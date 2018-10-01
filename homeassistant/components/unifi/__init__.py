@@ -1,5 +1,5 @@
 """
-Support for devices connected to Unifi POE.
+Support for devices connected to UniFi POE.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/unifi/
@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import DOMAIN, CONF_SITE_ID
+from .const import CONF_SITE_ID, DOMAIN, LOGGER
 from .controller import UniFiController, get_controller
 from .errors import AuthenticationRequired, CannotConnect, UserLevel
 
@@ -121,7 +121,10 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
             except UserLevel:
                 errors['base'] = 'user_privilege'
 
-            except Exception as err:
+            except Exception:  # pylint: disable=broad-except
+                LOGGER.exception(
+                    'Unknown error connecting with UniFi Controller at %s',
+                    user_input[CONF_HOST])
                 return self.async_abort(reason='unknown')
 
         return self.async_show_form(

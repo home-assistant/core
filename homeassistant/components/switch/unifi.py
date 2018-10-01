@@ -1,8 +1,9 @@
 """
-Support for devices connected to Unifi POE.
+Support for devices connected to UniFi POE.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.unifi/"""
+https://home-assistant.io/components/switch.unifi/
+"""
 
 import asyncio
 import logging
@@ -21,8 +22,8 @@ STORAGE_VERSION = 1
 SAVE_DELAY = 10
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Component doesn't support configuration through configuration.yaml."""
     pass
 
@@ -60,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return result
 
     async def update_controller():
-        """"""
+        """Update the values of the controller."""
         tasks = [async_update_items(
             controller, async_add_entities, request_update,
             switches, switches_off, update_progress, store
@@ -84,50 +85,48 @@ async def async_update_items(controller, async_add_entities,
     devices = controller.api.devices
     for client_id in controller.api.clients:
 
-        if client_id not in switches:
-            client = controller.api.clients[client_id]
+        if client_id in progress_waiting:
+            continue
 
-            if client.is_wired and \
-               client.sw_mac in devices and \
-               devices[client.sw_mac].ports[client.sw_port].poe_enable is not None:
-                switches[client_id] = UniFiSwitch(
-                    client, controller, request_controller_update)
-                new_switches.append(switches[client_id])
-                LOGGER.debug("New UniFi switch %s (%s)",
-                             client.hostname, client.mac)
-
-        elif client_id not in progress_waiting:
+        if client_id in switches:
             LOGGER.debug("Updating UniFi switch %s (%s)",
                          switches[client_id].entity_id,
                          switches[client_id].client.mac)
             switches[client_id].async_schedule_update_ha_state()
+            continue
 
-    update_storage = False
-    for device in controller.api.devices.values():
-        for port in device.ports.values():
+        client = controller.api.clients[client_id]
+        if not client.is_wired or client.sw_mac not in devices or \
+           devices[client.sw_mac].ports[client.sw_port].poe_enable is None:
+            continue
 
-            if port.port_poe and port.poe_mode == 'off':
-                for client in controller.api.clients.values():
-                    if client.mac not in switches_off and \
-                       device.mac == client.sw_mac and \
-                       port.port_idx == client.sw_port:
-                        switches_off[client.mac] = client.raw
-                        update_storage = True
-
-            elif port.port_poe and port.poe_mode is not None:
-                for client in controller.api.clients.values():
-                    if client.mac in switches_off and \
-                       device.mac == client.sw_mac and \
-                       port.port_idx == client.sw_port:
-                        del switches_off[client.mac]
-                        update_storage = True
+        switches[client_id] = UniFiSwitch(
+            client, controller, request_controller_update)
+        new_switches.append(switches[client_id])
+        LOGGER.debug("New UniFi switch %s (%s)", client.hostname, client.mac)
 
     @callback
     def _data_to_save():
-        """Update storage with devices that has got its' POE turned off."""
+        """Update storage with devices that has got its' POE off."""
         return switches_off
-    if update_storage:
-        store.async_delay_save(_data_to_save, SAVE_DELAY)
+
+    for device in controller.api.devices.values():
+        for port in device.ports.values():
+            if not port.port_poe or port.poe_mode is None:
+                continue
+
+            for client in controller.api.clients.values():
+                if device.mac != client.sw_mac or \
+                   port.port_idx != client.sw_port:
+                    continue
+
+                if port.poe_mode == 'off' and client.mac not in switches_off:
+                    switches_off[client.mac] = client.raw
+                    store.async_delay_save(_data_to_save, SAVE_DELAY)
+
+                elif port.poe_mode != 'off' and client.mac in switches_off:
+                    del switches_off[client.mac]
+                    store.async_delay_save(_data_to_save, SAVE_DELAY)
 
     if new_switches:
         async_add_entities(new_switches)
