@@ -123,7 +123,7 @@ class HassIODiscovery(HomeAssistantView):
         service = data[ATTR_SERVICE]
         uuid = data[ATTR_UUID]
 
-        # Check if realy deletet
+        # Check if realy deletet / prevent injections
         try:
             data = await self.hassio.get_discovery_message(uuid)
         except HassioAPIError as err:
