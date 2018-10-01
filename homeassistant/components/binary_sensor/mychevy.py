@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mychevy/
 """
-
-import asyncio
 import logging
 
 from homeassistant.components.mychevy import (
@@ -22,9 +20,8 @@ SENSORS = [
 ]
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the MyChevy sensors."""
     if discovery_info is None:
         return
@@ -75,8 +72,7 @@ class EVBinarySensor(BinarySensorDevice):
         """Return the car."""
         return self._conn.get_car(self._car_vid)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             UPDATE_TOPIC, self.async_update_callback)
