@@ -23,6 +23,7 @@ ATTR_SERVICE = 'service'
 ATTR_CONFIG = 'config'
 ATTR_COMPONENT = 'component'
 ATTR_PLATFORM = 'platform'
+ATTR_UUID = 'uuid'
 
 CONFIG_FLOW_SERVICE = ('mqtt',)
 
@@ -90,7 +91,7 @@ class HassIODiscovery(HomeAssistantView):
         service = data[ATTR_SERVICE]
         component = data[ATTR_COMPONENT]
         platform = data[ATTR_PLATFORM]
-        config_data = data=data[ATTR_CONFIG]
+        config_data = data[ATTR_CONFIG]
 
         # Read addinional Add-on info
         try:
@@ -105,7 +106,7 @@ class HassIODiscovery(HomeAssistantView):
             data[ATTR_ADDON] = addon_info[ATTR_NAME]
 
             await self.hass.config_entries.flow.async_init(
-                service, context={'source': 'hassio'}, data=config_data)
+                service, context={'source': 'hass.io'}, data=config_data)
             return
 
          # Use discovery
@@ -119,9 +120,23 @@ class HassIODiscovery(HomeAssistantView):
     async def async_process_del(self, data):
         """Process remove discovery entry."""
         service = data[ATTR_SERVICE]
+        uuid = data[ATTR_UUID]
+
+        # Check if realy deletet
+        try:
+            data = await self.hassio.get_discovery_message(uuid)
+        except HassioAPIError as err:
+            pass
+        else:
+            _LOGGER.warning("Retrieve a wrong unload discovery for %s", service)
+            return
 
         # Use config flow
-        if service in CONFIG_FLOW_SERVICE:
-            self.hass.config_entries.async_unload(self.hass, component=service)
-        else:
+        if service not in CONFIG_FLOW_SERVICE:
             _LOGGER.info("Can't unload discovery for %s", service)
+            return
+
+        for entry in self.hass.config_entries.async_entries(service):
+            if entry.source != 'hass.io':
+                continue
+            await self.hass.config_entries.async_remove(entry)
