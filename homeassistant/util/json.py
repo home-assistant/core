@@ -66,7 +66,7 @@ def save_json(filename: str, data: Union[List, Dict],
         if os.path.exists(tmp_filename):
             try:
                 os.remove(tmp_filename)
-            except OSError as e:
+            except OSError as err:
                 # If we are cleaning up then something else went wrong, so
                 # we should suppress likely follow-on errors in the cleanup
-                _LOGGER.error("JSON file replacement cleanup failed: %s", e)
+                _LOGGER.error("JSON replacement cleanup failed: %s", err)
