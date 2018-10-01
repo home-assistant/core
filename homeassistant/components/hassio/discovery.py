@@ -43,9 +43,10 @@ def async_setup_discovery(hass, hassio, config):
                 "Can't read discover info: %s", err)
             return
 
-        for discovery in data[ATTR_DISCOVERY]:
-            hass.async_create_task(
-                hassio_discovery.async_process_new(discovery))
+        jobs = [hassio_discovery.async_process_new(discovery)
+                for discovery in data[ATTR_DISCOVERY]]  
+        if jobs:
+            await asyncio.wait(jobs)
 
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_START, async_discovery_start_handler)
