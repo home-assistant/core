@@ -166,6 +166,13 @@ async def get_gateway_info(hass, host, identity, key):
             psk=key,
             loop=hass.loop
         )
+
+        def on_hass_stop(event):
+            """Close connection when hass stops."""
+            hass.async_add_job(factory.shutdown())
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+
         api = factory.request
         gateway = Gateway()
         gateway_info_result = await api(gateway.get_gateway_info())

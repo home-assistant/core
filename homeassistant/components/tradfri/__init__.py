@@ -17,7 +17,7 @@ from .const import (
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
-REQUIREMENTS = ['pytradfri[async]==5.6.0']
+REQUIREMENTS = ['pytradfri[async]==6.0.0']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = '.tradfri_psk.conf'
@@ -87,6 +87,13 @@ async def async_setup_entry(hass, entry):
         psk=entry.data[CONF_KEY],
         loop=hass.loop
     )
+
+    def on_hass_stop(event):
+        """Close connection when hass stops."""
+        hass.async_add_job(factory.shutdown())
+
+    self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+
     api = factory.request
     gateway = Gateway()
 
