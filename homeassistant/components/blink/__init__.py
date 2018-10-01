@@ -38,6 +38,7 @@ TYPE_BATTERY = 'battery'
 TYPE_WIFI_STRENGTH = 'wifi_strength'
 TYPE_STATUS = 'status'
 
+SERVICE_REFRESH = 'blink_update'
 SERVICE_TRIGGER = 'trigger_camera'
 SERVICE_SAVE_VIDEO = 'save_video'
 
@@ -69,7 +70,7 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema({
 
 SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_FILENAME): cv.template,
+    vol.Required(CONF_FILENAME): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema(
@@ -129,7 +130,7 @@ def setup(hass, config):
             return False
         return True
 
-    hass.services.register(BLINK_DATA, 'update', blink_refresh)
+    hass.services.register(BLINK_DATA, SERVICE_REFRESH, blink_refresh)
     hass.services.register(BLINK_DATA,
                            SERVICE_TRIGGER,
                            trigger_camera,
