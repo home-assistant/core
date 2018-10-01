@@ -3,6 +3,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.decorators import require_owner
 
 
 WS_TYPE_LIST = 'config/auth/list'
@@ -41,7 +42,7 @@ async def async_setup(hass):
 
 
 @callback
-@websocket_api.require_owner
+@require_owner
 def websocket_list(hass, connection, msg):
     """Return a list of users."""
     async def send_users():
@@ -55,7 +56,7 @@ def websocket_list(hass, connection, msg):
 
 
 @callback
-@websocket_api.require_owner
+@require_owner
 def websocket_delete(hass, connection, msg):
     """Delete a user."""
     async def delete_user():
@@ -82,7 +83,7 @@ def websocket_delete(hass, connection, msg):
 
 
 @callback
-@websocket_api.require_owner
+@require_owner
 def websocket_create(hass, connection, msg):
     """Create a user."""
     async def create_user():
