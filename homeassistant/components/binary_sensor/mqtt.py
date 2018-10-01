@@ -4,7 +4,6 @@ Support for MQTT binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mqtt/
 """
-import asyncio
 import logging
 from typing import Optional
 
@@ -115,11 +114,10 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         self._unique_id = unique_id
         self._discovery_hash = discovery_hash
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe mqtt events."""
-        yield from MqttAvailability.async_added_to_hass(self)
-        yield from MqttDiscoveryUpdate.async_added_to_hass(self)
+        await MqttAvailability.async_added_to_hass(self)
+        await MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
         def state_message_received(topic, payload, qos):
@@ -139,7 +137,7 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
 
             self.async_schedule_update_ha_state()
 
-        yield from mqtt.async_subscribe(
+        await mqtt.async_subscribe(
             self.hass, self._state_topic, state_message_received, self._qos)
 
     @property
