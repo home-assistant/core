@@ -4,7 +4,6 @@ Support for Rflink sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.rflink/
 """
-import asyncio
 from functools import partial
 import logging
 
@@ -74,14 +73,12 @@ def devices_from_config(domain_config, hass=None):
     return devices
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Rflink platform."""
     async_add_entities(devices_from_config(config, hass))
 
-    @asyncio.coroutine
-    def add_new_device(event):
+    async def add_new_device(event):
         """Check if device is known, otherwise create device entity."""
         device_id = event[EVENT_KEY_ID]
 
