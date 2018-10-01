@@ -63,10 +63,8 @@ class HassIODiscovery(HomeAssistantView):
         self.hassio = hassio
         self.config = config
 
-    async def post(self, request):
+    async def post(self, request, uuid):
         """Handle new discovery requests."""
-        uuid = request.match_info.get(ATTR_UUID)
-
         # Fetch discovery data and prevent injections
         try:
             data = await self.hassio.get_discovery_message(uuid)
@@ -77,7 +75,7 @@ class HassIODiscovery(HomeAssistantView):
         await self.async_process_new(self, data)
         return web.Response()
 
-    async def delete(self, request):
+    async def delete(self, request, uuid):
         """Handle remove discovery requests."""
         data = request.json()
 
