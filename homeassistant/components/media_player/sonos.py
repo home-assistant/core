@@ -69,7 +69,7 @@ ATTR_SPEECH_ENHANCE = 'speech_enhance'
 
 ATTR_SONOS_GROUP = 'sonos_group'
 
-UPNP_ERRORS_TO_IGNORE = ['701', '711']
+UPNP_ERRORS_TO_IGNORE = ['701', '711', '712']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
@@ -831,7 +831,7 @@ class SonosDevice(MediaPlayerDevice):
         """Set volume level, range 0..1."""
         self.soco.volume = str(int(volume * 100))
 
-    @soco_error()
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
