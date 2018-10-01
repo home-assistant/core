@@ -17,16 +17,19 @@ from homeassistant.const import (
     STATE_ALARM_ARMING, STATE_ALARM_DISARMING, STATE_UNKNOWN, CONF_NAME,
     STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
-
-REQUIREMENTS = ['total_connect_client==0.18']
+REQUIREMENTS = ['total_connect_client==0.19']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Total Connect'
+DEFAULT_USERCODE = '-1'
+
+CONF_USERCODE = 'usercode'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_USERCODE, default=DEFAULT_USERCODE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -36,15 +39,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    usercode = config.get(CONF_USERCODE)
 
-    total_connect = TotalConnect(name, username, password)
+    total_connect = TotalConnect(name, username, password, usercode)
     add_entities([total_connect], True)
 
 
 class TotalConnect(alarm.AlarmControlPanel):
     """Represent an TotalConnect status."""
 
-    def __init__(self, name, username, password):
+    def __init__(self, name, username, password, usercode):
         """Initialize the TotalConnect status."""
         from total_connect_client import TotalConnectClient
 
@@ -52,9 +56,10 @@ class TotalConnect(alarm.AlarmControlPanel):
         self._name = name
         self._username = username
         self._password = password
+        self._usercode = usercode
         self._state = STATE_UNKNOWN
         self._client = TotalConnectClient.TotalConnectClient(
-            username, password)
+            username, password, usercode)
 
     @property
     def name(self):
