@@ -120,29 +120,22 @@ class NswRuralFireServiceFeedManager:
     def _update_or_remove_entities(self, feed_entries):
         """Update existing entries and remove obsolete entities."""
         _LOGGER.debug("Entries for updating: %s", feed_entries)
-        remove_entry = None
         # Remove obsolete entities for events that have disappeared
         managed_entities = self._managed_entities.copy()
+        entries_lookup = {entry.external_id: entry for entry in feed_entries}
         for entity in managed_entities:
-            # Remove entry from previous iteration - if applicable.
-            if remove_entry:
-                feed_entries.remove(remove_entry)
-                remove_entry = None
-            for entry in feed_entries:
-                if entity.external_id == entry.external_id:
-                    # Existing entity - update details.
-                    _LOGGER.debug("Existing entity found %s", entity)
-                    remove_entry = entry
-                    entity.schedule_update_ha_state(True)
-                    break
+            if entity.external_id in entries_lookup:
+                entry = entries_lookup.get(entity.external_id)
+                # Existing entity - update details.
+                _LOGGER.debug("Existing entity found %s", entity)
+                feed_entries.remove(entry)
+                del entries_lookup[entity.external_id]
+                entity.schedule_update_ha_state(True)
             else:
                 # Remove obsolete entity.
                 _LOGGER.debug("Entity not current anymore %s", entity)
                 self._managed_entities.remove(entity)
                 self._hass.add_job(entity.async_remove())
-        # Remove entry from very last iteration - if applicable.
-        if remove_entry:
-            feed_entries.remove(remove_entry)
         # Return the remaining entries that new entities must be created for.
         return feed_entries
 
