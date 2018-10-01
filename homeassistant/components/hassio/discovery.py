@@ -92,7 +92,7 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         await self.hass.config_entries.flow.async_init(
-            service, context={'source': 'hass.io'}, data=config_data)
+            service, context={'source': 'hassio'}, data=config_data)
 
     async def async_process_del(self, data):
         """Process remove discovery entry."""
@@ -110,6 +110,6 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         for entry in self.hass.config_entries.async_entries(service):
-            if entry.source != 'hass.io':
+            if entry.source != 'hassio':
                 continue
             await self.hass.config_entries.async_remove(entry)
