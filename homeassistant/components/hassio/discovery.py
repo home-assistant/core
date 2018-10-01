@@ -18,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_DISCOVERY = 'discovery'
 ATTR_ADDON = 'addon'
 ATTR_NAME = 'name'
+ATTR_SERVICE = 'service'
+ATTR_CONFIG = 'config'
 
 
 @callback
@@ -59,7 +61,7 @@ class HassIODiscovery(HomeAssistantView):
     async def post(self, request):
         """Handle new discovery requests."""
         uuid = request.match_info.get(uuid)
-        
+
         # Fetch discovery data and prevent injections
         try:
             data = await self.hassio.get_discovery_message(uuid)
@@ -85,11 +87,12 @@ class HassIODiscovery(HomeAssistantView):
         except HassioAPIError as err:
             _LOGGER.error("Can't read add-on info: %s", err)
             return
-        
+
         # Replace Add-on name with ID
         data[ATTR_ADDON] = addon_info[ATTR_NAME]
-        
-        
+
+        await hass.config_entries.flow.async_init(
+            data[ATTR_SERVICE], context={'source': 'hassio'}, data=data[ATTR_CONFIG])
 
     async def async_process_del(self, data):
         """Process remove discovery entry."""
