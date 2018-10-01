@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 from homeassistant.auth.providers import homeassistant as auth_ha
-from homeassistant.core import callback
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.decorators import require_owner
 

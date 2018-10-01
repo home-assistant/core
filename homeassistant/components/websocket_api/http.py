@@ -91,6 +91,7 @@ class WebSocketImpl:
 
         # Py3.7+
         if hasattr(asyncio, 'current_task'):
+            # pylint: disable=no-member
             self._handle_task = asyncio.current_task()
         else:
             self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)

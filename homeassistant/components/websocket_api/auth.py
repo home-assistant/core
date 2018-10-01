@@ -3,9 +3,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.const import __version__
-from homeassistant.core import callback
 from homeassistant.components.http.auth import validate_password
-from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.ban import process_wrong_login, \
     process_success_login
 
@@ -81,8 +79,8 @@ class AuthPhase:
                     refresh_token.user, refresh_token)
 
         elif ((not self._hass.auth.active or
-                self._hass.auth.support_legacy) and
-                'api_password' in msg):
+               self._hass.auth.support_legacy) and
+               'api_password' in msg):
             self._logger.debug("Received api_password")
             if validate_password(self._request, msg['api_password']):
                 return await self._async_finish_auth(None, None)
