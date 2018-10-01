@@ -8,7 +8,6 @@ from aiohttp.web_exceptions import HTTPServiceUnavailable
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.helpers.discovery import async_load_platform, async_discover
 
 from .handler import HassioAPIError
 
@@ -22,8 +21,6 @@ ATTR_CONFIG = 'config'
 ATTR_COMPONENT = 'component'
 ATTR_PLATFORM = 'platform'
 ATTR_UUID = 'uuid'
-
-CONFIG_FLOW_SERVICE = ('mqtt',)
 
 
 @callback
@@ -97,21 +94,10 @@ class HassIODiscovery(HomeAssistantView):
             return
 
         # Use config flow
-        if service in CONFIG_FLOW_SERVICE:
-            # Replace Add-on ID with name
-            data[ATTR_ADDON] = addon_info[ATTR_NAME]
+        data[ATTR_ADDON] = addon_info[ATTR_NAME]
 
-            await self.hass.config_entries.flow.async_init(
-                service, context={'source': 'hass.io'}, data=config_data)
-            return
-
-        # Use discovery
-        if platform is None:
-            await async_discover(
-                self.hass, service, config_data, component, self.config)
-        else:
-            await async_load_platform(
-                self.hass, component, platform, config_data, self.config)
+        await self.hass.config_entries.flow.async_init(
+            service, context={'source': 'hass.io'}, data=config_data)
 
     async def async_process_del(self, data):
         """Process remove discovery entry."""
@@ -128,10 +114,6 @@ class HassIODiscovery(HomeAssistantView):
             return
 
         # Use config flow
-        if service not in CONFIG_FLOW_SERVICE:
-            _LOGGER.info("Can't unload discovery for %s", service)
-            return
-
         for entry in self.hass.config_entries.async_entries(service):
             if entry.source != 'hass.io':
                 continue
