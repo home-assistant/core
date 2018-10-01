@@ -108,7 +108,7 @@ async def async_update_items(controller, async_add_entities,
 
             if port.port_poe and port.poe_mode == 'off':
                 for client in controller.api.clients.values():
-                    if not client.mac in switches_off and \
+                    if client.mac not in switches_off and \
                        device.mac == client.sw_mac and \
                        port.port_idx == client.sw_port:
                         switches_off[client.mac] = client.raw
@@ -121,6 +121,7 @@ async def async_update_items(controller, async_add_entities,
                        port.port_idx == client.sw_port:
                         del switches_off[client.mac]
                         update_storage = True
+
     @callback
     def _data_to_save():
         """Update storage with devices that has got its' POE turned off."""
@@ -168,29 +169,11 @@ class UniFiSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Enable POE for client."""
-        device_id = self.device.id
-        url = 's/{site}/rest/device/' + device_id
-        data = {
-            'port_overrides': [{
-                'port_idx': self.client.sw_port,
-                'portconf_id': self.port.portconf_id,
-                'poe_mode': 'auto'
-            }]
-        }
-        await self.controller.api.request('put', url, json=data)
+        await self.device.async_set_port_poe_mode(self.client.sw_port, 'auto')
 
     async def async_turn_off(self, **kwargs):
         """Disable POE for client."""
-        device_id = self.device.id
-        url = 's/{site}/rest/device/' + device_id
-        data = {
-            'port_overrides': [{
-                'port_idx': self.client.sw_port,
-                'portconf_id': self.port.portconf_id,
-                'poe_mode': 'off'
-            }]
-        }
-        await self.controller.api.request('put', url, json=data)
+        await self.device.async_set_port_poe_mode(self.client.sw_port, 'off')
 
     @property
     def device_state_attributes(self):

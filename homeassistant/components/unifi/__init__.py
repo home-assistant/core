@@ -12,11 +12,9 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import DOMAIN, LOGGER, CONF_SITE_ID
+from .const import DOMAIN, CONF_SITE_ID
 from .controller import UniFiController, get_controller
 from .errors import AuthenticationRequired, CannotConnect, UserLevel
-
-DOMAIN = 'unifi'
 
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = 'default'
