@@ -129,7 +129,7 @@ class RestSwitch(SwitchDevice):
                     "Can't turn on %s. Is resource/endpoint offline?",
                     self._resource)
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error while turn on %s", self._resource)
+            _LOGGER.error("Error while switching on %s", self._resource)
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
@@ -144,7 +144,7 @@ class RestSwitch(SwitchDevice):
                     "Can't turn off %s. Is resource/endpoint offline?",
                     self._resource)
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error while turn off %s", self._resource)
+            _LOGGER.error("Error while switching off %s", self._resource)
 
     async def set_device_state(self, body):
         """Send a state update to the device."""
@@ -160,8 +160,10 @@ class RestSwitch(SwitchDevice):
         """Get the current state, catching errors."""
         try:
             await self.get_device_state(self.hass)
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.exception("Error while fetch data.")
+        except asyncio.TimeoutError:
+            _LOGGER.exception("Timed out while fetching data")
+        except aiohttp.ClientError as err:
+            _LOGGER.exception("Error while fetching data: %s", err)
 
     async def get_device_state(self, hass):
         """Get the latest data from REST API and update the state."""
