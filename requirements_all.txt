@@ -1259,7 +1259,7 @@ pyzabbix==0.7.4
 qnapstats==0.2.7
 
 # homeassistant.components.device_tracker.quantum_gateway
-quantum-gateway==0.0.2
+quantum-gateway==0.0.3
 
 # homeassistant.components.rachio
 rachiopy==0.1.3
