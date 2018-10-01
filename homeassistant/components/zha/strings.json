@@ -1,0 +1,23 @@
+{
+  "config": {
+    "title": "ZHA",
+    "step": {
+      "init": {
+        "title": "ZHA",
+        "description": "",
+        "data": {
+          "database_path": "Database Path",
+          "usb_path": "USB Device Path",
+          "radio_type": "Radio Type",
+          "baudrate": "Baudrate"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of ZHA is allowed."
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to ZHA device."
+    }
+  }
+}

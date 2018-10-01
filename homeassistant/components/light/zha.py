@@ -7,7 +7,7 @@ at https://home-assistant.io/components/light.zha/
 import logging
 from homeassistant.components import light
 from homeassistant.components.zha.entities import ZhaEntity
-from homeassistant.components.zha import helpers
+from homeassistant.components.zha import helpers, const
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,26 +25,36 @@ UNSUPPORTED_ATTRIBUTE = 0x86
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Zigbee Home Automation lights."""
-    discovery_info = helpers.get_discovery_info(hass, discovery_info)
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Zigbee Home Automation lights from config entry."""
+    discovery_info = hass.data.get(const.DISCOVERY_KEY, {})
     if discovery_info is None:
         return
 
-    endpoint = discovery_info['endpoint']
-    if hasattr(endpoint, 'light_color'):
-        caps = await helpers.safe_read(
-            endpoint.light_color, ['color_capabilities'])
-        discovery_info['color_capabilities'] = caps.get('color_capabilities')
-        if discovery_info['color_capabilities'] is None:
-            # ZCL Version 4 devices don't support the color_capabilities
-            # attribute. In this version XY support is mandatory, but we need
-            # to probe to determine if the device supports color temperature.
-            discovery_info['color_capabilities'] = CAPABILITIES_COLOR_XY
-            result = await helpers.safe_read(
-                endpoint.light_color, ['color_temperature'])
-            if result.get('color_temperature') is not UNSUPPORTED_ATTRIBUTE:
-                discovery_info['color_capabilities'] |= CAPABILITIES_COLOR_TEMP
+    entities = []
+    for device in discovery_info['light'].values():
+        endpoint = device['endpoint']
+        if hasattr(endpoint, 'light_color'):
+            caps = await helpers.safe_read(
+                endpoint.light_color, ['color_capabilities'])
+            device['color_capabilities'] = caps.get('color_capabilities')
+            if device['color_capabilities'] is None:
+                # ZCL Version 4 devices don't support the color_capabilities
+                # attribute. In this version XY support is mandatory, but we
+                # need to probe to determine if the device supports color
+                # temperature.
+                device['color_capabilities'] = CAPABILITIES_COLOR_XY
+                result = await helpers.safe_read(
+                    endpoint.light_color, ['color_temperature'])
+                if (result.get('color_temperature') is not
+                        UNSUPPORTED_ATTRIBUTE):
+                    device['color_capabilities'] |= CAPABILITIES_COLOR_TEMP
+        entities.append(Light(**device))
 
-    async_add_entities([Light(**discovery_info)], update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class Light(ZhaEntity, light.Light):

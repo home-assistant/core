@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.components.zha.entities import ZhaEntity
-from homeassistant.components.zha import helpers
+from homeassistant.components.zha import helpers, const
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,22 +28,27 @@ CLASS_MAPPING = {
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Zigbee Home Automation binary sensors."""
-    discovery_info = helpers.get_discovery_info(hass, discovery_info)
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Zigbee Home Automation binary sensor from config entry."""
+    discovery_info = hass.data.get(const.DISCOVERY_KEY, {})
     if discovery_info is None:
         return
 
     from zigpy.zcl.clusters.general import OnOff
     from zigpy.zcl.clusters.security import IasZone
-    if IasZone.cluster_id in discovery_info['in_clusters']:
-        await _async_setup_iaszone(hass, config, async_add_entities,
-                                   discovery_info)
-    elif OnOff.cluster_id in discovery_info['out_clusters']:
-        await _async_setup_remote(hass, config, async_add_entities,
-                                  discovery_info)
+    entities = []
+    for device in discovery_info['binary_sensor'].values():
+        if IasZone.cluster_id in device['in_clusters']:
+            entities.append(await _async_setup_iaszone(device))
+        elif OnOff.cluster_id in device['out_clusters']:
+            entities.append(await _async_setup_remote(device))
+    async_add_entities(entities, update_before_add=True)
 
 
-async def _async_setup_iaszone(hass, config, async_add_entities,
-                               discovery_info):
+async def _async_setup_iaszone(discovery_info):
     device_class = None
     from zigpy.zcl.clusters.security import IasZone
     cluster = discovery_info['in_clusters'][IasZone.cluster_id]
@@ -59,13 +64,10 @@ async def _async_setup_iaszone(hass, config, async_add_entities,
         # If we fail to read from the device, use a non-specific class
         pass
 
-    sensor = BinarySensor(device_class, **discovery_info)
-    async_add_entities([sensor], update_before_add=True)
+    return BinarySensor(device_class, **discovery_info)
 
 
-async def _async_setup_remote(hass, config, async_add_entities,
-                              discovery_info):
-
+async def _async_setup_remote(discovery_info):
     remote = Remote(**discovery_info)
 
     if discovery_info['new_join']:
@@ -84,7 +86,7 @@ async def _async_setup_remote(hass, config, async_add_entities,
                 reportable_change=1
             )
 
-    async_add_entities([remote], update_before_add=True)
+    return remote
 
 
 class BinarySensor(ZhaEntity, BinarySensorDevice):
