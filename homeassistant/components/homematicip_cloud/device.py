@@ -30,7 +30,8 @@ class HomematicipGenericDevice(Entity):
         self._home = home
         self._device = device
         self.post = post
-        _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
+        _LOGGER.info("Setting up %s, (%s)",
+                     self.name, self.unique_id)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -38,7 +39,7 @@ class HomematicipGenericDevice(Entity):
 
     def _device_changed(self, json, **kwargs):
         """Handle device state changes."""
-        _LOGGER.debug("Event %s (%s)", self.name, self._device.modelType)
+        _LOGGER.debug("Event %s (%s)", self.name, self.unique_id)
         self.async_schedule_update_ha_state()
 
     @property
@@ -60,6 +61,15 @@ class HomematicipGenericDevice(Entity):
     def available(self):
         """Device available."""
         return not self._device.unreach
+
+    @property
+    def unique_id(self):
+        """Device unique ID"""
+        id = "{}_{}".format(self._device.modelType, self._device.id).lower()
+        if self.post is not None and self.post != '':
+            id = "{}_{}_{}".format(self._device.modelType,
+                                   self.post, self._device.id).lower()
+        return id
 
     @property
     def icon(self):
