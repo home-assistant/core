@@ -4,7 +4,6 @@ Support for MQTT locks.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.mqtt/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -41,9 +40,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the MQTT lock."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -96,11 +94,10 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, LockDevice):
         self._template = value_template
         self._discovery_hash = discovery_hash
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        yield from MqttAvailability.async_added_to_hass(self)
-        yield from MqttDiscoveryUpdate.async_added_to_hass(self)
+        await MqttAvailability.async_added_to_hass(self)
+        await MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
         def message_received(topic, payload, qos):
@@ -119,7 +116,7 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, LockDevice):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            yield from mqtt.async_subscribe(
+            await mqtt.async_subscribe(
                 self.hass, self._state_topic, message_received, self._qos)
 
     @property
@@ -142,8 +139,7 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, LockDevice):
         """Return true if we do optimistic updates."""
         return self._optimistic
 
-    @asyncio.coroutine
-    def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock the device.
 
         This method is a coroutine.
@@ -156,8 +152,7 @@ class MqttLock(MqttAvailability, MqttDiscoveryUpdate, LockDevice):
             self._state = True
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock the device.
 
         This method is a coroutine.
