@@ -283,6 +283,6 @@ def async_setup(hass, config):
             HASS_DOMAIN, service, async_handle_core_service)
 
     # Init discovery Hass.io feature
-    async_setup_discovery(hass, hassio)
+    async_setup_discovery(hass, hassio, config)
 
     return True
