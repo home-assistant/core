@@ -4,7 +4,6 @@ Support to interface with Sonos players.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.sonos/
 """
-import asyncio
 import datetime
 import functools as ft
 import logging
@@ -364,8 +363,7 @@ class SonosDevice(MediaPlayerDevice):
 
         self._set_basic_information()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe sonos events."""
         self.hass.data[DATA_SONOS].devices.append(self)
         self.hass.async_add_job(self._subscribe_to_player_events)
