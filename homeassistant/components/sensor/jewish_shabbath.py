@@ -140,13 +140,13 @@ class Shabbat(Entity):
             + str(self.friday) + "&end=" + str(self.saturday)
             + "&ss=on&c=on&geo=geoname&geonameid=" + str(self._geoid)
             + "&m=" + str(self._havdalah) + "&s=on"
-            ) as url:
+        ) as url:
             self.shabbat_db = json.loads(url.read().decode())
         with urllib.request.urlopen(
             "https://www.hebcal.com/converter/?cfg=json&gy="
             + str(self.datetoday.year) + "&gm=" + str(self.datetoday.month)
             + "&gd=" + str(self.datetoday.day) + "&g2h=1"
-            ) as heb_url:
+        ) as heb_url:
             self.hebrew_date_db = json.loads(heb_url.read().decode())
         self.get_full_time_in()
         self.get_full_time_out()
