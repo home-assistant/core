@@ -1,5 +1,5 @@
 """The tests for the persistent notification component."""
-from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.persistent_notification as pn
 
@@ -151,7 +151,7 @@ async def test_ws_get_notifications(hass, hass_ws_client):
     })
     msg = await client.receive_json()
     assert msg['id'] == 5
-    assert msg['type'] == websocket_api.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success']
     notifications = msg['result']
     assert len(notifications) == 0
@@ -165,7 +165,7 @@ async def test_ws_get_notifications(hass, hass_ws_client):
     })
     msg = await client.receive_json()
     assert msg['id'] == 6
-    assert msg['type'] == websocket_api.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success']
     notifications = msg['result']
     assert len(notifications) == 1
