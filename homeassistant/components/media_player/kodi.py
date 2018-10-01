@@ -393,7 +393,7 @@ class KodiDevice(MediaPlayerDevice):
         """Return the active player objects or None."""
         import jsonrpc_base
         try:
-            return (await self.server.Player.GetActivePlayers())
+            return await self.server.Player.GetActivePlayers()
         except jsonrpc_base.jsonrpc.TransportError:
             if self._players is not None:
                 _LOGGER.info("Unable to fetch kodi data")
@@ -865,12 +865,12 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_get_artists(self):
         """Get artists list."""
-        return (await self.server.AudioLibrary.GetArtists())
+        return await self.server.AudioLibrary.GetArtists()
 
     async def async_get_albums(self, artist_id=None):
         """Get albums list."""
         if artist_id is None:
-            return (await self.server.AudioLibrary.GetAlbums())
+            return await self.server.AudioLibrary.GetAlbums()
 
         return (await self.server.AudioLibrary.GetAlbums(
             {"filter": {"artistid": int(artist_id)}}))
@@ -889,7 +889,7 @@ class KodiDevice(MediaPlayerDevice):
     async def async_get_songs(self, artist_id=None):
         """Get songs list."""
         if artist_id is None:
-            return (await self.server.AudioLibrary.GetSongs())
+            return await self.server.AudioLibrary.GetSongs()
 
         return (await self.server.AudioLibrary.GetSongs(
             {"filter": {"artistid": int(artist_id)}}))
