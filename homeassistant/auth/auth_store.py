@@ -28,7 +28,8 @@ class AuthStore:
         """Initialize the auth store."""
         self.hass = hass
         self._users = None  # type: Optional[Dict[str, models.User]]
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY,
+                                                 private=True)
 
     async def async_get_users(self) -> List[models.User]:
         """Retrieve all users."""

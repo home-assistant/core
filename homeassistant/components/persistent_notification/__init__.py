@@ -4,7 +4,6 @@ A component which is collecting configuration errors.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/persistent_notification/
 """
-import asyncio
 import logging
 from collections import OrderedDict
 from typing import Awaitable
@@ -99,8 +98,7 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
 
 
-@asyncio.coroutine
-def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
+async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
     """Set up the persistent notification component."""
     persistent_notifications = OrderedDict()
     hass.data[DOMAIN] = {'notifications': persistent_notifications}
@@ -201,7 +199,7 @@ def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
 def websocket_get_notifications(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return a list of persistent_notifications."""
-    connection.to_write.put_nowait(
+    connection.send_message(
         websocket_api.result_message(msg['id'], [
             {
                 key: data[key] for key in (ATTR_NOTIFICATION_ID, ATTR_MESSAGE,

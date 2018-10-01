@@ -91,7 +91,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities(dev)
 
     weather = YrData(hass, coordinates, forecast, dev)
-    async_track_utc_time_change(hass, weather.updating_devices, minute=31)
+    async_track_utc_time_change(hass, weather.updating_devices,
+                                minute=31, second=0)
     await weather.fetching_data()
 
 

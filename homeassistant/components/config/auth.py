@@ -3,6 +3,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.decorators import require_owner
 
 
 WS_TYPE_LIST = 'config/auth/list'
@@ -41,27 +42,27 @@ async def async_setup(hass):
 
 
 @callback
-@websocket_api.require_owner
+@require_owner
 def websocket_list(hass, connection, msg):
     """Return a list of users."""
     async def send_users():
         """Send users."""
         result = [_user_info(u) for u in await hass.auth.async_get_users()]
 
-        connection.send_message_outside(
+        connection.send_message(
             websocket_api.result_message(msg['id'], result))
 
     hass.async_add_job(send_users())
 
 
 @callback
-@websocket_api.require_owner
+@require_owner
 def websocket_delete(hass, connection, msg):
     """Delete a user."""
     async def delete_user():
         """Delete user."""
-        if msg['user_id'] == connection.request.get('hass_user').id:
-            connection.send_message_outside(websocket_api.error_message(
+        if msg['user_id'] == connection.user.id:
+            connection.send_message(websocket_api.error_message(
                 msg['id'], 'no_delete_self',
                 'Unable to delete your own account'))
             return
@@ -69,27 +70,27 @@ def websocket_delete(hass, connection, msg):
         user = await hass.auth.async_get_user(msg['user_id'])
 
         if not user:
-            connection.send_message_outside(websocket_api.error_message(
+            connection.send_message(websocket_api.error_message(
                 msg['id'], 'not_found', 'User not found'))
             return
 
         await hass.auth.async_remove_user(user)
 
-        connection.send_message_outside(
+        connection.send_message(
             websocket_api.result_message(msg['id']))
 
     hass.async_add_job(delete_user())
 
 
 @callback
-@websocket_api.require_owner
+@require_owner
 def websocket_create(hass, connection, msg):
     """Create a user."""
     async def create_user():
         """Create a user."""
         user = await hass.auth.async_create_user(msg['name'])
 
-        connection.send_message_outside(
+        connection.send_message(
             websocket_api.result_message(msg['id'], {
                 'user': _user_info(user)
             }))

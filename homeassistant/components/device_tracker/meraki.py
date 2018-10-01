@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.meraki/
 
 """
-import asyncio
 import logging
 import json
 
@@ -33,8 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up an endpoint for the Meraki tracker."""
     hass.http.register_view(
         MerakiView(config, async_see))
@@ -54,16 +52,14 @@ class MerakiView(HomeAssistantView):
         self.validator = config[CONF_VALIDATOR]
         self.secret = config[CONF_SECRET]
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """Meraki message received as GET."""
         return self.validator
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Meraki CMX message received."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
         _LOGGER.debug("Meraki Data from Post: %s", json.dumps(data))

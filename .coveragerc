@@ -42,6 +42,7 @@ omit =
 
     homeassistant/components/asterisk_mbox.py
     homeassistant/components/*/asterisk_mbox.py
+    homeassistant/components/*/asterisk_cdr.py
 
     homeassistant/components/august.py
     homeassistant/components/*/august.py
@@ -103,6 +104,9 @@ omit =
 
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
+
+    homeassistant/components/evohome.py
+    homeassistant/components/*/evohome.py
 
     homeassistant/components/fritzbox.py
     homeassistant/components/switch/fritzbox.py
@@ -189,6 +193,9 @@ omit =
 
     homeassistant/components/linode.py
     homeassistant/components/*/linode.py
+
+    homeassistant/components/logi_circle.py
+    homeassistant/components/*/logi_circle.py
 
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
@@ -506,6 +513,7 @@ omit =
     homeassistant/components/light/lw12wifi.py
     homeassistant/components/light/mystrom.py
     homeassistant/components/light/nanoleaf_aurora.py
+    homeassistant/components/light/opple.py
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/piglow.py
     homeassistant/components/light/rpi_gpio_pwm.py
@@ -675,6 +683,7 @@ omit =
     homeassistant/components/sensor/fritzbox_netmonitor.py
     homeassistant/components/sensor/gearbest.py
     homeassistant/components/sensor/geizhals.py
+    homeassistant/components/sensor/gitlab_ci.py
     homeassistant/components/sensor/gitter.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
@@ -691,6 +700,7 @@ omit =
     homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lacrosse.py
     homeassistant/components/sensor/lastfm.py
+    homeassistant/components/sensor/linky.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/luftdaten.py
@@ -704,6 +714,7 @@ omit =
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/mvglive.py
     homeassistant/components/sensor/nederlandse_spoorwegen.py
+    homeassistant/components/sensor/netatmo_public.py
     homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/netdata_public.py
     homeassistant/components/sensor/neurio_energy.py
@@ -747,6 +758,7 @@ omit =
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/spotcrime.py
+    homeassistant/components/sensor/starlingbank.py
     homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/supervisord.py
     homeassistant/components/sensor/swiss_hydrological_data.py
@@ -820,6 +832,7 @@ omit =
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/darksky.py
+    homeassistant/components/weather/met.py
     homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/weather/zamg.py

@@ -7,7 +7,9 @@ from homeassistant.setup import setup_component
 from homeassistant.components.notify import demo
 from homeassistant.core import callback
 from homeassistant.helpers import discovery, script
+
 from tests.common import assert_setup_component, get_test_home_assistant
+from tests.components.notify import common
 
 CONFIG = {
     notify.DOMAIN: {
@@ -79,7 +81,7 @@ class TestNotifyDemo(unittest.TestCase):
     def test_sending_none_message(self):
         """Test send with None as message."""
         self._setup_notify()
-        notify.send_message(self.hass, None)
+        common.send_message(self.hass, None)
         self.hass.block_till_done()
         self.assertTrue(len(self.events) == 0)
 
@@ -87,7 +89,7 @@ class TestNotifyDemo(unittest.TestCase):
         """Send a templated message."""
         self._setup_notify()
         self.hass.states.set('sensor.temperature', 10)
-        notify.send_message(self.hass, '{{ states.sensor.temperature.state }}',
+        common.send_message(self.hass, '{{ states.sensor.temperature.state }}',
                             '{{ states.sensor.temperature.name }}')
         self.hass.block_till_done()
         last_event = self.events[-1]
@@ -97,7 +99,7 @@ class TestNotifyDemo(unittest.TestCase):
     def test_method_forwards_correct_data(self):
         """Test that all data from the service gets forwarded to service."""
         self._setup_notify()
-        notify.send_message(self.hass, 'my message', 'my title',
+        common.send_message(self.hass, 'my message', 'my title',
                             {'hello': 'world'})
         self.hass.block_till_done()
         self.assertTrue(len(self.events) == 1)

@@ -322,7 +322,7 @@ def mock_component(hass, component):
 def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
-    registry.entities = mock_entries or {}
+    registry.entities = mock_entries or OrderedDict()
 
     async def _get_reg():
         return registry
@@ -550,14 +550,16 @@ class MockConfigEntry(config_entries.ConfigEntry):
 
     def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
                  source=config_entries.SOURCE_USER, title='Mock Title',
-                 state=None):
+                 state=None,
+                 connection_class=config_entries.CONN_CLASS_UNKNOWN):
         """Initialize a mock config entry."""
         kwargs = {
             'entry_id': entry_id or 'mock-id',
             'domain': domain,
             'data': data or {},
             'version': version,
-            'title': title
+            'title': title,
+            'connection_class': connection_class,
         }
         if source is not None:
             kwargs['source'] = source
@@ -607,16 +609,18 @@ def patch_yaml_files(files_dict, endswith=True):
     return patch.object(yaml, 'open', mock_open_f, create=True)
 
 
-def mock_coro(return_value=None):
-    """Return a coro that returns a value."""
-    return mock_coro_func(return_value)()
+def mock_coro(return_value=None, exception=None):
+    """Return a coro that returns a value or raise an exception."""
+    return mock_coro_func(return_value, exception)()
 
 
-def mock_coro_func(return_value=None):
+def mock_coro_func(return_value=None, exception=None):
     """Return a method to create a coro function that returns a value."""
     @asyncio.coroutine
     def coro(*args, **kwargs):
         """Fake coroutine."""
+        if exception:
+            raise exception
         return return_value
 
     return coro
@@ -760,6 +764,11 @@ class MockEntity(entity.Entity):
     def available(self):
         """Return True if entity is available."""
         return self._handle('available')
+
+    @property
+    def device_info(self):
+        """Info how it links to a device."""
+        return self._handle('device_info')
 
     def _handle(self, attr):
         """Return attribute value."""
