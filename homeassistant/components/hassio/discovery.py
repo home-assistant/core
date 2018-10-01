@@ -43,7 +43,7 @@ def async_setup_discovery(hass, hassio, config):
             return
 
         for discovery in data[ATTR_DISCOVERY]:
-            hass.async_create_taks(
+            hass.async_create_task(
                 hassio_discovery.async_process_new(discovery))
 
     hass.bus.async_listen_once(
