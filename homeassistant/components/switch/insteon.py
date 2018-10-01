@@ -4,7 +4,6 @@ Support for INSTEON dimmers via PowerLinc Modem.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.insteon/
 """
-import asyncio
 import logging
 
 from homeassistant.components.insteon import InsteonEntity
@@ -15,9 +14,8 @@ DEPENDENCIES = ['insteon']
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the INSTEON device class for the hass platform."""
     insteon_modem = hass.data['insteon'].get('modem')
 
@@ -48,13 +46,11 @@ class InsteonSwitchDevice(InsteonEntity, SwitchDevice):
         """Return the boolean response if the node is on."""
         return bool(self._insteon_device_state.value)
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn device on."""
         self._insteon_device_state.on()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn device off."""
         self._insteon_device_state.off()
 
@@ -67,12 +63,10 @@ class InsteonOpenClosedDevice(InsteonEntity, SwitchDevice):
         """Return the boolean response if the node is on."""
         return bool(self._insteon_device_state.value)
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn device on."""
         self._insteon_device_state.open()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn device off."""
         self._insteon_device_state.close()

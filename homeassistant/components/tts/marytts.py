@@ -45,8 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_get_engine(hass, config):
+async def async_get_engine(hass, config):
     """Set up MaryTTS speech component."""
     return MaryTTSProvider(hass, config)
 
@@ -74,8 +73,7 @@ class MaryTTSProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    @asyncio.coroutine
-    def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from MaryTTS."""
         websession = async_get_clientsession(self.hass)
 
@@ -98,13 +96,13 @@ class MaryTTSProvider(Provider):
                     'LOCALE': actual_language
                 }
 
-                request = yield from websession.get(url, params=url_param)
+                request = await websession.get(url, params=url_param)
 
                 if request.status != 200:
                     _LOGGER.error("Error %d on load url %s",
                                   request.status, request.url)
                     return (None, None)
-                data = yield from request.read()
+                data = await request.read()
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for MaryTTS API")
