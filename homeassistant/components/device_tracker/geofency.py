@@ -67,7 +67,7 @@ class GeofencyView(HomeAssistantView):
             return ("Invalid data", HTTP_UNPROCESSABLE_ENTITY)
 
         if self._is_mobile_beacon(data):
-            return (await self._set_location(hass, data, None))
+            return await self._set_location(hass, data, None)
         if data['entry'] == LOCATION_ENTRY:
             location_name = data['name']
         else:
@@ -76,7 +76,7 @@ class GeofencyView(HomeAssistantView):
                 data[ATTR_LATITUDE] = data[ATTR_CURRENT_LATITUDE]
                 data[ATTR_LONGITUDE] = data[ATTR_CURRENT_LONGITUDE]
 
-        return (await self._set_location(hass, data, location_name))
+        return await self._set_location(hass, data, location_name)
 
     @staticmethod
     def _validate_data(data):

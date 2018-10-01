@@ -162,7 +162,7 @@ async def async_setup(hass, config):
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
-    if not (await hassio.is_connected()):
+    if not await hassio.is_connected():
         _LOGGER.error("Not connected with Hass.io")
         return False
 

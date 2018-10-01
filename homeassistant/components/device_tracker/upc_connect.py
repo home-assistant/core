@@ -122,7 +122,7 @@ class UPCDeviceScanner(DeviceScanner):
 
                 # Load data, store token for next request
                 self.token = response.cookies['sessionToken'].value
-                return (await response.text())
+                return await response.text()
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error on %s", function)
