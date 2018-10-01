@@ -37,7 +37,7 @@ async def make_sensor(discovery_info):
     from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
     in_clusters = discovery_info['in_clusters']
     if 'sub_component' in discovery_info:
-        sensor = globals()[discovery_info['sub_component']](**discovery_info)
+        sensor = discovery_info['sub_component'](**discovery_info)
     elif RelativeHumidity.cluster_id in in_clusters:
         sensor = RelativeHumiditySensor(**discovery_info)
     elif TemperatureMeasurement.cluster_id in in_clusters:

@@ -15,6 +15,7 @@ def populate_data():
     """
     from zigpy import zcl, quirks
     from zigpy.profiles import PROFILES, zha, zll
+    from homeassistant.components.sensor import zha as sensor_zha
 
     DEVICE_CLASS[zha.PROFILE_ID] = {
         zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
@@ -62,7 +63,7 @@ def populate_data():
     # A map of device/cluster to component/sub-component
     CUSTOM_CLUSTER_MAPPINGS.update({
         (quirks.smartthings.SmartthingsTemperatureHumiditySensor, 64581):
-            ('sensor', 'RelativeHumiditySensor')
+            ('sensor', sensor_zha.RelativeHumiditySensor)
     })
 
     # A map of hass components to all Zigbee clusters it could use
