@@ -4,6 +4,7 @@ import voluptuous as vol
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.core import callback
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.decorators import require_owner
 
 
 WS_TYPE_CREATE = 'config/auth_provider/homeassistant/create'
@@ -55,7 +56,7 @@ def _get_provider(hass):
 
 
 @callback
-@websocket_api.require_owner
+@require_owner
 def websocket_create(hass, connection, msg):
     """Create credentials and attach to a user."""
     async def create_creds():
@@ -96,7 +97,7 @@ def websocket_create(hass, connection, msg):
 
 
 @callback
-@websocket_api.require_owner
+@require_owner
 def websocket_delete(hass, connection, msg):
     """Delete username and related credential."""
     async def delete_creds():
