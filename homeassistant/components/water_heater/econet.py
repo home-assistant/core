@@ -229,12 +229,11 @@ class EcoNetWaterHeater(WaterHeaterDevice):
 
     def turn_away_mode_on(self):
         """Set a vacation for 1 year."""
-        self.add_vacation(None, (datetime.datetime.now() + datetime.timedelta(days=365)).timestamp())
+        self.add_vacation(None,
+                          (datetime.datetime.now() +
+                           datetime.timedelta(days=365)).timestamp())
 
     def turn_away_mode_off(self):
         """Remove all vacations."""
         for vacation in self.water_heater.get_vacations():
             vacation.delete()
-
-
-

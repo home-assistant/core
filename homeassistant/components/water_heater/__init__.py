@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
-    PRECISION_TENTHS, TEMP_FAHRENHEIT )
+    PRECISION_TENTHS, TEMP_FAHRENHEIT)
 
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140
@@ -92,6 +92,7 @@ def set_away_mode(hass, away_mode, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
 
+
 @bind_hass
 def set_temperature(hass, temperature=None, entity_id=None,
                     operation_mode=None):
@@ -105,6 +106,7 @@ def set_temperature(hass, temperature=None, entity_id=None,
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)
     hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, kwargs)
+
 
 @bind_hass
 def set_operation_mode(hass, operation_mode, entity_id=None):

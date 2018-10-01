@@ -78,7 +78,8 @@ class TestDemoWaterHeater(unittest.TestCase):
         state = self.hass.states.get(ENTITY_WATER_HEATER)
         self.assertEqual("eco", state.attributes.get('operation_mode'))
         self.assertEqual("eco", state.state)
-        water_heater.set_operation_mode(self.hass, "electric", ENTITY_WATER_HEATER)
+        water_heater.set_operation_mode(self.hass, "electric",
+                                        ENTITY_WATER_HEATER)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_WATER_HEATER)
         self.assertEqual("electric", state.attributes.get('operation_mode'))

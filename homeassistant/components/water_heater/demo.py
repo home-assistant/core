@@ -9,7 +9,7 @@ from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_AWAY_MODE,
     SUPPORT_OPERATION_MODE)
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
+from homeassistant.const import TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
 SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                         SUPPORT_AWAY_MODE)
@@ -18,7 +18,8 @@ SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo water_heater devices."""
     add_entities([
-        DemoWaterHeater('Demo Water Heater', 119, TEMP_FAHRENHEIT, False, 'eco')
+        DemoWaterHeater('Demo Water Heater', 119,
+                        TEMP_FAHRENHEIT, False, 'eco')
 
     ])
 
@@ -42,7 +43,8 @@ class DemoWaterHeater(WaterHeaterDevice):
         self._unit_of_measurement = unit_of_measurement
         self._away = away
         self._current_operation = current_operation
-        self._operation_list = ['eco', 'electric', 'performance', 'high_demand', 'heat_pump', 'gas']
+        self._operation_list = ['eco', 'electric', 'performance',
+                                'high_demand', 'heat_pump', 'gas']
 
     @property
     def supported_features(self):
