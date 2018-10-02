@@ -3,6 +3,8 @@ import logging
 from typing import Union, List, Dict
 
 import json
+import os
+from os import O_WRONLY, O_CREAT, O_TRUNC
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -44,10 +46,14 @@ def save_json(filename: str, data: Union[List, Dict],
 
     Returns True on success.
     """
+    tmp_filename = filename + "__TEMP__"
     try:
         json_data = json.dumps(data, sort_keys=True, indent=4)
-        with open(filename, 'w', encoding='utf-8') as fdesc:
+        mode = 0o600 if private else 0o644
+        with open(os.open(tmp_filename, O_WRONLY | O_CREAT | O_TRUNC, mode),
+                  'w', encoding='utf-8') as fdesc:
             fdesc.write(json_data)
+        os.replace(tmp_filename, filename)
     except TypeError as error:
         _LOGGER.exception('Failed to serialize to JSON: %s',
                           filename)
@@ -56,3 +62,11 @@ def save_json(filename: str, data: Union[List, Dict],
         _LOGGER.exception('Saving JSON file failed: %s',
                           filename)
         raise WriteError(error)
+    finally:
+        if os.path.exists(tmp_filename):
+            try:
+                os.remove(tmp_filename)
+            except OSError as err:
+                # If we are cleaning up then something else went wrong, so
+                # we should suppress likely follow-on errors in the cleanup
+                _LOGGER.error("JSON replacement cleanup failed: %s", err)

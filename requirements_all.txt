@@ -139,6 +139,9 @@ apcaccess==0.0.13
 # homeassistant.components.notify.apns
 apns2==0.3.0
 
+# homeassistant.components.aqualogic
+aqualogic==1.0
+
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
@@ -353,7 +356,6 @@ fastdotcom==0.0.3
 fedexdeliverymanager==1.0.6
 
 # homeassistant.components.feedreader
-# homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
 # homeassistant.components.sensor.fints
@@ -394,6 +396,9 @@ geizhals==0.0.7
 # homeassistant.components.geo_location.geo_json_events
 geojson_client==0.1
 
+# homeassistant.components.sensor.geo_rss_events
+georss_client==0.1
+
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.7
 
@@ -429,9 +434,6 @@ habitipy==0.2.0
 
 # homeassistant.components.hangouts
 hangups==0.4.5
-
-# homeassistant.components.sensor.geo_rss_events
-haversine==0.4.5
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -909,7 +911,7 @@ pyhik==0.1.8
 pyhiveapi==0.2.14
 
 # homeassistant.components.homematic
-pyhomematic==0.1.49
+pyhomematic==0.1.50
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.2.2
@@ -997,7 +999,7 @@ pymysensors==0.17.0
 pynello==1.5.1
 
 # homeassistant.components.device_tracker.netgear
-pynetgear==0.4.1
+pynetgear==0.4.2
 
 # homeassistant.components.switch.netio
 pynetio==0.1.6
