@@ -116,7 +116,7 @@ class Shabbat(Entity):
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
-        """update our sensor state."""
+        """Update our sensor state."""
         self.datetoday = datetime.date.today()
         self.fulltoday = datetime.datetime.today()
         if self.type.__eq__('in'):
@@ -152,7 +152,8 @@ class Shabbat(Entity):
     def set_days(self):
         weekday = self.set_friday(datetime.date.today().isoweekday())
         self.friday = datetime.date.today()+datetime.timedelta(days=weekday)
-        self.saturday = datetime.date.today()+datetime.timedelta(days=weekday+1)
+        self.saturday = datetime.date.today()+datetime.timedelta(
+            days=weekday+1)
 
     def set_friday(self, day):
         switcher = {
@@ -219,10 +220,14 @@ class Shabbat(Entity):
     # check if is shabbat now / return true or false
     def is_shabbat(self):
         if self.shabbatin is not None and self.shabbatout is not None:
-            is_in = datetime.datetime.strptime(self.shabbatin, '%Y-%m-%dT%H:%M:%S%z')
-            is_out = datetime.datetime.strptime(self.shabbatout, '%Y-%m-%dT%H:%M:%S%z')
-            is_in = is_in - datetime.timedelta(minutes=int(self._time_before))
-            is_out = is_out + datetime.timedelta(minutes=int(self._time_after))
+            is_in = datetime.datetime.strptime(
+                self.shabbatin, '%Y-%m-%dT%H:%M:%S%z')
+            is_out = datetime.datetime.strptime(
+                self.shabbatout, '%Y-%m-%dT%H:%M:%S%z')
+            is_in = is_in - datetime.timedelta(
+                minutes=int(self._time_before))
+            is_out = is_out + datetime.timedelta(
+                minutes=int(self._time_after))
             if is_in.replace(tzinfo=None) < self.fulltoday < is_out.replace(tzinfo=None):
                 return 'True'
             else:
