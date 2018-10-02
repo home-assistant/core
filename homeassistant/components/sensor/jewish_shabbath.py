@@ -162,6 +162,7 @@ class Shabbat(Entity):
         self.friday = datetime.date.today()+datetime.timedelta(days=weekday)
         self.saturday = datetime.date.today()+datetime.timedelta(
             days=weekday+1)
+    
     @classmethod
     def set_friday(cls, day):
         """Set friday day."""
