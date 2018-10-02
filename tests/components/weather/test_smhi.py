@@ -1,4 +1,4 @@
-"""Test the smhi weather entity."""
+"""Test for the smhi weather entity."""
 import asyncio
 import logging
 from datetime import datetime, timezone

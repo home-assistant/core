@@ -1,4 +1,4 @@
-"""Tests for Philips Hue config flow."""
+"""Tests for SMHI config flow."""
 from unittest.mock import Mock, patch
 
 from smhi.smhi_lib import Smhi as SmhiApi, SmhiForecastException
