@@ -89,7 +89,7 @@ class GoogleCalendarData:
         params['timeMax'] = end_date.isoformat('T')
 
         events = await hass.async_add_job(service.events)
-        result = await hass.async_create_task(events.list(**params).execute)
+        result = await hass.async_add_job(events.list(**params).execute)
 
         items = result.get('items', [])
         event_list = []
