@@ -1469,6 +1469,9 @@ toonlib==1.0.2
 # homeassistant.components.alarm_control_panel.totalconnect
 total_connect_client==0.18
 
+# homeassistant.components.tplink_lte
+tp-connected==0.0.4
+
 # homeassistant.components.device_tracker.tplink
 tplink==0.2.1
 

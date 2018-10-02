@@ -328,6 +328,9 @@ omit =
     homeassistant/components/toon.py
     homeassistant/components/*/toon.py
 
+    homeassistant/components/tplink_lte.py
+    homeassistant/components/*/tplink_lte.py
+
     homeassistant/components/tradfri.py
     homeassistant/components/*/tradfri.py
 
