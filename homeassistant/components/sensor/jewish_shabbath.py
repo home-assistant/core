@@ -67,10 +67,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(entities)
 
-
-# pylint: disable=abstract-method
-
 class Shabbat(Entity):
+    """Create shabbat sensor."""
     shabbat_db = None
     hebrew_date_db = None
     shabbatin = None
@@ -135,6 +133,7 @@ class Shabbat(Entity):
 
     @Throttle(datetime.timedelta(minutes=5))
     def update_db(self):
+        """Update the db."""
         self.set_days()
         with urllib.request.urlopen(
             "https://www.hebcal.com/hebcal/?v=1&cfg=fc&start="
@@ -153,12 +152,14 @@ class Shabbat(Entity):
         self.get_full_time_out()
 
     def set_days(self):
+        """Set the friday and saturday"""
         weekday = self.set_friday(datetime.date.today().isoweekday())
         self.friday = datetime.date.today()+datetime.timedelta(days=weekday)
         self.saturday = datetime.date.today()+datetime.timedelta(
             days=weekday+1)
 
     def set_friday(self, day):
+        """Set friday day."""
         switcher = {
             7: 5,
             1: 5,
@@ -172,6 +173,7 @@ class Shabbat(Entity):
 
     # get shabbat entrace
     def get_time_in(self):
+        """Get shabbat entrace."""
         result = ''
         for extract_data in self.shabbat_db:
             if extract_data['className'] == "candles":
@@ -182,6 +184,7 @@ class Shabbat(Entity):
 
     # get shabbat time exit
     def get_time_out(self):
+        """Get shabbat time exit."""
         result = ''
         for extract_data in self.shabbat_db:
             if extract_data['className'] == "havdalah":
@@ -192,6 +195,7 @@ class Shabbat(Entity):
 
     # get full time entrace shabbat for check if is shabbat now
     def get_full_time_in(self):
+        """Get full time entrace shabbat for check if is shabbat now."""
         for extract_data in self.shabbat_db:
             if extract_data['className'] == "candles":
                 self.shabbatin = extract_data['start']
@@ -200,6 +204,7 @@ class Shabbat(Entity):
 
     # get full time exit shabbat for check if is shabbat now
     def get_full_time_out(self):
+        """Get full time exit shabbat for check if is shabbat now"""
         for extract_data in self.shabbat_db:
             if extract_data['className'] == "havdalah":
                 self.shabbatout = extract_data['start']
@@ -208,6 +213,7 @@ class Shabbat(Entity):
 
     # get parashat hashavo'h
     def get_parasha(self):
+        """Get parashat hashavo'h"""
         result = 'שבת מיוחדת'
         get_shabbat_name = None
         for extract_data in self.shabbat_db:
@@ -222,6 +228,7 @@ class Shabbat(Entity):
 
     # check if is shabbat now / return true or false
     def is_shabbat(self):
+        """Check if is shabbat now / return true or false."""
         if self.shabbatin is not None and self.shabbatout is not None:
             is_in = datetime.datetime.strptime(
                 self.shabbatin, '%Y-%m-%dT%H:%M:%S%z')
@@ -240,10 +247,12 @@ class Shabbat(Entity):
 
     # convert to hebrew date
     def get_hebrew_date(self):
+        """Convert to hebrew date."""
         return self.hebrew_date_db['hebrew']
 
     # check if the time is correct
     def is_time_format(self, input):
+        """Check if the time is correct."""
         try:
             time.strptime(input, '%H:%M')
             return True
