@@ -10,7 +10,6 @@ import functools as ft
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.entity_component import EntityComponent
@@ -78,45 +77,6 @@ SET_OPERATION_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_OPERATION_MODE): cv.string,
 })
-
-
-@bind_hass
-def set_away_mode(hass, away_mode, entity_id=None):
-    """Turn all or specified water_heater devices away mode on."""
-    data = {
-        ATTR_AWAY_MODE: away_mode
-    }
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
-
-
-@bind_hass
-def set_temperature(hass, temperature=None, entity_id=None,
-                    operation_mode=None):
-    """Set new target temperature."""
-    kwargs = {
-        key: value for key, value in [
-            (ATTR_TEMPERATURE, temperature),
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OPERATION_MODE, operation_mode)
-        ] if value is not None
-    }
-    _LOGGER.debug("set_temperature start data=%s", kwargs)
-    hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, kwargs)
-
-
-@bind_hass
-def set_operation_mode(hass, operation_mode, entity_id=None):
-    """Set new target operation mode."""
-    data = {ATTR_OPERATION_MODE: operation_mode}
-
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_OPERATION_MODE, data)
 
 
 async def async_setup(hass, config):
