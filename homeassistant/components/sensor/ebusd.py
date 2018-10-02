@@ -13,8 +13,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_MONITORED_CONDITIONS,
+    CONF_NAME, CONF_HOST, CONF_PORT, CONF_MONITORED_VARIABLES,
     STATE_ON, STATE_OFF)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -106,7 +107,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+    vol.Optional(CONF_MONITORED_VARIABLES, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
@@ -126,17 +127,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sock.close()
 
         dev = []
-        for variable in config[CONF_MONITORED_CONDITIONS]:
+        for variable in config[CONF_MONITORED_VARIABLES]:
             dev.append(Ebusd(data, variable, name))
 
         add_devices(dev)
         hass.services.register('sensor', 'ebusd_write', data.write)
     except socket.timeout:
-        _LOGGER.error("socket timeout error")
-        return
+        raise PlatformNotReady
     except socket.error:
-        _LOGGER.error("socket error")
-        return
+        raise PlatformNotReady
 
 
 def timer_format(string):
@@ -234,18 +233,20 @@ class Ebusd(Entity):
         """Fetch new state data for the sensor."""
         try:
             self.data.update(self._name)
-            if self._name in self.data.value:
-                if self._type == 0:
-                    self._state = format(
-                        float(self.data.value[self._name]), '.1f')
-                elif self._type == 1:
-                    self._state = timer_format(self.data.value[self._name])
-                elif self._type == 2:
-                    if self.data.value[self._name] == 1:
-                        self._state = STATE_ON
-                    else:
-                        self._state = STATE_OFF
-                elif self._type == 3:
-                    self._state = self.data.value[self._name]
+            if self._name not in self.data.value:
+                return
+
+            if self._type == 0:
+                self._state = format(
+                    float(self.data.value[self._name]), '.1f')
+            elif self._type == 1:
+                self._state = timer_format(self.data.value[self._name])
+            elif self._type == 2:
+                if self.data.value[self._name] == 1:
+                    self._state = STATE_ON
+                else:
+                    self._state = STATE_OFF
+            elif self._type == 3:
+                self._state = self.data.value[self._name]
         except RuntimeError:
             _LOGGER.debug("EbusdData.update exception")
