@@ -132,10 +132,10 @@ def setup(hass, config):
                            SERVICE_TRIGGER,
                            trigger_camera,
                            schema=SERVICE_TRIGGER_SCHEMA)
-    hass.services.async_register(DOMAIN,
-                                 SERVICE_SAVE_VIDEO,
-                                 async_save_video,
-                                 schema=SERVICE_SAVE_VIDEO_SCHEMA)
+    hass.services.register(DOMAIN,
+                           SERVICE_SAVE_VIDEO,
+                           async_save_video,
+                           schema=SERVICE_SAVE_VIDEO_SCHEMA)
     return True
 
 
