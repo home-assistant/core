@@ -55,7 +55,7 @@ CONFIG_ENTRY_IS_SETUP = 'mqtt_config_entry_is_setup'
 MQTT_DISCOVERY_UPDATED = 'mqtt_discovery_updated_{}'
 MQTT_DISCOVERY_NEW = 'mqtt_discovery_new_{}_{}'
 
-TOPIC_PREFIX = '~'
+TOPIC_BASE = '~'
 
 ABBREVIATIONS = {
     'aux_cmd_t': 'aux_command_topic',
@@ -195,11 +195,13 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
             key = ABBREVIATIONS.get(key, key)
             payload[key] = payload.pop(abbreviated_key)
 
-        if TOPIC_PREFIX in payload:
-            prefix = payload[TOPIC_PREFIX]
+        if TOPIC_BASE in payload:
+            base = payload[TOPIC_BASE]
             for key, value in payload.items():
-                if value[0] == TOPIC_PREFIX and key.endswith('_topic'):
-                    payload[key] = "{}{}".format(prefix, value[1:])
+                if key.endswith('_topic'):
+                    value = value.split('/')
+                    value = [x if x != TOPIC_BASE else base for x in value]
+                    payload[key] = '/'.join(value)
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = '_'.join((node_id, object_id)) if node_id else object_id
