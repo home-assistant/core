@@ -264,3 +264,4 @@ class Shabbat(Entity):
             return True
         except ValueError:
             return False
+        
