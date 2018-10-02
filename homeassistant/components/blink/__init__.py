@@ -125,7 +125,7 @@ def setup(hass, config):
 
     async def async_save_video(call):
         """Call save video service handler."""
-        result = await async_handle_save_video_service(hass, call)
+        await async_handle_save_video_service(hass, call)
 
     hass.services.register(DOMAIN, SERVICE_REFRESH, blink_refresh)
     hass.services.register(DOMAIN,
