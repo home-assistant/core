@@ -24,7 +24,7 @@ def set_loop() -> None:
     import asyncio
 
     if sys.platform == 'win32':
-        asyncio.set_event_loop(asyncio.ProactorEventLoop())
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     else:
         try:
             import uvloop
