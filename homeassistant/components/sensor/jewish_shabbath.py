@@ -1,5 +1,6 @@
 """
 Platform to get Shabbath Times And Shabbath information for Home Assistant.
+Document will come soon...
 """
 import logging
 import urllib
@@ -67,8 +68,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(entities)
 
-
-# pylint: disable=abstract-method
 
 class Shabbat(Entity):
     """Create shabbat sensor."""
@@ -156,7 +155,7 @@ class Shabbat(Entity):
         self.get_full_time_out()
 
     def set_days(self):
-        """Set the friday and saturday"""
+        """Set the friday and saturday."""
         weekday = self.set_friday(datetime.date.today().isoweekday())
         self.friday = datetime.date.today()+datetime.timedelta(days=weekday)
         self.saturday = datetime.date.today()+datetime.timedelta(
@@ -208,7 +207,7 @@ class Shabbat(Entity):
 
     # get full time exit shabbat for check if is shabbat now
     def get_full_time_out(self):
-        """Get full time exit shabbat for check if is shabbat now"""
+        """Get full time exit shabbat for check if is shabbat now."""
         for extract_data in self.shabbat_db:
             if extract_data['className'] == "havdalah":
                 self.shabbatout = extract_data['start']
@@ -217,7 +216,7 @@ class Shabbat(Entity):
 
     # get parashat hashavo'h
     def get_parasha(self):
-        """Get parashat hashavo'h"""
+        """Get parashat hashavo'h."""
         result = 'שבת מיוחדת'
         get_shabbat_name = None
         for extract_data in self.shabbat_db:
