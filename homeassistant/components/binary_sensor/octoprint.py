@@ -7,12 +7,8 @@ https://home-assistant.io/components/binary_sensor.octoprint/
 import logging
 
 import requests
-import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_MONITORED_CONDITIONS
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,22 +22,12 @@ SENSOR_TYPES = {
     'Printing Error': ['printer', 'state', 'error', None]
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""
-    name = config.get(CONF_NAME)
-    if name not in hass.data[DOMAIN]:
-        raise vol.Invalid('Please configure the octoprint component for this '
-                          'printer first')
+    name = discovery_info['name']
+    monitored_conditions = list(SENSOR_TYPES)
     octoprint_api = hass.data[DOMAIN][name]
-    monitored_conditions = config.get(
-        CONF_MONITORED_CONDITIONS, SENSOR_TYPES.keys())
 
     devices = []
     for octo_type in monitored_conditions:

@@ -14,6 +14,8 @@ from aiohttp.hdrs import CONTENT_TYPE
 from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON,
                                  CONF_NAME, CONF_PORT, CONF_SSL)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.util import slugify as util_slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,8 +24,20 @@ CONF_NUMBER_OF_TOOLS = 'number_of_tools'
 CONF_BED = 'bed'
 DEFAULT_NAME = 'OctoPrint'
 
+
+def has_all_unique_names(value):
+    """Validate that printers have an unique name."""
+    names = []
+    for printer in value:
+        name = printer['name'] if 'name' in printer else DEFAULT_NAME
+        names.append(util_slugify(name))
+    schema = vol.Schema(vol.Unique())
+    schema(names)
+    return value
+
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, has_all_unique_names, [vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
@@ -57,6 +71,8 @@ def setup(hass, config):
         except requests.exceptions.RequestException as conn_err:
             _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
 
+        load_platform(hass, 'sensor', DOMAIN, {'name': name})
+        load_platform(hass, 'binary_sensor', DOMAIN, {'name': name})
     return True
 
 

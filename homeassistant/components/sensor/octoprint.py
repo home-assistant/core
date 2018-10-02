@@ -7,13 +7,9 @@ https://home-assistant.io/components/sensor.octoprint/
 import logging
 
 import requests
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,21 +27,12 @@ SENSOR_TYPES = {
     'Time Elapsed': ['job', 'progress', 'printTime', 'seconds'],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint sensors."""
-    name = config.get(CONF_NAME)
-    if name not in hass.data[DOMAIN]:
-        raise vol.Invalid('Please configure the octoprint component for this '
-                          'printer first')
+    name = discovery_info['name']
+    monitored_conditions = list(SENSOR_TYPES)
     octoprint_api = hass.data[DOMAIN][name]
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
     tools = octoprint_api.get_tools()
 
     if "Temperatures" in monitored_conditions:
