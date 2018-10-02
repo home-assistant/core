@@ -117,13 +117,13 @@ class LogbookView(HomeAssistantView):
 
     url = '/api/logbook'
     name = 'api:logbook'
-    extra_urls = ['/api/logbook/{datetime}']
+    extra_urls = ['/api/logbook/{datetime}', '/api/logbook/{datetime}/{entity_id}']
 
     def __init__(self, config):
         """Initialize the logbook view."""
         self.config = config
 
-    async def get(self, request, datetime=None):
+    async def get(self, request, datetime=None, entity_id=None):
         """Retrieve logbook entries."""
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
@@ -140,7 +140,7 @@ class LogbookView(HomeAssistantView):
         def json_events():
             """Fetch events and generate JSON."""
             return self.json(list(
-                _get_events(hass, self.config, start_day, end_day)))
+                _get_events(hass, self.config, start_day, end_day, entity_id)))
 
         return await hass.async_add_job(json_events)
 
@@ -287,7 +287,7 @@ def humanify(hass, events):
                 }
 
 
-def _get_events(hass, config, start_day, end_day):
+def _get_events(hass, config, start_day, end_day, entity_id=None):
     """Get events for a period of time."""
     from homeassistant.components.recorder.models import Events, States
     from homeassistant.components.recorder.util import (
@@ -301,6 +301,10 @@ def _get_events(hass, config, start_day, end_day):
                     & (Events.time_fired < end_day)) \
             .filter((States.last_updated == States.last_changed)
                     | (States.state_id.is_(None)))
+
+        if entity_id is not None:
+            query = query.filter(States.entity_id == entity_id.lower())
+
         events = execute(query)
     return humanify(hass, _exclude_events(events, config))
 
