@@ -93,7 +93,7 @@ class DemoWaterHeater(WaterHeaterDevice):
         self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
-        """Set new target temperature."""
+        """Set new operation mode."""
         self._current_operation = operation_mode
         self.schedule_update_ha_state()
 
