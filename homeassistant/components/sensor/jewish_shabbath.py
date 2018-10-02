@@ -240,10 +240,8 @@ class Shabbat(Entity):
                 minutes=int(self._time_after))
             if is_in.replace(tzinfo=None) < self.fulltoday < is_out.replace(tzinfo=None):
                 return 'True'
-            else:
-                return 'False'
-        else:
             return 'False'
+        return 'False'
 
     # convert to hebrew date
     def get_hebrew_date(self):
