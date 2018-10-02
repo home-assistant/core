@@ -2,6 +2,7 @@
 import concurrent.futures
 import threading
 import logging
+import sys
 from asyncio import coroutines
 from asyncio.events import AbstractEventLoop
 from asyncio.futures import Future
@@ -22,7 +23,10 @@ except AttributeError:
 
     def asyncio_run(main: Awaitable[_T], *, debug: bool = False) -> _T:
         """Minimal re-implementation of asyncio.run (since 3.7)."""
-        loop = asyncio.new_event_loop()
+        if sys.platform == 'win32':
+            loop = asyncio.ProactorEventLoop()
+        else:
+            loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.set_debug(debug)
         try:
