@@ -48,6 +48,8 @@ SENSOR_TYPES = {
         ['Hc1SummerTempLimit', '°C', 'mdi:weather-sunny', 0],
     'HolidayTemperature':
         ['HolidayTemp', '°C', 'mdi:thermometer', 0],
+    'HWTemperature':
+        ['HwcTemp', '°C', 'mdi:thermometer', 0],
     'HWTemperatureDesired':
         ['HwcTempDesired', '°C', 'mdi:thermometer', 0],
     'HWTimerMonday':
