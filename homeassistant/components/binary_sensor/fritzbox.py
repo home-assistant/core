@@ -44,11 +44,6 @@ class FritzboxBinarySensor(BinarySensorDevice):
         return self._device.name
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def device_class(self):
         """Return the class of this sensor."""
         return self._sensor_type
