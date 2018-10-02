@@ -26,7 +26,7 @@ async def test_hassio_discovery_startup(hass, hassio_client,
         })
 
     with patch('homeassistant.components.mqtt.'
-               'config_flow.async_step_hassio') as mock_mqtt:
+               'config_flow.FlowHandler.async_step_hassio') as mock_mqtt:
         await hass.async_start()
 
         assert aioclient_mock.call_count == 5
