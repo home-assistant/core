@@ -1,7 +1,6 @@
 """HTTP views to interact with the device registry."""
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.components import websocket_api
 
