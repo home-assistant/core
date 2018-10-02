@@ -91,7 +91,7 @@ async def process_wrong_login(request):
     msg = ('Login attempt or request with invalid authentication '
            'from {}. Method: {}, Path: {}'.format(remote_addr,
                                                   request.method,
-                                                  request.raw_path))
+                                                  request.path))
     _LOGGER.warning(msg)
 
     hass = request.app['hass']
