@@ -78,7 +78,8 @@ class TestGeoJsonPlatform(unittest.TestCase):
             council_area='Council Area 1', status='Status 1',
             entry_type='Type 1', size='Size 1', responsible_agency='Agency 1')
         mock_entry_2 = self._generate_mock_feed_entry('2345', 'Title 2', 20.5,
-                                                      (-31.1, 150.1))
+                                                      (-31.1, 150.1),
+                                                      fire=False)
         mock_entry_3 = self._generate_mock_feed_entry('3456', 'Title 3', 25.5,
                                                       (-31.2, 150.2))
         mock_entry_4 = self._generate_mock_feed_entry('4567', 'Title 4', 12.5,
@@ -125,7 +126,7 @@ class TestGeoJsonPlatform(unittest.TestCase):
                 assert state.attributes == {
                     ATTR_EXTERNAL_ID: "2345", ATTR_LATITUDE: -31.1,
                     ATTR_LONGITUDE: 150.1, ATTR_FRIENDLY_NAME: "Title 2",
-                    ATTR_FIRE: True,
+                    ATTR_FIRE: False,
                     ATTR_UNIT_OF_MEASUREMENT: "km"}
                 self.assertAlmostEqual(float(state.state), 20.5)
 

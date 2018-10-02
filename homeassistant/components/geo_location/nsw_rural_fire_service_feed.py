@@ -221,25 +221,19 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
-        if self.external_id:
-            attributes[ATTR_EXTERNAL_ID] = self.external_id
-        if self._category:
-            attributes[ATTR_CATEGORY] = self._category
-        if self._location:
-            attributes[ATTR_LOCATION] = self._location
-        if self._attribution:
-            attributes[ATTR_ATTRIBUTION] = self._attribution
-        if self._publication_date:
-            attributes[ATTR_PUBLICATION_DATE] = self._publication_date
-        if self._council_area:
-            attributes[ATTR_COUNCIL_AREA] = self._council_area
-        if self._status:
-            attributes[ATTR_STATUS] = self._status
-        if self._type:
-            attributes[ATTR_TYPE] = self._type
-        attributes[ATTR_FIRE] = self._fire
-        if self._size:
-            attributes[ATTR_SIZE] = self._size
-        if self._responsible_agency:
-            attributes[ATTR_RESPONSIBLE_AGENCY] = self._responsible_agency
+        for key, value in (
+                (ATTR_EXTERNAL_ID, self.external_id),
+                (ATTR_CATEGORY, self._category),
+                (ATTR_LOCATION, self._location),
+                (ATTR_ATTRIBUTION, self._attribution),
+                (ATTR_PUBLICATION_DATE, self._publication_date),
+                (ATTR_COUNCIL_AREA, self._council_area),
+                (ATTR_STATUS, self._status),
+                (ATTR_TYPE, self._type),
+                (ATTR_FIRE, self._fire),
+                (ATTR_SIZE, self._size),
+                (ATTR_RESPONSIBLE_AGENCY, self._responsible_agency),
+        ):
+            if value or isinstance(value, bool):
+                attributes[key] = value
         return attributes
