@@ -48,3 +48,15 @@ def hassio_handler(hass, aioclient_mock):
 
     with patch.dict(os.environ, {'HASSIO_TOKEN': HASSIO_TOKEN}):
         yield HassIO(hass.loop, websession, "127.0.0.1")
+
+
+@pytest.fixture
+def mock_mqtt():
+    """Mock the try connection method."""
+    with patch(
+        'homeassistant.components.mqtt.config_flow.try_connection'
+    ), patch(
+        'homeassistant.components.mqtt.MQTT.async_connect',
+        return_value=mock_coro(True)
+    ):
+        yield
