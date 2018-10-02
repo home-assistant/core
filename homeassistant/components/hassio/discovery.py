@@ -67,14 +67,14 @@ class HassIODiscovery(HomeAssistantView):
             _LOGGER.error("Can't read discovey data: %s", err)
             raise HTTPServiceUnavailable() from None
 
-        await self.async_process_new(self, data)
+        await self.async_process_new(data)
         return web.Response()
 
     async def delete(self, request, uuid):
         """Handle remove discovery requests."""
         data = request.json()
 
-        await self.async_process_del(self, data)
+        await self.async_process_del(data)
         return web.Response()
 
     async def async_process_new(self, data):
