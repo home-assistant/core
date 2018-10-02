@@ -1,3 +1,6 @@
+"""
+Platform to get Shabbath Times And Shabbath information for Home Assistant.
+"""
 import logging
 import urllib
 import json
