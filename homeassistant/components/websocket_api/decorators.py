@@ -10,22 +10,24 @@ from . import messages
 _LOGGER = logging.getLogger(__name__)
 
 
+async def _handle_async_response(func, hass, connection, msg):
+    """Create a response and handle exception."""
+    try:
+        await func(hass, connection, msg)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception")
+        connection.send_message(messages.error_message(
+            msg['id'], 'unknown', 'Unexpected error occurred'))
+
+
 def async_response(func):
     """Decorate an async function to handle WebSocket API messages."""
-    async def handle_msg_response(hass, connection, msg):
-        """Create a response and handle exception."""
-        try:
-            await func(hass, connection, msg)
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            connection.send_message(messages.error_message(
-                msg['id'], 'unknown', 'Unexpected error occurred'))
-
     @callback
     @wraps(func)
     def schedule_handler(hass, connection, msg):
         """Schedule the handler."""
-        hass.async_create_task(handle_msg_response(hass, connection, msg))
+        hass.async_create_task(
+            _handle_async_response(func, hass, connection, msg))
 
     return schedule_handler
 

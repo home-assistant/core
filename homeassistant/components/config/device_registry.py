@@ -22,26 +22,19 @@ async def async_setup(hass):
     return True
 
 
-@callback
-def websocket_list_devices(hass, connection, msg):
-    """Handle list devices command.
-
-    Async friendly.
-    """
-    async def retrieve_entities():
-        """Get devices from registry."""
-        registry = await async_get_registry(hass)
-        connection.send_message(websocket_api.result_message(
-            msg['id'], [{
-                'config_entries': list(entry.config_entries),
-                'connections': list(entry.connections),
-                'manufacturer': entry.manufacturer,
-                'model': entry.model,
-                'name': entry.name,
-                'sw_version': entry.sw_version,
-                'id': entry.id,
-                'hub_device_id': entry.hub_device_id,
-            } for entry in registry.devices.values()]
-        ))
-
-    hass.async_create_task(retrieve_entities())
+@websocket_api.async_response
+async def websocket_list_devices(hass, connection, msg):
+    """Handle list devices command."""
+    registry = await async_get_registry(hass)
+    connection.send_message(websocket_api.result_message(
+        msg['id'], [{
+            'config_entries': list(entry.config_entries),
+            'connections': list(entry.connections),
+            'manufacturer': entry.manufacturer,
+            'model': entry.model,
+            'name': entry.name,
+            'sw_version': entry.sw_version,
+            'id': entry.id,
+            'hub_device_id': entry.hub_device_id,
+        } for entry in registry.devices.values()]
+    ))
