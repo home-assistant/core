@@ -1000,7 +1000,7 @@ pymysensors==0.17.0
 pynello==1.5.1
 
 # homeassistant.components.device_tracker.netgear
-pynetgear==0.4.1
+pynetgear==0.4.2
 
 # homeassistant.components.switch.netio
 pynetio==0.1.6
