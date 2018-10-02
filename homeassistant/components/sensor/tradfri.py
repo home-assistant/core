@@ -93,7 +93,7 @@ class TradfriDevice(Entity):
             cmd = self._device.observe(callback=self._observe_update,
                                        err_callback=self._async_start_observe,
                                        duration=0)
-            self.hass.async_add_job(self._api(cmd))
+            self.hass.async_create_task(self._api(cmd))
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
@@ -107,4 +107,4 @@ class TradfriDevice(Entity):
         """Receive new state data for this device."""
         self._refresh(tradfri_device)
 
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.hass.async_create_task(self.async_update_ha_state())

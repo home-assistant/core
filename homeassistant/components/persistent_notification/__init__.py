@@ -95,7 +95,8 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     """Remove a notification."""
     data = {ATTR_NOTIFICATION_ID: notification_id}
 
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:

@@ -148,7 +148,7 @@ class MediaExtractor:
             if entity_id:
                 data[ATTR_ENTITY_ID] = entity_id
 
-            self.hass.async_add_job(
+            self.hass.async_create_task(
                 self.hass.services.async_call(
                     MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data)
             )
