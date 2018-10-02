@@ -67,6 +67,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(entities)
 
+
+# pylint: disable=abstract-method
+
 class Shabbat(Entity):
     """Create shabbat sensor."""
     shabbat_db = None
@@ -78,7 +81,8 @@ class Shabbat(Entity):
     friday = None
     saturday = None
 
-    def __init__(self, sensor_type, geoid, latitude, longitude, havdalah, time_before, time_after):
+    def __init__(self, sensor_type, geoid, latitude, longitude,
+                 havdalah, time_before, time_after):
         """Initialize the sensor."""
         self.type = sensor_type
         self._geoid = geoid
@@ -249,10 +253,10 @@ class Shabbat(Entity):
         return self.hebrew_date_db['hebrew']
 
     # check if the time is correct
-    def is_time_format(self, input):
+    def is_time_format(self, input_time):
         """Check if the time is correct."""
         try:
-            time.strptime(input, '%H:%M')
+            time.strptime(input_time, '%H:%M')
             return True
         except ValueError:
             return False
