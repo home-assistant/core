@@ -45,7 +45,7 @@ class FritzboxBinarySensor(BinarySensorDevice):
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return True
 
     @property
