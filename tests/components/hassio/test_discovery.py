@@ -8,10 +8,8 @@ from homeassistant.setup import async_setup_component
 from tests.common import mock_coro, MockConfigEntry
 
 
-async def test_hassio_confirm(hass, mock_try_connection,
-                              mock_finish_setup):
+async def test_hassio_confirm(hass, mock_mqtt):
     """Test we can finish a config flow."""
-    mock_try_connection.return_value = True
 
     result = await hass.config_entries.flow.async_init(
         'mqtt',
