@@ -11,7 +11,7 @@ async def test_hassio_discovery_startup(hass, hassio_client,
             'result': 'ok', 'data': {'discovery': [
                 {
                     "service": "mqtt", "uuid": "test",
-                    "addon", "mosquitto", "config":
+                    "addon": "mosquitto", "config":
                     {
                         'broker': 'mock-broker',
                         'port': 1883,
