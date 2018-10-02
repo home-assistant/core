@@ -15,7 +15,7 @@ from homeassistant.components.tibber import DOMAIN as TIBBER_DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the Tibber notification service."""
     tibber_connection = hass.data[TIBBER_DOMAIN]
     return TibberNotificationService(tibber_connection.send_notification)
