@@ -19,7 +19,6 @@ class TestNotifyYesssSMS(unittest.TestCase):
     @requests_mock.Mocker()
     def test_login_error(self, mock):
         """Test login that fails."""
-
         mock.register_uri(
             requests_mock.POST,
             # pylint: disable=protected-access
@@ -38,7 +37,6 @@ class TestNotifyYesssSMS(unittest.TestCase):
 
     def test_empty_message_error(self):
         """Test for an empty SMS message error."""
-
         message = ""
         with self.assertLogs("homeassistant.components.notify",
                              level='ERROR'):
@@ -47,7 +45,6 @@ class TestNotifyYesssSMS(unittest.TestCase):
     @requests_mock.Mocker()
     def test_error_account_suspended(self, mock):
         """Test login that fails after multiple attempts."""
-
         mock.register_uri(
             requests_mock.POST,
             # pylint: disable=protected-access
@@ -83,7 +80,6 @@ class TestNotifyYesssSMS(unittest.TestCase):
 
     def test_error_account_suspended_2(self):
         """Test login that fails after multiple attempts."""
-
         message = "Testing YesssSMS platform :)"
         # pylint: disable=protected-access
         self.yessssms.yesss._suspended = True
@@ -95,7 +91,6 @@ class TestNotifyYesssSMS(unittest.TestCase):
     @requests_mock.Mocker()
     def test_send_message(self, mock):
         """Test send message."""
-
         message = "Testing YesssSMS platform :)"
         mock.register_uri(
             requests_mock.POST,
