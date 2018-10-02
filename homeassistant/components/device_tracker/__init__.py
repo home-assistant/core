@@ -371,7 +371,7 @@ class DeviceTracker:
         for device in self.devices.values():
             if (device.track and device.last_update_home) and \
                device.stale(now):
-                self.hass.async_add_job(device.async_update_ha_state(True))
+                self.hass.async_create_task(device.async_update_ha_state(True))
 
     async def async_setup_tracked_device(self):
         """Set up all not exists tracked devices.
@@ -386,7 +386,7 @@ class DeviceTracker:
         tasks = []
         for device in self.devices.values():
             if device.track and not device.last_seen:
-                tasks.append(self.hass.async_add_job(
+                tasks.append(self.hass.async_create_task(
                     async_init_single_device(device)))
 
         if tasks:
@@ -718,10 +718,10 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                                  zone_home.attributes[ATTR_LONGITUDE]]
                 kwargs['gps_accuracy'] = 0
 
-            hass.async_add_job(async_see_device(**kwargs))
+            hass.async_create_task(async_see_device(**kwargs))
 
     async_track_time_interval(hass, async_device_tracker_scan, interval)
-    hass.async_add_job(async_device_tracker_scan(None))
+    hass.async_create_task(async_device_tracker_scan(None))
 
 
 def update_config(path: str, dev_id: str, device: Device):

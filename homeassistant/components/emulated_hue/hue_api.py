@@ -254,11 +254,11 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Separate call to turn on needed
         if turn_on_needed:
-            hass.async_add_job(hass.services.async_call(
+            hass.async_create_task(hass.services.async_call(
                 core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id},
                 blocking=True))
 
-        hass.async_add_job(hass.services.async_call(
+        hass.async_create_task(hass.services.async_call(
             domain, service, data, blocking=True))
 
         json_response = \

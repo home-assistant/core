@@ -52,7 +52,7 @@ def websocket_list(hass, connection, msg):
         connection.send_message(
             websocket_api.result_message(msg['id'], result))
 
-    hass.async_add_job(send_users())
+    hass.async_create_task(send_users())
 
 
 @callback
@@ -79,7 +79,7 @@ def websocket_delete(hass, connection, msg):
         connection.send_message(
             websocket_api.result_message(msg['id']))
 
-    hass.async_add_job(delete_user())
+    hass.async_create_task(delete_user())
 
 
 @callback
@@ -95,7 +95,7 @@ def websocket_create(hass, connection, msg):
                 'user': _user_info(user)
             }))
 
-    hass.async_add_job(create_user())
+    hass.async_create_task(create_user())
 
 
 def _user_info(user):
