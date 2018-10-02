@@ -11,7 +11,8 @@ import aiohttp
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN, CONF_NAME
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN,
+                                 CONF_NAME)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -48,6 +49,7 @@ async def async_setup(hass, config):
         return False
 
     for component in ['sensor', 'notify']:
-        discovery.load_platform(hass, component, DOMAIN, {CONF_NAME: DOMAIN}, conf)
+        discovery.load_platform(hass, component, DOMAIN,
+                                {CONF_NAME: DOMAIN}, conf)
 
     return True
