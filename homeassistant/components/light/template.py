@@ -215,7 +215,7 @@ class LightTemplate(Light):
             optimistic_set = True
 
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
-            self.hass.async_add_job(self._level_script.async_run(
+            self.hass.async_create_task(self._level_script.async_run(
                 {"brightness": kwargs[ATTR_BRIGHTNESS]}))
         else:
             await self._on_script.async_run()

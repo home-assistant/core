@@ -252,4 +252,4 @@ class AppleTVPowerManager:
                 self.atv.push_updater.start()
 
             for listener in self.listeners:
-                self.hass.async_add_job(listener.async_update_ha_state())
+                self.hass.async_create_task(listener.async_update_ha_state())
