@@ -25,13 +25,10 @@ def purge_old_data(instance, purge_days, repack):
         # s.t. we can properly restore state even if the entity has not been
         # updated in a long time
         protected_states = session.query(func.max(States.state_id)) \
-            .group_by(States.entity_id).all()
+            .group_by(States.entity_id)
 
-        protected_state_ids = tuple(state[0] for state in protected_states)
-
-        if protected_state_ids:
-            delete_states = delete_states \
-                .filter(~States.state_id.in_(protected_state_ids))
+        delete_states = delete_states \
+            .filter(States.state_id.notin_(protected_states))
 
         deleted_rows = delete_states.delete(synchronize_session=False)
         _LOGGER.debug("Deleted %s states", deleted_rows)
@@ -43,17 +40,12 @@ def purge_old_data(instance, purge_days, repack):
         # Otherwise, if the SQL server has "ON DELETE CASCADE" as default, it
         # will delete the protected state when deleting its associated
         # event. Also, we would be producing NULLed foreign keys otherwise.
-        if protected_state_ids:
-            protected_events = session.query(States.event_id) \
-                .filter(States.state_id.in_(protected_state_ids)) \
-                .filter(States.event_id.isnot(None)) \
-                .all()
+        protected_events = session.query(States.event_id) \
+            .filter(States.state_id.in_(protected_states)) \
+            .filter(States.event_id.isnot(None))
 
-            protected_event_ids = tuple(state[0] for state in protected_events)
-
-            if protected_event_ids:
-                delete_events = delete_events \
-                    .filter(~Events.event_id.in_(protected_event_ids))
+        delete_events = delete_events \
+            .filter(Events.event_id.notin_(protected_events))
 
         deleted_rows = delete_events.delete(synchronize_session=False)
         _LOGGER.debug("Deleted %s events", deleted_rows)
