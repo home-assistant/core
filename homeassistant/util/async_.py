@@ -2,6 +2,7 @@
 import concurrent.futures
 import threading
 import logging
+import sys
 from asyncio import coroutines
 from asyncio.events import AbstractEventLoop
 from asyncio.futures import Future
