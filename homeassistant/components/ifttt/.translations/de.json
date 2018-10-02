@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Auf Ihre Home Assistant-Instanz muss vom Internet aus zugegriffen werden k\u00f6nnen, um IFTTT-Nachrichten zu empfangen.",
+            "one_instance_allowed": "Nur eine einzige Instanz ist notwendig."
+        },
+        "step": {
+            "user": {
+                "description": "Bist du sicher, dass du IFTTT einrichten m\u00f6chtest?",
+                "title": "Einrichten des IFTTT Webhook Applets"
+            }
+        },
+        "title": "IFTTT"
+    }
+}

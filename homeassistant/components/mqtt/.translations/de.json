@@ -9,8 +9,10 @@
         "step": {
             "broker": {
                 "data": {
+                    "broker": "Server",
                     "discovery": "Suche aktivieren",
                     "password": "Passwort",
+                    "port": "Port",
                     "username": "Benutzername"
                 },
                 "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein.",

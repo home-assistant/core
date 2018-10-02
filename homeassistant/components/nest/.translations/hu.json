@@ -1,13 +1,19 @@
 {
     "config": {
+        "abort": {
+            "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az \u00e9rv\u00e9nyes\u00edt\u00e9si url gener\u00e1l\u00e1sa sor\u00e1n."
+        },
         "error": {
-            "invalid_code": "\u00c9rv\u00e9nytelen k\u00f3d"
+            "invalid_code": "\u00c9rv\u00e9nytelen k\u00f3d",
+            "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a k\u00f3d \u00e9rv\u00e9nyes\u00edt\u00e9se sor\u00e1n.",
+            "unknown": "Ismeretlen hiba t\u00f6rt\u00e9nt a k\u00f3d \u00e9rv\u00e9nyes\u00edt\u00e9se sor\u00e1n"
         },
         "step": {
             "init": {
                 "data": {
                     "flow_impl": "Szolg\u00e1ltat\u00f3"
-                }
+                },
+                "title": "Hiteles\u00edt\u00e9si Szolg\u00e1ltat\u00f3"
             },
             "link": {
                 "data": {
