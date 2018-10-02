@@ -50,7 +50,8 @@ DEFAULT_UNIT = 1
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SLAVE, default=DEFAULT_UNIT): vol.All(int, vol.Range(min=0, max=32)),
+    vol.Optional(CONF_SLAVE, default=DEFAULT_UNIT):
+        vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string
 })
 
@@ -101,6 +102,7 @@ class StiebelEltron(ClimateDevice):
         # self._cooling = None
         # self._alarm = False
         self.unit = pystiebeleltron.StiebelEltronAPI(self._client, self._slave)
+        _LOGGER.debug("Initialized stiebel_eltron.")
 
     @property
     def supported_features(self):
