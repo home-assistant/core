@@ -28,6 +28,7 @@ def set_loop() -> None:
 
     if sys.platform == 'win32':
         if hasattr(asyncio, 'WindowsProactorEventLoopPolicy'):
+            # pylint: disable=no-member
             policy = asyncio.WindowsProactorEventLoopPolicy()
         else:
             class ProactorPolicy(BaseDefaultEventLoopPolicy):
