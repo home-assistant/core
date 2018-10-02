@@ -32,6 +32,7 @@ def set_loop() -> None:
         else:
             class ProactorPolicy(BaseDefaultEventLoopPolicy):
                 """Event loop policy to create proactor loops."""
+
                 _loop_factory = asyncio.ProactorEventLoop
 
             policy = ProactorPolicy()
