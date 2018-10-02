@@ -395,9 +395,13 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
                 _LOGGER.debug("Ignoring empty hs message from '%s'", topic)
                 return
 
-            hs_color = [float(val) for val in payload.split(',')][0:2]
-            self._hs = hs_color
-            self.async_schedule_update_ha_state()
+            try:
+                hs_color = [float(val) for val in payload.split(',', 2)]
+                self._hs = hs_color
+                self.async_schedule_update_ha_state()
+            except ValueError:
+                _LOGGER.debug("Failed to parse hs state update: '%s'",
+                              payload)
 
         if self._topic[CONF_HS_STATE_TOPIC] is not None:
             await mqtt.async_subscribe(
