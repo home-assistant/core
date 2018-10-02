@@ -48,4 +48,3 @@ def hassio_handler(hass, aioclient_mock):
 
     with patch.dict(os.environ, {'HASSIO_TOKEN': HASSIO_TOKEN}):
         yield HassIO(hass.loop, websession, "127.0.0.1")
-
