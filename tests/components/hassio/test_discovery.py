@@ -1,8 +1,6 @@
 """Test config flow."""
 from unittest.mock import patch
 
-import pytest
-
 
 patch('homeassistant.components.mqtt.config_flow.async_step_hassio')
 async def test_hassio_discovery_startup(hass, hassio_client, 
