@@ -859,8 +859,8 @@ pydukeenergy==0.0.6
 # homeassistant.components.sensor.ebox
 pyebox==1.1.4
 
-# homeassistant.components.water_heater.econet
-pyeconet==0.0.5
+# homeassistant.components.climate.econet
+pyeconet==0.0.6
 
 # homeassistant.components.switch.edimax
 pyedimax==0.1
