@@ -18,8 +18,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = hass.data[BLINK_DATA]
 
     devs = []
-    for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
-        for camera in data.sync.cameras:
+    for camera in data.sync.cameras:
+        for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
             devs.append(BlinkBinarySensor(data, camera, sensor_type))
     add_entities(devs, True)
 

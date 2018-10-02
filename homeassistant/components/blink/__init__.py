@@ -43,8 +43,8 @@ SERVICE_TRIGGER = 'trigger_camera'
 SERVICE_SAVE_VIDEO = 'save_video'
 
 BINARY_SENSORS = {
-    TYPE_CAMERA_ARMED: ('Camera Armed', 'mdi:verified'),
-    TYPE_MOTION_DETECTED: ('Motion Detected', 'mdi:run-fast'),
+    TYPE_CAMERA_ARMED: ['Camera Armed', 'mdi:verified'],
+    TYPE_MOTION_DETECTED: ['Motion Detected', 'mdi:run-fast'],
 }
 
 SENSORS = {
@@ -126,16 +126,13 @@ def setup(hass, config):
     async def async_save_video(call):
         """Call save video service handler."""
         result = await async_handle_save_video_service(hass, call)
-        if not result:
-            return False
-        return True
 
-    hass.services.register(BLINK_DATA, SERVICE_REFRESH, blink_refresh)
-    hass.services.register(BLINK_DATA,
+    hass.services.register(DOMAIN, SERVICE_REFRESH, blink_refresh)
+    hass.services.register(DOMAIN,
                            SERVICE_TRIGGER,
                            trigger_camera,
                            schema=SERVICE_TRIGGER_SCHEMA)
-    hass.services.async_register(BLINK_DATA,
+    hass.services.async_register(DOMAIN,
                                  SERVICE_SAVE_VIDEO,
                                  async_save_video,
                                  schema=SERVICE_SAVE_VIDEO_SCHEMA)
