@@ -1,7 +1,7 @@
 """
 Platform to get Shabbath Times And Shabbath information for Home Assistant.
 
-Document will come soon...
+Document will come soon....
 """
 import logging
 import urllib
