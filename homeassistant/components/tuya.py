@@ -159,7 +159,7 @@ class TuyaDevice(Entity):
     def _delete_callback(self, dev_id):
         """Remove this entity."""
         if dev_id == self.object_id:
-            self.hass.async_add_job(self.async_remove())
+            self.hass.async_create_task(self.async_remove())
 
     @callback
     def _update_callback(self):

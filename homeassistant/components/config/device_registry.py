@@ -44,4 +44,4 @@ def websocket_list_devices(hass, connection, msg):
             } for entry in registry.devices.values()]
         ))
 
-    hass.async_add_job(retrieve_entities())
+    hass.async_create_task(retrieve_entities())
