@@ -1,14 +1,10 @@
 """
 Transport NSW (AU) sensor to query next leave event for a specified stop.
 
-In order to retrive the data you have to apply of your API key
-at https://opendata.transport.nsw.gov.au/
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.transport_nsw/
 """
 import logging
-from datetime import timedelta, datetime
 
 import voluptuous as vol
 
@@ -17,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 
-#REQUIREMENTS = ['TransportNSW==0.0.3']
+REQUIREMENTS = ['TransportNSW==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +30,6 @@ CONF_APIKEY = 'apikey'
 
 DEFAULT_NAME = "Next Bus"
 ICON = "mdi:bus"
-
-SCAN_INTERVAL = timedelta(minutes=1)
-TIME_STR_FORMAT = "%H:%M"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_ID): cv.string,
@@ -116,19 +109,23 @@ class PublicTransportData(object):
 
     def __init__(self, stopid, route, apikey):
         """Initialize the data object."""
-        self.stopid = stopid
-        self.route = route
-        self.apikey = apikey
-        self.info = [{ATTR_ROUTE: self.route,
+        from TransportNSW import TransportNSW
+        self._stopid = stopid
+        self._route = route
+        self._apikey = apikey
+        self.info = [{ATTR_ROUTE: self._route,
                       ATTR_DUE_IN: 'n/a',
                       ATTR_DELAY: 'n/a',
                       ATTR_REALTIME: 'n/a'}]
+        self.tnsw = TransportNSW.TransportNSW()
 
     def update(self):
         """Get the next leave time"""
-        self.info = [{ATTR_ROUTE: self.route,
-                      ATTR_DUE_IN: 'n/a',
-                      ATTR_DELAY: 'n/a',
-                      ATTR_REALTIME: 'n/a'}]
+        _data = self.tnsw.get_departures(self._stopid,
+                                         self._route,
+                                         self._apikey)
+        self.info = [{ATTR_ROUTE: _data[0]['route'],
+                      ATTR_DUE_IN: _data[0]['due'],
+                      ATTR_DELAY: _data[0]['delay'],
+                      ATTR_REALTIME: _data[0]['realtime']}]
         return
-
