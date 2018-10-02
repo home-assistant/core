@@ -15,8 +15,8 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, fire_mqtt_message, async_fire_mqtt_message,
-    mock_component, mock_mqtt_component, async_mock_mqtt_component,
-    MockConfigEntry)
+    fire_time_changed, mock_component, mock_mqtt_component,
+    async_mock_mqtt_component, MockConfigEntry)
 
 
 class TestSensorMQTT(unittest.TestCase):
@@ -222,7 +222,7 @@ class TestSensorMQTT(unittest.TestCase):
                 'state_topic': 'test-topic',
                 'payload_on': 'ON',
                 'payload_off': 'OFF',
-                'off_delay': {'seconds': 30},
+                'off_delay': 30,
                 'force_update': True
             }
         })
@@ -248,9 +248,7 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual(2, len(events))
 
-        self.hass.bus.fire(
-           ha.EVENT_TIME_CHANGED,
-           {ha.ATTR_NOW: dt_util.utcnow() + timedelta(seconds=30)})
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=30))
         self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test')
         self.assertEqual(STATE_OFF, state.state)

@@ -25,7 +25,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.event as evt
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_OFF_DELAY):
-    vol.All(cv.time_period, cv.positive_timedelta),
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
     # Integrations shouldn't never expose unique_id through configuration
     # this here is an exception because MQTT is a msg transport, not a protocol
     vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -157,9 +156,8 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
                 if self._delay_listener is not None:
                     self._delay_listener()
 
-                self._delay_listener = evt.async_track_point_in_utc_time(
-                    self.hass, off_delay_listener,
-                    dt_util.utcnow() + self._off_delay)
+                self._delay_listener = evt.async_call_later(
+                    self.hass, self._off_delay, off_delay_listener)
 
             self.async_schedule_update_ha_state()
 
