@@ -1,5 +1,5 @@
 """Tests for the HomeKit component."""
-from unittest.mock import patch, ANY, Mock
+from unittest.mock import patch, ANY, Mock, MagicMock
 
 import pytest
 
@@ -173,7 +173,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
     """Test HomeKit start method."""
     pin = b'123-45-678'
     homekit = HomeKit(hass, None, None, None, {}, {'cover.demo': {}})
-    homekit.bridge = 'bridge'
+    homekit.bridge = mock_bridge = MagicMock()
     homekit.driver = hk_driver
 
     hass.states.async_set('light.demo', 'on')
@@ -190,7 +190,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
 
     mock_add_acc.assert_called_with(state)
     mock_setup_msg.assert_called_with(hass, pin)
-    hk_driver_add_acc.assert_called_with('bridge')
+    hk_driver_add_acc.assert_called_with(mock_bridge)
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
 
