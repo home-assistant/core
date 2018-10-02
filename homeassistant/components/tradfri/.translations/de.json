@@ -11,6 +11,7 @@
         "step": {
             "auth": {
                 "data": {
+                    "host": "Host",
                     "security_code": "Sicherheitscode"
                 },
                 "description": "Du findest den Sicherheitscode auf der R\u00fcckseite deines Gateways.",
