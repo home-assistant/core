@@ -310,7 +310,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
                 _LOGGER.debug("Ignoring empty rgb message from '%s'", topic)
                 return
 
-            rgb = [int(val) for val in payload.split(',')]
+            rgb = [int(val) for val in payload.split(',')][0:3]
             self._hs = color_util.color_RGB_to_hs(*rgb)
             self.async_schedule_update_ha_state()
 
