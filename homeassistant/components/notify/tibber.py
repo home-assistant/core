@@ -1,5 +1,5 @@
 """
-Pushbullet platform for notify component.
+Tibber platform for notify component.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.tibber/
@@ -9,15 +9,15 @@ import logging
 
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService)
-from homeassistant.components.tibber import DOMAIN
+from homeassistant.components.tibber import DOMAIN as TIBBER_DOMAIN
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config, discovery_info=None):
-    """Get the Pushbullet notification service."""
-    tibber_connection = hass.data[DOMAIN]
+    """Get the Tibber notification service."""
+    tibber_connection = hass.data[TIBBER_DOMAIN]
     return TibberNotificationService(tibber_connection.send_notification)
 
 
@@ -34,4 +34,4 @@ class TibberNotificationService(BaseNotificationService):
         try:
             await self._notify(title=title, message=message)
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout sending message with Tibber.")
+            _LOGGER.error("Timeout sending message with Tibber")

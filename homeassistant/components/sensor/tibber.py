@@ -11,7 +11,7 @@ import logging
 from datetime import timedelta
 import aiohttp
 
-from homeassistant.components.tibber import DOMAIN
+from homeassistant.components.tibber import DOMAIN as TIBBER_DOMAIN
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
@@ -28,11 +28,12 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Tibber sensor."""
-    tibber_connection = hass.data.get(DOMAIN)
-    if tibber_connection is None:
+    if discovery_info is None:
         _LOGGER.error("Tibber sensor configuration has changed."
                       " Check https://home-assistant.io/components/tibber/")
         return
+
+    tibber_connection = hass.data.get(TIBBER_DOMAIN)
 
     try:
         dev = []
