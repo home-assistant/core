@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup the shabbat config sensors."""
+    """Set up the shabbat config sensors."""
     havdalah = config.get(HAVDALAH_MINUTES)
     geoid = config.get(GEOID)
     latitude = config.get(LATITUDE)
