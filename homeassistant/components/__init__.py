@@ -59,55 +59,6 @@ def is_on(hass, entity_id=None):
     return False
 
 
-def turn_on(hass, entity_id=None, **service_data):
-    """Turn specified entity on if possible."""
-    if entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(ha.DOMAIN, SERVICE_TURN_ON, service_data)
-
-
-def turn_off(hass, entity_id=None, **service_data):
-    """Turn specified entity off."""
-    if entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
-
-
-def toggle(hass, entity_id=None, **service_data):
-    """Toggle specified entity."""
-    if entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(ha.DOMAIN, SERVICE_TOGGLE, service_data)
-
-
-def stop(hass):
-    """Stop Home Assistant."""
-    hass.services.call(ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP)
-
-
-def restart(hass):
-    """Stop Home Assistant."""
-    hass.services.call(ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
-
-
-def check_config(hass):
-    """Check the config files."""
-    hass.services.call(ha.DOMAIN, SERVICE_CHECK_CONFIG)
-
-
-def reload_core_config(hass):
-    """Reload the core config."""
-    hass.services.call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
-
-
-async def async_reload_core_config(hass):
-    """Reload the core config."""
-    await hass.services.async_call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
-
-
 async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
     """Set up general services related to Home Assistant."""
     async def async_handle_turn_service(service):
