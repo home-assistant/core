@@ -12,7 +12,7 @@ import voluptuous as vol
 from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON,
-                                 CONF_NAME, CONF_PORT)
+                                 CONF_NAME, CONF_PORT, CONF_SSL)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.positive_int,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_PORT, default=80): cv.port,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
         vol.Optional(CONF_BED, default=False): cv.boolean
@@ -40,10 +41,10 @@ def setup(hass, config):
 
     for printer in config[DOMAIN]:
         name = printer[CONF_NAME]
-        if name in printers:
-            raise vol.Invalid('Printer names must be unique')
-        base_url = 'http://{}:{}/api/'.format(printer[CONF_HOST],
-                                              printer[CONF_PORT])
+        ssl = 's' if printer[CONF_SSL] else ''
+        base_url = 'http{}://{}:{}/api/'.format(ssl,
+                                                printer[CONF_HOST],
+                                                printer[CONF_PORT])
         api_key = printer[CONF_API_KEY]
         number_of_tools = printer[CONF_NUMBER_OF_TOOLS]
         bed = printer[CONF_BED]
