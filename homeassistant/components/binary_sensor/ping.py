@@ -4,20 +4,19 @@ Tracks the latency of a host by sending ICMP echo requests (ping).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.ping/
 """
-import logging
-import subprocess
-import re
-import sys
-from datetime import timedelta
-
 import asyncio
+from datetime import timedelta
+import logging
+import re
+import subprocess
+import sys
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.const import CONF_NAME, CONF_HOST
+    PLATFORM_SCHEMA, BinarySensorDevice)
+from homeassistant.const import CONF_HOST, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,8 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Ping Binary sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -120,8 +119,7 @@ class PingData:
     async def ping(self):
         """Send ICMP echo request and return details if success."""
         pinger = await asyncio.create_subprocess_shell(
-            ' '.join(self._ping_cmd),
-            stdout=subprocess.PIPE,
+            ' '.join(self._ping_cmd), stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
         try:
             out = await pinger.communicate()
@@ -133,7 +131,8 @@ class PingData:
                     'min': rtt_min,
                     'avg': rtt_avg,
                     'max': rtt_max,
-                    'mdev': ''}
+                    'mdev': '',
+                }
             if 'max/' not in str(out):
                 match = PING_MATCHER_BUSYBOX.search(str(out).split('\n')[-1])
                 rtt_min, rtt_avg, rtt_max = match.groups()
@@ -141,14 +140,16 @@ class PingData:
                     'min': rtt_min,
                     'avg': rtt_avg,
                     'max': rtt_max,
-                    'mdev': ''}
+                    'mdev': '',
+                }
             match = PING_MATCHER.search(str(out).split('\n')[-1])
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {
                 'min': rtt_min,
                 'avg': rtt_avg,
                 'max': rtt_max,
-                'mdev': rtt_mdev}
+                'mdev': rtt_mdev,
+            }
         except (subprocess.CalledProcessError, AttributeError):
             return False
 
