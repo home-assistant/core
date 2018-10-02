@@ -16,7 +16,8 @@
                     "description": "Ein Einmal-Passwort wurde per ** notify gesendet. {notify_service} **. Bitte gebe es unten ein:",
                     "title": "\u00dcberpr\u00fcfe das Setup"
                 }
-            }
+            },
+            "title": "Benachrichtig f\u00fcr One-Time Password"
         },
         "totp": {
             "error": {
