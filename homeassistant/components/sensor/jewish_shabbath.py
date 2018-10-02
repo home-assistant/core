@@ -243,7 +243,8 @@ class Shabbat(Entity):
                 minutes=int(self._time_before))
             is_out = is_out + datetime.timedelta(
                 minutes=int(self._time_after))
-            if is_in.replace(tzinfo=None) < self.fulltoday < is_out.replace(tzinfo=None):
+            if (is_in.replace(tzinfo=None) <
+                    self.fulltoday < is_out.replace(tzinfo=None)):
                 return 'True'
             return 'False'
         return 'False'
