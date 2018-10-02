@@ -52,7 +52,7 @@ async def test_api_homeassistant_info_error(hassio_handler, aioclient_mock):
             'result': 'error', 'message': None})
 
     with pytest.raises(HassioAPIError):
-        data = await hassio_handler.get_homeassistant_info()
+        await hassio_handler.get_homeassistant_info()
 
     assert aioclient_mock.call_count == 1
 
