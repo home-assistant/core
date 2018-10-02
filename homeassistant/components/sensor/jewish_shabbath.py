@@ -47,8 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform
-        hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the shabbat config sensors."""
     havdalah = config.get(HAVDALAH_MINUTES)
     geoid = config.get(GEOID)
@@ -97,7 +96,7 @@ class Shabbat(Entity):
         self._friendly_name = SENSOR_TYPES[self.type][0]
         self._icon = SENSOR_TYPES[self.type][1]
         self._state = None
-        self.async_update_db()
+        self.update_db()
         self.get_full_time_in()
         self.get_full_time_out()
 
@@ -121,7 +120,8 @@ class Shabbat(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    async def async_update(self):
+    @Throttle(SCAN_INTERVAL)
+    def update(self):
         """Update our sensor state."""
         self.datetoday = datetime.date.today()
         self.fulltoday = datetime.datetime.today()
@@ -136,7 +136,8 @@ class Shabbat(Entity):
         elif self.type.__eq__('hebrew_date'):
             self._state = self.get_hebrew_date()
 
-    async def async_update_db(self):
+    @Throttle(datetime.timedelta(minutes=5))
+    def update_db(self):
         """Update the db."""
         self.set_days()
         with urllib.request.urlopen(
