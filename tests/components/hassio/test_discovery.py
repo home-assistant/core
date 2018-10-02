@@ -1,9 +1,12 @@
 """Test config flow."""
-from unittest.mock import patch
+from unittest.mock import patch, Mock
+
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+
+from tests.common import mock_coro
 
 
-async def test_hassio_discovery_startup(hass, hassio_client,
-                                        aioclient_mock):
+async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
     """Test startup and discovery after event."""
     aioclient_mock.get(
         "http://127.0.0.1/discovery", json={
@@ -26,12 +29,14 @@ async def test_hassio_discovery_startup(hass, hassio_client,
         })
 
     with patch('homeassistant.components.mqtt.'
-               'config_flow.FlowHandler.async_step_hassio') as mock_mqtt:
-        await hass.async_start()
+               'config_flow.FlowHandler.async_step_hassio',
+               Mock(return_value=mock_coro())) as mock_mqtt:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
-        assert aioclient_mock.call_count == 5
+        assert aioclient_mock.call_count == 2
         assert mock_mqtt.called
-        assert mock_mqtt.assert_called_with(input={
+        mock_mqtt.assert_called_with({
             'broker': 'mock-broker', 'port': 1883, 'username': 'mock-user',
             'password': 'mock-pass', 'protocol': '3.1.1'
         })
