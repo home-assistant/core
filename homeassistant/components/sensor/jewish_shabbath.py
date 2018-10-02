@@ -1,5 +1,6 @@
 """
 Platform to get Shabbath Times And Shabbath information for Home Assistant.
+
 Document will come soon...
 """
 import logging
@@ -46,7 +47,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass, config, add_entities, discovery_info=None):
     """Setup the shabbat config sensors."""
     havdalah = config.get(HAVDALAH_MINUTES)
     geoid = config.get(GEOID)
@@ -71,6 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class Shabbat(Entity):
     """Create shabbat sensor."""
+    
     shabbat_db = None
     hebrew_date_db = None
     shabbatin = None
