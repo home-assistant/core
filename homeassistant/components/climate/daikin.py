@@ -144,7 +144,6 @@ class DaikinClimate(ClimateDevice):
             # Daikin can return also internal states auto-1 or auto-7
             # and we need to translate them as AUTO
             daikin_mode = re.sub('[^a-z]', '', self._api.device.represent(daikin_attr)[1])
-            
             ha_mode = DAIKIN_TO_HA_STATE.get(daikin_mode)
             value = ha_mode
 
