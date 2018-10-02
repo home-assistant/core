@@ -356,7 +356,6 @@ fastdotcom==0.0.3
 fedexdeliverymanager==1.0.6
 
 # homeassistant.components.feedreader
-# homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
 # homeassistant.components.sensor.fints
@@ -397,6 +396,9 @@ geizhals==0.0.7
 # homeassistant.components.geo_location.geo_json_events
 geojson_client==0.1
 
+# homeassistant.components.sensor.geo_rss_events
+georss_client==0.1
+
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.7
 
@@ -432,9 +434,6 @@ habitipy==0.2.0
 
 # homeassistant.components.hangouts
 hangups==0.4.5
-
-# homeassistant.components.sensor.geo_rss_events
-haversine==0.4.5
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
