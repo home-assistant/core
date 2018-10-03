@@ -56,7 +56,7 @@ omit =
     homeassistant/components/bbb_gpio.py
     homeassistant/components/*/bbb_gpio.py
 
-    homeassistant/components/blink.py
+    homeassistant/components/blink/*
     homeassistant/components/*/blink.py
 
     homeassistant/components/bloomsky.py
