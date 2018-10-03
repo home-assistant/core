@@ -1,9 +1,9 @@
-"""The tests for the Homematic Signal Generator notification platform."""
+"""The tests for the Homematic notification platform."""
 
 import unittest
 
 from homeassistant.setup import setup_component
-import homeassistant.components.notify as notify
+import homeassistant.components.notify as notify_comp
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -33,11 +33,14 @@ class TestHomematicSignalGen(unittest.TestCase):
             assert setup_component(self.hass, 'notify', {
                 'notify': {
                     'name': 'test',
-                    'platform': 'homematic_signalgen',
+                    'platform': 'homematic',
                     'address': 'NEQXXXXXXX',
-                    'value': '1,1,108000,2'}
+                    'channel': 2,
+                    'param': 'SUBMIT',
+                    'value': '1,1,108000,2',
+                    'interface': 'my-interface'}
             })
-        assert handle_config[notify.DOMAIN]
+        assert handle_config[notify_comp.DOMAIN]
 
     def test_setup_without_optional(self):
         """Test valid configuration without optional."""
@@ -54,19 +57,22 @@ class TestHomematicSignalGen(unittest.TestCase):
             assert setup_component(self.hass, 'notify', {
                 'notify': {
                     'name': 'test',
-                    'platform': 'homematic_signalgen',
-                    'address': 'NEQXXXXXXX'}
+                    'platform': 'homematic',
+                    'address': 'NEQXXXXXXX',
+                    'channel': 2,
+                    'param': 'SUBMIT',
+                    'value': '1,1,108000,2'}
             })
-        assert handle_config[notify.DOMAIN]
+        assert handle_config[notify_comp.DOMAIN]
 
     def test_bad_config(self):
         """Test invalid configuration."""
         config = {
-            notify.DOMAIN: {
+            notify_comp.DOMAIN: {
                 'name': 'test',
-                'platform': 'homematic_signalgen',
+                'platform': 'homematic_signalgen'
             }
         }
         with assert_setup_component(0) as handle_config:
-            assert setup_component(self.hass, notify.DOMAIN, config)
-        assert not handle_config[notify.DOMAIN]
+            assert setup_component(self.hass, notify_comp.DOMAIN, config)
+        assert not handle_config[notify_comp.DOMAIN]
