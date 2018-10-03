@@ -7,8 +7,8 @@ import homeassistant.components.notify as notify_comp
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
-class TestHomematicSignalGen(unittest.TestCase):
-    """Test the homematic_signalgen notifications."""
+class TestHomematicNotify(unittest.TestCase):
+    """Test the Homematic notifications."""
 
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
@@ -70,7 +70,7 @@ class TestHomematicSignalGen(unittest.TestCase):
         config = {
             notify_comp.DOMAIN: {
                 'name': 'test',
-                'platform': 'homematic_signalgen'
+                'platform': 'homematic'
             }
         }
         with assert_setup_component(0) as handle_config:

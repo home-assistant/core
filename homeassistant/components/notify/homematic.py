@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_service(hass, config, discovery_info=None):
-    """Get the Homematic Signal Generator notification service."""
+    """Get the Homematic notification service."""
     data = {
         ATTR_ADDRESS: config[ATTR_ADDRESS],
         ATTR_CHANNEL: config[ATTR_CHANNEL],
@@ -39,11 +39,11 @@ def get_service(hass, config, discovery_info=None):
     if ATTR_INTERFACE in config:
         data[ATTR_INTERFACE] = config[ATTR_INTERFACE]
 
-    return HomematicSignalGeneratorNotificationService(hass, data)
+    return HomematicNotificationService(hass, data)
 
 
-class HomematicSignalGeneratorNotificationService(BaseNotificationService):
-    """Implement the notification service for the Command Line service."""
+class HomematicNotificationService(BaseNotificationService):
+    """Implement the notification service for Homematic."""
 
     def __init__(self, hass, data):
         """Initialize the service."""
@@ -51,7 +51,7 @@ class HomematicSignalGeneratorNotificationService(BaseNotificationService):
         self.data = data
 
     def send_message(self, message="", **kwargs):
-        """Send a notification to the signal generator."""
+        """Send a notification to the device."""
         attr_data = kwargs.get(ATTR_DATA)
         if attr_data is not None:
             if 'address' in attr_data:
