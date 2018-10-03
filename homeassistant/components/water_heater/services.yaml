@@ -16,7 +16,7 @@ set_temperature:
       description: Name(s) of entities to change.
       example: 'water_heater.water_heater'
     temperature:
-      description: New target temperature for HVAC.
+      description: New target temperature for water heater.
       example: 25
 set_operation_mode:
   description: Set operation mode for water_heater device.
@@ -26,4 +26,4 @@ set_operation_mode:
       example: 'water_heater.water_heater'
     operation_mode:
       description: New value of operation mode.
-      example: Eco
+      example: eco

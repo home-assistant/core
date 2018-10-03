@@ -88,8 +88,7 @@ class DemoWaterHeater(WaterHeaterDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):

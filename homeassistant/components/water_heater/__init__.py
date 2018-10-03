@@ -18,7 +18,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
+    STATE_ON, STATE_OFF, TEMP_CELSIUS, PRECISION_WHOLE,
     PRECISION_TENTHS, TEMP_FAHRENHEIT)
 
 DEFAULT_MIN_TEMP = 110
@@ -65,10 +65,8 @@ SET_AWAY_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_AWAY_MODE): cv.boolean,
 })
 SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
-    cv.has_at_least_one_key(
-        ATTR_TEMPERATURE),
     {
-        vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
+        vol.Required(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Optional(ATTR_OPERATION_MODE): cv.string,
     }
@@ -131,7 +129,7 @@ class WaterHeaterDevice(Entity):
             return self.current_operation
         if self.is_on:
             return STATE_ON
-        return STATE_UNKNOWN
+        return None
 
     @property
     def precision(self):
@@ -175,7 +173,7 @@ class WaterHeaterDevice(Entity):
 
     @property
     def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
+        """Return current operation ie. eco, electric, performance, ..."""
         return None
 
     @property
@@ -202,46 +200,33 @@ class WaterHeaterDevice(Entity):
         """Set new target temperature."""
         raise NotImplementedError()
 
-    def async_set_temperature(self, **kwargs):
-        """Set new target temperature.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
-            ft.partial(self.set_temperature, **kwargs))
+    async def async_set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        self.set_temperature(**kwargs)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         raise NotImplementedError()
 
-    def async_set_operation_mode(self, operation_mode):
-        """Set new target operation mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_operation_mode, operation_mode)
+    async def async_set_operation_mode(self, operation_mode):
+        """Set new target operation mode."""
+        self.set_operation_mode(operation_mode)
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
         raise NotImplementedError()
 
-    def async_turn_away_mode_on(self):
-        """Turn away mode on.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.turn_away_mode_on)
+    async def async_turn_away_mode_on(self):
+        """Turn away mode on."""
+        self.turn_away_mode_on()
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
         raise NotImplementedError()
 
-    def async_turn_away_mode_off(self):
-        """Turn away mode off.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.turn_away_mode_off)
+    async def async_turn_away_mode_off(self):
+        """Turn away mode off."""
+        self.turn_away_mode_off()
 
     @property
     def supported_features(self):
