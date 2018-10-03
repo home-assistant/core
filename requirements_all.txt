@@ -66,6 +66,9 @@ PyXiaomiGateway==0.11.1
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.0
 
+# homeassistant.components.sensor.transport_nsw
+TransportNSW==0.0.4
+
 # homeassistant.components.sensor.travisci
 TravisPy==0.3.5
 
