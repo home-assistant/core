@@ -23,7 +23,6 @@ X_HASSIO = 'X-HASSIO-KEY'
 
 class HassioAPIError(RuntimeError):
     """Return if a API trow a error."""
-    pass
 
 
 def _api_bool(funct):
