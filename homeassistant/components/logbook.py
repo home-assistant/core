@@ -117,13 +117,13 @@ class LogbookView(HomeAssistantView):
 
     url = '/api/logbook'
     name = 'api:logbook'
-    extra_urls = ['/api/logbook/{datetime}', '/api/logbook/{datetime}/{entity_id}']
+    extra_urls = ['/api/logbook/{datetime}']
 
     def __init__(self, config):
         """Initialize the logbook view."""
         self.config = config
 
-    async def get(self, request, datetime=None, entity_id=None):
+    async def get(self, request, datetime=None):
         """Retrieve logbook entries."""
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
@@ -133,8 +133,15 @@ class LogbookView(HomeAssistantView):
         else:
             datetime = dt_util.start_of_local_day()
 
-        start_day = dt_util.as_utc(datetime)
-        end_day = start_day + timedelta(days=1)
+        period = request.query.get('period')
+        if period is None:
+            period = 1
+        else:
+            period = int(period)
+
+        entity_id = request.query.get('entity')
+        start_day = dt_util.as_utc(datetime) - timedelta(days=period - 1)
+        end_day = start_day + timedelta(days=period)
         hass = request.app['hass']
 
         def json_events():
