@@ -33,7 +33,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         @callback
         def async_message_received(topic, payload, qos, dev_id=dev_id):
             """Handle received MQTT message."""
-            hass.async_add_job(
+            hass.async_create_task(
                 async_see(dev_id=dev_id, location_name=payload))
 
         await mqtt.async_subscribe(

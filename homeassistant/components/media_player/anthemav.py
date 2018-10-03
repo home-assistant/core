@@ -49,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     def async_anthemav_update_callback(message):
         """Receive notification from transport that new data exists."""
         _LOGGER.info("Received update callback from AVR: %s", message)
-        hass.async_add_job(device.async_update_ha_state())
+        hass.async_create_task(device.async_update_ha_state())
 
     avr = await anthemav.Connection.create(
         host=host, port=port, loop=hass.loop,

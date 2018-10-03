@@ -109,7 +109,8 @@ async def async_setup(hass, config):
     await APPLICATION_CONTROLLER.startup(auto_form=True)
 
     for device in APPLICATION_CONTROLLER.devices.values():
-        hass.async_add_job(listener.async_device_initialized(device, False))
+        hass.async_create_task(
+            listener.async_device_initialized(device, False))
 
     async def permit(service):
         """Allow devices to join this network."""
@@ -161,7 +162,8 @@ class ApplicationListener:
 
     def device_initialized(self, device):
         """Handle device joined and basic information discovered."""
-        self._hass.async_add_job(self.async_device_initialized(device, True))
+        self._hass.async_create_task(
+            self.async_device_initialized(device, True))
 
     def device_left(self, device):
         """Handle device leaving the network."""
@@ -170,7 +172,7 @@ class ApplicationListener:
     def device_removed(self, device):
         """Handle device being removed from the network."""
         for device_entity in self._device_registry[device.ieee]:
-            self._hass.async_add_job(device_entity.async_remove())
+            self._hass.async_create_task(device_entity.async_remove())
 
     async def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""

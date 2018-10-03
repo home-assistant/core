@@ -121,7 +121,7 @@ class MerakiView(HomeAssistantView):
                 attrs['seenTime'] = i['seenTime']
             if i.get('ssid', False):
                 attrs['ssid'] = i['ssid']
-            hass.async_add_job(self.async_see(
+            hass.async_create_task(self.async_see(
                 gps=gps_location,
                 mac=mac,
                 source_type=SOURCE_TYPE_ROUTER,
