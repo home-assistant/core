@@ -89,6 +89,8 @@ homeassistant/components/vacuum/roomba.py @pschmitt
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 homeassistant/components/*/axis.py @kane610
+homeassistant/components/blink/* @fronzbot
+homeassistant/components/*/blink.py @fronzbot
 homeassistant/components/*/bmw_connected_drive.py @ChristianKuehnel
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/*/deconz.py @kane610
