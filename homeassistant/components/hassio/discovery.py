@@ -102,7 +102,7 @@ class HassIODiscovery(HomeAssistantView):
         # Check if realy deletet / prevent injections
         try:
             data = await self.hassio.get_discovery_message(uuid)
-        except HassioAPIError as err:
+        except HassioAPIError:
             pass
         else:
             _LOGGER.warning("Retrieve wrong unload for %s", service)
