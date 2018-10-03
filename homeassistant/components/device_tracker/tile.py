@@ -32,7 +32,7 @@ ATTR_VOIP_STATE = 'voip_state'
 
 CONF_SHOW_INACTIVE = 'show_inactive'
 
-DEFAULT_ICON = 'mdi:bluetooth'
+DEFAULT_ICON = 'mdi:view-grid'
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
