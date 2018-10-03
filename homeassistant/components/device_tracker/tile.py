@@ -52,7 +52,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    config_file = hass.config.path(".{}{}" % (slugify(config[CONF_USERNAME]),
+    config_file = hass.config.path(".{0}{1}" % (slugify(config[CONF_USERNAME]),
                                               CLIENT_UUID_CONFIG_FILE))
     config_data = await hass.async_add_job(
         load_json, config_file)
