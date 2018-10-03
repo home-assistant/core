@@ -80,8 +80,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_get_engine(hass, config):
+async def async_get_engine(hass, config):
     """Set up VoiceRSS TTS component."""
     return VoiceRSSProvider(hass, config)
 
@@ -113,8 +112,7 @@ class VoiceRSSProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    @asyncio.coroutine
-    def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from VoiceRSS."""
         websession = async_get_clientsession(self.hass)
         form_data = self._form_data.copy()
@@ -124,7 +122,7 @@ class VoiceRSSProvider(Provider):
 
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                request = yield from websession.post(
+                request = await websession.post(
                     VOICERSS_API_URL, data=form_data
                 )
 
@@ -132,7 +130,7 @@ class VoiceRSSProvider(Provider):
                     _LOGGER.error("Error %d on load url %s.",
                                   request.status, request.url)
                     return (None, None)
-                data = yield from request.read()
+                data = await request.read()
 
                 if data in ERROR_MSG:
                     _LOGGER.error(

@@ -4,7 +4,6 @@ Component for interacting with a Lutron Caseta system.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/lutron_caseta/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -40,8 +39,7 @@ LUTRON_CASETA_COMPONENTS = [
 ]
 
 
-@asyncio.coroutine
-def async_setup(hass, base_config):
+async def async_setup(hass, base_config):
     """Set up the Lutron component."""
     from pylutron_caseta.smartbridge import Smartbridge
 
@@ -54,7 +52,7 @@ def async_setup(hass, base_config):
                                     certfile=certfile,
                                     ca_certs=ca_certs)
     hass.data[LUTRON_CASETA_SMARTBRIDGE] = bridge
-    yield from bridge.connect()
+    await bridge.connect()
     if not hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
         _LOGGER.error("Unable to connect to Lutron smartbridge at %s",
                       config[CONF_HOST])
@@ -85,8 +83,7 @@ class LutronCasetaDevice(Entity):
         self._state = None
         self._smartbridge = bridge
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self._smartbridge.add_subscriber(self._device_id,
                                          self.async_schedule_update_ha_state)

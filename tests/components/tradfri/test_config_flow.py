@@ -6,7 +6,7 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.tradfri import config_flow
 
-from tests.common import mock_coro
+from tests.common import mock_coro, MockConfigEntry
 
 
 @pytest.fixture
@@ -154,3 +154,66 @@ async def test_import_connection(hass, mock_gateway_info, mock_entry_setup):
 
     assert len(mock_gateway_info.mock_calls) == 1
     assert len(mock_entry_setup.mock_calls) == 1
+
+
+async def test_import_connection_legacy(hass, mock_gateway_info,
+                                        mock_entry_setup):
+    """Test a connection via import."""
+    mock_gateway_info.side_effect = \
+        lambda hass, host, identity, key: mock_coro({
+            'host': host,
+            'identity': identity,
+            'key': key,
+            'gateway_id': 'mock-gateway'
+        })
+
+    result = await hass.config_entries.flow.async_init(
+        'tradfri', context={'source': 'import'}, data={
+            'host': '123.123.123.123',
+            'key': 'mock-key',
+            'import_groups': True
+        })
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result['result'].data == {
+        'host': '123.123.123.123',
+        'gateway_id': 'mock-gateway',
+        'identity': 'homeassistant',
+        'key': 'mock-key',
+        'import_groups': True
+    }
+
+    assert len(mock_gateway_info.mock_calls) == 1
+    assert len(mock_entry_setup.mock_calls) == 1
+
+
+async def test_discovery_duplicate_aborted(hass):
+    """Test a duplicate discovery host is ignored."""
+    MockConfigEntry(
+        domain='tradfri',
+        data={'host': 'some-host'}
+    ).add_to_hass(hass)
+
+    flow = await hass.config_entries.flow.async_init(
+        'tradfri', context={'source': 'discovery'}, data={
+            'host': 'some-host'
+        })
+
+    assert flow['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert flow['reason'] == 'already_configured'
+
+
+async def test_import_duplicate_aborted(hass):
+    """Test a duplicate discovery host is ignored."""
+    MockConfigEntry(
+        domain='tradfri',
+        data={'host': 'some-host'}
+    ).add_to_hass(hass)
+
+    flow = await hass.config_entries.flow.async_init(
+        'tradfri', context={'source': 'import'}, data={
+            'host': 'some-host'
+        })
+
+    assert flow['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert flow['reason'] == 'already_configured'

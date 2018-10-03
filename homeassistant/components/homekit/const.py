@@ -69,6 +69,8 @@ CHAR_CARBON_DIOXIDE_DETECTED = 'CarbonDioxideDetected'
 CHAR_CARBON_DIOXIDE_LEVEL = 'CarbonDioxideLevel'
 CHAR_CARBON_DIOXIDE_PEAK_LEVEL = 'CarbonDioxidePeakLevel'
 CHAR_CARBON_MONOXIDE_DETECTED = 'CarbonMonoxideDetected'
+CHAR_CARBON_MONOXIDE_LEVEL = 'CarbonMonoxideLevel'
+CHAR_CARBON_MONOXIDE_PEAK_LEVEL = 'CarbonMonoxidePeakLevel'
 CHAR_CHARGING_STATE = 'ChargingState'
 CHAR_COLOR_TEMPERATURE = 'ColorTemperature'
 CHAR_CONTACT_SENSOR_STATE = 'ContactSensorState'
@@ -114,6 +116,7 @@ PROP_MIN_VALUE = 'minValue'
 PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
 
 # #### Device Classes ####
+DEVICE_CLASS_CO = 'co'
 DEVICE_CLASS_CO2 = 'co2'
 DEVICE_CLASS_DOOR = 'door'
 DEVICE_CLASS_GARAGE_DOOR = 'garage_door'
@@ -125,3 +128,7 @@ DEVICE_CLASS_OPENING = 'opening'
 DEVICE_CLASS_PM25 = 'pm25'
 DEVICE_CLASS_SMOKE = 'smoke'
 DEVICE_CLASS_WINDOW = 'window'
+
+# #### Thresholds ####
+THRESHOLD_CO = 25
+THRESHOLD_CO2 = 1000

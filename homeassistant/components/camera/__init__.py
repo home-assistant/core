@@ -84,62 +84,6 @@ class Image:
 
 
 @bind_hass
-def turn_off(hass, entity_id=None):
-    """Turn off camera."""
-    hass.add_job(async_turn_off, hass, entity_id)
-
-
-@bind_hass
-async def async_turn_off(hass, entity_id=None):
-    """Turn off camera."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-@bind_hass
-def turn_on(hass, entity_id=None):
-    """Turn on camera."""
-    hass.add_job(async_turn_on, hass, entity_id)
-
-
-@bind_hass
-async def async_turn_on(hass, entity_id=None):
-    """Turn on camera, and set operation mode."""
-    data = {}
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data)
-
-
-@bind_hass
-def enable_motion_detection(hass, entity_id=None):
-    """Enable Motion Detection."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_ENABLE_MOTION, data))
-
-
-@bind_hass
-def disable_motion_detection(hass, entity_id=None):
-    """Disable Motion Detection."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_DISABLE_MOTION, data))
-
-
-@bind_hass
-@callback
-def async_snapshot(hass, filename, entity_id=None):
-    """Make a snapshot from a camera."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_FILENAME] = filename
-
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_SNAPSHOT, data))
-
-
-@bind_hass
 async def async_get_image(hass, entity_id, timeout=10):
     """Fetch an image from a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
@@ -239,7 +183,7 @@ async def async_setup(hass, config):
         """Update tokens of the entities."""
         for entity in component.entities:
             entity.async_update_token()
-            hass.async_add_job(entity.async_update_ha_state())
+            hass.async_create_task(entity.async_update_ha_state())
 
     hass.helpers.event.async_track_time_interval(
         update_tokens, TOKEN_CHANGE_INTERVAL)
@@ -508,27 +452,23 @@ class CameraMjpegStream(CameraView):
             raise web.HTTPBadRequest()
 
 
-@callback
-def websocket_camera_thumbnail(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_camera_thumbnail(hass, connection, msg):
     """Handle get camera thumbnail websocket command.
 
     Async friendly.
     """
-    async def send_camera_still():
-        """Send a camera still."""
-        try:
-            image = await async_get_image(hass, msg['entity_id'])
-            connection.send_message_outside(websocket_api.result_message(
-                msg['id'], {
-                    'content_type': image.content_type,
-                    'content': base64.b64encode(image.content).decode('utf-8')
-                }
-            ))
-        except HomeAssistantError:
-            connection.send_message_outside(websocket_api.error_message(
-                msg['id'], 'image_fetch_failed', 'Unable to fetch image'))
-
-    hass.async_add_job(send_camera_still())
+    try:
+        image = await async_get_image(hass, msg['entity_id'])
+        connection.send_message(websocket_api.result_message(
+            msg['id'], {
+                'content_type': image.content_type,
+                'content': base64.b64encode(image.content).decode('utf-8')
+            }
+        ))
+    except HomeAssistantError:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'image_fetch_failed', 'Unable to fetch image'))
 
 
 async def async_handle_snapshot_service(camera, service):

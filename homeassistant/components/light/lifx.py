@@ -30,7 +30,7 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.6.3', 'aiolifx_effects==0.1.2']
+REQUIREMENTS = ['aiolifx==0.6.3', 'aiolifx_effects==0.2.0']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -300,7 +300,7 @@ class LIFXManager:
     @callback
     def register(self, bulb):
         """Handle aiolifx detected bulb."""
-        self.hass.async_add_job(self.register_new_bulb(bulb))
+        self.hass.async_create_task(self.register_new_bulb(bulb))
 
     async def register_new_bulb(self, bulb):
         """Handle newly detected bulb."""
@@ -344,7 +344,7 @@ class LIFXManager:
             entity = self.entities[bulb.mac_addr]
             _LOGGER.debug("%s unregister", entity.who)
             entity.registered = False
-            self.hass.async_add_job(entity.async_update_ha_state())
+            self.hass.async_create_task(entity.async_update_ha_state())
 
 
 class AwaitAioLIFX:
@@ -484,12 +484,12 @@ class LIFXLight(Light):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         kwargs[ATTR_POWER] = True
-        self.hass.async_add_job(self.set_state(**kwargs))
+        self.hass.async_create_task(self.set_state(**kwargs))
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         kwargs[ATTR_POWER] = False
-        self.hass.async_add_job(self.set_state(**kwargs))
+        self.hass.async_create_task(self.set_state(**kwargs))
 
     async def set_state(self, **kwargs):
         """Set a color on the light and turn it on/off."""

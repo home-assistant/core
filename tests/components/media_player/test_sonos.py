@@ -57,7 +57,7 @@ class SoCoMock():
         self.is_visible = True
         self.volume = 50
         self.mute = False
-        self.play_mode = 'NORMAL'
+        self.shuffle = False
         self.night_mode = False
         self.dialog_mode = False
         self.music_library = MusicLibraryMock()

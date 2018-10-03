@@ -12,11 +12,12 @@ from homeassistant import config_entries
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
-from .const import CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY
+from .const import (
+    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID)
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
-REQUIREMENTS = ['pytradfri[async]==5.5.1']
+REQUIREMENTS = ['pytradfri[async]==5.6.0']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = '.tradfri_psk.conf'
@@ -43,10 +44,16 @@ async def async_setup(hass, config):
     if conf is None:
         return True
 
-    known_hosts = await hass.async_add_executor_job(
+    configured_hosts = [entry.data['host'] for entry in
+                        hass.config_entries.async_entries(DOMAIN)]
+
+    legacy_hosts = await hass.async_add_executor_job(
         load_json, hass.config.path(CONFIG_FILE))
 
-    for host, info in known_hosts.items():
+    for host, info in legacy_hosts.items():
+        if host in configured_hosts:
+            continue
+
         info[CONF_HOST] = host
         info[CONF_IMPORT_GROUPS] = conf[CONF_ALLOW_TRADFRI_GROUPS]
 
@@ -57,7 +64,7 @@ async def async_setup(hass, config):
 
     host = conf.get(CONF_HOST)
 
-    if host is None or host in known_hosts:
+    if host is None or host in configured_hosts or host in legacy_hosts:
         return True
 
     hass.async_create_task(hass.config_entries.flow.async_init(
@@ -84,7 +91,7 @@ async def async_setup_entry(hass, entry):
     gateway = Gateway()
 
     try:
-        await api(gateway.get_gateway_info())
+        gateway_info = await api(gateway.get_gateway_info())
     except RequestError:
         _LOGGER.error("Tradfri setup failed.")
         return False
@@ -92,11 +99,28 @@ async def async_setup_entry(hass, entry):
     hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
     hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = gateway
 
+    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={
+            (DOMAIN, entry.data[CONF_GATEWAY_ID])
+        },
+        manufacturer='IKEA',
+        name='Gateway',
+        # They just have 1 gateway model. Type is not exposed yet.
+        model='E1526',
+        sw_version=gateway_info.firmware_version,
+    )
+
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'light'
     ))
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'sensor'
+    ))
+    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+        entry, 'switch'
     ))
 
     return True

@@ -13,7 +13,8 @@ from homeassistant.components.light import (
     SUPPORT_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
-from homeassistant.components.tradfri import KEY_GATEWAY, KEY_API
+from homeassistant.components.tradfri import (
+    KEY_GATEWAY, KEY_API, DOMAIN as TRADFRI_DOMAIN)
 from homeassistant.components.tradfri.const import (
     CONF_IMPORT_GROUPS, CONF_GATEWAY_ID)
 import homeassistant.util.color as color_util
@@ -126,7 +127,7 @@ class TradfriGroup(Light):
             cmd = self._group.observe(callback=self._observe_update,
                                       err_callback=self._async_start_observe,
                                       duration=0)
-            self.hass.async_add_job(self._api(cmd))
+            self.hass.async_create_task(self._api(cmd))
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
@@ -161,6 +162,7 @@ class TradfriLight(Light):
         self._hs_color = None
         self._features = SUPPORTED_FEATURES
         self._available = True
+        self._gateway_id = gateway_id
 
         self._refresh(light)
 
@@ -168,6 +170,22 @@ class TradfriLight(Light):
     def unique_id(self):
         """Return unique ID for light."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        info = self._light.device_info
+
+        return {
+            'identifiers': {
+                (TRADFRI_DOMAIN, self._light.id)
+            },
+            'name': self._name,
+            'manufacturer': info.manufacturer,
+            'model': info.model_number,
+            'sw_version': info.firmware_version,
+            'via_hub': (TRADFRI_DOMAIN, self._gateway_id),
+        }
 
     @property
     def min_mireds(self):
@@ -328,7 +346,7 @@ class TradfriLight(Light):
             cmd = self._light.observe(callback=self._observe_update,
                                       err_callback=self._async_start_observe,
                                       duration=0)
-            self.hass.async_add_job(self._api(cmd))
+            self.hass.async_create_task(self._api(cmd))
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
