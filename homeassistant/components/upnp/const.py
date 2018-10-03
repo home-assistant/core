@@ -11,3 +11,4 @@ CONF_SSDP_DESCRIPTION = 'ssdp_description'
 CONF_UDN = 'udn'
 DOMAIN = 'upnp'
 LOGGER = logging.getLogger('homeassistant.components.upnp')
+SIGNAL_REMOVE_SENSOR = 'upnp_remove_sensor'
