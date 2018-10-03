@@ -78,7 +78,7 @@ async def async_setup(hass, config):
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle webhook callback."""
-    body = request.text()
+    body = await request.text()
     try:
         data = json.loads(body) if body else {}
     except ValueError:
