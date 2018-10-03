@@ -4,11 +4,14 @@ Support for August lock.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.august/
 """
+import logging
 from datetime import timedelta
 
 from homeassistant.components.august import DATA_AUGUST
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['august']
 
@@ -21,6 +24,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
 
     for lock in data.locks:
+        _LOGGER.debug("Adding lock for %s.", lock.device_name)
         devices.append(AugustLock(data, lock))
 
     add_entities(devices, True)
@@ -39,14 +43,17 @@ class AugustLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock the device."""
+        _LOGGER.debug("Locking %s.", self.entity_id)
         self._data.lock(self._lock.device_id)
 
     def unlock(self, **kwargs):
         """Unlock the device."""
+        _LOGGER.debug("Unlocking %s.", self.entity_id)
         self._data.unlock(self._lock.device_id)
 
     def update(self):
         """Get the latest state of the sensor."""
+        old_status = self._lock_status
         self._lock_status = self._data.get_lock_status(self._lock.device_id)
         self._lock_detail = self._data.get_lock_detail(self._lock.device_id)
 
@@ -57,6 +64,13 @@ class AugustLock(LockDevice):
 
         if activity is not None:
             self._changed_by = activity.operated_by
+
+        if old_status == self._lock_status:
+            _LOGGER.debug("%s not changed; current status is %s.",
+                          self.entity_id, self._lock_status)
+        else:
+            _LOGGER.debug("%s changed from %s to %s.",
+                          self.entity_id, old_status, self._lock_status)
 
     @property
     def name(self):
