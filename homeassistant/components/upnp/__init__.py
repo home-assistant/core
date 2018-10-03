@@ -4,7 +4,6 @@ Will open a port in your router for Home Assistant and provide statistics.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/upnp/
 """
-# pylint: disable=invalid-name
 import asyncio
 from ipaddress import ip_address
 
@@ -23,6 +22,7 @@ from .const import (
     CONF_ENABLE_PORT_MAPPING, CONF_ENABLE_SENSORS,
     CONF_HASS, CONF_LOCAL_IP, CONF_PORTS,
     CONF_UDN, CONF_SSDP_DESCRIPTION,
+    SIGNAL_REMOVE_SENSOR,
 )
 from .const import DOMAIN
 from .const import LOGGER as _LOGGER
@@ -51,13 +51,19 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def _substitute_hass_ports(ports, hass_port):
-    # substitute 'hass' for hass_port, both sides
+    """Substitute 'hass' for the hass_port."""
+    ports = ports.copy()
+
+    # substitute 'hass' for hass_port, both keys and values
     if CONF_HASS in ports:
         ports[hass_port] = ports[CONF_HASS]
         del ports[CONF_HASS]
+
     for port in ports:
         if ports[port] == CONF_HASS:
             ports[port] = hass_port
+
+    return ports
 
 
 # config
@@ -107,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistantType,
         device = await Device.async_create_device(hass, ssdp_description)
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error('Unable to create upnp-device')
-        return
+        return False
 
     hass.data[DOMAIN]['devices'][device.udn] = device
 
@@ -118,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistantType,
         _LOGGER.debug('Enabling port mappings: %s', ports)
 
         hass_port = hass.http.server_port
-        _substitute_hass_ports(ports, hass_port)
+        ports = _substitute_hass_ports(ports, hass_port)
         await device.async_add_port_mappings(ports, local_ip=local_ip)
 
     # sensors
@@ -155,7 +161,7 @@ async def async_unload_entry(hass: HomeAssistantType,
     # sensors
     if data.get(CONF_ENABLE_SENSORS):
         _LOGGER.debug('Deleting sensors')
-        dispatcher.async_dispatcher_send(hass, 'upnp_remove_sensor', device)
+        dispatcher.async_dispatcher_send(hass, SIGNAL_REMOVE_SENSOR, device)
 
     # clear stored device
     del hass.data[DOMAIN]['devices'][udn]
