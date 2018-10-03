@@ -211,7 +211,8 @@ class WaterHeaterDevice(Entity):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
-        await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
+        await self.hass.async_add_executor_job(self.set_operation_mode,
+                                               operation_mode)
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
