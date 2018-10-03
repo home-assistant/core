@@ -9,7 +9,6 @@ class TestNotifyYesssSMS(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
-        print("setup run....\n")
         login = "06641234567"
         passwd = "testpasswd"
         recipient = "06501234567"
