@@ -138,8 +138,9 @@ class TestSamsungTv(unittest.TestCase):
         ping.returncode = 0
         self.device.update()
         expected_timeout = self.device._config['timeout']
+        timeout_arg = '-W{}'.format(expected_timeout)
         ping_command = [
-            'ping', '-n', '-q', '-c3', f'-W{expected_timeout}', 'fake']
+            'ping', '-n', '-q', '-c3', timeout_arg, 'fake']
         expected_call = call(ping_command, stderr=-3, stdout=-1)
         self.assertEqual(mocked_popen.call_args, expected_call)
         self.assertEqual(STATE_ON, self.device._state)
