@@ -335,7 +335,7 @@ class SonosDevice(MediaPlayerDevice):
     def __init__(self, player):
         """Initialize the Sonos device."""
         self._receives_events = False
-        self._volume_increment = 5
+        self._volume_increment = 2
         self._unique_id = player.uid
         self._player = player
         self._model = None
