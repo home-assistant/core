@@ -55,20 +55,21 @@ class YesssSMSNotificationService(BaseNotificationService):
             self.yesss.send(self._recipient, message)
         except self.yesss.NoRecipientError as ex:
             _LOGGER.error(
-                "You need to provide a recipient for SMS notification.",
-                exc_info=ex)
+                "You need to provide a recipient for SMS notification: %s",
+                ex)
         except self.yesss.EmptyMessageError as ex:
             _LOGGER.error(
                 "Cannot send empty SMS message: %s", ex)
         except self.yesss.SMSSendingError as ex:
-            _LOGGER.error(str(ex))
+            _LOGGER.error(str(ex), exc_info=ex)
         except ConnectionError as ex:
             _LOGGER.error(
-                "YesssSMS: unable to connect to yesss.at server: %s", ex)
+                "YesssSMS: unable to connect to yesss.at server.",
+                exc_info=ex)
         except self.yesss.AccountSuspendedError as ex:
-            _LOGGER.error("Wrong login credentials!! "
-                          "Verify correct credentials and restart "
-                          "Home Assistant: %s", ex)
+            _LOGGER.error(
+                "Wrong login credentials!! Verify correct credentials and "
+                "restart Home Assistant: %s", ex)
         except self.yesss.LoginError as ex:
             _LOGGER.error("Wrong login credentials: %s", ex)
         else:
