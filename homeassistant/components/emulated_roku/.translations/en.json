@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Name already exists"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Name",
+                    "listen_port": "Port",
+                    "host_ip": "IP address",
+                    "advertise_ip": "Advertised IP address",
+                    "advertise_port": "Advertised port",
+                    "upnp_bind_multicast": "Bind multicast group"
+                },
+                "title": "Define Emulated Roku configuration"
+            }
+        },
+        "title": "Emulated Roku"
+    }
+}
