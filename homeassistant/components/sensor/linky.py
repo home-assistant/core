@@ -35,26 +35,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config[CONF_PASSWORD]
     timeout = config[CONF_TIMEOUT]
 
-    from pylinky.client import LinkyClient, PyLinkyError
-    client = LinkyClient(username, password, None, timeout)
-
-    try:
-        client.fetch_data()
-    except PyLinkyError as exp:
-        _LOGGER.error(exp)
-        return
-
-    devices = [LinkySensor('Linky', client)]
+    devices = [LinkySensor('Linky', username, password)]
     add_entities(devices, True)
 
 
 class LinkySensor(Entity):
     """Representation of a sensor entity for Linky."""
 
-    def __init__(self, name, client):
+    def __init__(self, name, username, password):
         """Initialize the sensor."""
         self._name = name
-        self._client = client
+        self._username = username
+        self._password = password
         self._state = None
 
     @property
@@ -75,17 +67,19 @@ class LinkySensor(Entity):
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Fetch new state data for the sensor."""
-        from pylinky.client import PyLinkyError
+        from pylinky.client import LinkyClient, PyLinkyError
+
+        client = LinkyClient(self._username, self._password)
         try:
-            self._client.fetch_data()
+            client.fetch_data()
         except PyLinkyError as exp:
             _LOGGER.error(exp)
             return
 
-        _LOGGER.debug(json.dumps(self._client.get_data(), indent=2))
+        _LOGGER.debug(json.dumps(client.get_data(), indent=2))
 
-        if self._client.get_data():
+        if client.get_data():
             # get the last past day data
-            self._state = self._client.get_data()['daily'][-2]['conso']
+            self._state = client.get_data()['daily'][-2]['conso']
         else:
             self._state = None
