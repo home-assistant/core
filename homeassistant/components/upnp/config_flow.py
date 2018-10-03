@@ -28,7 +28,7 @@ def ensure_domain_data(hass):
 
 @config_entries.HANDLERS.register(DOMAIN)
 class UpnpFlowHandler(data_entry_flow.FlowHandler):
-    """Handle a Hue config flow."""
+    """Handle a UPnP/IGD config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL

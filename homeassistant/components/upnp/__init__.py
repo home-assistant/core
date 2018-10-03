@@ -103,7 +103,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 # config flow
 async def async_setup_entry(hass: HomeAssistantType,
                             config_entry: ConfigEntry):
-    """Set up a bridge from a config entry."""
+    """Set up UPnP/IGD-device from a config entry."""
     ensure_domain_data(hass)
     data = config_entry.data
 
