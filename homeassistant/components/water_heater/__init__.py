@@ -6,6 +6,7 @@ https://home-assistant.io/components/water_heater/
 """
 from datetime import timedelta
 import logging
+import functools as ft
 
 import voluptuous as vol
 
@@ -201,7 +202,8 @@ class WaterHeaterDevice(Entity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        self.set_temperature(**kwargs)
+        await self.hass.async_add_executor_job(
+            ft.partial(self.set_temperature, **kwargs))
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
@@ -209,7 +211,7 @@ class WaterHeaterDevice(Entity):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
-        self.set_operation_mode(operation_mode)
+        await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
@@ -217,7 +219,7 @@ class WaterHeaterDevice(Entity):
 
     async def async_turn_away_mode_on(self):
         """Turn away mode on."""
-        self.turn_away_mode_on()
+        await self.hass.async_add_executor_job(self.turn_away_mode_on)
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
@@ -225,7 +227,7 @@ class WaterHeaterDevice(Entity):
 
     async def async_turn_away_mode_off(self):
         """Turn away mode off."""
-        self.turn_away_mode_off()
+        await self.hass.async_add_executor_job(self.turn_away_mode_off)
 
     @property
     def supported_features(self):
