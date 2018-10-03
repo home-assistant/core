@@ -88,7 +88,7 @@ class HassIODiscovery(HomeAssistantView):
         except HassioAPIError as err:
             _LOGGER.error("Can't read add-on info: %s", err)
             return
-        data[ATTR_ADDON] = addon_info[ATTR_NAME]
+        config_data[ATTR_ADDON] = addon_info[ATTR_NAME]
 
         # Use config flow
         await self.hass.config_entries.flow.async_init(
