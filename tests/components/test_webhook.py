@@ -63,7 +63,7 @@ async def test_posting_webhook_json(hass, mock_client):
 
     async def handle(*args):
         """Handle webhook."""
-        hooks.append(args)
+        hooks.append((args[0], args[1], await args[2].text()))
 
     hass.components.webhook.async_register(webhook_id, handle)
 
@@ -74,8 +74,7 @@ async def test_posting_webhook_json(hass, mock_client):
     assert len(hooks) == 1
     assert hooks[0][0] is hass
     assert hooks[0][1] == webhook_id
-    # The line below causes PayloadAccessError
-    # assert await hooks[0][2].text() == '{\'data\':true}'
+    assert hooks[0][2] == '{"data": true}'
 
 
 async def test_posting_webhook_no_data(hass, mock_client):

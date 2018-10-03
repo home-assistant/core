@@ -9,7 +9,6 @@ import json
 import logging
 from urllib.parse import urlparse
 
-from aiohttp.web import Response
 import requests
 import voluptuous as vol
 
@@ -82,9 +81,7 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = json.loads(body) if body else {}
     except ValueError:
-        _LOGGER.warning(
-            'Received webhook %s with invalid JSON', webhook_id)
-        return Response(status=200)
+        return None
 
     if isinstance(data, dict):
         data['webhook_id'] = webhook_id
