@@ -95,6 +95,18 @@ class TestJewishCalenderSensor(unittest.TestCase):
                 sensor.async_update(), self.hass.loop).result()
             self.assertEqual(sensor.state, "א\' ראש השנה")
 
+    def test_jewish_calendar_sensor_holiday_name_english(self):
+        """Test Jewish calendar sensor date output in hebrew."""
+        test_time = dt(2018, 9, 10)
+        sensor = JewishCalSensor(
+            name='test', language='english', sensor_type='holiday_name',
+            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
+            diaspora=False)
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop).result()
+            self.assertEqual(sensor.state, "Rosh Hashana I")
+
     def test_jewish_calendar_sensor_holyness(self):
         """Test Jewish calendar sensor date output in hebrew."""
         test_time = dt(2018, 9, 10)
