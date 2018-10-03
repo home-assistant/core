@@ -17,7 +17,7 @@ from .const import (
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
-REQUIREMENTS = ['pytradfri[async]==6.0.0']
+REQUIREMENTS = ['pytradfri[async]==6.0.1']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = '.tradfri_psk.conf'
