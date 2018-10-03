@@ -39,7 +39,8 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
         assert mock_mqtt.called
         mock_mqtt.assert_called_with({
             'broker': 'mock-broker', 'port': 1883, 'username': 'mock-user',
-            'password': 'mock-pass', 'protocol': '3.1.1', 'addon': 'Mosquitto Test',
+            'password': 'mock-pass', 'protocol': '3.1.1',
+            'addon': 'Mosquitto Test',
         })
 
 
@@ -82,5 +83,6 @@ async def test_hassio_discovery_webhook(hass, aioclient_mock, hassio_client):
         assert mock_mqtt.called
         mock_mqtt.assert_called_with({
             'broker': 'mock-broker', 'port': 1883, 'username': 'mock-user',
-            'password': 'mock-pass', 'protocol': '3.1.1', 'addon': 'Mosquitto Test',
+            'password': 'mock-pass', 'protocol': '3.1.1',
+            'addon': 'Mosquitto Test',
         })
