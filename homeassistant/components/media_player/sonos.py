@@ -133,9 +133,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Sync version of async add devices."""
         hass.add_job(async_add_entities, devices, update_before_add)
 
-    hass.add_job(_setup_platform, hass,
-                 hass.data[SONOS_DOMAIN].get('media_player', {}),
-                 add_entities, None)
+    hass.async_add_executor_job(
+        _setup_platform, hass, hass.data[SONOS_DOMAIN].get('media_player', {}),
+        add_entities, None)
 
 
 def _setup_platform(hass, config, add_entities, discovery_info):
@@ -366,7 +366,7 @@ class SonosDevice(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
         self.hass.data[DATA_SONOS].devices.append(self)
-        self.hass.async_add_job(self._subscribe_to_player_events)
+        self.hass.async_add_executor_job(self._subscribe_to_player_events)
 
     @property
     def unique_id(self):
