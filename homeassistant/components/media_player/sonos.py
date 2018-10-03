@@ -341,7 +341,7 @@ class SonosDevice(MediaPlayerDevice):
         self._model = None
         self._player_volume = None
         self._player_muted = None
-        self._play_mode = None
+        self._shuffle = None
         self._name = None
         self._coordinator = None
         self._sonos_group = None
@@ -437,7 +437,7 @@ class SonosDevice(MediaPlayerDevice):
         speaker_info = self.soco.get_speaker_info(True)
         self._name = speaker_info['zone_name']
         self._model = speaker_info['model_name']
-        self._play_mode = self.soco.play_mode
+        self._shuffle = self.soco.shuffle
 
         self.update_volume()
 
@@ -530,7 +530,7 @@ class SonosDevice(MediaPlayerDevice):
         if new_status == 'TRANSITIONING':
             return
 
-        self._play_mode = self.soco.play_mode
+        self._shuffle = self.soco.shuffle
 
         if self.soco.is_playing_tv:
             self.update_media_linein(SOURCE_TV)
@@ -755,7 +755,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_coordinator
     def shuffle(self):
         """Shuffling state."""
-        return 'SHUFFLE' in self._play_mode
+        return self._shuffle
 
     @property
     def media_content_type(self):
@@ -835,7 +835,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_coordinator
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
-        self.soco.play_mode = 'SHUFFLE_NOREPEAT' if shuffle else 'NORMAL'
+        self.soco.shuffle = shuffle
 
     @soco_error()
     def mute_volume(self, mute):
