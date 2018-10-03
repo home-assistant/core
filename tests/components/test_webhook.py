@@ -58,6 +58,7 @@ async def test_posting_webhook_invalid_json(hass, mock_client):
 
 async def test_posting_webhook_json(hass, mock_client):
     """Test posting a webhook with JSON data."""
+    from aiohttp.web import Request
     hooks = []
     webhook_id = hass.components.webhook.async_generate_id()
 
@@ -74,13 +75,12 @@ async def test_posting_webhook_json(hass, mock_client):
     assert len(hooks) == 1
     assert hooks[0][0] is hass
     assert hooks[0][1] == webhook_id
-    assert hooks[0][2] == {
-        'data': True
-    }
+    assert isinstance(hooks[0][2], Request)
 
 
 async def test_posting_webhook_no_data(hass, mock_client):
     """Test posting a webhook with no data."""
+    from aiohttp.web import Request
     hooks = []
     webhook_id = hass.components.webhook.async_generate_id()
 
@@ -95,4 +95,4 @@ async def test_posting_webhook_no_data(hass, mock_client):
     assert len(hooks) == 1
     assert hooks[0][0] is hass
     assert hooks[0][1] == webhook_id
-    assert hooks[0][2] == {}
+    assert isinstance(hooks[0][2], Request)
