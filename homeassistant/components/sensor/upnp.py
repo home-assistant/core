@@ -4,7 +4,6 @@ Support for UPnP/IGD Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.upnp/
 """
-# pylint: disable=invalid-name
 from datetime import datetime
 import logging
 
@@ -12,6 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.upnp.const import DOMAIN as DATA_UPNP
+from homeassistant.components.upnp.const import SIGNAL_REMOVE_SENSOR
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,9 +88,10 @@ class UpnpSensor(Entity):
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
         async_dispatcher_connect(self.hass,
-                                 'upnp_remove_sensor',
+                                 SIGNAL_REMOVE_SENSOR,
                                  self._upnp_remove_sensor)
 
+    @callback
     def _upnp_remove_sensor(self, device):
         """Remove sensor."""
         if self._device != device:
