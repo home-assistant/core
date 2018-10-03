@@ -40,10 +40,11 @@ SERVICE_START_REMOTE_CONTROL = 'xiaomi_remote_control_start'
 SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_remote_control_stop'
 
 FAN_SPEEDS = {
-    'Quiet': 38,
-    'Balanced': 60,
-    'Turbo': 77,
-    'Max': 90}
+    'Quiet': 101,
+    'Balanced': 102,
+    'Turbo': 103,
+    'Max': 104,
+    'Mop': 105}
 
 ATTR_CLEANING_TIME = 'cleaning_time'
 ATTR_DO_NOT_DISTURB = 'do_not_disturb'
