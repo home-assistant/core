@@ -149,6 +149,7 @@ FLOWS = [
     'sonos',
     'tradfri',
     'zone',
+    'upnp',
 ]
 
 
