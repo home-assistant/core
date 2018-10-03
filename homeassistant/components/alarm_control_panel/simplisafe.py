@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['simplisafe-python==3.1.1']
+REQUIREMENTS = ['simplisafe-python==3.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
