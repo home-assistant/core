@@ -38,7 +38,7 @@ async def async_setup(hass, config):
                                       websession=async_get_clientsession(hass))
     hass.data[DOMAIN] = tibber_connection
 
-    async def _close(*_):
+    async def _close(event):
         await tibber_connection.rt_disconnect()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
