@@ -112,9 +112,8 @@ class AugustBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         from august.lock import LockDoorStatus
-
-        """Return true if open or unknown for door.
         if SENSOR_TYPES[self._sensor_type][1] == 'door':
+            # For sensor type door, return true open/unknown or false for close
             return self._state is not LockDoorStatus.CLOSED
 
         return self._state
