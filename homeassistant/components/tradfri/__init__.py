@@ -13,7 +13,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
 from .const import (
-    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID)
+    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID,
+    EVENT_HOMEASSISTANT_STOP)
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
@@ -92,7 +93,7 @@ async def async_setup_entry(hass, entry):
         """Close connection when hass stops."""
         hass.async_add_job(factory.shutdown())
 
-    self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
     api = factory.request
     gateway = Gateway()

@@ -9,7 +9,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 
 from .const import (
-    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID)
+    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID,
+    EVENT_HOMEASSISTANT_STOP)
 
 KEY_HOST = 'host'
 KEY_SECURITY_CODE = 'security_code'
@@ -171,7 +172,7 @@ async def get_gateway_info(hass, host, identity, key):
             """Close connection when hass stops."""
             hass.async_add_job(factory.shutdown())
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
         api = factory.request
         gateway = Gateway()
