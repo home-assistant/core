@@ -12,23 +12,17 @@ from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA,
                                               STATE_IDLE, STATE_HEAT,
                                               STATE_COOL,
                                               SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.opentherm_gw import SIGNAL_OPENTHERM_GW_UPDATE
 from homeassistant.const import (ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME,
                                  PRECISION_HALVES, PRECISION_TENTHS,
                                  TEMP_CELSIUS, PRECISION_WHOLE)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyotgw==0.1b0']
+DEPENDENCIES = ['opentherm_gw']
 
 CONF_FLOOR_TEMP = "floor_temperature"
 CONF_PRECISION = 'precision'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE): cv.string,
-    vol.Optional(CONF_NAME, default="OpenTherm Gateway"): cv.string,
-    vol.Optional(CONF_PRECISION): vol.In([PRECISION_TENTHS, PRECISION_HALVES,
-                                          PRECISION_WHOLE]),
-    vol.Optional(CONF_FLOOR_TEMP, default=False): cv.boolean,
-})
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the opentherm_gw device."""
-    gateway = OpenThermGateway(config)
+    gateway = OpenThermGateway(discovery_info)
     async_add_entities([gateway])
 
 
@@ -45,11 +39,9 @@ class OpenThermGateway(ClimateDevice):
     """Representation of a climate device."""
 
     def __init__(self, config):
-        """Initialize the sensor."""
+        """Initialize the device."""
         import pyotgw
         self.pyotgw = pyotgw
-        self.gateway = self.pyotgw.pyotgw()
-        self._device = config[CONF_DEVICE]
         self.friendly_name = config.get(CONF_NAME)
         self.floor_temp = config.get(CONF_FLOOR_TEMP)
         self.temp_precision = config.get(CONF_PRECISION)
@@ -63,10 +55,9 @@ class OpenThermGateway(ClimateDevice):
 
     async def async_added_to_hass(self):
         """Connect to the OpenTherm Gateway device."""
-        await self.gateway.connect(self.hass.loop, self._device)
-        self.gateway.subscribe(self.receive_report)
-        _LOGGER.debug("Connected to %s on %s", self.friendly_name,
-                      self._device)
+        _LOGGER.debug("Added device {}".format(self.friendly_name))
+        async_dispatcher_connect(self.hass, SIGNAL_OPENTHERM_GW_UPDATE,
+                                 self.receive_report)
 
     async def receive_report(self, status):
         """Receive and handle a new report from the Gateway."""
