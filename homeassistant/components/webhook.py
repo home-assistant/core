@@ -85,7 +85,7 @@ class WebhookView(HomeAssistantView):
             return Response(status=200)
 
         try:
-            response = await handler(hass, webhook_id, data)
+            response = await handler(hass, webhook_id, data, request.headers)
             if response is None:
                 response = Response(status=200)
             return response
