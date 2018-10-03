@@ -6,7 +6,6 @@ https://home-assistant.io/components/water_heater/
 """
 from datetime import timedelta
 import logging
-import functools as ft
 
 import voluptuous as vol
 
