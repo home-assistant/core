@@ -128,7 +128,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
-    hass.services.register(DOMAIN, 'update_google_travel_sensor', update)
+    hass.services.register(DOMAIN, 'google_travel_sensor_update', update)
 
 
 class GoogleTravelTimeSensor(Entity):
