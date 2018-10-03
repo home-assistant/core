@@ -99,6 +99,7 @@ class HKDevice():
         self.configurator = hass.components.configurator
         self.conn = None
         self.securecon = None
+        self._connection_warning_logged = False
 
         data_dir = os.path.join(hass.config.path(), HOMEKIT_DIR)
         if not os.path.isdir(data_dir):
@@ -136,10 +137,7 @@ class HKDevice():
 
         try:
             data = self.get_json('/accessories')
-        except HomeKitConnectionError as ex:
-            _LOGGER.info(
-                "Failed to connect to HomeKit device. Retrying in %d seconds.",
-                RETRY_INTERVAL, exc_info=ex)
+        except HomeKitConnectionError:
             call_later(
                 self.hass, RETRY_INTERVAL, lambda _: self.accessory_setup())
             return
@@ -166,9 +164,21 @@ class HKDevice():
             if self.conn is None:
                 self.connect()
             response = self.securecon.get(target)
-            return json.loads(response.read().decode())
+            data = json.loads(response.read().decode())
+
+            # After a successful connection, clear the warning logged status
+            self._connection_warning_logged = False
+
+            return data
         except (ConnectionError, OSError, json.JSONDecodeError) as ex:
             # Mark connection as failed
+            if not self._connection_warning_logged:
+                _LOGGER.warning("Failed to connect to homekit device",
+                                exc_info=ex)
+                self._connection_warning_logged = True
+            else:
+                _LOGGER.debug("Failed to connect to homekit device",
+                              exc_info=ex)
             self.conn = None
             self.securecon = None
             raise HomeKitConnectionError() from ex
@@ -242,8 +252,7 @@ class HomeKitEntity(Entity):
         """Obtain a HomeKit device's state."""
         try:
             data = self._accessory.get_json('/accessories')
-        except HomeKitConnectionError as ex:
-            _LOGGER.info("Lost connection to HomeKit device.", exc_info=ex)
+        except HomeKitConnectionError:
             return
         for accessory in data['accessories']:
             if accessory['aid'] != self._aid:
