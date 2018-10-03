@@ -1,5 +1,4 @@
 """The tests for the hassio component."""
-import asyncio
 
 import aiohttp
 import pytest
