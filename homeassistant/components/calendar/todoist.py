@@ -517,7 +517,6 @@ class TodoistProjectData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
-
         _LOGGER.debug("Updating {0}".format(self._name))
 
         if self._id is None:
