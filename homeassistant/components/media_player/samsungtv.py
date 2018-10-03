@@ -124,11 +124,19 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
+        count = 3
         if sys.platform == 'win32':
-            _ping_cmd = ['ping', '-n 1', '-w', '1000', self._config['host']]
+            _ping_cmd = [
+                'ping', f'-n {count}', '-w',
+                f"{self._config['timeout']}000",
+                self._config['host']
+            ]
         else:
-            _ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
-                         self._config['host']]
+            _ping_cmd = [
+                'ping', '-n', '-q', f'-c{count}',
+                f"-W{self._config['timeout']}",
+                self._config['host']
+            ]
 
         ping = subprocess.Popen(
             _ping_cmd,
