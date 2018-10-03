@@ -4,16 +4,17 @@ Add support for the Xiaomi TVs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/xiaomi_tv/
 """
-
 import logging
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
-from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, MediaPlayerDevice, PLATFORM_SCHEMA,
-    SUPPORT_VOLUME_STEP)
 
-REQUIREMENTS = ['pymitv==1.0.0']
+import voluptuous as vol
+
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['pymitv==1.4.0']
 
 DEFAULT_NAME = "Xiaomi TV"
 
@@ -29,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Xiaomi TV platform."""
     from pymitv import Discover
 
@@ -39,16 +40,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if host is not None:
         # Check if there's a valid TV at the IP address.
-        if not Discover().checkIp(host):
+        if not Discover().check_ip(host):
             _LOGGER.error(
-                "Could not find Xiaomi TV with specified IP: %s", host
-            )
+                "Could not find Xiaomi TV with specified IP: %s", host)
         else:
             # Register TV with Home Assistant.
-            add_devices([XiaomiTV(host, name)])
+            add_entities([XiaomiTV(host, name)])
     else:
         # Otherwise, discover TVs on network.
-        add_devices(XiaomiTV(tv, DEFAULT_NAME) for tv in Discover().scan())
+        add_entities(XiaomiTV(tv, DEFAULT_NAME) for tv in Discover().scan())
 
 
 class XiaomiTV(MediaPlayerDevice):

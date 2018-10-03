@@ -19,7 +19,7 @@ POWER_CONSUMED = 'power_consumed'
 IN_USE = 'inuse'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif model in ['86plug', 'ctrl_86plug', 'ctrl_86plug.aq1']:
                 devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
                                                    'status', True, gateway))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
@@ -99,6 +99,11 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
         attrs.update(super().device_state_attributes)
         return attrs
 
+    @property
+    def should_poll(self):
+        """Return the polling state. Polling needed for zigbee plug only."""
+        return self._supports_power_consumption
+
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         if self._write_to_hub(self._sid, **{self._data_key: 'on'}):
@@ -131,3 +136,8 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             return False
         self._state = state
         return True
+
+    def update(self):
+        """Get data from hub."""
+        _LOGGER.debug("Update data from hub: %s", self._name)
+        self._get_from_hub(self._sid)

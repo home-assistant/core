@@ -60,7 +60,7 @@ def setup(hass, config):
     return True
 
 
-class SCSGate(object):
+class SCSGate:
     """The class for dealing with the SCSGate device via scsgate.Reactor."""
 
     def __init__(self, device, logger):

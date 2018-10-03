@@ -4,7 +4,6 @@ Use Bayesian Inference to trigger a binary sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.bayesian/
 """
-import asyncio
 import logging
 from collections import OrderedDict
 
@@ -74,8 +73,8 @@ def update_probability(prior, prob_true, prob_false):
     return probability
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Bayesian Binary sensor."""
     name = config.get(CONF_NAME)
     observations = config.get(CONF_OBSERVATIONS)
@@ -83,7 +82,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     probability_threshold = config.get(CONF_PROBABILITY_THRESHOLD)
     device_class = config.get(CONF_DEVICE_CLASS)
 
-    async_add_devices([
+    async_add_entities([
         BayesianBinarySensor(
             name, prior, observations, probability_threshold, device_class)
     ], True)
@@ -118,11 +117,9 @@ class BayesianBinarySensor(BinarySensorDevice):
             'state': self._process_state
         }
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity about to be added."""
         @callback
-        # pylint: disable=invalid-name
         def async_threshold_sensor_state_listener(entity, old_state,
                                                   new_state):
             """Handle sensor state changes."""
@@ -214,7 +211,6 @@ class BayesianBinarySensor(BinarySensorDevice):
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
         }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data and update the states."""
-        self._deviation = bool(self.probability > self._probability_threshold)
+        self._deviation = bool(self.probability >= self._probability_threshold)

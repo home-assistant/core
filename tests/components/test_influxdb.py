@@ -21,7 +21,7 @@ class TestInfluxDB(unittest.TestCase):
     """Test the InfluxDB component."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.handler_method = None
         self.hass.bus.listen = mock.Mock()
@@ -96,7 +96,7 @@ class TestInfluxDB(unittest.TestCase):
         assert not setup_component(self.hass, influxdb.DOMAIN, config)
 
     def _setup(self, **kwargs):
-        """Setup the client."""
+        """Set up the client."""
         config = {
             'influxdb': {
                 'host': 'host',
@@ -217,7 +217,7 @@ class TestInfluxDB(unittest.TestCase):
         """Test the event listener for missing units."""
         self._setup()
 
-        attrs = {'bignumstring':  "9" * 999}
+        attrs = {'bignumstring':  '9' * 999, 'nonumstring': 'nan'}
         state = mock.MagicMock(
             state=8, domain='fake', entity_id='fake.entity-id',
             object_id='entity', attributes=attrs)

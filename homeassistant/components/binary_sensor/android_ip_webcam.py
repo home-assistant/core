@@ -4,8 +4,6 @@ Support for IP Webcam binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.android_ip_webcam/
 """
-import asyncio
-
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.android_ip_webcam import (
     KEY_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST, CONF_NAME)
@@ -13,8 +11,8 @@ from homeassistant.components.android_ip_webcam import (
 DEPENDENCIES = ['android_ip_webcam']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the IP Webcam binary sensors."""
     if discovery_info is None:
         return
@@ -23,7 +21,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = discovery_info[CONF_NAME]
     ipcam = hass.data[DATA_IP_WEBCAM][host]
 
-    async_add_devices(
+    async_add_entities(
         [IPWebcamBinarySensor(name, host, ipcam, 'motion_active')], True)
 
 
@@ -50,8 +48,7 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorDevice):
         """Return true if the binary sensor is on."""
         return self._state
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve latest state."""
         state, _ = self._ipcam.export_sensor(self._sensor)
         self._state = state == 1.0

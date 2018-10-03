@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['pyenvisalink==2.2']
+REQUIREMENTS = ['pyenvisalink==3.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,8 +81,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up for Envisalink devices."""
     from pyenvisalink import EnvisalinkAlarmPanel
 
@@ -111,20 +110,24 @@ def async_setup(hass, config):
     def login_fail_callback(data):
         """Handle when the evl rejects our login."""
         _LOGGER.error("The Envisalink rejected your credentials")
-        sync_connect.set_result(False)
+        if not sync_connect.done():
+            sync_connect.set_result(False)
 
     @callback
     def connection_fail_callback(data):
         """Network failure callback."""
         _LOGGER.error("Could not establish a connection with the Envisalink")
-        sync_connect.set_result(False)
+        if not sync_connect.done():
+            sync_connect.set_result(False)
 
     @callback
     def connection_success_callback(data):
         """Handle a successful connection."""
         _LOGGER.info("Established a connection with the Envisalink")
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
-        sync_connect.set_result(True)
+        if not sync_connect.done():
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                       stop_envisalink)
+            sync_connect.set_result(True)
 
     @callback
     def zones_updated_callback(data):
@@ -161,27 +164,27 @@ def async_setup(hass, config):
     _LOGGER.info("Start envisalink.")
     controller.start()
 
-    result = yield from sync_connect
+    result = await sync_connect
     if not result:
         return False
 
     # Load sub-components for Envisalink
     if partitions:
-        hass.async_add_job(async_load_platform(
+        hass.async_create_task(async_load_platform(
             hass, 'alarm_control_panel', 'envisalink', {
                 CONF_PARTITIONS: partitions,
                 CONF_CODE: code,
                 CONF_PANIC: panic_type
             }, config
         ))
-        hass.async_add_job(async_load_platform(
+        hass.async_create_task(async_load_platform(
             hass, 'sensor', 'envisalink', {
                 CONF_PARTITIONS: partitions,
                 CONF_CODE: code
             }, config
         ))
     if zones:
-        hass.async_add_job(async_load_platform(
+        hass.async_create_task(async_load_platform(
             hass, 'binary_sensor', 'envisalink', {
                 CONF_ZONES: zones
             }, config

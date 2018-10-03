@@ -10,13 +10,13 @@ from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['hive']
 
-FRIENDLY_NAMES = {'Hub_OnlineStatus': 'Hub Status',
+FRIENDLY_NAMES = {'Hub_OnlineStatus': 'Hive Hub Status',
                   'Hive_OutsideTemperature': 'Outside Temperature'}
 DEVICETYPE_ICONS = {'Hub_OnlineStatus': 'mdi:switch',
                     'Hive_OutsideTemperature': 'mdi:thermometer'}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive sensor devices."""
     if discovery_info is None:
         return
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if (discovery_info["HA_DeviceType"] == "Hub_OnlineStatus" or
             discovery_info["HA_DeviceType"] == "Hive_OutsideTemperature"):
-        add_devices([HiveSensorEntity(session, discovery_info)])
+        add_entities([HiveSensorEntity(session, discovery_info)])
 
 
 class HiveSensorEntity(Entity):
@@ -55,7 +55,7 @@ class HiveSensorEntity(Entity):
         """Return the state of the sensor."""
         if self.device_type == "Hub_OnlineStatus":
             return self.session.sensor.hub_online_status(self.node_id)
-        elif self.device_type == "Hive_OutsideTemperature":
+        if self.device_type == "Hive_OutsideTemperature":
             return self.session.weather.temperature()
 
     @property
@@ -70,7 +70,7 @@ class HiveSensorEntity(Entity):
         return DEVICETYPE_ICONS.get(self.device_type)
 
     def update(self):
-        """Update all Node data frome Hive."""
+        """Update all Node data from Hive."""
         if self.session.core.update_data(self.node_id):
             for entity in self.session.entities:
                 entity.handle_update(self.data_updatesource)

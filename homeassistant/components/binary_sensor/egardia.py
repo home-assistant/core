@@ -4,7 +4,6 @@ Interfaces with Egardia/Woonveilig alarm control panel.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.egardia/
 """
-import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -18,8 +17,8 @@ EGARDIA_TYPE_TO_DEVICE_CLASS = {'IR Sensor': 'motion',
                                 'IR': 'motion'}
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Initialize the platform."""
     if (discovery_info is None or
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
@@ -27,7 +26,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     disc_info = discovery_info[ATTR_DISCOVER_DEVICES]
     # multiple devices here!
-    async_add_devices(
+    async_add_entities(
         (
             EgardiaBinarySensor(
                 sensor_id=disc_info[sensor]['id'],
@@ -58,7 +57,7 @@ class EgardiaBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """The name of the device."""
+        """Return the name of the device."""
         return self._name
 
     @property
@@ -74,5 +73,5 @@ class EgardiaBinarySensor(BinarySensorDevice):
 
     @property
     def device_class(self):
-        """The device class."""
+        """Return the device class."""
         return self._device_class

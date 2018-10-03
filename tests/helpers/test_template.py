@@ -27,7 +27,7 @@ class TestHelpersTemplate(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup the tests."""
+        """Set up the tests."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = UnitSystem('custom', TEMP_CELSIUS,
                                             LENGTH_METERS, VOLUME_LITERS,
@@ -511,8 +511,8 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_regex_match(self):
         """Test regex_match method."""
-        tpl = template.Template("""
-{{ '123-456-7890' | regex_match('(\d{3})-(\d{3})-(\d{4})') }}
+        tpl = template.Template(r"""
+{{ '123-456-7890' | regex_match('(\\d{3})-(\\d{3})-(\\d{4})') }}
                 """, self.hass)
         self.assertEqual('True', tpl.render())
 
@@ -528,8 +528,8 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_regex_search(self):
         """Test regex_search method."""
-        tpl = template.Template("""
-{{ '123-456-7890' | regex_search('(\d{3})-(\d{3})-(\d{4})') }}
+        tpl = template.Template(r"""
+{{ '123-456-7890' | regex_search('(\\d{3})-(\\d{3})-(\\d{4})') }}
                 """, self.hass)
         self.assertEqual('True', tpl.render())
 
@@ -545,8 +545,8 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_regex_replace(self):
         """Test regex_replace method."""
-        tpl = template.Template("""
-{{ 'Hello World' | regex_replace('(Hello\s)',) }}
+        tpl = template.Template(r"""
+{{ 'Hello World' | regex_replace('(Hello\\s)',) }}
                 """, self.hass)
         self.assertEqual('World', tpl.render())
 
@@ -561,6 +561,36 @@ class TestHelpersTemplate(unittest.TestCase):
 {{ 'Flight from JFK to LHR' | regex_findall_index('([A-Z]{3})', 1) }}
                 """, self.hass)
         self.assertEqual('LHR', tpl.render())
+
+    def test_bitwise_and(self):
+        """Test bitwise_and method."""
+        tpl = template.Template("""
+{{ 8 | bitwise_and(8) }}
+                """, self.hass)
+        self.assertEqual(str(8 & 8), tpl.render())
+        tpl = template.Template("""
+{{ 10 | bitwise_and(2) }}
+                """, self.hass)
+        self.assertEqual(str(10 & 2), tpl.render())
+        tpl = template.Template("""
+{{ 8 | bitwise_and(2) }}
+                """, self.hass)
+        self.assertEqual(str(8 & 2), tpl.render())
+
+    def test_bitwise_or(self):
+        """Test bitwise_or method."""
+        tpl = template.Template("""
+{{ 8 | bitwise_or(8) }}
+                """, self.hass)
+        self.assertEqual(str(8 | 8), tpl.render())
+        tpl = template.Template("""
+{{ 10 | bitwise_or(2) }}
+                """, self.hass)
+        self.assertEqual(str(10 | 2), tpl.render())
+        tpl = template.Template("""
+{{ 8 | bitwise_or(2) }}
+                """, self.hass)
+        self.assertEqual(str(8 | 2), tpl.render())
 
     def test_distance_function_with_1_state(self):
         """Test distance function with 1 state."""

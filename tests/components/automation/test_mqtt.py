@@ -7,6 +7,7 @@ import homeassistant.components.automation as automation
 from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant,
     mock_component)
+from tests.components.automation import common
 
 
 # pylint: disable=invalid-name
@@ -14,7 +15,7 @@ class TestAutomationMQTT(unittest.TestCase):
     """Test the event automation."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'group')
         mock_mqtt_component(self.hass)
@@ -22,7 +23,7 @@ class TestAutomationMQTT(unittest.TestCase):
 
         @callback
         def record_call(service):
-            """Helper to record calls."""
+            """Record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
@@ -56,7 +57,7 @@ class TestAutomationMQTT(unittest.TestCase):
         self.assertEqual('mqtt - test-topic - { "hello": "world" } - world',
                          self.calls[0].data['some'])
 
-        automation.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
         fire_mqtt_message(self.hass, 'test-topic', 'test_payload')
         self.hass.block_till_done()

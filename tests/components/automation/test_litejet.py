@@ -7,8 +7,9 @@ from datetime import timedelta
 from homeassistant import setup
 import homeassistant.util.dt as dt_util
 from homeassistant.components import litejet
-from tests.common import (fire_time_changed, get_test_home_assistant)
 import homeassistant.components.automation as automation
+
+from tests.common import (fire_time_changed, get_test_home_assistant)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class TestLiteJetTrigger(unittest.TestCase):
 
     @mock.patch('pylitejet.LiteJet')
     def setup_method(self, method, mock_pylitejet):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.start()
 

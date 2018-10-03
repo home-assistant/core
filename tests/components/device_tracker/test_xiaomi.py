@@ -55,21 +55,21 @@ def mocked_requests(*args, **kwargs):
             "code": "401",
             "msg": "Invalid token"
         }, 200)
-    elif data and data.get('username', None) == TOKEN_TIMEOUT_USERNAME:
+    if data and data.get('username', None) == TOKEN_TIMEOUT_USERNAME:
         # deliver an expired token
         return MockResponse({
             "url": "/cgi-bin/luci/;stok=ef5860/web/home",
             "token": "timedOut",
             "code": "0"
         }, 200)
-    elif str(args[0]).startswith(URL_AUTHORIZE):
+    if str(args[0]).startswith(URL_AUTHORIZE):
         # deliver an authorized token
         return MockResponse({
             "url": "/cgi-bin/luci/;stok=ef5860/web/home",
             "token": "ef5860",
             "code": "0"
         }, 200)
-    elif str(args[0]).endswith("timedOut/" + URL_LIST_END) \
+    if str(args[0]).endswith("timedOut/" + URL_LIST_END) \
             and FIRST_CALL is True:
         FIRST_CALL = False
         # deliver an error when called with expired token
@@ -77,7 +77,7 @@ def mocked_requests(*args, **kwargs):
             "code": "401",
             "msg": "Invalid token"
         }, 200)
-    elif str(args[0]).endswith(URL_LIST_END):
+    if str(args[0]).endswith(URL_LIST_END):
         # deliver the device list
         return MockResponse({
             "mac": "1C:98:EC:0E:D5:A4",
@@ -149,8 +149,7 @@ def mocked_requests(*args, **kwargs):
             ],
             "code": 0
         }, 200)
-    else:
-        _LOGGER.debug('UNKNOWN ROUTE')
+    _LOGGER.debug('UNKNOWN ROUTE')
 
 
 class TestXiaomiDeviceScanner(unittest.TestCase):
@@ -210,7 +209,7 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
     def test_invalid_credential(self, mock_get, mock_post):
-        """"Testing invalid credential handling."""
+        """Testing invalid credential handling."""
         config = {
             DOMAIN: xiaomi.PLATFORM_SCHEMA({
                 CONF_PLATFORM: xiaomi.DOMAIN,
@@ -224,7 +223,7 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
     def test_valid_credential(self, mock_get, mock_post):
-        """"Testing valid refresh."""
+        """Testing valid refresh."""
         config = {
             DOMAIN: xiaomi.PLATFORM_SCHEMA({
                 CONF_PLATFORM: xiaomi.DOMAIN,
@@ -244,7 +243,7 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
     def test_token_timed_out(self, mock_get, mock_post):
-        """"Testing refresh with a timed out token.
+        """Testing refresh with a timed out token.
 
         New token is requested and list is downloaded a second time.
         """

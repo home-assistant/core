@@ -1,15 +1,20 @@
-requests==2.18.4
-pyyaml>=3.11,<4
-pytz>=2017.02
-pip>=8.0.3
+aiohttp==3.4.4
+astral==1.6.1
+async_timeout==3.0.0
+attrs==18.2.0
+bcrypt==3.1.4
+certifi>=2018.04.16
 jinja2>=2.10
-voluptuous==0.11.1
-typing>=3,<4
-aiohttp==3.1.3
-async_timeout==2.0.1
-astral==1.6
-certifi>=2017.4.17
-attrs==17.4.0
+PyJWT==1.6.4
+cryptography==2.3.1
+pip>=8.0.3
+pytz>=2018.04
+pyyaml>=3.13,<4
+requests==2.19.1
+voluptuous==0.11.5
+voluptuous-serialize==2.0.0
+
+pycryptodome>=3.6.6
 
 # Breaks Python 3.6 and is not needed for our supported Python versions
 enum34==1000000000.0.0

@@ -3,11 +3,26 @@
 import asyncio
 import unittest
 
-from homeassistant.core import CoreState, State
+from homeassistant.components.input_text import (
+    ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE)
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import CoreState, State, Context
+from homeassistant.loader import bind_hass
 from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.components.input_text import (DOMAIN, set_value)
 
 from tests.common import get_test_home_assistant, mock_restore_cache
+
+
+@bind_hass
+def set_value(hass, entity_id, value):
+    """Set input_text to value.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_VALUE: value,
+    })
 
 
 class TestInputText(unittest.TestCase):
@@ -15,7 +30,7 @@ class TestInputText(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -180,3 +195,27 @@ def test_no_initial_state_and_no_restore_state(hass):
     state = hass.states.get('input_text.b1')
     assert state
     assert str(state.state) == 'unknown'
+
+
+async def test_input_text_context(hass):
+    """Test that input_text context works."""
+    assert await async_setup_component(hass, 'input_text', {
+        'input_text': {
+            't1': {
+                'initial': 'bla',
+            }
+        }
+    })
+
+    state = hass.states.get('input_text.t1')
+    assert state is not None
+
+    await hass.services.async_call('input_text', 'set_value', {
+        'entity_id': state.entity_id,
+        'value': 'new_value',
+    }, True, Context(user_id='abcd'))
+
+    state2 = hass.states.get('input_text.t1')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

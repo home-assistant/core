@@ -2,8 +2,11 @@
     "config": {
         "abort": {
             "all_configured": "Alle Philips Hue Bridger er allerede konfigurert",
+            "already_configured": "Bridge er allerede konfigurert",
+            "cannot_connect": "Kan ikke koble til Bridge",
             "discover_timeout": "Kunne ikke oppdage Hue Bridger",
-            "no_bridges": "Ingen Philips Hue Bridger oppdaget"
+            "no_bridges": "Ingen Philips Hue Bridger oppdaget",
+            "unknown": "Ukjent feil oppstod"
         },
         "error": {
             "linking": "Ukjent koblingsfeil oppstod.",

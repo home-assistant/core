@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 
-REQUIREMENTS = ['pywebpush==1.6.0', 'PyJWT==1.6.0']
+REQUIREMENTS = ['pywebpush==1.6.0']
 
 DEPENDENCIES = ['frontend']
 
@@ -130,17 +130,6 @@ def _load_config(filename):
     except HomeAssistantError:
         pass
     return {}
-
-
-class JSONBytesDecoder(json.JSONEncoder):
-    """JSONEncoder to decode bytes objects to unicode."""
-
-    # pylint: disable=method-hidden, arguments-differ
-    def default(self, obj):
-        """Decode object if it's a bytes object, else defer to base class."""
-        if isinstance(obj, bytes):
-            return obj.decode()
-        return json.JSONEncoder.default(self, obj)
 
 
 class HTML5PushRegistrationView(HomeAssistantView):
@@ -280,7 +269,7 @@ class HTML5PushCallbackView(HomeAssistantView):
             return self.json_message('Authorization header must '
                                      'start with Bearer',
                                      status_code=HTTP_UNAUTHORIZED)
-        elif len(parts) != 2:
+        if len(parts) != 2:
             return self.json_message('Authorization header must '
                                      'be Bearer token',
                                      status_code=HTTP_UNAUTHORIZED)
@@ -413,7 +402,6 @@ class HTML5NotificationService(BaseNotificationService):
                 json.dumps(payload), gcm_key=gcm_key, ttl='86400'
             )
 
-            # pylint: disable=no-member
             if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)

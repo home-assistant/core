@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Netio platform."""
     from pynetio import Netio
 
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             DEVICES[host].netio, key, config[CONF_OUTLETS][key])
         DEVICES[host].entities.append(switch)
 
-    add_devices(DEVICES[host].entities)
+    add_entities(DEVICES[host].entities)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, dispose)
     return True
@@ -117,7 +117,7 @@ class NetioApiView(HomeAssistantView):
         ndev.start_dates = start_dates
 
         for dev in DEVICES[host].entities:
-            hass.async_add_job(dev.async_update_ha_state())
+            hass.async_create_task(dev.async_update_ha_state())
 
         return self.json(True)
 

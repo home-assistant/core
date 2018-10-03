@@ -15,6 +15,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import (
     assert_setup_component, get_test_home_assistant, fire_time_changed,
     mock_service, async_mock_service, mock_restore_cache)
+from tests.components.automation import common
 
 
 # pylint: disable=invalid-name
@@ -22,7 +23,7 @@ class TestAutomation(unittest.TestCase):
     """Test the event automation."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.calls = mock_service(self.hass, 'test', 'automation')
 
@@ -207,6 +208,7 @@ class TestAutomation(unittest.TestCase):
         """Test triggers."""
         assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
+                'alias': 'test',
                 'trigger': [
                     {
                         'platform': 'event',
@@ -228,7 +230,9 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         assert len(self.calls) == 0
 
-        self.hass.services.call('automation', 'trigger', blocking=True)
+        self.hass.services.call('automation', 'trigger',
+                                {'entity_id': 'automation.test'},
+                                blocking=True)
         self.hass.block_till_done()
         assert len(self.calls) == 1
 
@@ -360,7 +364,7 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         assert len(self.calls) == 1
 
-        automation.turn_off(self.hass, entity_id)
+        common.turn_off(self.hass, entity_id)
         self.hass.block_till_done()
 
         assert not automation.is_on(self.hass, entity_id)
@@ -368,7 +372,7 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         assert len(self.calls) == 1
 
-        automation.toggle(self.hass, entity_id)
+        common.toggle(self.hass, entity_id)
         self.hass.block_till_done()
 
         assert automation.is_on(self.hass, entity_id)
@@ -376,17 +380,17 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         assert len(self.calls) == 2
 
-        automation.trigger(self.hass, entity_id)
+        common.trigger(self.hass, entity_id)
         self.hass.block_till_done()
         assert len(self.calls) == 3
 
-        automation.turn_off(self.hass, entity_id)
+        common.turn_off(self.hass, entity_id)
         self.hass.block_till_done()
-        automation.trigger(self.hass, entity_id)
+        common.trigger(self.hass, entity_id)
         self.hass.block_till_done()
         assert len(self.calls) == 4
 
-        automation.turn_on(self.hass, entity_id)
+        common.turn_on(self.hass, entity_id)
         self.hass.block_till_done()
         assert automation.is_on(self.hass, entity_id)
 
@@ -434,10 +438,12 @@ class TestAutomation(unittest.TestCase):
                            }
                        }
                     }}):
-            automation.reload(self.hass)
-            self.hass.block_till_done()
-            # De-flake ?!
-            self.hass.block_till_done()
+            with patch('homeassistant.config.find_config_file',
+                       return_value=''):
+                common.reload(self.hass)
+                self.hass.block_till_done()
+                # De-flake ?!
+                self.hass.block_till_done()
 
         assert self.hass.states.get('automation.hello') is None
         assert self.hass.states.get('automation.bye') is not None
@@ -482,8 +488,10 @@ class TestAutomation(unittest.TestCase):
 
         with patch('homeassistant.config.load_yaml_config_file', autospec=True,
                    return_value={automation.DOMAIN: 'not valid'}):
-            automation.reload(self.hass)
-            self.hass.block_till_done()
+            with patch('homeassistant.config.find_config_file',
+                       return_value=''):
+                common.reload(self.hass)
+                self.hass.block_till_done()
 
         assert self.hass.states.get('automation.hello') is None
 
@@ -518,8 +526,10 @@ class TestAutomation(unittest.TestCase):
 
         with patch('homeassistant.config.load_yaml_config_file',
                    side_effect=HomeAssistantError('bla')):
-            automation.reload(self.hass)
-            self.hass.block_till_done()
+            with patch('homeassistant.config.find_config_file',
+                       return_value=''):
+                common.reload(self.hass)
+                self.hass.block_till_done()
 
         assert self.hass.states.get('automation.hello') is not None
 

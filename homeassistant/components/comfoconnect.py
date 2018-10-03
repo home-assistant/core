@@ -88,7 +88,7 @@ def setup(hass, config):
     return True
 
 
-class ComfoConnectBridge(object):
+class ComfoConnectBridge:
     """Representation of a ComfoConnect bridge."""
 
     def __init__(self, hass, bridge, name, token, friendly_name, pin):

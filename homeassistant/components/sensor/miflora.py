@@ -4,16 +4,19 @@ Support for Xiaomi Mi Flora BLE plant sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.miflora/
 """
+import asyncio
+from datetime import timedelta
 import logging
-
 import voluptuous as vol
+import async_timeout
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC
-)
+    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC,
+    CONF_SCAN_INTERVAL)
 
 
 REQUIREMENTS = ['miflora==0.4.0']
@@ -21,24 +24,19 @@ REQUIREMENTS = ['miflora==0.4.0']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ADAPTER = 'adapter'
-CONF_CACHE = 'cache_value'
 CONF_MEDIAN = 'median'
-CONF_RETRIES = 'retries'
-CONF_TIMEOUT = 'timeout'
 
 DEFAULT_ADAPTER = 'hci0'
-DEFAULT_UPDATE_INTERVAL = 1200
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_MEDIAN = 3
 DEFAULT_NAME = 'Mi Flora'
-DEFAULT_RETRIES = 2
-DEFAULT_TIMEOUT = 10
 
+SCAN_INTERVAL = timedelta(seconds=1200)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     'temperature': ['Temperature', '°C'],
-    'light': ['Light intensity', 'lux'],
+    'light': ['Light intensity', 'lx'],
     'moisture': ['Moisture', '%'],
     'conductivity': ['Conductivity', 'µS/cm'],
     'battery': ['Battery', '%'],
@@ -51,18 +49,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_RETRIES, default=DEFAULT_RETRIES): cv.positive_int,
-    vol.Optional(CONF_CACHE, default=DEFAULT_UPDATE_INTERVAL): cv.positive_int,
     vol.Optional(CONF_ADAPTER, default=DEFAULT_ADAPTER): cv.string,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
     try:
-        import bluepy.btle  # noqa: F401 # pylint: disable=unused-variable
+        import bluepy.btle  # noqa: F401 pylint: disable=unused-variable
         from btlewrap import BluepyBackend
         backend = BluepyBackend
     except ImportError:
@@ -70,16 +66,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         backend = GatttoolBackend
     _LOGGER.debug('Miflora is using %s backend.', backend.__name__)
 
-    cache = config.get(CONF_CACHE)
+    cache = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL).total_seconds()
     poller = miflora_poller.MiFloraPoller(
         config.get(CONF_MAC), cache_timeout=cache,
         adapter=config.get(CONF_ADAPTER), backend=backend)
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
-    poller.ble_timeout = config.get(CONF_TIMEOUT)
-    poller.retries = config.get(CONF_RETRIES)
 
     devs = []
+
+    try:
+        with async_timeout.timeout(9):
+            await hass.async_add_executor_job(poller.fill_cache)
+    except asyncio.TimeoutError:
+        _LOGGER.error('Unable to connect to %s', config.get(CONF_MAC))
+        raise PlatformNotReady
 
     for parameter in config[CONF_MONITORED_CONDITIONS]:
         name = SENSOR_TYPES[parameter][0]
@@ -92,7 +93,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devs.append(MiFloraSensor(
             poller, parameter, name, unit, force_update, median))
 
-    add_devices(devs)
+    async_add_entities(devs, update_before_add=True)
 
 
 class MiFloraSensor(Entity):
@@ -171,5 +172,8 @@ class MiFloraSensor(Entity):
             median = sorted(self.data)[int((self.median_count - 1) / 2)]
             _LOGGER.debug("Median is: %s", median)
             self._state = median
+        elif self._state is None:
+            _LOGGER.debug("Set initial state")
+            self._state = self.data[0]
         else:
             _LOGGER.debug("Not yet enough data for median calculation")

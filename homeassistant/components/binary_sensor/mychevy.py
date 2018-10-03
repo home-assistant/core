@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mychevy/
 """
-
-import asyncio
 import logging
 
 from homeassistant.components.mychevy import (
@@ -22,8 +20,8 @@ SENSORS = [
 ]
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the MyChevy sensors."""
     if discovery_info is None:
         return
@@ -31,9 +29,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensors = []
     hub = hass.data[MYCHEVY_DOMAIN]
     for sconfig in SENSORS:
-        sensors.append(EVBinarySensor(hub, sconfig))
+        for car in hub.cars:
+            sensors.append(EVBinarySensor(hub, sconfig, car.vid))
 
-    async_add_devices(sensors)
+    async_add_entities(sensors)
 
 
 class EVBinarySensor(BinarySensorDevice):
@@ -45,16 +44,18 @@ class EVBinarySensor(BinarySensorDevice):
 
     """
 
-    def __init__(self, connection, config):
+    def __init__(self, connection, config, car_vid):
         """Initialize sensor with car connection."""
         self._conn = connection
         self._name = config.name
         self._attr = config.attr
         self._type = config.device_class
         self._is_on = None
-
+        self._car_vid = car_vid
         self.entity_id = ENTITY_ID_FORMAT.format(
-            '{}_{}'.format(MYCHEVY_DOMAIN, slugify(self._name)))
+            '{}_{}_{}'.format(MYCHEVY_DOMAIN,
+                              slugify(self._car.name),
+                              slugify(self._name)))
 
     @property
     def name(self):
@@ -66,8 +67,12 @@ class EVBinarySensor(BinarySensorDevice):
         """Return if on."""
         return self._is_on
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    @property
+    def _car(self):
+        """Return the car."""
+        return self._conn.get_car(self._car_vid)
+
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             UPDATE_TOPIC, self.async_update_callback)
@@ -75,8 +80,8 @@ class EVBinarySensor(BinarySensorDevice):
     @callback
     def async_update_callback(self):
         """Update state."""
-        if self._conn.car is not None:
-            self._is_on = getattr(self._conn.car, self._attr, None)
+        if self._car is not None:
+            self._is_on = getattr(self._car, self._attr, None)
             self.async_schedule_update_ha_state()
 
     @property

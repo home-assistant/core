@@ -39,6 +39,8 @@ SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NODE = "test_node"
 SERVICE_TEST_NETWORK = "test_network"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
+SERVICE_SET_NODE_VALUE = "set_node_value"
+SERVICE_REFRESH_NODE_VALUE = "refresh_node_value"
 SERVICE_PRINT_CONFIG_PARAMETER = "print_config_parameter"
 SERVICE_PRINT_NODE = "print_node"
 SERVICE_REMOVE_FAILED_NODE = "remove_failed_node"
@@ -58,6 +60,7 @@ EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
 EVENT_NETWORK_READY = "zwave.network_ready"
 EVENT_NETWORK_COMPLETE = "zwave.network_complete"
+EVENT_NETWORK_COMPLETE_SOME_DEAD = "zwave.network_complete_some_dead"
 EVENT_NETWORK_START = "zwave.network_start"
 EVENT_NETWORK_STOP = "zwave.network_stop"
 
@@ -345,7 +348,6 @@ DISC_SPECIFIC_DEVICE_CLASS = "specific_device_class"
 DISC_TYPE = "type"
 DISC_VALUES = "values"
 
-# noqa
 # https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L49
 # See also:
 # https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L275

@@ -1,5 +1,4 @@
 """Provides a Hue API to control Home Assistant."""
-import asyncio
 import logging
 
 from aiohttp import web
@@ -36,11 +35,10 @@ class HueUsernameView(HomeAssistantView):
     extra_urls = ['/api/']
     requires_auth = False
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle a POST request."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -146,8 +144,7 @@ class HueOneLightChangeView(HomeAssistantView):
         """Initialize the instance of the view."""
         self.config = config
 
-    @asyncio.coroutine
-    def put(self, request, username, entity_number):
+    async def put(self, request, username, entity_number):
         """Process a request to set the state of an individual light."""
         config = self.config
         hass = request.app['hass']
@@ -168,7 +165,7 @@ class HueOneLightChangeView(HomeAssistantView):
             return web.Response(text="Entity not exposed", status=404)
 
         try:
-            request_json = yield from request.json()
+            request_json = await request.json()
         except ValueError:
             _LOGGER.error('Received invalid json')
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
@@ -237,11 +234,11 @@ class HueOneLightChangeView(HomeAssistantView):
                     # Convert 0-100 to a fan speed
                     if brightness == 0:
                         data[ATTR_SPEED] = SPEED_OFF
-                    elif brightness <= 33.3 and brightness > 0:
+                    elif 0 < brightness <= 33.3:
                         data[ATTR_SPEED] = SPEED_LOW
-                    elif brightness <= 66.6 and brightness > 33.3:
+                    elif 33.3 < brightness <= 66.6:
                         data[ATTR_SPEED] = SPEED_MEDIUM
-                    elif brightness <= 100 and brightness > 66.6:
+                    elif 66.6 < brightness <= 100:
                         data[ATTR_SPEED] = SPEED_HIGH
 
         if entity.domain in config.off_maps_to_on_domains:
@@ -257,11 +254,11 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Separate call to turn on needed
         if turn_on_needed:
-            hass.async_add_job(hass.services.async_call(
+            hass.async_create_task(hass.services.async_call(
                 core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id},
                 blocking=True))
 
-        hass.async_add_job(hass.services.async_call(
+        hass.async_create_task(hass.services.async_call(
             domain, service, data, blocking=True))
 
         json_response = \

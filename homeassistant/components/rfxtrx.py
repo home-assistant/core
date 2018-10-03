@@ -4,23 +4,19 @@ Support for RFXtrx components.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
-
-import asyncio
-import logging
 from collections import OrderedDict
+import logging
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    ATTR_ENTITY_ID, TEMP_CELSIUS,
-    CONF_DEVICES
-)
+    ATTR_ENTITY_ID, ATTR_NAME, ATTR_STATE, CONF_DEVICE, CONF_DEVICES,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyRFXtrx==0.22.1']
+REQUIREMENTS = ['pyRFXtrx==0.23']
 
 DOMAIN = 'rfxtrx'
 
@@ -29,8 +25,6 @@ DEFAULT_SIGNAL_REPETITIONS = 1
 ATTR_AUTOMATIC_ADD = 'automatic_add'
 ATTR_DEVICE = 'device'
 ATTR_DEBUG = 'debug'
-ATTR_STATE = 'state'
-ATTR_NAME = 'name'
 ATTR_FIRE_EVENT = 'fire_event'
 ATTR_DATA_TYPE = 'data_type'
 ATTR_DUMMY = 'dummy'
@@ -40,7 +34,6 @@ CONF_DATA_TYPE = 'data_type'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_FIRE_EVENT = 'fire_event'
 CONF_DUMMY = 'dummy'
-CONF_DEVICE = 'device'
 CONF_DEBUG = 'debug'
 CONF_OFF_DELAY = 'off_delay'
 EVENT_BUTTON_PRESSED = 'button_pressed'
@@ -168,11 +161,11 @@ def get_pt2262_cmd(device_id, data_bits):
     return hex(data[-1] & mask)
 
 
-# pylint: disable=unused-variable
 def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for device in RFX_DEVICES.values():
         if (hasattr(device, 'is_lighting4') and
+                device.masked_id is not None and
                 device.masked_id == get_pt2262_deviceid(device_id,
                                                         device.data_bits)):
             _LOGGER.debug("rfxtrx: found matching device %s for %s",
@@ -182,7 +175,6 @@ def get_pt2262_device(device_id):
     return None
 
 
-# pylint: disable=unused-variable
 def find_possible_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():
@@ -323,8 +315,7 @@ class RfxtrxDevice(Entity):
         self._brightness = 0
         self.added_to_hass = False
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe RFXtrx events."""
         self.added_to_hass = True
 

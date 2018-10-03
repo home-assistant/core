@@ -4,7 +4,6 @@ Show the amount of records in a user's Discogs collection.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.discogs/
 """
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -36,8 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Discogs sensor."""
     import discogs_client
 
@@ -51,7 +50,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("API token is not valid")
         return
 
-    async_add_devices([DiscogsSensor(identity, name)], True)
+    async_add_entities([DiscogsSensor(identity, name)], True)
 
 
 class DiscogsSensor(Entity):
@@ -91,7 +90,6 @@ class DiscogsSensor(Entity):
             ATTR_IDENTITY: self._identity.name,
         }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Set state to the amount of records in user's collection."""
         self._state = self._identity.num_collection

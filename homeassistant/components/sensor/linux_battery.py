@@ -10,15 +10,14 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import ATTR_NAME, CONF_NAME, DEVICE_CLASS_BATTERY
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['batinfo==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_NAME = 'name'
 ATTR_PATH = 'path'
 ATTR_ALARM = 'alarm'
 ATTR_CAPACITY = 'capacity'
@@ -48,8 +47,6 @@ DEFAULT_SYSTEM = 'linux'
 
 SYSTEMS = ['android', 'linux']
 
-ICON = 'mdi:battery'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -57,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Linux Battery sensor."""
     name = config.get(CONF_NAME)
     battery_id = config.get(CONF_BATTERY)
@@ -72,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No battery found")
         return False
 
-    add_devices([LinuxBatterySensor(name, battery_id, system)], True)
+    add_entities([LinuxBatterySensor(name, battery_id, system)], True)
 
 
 class LinuxBatterySensor(Entity):
@@ -97,7 +94,7 @@ class LinuxBatterySensor(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return 'battery'
+        return DEVICE_CLASS_BATTERY
 
     @property
     def state(self):
@@ -108,11 +105,6 @@ class LinuxBatterySensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def device_state_attributes(self):

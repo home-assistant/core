@@ -25,7 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['distro==1.2.0']
+REQUIREMENTS = ['distro==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ async def async_setup(hass, config):
     """Set up the updater component."""
     if 'dev' in current_version:
         # This component only makes sense in release versions
-        _LOGGER.warning("Running on 'dev', only analytics will be submitted")
+        _LOGGER.info("Running on 'dev', only analytics will be submitted")
 
     config = config.get(DOMAIN, {})
     if config.get(CONF_REPORTING):

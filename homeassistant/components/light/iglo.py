@@ -31,12 +31,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the iGlo lights."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
-    add_devices([IGloLamp(name, host, port)], True)
+    add_entities([IGloLamp(name, host, port)], True)
 
 
 class IGloLamp(Light):

@@ -88,7 +88,8 @@ class MockNetwork(MagicMock):
     SIGNAL_NODE_QUERIES_COMPLETE = 'mock_NodeQueriesComplete'
     SIGNAL_AWAKE_NODES_QUERIED = 'mock_AwakeNodesQueried'
     SIGNAL_ALL_NODES_QUERIED = 'mock_AllNodesQueried'
-    SIGNAL_ALL_NODES_QUERIED_SOME_DEAD = 'mock_AllNodesQueriedSomeDead'
+    SIGNAL_ALL_NODES_QUERIED_SOME_DEAD = \
+        'mock_AllNodesQueriedSomeDead'
     SIGNAL_MSG_COMPLETE = 'mock_MsgComplete'
     SIGNAL_NOTIFICATION = 'mock_Notification'
     SIGNAL_CONTROLLER_COMMAND = 'mock_ControllerCommand'
@@ -178,6 +179,7 @@ class MockValue(MagicMock):
             MockValue._mock_value_id += 1
             value_id = MockValue._mock_value_id
         self.value_id = value_id
+        self.object_id = value_id
         for attr_name in kwargs:
             setattr(self, attr_name, kwargs[attr_name])
 

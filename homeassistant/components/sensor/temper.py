@@ -33,8 +33,7 @@ def get_temper_devices():
     return TemperHandler().get_devices()
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Temper sensors."""
     temp_unit = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
@@ -48,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if idx != 0:
             name = name + '_' + str(idx)
         TEMPER_SENSORS.append(TemperSensor(dev, temp_unit, name, scaling))
-    add_devices(TEMPER_SENSORS)
+    add_entities(TEMPER_SENSORS)
 
 
 def reset_devices():

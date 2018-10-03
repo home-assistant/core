@@ -11,7 +11,7 @@ class TestTemplateSensor:
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
@@ -269,7 +269,7 @@ class TestTemplateSensor:
         assert self.hass.states.all() == []
 
     def test_setup_invalid_device_class(self):
-        """"Test setup with invalid device_class."""
+        """Test setup with invalid device_class."""
         with assert_setup_component(0):
             assert setup_component(self.hass, 'sensor', {
                 'sensor': {
@@ -284,7 +284,7 @@ class TestTemplateSensor:
             })
 
     def test_setup_valid_device_class(self):
-        """"Test setup with valid device_class."""
+        """Test setup with valid device_class."""
         with assert_setup_component(1):
             assert setup_component(self.hass, 'sensor', {
                 'sensor': {

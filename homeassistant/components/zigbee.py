@@ -4,7 +4,6 @@ Support for ZigBee devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zigbee/
 """
-import asyncio
 import logging
 from binascii import hexlify, unhexlify
 
@@ -124,7 +123,7 @@ def frame_is_relevant(entity, frame):
     return True
 
 
-class ZigBeeConfig(object):
+class ZigBeeConfig:
     """Handle the fetching of configuration from the config file."""
 
     def __init__(self, config):
@@ -277,8 +276,7 @@ class ZigBeeDigitalIn(Entity):
         self._config = config
         self._state = False
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         def handle_frame(frame):
             """Handle an incoming frame.
@@ -403,8 +401,7 @@ class ZigBeeAnalogIn(Entity):
         self._config = config
         self._value = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         def handle_frame(frame):
             """Handle an incoming frame.

@@ -24,7 +24,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_service(hass, config, discovery_info=None):
     """Get the MessageBird notification service."""
     import messagebird

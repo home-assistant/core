@@ -116,7 +116,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Todoist platform."""
     token = config.get(CONF_TOKEN)
 
@@ -178,7 +178,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         )
 
-    add_devices(project_devices)
+    add_entities(project_devices)
 
     def handle_new_task(call):
         """Call when a user creates a new Todoist Task from HASS."""
@@ -257,6 +257,10 @@ class TodoistProjectDevice(CalendarEventDevice):
         super().cleanup()
         self._cal_data[ALL_TASKS] = []
 
+    async def async_get_events(self, hass, start_date, end_date):
+        """Get all events in a specific time frame."""
+        return await self.data.async_get_events(hass, start_date, end_date)
+
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
@@ -276,7 +280,7 @@ class TodoistProjectDevice(CalendarEventDevice):
         return attributes
 
 
-class TodoistProjectData(object):
+class TodoistProjectData:
     """
     Class used by the Task Device service object to hold all Todoist Tasks.
 
@@ -484,6 +488,31 @@ class TodoistProjectData(object):
                     event = proposed_event
                     continue
         return event
+
+    async def async_get_events(self, hass, start_date, end_date):
+        """Get all tasks in a specific time frame."""
+        if self._id is None:
+            project_task_data = [
+                task for task in self._api.state[TASKS]
+                if not self._project_id_whitelist or
+                task[PROJECT_ID] in self._project_id_whitelist]
+        else:
+            project_task_data = self._api.projects.get_data(self._id)[TASKS]
+
+        events = []
+        time_format = '%a %d %b %Y %H:%M:%S %z'
+        for task in project_task_data:
+            due_date = datetime.strptime(task['due_date_utc'], time_format)
+            if start_date < due_date < end_date:
+                event = {
+                    'uid': task['id'],
+                    'title': task['content'],
+                    'start': due_date.isoformat(),
+                    'end': due_date.isoformat(),
+                    'allDay': True,
+                }
+                events.append(event)
+        return events
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
