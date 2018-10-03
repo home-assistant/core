@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/fan.knx/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
@@ -31,27 +32,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass,
                                config,
-                               async_add_devices,
+                               async_add_entities,
                                discovery_info=None):
     """Set up fan(s) for KNX platform."""
     if discovery_info is not None:
-        async_add_devices_discovery(hass, discovery_info, async_add_devices)
+        async_add_entities_discovery(hass, discovery_info, async_add_entities)
     else:
-        async_add_devices_config(hass, config, async_add_devices)
+        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
-def async_add_devices_discovery(hass, discovery_info, async_add_devices):
+def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     """Set up fans for KNX platform configured via xknx.yaml."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
         entities.append(KNXFan(hass, device))
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 @callback
-def async_add_devices_config(hass, config, async_add_devices):
+def async_add_entities_config(hass, config, async_add_entities):
     """Set up fan for KNX platform configured within plattform."""
     import xknx
     fan = xknx.devices.Fan(
@@ -60,16 +61,15 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address_speed=config.get(CONF_SPEED_ADDRESS),
         group_address_speed_state=config.get(CONF_SPEED_STATE_ADDRESS))
     hass.data[DATA_KNX].xknx.devices.add(fan)
-    async_add_devices([KNXFan(hass, fan)])
+    async_add_entities([KNXFan(hass, fan)])
 
 
 class KNXFan(FanEntity):
     """Representation of a KNX fan."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize the entity."""
         self.device = device
-        self.hass = hass
         self.async_register_callbacks()
 
     @callback
@@ -101,6 +101,8 @@ class KNXFan(FanEntity):
         """Return the current speed."""
         if self.device.current_speed() is not None:
             return self.device.current_speed()
+        else:
+            return None
 
     @property
     def speed_list(self) -> list:
@@ -124,17 +126,6 @@ class KNXFan(FanEntity):
 
     async def _internal_set_speed(self, speed: int):
         await self.device.set_speed(speed)
-
-    def set_direction(self, direction: str) -> None:
-        """Set the direction of the fan."""
-
-    def oscillate(self, oscillating: bool) -> None:
-        """Set oscillation."""
-
-    @property
-    def current_direction(self) -> str:
-        """Fan direction."""
-        return None
 
     @property
     def supported_features(self) -> int:
