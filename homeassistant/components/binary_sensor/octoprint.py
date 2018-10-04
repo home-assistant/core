@@ -37,6 +37,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""
     name = config.get(CONF_NAME)
+
+    if discovery_info is not None:
+        if 'name' in discovery_info:
+            name = discovery_info['name']
+
     if name in hass.data[DOMAIN]:
         if "api" in hass.data[DOMAIN][name]:
             _LOGGER.debug('Octoprint API %s found for ', name)
@@ -69,14 +74,14 @@ class OctoPrintBinarySensor(BinarySensorDevice):
     def __init__(self, api, condition, sensor_type, sensor_name, unit,
                  endpoint, group, tool=None):
         """Initialize a new OctoPrint sensor."""
+        self.sensor_name = sensor_name
         if tool is None:
             self._name = '{} {}'.format(sensor_name, condition)
             self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
         else:
             self._name = '{} {}'.format(sensor_name, condition)
             self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
-        self.friendly_name = condition
-        self.sensor_name = sensor_name
+        self.friendly_name = '{} - {}'.format(sensor_name, condition)
         self.sensor_type = sensor_type
         self.api = api
         self._state = False
