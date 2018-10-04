@@ -23,7 +23,8 @@ from tests.common import async_mock_service
 
 def test_validate_entity_config():
     """Test validate entities."""
-    configs = [{'invalid_entity_id': {}}, {'demo.test': 1},
+    configs = [None, [], 'string', 12345,
+               {'invalid_entity_id': {}}, {'demo.test': 1},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
                {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
                {'media_player.test': {CONF_FEATURE_LIST: [
