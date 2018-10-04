@@ -89,9 +89,9 @@ async def async_setup_entry(hass, entry):
         loop=hass.loop
     )
 
-    def on_hass_stop(event):
+    async def on_hass_stop(event):
         """Close connection when hass stops."""
-        hass.async_add_job(factory.shutdown())
+        await factory.shutdown()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 

@@ -7,7 +7,6 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 from .const import (
     CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID)
@@ -168,15 +167,11 @@ async def get_gateway_info(hass, host, identity, key):
             loop=hass.loop
         )
 
-        def on_hass_stop(event):
-            """Close connection when hass stops."""
-            hass.async_add_job(factory.shutdown())
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
-
         api = factory.request
         gateway = Gateway()
         gateway_info_result = await api(gateway.get_gateway_info())
+
+        await factory.shutdown()
     except (OSError, RequestError):
         # We're also catching OSError as PyTradfri doesn't catch that one yet
         # Upstream PR: https://github.com/ggravlingen/pytradfri/pull/189
