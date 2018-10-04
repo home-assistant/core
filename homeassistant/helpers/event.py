@@ -1,6 +1,4 @@
 """Helpers for listening to events."""
-import fnmatch
-import re
 from datetime import timedelta
 import functools as ft
 
