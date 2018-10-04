@@ -316,6 +316,9 @@ omit =
 
     homeassistant/components/*/thinkingcleaner.py
 
+    homeassistant/components/tibber/*
+    homeassistant/components/*/tibber.py
+
     homeassistant/components/toon.py
     homeassistant/components/*/toon.py
 
@@ -774,7 +777,6 @@ omit =
     homeassistant/components/sensor/tank_utility.py
     homeassistant/components/sensor/ted5000.py
     homeassistant/components/sensor/temper.py
-    homeassistant/components/sensor/tibber.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/trafikverket_weatherstation.py
