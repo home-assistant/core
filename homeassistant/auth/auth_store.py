@@ -1,9 +1,9 @@
 """Storage for auth models."""
 from collections import OrderedDict
 from datetime import timedelta
+import hmac
 from logging import getLogger
 from typing import Any, Dict, List, Optional  # noqa: F401
-import hmac
 
 from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
@@ -214,14 +214,24 @@ class AuthStore:
         if self._users is not None:
             return
 
-        users = OrderedDict()  # type: Dict[str, models.User]
-
         if data is None:
-            self._users = users
+            self._set_defaults()
             return
 
+        users = OrderedDict()  # type: Dict[str, models.User]
+
+        # When creating objects we mention each attribute explicetely. This
+        # prevents crashing if user rolls back HA version after a new property
+        # was added.
+
         for user_dict in data['users']:
-            users[user_dict['id']] = models.User(**user_dict)
+            users[user_dict['id']] = models.User(
+                name=user_dict['name'],
+                id=user_dict['id'],
+                is_owner=user_dict['is_owner'],
+                is_active=user_dict['is_active'],
+                system_generated=user_dict['system_generated'],
+            )
 
         for cred_dict in data['credentials']:
             users[cred_dict['user_id']].credentials.append(models.Credentials(
@@ -341,3 +351,7 @@ class AuthStore:
             'credentials': credentials,
             'refresh_tokens': refresh_tokens,
         }
+
+    def _set_defaults(self) -> None:
+        """Set default values for auth store."""
+        self._users = OrderedDict()  # type: Dict[str, models.User]

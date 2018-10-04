@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries, loader, data_entry_flow
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -126,7 +127,7 @@ def test_remove_entry_if_not_loaded(hass, manager):
     assert [item.entry_id for item in manager.async_entries()] == \
         ['test1', 'test3']
 
-    assert len(mock_unload_entry.mock_calls) == 0
+    assert len(mock_unload_entry.mock_calls) == 1
 
 
 @asyncio.coroutine
@@ -367,3 +368,49 @@ async def test_updating_entry_data(manager):
     assert entry.data == {
         'second': True
     }
+
+
+async def test_setup_raise_not_ready(hass, caplog):
+    """Test a setup raising not ready."""
+    entry = MockConfigEntry(domain='test')
+
+    mock_setup_entry = MagicMock(side_effect=ConfigEntryNotReady)
+    loader.set_component(
+        hass, 'test', MockModule('test', async_setup_entry=mock_setup_entry))
+
+    with patch('homeassistant.helpers.event.async_call_later') as mock_call:
+        await entry.async_setup(hass)
+
+    assert len(mock_call.mock_calls) == 1
+    assert 'Config entry for test not ready yet' in caplog.text
+    p_hass, p_wait_time, p_setup = mock_call.mock_calls[0][1]
+
+    assert p_hass is hass
+    assert p_wait_time == 5
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+
+    mock_setup_entry.side_effect = None
+    mock_setup_entry.return_value = mock_coro(True)
+
+    await p_setup(None)
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_setup_retrying_during_unload(hass):
+    """Test if we unload an entry that is in retry mode."""
+    entry = MockConfigEntry(domain='test')
+
+    mock_setup_entry = MagicMock(side_effect=ConfigEntryNotReady)
+    loader.set_component(
+        hass, 'test', MockModule('test', async_setup_entry=mock_setup_entry))
+
+    with patch('homeassistant.helpers.event.async_call_later') as mock_call:
+        await entry.async_setup(hass)
+
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+    assert len(mock_call.return_value.mock_calls) == 0
+
+    await entry.async_unload(hass)
+
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert len(mock_call.return_value.mock_calls) == 1

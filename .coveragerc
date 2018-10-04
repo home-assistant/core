@@ -112,7 +112,7 @@ omit =
     homeassistant/components/*/evohome.py
 
     homeassistant/components/fritzbox.py
-    homeassistant/components/switch/fritzbox.py
+    homeassistant/components/*/fritzbox.py
 
     homeassistant/components/ecovacs.py
     homeassistant/components/*/ecovacs.py
@@ -315,6 +315,9 @@ omit =
     homeassistant/components/*/thethingsnetwork.py
 
     homeassistant/components/*/thinkingcleaner.py
+
+    homeassistant/components/tibber/*
+    homeassistant/components/*/tibber.py
 
     homeassistant/components/toon.py
     homeassistant/components/*/toon.py
@@ -695,6 +698,7 @@ omit =
     homeassistant/components/sensor/haveibeenpwned.py
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/htu21d.py
+    homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/influxdb.py
@@ -773,7 +777,6 @@ omit =
     homeassistant/components/sensor/tank_utility.py
     homeassistant/components/sensor/ted5000.py
     homeassistant/components/sensor/temper.py
-    homeassistant/components/sensor/tibber.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/trafikverket_weatherstation.py
@@ -781,7 +784,6 @@ omit =
     homeassistant/components/sensor/travisci.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
-    homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
     homeassistant/components/sensor/uscis.py
     homeassistant/components/sensor/vasttrafik.py

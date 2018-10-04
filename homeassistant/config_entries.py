@@ -115,14 +115,13 @@ should follow the same return values as a normal step.
 If the result of the step is to show a form, the user will be able to continue
 the flow from the config panel.
 """
-
 import logging
 import uuid
 from typing import Set, Optional, List, Dict  # noqa pylint: disable=unused-import
 
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
 
@@ -149,6 +148,7 @@ FLOWS = [
     'sonos',
     'tradfri',
     'zone',
+    'upnp',
 ]
 
 
@@ -160,9 +160,15 @@ PATH_CONFIG = '.config_entries.json'
 
 SAVE_DELAY = 1
 
+# The config entry has been set up successfully
 ENTRY_STATE_LOADED = 'loaded'
+# There was an error while trying to set up this config entry
 ENTRY_STATE_SETUP_ERROR = 'setup_error'
+# The config entry was not ready to be set up yet, but might be later
+ENTRY_STATE_SETUP_RETRY = 'setup_retry'
+# The config entry has not been loaded
 ENTRY_STATE_NOT_LOADED = 'not_loaded'
+# An error occurred when trying to unload the entry
 ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
@@ -185,7 +191,8 @@ class ConfigEntry:
     """Hold a configuration entry."""
 
     __slots__ = ('entry_id', 'version', 'domain', 'title', 'data', 'source',
-                 'connection_class', 'state')
+                 'connection_class', 'state', '_setup_lock',
+                 '_async_cancel_retry_setup')
 
     def __init__(self, version: str, domain: str, title: str, data: dict,
                  source: str, connection_class: str,
@@ -216,8 +223,11 @@ class ConfigEntry:
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
 
+        # Function to cancel a scheduled retry
+        self._async_cancel_retry_setup = None
+
     async def async_setup(
-            self, hass: HomeAssistant, *, component=None) -> None:
+            self, hass: HomeAssistant, *, component=None, tries=0) -> None:
         """Set up an entry."""
         if component is None:
             component = getattr(hass.components, self.domain)
@@ -229,6 +239,22 @@ class ConfigEntry:
                 _LOGGER.error('%s.async_config_entry did not return boolean',
                               component.DOMAIN)
                 result = False
+        except ConfigEntryNotReady:
+            self.state = ENTRY_STATE_SETUP_RETRY
+            wait_time = 2**min(tries, 4) * 5
+            tries += 1
+            _LOGGER.warning(
+                'Config entry for %s not ready yet. Retrying in %d seconds.',
+                self.domain, wait_time)
+
+            async def setup_again(now):
+                """Run setup again."""
+                self._async_cancel_retry_setup = None
+                await self.async_setup(hass, component=component, tries=tries)
+
+            self._async_cancel_retry_setup = \
+                hass.helpers.event.async_call_later(wait_time, setup_again)
+            return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up entry %s for %s',
                               self.title, component.DOMAIN)
@@ -251,6 +277,15 @@ class ConfigEntry:
         if component is None:
             component = getattr(hass.components, self.domain)
 
+        if component.DOMAIN == self.domain:
+            if self._async_cancel_retry_setup is not None:
+                self._async_cancel_retry_setup()
+                self.state = ENTRY_STATE_NOT_LOADED
+                return True
+
+            if self.state != ENTRY_STATE_LOADED:
+                return True
+
         supports_unload = hasattr(component, 'async_unload_entry')
 
         if not supports_unload:
@@ -259,16 +294,18 @@ class ConfigEntry:
         try:
             result = await component.async_unload_entry(hass, self)
 
-            if not isinstance(result, bool):
-                _LOGGER.error('%s.async_unload_entry did not return boolean',
-                              component.DOMAIN)
-                result = False
+            assert isinstance(result, bool)
+
+            # Only adjust state if we unloaded the component
+            if result and component.DOMAIN == self.domain:
+                self.state = ENTRY_STATE_NOT_LOADED
 
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error unloading entry %s for %s',
                               self.title, component.DOMAIN)
-            self.state = ENTRY_STATE_FAILED_UNLOAD
+            if component.DOMAIN == self.domain:
+                self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
 
     def as_dict(self):
@@ -341,10 +378,7 @@ class ConfigEntries:
         entry = self._entries.pop(found)
         self._async_schedule_save()
 
-        if entry.state == ENTRY_STATE_LOADED:
-            unloaded = await entry.async_unload(self.hass)
-        else:
-            unloaded = True
+        unloaded = await entry.async_unload(self.hass)
 
         device_registry = await \
             self.hass.helpers.device_registry.async_get_registry()

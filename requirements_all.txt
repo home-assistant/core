@@ -58,7 +58,7 @@ PyRMVtransport==0.1
 PySwitchbot==0.3
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.10.0
+PyXiaomiGateway==0.11.0
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
@@ -145,6 +145,7 @@ aqualogic==1.0
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
+# homeassistant.components.upnp
 # homeassistant.components.media_player.dlna_dmr
 async-upnp-client==0.12.4
 
@@ -766,8 +767,8 @@ pyRFXtrx==0.23
 # homeassistant.components.switch.switchmate
 pySwitchmate==0.4.1
 
-# homeassistant.components.sensor.tibber
-pyTibber==0.6.0
+# homeassistant.components.tibber
+pyTibber==0.7.2
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
@@ -1224,9 +1225,6 @@ pytrafikverket==0.1.5.8
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
 
-# homeassistant.components.upnp
-pyupnp-async==0.1.1.1
-
 # homeassistant.components.binary_sensor.uptimerobot
 pyuptimerobot==0.0.5
 
@@ -1337,7 +1335,7 @@ shodan==1.10.2
 simplepush==1.1.4
 
 # homeassistant.components.alarm_control_panel.simplisafe
-simplisafe-python==2.0.2
+simplisafe-python==3.1.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.1
