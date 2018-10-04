@@ -115,7 +115,12 @@ class OctoPrintSensor(Entity):
                 'temp'
             )
             self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
-            self.friendly_name = '{} - {} {} {}'.format(sensor_name, condition, tool, 'temp')
+            self.friendly_name = '{} - {} {} {}'.format(
+                sensor_name,
+                condition,
+                tool,
+                'temp'
+            )
 
         self.sensor_name = sensor_name
         self.sensor_type = sensor_type
