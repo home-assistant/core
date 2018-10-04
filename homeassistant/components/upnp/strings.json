@@ -14,8 +14,6 @@
                 }
             }
         },
-        "error": {
-        },
         "abort": {
             "no_devices_discovered": "No UPnP/IGDs discovered",
             "already_configured": "UPnP/IGD is already configured",
