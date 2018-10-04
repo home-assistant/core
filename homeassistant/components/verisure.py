@@ -32,6 +32,7 @@ CONF_MOUSE = 'mouse'
 CONF_SMARTPLUGS = 'smartplugs'
 CONF_THERMOMETERS = 'thermometers'
 CONF_SMARTCAM = 'smartcam'
+CONF_POLLING_RATE = 'polling_rate'
 
 DOMAIN = 'verisure'
 
@@ -53,6 +54,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
         vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
         vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
+        vol.Optional(CONF_POLLING_RATE, default=1): vol.All(
+            vol.Coerce(int), vol.Range(min=1)),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -66,6 +69,8 @@ def setup(hass, config):
     import verisure
     global HUB
     HUB = VerisureHub(config[DOMAIN], verisure)
+    HUB.update_overview = Throttle(timedelta(
+        minutes=config[DOMAIN][CONF_POLLING_RATE]))(HUB.update_overview)
     if not HUB.login():
         return False
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
@@ -140,7 +145,6 @@ class VerisureHub:
             return False
         return True
 
-    @Throttle(timedelta(seconds=60))
     def update_overview(self):
         """Update the overview."""
         try:
