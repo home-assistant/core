@@ -1124,7 +1124,7 @@ async def async_setup(hass, config):
         'Co wiesz na temat {item}', 'Opowiedz o {item}',
         'Kim są {item}', 'Kto to {item}'])
     async_register(hass, INTENT_OPEN_COVER, ['Otwórz {item}', 'Odsłoń {item}'])
-    async_register(hass, INTENT_CLOSE_COVER, ['Zamknij {item}', 'Odsłoń {item}'])
+    async_register(hass, INTENT_CLOSE_COVER, ['Zamknij {item}', 'Zasłoń {item}'])
     async_register(hass, INTENT_STOP, ['Stop', 'Zatrzymaj', 'Koniec', 'Pauza', 'Zaniechaj', 'Stój'])
     async_register(hass, INTENT_SCENE, ['Scena {item}', 'Aktywuj [scenę] {item}'])
 
