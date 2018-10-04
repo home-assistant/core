@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ifttt/
 """
 from ipaddress import ip_address
+import json
 import logging
 from urllib.parse import urlparse
 
@@ -74,8 +75,14 @@ async def async_setup(hass, config):
     return True
 
 
-async def handle_webhook(hass, webhook_id, data):
+async def handle_webhook(hass, webhook_id, request):
     """Handle webhook callback."""
+    body = await request.text()
+    try:
+        data = json.loads(body) if body else {}
+    except ValueError:
+        return None
+
     if isinstance(data, dict):
         data['webhook_id'] = webhook_id
     hass.bus.async_fire(EVENT_RECEIVED, data)
