@@ -234,7 +234,7 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
     hass.data[DATA_ZWAVE_CONFIG] = conf
 
     if not hass.config_entries.async_entries(DOMAIN):
@@ -242,9 +242,7 @@ async def async_setup(hass, config):
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
                 CONF_USB_STICK_PATH: conf[CONF_USB_STICK_PATH],
-                CONF_AUTOHEAL: conf.get(CONF_AUTOHEAL),
                 CONF_NETWORK_KEY: conf.get(CONF_NETWORK_KEY),
-                CONF_POLLING_INTERVAL: conf.get(CONF_POLLING_INTERVAL)
             }
         ))
 
@@ -267,8 +265,9 @@ async def async_setup_entry(hass, config_entry):
         config = hass.data[DATA_ZWAVE_CONFIG]
 
     # Load configuration
-    use_debug = config.get(CONF_DEBUG)
-    autoheal = config_entry.data.get(CONF_AUTOHEAL)
+    use_debug = config.get(CONF_DEBUG, DEFAULT_DEBUG)
+    autoheal = config.get(CONF_AUTOHEAL,
+                          DEFAULT_CONF_AUTOHEAL)
     device_config = EntityValues(
         config.get(CONF_DEVICE_CONFIG),
         config.get(CONF_DEVICE_CONFIG_DOMAIN),
@@ -692,7 +691,7 @@ async def async_setup_entry(hass, config_entry):
     def _finalize_start():
         """Perform final initializations after Z-Wave network is awaked."""
         polling_interval = convert(
-            config_entry.data.get(CONF_POLLING_INTERVAL), int)
+            config.get(CONF_POLLING_INTERVAL), int)
         if polling_interval is not None:
             network.set_poll_interval(polling_interval, False)
 
