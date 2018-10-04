@@ -149,6 +149,7 @@ FLOWS = [
     'tradfri',
     'zone',
     'upnp',
+    'zwave'
 ]
 
 
