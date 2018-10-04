@@ -76,7 +76,7 @@ TwitterAPI==2.5.4
 WazeRouteCalculator==0.6
 
 # homeassistant.components.notify.yessssms
-YesssSMS==0.1.1b3
+YesssSMS==0.2.3
 
 # homeassistant.components.abode
 abodepy==0.13.1

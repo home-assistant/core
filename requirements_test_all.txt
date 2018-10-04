@@ -24,6 +24,9 @@ HAP-python==2.2.2
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.1
 
+# homeassistant.components.notify.yessssms
+YesssSMS==0.2.3
+
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
 
