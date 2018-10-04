@@ -69,26 +69,6 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
             step_id='init', data_schema=vol.Schema(fields)
         )
 
-    async def async_step_link(self, user_input=None):
-        """Request Z-Wave data from the user."""
-        errors = {}
-
-        if user_input is not None:
-            return self.async_create_entry(
-                title="Z-Wave",
-                data={
-                    CONF_USB_STICK_PATH: user_input[CONF_USB_STICK_PATH],
-                    CONF_NETWORK_KEY: user_input[CONF_NETWORK_KEY],
-                    CONF_AUTOHEAL: user_input[CONF_AUTOHEAL],
-                    CONF_POLLING_INTERVAL: user_input[CONF_POLLING_INTERVAL]
-                },
-            )
-
-        return self.async_show_form(
-            step_id='link',
-            errors=errors,
-        )
-
     async def async_step_import(self, info):
         """Import existing configuration from Z-Wave."""
         if self.hass.config_entries.async_entries(DOMAIN):
