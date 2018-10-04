@@ -44,6 +44,9 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend({
 
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
+    if not isinstance(values, dict):
+        raise vol.Invalid('expected a dictionary')
+
     entities = {}
     for entity_id, config in values.items():
         entity = cv.entity_id(entity_id)
