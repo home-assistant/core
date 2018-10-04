@@ -35,18 +35,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config[CONF_PASSWORD]
     timeout = config[CONF_TIMEOUT]
 
-    devices = [LinkySensor('Linky', username, password)]
+    from pylinky.client import LinkyClient, PyLinkyError
+    client = LinkyClient(username, password, None, timeout)
+    try:
+        client.fetch_data()
+    except PyLinkyError as exp:
+        _LOGGER.error(exp)
+        return
+    finally:
+        client.close_session()
+
+    devices = [LinkySensor('Linky', username, password, timeout)]
     add_entities(devices, True)
 
 
 class LinkySensor(Entity):
     """Representation of a sensor entity for Linky."""
 
-    def __init__(self, name, username, password):
+    def __init__(self, name, username, password, timeout):
         """Initialize the sensor."""
         self._name = name
         self._username = username
         self._password = password
+        self._timeout = timeout
         self._state = None
 
     @property
@@ -69,12 +80,14 @@ class LinkySensor(Entity):
         """Fetch new state data for the sensor."""
         from pylinky.client import LinkyClient, PyLinkyError
 
-        client = LinkyClient(self._username, self._password)
+        client = LinkyClient(self._username, self._password, None, self._timeout)
         try:
             client.fetch_data()
         except PyLinkyError as exp:
             _LOGGER.error(exp)
             return
+        finally:
+            client.close_session()
 
         _LOGGER.debug(json.dumps(client.get_data(), indent=2))
 
