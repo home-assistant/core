@@ -75,7 +75,6 @@ CONF_RETAIN = 'retain'
 
 CONF_IDENTIFIERS = 'identifiers'
 CONF_CONNECTIONS = 'connections'
-CONF_IDENTIFIER = 'identifier'
 CONF_MANUFACTURER = 'manufacturer'
 CONF_MODEL = 'model'
 CONF_SW_VERSION = 'sw_version'
