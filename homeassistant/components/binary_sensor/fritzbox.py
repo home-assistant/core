@@ -27,17 +27,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if device.has_alarm:
                 devices.append(FritzboxBinarySensor(device, fritz))
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class FritzboxBinarySensor(BinarySensorDevice):
     """Representation of a binary Fritzbox device."""
 
     def __init__(self, device, fritz):
-        """Initialize the sensor."""
+        """Initialize the Fritzbox binary sensor."""
         self._device = device
         self._fritz = fritz
-        self._sensor_type = 'window'
 
     @property
     def name(self):
@@ -47,7 +46,7 @@ class FritzboxBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return self._sensor_type
+        return 'window'
 
     @property
     def is_on(self):
@@ -57,9 +56,9 @@ class FritzboxBinarySensor(BinarySensorDevice):
         return self._device.alert_state
 
     def update(self):
-        """Get latest data from the fritzbox."""
+        """Get latest data from the Fritzbox."""
         try:
             self._device.update()
         except requests.exceptions.HTTPError as ex:
-            _LOGGER.warning("Fritzbox connection error: %s", ex)
+            _LOGGER.warning("Connection error: %s", ex)
             self._fritz.login()
