@@ -55,6 +55,11 @@ class DeconzSwitch(SwitchDevice):
         self._switch.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._switch.deconz_id
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect switch object when removed."""
+        self._switch.remove_callback(self.async_update_callback)
+        self._switch = None
+
     @callback
     def async_update_callback(self, reason):
         """Update the switch's state."""
@@ -87,6 +92,7 @@ class DeconzSwitch(SwitchDevice):
                 self._switch.uniqueid.count(':') != 7):
             return None
         serial = self._switch.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -94,6 +100,7 @@ class DeconzSwitch(SwitchDevice):
             'model': self._switch.modelid,
             'name': self._switch.name,
             'sw_version': self._switch.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
 
 

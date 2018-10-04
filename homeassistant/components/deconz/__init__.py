@@ -24,7 +24,10 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==44']
+REQUIREMENTS = ['pydeconz==47']
+
+SUPPORTED_PLATFORMS = ['binary_sensor', 'cover',
+                       'light', 'scene', 'sensor', 'switch']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -45,6 +48,8 @@ SERVICE_SCHEMA = vol.Schema({
     vol.Exclusive(SERVICE_ENTITY, 'deconz_id'): cv.entity_id,
     vol.Required(SERVICE_DATA): dict,
 })
+
+SERVICE_DEVICE_REFRESH = 'device_refresh'
 
 
 async def async_setup(hass, config):
@@ -84,15 +89,17 @@ async def async_setup_entry(hass, config_entry):
     @callback
     def async_add_device_callback(device_type, device):
         """Handle event of new device creation in deCONZ."""
+        if not isinstance(device, list):
+            device = [device]
         async_dispatcher_send(
-            hass, 'deconz_new_{}'.format(device_type), [device])
+            hass, 'deconz_new_{}'.format(device_type), device)
 
     session = aiohttp_client.async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, session, **config_entry.data,
                            async_add_device=async_add_device_callback)
     result = await deconz.async_load_parameters()
+
     if result is False:
-        _LOGGER.error("Failed to communicate with deCONZ")
         return False
 
     hass.data[DOMAIN] = deconz
@@ -100,7 +107,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_DECONZ_EVENT] = []
     hass.data[DATA_DECONZ_UNSUB] = []
 
-    for component in ['binary_sensor', 'light', 'scene', 'sensor', 'switch']:
+    for component in SUPPORTED_PLATFORMS:
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
 
@@ -123,7 +130,7 @@ async def async_setup_entry(hass, config_entry):
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
-        config_entry=config_entry.entry_id,
+        config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, deconz.config.mac)},
         identifiers={(DOMAIN, deconz.config.bridgeid)},
         manufacturer='Dresden Elektronik', model=deconz.config.modelid,
@@ -149,15 +156,59 @@ async def async_setup_entry(hass, config_entry):
         data = call.data.get(SERVICE_DATA)
         deconz = hass.data[DOMAIN]
         if entity_id:
+
             entities = hass.data.get(DATA_DECONZ_ID)
+
             if entities:
                 field = entities.get(entity_id)
+
             if field is None:
                 _LOGGER.error('Could not find the entity %s', entity_id)
                 return
+
         await deconz.async_put_state(field, data)
+
     hass.services.async_register(
         DOMAIN, SERVICE_DECONZ, async_configure, schema=SERVICE_SCHEMA)
+
+    async def async_refresh_devices(call):
+        """Refresh available devices from deCONZ."""
+        deconz = hass.data[DOMAIN]
+
+        groups = list(deconz.groups.keys())
+        lights = list(deconz.lights.keys())
+        scenes = list(deconz.scenes.keys())
+        sensors = list(deconz.sensors.keys())
+
+        if not await deconz.async_load_parameters():
+            return
+
+        async_add_device_callback(
+            'group', [group
+                      for group_id, group in deconz.groups.items()
+                      if group_id not in groups]
+        )
+
+        async_add_device_callback(
+            'light', [light
+                      for light_id, light in deconz.lights.items()
+                      if light_id not in lights]
+        )
+
+        async_add_device_callback(
+            'scene', [scene
+                      for scene_id, scene in deconz.scenes.items()
+                      if scene_id not in scenes]
+        )
+
+        async_add_device_callback(
+            'sensor', [sensor
+                       for sensor_id, sensor in deconz.sensors.items()
+                       if sensor_id not in sensors]
+        )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_DEVICE_REFRESH, async_refresh_devices)
 
     @callback
     def deconz_shutdown(event):
@@ -179,15 +230,22 @@ async def async_unload_entry(hass, config_entry):
     deconz = hass.data.pop(DOMAIN)
     hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
     deconz.close()
-    for component in ['binary_sensor', 'light', 'scene', 'sensor']:
+
+    for component in SUPPORTED_PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
+
     dispatchers = hass.data[DATA_DECONZ_UNSUB]
     for unsub_dispatcher in dispatchers:
         unsub_dispatcher()
     hass.data[DATA_DECONZ_UNSUB] = []
-    hass.data[DATA_DECONZ_EVENT] = []
+
+    for event in hass.data[DATA_DECONZ_EVENT]:
+        event.async_will_remove_from_hass()
+        hass.data[DATA_DECONZ_EVENT].remove(event)
+
     hass.data[DATA_DECONZ_ID] = []
+
     return True
 
 
@@ -205,6 +263,12 @@ class DeconzEvent:
         self._device.register_async_callback(self.async_update_callback)
         self._event = 'deconz_{}'.format(CONF_EVENT)
         self._id = slugify(self._device.name)
+
+    @callback
+    def async_will_remove_from_hass(self) -> None:
+        """Disconnect event object when removed."""
+        self._device.remove_callback(self.async_update_callback)
+        self._device = None
 
     @callback
     def async_update_callback(self, reason):

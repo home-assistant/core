@@ -8,16 +8,25 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import (
+    CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN)
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_TYPE, STATE_CLOSED)
+    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_OPEN,
+    STATE_CLOSING, STATE_OPENING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymyq==0.0.11']
+REQUIREMENTS = ['pymyq==0.0.15']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'myq'
+
+MYQ_TO_HASS = {
+    'closed': STATE_CLOSED,
+    'open': STATE_OPEN,
+    'closing': STATE_CLOSING,
+    'opening': STATE_OPENING
+}
 
 NOTIFICATION_ID = 'myq_notification'
 NOTIFICATION_TITLE = 'MyQ Cover Setup'
@@ -87,7 +96,17 @@ class MyQDevice(CoverDevice):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        return self._status == STATE_CLOSED
+        return MYQ_TO_HASS[self._status] == STATE_CLOSED
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return MYQ_TO_HASS[self._status] == STATE_CLOSING
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return MYQ_TO_HASS[self._status] == STATE_OPENING
 
     def close_cover(self, **kwargs):
         """Issue close command to cover."""
@@ -96,6 +115,16 @@ class MyQDevice(CoverDevice):
     def open_cover(self, **kwargs):
         """Issue open command to cover."""
         self.myq.open_device(self.device_id)
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN | SUPPORT_CLOSE
+
+    @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return self.device_id
 
     def update(self):
         """Update status of cover."""

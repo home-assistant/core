@@ -6,7 +6,8 @@ https://home-assistant.io/components/light.deconz/
 """
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN, SWITCH_TYPES)
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN,
+    COVER_TYPES, SWITCH_TYPES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -33,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add light from deCONZ."""
         entities = []
         for light in lights:
-            if light.type not in SWITCH_TYPES:
+            if light.type not in COVER_TYPES + SWITCH_TYPES:
                 entities.append(DeconzLight(light))
         async_add_entities(entities, True)
 
@@ -81,6 +82,11 @@ class DeconzLight(Light):
         """Subscribe to lights events."""
         self._light.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._light.deconz_id
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect light object when removed."""
+        self._light.remove_callback(self.async_update_callback)
+        self._light = None
 
     @callback
     def async_update_callback(self, reason):
@@ -208,6 +214,7 @@ class DeconzLight(Light):
                 self._light.uniqueid.count(':') != 7):
             return None
         serial = self._light.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -215,4 +222,5 @@ class DeconzLight(Light):
             'model': self._light.modelid,
             'name': self._light.name,
             'sw_version': self._light.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }

@@ -54,6 +54,11 @@ class DeconzBinarySensor(BinarySensorDevice):
         self._sensor.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect sensor object when removed."""
+        self._sensor.remove_callback(self.async_update_callback)
+        self._sensor = None
+
     @callback
     def async_update_callback(self, reason):
         """Update the sensor's state.
@@ -122,6 +127,7 @@ class DeconzBinarySensor(BinarySensorDevice):
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -129,4 +135,5 @@ class DeconzBinarySensor(BinarySensorDevice):
             'model': self._sensor.modelid,
             'name': self._sensor.name,
             'sw_version': self._sensor.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }

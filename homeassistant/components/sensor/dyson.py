@@ -14,10 +14,18 @@ from homeassistant.helpers.entity import Entity
 DEPENDENCIES = ['dyson']
 
 SENSOR_UNITS = {
-    'air_quality': 'level',
-    'dust': 'level',
+    'air_quality': None,
+    'dust': None,
     'filter_life': 'hours',
     'humidity': '%',
+}
+
+SENSOR_ICONS = {
+    'air_quality': 'mdi:fan',
+    'dust': 'mdi:cloud',
+    'filter_life': 'mdi:filter-outline',
+    'humidity': 'mdi:water-percent',
+    'temperature': 'mdi:thermometer',
 }
 
 SENSOR_UNITS_V2 = {
@@ -41,12 +49,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
     for device in [d for d in hass.data[DYSON_DEVICES] if
                    isinstance(d, DysonPureCoolLink)]:
-        devices.append(DysonFilterLifeSensor(hass, device))
-        devices.append(DysonDustSensor(hass, device))
-        devices.append(DysonHumiditySensor(hass, device))
-        devices.append(DysonTemperatureSensor(hass, device, unit))
-        devices.append(DysonAirQualitySensor(hass, device))
+        devices.append(DysonFilterLifeSensor(device))
+        devices.append(DysonDustSensor(device))
+        devices.append(DysonHumiditySensor(device))
+        devices.append(DysonTemperatureSensor(device, unit))
+        devices.append(DysonAirQualitySensor(device))
     add_entities(devices)
+
     from libpurecoollink.dyson_pure_cool import DysonPureCool
 
     for device in hass.data[DYSON_DEVICES]:
@@ -65,18 +74,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             devices.append(DysonHumiditySensor(hass, device))
             devices.append(DysonTemperatureSensor(hass, device, unit))
             devices.append(DysonAirQualitySensor(hass, device))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class DysonSensor(Entity):
-    """Representation of Dyson sensor."""
+    """Representation of a generic Dyson sensor."""
 
-    def __init__(self, hass, device):
-        """Create a new Dyson filter life sensor."""
-        self.hass = hass
+    def __init__(self, device, sensor_type):
+        """Create a new generic Dyson sensor."""
         self._device = device
         self._old_value = None
         self._name = None
+        self._sensor_type = sensor_type
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -100,17 +109,27 @@ class DysonSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the dyson sensor name."""
+        """Return the name of the Dyson sensor name."""
         return self._name
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS[self._sensor_type]
+
+    @property
+    def icon(self):
+        """Return the icon for this sensor."""
+        return SENSOR_ICONS[self._sensor_type]
 
 
 class DysonFilterLifeSensor(DysonSensor):
-    """Representation of Dyson filter life sensor (in hours)."""
+    """Representation of Dyson Filter Life sensor (in hours)."""
 
-    def __init__(self, hass, device):
-        """Create a new Dyson filter life sensor."""
-        DysonSensor.__init__(self, hass, device)
-        self._name = "{} filter life".format(self._device.name)
+    def __init__(self, device):
+        """Create a new Dyson Filter Life sensor."""
+        super().__init__(device, 'filter_life')
+        self._name = "{} Filter Life".format(self._device.name)
 
     @property
     def state(self):
@@ -119,19 +138,14 @@ class DysonFilterLifeSensor(DysonSensor):
             return int(self._device.state.filter_life)
         return None
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_UNITS['filter_life']
-
 
 class DysonDustSensor(DysonSensor):
     """Representation of Dyson Dust sensor (lower is better)."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Create a new Dyson Dust sensor."""
-        DysonSensor.__init__(self, hass, device)
-        self._name = "{} dust".format(self._device.name)
+        super().__init__(device, 'dust')
+        self._name = "{} Dust".format(self._device.name)
 
     @property
     def state(self):
@@ -140,47 +154,37 @@ class DysonDustSensor(DysonSensor):
             return self._device.environmental_state.dust
         return None
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_UNITS['dust']
-
 
 class DysonHumiditySensor(DysonSensor):
     """Representation of Dyson Humidity sensor."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Create a new Dyson Humidity sensor."""
-        DysonSensor.__init__(self, hass, device)
-        self._name = "{} humidity".format(self._device.name)
+        super().__init__(device, 'humidity')
+        self._name = "{} Humidity".format(self._device.name)
 
     @property
     def state(self):
-        """Return Dust value."""
+        """Return Humidity value."""
         if self._device.environmental_state:
             if self._device.environmental_state.humidity == 0:
                 return STATE_OFF
             return self._device.environmental_state.humidity
         return None
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_UNITS['humidity']
-
 
 class DysonTemperatureSensor(DysonSensor):
     """Representation of Dyson Temperature sensor."""
 
-    def __init__(self, hass, device, unit):
+    def __init__(self, device, unit):
         """Create a new Dyson Temperature sensor."""
-        DysonSensor.__init__(self, hass, device)
-        self._name = "{} temperature".format(self._device.name)
+        super().__init__(device, 'temperature')
+        self._name = "{} Temperature".format(self._device.name)
         self._unit = unit
 
     @property
     def state(self):
-        """Return Dust value."""
+        """Return Temperature value."""
         if self._device.environmental_state:
             temperature_kelvin = self._device.environmental_state.temperature
             if temperature_kelvin == 0:
@@ -199,10 +203,10 @@ class DysonTemperatureSensor(DysonSensor):
 class DysonAirQualitySensor(DysonSensor):
     """Representation of Dyson Air Quality sensor (lower is better)."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Create a new Dyson Air Quality sensor."""
-        DysonSensor.__init__(self, hass, device)
-        self._name = "{} air quality".format(self._device.name)
+        super().__init__(device, 'air_quality')
+        self._name = "{} AQI".format(self._device.name)
 
     @property
     def state(self):
@@ -211,10 +215,7 @@ class DysonAirQualitySensor(DysonSensor):
             return self._device.environmental_state.volatil_organic_compounds
         return None
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_UNITS['air_quality']
+# my stuff starts here have to update
 
 
 class DysonParticulateMatter25Sensor(DysonSensor):

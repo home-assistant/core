@@ -14,7 +14,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['shodan==1.9.1']
+REQUIREMENTS = ['shodan==1.10.2']
 
 _LOGGER = logging.getLogger(__name__)
 

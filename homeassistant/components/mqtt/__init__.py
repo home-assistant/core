@@ -6,49 +6,54 @@ https://home-assistant.io/components/mqtt/
 """
 import asyncio
 from itertools import groupby
-from typing import Optional, Any, Union, Callable, List, cast  # noqa: F401
-from operator import attrgetter
 import logging
+from operator import attrgetter
 import os
 import socket
-import time
 import ssl
-import re
-import requests.certs
-import attr
+import time
+from typing import Any, Callable, List, Optional, Union, cast  # noqa: F401
 
+import attr
+import requests.certs
 import voluptuous as vol
 
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType, \
-    ServiceDataType
-from homeassistant.core import callback, Event, ServiceCall
-from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
-from homeassistant.helpers import template, config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util.async_ import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant import config_entries
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE, CONF_USERNAME,
-    CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
+    CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT, CONF_PROTOCOL, CONF_USERNAME,
+    CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import Event, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import template
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import (
+    ConfigType, HomeAssistantType, ServiceDataType)
+from homeassistant.loader import bind_hass
+from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.async_ import (
+    run_callback_threadsafe, run_coroutine_threadsafe)
 
+# Loading the config flow file will register the flow
+from . import config_flow  # noqa  # pylint: disable=unused-import
+from .const import CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY
 from .server import HBMQTT_CONFIG_SCHEMA
 
-REQUIREMENTS = ['paho-mqtt==1.3.1']
+REQUIREMENTS = ['paho-mqtt==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt'
 
 DATA_MQTT = 'mqtt'
+DATA_MQTT_CONFIG = 'mqtt_config'
+DATA_MQTT_HASS_CONFIG = 'mqtt_hass_config'
 
 SERVICE_PUBLISH = 'publish'
 
 CONF_EMBEDDED = 'embedded'
-CONF_BROKER = 'broker'
+
 CONF_CLIENT_ID = 'client_id'
-CONF_DISCOVERY = 'discovery'
 CONF_DISCOVERY_PREFIX = 'discovery_prefix'
 CONF_KEEPALIVE = 'keepalive'
 CONF_CERTIFICATE = 'certificate'
@@ -76,7 +81,6 @@ DEFAULT_KEEPALIVE = 60
 DEFAULT_QOS = 0
 DEFAULT_RETAIN = False
 DEFAULT_PROTOCOL = PROTOCOL_311
-DEFAULT_DISCOVERY = False
 DEFAULT_DISCOVERY_PREFIX = 'homeassistant'
 DEFAULT_TLS_PROTOCOL = 'auto'
 DEFAULT_PAYLOAD_AVAILABLE = 'online'
@@ -87,6 +91,7 @@ ATTR_PAYLOAD = 'payload'
 ATTR_PAYLOAD_TEMPLATE = 'payload_template'
 ATTR_QOS = CONF_QOS
 ATTR_RETAIN = CONF_RETAIN
+ATTR_DISCOVERY_HASH = 'discovery_hash'
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
@@ -291,8 +296,7 @@ def subscribe(hass: HomeAssistantType, topic: str,
     return remove
 
 
-async def _async_setup_server(hass: HomeAssistantType,
-                              config: ConfigType):
+async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
     """Try to start embedded MQTT broker.
 
     This method is a coroutine.
@@ -312,26 +316,25 @@ async def _async_setup_server(hass: HomeAssistantType,
 
     if not success:
         return None
+
     return broker_config
 
 
-async def _async_setup_discovery(hass: HomeAssistantType,
-                                 config: ConfigType) -> bool:
+async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
+                                 hass_config: ConfigType) -> bool:
     """Try to start the discovery of MQTT devices.
 
     This method is a coroutine.
     """
-    conf = config.get(DOMAIN, {})  # type: ConfigType
-
     discovery = await async_prepare_setup_platform(
-        hass, config, DOMAIN, 'discovery')
+        hass, hass_config, DOMAIN, 'discovery')
 
     if discovery is None:
         _LOGGER.error("Unable to load MQTT discovery")
         return False
 
     success = await discovery.async_start(
-        hass, conf[CONF_DISCOVERY_PREFIX], config)  # type: bool
+        hass, conf[CONF_DISCOVERY_PREFIX], hass_config)  # type: bool
 
     return success
 
@@ -340,20 +343,21 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
     conf = config.get(DOMAIN)  # type: Optional[ConfigType]
 
+    # We need this because discovery can cause components to be set up and
+    # otherwise it will not load the users config.
+    # This needs a better solution.
+    hass.data[DATA_MQTT_HASS_CONFIG] = config
+
     if conf is None:
-        conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
-    conf = cast(ConfigType, conf)
+        # If we have a config entry, setup is done by that config entry.
+        # If there is no config entry, this should fail.
+        return bool(hass.config_entries.async_entries(DOMAIN))
 
-    client_id = conf.get(CONF_CLIENT_ID)  # type: Optional[str]
-    keepalive = conf.get(CONF_KEEPALIVE)  # type: int
+    conf = dict(conf)
 
-    # Only setup if embedded config passed in or no broker specified
-    if CONF_EMBEDDED not in conf and CONF_BROKER in conf:
-        broker_config = None
-    else:
+    if CONF_EMBEDDED in conf or CONF_BROKER not in conf:
         if (conf.get(CONF_PASSWORD) is None and
-                config.get('http') is not None and
-                config['http'].get('api_password') is not None):
+                config.get('http', {}).get('api_password') is not None):
             _LOGGER.error(
                 "Starting from release 0.76, the embedded MQTT broker does not"
                 " use api_password as default password anymore. Please set"
@@ -363,48 +367,88 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
         broker_config = await _async_setup_server(hass, config)
 
-    if CONF_BROKER in conf:
-        broker = conf[CONF_BROKER]  # type: str
-        port = conf[CONF_PORT]  # type: int
-        username = conf.get(CONF_USERNAME)  # type: Optional[str]
-        password = conf.get(CONF_PASSWORD)  # type: Optional[str]
-        certificate = conf.get(CONF_CERTIFICATE)  # type: Optional[str]
-        client_key = conf.get(CONF_CLIENT_KEY)  # type: Optional[str]
-        client_cert = conf.get(CONF_CLIENT_CERT)  # type: Optional[str]
-        tls_insecure = conf.get(CONF_TLS_INSECURE)  # type: Optional[bool]
-        protocol = conf[CONF_PROTOCOL]  # type: str
-    elif broker_config is not None:
-        # If no broker passed in, auto config to internal server
-        broker, port, username, password, certificate, protocol = broker_config
-        # Embedded broker doesn't have some ssl variables
-        client_key, client_cert, tls_insecure = None, None, None
-        # hbmqtt requires a client id to be set.
-        if client_id is None:
-            client_id = 'home-assistant'
-    else:
-        err = "Unable to start MQTT broker."
-        if conf.get(CONF_EMBEDDED) is not None:
-            # Explicit embedded config, requires explicit broker config
-            err += " (Broker configuration required.)"
-        _LOGGER.error(err)
+        if broker_config is None:
+            _LOGGER.error("Unable to start embedded MQTT broker")
+            return False
+
+        conf.update({
+            CONF_BROKER: broker_config[0],
+            CONF_PORT: broker_config[1],
+            CONF_USERNAME: broker_config[2],
+            CONF_PASSWORD: broker_config[3],
+            CONF_CERTIFICATE: broker_config[4],
+            CONF_PROTOCOL: broker_config[5],
+            CONF_CLIENT_KEY: None,
+            CONF_CLIENT_CERT: None,
+            CONF_TLS_INSECURE: None,
+        })
+
+    hass.data[DATA_MQTT_CONFIG] = conf
+
+    # Only import if we haven't before.
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            data={}
+        ))
+
+    return True
+
+
+async def async_setup_entry(hass, entry):
+    """Load a config entry."""
+    conf = hass.data.get(DATA_MQTT_CONFIG)
+
+    # Config entry was created because user had configuration.yaml entry
+    # They removed that, so remove entry.
+    if conf is None and entry.source == config_entries.SOURCE_IMPORT:
+        hass.async_create_task(
+            hass.config_entries.async_remove(entry.entry_id))
         return False
 
+    # If user didn't have configuration.yaml config, generate defaults
+    if conf is None:
+        conf = CONFIG_SCHEMA({
+            DOMAIN: entry.data
+        })[DOMAIN]
+    elif any(key in conf for key in entry.data):
+        _LOGGER.warning(
+            "Data in your config entry is going to override your "
+            "configuration.yaml: %s", entry.data)
+
+    conf.update(entry.data)
+
+    broker = conf[CONF_BROKER]
+    port = conf[CONF_PORT]
+    client_id = conf.get(CONF_CLIENT_ID)
+    keepalive = conf[CONF_KEEPALIVE]
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
+    certificate = conf.get(CONF_CERTIFICATE)
+    client_key = conf.get(CONF_CLIENT_KEY)
+    client_cert = conf.get(CONF_CLIENT_CERT)
+    tls_insecure = conf.get(CONF_TLS_INSECURE)
+    protocol = conf[CONF_PROTOCOL]
+
     # For cloudmqtt.com, secured connection, auto fill in certificate
-    if (certificate is None and 19999 < port < 30000 and
+    if (certificate is None and 19999 < conf[CONF_PORT] < 30000 and
             broker.endswith('.cloudmqtt.com')):
-        certificate = os.path.join(os.path.dirname(__file__),
-                                   'addtrustexternalcaroot.crt')
+        certificate = os.path.join(
+            os.path.dirname(__file__), 'addtrustexternalcaroot.crt')
 
     # When the certificate is set to auto, use bundled certs from requests
-    if certificate == 'auto':
+    elif certificate == 'auto':
         certificate = requests.certs.where()
 
-    will_message = None  # type: Optional[Message]
-    if conf.get(CONF_WILL_MESSAGE) is not None:
-        will_message = Message(**conf.get(CONF_WILL_MESSAGE))
-    birth_message = None  # type: Optional[Message]
-    if conf.get(CONF_BIRTH_MESSAGE) is not None:
-        birth_message = Message(**conf.get(CONF_BIRTH_MESSAGE))
+    if CONF_WILL_MESSAGE in conf:
+        will_message = Message(**conf[CONF_WILL_MESSAGE])
+    else:
+        will_message = None
+
+    if CONF_BIRTH_MESSAGE in conf:
+        birth_message = Message(**conf[CONF_BIRTH_MESSAGE])
+    else:
+        birth_message = None
 
     # Be able to override versions other than TLSv1.0 under Python3.6
     conf_tls_version = conf.get(CONF_TLS_VERSION)  # type: str
@@ -422,14 +466,27 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         else:
             tls_version = ssl.PROTOCOL_TLSv1
 
-    try:
-        hass.data[DATA_MQTT] = MQTT(
-            hass, broker, port, client_id, keepalive, username, password,
-            certificate, client_key, client_cert, tls_insecure, protocol,
-            will_message, birth_message, tls_version)
-    except socket.error:
-        _LOGGER.exception("Can't connect to the broker. "
-                          "Please check your settings and the broker itself")
+    hass.data[DATA_MQTT] = MQTT(
+        hass,
+        broker=broker,
+        port=port,
+        client_id=client_id,
+        keepalive=keepalive,
+        username=username,
+        password=password,
+        certificate=certificate,
+        client_key=client_key,
+        client_cert=client_cert,
+        tls_insecure=tls_insecure,
+        protocol=protocol,
+        will_message=will_message,
+        birth_message=birth_message,
+        tls_version=tls_version,
+    )
+
+    success = await hass.data[DATA_MQTT].async_connect()  # type: bool
+
+    if not success:
         return False
 
     async def async_stop_mqtt(event: Event):
@@ -437,10 +494,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         await hass.data[DATA_MQTT].async_disconnect()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
-
-    success = await hass.data[DATA_MQTT].async_connect()  # type: bool
-    if not success:
-        return False
 
     async def async_publish_service(call: ServiceCall):
         """Handle MQTT publish service calls."""
@@ -468,7 +521,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         schema=MQTT_PUBLISH_SCHEMA)
 
     if conf.get(CONF_DISCOVERY):
-        await _async_setup_discovery(hass, config)
+        await _async_setup_discovery(
+            hass, conf, hass.data[DATA_MQTT_HASS_CONFIG])
 
     return True
 
@@ -502,7 +556,8 @@ class MQTT:
                  certificate: Optional[str], client_key: Optional[str],
                  client_cert: Optional[str], tls_insecure: Optional[bool],
                  protocol: Optional[str], will_message: Optional[Message],
-                 birth_message: Optional[Message], tls_version) -> None:
+                 birth_message: Optional[Message],
+                 tls_version: Optional[int]) -> None:
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
@@ -550,6 +605,7 @@ class MQTT:
         This method must be run in the event loop and returns a coroutine.
         """
         async with self._paho_lock:
+            _LOGGER.debug("Transmitting message on %s: %s", topic, payload)
             await self.hass.async_add_job(
                 self._mqttc.publish, topic, payload, qos, retain)
 
@@ -563,12 +619,12 @@ class MQTT:
             result = await self.hass.async_add_job(
                 self._mqttc.connect, self.broker, self.port, self.keepalive)
         except OSError as err:
-            _LOGGER.error('Failed to connect due to exception: %s', err)
+            _LOGGER.error("Failed to connect due to exception: %s", err)
             return False
 
         if result != 0:
             import paho.mqtt.client as mqtt
-            _LOGGER.error('Failed to connect: %s', mqtt.error_string(result))
+            _LOGGER.error("Failed to connect: %s", mqtt.error_string(result))
             return False
 
         self._mqttc.loop_start()
@@ -595,7 +651,7 @@ class MQTT:
         This method is a coroutine.
         """
         if not isinstance(topic, str):
-            raise HomeAssistantError("topic needs to be a string!")
+            raise HomeAssistantError("Topic needs to be a string!")
 
         subscription = Subscription(topic, msg_callback, qos, encoding)
         self.subscriptions.append(subscription)
@@ -637,8 +693,8 @@ class MQTT:
                 self._mqttc.subscribe, topic, qos)
             _raise_on_error(result)
 
-    def _mqtt_on_connect(self, _mqttc, _userdata, _flags,
-                         result_code: int) -> None:
+    def _mqtt_on_connect(
+            self, _mqttc, _userdata, _flags, result_code: int) -> None:
         """On connect callback.
 
         Resubscribe to all topics we were subscribed to and publish birth
@@ -647,7 +703,7 @@ class MQTT:
         import paho.mqtt.client as mqtt
 
         if result_code != mqtt.CONNACK_ACCEPTED:
-            _LOGGER.error('Unable to connect to the MQTT broker: %s',
+            _LOGGER.error("Unable to connect to the MQTT broker: %s",
                           mqtt.connack_string(result_code))
             self._mqttc.disconnect()
             return
@@ -681,14 +737,13 @@ class MQTT:
                 try:
                     payload = msg.payload.decode(subscription.encoding)
                 except (AttributeError, UnicodeDecodeError):
-                    _LOGGER.warning("Can't decode payload %s on %s "
-                                    "with encoding %s",
-                                    msg.payload, msg.topic,
-                                    subscription.encoding)
+                    _LOGGER.warning(
+                        "Can't decode payload %s on %s with encoding %s",
+                        msg.payload, msg.topic, subscription.encoding)
                     continue
 
-            self.hass.async_run_job(subscription.callback,
-                                    msg.topic, payload, msg.qos)
+            self.hass.async_run_job(
+                subscription.callback, msg.topic, payload, msg.qos)
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
@@ -726,23 +781,14 @@ def _raise_on_error(result_code: int) -> None:
 
 def _match_topic(subscription: str, topic: str) -> bool:
     """Test if topic matches subscription."""
-    reg_ex_parts = []  # type: List[str]
-    suffix = ""
-    if subscription.endswith('#'):
-        subscription = subscription[:-2]
-        suffix = "(.*)"
-    sub_parts = subscription.split('/')
-    for sub_part in sub_parts:
-        if sub_part == "+":
-            reg_ex_parts.append(r"([^\/]+)")
-        else:
-            reg_ex_parts.append(re.escape(sub_part))
-
-    reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
-
-    reg = re.compile(reg_ex)
-
-    return reg.match(topic) is not None
+    from paho.mqtt.matcher import MQTTMatcher
+    matcher = MQTTMatcher()
+    matcher[subscription] = True
+    try:
+        next(matcher.iter_match(topic))
+        return True
+    except StopIteration:
+        return False
 
 
 class MqttAvailability(Entity):
@@ -759,7 +805,7 @@ class MqttAvailability(Entity):
         self._payload_not_available = payload_not_available
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe mqtt events.
+        """Subscribe MQTT events.
 
         This method must be run in the event loop and returns a coroutine.
         """
@@ -784,3 +830,36 @@ class MqttAvailability(Entity):
     def available(self) -> bool:
         """Return if the device is available."""
         return self._available
+
+
+class MqttDiscoveryUpdate(Entity):
+    """Mixin used to handle updated discovery message."""
+
+    def __init__(self, discovery_hash) -> None:
+        """Initialize the discovery update mixin."""
+        self._discovery_hash = discovery_hash
+        self._remove_signal = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to discovery updates."""
+        from homeassistant.helpers.dispatcher import async_dispatcher_connect
+        from homeassistant.components.mqtt.discovery import (
+            ALREADY_DISCOVERED, MQTT_DISCOVERY_UPDATED)
+
+        @callback
+        def discovery_callback(payload):
+            """Handle discovery update."""
+            _LOGGER.info("Got update for entity with hash: %s '%s'",
+                         self._discovery_hash, payload)
+            if not payload:
+                # Empty payload: Remove component
+                _LOGGER.info("Removing component: %s", self.entity_id)
+                self.hass.async_create_task(self.async_remove())
+                del self.hass.data[ALREADY_DISCOVERED][self._discovery_hash]
+                self._remove_signal()
+
+        if self._discovery_hash:
+            self._remove_signal = async_dispatcher_connect(
+                self.hass,
+                MQTT_DISCOVERY_UPDATED.format(self._discovery_hash),
+                discovery_callback)

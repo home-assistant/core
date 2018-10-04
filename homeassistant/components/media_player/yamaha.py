@@ -12,9 +12,9 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     DOMAIN, MEDIA_PLAYER_SCHEMA, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOUND_MODE, SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PLAYING)
@@ -43,7 +43,8 @@ ENABLE_OUTPUT_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
 SERVICE_ENABLE_OUTPUT = 'yamaha_enable_output'
 
 SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY \
+    | SUPPORT_SELECT_SOUND_MODE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -140,6 +141,8 @@ class YamahaDevice(MediaPlayerDevice):
         self._volume = 0
         self._pwstate = STATE_OFF
         self._current_source = None
+        self._sound_mode = None
+        self._sound_mode_list = None
         self._source_list = None
         self._source_ignore = source_ignore or []
         self._source_names = source_names or {}
@@ -181,6 +184,8 @@ class YamahaDevice(MediaPlayerDevice):
         self._playback_support = self.receiver.get_playback_support()
         self._is_playback_supported = self.receiver.is_playback_supported(
             self._current_source)
+        self._sound_mode = self.receiver.surround_program
+        self._sound_mode_list = self.receiver.surround_programs()
 
     def build_source_list(self):
         """Build the source list."""
@@ -221,6 +226,16 @@ class YamahaDevice(MediaPlayerDevice):
     def source(self):
         """Return the current input source."""
         return self._current_source
+
+    @property
+    def sound_mode(self):
+        """Return the current sound mode."""
+        return self._sound_mode
+
+    @property
+    def sound_mode_list(self):
+        """Return the current sound mode."""
+        return self._sound_mode_list
 
     @property
     def source_list(self):
@@ -329,6 +344,10 @@ class YamahaDevice(MediaPlayerDevice):
     def enable_output(self, port, enabled):
         """Enable or disable an output port.."""
         self.receiver.enable_output(port, enabled)
+
+    def select_sound_mode(self, sound_mode):
+        """Set Sound Mode for Receiver.."""
+        self.receiver.surround_program = sound_mode
 
     @property
     def media_artist(self):

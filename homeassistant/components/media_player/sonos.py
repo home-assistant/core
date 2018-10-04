@@ -1,5 +1,5 @@
 """
-Support to interface with Sonos players (via SoCo).
+Support to interface with Sonos players.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.sonos/
@@ -9,8 +9,8 @@ import datetime
 import functools as ft
 import logging
 import socket
-import urllib
 import threading
+import urllib
 
 import voluptuous as vol
 
@@ -31,11 +31,11 @@ DEPENDENCIES = ('sonos',)
 
 _LOGGER = logging.getLogger(__name__)
 
-# Quiet down soco logging to just actual problems.
-logging.getLogger('soco').setLevel(logging.WARNING)
-logging.getLogger('soco.events').setLevel(logging.ERROR)
-logging.getLogger('soco.data_structures_entry').setLevel(logging.ERROR)
-_SOCO_SERVICES_LOGGER = logging.getLogger('soco.services')
+# Quiet down pysonos logging to just actual problems.
+logging.getLogger('pysonos').setLevel(logging.WARNING)
+logging.getLogger('pysonos.events').setLevel(logging.ERROR)
+logging.getLogger('pysonos.data_structures_entry').setLevel(logging.ERROR)
+_SOCO_SERVICES_LOGGER = logging.getLogger('pysonos.services')
 
 SUPPORT_SONOS = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE |\
@@ -143,18 +143,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def _setup_platform(hass, config, add_entities, discovery_info):
     """Set up the Sonos platform."""
-    import soco
+    import pysonos
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
 
     advertise_addr = config.get(CONF_ADVERTISE_ADDR)
     if advertise_addr:
-        soco.config.EVENT_ADVERTISE_IP = advertise_addr
+        pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
 
     players = []
     if discovery_info:
-        player = soco.SoCo(discovery_info.get('host'))
+        player = pysonos.SoCo(discovery_info.get('host'))
 
         # If device already exists by config
         if player.uid in hass.data[DATA_SONOS].uids:
@@ -174,11 +174,11 @@ def _setup_platform(hass, config, add_entities, discovery_info):
             hosts = hosts.split(',') if isinstance(hosts, str) else hosts
             for host in hosts:
                 try:
-                    players.append(soco.SoCo(socket.gethostbyname(host)))
+                    players.append(pysonos.SoCo(socket.gethostbyname(host)))
                 except OSError:
                     _LOGGER.warning("Failed to initialize '%s'", host)
         else:
-            players = soco.discover(
+            players = pysonos.discover(
                 interface_addr=config.get(CONF_INTERFACE_ADDR))
 
         if not players:
@@ -287,7 +287,7 @@ def soco_error(errorcodes=None):
         @ft.wraps(funct)
         def wrapper(*args, **kwargs):
             """Wrap for all soco UPnP exception."""
-            from soco.exceptions import SoCoUPnPException, SoCoException
+            from pysonos.exceptions import SoCoUPnPException, SoCoException
 
             # Temporarily disable SoCo logging because it will log the
             # UPnP exception otherwise
@@ -387,6 +387,18 @@ class SonosDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (SONOS_DOMAIN, self._unique_id)
+            },
+            'name': self._name,
+            'model': self._model.replace("Sonos ", ""),
+            'manufacturer': 'Sonos',
+        }
 
     @property
     @soco_coordinator
@@ -600,9 +612,9 @@ class SonosDevice(MediaPlayerDevice):
         current_uri_metadata = media_info["CurrentURIMetaData"]
         if current_uri_metadata not in ('', 'NOT_IMPLEMENTED', None):
             # currently soco does not have an API for this
-            import soco
-            current_uri_metadata = soco.xml.XML.fromstring(
-                soco.utils.really_utf8(current_uri_metadata))
+            import pysonos
+            current_uri_metadata = pysonos.xml.XML.fromstring(
+                pysonos.utils.really_utf8(current_uri_metadata))
 
             md_title = current_uri_metadata.findtext(
                 './/{http://purl.org/dc/elements/1.1/}title')
@@ -872,6 +884,8 @@ class SonosDevice(MediaPlayerDevice):
             sources += [SOURCE_LINEIN]
         elif 'PLAYBAR' in model:
             sources += [SOURCE_LINEIN, SOURCE_TV]
+        elif 'BEAM' in model:
+            sources += [SOURCE_TV]
 
         return sources
 
@@ -936,7 +950,7 @@ class SonosDevice(MediaPlayerDevice):
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
-            from soco.exceptions import SoCoUPnPException
+            from pysonos.exceptions import SoCoUPnPException
             try:
                 self.soco.add_uri_to_queue(media_id)
             except SoCoUPnPException:
@@ -967,7 +981,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error()
     def snapshot(self, with_group=True):
         """Snapshot the player."""
-        from soco.snapshot import Snapshot
+        from pysonos.snapshot import Snapshot
 
         self._soco_snapshot = Snapshot(self.soco)
         self._soco_snapshot.snapshot()
@@ -982,7 +996,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error()
     def restore(self, with_group=True):
         """Restore snapshot for the player."""
-        from soco.exceptions import SoCoException
+        from pysonos.exceptions import SoCoException
         try:
             # need catch exception if a coordinator is going to slave.
             # this state will recover with group part.
@@ -1046,7 +1060,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_coordinator
     def set_alarm(self, **data):
         """Set the alarm clock on the player."""
-        from soco import alarms
+        from pysonos import alarms
         alarm = None
         for one_alarm in alarms.get_alarms(self.soco):
             # pylint: disable=protected-access

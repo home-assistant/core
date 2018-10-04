@@ -64,6 +64,11 @@ class DeconzSensor(Entity):
         self._sensor.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect sensor object when removed."""
+        self._sensor.remove_callback(self.async_update_callback)
+        self._sensor = None
+
     @callback
     def async_update_callback(self, reason):
         """Update the sensor's state.
@@ -142,6 +147,7 @@ class DeconzSensor(Entity):
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -149,22 +155,28 @@ class DeconzSensor(Entity):
             'model': self._sensor.modelid,
             'name': self._sensor.name,
             'sw_version': self._sensor.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
 
 
 class DeconzBattery(Entity):
     """Battery class for when a device is only represented as an event."""
 
-    def __init__(self, device):
+    def __init__(self, sensor):
         """Register dispatcher callback for update of battery state."""
-        self._device = device
-        self._name = '{} {}'.format(self._device.name, 'Battery Level')
+        self._sensor = sensor
+        self._name = '{} {}'.format(self._sensor.name, 'Battery Level')
         self._unit_of_measurement = "%"
 
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
-        self._device.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._device.deconz_id
+        self._sensor.register_async_callback(self.async_update_callback)
+        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect sensor object when removed."""
+        self._sensor.remove_callback(self.async_update_callback)
+        self._sensor = None
 
     @callback
     def async_update_callback(self, reason):
@@ -175,7 +187,7 @@ class DeconzBattery(Entity):
     @property
     def state(self):
         """Return the state of the battery."""
-        return self._device.battery
+        return self._sensor.battery
 
     @property
     def name(self):
@@ -185,7 +197,7 @@ class DeconzBattery(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for the device."""
-        return self._device.uniqueid
+        return self._sensor.uniqueid
 
     @property
     def device_class(self):
@@ -206,22 +218,24 @@ class DeconzBattery(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the battery."""
         attr = {
-            ATTR_EVENT_ID: slugify(self._device.name),
+            ATTR_EVENT_ID: slugify(self._sensor.name),
         }
         return attr
 
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        if (self._device.uniqueid is None or
-                self._device.uniqueid.count(':') != 7):
+        if (self._sensor.uniqueid is None or
+                self._sensor.uniqueid.count(':') != 7):
             return None
-        serial = self._device.uniqueid.split('-', 1)[0]
+        serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
-            'manufacturer': self._device.manufacturer,
-            'model': self._device.modelid,
-            'name': self._device.name,
-            'sw_version': self._device.swversion,
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'name': self._sensor.name,
+            'sw_version': self._sensor.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }

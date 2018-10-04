@@ -1,4 +1,3 @@
-
 configure:
   description: Set attribute of device in deCONZ. See https://home-assistant.io/components/deconz/#device-services for details.
   fields:
@@ -11,3 +10,6 @@ configure:
     data:
       description: Data is a json object with what data you want to alter.
       example: '{"on": true}'
+
+device_refresh:
+  description: Refresh device lists from deCONZ.

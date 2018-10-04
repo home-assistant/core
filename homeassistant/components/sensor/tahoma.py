@@ -11,12 +11,15 @@ from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.tahoma import (
     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
+from homeassistant.const import ATTR_BATTERY_LEVEL
 
 DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=60)
+
+ATTR_RSSI_LEVEL = 'rssi_level'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -34,6 +37,7 @@ class TahomaSensor(TahomaDevice, Entity):
     def __init__(self, tahoma_device, controller):
         """Initialize the sensor."""
         self.current_value = None
+        self._available = False
         super().__init__(tahoma_device, controller)
 
     @property
@@ -52,6 +56,10 @@ class TahomaSensor(TahomaDevice, Entity):
             return 'lx'
         if self.tahoma_device.type == 'Humidity Sensor':
             return '%'
+        if self.tahoma_device.type == 'rtds:RTDSContactSensor':
+            return None
+        if self.tahoma_device.type == 'rtds:RTDSMotionSensor':
+            return None
 
     def update(self):
         """Update the state."""
@@ -59,6 +67,41 @@ class TahomaSensor(TahomaDevice, Entity):
         if self.tahoma_device.type == 'io:LightIOSystemSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:LuminanceState']
+            self._available = bool(self.tahoma_device.active_states.get(
+                'core:StatusState') == 'available')
         if self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:ContactState']
+            self._available = bool(self.tahoma_device.active_states.get(
+                'core:StatusState') == 'available')
+        if self.tahoma_device.type == 'rtds:RTDSContactSensor':
+            self.current_value = self.tahoma_device.active_states[
+                'core:ContactState']
+            self._available = True
+        if self.tahoma_device.type == 'rtds:RTDSMotionSensor':
+            self.current_value = self.tahoma_device.active_states[
+                'core:OccupancyState']
+            self._available = True
+
+        _LOGGER.debug("Update %s, value: %d", self._name, self.current_value)
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attr = {}
+        super_attr = super().device_state_attributes
+        if super_attr is not None:
+            attr.update(super_attr)
+
+        if 'core:RSSILevelState' in self.tahoma_device.active_states:
+            attr[ATTR_RSSI_LEVEL] = \
+                self.tahoma_device.active_states['core:RSSILevelState']
+        if 'core:SensorDefectState' in self.tahoma_device.active_states:
+            attr[ATTR_BATTERY_LEVEL] = \
+                self.tahoma_device.active_states['core:SensorDefectState']
+        return attr
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
