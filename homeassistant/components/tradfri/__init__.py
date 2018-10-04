@@ -9,12 +9,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
 from .const import (
-    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID)
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 

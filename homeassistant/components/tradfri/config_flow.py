@@ -7,10 +7,10 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 from .const import (
-    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID)
 
 KEY_HOST = 'host'
 KEY_SECURITY_CODE = 'security_code'
