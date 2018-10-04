@@ -21,13 +21,11 @@ from tests.common import (
     get_test_home_assistant, async_fire_time_changed, mock_coro)
 from tests.mock.zwave import MockNetwork, MockNode, MockValue, MockEntityValues
 
-'''
 @asyncio.coroutine
 def test_missing_openzwave(hass):
     """Test that missing openzwave lib stops setup."""
     result = yield from async_setup_component(hass, 'zwave', {'zwave': {}})
     assert not result
-'''
 
 @asyncio.coroutine
 def test_valid_device_config(hass, mock_openzwave):
@@ -88,7 +86,6 @@ def test_network_options(hass, mock_openzwave):
     assert network.options.device == 'mock_usb_path'
     assert network.options.config_path == 'mock_config_path'
 
-
 @asyncio.coroutine
 def test_auto_heal_midnight(hass, mock_openzwave):
     """Test network auto-heal at midnight."""
@@ -104,7 +101,6 @@ def test_auto_heal_midnight(hass, mock_openzwave):
     yield from hass.async_block_till_done()
     assert network.heal.called
     assert len(network.heal.mock_calls) == 1
-
 
 @asyncio.coroutine
 def test_auto_heal_disabled(hass, mock_openzwave):
