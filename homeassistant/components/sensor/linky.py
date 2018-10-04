@@ -80,7 +80,8 @@ class LinkySensor(Entity):
         """Fetch new state data for the sensor."""
         from pylinky.client import LinkyClient, PyLinkyError
 
-        client = LinkyClient(self._username, self._password, None, self._timeout)
+        client = LinkyClient(self._username, self._password, None,
+                             self._timeout)
         try:
             client.fetch_data()
         except PyLinkyError as exp:
