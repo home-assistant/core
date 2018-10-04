@@ -289,6 +289,7 @@ async def test_saving_loading(hass, hass_storage):
     store2 = auth_store.AuthStore(hass)
     users = await store2.async_get_users()
     assert len(users) == 1
+    assert users[0].permissions == user.permissions
     assert users[0] == user
     assert len(users[0].refresh_tokens) == 2
     for r_token in users[0].refresh_tokens.values():
