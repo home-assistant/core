@@ -179,7 +179,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][DATA_OPENUV_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
             hass, refresh_sensors,
-            hass.data[DOMAIN][CONF_SCAN_INTERVAL])
+            hass.data[DOMAIN].get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
 
     return True
 

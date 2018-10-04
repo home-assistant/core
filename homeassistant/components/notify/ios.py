@@ -24,7 +24,7 @@ DEPENDENCIES = ["ios"]
 
 
 # pylint: disable=invalid-name
-def log_rate_limits(target, resp, level=20):
+def log_rate_limits(hass, target, resp, level=20):
     """Output rate limit log line at given level."""
     rate_limits = resp["rateLimits"]
     resetsAt = dt_util.parse_datetime(rate_limits["resetsAt"])
@@ -33,7 +33,7 @@ def log_rate_limits(target, resp, level=20):
                       "%d sent, %d allowed, %d errors, "
                       "resets in %s")
     _LOGGER.log(level, rate_limit_msg,
-                ios.device_name_for_push_id(target),
+                ios.device_name_for_push_id(hass, target),
                 rate_limits["successful"],
                 rate_limits["maximum"], rate_limits["errors"],
                 str(resetsAtTime).split(".")[0])
@@ -45,7 +45,7 @@ def get_service(hass, config, discovery_info=None):
         # Need this to enable requirements checking in the app.
         hass.config.components.add("notify.ios")
 
-    if not ios.devices_with_push():
+    if not ios.devices_with_push(hass):
         _LOGGER.error("The notify.ios platform was loaded but no "
                       "devices exist! Please check the documentation at "
                       "https://home-assistant.io/ecosystem/ios/notifications"
@@ -64,7 +64,7 @@ class iOSNotificationService(BaseNotificationService):
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
-        return ios.devices_with_push()
+        return ios.devices_with_push(self.hass)
 
     def send_message(self, message="", **kwargs):
         """Send a message to the Lambda APNS gateway."""
@@ -78,13 +78,13 @@ class iOSNotificationService(BaseNotificationService):
         targets = kwargs.get(ATTR_TARGET)
 
         if not targets:
-            targets = ios.enabled_push_ids()
+            targets = ios.enabled_push_ids(self.hass)
 
         if kwargs.get(ATTR_DATA) is not None:
             data[ATTR_DATA] = kwargs.get(ATTR_DATA)
 
         for target in targets:
-            if target not in ios.enabled_push_ids():
+            if target not in ios.enabled_push_ids(self.hass):
                 _LOGGER.error("The target (%s) does not exist in .ios.conf.",
                               targets)
                 return
@@ -102,8 +102,8 @@ class iOSNotificationService(BaseNotificationService):
                 message = req.json().get("message", fallback_message)
                 if req.status_code == 429:
                     _LOGGER.warning(message)
-                    log_rate_limits(target, req.json(), 30)
+                    log_rate_limits(self.hass, target, req.json(), 30)
                 else:
                     _LOGGER.error(message)
             else:
-                log_rate_limits(target, req.json())
+                log_rate_limits(self.hass, target, req.json())

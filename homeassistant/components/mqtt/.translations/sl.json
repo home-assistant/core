@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Dovoljena je samo ena konfiguracija MQTT."
+        },
+        "error": {
+            "cannot_connect": "Ne morem se povezati na posrednik."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Posrednik",
+                    "discovery": "Omogo\u010di odkrivanje",
+                    "password": "Geslo",
+                    "port": "port",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "description": "Prosimo vnesite informacije o povezavi va\u0161ega MQTT posrednika.",
+                "title": "MQTT"
+            }
+        },
+        "title": "MQTT"
+    }
+}

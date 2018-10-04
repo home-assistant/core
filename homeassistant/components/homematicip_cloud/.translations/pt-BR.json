@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "O Accesspoint j\u00e1 est\u00e1 configurado",
-            "conection_aborted": "N\u00e3o foi poss\u00edvel conectar ao servidor HMIP",
             "connection_aborted": "N\u00e3o foi poss\u00edvel conectar ao servidor HMIP",
             "unknown": "Ocorreu um erro desconhecido."
         },

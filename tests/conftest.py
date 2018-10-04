@@ -73,7 +73,7 @@ def hass(loop, hass_storage):
 
     yield hass
 
-    loop.run_until_complete(hass.async_stop())
+    loop.run_until_complete(hass.async_stop(force=True))
 
 
 @pytest.fixture
