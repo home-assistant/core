@@ -242,9 +242,9 @@ async def async_setup(hass, config):
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
                 CONF_USB_STICK_PATH: conf[CONF_USB_STICK_PATH],
-                CONF_AUTOHEAL: conf[CONF_AUTOHEAL],
-                CONF_NETWORK_KEY: conf[CONF_NETWORK_KEY],
-                CONF_POLLING_INTERVAL: conf[CONF_POLLING_INTERVAL]
+                CONF_AUTOHEAL: conf.get(CONF_AUTOHEAL),
+                CONF_NETWORK_KEY: conf.get(CONF_NETWORK_KEY),
+                CONF_POLLING_INTERVAL: conf.get(CONF_POLLING_INTERVAL)
             }
         ))
 
