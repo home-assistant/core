@@ -399,7 +399,7 @@ class DysonPureCoolDevice(FanEntity):
             return FLOW_BACK
 
     @property
-    def speed_list(self: ToggleEntity) -> list:
+    def speed_list(self) -> list:
         """Get the list of available speeds."""
         from libpurecoollink.const import FanSpeed
 
@@ -420,7 +420,7 @@ class DysonPureCoolDevice(FanEntity):
         return supported_speeds
 
     @property
-    def supported_features(self: ToggleEntity) -> int:
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_OSCILLATE | \
             SUPPORT_SET_SPEED | \
