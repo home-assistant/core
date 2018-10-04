@@ -22,7 +22,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['PyXiaomiGateway==0.10.0']
+REQUIREMENTS = ['PyXiaomiGateway==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
