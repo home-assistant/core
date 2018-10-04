@@ -34,7 +34,7 @@ WRITE_COMMAND = 'write -c {0} {1} {2}\n'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
-# SensorTypes: 0='decimal', 1='time-schedule', 2='switch', 3='op-mode'
+# SensorTypes: 0='decimal', 1='time-schedule', 2='switch', 3='string' (off,on,night,day)
 SENSOR_TYPES = {
     'ActualFlowTemperatureDesired':
         ['Hc1ActualFlowTempDesired', '°C', 'mdi:thermometer', 0],
@@ -44,12 +44,12 @@ SENSOR_TYPES = {
         ['Hc1MinFlowTempDesired', '°C', 'mdi:thermometer', 0],
     'PumpStatus':
         ['Hc1PumpStatus', None, 'mdi:toggle-switch', 2],
-    'Hc1SummerTemperatureLimit':
+    'HCSummerTemperatureLimit':
         ['Hc1SummerTempLimit', '°C', 'mdi:weather-sunny', 0],
     'HolidayTemperature':
         ['HolidayTemp', '°C', 'mdi:thermometer', 0],
     'HWTemperature':
-        ['HwcTemp', '°C', 'mdi:thermometer', 0],
+        ['HwcTemp', '°C', 'mdi:thermometer', 3],
     'HWTemperatureDesired':
         ['HwcTempDesired', '°C', 'mdi:thermometer', 0],
     'HWTimerMonday':
