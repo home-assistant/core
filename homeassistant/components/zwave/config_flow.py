@@ -6,22 +6,22 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_AUTOHEAL, CONF_POLLING_INTERVAL,
-    CONF_USB_STICK_PATH, CONF_CONFIG_PATH,
-    CONF_NETWORK_KEY, DEFAULT_CONF_AUTOHEAL, 
-    DEFAULT_CONF_USB_STICK_PATH, DEFAULT_POLLING_INTERVAL,
-    DEFAULT_DEBUG, DOMAIN)
+    CONF_USB_STICK_PATH, CONF_NETWORK_KEY,
+    DEFAULT_CONF_AUTOHEAL, DEFAULT_CONF_USB_STICK_PATH,
+    DEFAULT_POLLING_INTERVAL, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
+
 
 @callback
 def configured_hosts(hass):
     """Return a set of the configured hosts."""
     return set(entry.data[CONF_USB_STICK_PATH] for entry
                in hass.config_entries.async_entries(DOMAIN))
+
 
 @config_entries.HANDLERS.register(DOMAIN)
 class ZwaveFlowHandler(config_entries.ConfigFlow):
@@ -60,8 +60,10 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
         fields[vol.Optional(CONF_NETWORK_KEY)] = str
         fields[vol.Optional(CONF_AUTOHEAL,
                             default=DEFAULT_CONF_AUTOHEAL)] = bool
-        fields[vol.Optional(CONF_POLLING_INTERVAL,
-                            default=DEFAULT_POLLING_INTERVAL)] = vol.Coerce(int)
+        fields[vol.Optional(
+            CONF_POLLING_INTERVAL,
+            default=DEFAULT_POLLING_INTERVAL
+        )] = vol.Coerce(int)
 
         return self.async_show_form(
             step_id='init', data_schema=vol.Schema(fields)
@@ -69,7 +71,6 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_link(self, user_input=None):
         """Request Z-Wave data from the user."""
-
         errors = {}
 
         if user_input is not None:
