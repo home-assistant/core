@@ -8,12 +8,15 @@ https://home-assistant.io/components/switch.unifi/
 import asyncio
 import logging
 
+from datetime import timedelta
+
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components import unifi
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 DEPENDENCIES = ['unifi']
+SCAN_INTERVAL = timedelta(seconds=15)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +100,9 @@ async def async_update_items(controller, async_add_entities,
 
         client = controller.api.clients[client_id]
         if not client.is_wired or client.sw_mac not in devices or \
-           devices[client.sw_mac].ports[client.sw_port].poe_enable is None:
+           not devices[client.sw_mac].ports[client.sw_port].port_poe or \
+           not devices[client.sw_mac].ports[client.sw_port].poe_enable and \
+           client.mac not in switches_off:
             continue
 
         switches[client_id] = UniFiSwitch(
@@ -110,23 +115,16 @@ async def async_update_items(controller, async_add_entities,
         """Update storage with devices that has got its' POE off."""
         return switches_off
 
-    for device in controller.api.devices.values():
-        for port in device.ports.values():
-            if not port.port_poe or port.poe_mode is None:
-                continue
+    for switch in switches.values():
+        if switch.port.poe_mode == 'off' and \
+           switch.client.mac not in switches_off:
+            switches_off[switch.client.mac] = switch.client.raw
+            store.async_delay_save(_data_to_save, SAVE_DELAY)
 
-            for client in controller.api.clients.values():
-                if device.mac != client.sw_mac or \
-                   port.port_idx != client.sw_port:
-                    continue
-
-                if port.poe_mode == 'off' and client.mac not in switches_off:
-                    switches_off[client.mac] = client.raw
-                    store.async_delay_save(_data_to_save, SAVE_DELAY)
-
-                elif port.poe_mode != 'off' and client.mac in switches_off:
-                    del switches_off[client.mac]
-                    store.async_delay_save(_data_to_save, SAVE_DELAY)
+        elif switch.port.poe_mode != 'off' and \
+             switch.client.mac in switches_off:
+            del switches_off[switch.client.mac]
+            store.async_delay_save(_data_to_save, SAVE_DELAY)
 
     if new_switches:
         async_add_entities(new_switches)
@@ -158,7 +156,11 @@ class UniFiSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if POE is active."""
-        return self.port.poe_mode != 'off'
+        try:
+            return self.port.poe_mode != 'off'
+        except Exception:
+            print(self.client.raw)
+        # return self.port.poe_mode != 'off'
 
     @property
     def available(self):
@@ -177,11 +179,12 @@ class UniFiSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        if self.client.is_wired:
-            attributes['POE'] = self.port.poe_power
-            attributes['received'] = self.client.wired_rx_bytes / 1000000
-            attributes['transferred'] = self.client.wired_tx_bytes / 1000000
+        attributes = {
+            'host': self.client.ip,
+            'POE': self.port.poe_power,
+            'received': self.client.wired_rx_bytes / 1000000,
+            'transferred': self.client.wired_tx_bytes / 1000000
+        }
         return attributes
 
     @property
