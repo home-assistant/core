@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rmvtransport/
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -12,6 +13,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+from homeassistant.util import Throttle
+from homeassistant.exceptions import PlatformNotReady
 
 REQUIREMENTS = ['PyRMVtransport==0.1']
 
@@ -46,6 +49,8 @@ ICONS = {
 }
 ATTRIBUTION = "Data provided by opendata.rmv.de"
 
+SCAN_INTERVAL = timedelta(seconds=60)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NEXT_DEPARTURE): [{
         vol.Required(CONF_STATION): cv.string,
@@ -63,7 +68,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the RMV departure sensor."""
     sensors = []
     for next_departure in config.get(CONF_NEXT_DEPARTURE):
@@ -77,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 next_departure.get(CONF_TIME_OFFSET),
                 next_departure.get(CONF_MAX_JOURNEYS),
                 next_departure.get(CONF_NAME)))
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class RMVDepartureSensor(Entity):
@@ -92,6 +98,9 @@ class RMVDepartureSensor(Entity):
         self.data = RMVDepartureData(station, destinations, directions, lines,
                                      products, time_offset, max_journeys)
         self._icon = ICONS[None]
+
+        if self.data is None:
+            raise PlatformNotReady
 
     @property
     def name(self):
@@ -134,9 +143,10 @@ class RMVDepartureSensor(Entity):
         """Return the unit this state is expressed in."""
         return "min"
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data and update the state."""
-        self.data.update()
+        await self.data.async_update()
+
         if not self.data.departures:
             self._state = None
             self._icon = ICONS[None]
@@ -166,7 +176,8 @@ class RMVDepartureData:
         self.rmv = RMVtransport.RMVtransport()
         self.departures = []
 
-    def update(self):
+    @Throttle(SCAN_INTERVAL)
+    async def async_update(self):
         """Update the connection data."""
         try:
             _data = self.rmv.get_departures(self._station_id,
