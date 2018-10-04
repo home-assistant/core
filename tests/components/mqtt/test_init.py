@@ -196,22 +196,21 @@ class TestMQTTComponent(unittest.TestCase):
         mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
             'identifiers': ['abcd']
         })
+        mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
+            'identifiers': 'abcd'
+        })
         # just connection
         mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
             'connections': [{
-                'type': 'mac',
-                'identifier': '02:5b:26:a8:dc:12'
+                'mac': '02:5b:26:a8:dc:12',
             }]
         })
         # full device info
         mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
             'identifiers': ['helloworld', 'hello'],
             'connections': [{
-                "type": "mac",
-                "identifier": "02:5b:26:a8:dc:12",
-            }, {
-                "type": "zigbee",
-                "identifier": "zigbee_id"
+                "mac": "02:5b:26:a8:dc:12",
+                "zigbee": "zigbee_id",
             }],
             'manufacturer': 'Whatever',
             'name': 'Beer',
@@ -230,13 +229,6 @@ class TestMQTTComponent(unittest.TestCase):
             'identifiers': [],
             'connections': [],
             'name': 'Beer',
-        })
-        # invalid connection type
-        self.assertRaises(vol.Invalid, mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA, {
-            'connections': [{
-                'type': 'invalid',
-                'identifier': 'empty'
-            }]
         })
 
 

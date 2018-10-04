@@ -219,8 +219,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(vol.Schema({
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_CONNECTIONS, default=list):
         vol.All(cv.ensure_list, [vol.Schema({
-            vol.Required(CONF_TYPE): vol.Any(*device_registry.CONNECTION_KEYS),
-            vol.Required(CONF_IDENTIFIER): cv.string,
+            cv.string: cv.string,
         })]),
     vol.Optional(CONF_MANUFACTURER): cv.string,
     vol.Optional(CONF_MODEL): cv.string,
@@ -913,15 +912,16 @@ class MqttEntityDeviceInfo(Entity):
         if not self._device_config:
             return None
 
+        connections = set()
+        for conn in self._device_config[CONF_CONNECTIONS]:
+            connections |= set(conn.items())
+
         return {
             'identifiers': {
                 (DOMAIN, id_)
                 for id_ in self._device_config[CONF_IDENTIFIERS]
             },
-            'connections': {
-                (connection[CONF_TYPE], connection[CONF_IDENTIFIER])
-                for connection in self._device_config[CONF_CONNECTIONS]
-            },
+            'connections': connections,
             'manufacturer': self._device_config.get(CONF_MANUFACTURER),
             'model': self._device_config.get(CONF_MODEL),
             'name': self._device_config.get(CONF_NAME),
