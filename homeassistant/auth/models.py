@@ -19,19 +19,19 @@ class User:
     """A user."""
 
     name = attr.ib(type=str)  # type: Optional[str]
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     is_owner = attr.ib(type=bool, default=False)
     is_active = attr.ib(type=bool, default=False)
     system_generated = attr.ib(type=bool, default=False)
 
     # List of credentials of a user.
     credentials = attr.ib(
-        type=list, default=attr.Factory(list), cmp=False
+        type=list, factory=list, cmp=False
     )  # type: List[Credentials]
 
     # Tokens associated with a user.
     refresh_tokens = attr.ib(
-        type=dict, default=attr.Factory(dict), cmp=False
+        type=dict, factory=dict, cmp=False
     )  # type: Dict[str, RefreshToken]
 
 
@@ -48,12 +48,10 @@ class RefreshToken:
                          validator=attr.validators.in_((
                              TOKEN_TYPE_NORMAL, TOKEN_TYPE_SYSTEM,
                              TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN)))
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
-    created_at = attr.ib(type=datetime, default=attr.Factory(dt_util.utcnow))
-    token = attr.ib(type=str,
-                    default=attr.Factory(lambda: generate_secret(64)))
-    jwt_key = attr.ib(type=str,
-                      default=attr.Factory(lambda: generate_secret(64)))
+    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
+    created_at = attr.ib(type=datetime, factory=dt_util.utcnow)
+    token = attr.ib(type=str, factory=lambda: generate_secret(64))
+    jwt_key = attr.ib(type=str, factory=lambda: generate_secret(64))
 
     last_used_at = attr.ib(type=Optional[datetime], default=None)
     last_used_ip = attr.ib(type=Optional[str], default=None)
@@ -69,7 +67,7 @@ class Credentials:
     # Allow the auth provider to store data to represent their auth.
     data = attr.ib(type=dict)
 
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     is_new = attr.ib(type=bool, default=True)
 
 
