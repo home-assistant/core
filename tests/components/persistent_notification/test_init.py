@@ -41,6 +41,7 @@ class TestPersistentNotification:
         assert notification['status'] == pn.STATUS_UNREAD
         assert notification['message'] == 'Hello World 2'
         assert notification['title'] == '2 beers'
+        assert notification['created_at'] is not None
         notifications.clear()
 
     def test_create_notification_id(self):
@@ -174,6 +175,7 @@ async def test_ws_get_notifications(hass, hass_ws_client):
     assert notification['message'] == 'test'
     assert notification['title'] is None
     assert notification['status'] == pn.STATUS_UNREAD
+    assert notification['created_at'] is not None
 
     # Mark Read
     await hass.services.async_call(pn.DOMAIN, pn.SERVICE_MARK_READ, {
