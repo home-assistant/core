@@ -9,7 +9,6 @@ import hmac
 import json
 import time
 import voluptuous as vol
-import konnected
 
 from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.web import Request, Response
@@ -104,6 +103,8 @@ SIGNAL_SENSOR_UPDATE = 'konnected.{}.update'
 
 async def async_setup(hass, config):
     """Set up the Konnected platform."""
+    import konnected
+
     cfg = config.get(DOMAIN)
     if cfg is None:
         cfg = {}
@@ -254,6 +255,7 @@ class DiscoveredDevice:
         self.host = host
         self.port = port
 
+        import konnected
         self.client = konnected.Client(host, str(port))
         self.status = self.client.get_status()
 
