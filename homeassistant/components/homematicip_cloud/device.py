@@ -25,11 +25,11 @@ ATTR_UNREACHABLE = 'unreachable'
 class HomematicipGenericDevice(Entity):
     """Representation of an HomematicIP generic device."""
 
-    def __init__(self, home, device, post=None):
+    def __init__(self, home, device, postfix=None):
         """Initialize the generic device."""
         self._home = home
         self._device = device
-        self.post = post
+        self._postfix = postfix
         _LOGGER.info("Setting up %s, (%s)",
                      self.name, self.unique_id)
 
@@ -48,8 +48,8 @@ class HomematicipGenericDevice(Entity):
         name = self._device.label
         if self._home.name is not None and self._home.name != '':
             name = "{} {}".format(self._home.name, name)
-        if self.post is not None and self.post != '':
-            name = "{} {}".format(name, self.post)
+        if self._postfix is not None and self._postfix != '':
+            name = "{} {}".format(name, self._postfix)
         return name
 
     @property
@@ -66,9 +66,9 @@ class HomematicipGenericDevice(Entity):
     def unique_id(self):
         """Device unique ID"""
         id = "{}_{}".format(self._device.modelType, self._device.id).lower()
-        if self.post is not None and self.post != '':
+        if self._postfix is not None and self._postfix != '':
             id = "{}_{}_{}".format(self._device.modelType,
-                                   self.post, self._device.id).lower()
+                                   self._postfix, self._device.id).lower()
         return id
 
     @property
