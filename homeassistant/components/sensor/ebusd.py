@@ -34,7 +34,7 @@ WRITE_COMMAND = 'write -c {0} {1} {2}\n'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
-# SensorTypes: 0='decimal', 1='time-schedule', 2='switch', 3='string' (off,on,night,day)
+# SensorTypes: 0='decimal', 1='time-schedule', 2='switch', 3='string'
 SENSOR_TYPES = {
     'ActualFlowTemperatureDesired':
         ['Hc1ActualFlowTempDesired', '°C', 'mdi:thermometer', 0],
