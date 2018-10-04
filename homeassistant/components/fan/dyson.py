@@ -42,7 +42,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Get Dyson Devices from parent component
     for device in hass.data[DYSON_DEVICES]:
-
         if isinstance(device, DysonPureCool):
             dyson_entity = DysonPureCoolDevice(hass, device)
             hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
