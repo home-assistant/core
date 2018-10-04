@@ -1,12 +1,12 @@
 """Tests for the HomeKit component."""
-from unittest.mock import patch, ANY, Mock, MagicMock
+from unittest.mock import patch, ANY, Mock, MagicMock, PropertyMock
 
 import pytest
 
 from homeassistant import setup
 from homeassistant.components.homekit import (
     generate_aid, HomeKit, STATUS_READY, STATUS_RUNNING,
-    STATUS_STOPPED, STATUS_WAIT)
+    STATUS_STOPPED, STATUS_WAIT, MAX_DEVICES)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     CONF_AUTO_START, BRIDGE_NAME, DEFAULT_PORT, DOMAIN, HOMEKIT_FILE,
@@ -217,3 +217,19 @@ async def test_homekit_stop(hass):
     homekit.status = STATUS_RUNNING
     await hass.async_add_job(homekit.stop)
     assert homekit.driver.stop.called is True
+
+
+async def test_homekit_too_many_accessories(hass, hk_driver):
+    """Test adding too many accessories to homekit."""
+    homekit = HomeKit(hass, None, None, None, None, None)
+    homekit.bridge = mock_bridge = MagicMock()
+    type(mock_bridge).accessories = PropertyMock(
+        return_value=range(0, MAX_DEVICES+1))
+    homekit.driver = hk_driver
+
+    with patch('pyhap.accessory_driver.AccessoryDriver.start'), \
+            patch('pyhap.accessory_driver.AccessoryDriver.add_accessory'), \
+            patch('homeassistant.components.homekit._LOGGER.warning') \
+            as mock_warn:
+        await hass.async_add_job(homekit.start)
+        assert mock_warn.called is True
