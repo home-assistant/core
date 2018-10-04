@@ -18,7 +18,6 @@ from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -357,22 +356,22 @@ class FanEntity(ToggleEntity):
         """
         return self.hass.async_add_job(self.oscillate, oscillating)
 
-    def set_night_mode(self: ToggleEntity, night_mode: bool) -> None:
+    def set_night_mode(self, night_mode: bool) -> None:
         """Oscillate the fan."""
         pass
 
-    def async_set_night_mode(self: ToggleEntity, night_mode: bool):
+    def async_set_night_mode(self, night_mode: bool):
         """Oscillate the fan.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.set_night_mode, night_mode)
+        return self.hass.async_add_job(self, night_mode)
 
-    def set_angle(self: ToggleEntity, angle_low: int = None, angle_high: int = None) -> None:
+    def set_angle(self, angle_low: int = None, angle_high: int = None) -> None:
         """set the oscillation angle of the the fan."""
         pass
 
-    def async_set_angle(self: ToggleEntity, angle_low: int = None, angle_high: int = None):
+    def async_set_angle(self, angle_low: int = None, angle_high: int = None):
         """set the oscillation angle of the the fan.
 
         This method must be run in the event loop and returns a coroutine.
@@ -383,18 +382,18 @@ class FanEntity(ToggleEntity):
         """set the timer of the the fan."""
         pass
 
-    def async_set_timer(self: ToggleEntity, timer: str = None):
+    def async_set_timer(self, timer: str = None):
         """set the timer of the the fan.
 
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.set_timer, timer)
 
-    def set_flow_direction(self: ToggleEntity, flow_direction: str = None) -> None:
+    def set_flow_direction(self, flow_direction: str = None) -> None:
         """set flow direction of the the fan."""
         pass
 
-    def async_set_flow_direction(self: ToggleEntity, flow_direction: str = None):
+    def async_set_flow_direction(self, flow_direction: str = None):
         """set the flow direction of the the fan.
 
         This method must be run in the event loop and returns a coroutine.
@@ -407,7 +406,7 @@ class FanEntity(ToggleEntity):
         return self.speed not in [SPEED_OFF, STATE_UNKNOWN]
 
     @property
-    def speed(self) -> str:
+    def speed(self):
         """Return the current speed."""
         return None
 
