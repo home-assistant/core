@@ -149,7 +149,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
             ATTR_NOTIFICATION_ID: notification_id,
             ATTR_STATUS: STATUS_UNREAD,
             ATTR_TITLE: title,
-            ATTR_CREATED_AT: dt_util.now(),
+            ATTR_CREATED_AT: dt_util.utcnow(),
         }
 
         hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
