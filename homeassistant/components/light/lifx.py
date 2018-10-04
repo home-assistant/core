@@ -21,6 +21,8 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_TRANSITION, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
     preprocess_turn_on_alternatives)
+from homeassistant.components.lifx import (
+    UDP_BROADCAST_PORT, DOMAIN as LIFX_DOMAIN)
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -30,9 +32,10 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.6.3', 'aiolifx_effects==0.2.1']
+DEPENDENCIES = ('lifx',)
+REQUIREMENTS = ['aiolifx_effects==0.2.1']
 
-UDP_BROADCAST_PORT = 56700
+SCAN_INTERVAL = timedelta(seconds=10)
 
 DISCOVERY_INTERVAL = 60
 MESSAGE_TIMEOUT = 1.0
@@ -42,10 +45,12 @@ UNAVAILABLE_GRACE = 90
 CONF_SERVER = 'server'
 CONF_BROADCAST = 'broadcast'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+CONFIG = {
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
     vol.Optional(CONF_BROADCAST, default='255.255.255.255'): cv.string,
-})
+}
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(CONFIG)
 
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
@@ -138,6 +143,28 @@ async def async_setup_platform(hass,
                                config,
                                async_add_entities,
                                discovery_info=None):
+    """Set up the LIFX light platform.
+
+    Deprecated.
+    """
+    _LOGGER.warning('Loading LIFX via light platform config is deprecated.')
+    await _async_setup_platform(
+        hass, config, async_add_entities, discovery_info)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up LIFX from a config entry."""
+    try:
+        config = vol.Schema(CONFIG)(hass.data[LIFX_DOMAIN].get('light', {}))
+        await _async_setup_platform(hass, config, async_add_entities, None)
+    except vol.Error as ex:
+        _LOGGER.error("Invalid configuration: %s", ex)
+
+
+async def _async_setup_platform(hass,
+                                config,
+                                async_add_entities,
+                                discovery_info=None):
     """Set up the LIFX platform."""
     if sys.platform == 'win32':
         _LOGGER.warning("The lifx platform is known to not work on Windows. "
