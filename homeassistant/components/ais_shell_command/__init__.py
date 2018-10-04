@@ -98,7 +98,7 @@ def _change_host_name(hass, call):
     import subprocess
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
-    command = 'sudo /data/data/pl.sviete.dom/.ais/run_as_root.sh'
+    command = 'su -c "/data/data/pl.sviete.dom/.ais/run_as_root.sh"'
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
 
