@@ -28,10 +28,12 @@ from .const import (
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
-TYPES = Registry()
+REQUIREMENTS = ['HAP-python==2.2.2']
+
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==2.2.2']
+MAX_DEVICES = 100
+TYPES = Registry()
 
 # #### Driver Status ####
 STATUS_READY = 0
@@ -238,6 +240,10 @@ class HomeKit():
 
         if not self.driver.state.paired:
             show_setup_message(self.hass, self.driver.state.pincode)
+
+        if len(self.bridge.accessories) > MAX_DEVICES:
+            _LOGGER.warning('You have exceeded the device limit, which might '
+                            'cause issues. Consider using the filter option.')
 
         _LOGGER.debug('Driver start')
         self.hass.add_job(self.driver.start)
