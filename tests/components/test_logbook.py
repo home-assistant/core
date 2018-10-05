@@ -566,8 +566,8 @@ async def test_logbook_view_period_entity(hass, aiohttp_client):
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await aiohttp_client(hass.http.app)
     response = await client.get(
-        '/api/logbook/{}?period=3&entity=sun.sun'
-            .format(dt_util.utcnow().isoformat()))
+        '/api/logbook/{}?period=3&entity=sun.sun'.format(
+            dt_util.utcnow().isoformat()))
     assert response.status == 200
 
 
