@@ -49,7 +49,6 @@ homeassistant/components/hassio/* @home-assistant/hassio
 # Individual platforms
 homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
 homeassistant/components/alarm_control_panel/manual_mqtt.py @colinodell
-homeassistant/components/alarm_control_panel/simplisafe.py @bachya
 homeassistant/components/binary_sensor/hikvision.py @mezz64
 homeassistant/components/binary_sensor/threshold.py @fabaff
 homeassistant/components/camera/yi.py @bachya
@@ -192,7 +191,7 @@ homeassistant/components/melissa.py @kennedyshead
 homeassistant/components/*/melissa.py @kennedyshead
 homeassistant/components/*/mystrom.py @fabaff
 
-# U
+# O
 homeassistant/components/openuv/* @bachya
 homeassistant/components/*/openuv.py @bachya
 
@@ -205,6 +204,10 @@ homeassistant/components/rainmachine/* @bachya
 homeassistant/components/*/rainmachine.py @bachya
 homeassistant/components/*/random.py @fabaff
 homeassistant/components/*/rfxtrx.py @danielhiversen
+
+# S
+homeassistant/components/simplisafe/* @bachya
+homeassistant/components/*/simplisafe.py @bachya
 
 # T
 homeassistant/components/tahoma.py @philklei
