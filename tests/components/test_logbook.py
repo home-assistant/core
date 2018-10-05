@@ -558,6 +558,19 @@ async def test_logbook_view(hass, aiohttp_client):
     assert response.status == 200
 
 
+async def test_logbook_view_period_entity(hass, aiohttp_client):
+    """Test the logbook view with period and entity."""
+    await hass.async_add_job(init_recorder_component, hass)
+    await async_setup_component(hass, 'logbook', {})
+    await hass.components.recorder.wait_connection_ready()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    client = await aiohttp_client(hass.http.app)
+    response = await client.get(
+        '/api/logbook/{}?period=3&entity=sun.sun'
+            .format(dt_util.utcnow().isoformat()))
+    assert response.status == 200
+
+
 async def test_humanify_alexa_event(hass):
     """Test humanifying Alexa event."""
     hass.states.async_set('light.kitchen', 'on', {
