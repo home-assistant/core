@@ -110,6 +110,8 @@ homeassistant/components/konnected.py @heythisisnate
 homeassistant/components/*/konnected.py @heythisisnate
 homeassistant/components/matrix.py @tinloaf
 homeassistant/components/*/matrix.py @tinloaf
+homeassistant/components/melissa.py @kennedyshead
+homeassistant/components/*/melissa.py @kennedyshead
 homeassistant/components/openuv/* @bachya
 homeassistant/components/*/openuv.py @bachya
 homeassistant/components/qwikswitch.py @kellerza
