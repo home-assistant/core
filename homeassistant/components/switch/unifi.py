@@ -43,7 +43,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     switches_off = await store.async_load()
     if switches_off is None:
         switches_off = {}
-    controller.api.clients.process_raw(list(switches_off.values()))
+    controller.api.clients.process_raw([switch['data']
+                                        for switch in switches_off.values()]
+                                      )
 
     progress = None
     update_progress = set()
@@ -105,8 +107,12 @@ async def async_update_items(controller, async_add_entities,
            client.mac not in switches_off:
             continue
 
+        poe_mode = None
+        if client.mac in switches_off:
+            poe_mode = switches_off[client.mac]['poe_mode']
+
         switches[client_id] = UniFiSwitch(
-            client, controller, request_controller_update)
+            client, controller, request_controller_update, poe_mode)
         new_switches.append(switches[client_id])
         LOGGER.debug("New UniFi switch %s (%s)", client.hostname, client.mac)
 
@@ -118,11 +124,14 @@ async def async_update_items(controller, async_add_entities,
     for switch in switches.values():
         if switch.port.poe_mode == 'off' and \
            switch.client.mac not in switches_off:
-            switches_off[switch.client.mac] = switch.client.raw
+            switches_off[switch.client.mac] = {
+                'data': switch.client.raw,
+                'poe_mode': switch.poe_mode
+            }
             store.async_delay_save(_data_to_save, SAVE_DELAY)
 
         elif switch.port.poe_mode != 'off' and \
-             switch.client.mac in switches_off:
+           switch.client.mac in switches_off:
             del switches_off[switch.client.mac]
             store.async_delay_save(_data_to_save, SAVE_DELAY)
 
@@ -133,14 +142,18 @@ async def async_update_items(controller, async_add_entities,
 class UniFiSwitch(SwitchDevice):
     """Representation of a client that uses POE."""
 
-    def __init__(self, client, controller, request_controller_update):
+    def __init__(self, client, controller,
+                 request_controller_update, poe_mode):
         """Set up switch."""
         self.client = client
         self.controller = controller
+        self.poe_mode = poe_mode
         self.async_request_controller_update = request_controller_update
 
     async def async_update(self):
         """Synchronize state with controller."""
+        if self.poe_mode is None and self.port.poe_mode != 'off':
+            self.poe_mode = self.port.poe_mode
         await self.async_request_controller_update(self.client.mac)
 
     @property
@@ -156,11 +169,7 @@ class UniFiSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if POE is active."""
-        try:
-            return self.port.poe_mode != 'off'
-        except Exception:
-            print(self.client.raw)
-        # return self.port.poe_mode != 'off'
+        return self.port.poe_mode != 'off'
 
     @property
     def available(self):
@@ -170,7 +179,8 @@ class UniFiSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Enable POE for client."""
-        await self.device.async_set_port_poe_mode(self.client.sw_port, 'auto')
+        await self.device.async_set_port_poe_mode(
+            self.client.sw_port, self.poe_mode)
 
     async def async_turn_off(self, **kwargs):
         """Disable POE for client."""
@@ -180,10 +190,9 @@ class UniFiSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = {
-            'host': self.client.ip,
-            'POE': self.port.poe_power,
+            'power': self.port.poe_power,
             'received': self.client.wired_rx_bytes / 1000000,
-            'transferred': self.client.wired_tx_bytes / 1000000
+            'sent': self.client.wired_tx_bytes / 1000000
         }
         return attributes
 
