@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyrecswitch==1.0.1']
+REQUIREMENTS = ['pyrecswitch==1.0.2']
 
 DEFAULT_NAME = 'RecSwitch {0}'
 
