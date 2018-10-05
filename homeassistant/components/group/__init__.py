@@ -570,9 +570,10 @@ class Group(Entity):
         if gr_on is None:
             return
 
+        # pylint: disable=too-many-boolean-expressions
         if tr_state is None or ((gr_state == gr_on and
                                  tr_state.state == gr_off) or
-                                 (gr_state == gr_off and
+                                (gr_state == gr_off and
                                  tr_state.state == gr_on) or
                                 tr_state.state not in (gr_on, gr_off)):
             if states is None:
