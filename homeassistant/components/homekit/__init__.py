@@ -241,8 +241,8 @@ class HomeKit():
             show_setup_message(self.hass, self.driver.state.pincode)
 
         if len(self.bridge.accessories) > MAX_DEVICES:
-            _LOGGER.warning('You have exceeded the device limit, which ' \
-                'might cause issues. Consider using the filter option.')
+            _LOGGER.warning('You have exceeded the device limit, which might '
+                            'cause issues. Consider using the filter option.')
 
         _LOGGER.debug('Driver start')
         self.hass.add_job(self.driver.start)
