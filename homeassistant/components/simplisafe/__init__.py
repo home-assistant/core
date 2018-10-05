@@ -5,10 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/simplisafe/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel import (
+    SCAN_INTERVAL as DEFAULT_SCAN_INTERVAL)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_CODE, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
@@ -31,8 +32,6 @@ REQUIREMENTS = ['simplisafe-python==3.1.3']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ACCOUNTS = 'accounts'
-
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 ACCOUNT_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
