@@ -151,6 +151,14 @@ class EQ3BTSmartThermostat(ClimateDevice):
         """Return if we are away."""
         return self.current_operation == STATE_AWAY
 
+    def turn_on(self):
+        """Turn device on."""
+        self.set_operation_mode(STATE_AUTO)
+
+    def turn_off(self):
+        """Turn device off."""
+        self.set_operation_mode(STATE_OFF)
+
     @property
     def min_temp(self):
         """Return the minimum temperature."""
