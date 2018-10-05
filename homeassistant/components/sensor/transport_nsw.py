@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 
-REQUIREMENTS = ['TransportNSW==0.0.4']
+REQUIREMENTS = ['PyTransportNSW==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +109,7 @@ class PublicTransportData(object):
 
     def __init__(self, stopid, route, apikey):
         """Initialize the data object."""
-        from TransportNSW import TransportNSW
+        import TransportNSW
         self._stopid = stopid
         self._route = route
         self._apikey = apikey
@@ -120,7 +120,7 @@ class PublicTransportData(object):
         self.tnsw = TransportNSW.TransportNSW()
 
     def update(self):
-        """Get the next leave time"""
+        """Get the next leave time."""
         _data = self.tnsw.get_departures(self._stopid,
                                          self._route,
                                          self._apikey)
