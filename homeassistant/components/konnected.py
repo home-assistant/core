@@ -7,7 +7,7 @@ https://home-assistant.io/components/konnected/
 import logging
 import hmac
 import json
-import time
+import asyncio
 import voluptuous as vol
 
 from aiohttp.hdrs import AUTHORIZATION
@@ -116,10 +116,8 @@ async def async_setup(hass, config):
             CONF_API_HOST: cfg.get(CONF_API_HOST)
         }
 
-    def device_discovered(service, info):
-        """Call when a Konnected device has been discovered."""
-        host = info.get(CONF_HOST)
-        port = info.get(CONF_PORT)
+    def setup_device(host, port):
+        """Set up a Konnected device at `host` listening on `port`."""
         discovered = DiscoveredDevice(hass, host, port)
         if discovered.is_configured:
             discovered.setup()
@@ -128,7 +126,13 @@ async def async_setup(hass, config):
                             " but not specified in configuration.yaml",
                             discovered.device_id)
 
-    def manual_discovery(event):
+    def device_discovered(service, info):
+        """Call when a Konnected device has been discovered."""
+        host = info.get(CONF_HOST)
+        port = info.get(CONF_PORT)
+        setup_device(host, port)
+
+    async def manual_discovery(event):
         """Init devices on the network with manually assigned addresses."""
         specified = [dev for dev in cfg.get(CONF_DEVICES) if
                      dev.get(CONF_HOST) and dev.get(CONF_PORT)]
@@ -140,20 +144,13 @@ async def async_setup(hass, config):
                               dev.get(CONF_HOST),
                               dev.get(CONF_PORT))
                 try:
-                    discovered = DiscoveredDevice(hass,
-                                                  dev.get(CONF_HOST),
-                                                  dev.get(CONF_PORT))
-                    if discovered.is_configured:
-                        discovered.setup()
-                        specified.remove(dev)
-                    else:
-                        _LOGGER.error("Konnected device %s was manually "
-                                      "configured, but its mac address is not "
-                                      "found in configuration.yaml",
-                                      discovered.device_id)
+                    await hass.async_add_job(setup_device,
+                                             dev.get(CONF_HOST),
+                                             dev.get(CONF_PORT))
+                    specified.remove(dev)
                 except konnected.Client.ClientError as err:
                     _LOGGER.error(err)
-                    time.sleep(10)  # try again in 10 seconds
+                    await asyncio.sleep(10)  # try again in 10 seconds
 
     # Initialize devices specified in the configuration on boot
     for device in cfg.get(CONF_DEVICES):
