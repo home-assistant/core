@@ -82,7 +82,6 @@ homeassistant/components/sensor/qnap.py @colinodell
 homeassistant/components/sensor/sma.py @kellerza
 homeassistant/components/sensor/sql.py @dgomes
 homeassistant/components/sensor/sytadin.py @gautric
-homeassistant/components/sensor/tibber.py @danielhiversen
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/vacuum/roomba.py @pschmitt
@@ -124,6 +123,8 @@ homeassistant/components/tesla.py @zabuldon
 homeassistant/components/*/tesla.py @zabuldon
 homeassistant/components/tellduslive.py @molobrakos @fredrike
 homeassistant/components/*/tellduslive.py @molobrakos @fredrike
+homeassistant/components/tibber/* @danielhiversen
+homeassistant/components/*/tibber.py @danielhiversen
 homeassistant/components/*/tradfri.py @ggravlingen
 homeassistant/components/upcloud.py @scop
 homeassistant/components/*/upcloud.py @scop
