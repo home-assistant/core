@@ -12,5 +12,4 @@ send_message:
       example: '[{"text":"test", "is_bold": false, "is_italic": false, "is_strikethrough": false, "is_underline": false, "parse_str": false, "link_target": "http://google.com"}, ...]'
     data:
       description: Other options ['image_file' / 'image_url']
-      example: '{ "image_file": "file" }' or '{ "image_url": "url" }'
-      
+      example: '{ "image_file": "file" }  or  { "image_url": "url" }'
