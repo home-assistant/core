@@ -265,16 +265,17 @@ def humanify(hass, events):
 
             elif event.event_type == EVENT_ALEXA_SMART_HOME:
                 data = event.data
-                entity_id = data.get('entity_id')
+                entity_id = data['request'].get('entity_id')
 
                 if entity_id:
                     state = hass.states.get(entity_id)
                     name = state.name if state else entity_id
                     message = "send command {}/{} for {}".format(
-                        data['namespace'], data['name'], name)
+                        data['request']['namespace'],
+                        data['request']['name'], name)
                 else:
                     message = "send command {}/{}".format(
-                        data['namespace'], data['name'])
+                        data['request']['namespace'], data['request']['name'])
 
                 yield {
                     'when': event.time_fired,
