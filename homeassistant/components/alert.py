@@ -10,6 +10,8 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.notify import (
+    ATTR_MESSAGE, DOMAIN as DOMAIN_NOTIFY)
 from homeassistant.const import (
     CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
@@ -204,7 +206,7 @@ class Alert(ToggleEntity):
             self._send_done_message = True
             for target in self._notifiers:
                 await self.hass.services.async_call(
-                    'notify', target, {'message': self._name})
+                    DOMAIN_NOTIFY, target, {ATTR_MESSAGE: self._name})
         await self._schedule_notify()
 
     async def _notify_done_message(self, *args):
@@ -213,7 +215,7 @@ class Alert(ToggleEntity):
         self._send_done_message = False
         for target in self._notifiers:
             await self.hass.services.async_call(
-                'notify', target, {'message': self._done_message})
+                DOMAIN_NOTIFY, target, {ATTR_MESSAGE: self._done_message})
 
     async def async_turn_on(self, **kwargs):
         """Async Unacknowledge alert."""

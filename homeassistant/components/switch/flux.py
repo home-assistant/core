@@ -13,10 +13,12 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    is_on, DOMAIN as LIGHT_DOMAIN, VALID_TRANSITION, ATTR_TRANSITION)
+    is_on, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    ATTR_WHITE_VALUE, ATTR_XY_COLOR, DOMAIN as LIGHT_DOMAIN, VALID_TRANSITION)
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import (
-    CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE, SERVICE_TURN_ON)
+    ATTR_ENTITY_ID, CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE,
+    SERVICE_TURN_ON)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
@@ -70,12 +72,12 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
     for light in lights:
         if is_on(hass, light):
             hass.services.call(
-                LIGHT_DOMAIN, SERVICE_TURN_ON, dict(
-                    xy_color=[x_val, y_val],
-                    brightness=brightness,
-                    transition=transition,
-                    white_value=brightness,
-                    entity_id=light))
+                LIGHT_DOMAIN, SERVICE_TURN_ON, {
+                    ATTR_XY_COLOR: [x_val, y_val],
+                    ATTR_BRIGHTNESS: brightness,
+                    ATTR_TRANSITION: transition,
+                    ATTR_WHITE_VALUE: brightness,
+                    ATTR_ENTITY_ID: light})
 
 
 def set_lights_temp(hass, lights, mired, brightness, transition):
@@ -83,11 +85,11 @@ def set_lights_temp(hass, lights, mired, brightness, transition):
     for light in lights:
         if is_on(hass, light):
             hass.services.call(
-                LIGHT_DOMAIN, SERVICE_TURN_ON, dict(
-                    color_temp=int(mired),
-                    brightness=brightness,
-                    transition=transition,
-                    entity_id=light))
+                LIGHT_DOMAIN, SERVICE_TURN_ON, {
+                    ATTR_COLOR_TEMP: int(mired),
+                    ATTR_BRIGHTNESS: brightness,
+                    ATTR_TRANSITION: transition,
+                    ATTR_ENTITY_ID: light})
 
 
 def set_lights_rgb(hass, lights, rgb, transition):
@@ -95,10 +97,10 @@ def set_lights_rgb(hass, lights, rgb, transition):
     for light in lights:
         if is_on(hass, light):
             hass.services.call(
-                LIGHT_DOMAIN, SERVICE_TURN_ON, dict(
-                    rgb_color=rgb,
-                    transition=transition,
-                    entity_id=light))
+                LIGHT_DOMAIN, SERVICE_TURN_ON, {
+                    ATTR_RGB_COLOR: rgb,
+                    ATTR_TRANSITION: transition,
+                    ATTR_ENTITY_ID: light})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
