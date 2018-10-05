@@ -12,137 +12,126 @@ import requests
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN, ATTR_ATTRIBUTION)
+    CONF_NAME, STATE_UNKNOWN, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['xmltodict==0.11.0']
+REQUIREMENTS = ['swisshydrodata==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'http://www.hydrodata.ch/xml/SMS.xml'
 
 CONF_STATION = 'station'
+CONF_MEASUREMENTS = 'measurements'
 CONF_ATTRIBUTION = "Data provided by the Swiss Federal Office for the " \
                    "Environment FOEN"
 
-DEFAULT_NAME = 'Water temperature'
-
-ICON = 'mdi:cup-water'
-
-ATTR_LOCATION = 'location'
-ATTR_UPDATE = 'update'
-ATTR_DISCHARGE = 'discharge'
-ATTR_WATERLEVEL = 'level'
-ATTR_DISCHARGE_MEAN = 'discharge_mean'
-ATTR_WATERLEVEL_MEAN = 'level_mean'
-ATTR_TEMPERATURE_MEAN = 'temperature_mean'
-ATTR_DISCHARGE_MAX = 'discharge_max'
-ATTR_WATERLEVEL_MAX = 'level_max'
-ATTR_TEMPERATURE_MAX = 'temperature_max'
+DEFAULT_NAME = 'SwissHydroData'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION): vol.Coerce(int),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_MEASUREMENTS): vol.Any([
+        'temperature',
+        'level',
+        'discharge',
+        'min_temperature',
+        'min_level',
+        'min_discharge',
+        'max_temperature',
+        'max_level',
+        'max_discharge',
+        'mean_temperature',
+        'mean_level',
+        'mean_discharge'
+    ])
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Swiss hydrological sensor."""
-    import xmltodict
-
     name = config.get(CONF_NAME)
     station = config.get(CONF_STATION)
-
-    try:
-        response = requests.get(_RESOURCE, timeout=5)
-        if any(str(station) == location.get('@StrNr') for location in
-               xmltodict.parse(response.text)['AKT_Data']['MesPar']) is False:
-            _LOGGER.error("The given station does not exist: %s", station)
-            return False
-    except requests.exceptions.ConnectionError:
-        _LOGGER.error("The URL is not accessible")
-        return False
+    measurements = config.get(CONF_MEASUREMENTS)
 
     data = HydrologicalData(station)
-    add_entities([SwissHydrologicalDataSensor(name, data)], True)
+
+    response = requests.get(
+        "https://www.hydrodaten.admin.ch/en/{0}.html".format(station),
+        timeout=5
+    )
+    if response.status_code != 200:
+        _LOGGER.error("The given station does not exist: %s", station)
+        return False
+
+    entities = []
+    for measurement in measurements:
+        entities.append(SwissHydrologicalDataSensor(name, data, measurement))
+
+    add_entities(entities, True)
 
 
 class SwissHydrologicalDataSensor(Entity):
     """Implementation of an Swiss hydrological sensor."""
 
-    def __init__(self, name, data):
+    def __init__(self, name, data, measurement):
         """Initialize the sensor."""
         self.data = data
         self._name = name
-        self._unit_of_measurement = TEMP_CELSIUS
+        self._measurement = measurement
+        self._unit_of_measurement = None
         self._state = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        if not self._name:
+            self._name = "SwissHydroData"
+        return "{0}_{1}".format(self._name, self._measurement)
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self._state is not STATE_UNKNOWN:
-            return self._unit_of_measurement
+            return self.data.measurements[self._measurement]["unit"]
         return None
 
     @property
     def state(self):
         """Return the state of the sensor."""
         try:
-            return round(float(self._state), 1)
+            return round(self._state, 2)
         except ValueError:
             return STATE_UNKNOWN
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = {}
-        if self.data.measurings is not None:
-            if '02' in self.data.measurings:
-                attributes[ATTR_WATERLEVEL] = self.data.measurings['02'][
-                    'current']
-                attributes[ATTR_WATERLEVEL_MEAN] = self.data.measurings['02'][
-                    'mean']
-                attributes[ATTR_WATERLEVEL_MAX] = self.data.measurings['02'][
-                    'max']
-            if '03' in self.data.measurings:
-                attributes[ATTR_TEMPERATURE_MEAN] = self.data.measurings['03'][
-                    'mean']
-                attributes[ATTR_TEMPERATURE_MAX] = self.data.measurings['03'][
-                    'max']
-            if '10' in self.data.measurings:
-                attributes[ATTR_DISCHARGE] = self.data.measurings['10'][
-                    'current']
-                attributes[ATTR_DISCHARGE_MEAN] = self.data.measurings['10'][
-                    'current']
-                attributes[ATTR_DISCHARGE_MAX] = self.data.measurings['10'][
-                    'max']
-
-            attributes[ATTR_LOCATION] = self.data.measurings['location']
-            attributes[ATTR_UPDATE] = self.data.measurings['update_time']
-            attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-            return attributes
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+        }
 
     @property
     def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
+        """Icon to use in the frontend."""
+        icons = {
+            "temperature": "mdi:oil-temperature",
+            "level": "mdi:zodiac-aquarius",
+            "discharge": "mdi:waves"
+        }
+        for key, val in icons.items():
+            if key in self._measurement:
+                return val
 
     def update(self):
-        """Get the latest data and update the states."""
+        """Get the latest data and update the state."""
         self.data.update()
-        if self.data.measurings is not None:
-            if '03' not in self.data.measurings:
-                self._state = STATE_UNKNOWN
-            else:
-                self._state = self.data.measurings['03']['current']
+        if self.data.measurements is None:
+            self._state = STATE_UNKNOWN
+        else:
+            self._state = self.data.measurements[self._measurement]["value"]
 
 
 class HydrologicalData:
@@ -151,38 +140,29 @@ class HydrologicalData:
     def __init__(self, station):
         """Initialize the data object."""
         self.station = station
-        self.measurings = None
+        self.measurements = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from hydrodata.ch."""
-        import xmltodict
+        from swisshydrodata import SwissHydroData
 
-        details = {}
-        try:
-            response = requests.get(_RESOURCE, timeout=5)
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from %s", _RESOURCE)
+        data = {}
 
-        try:
-            stations = xmltodict.parse(response.text)['AKT_Data']['MesPar']
-            # Water level: Typ="02", temperature: Typ="03", discharge: Typ="10"
-            for station in stations:
-                if str(self.station) != station.get('@StrNr'):
-                    continue
-                for data in ['02', '03', '10']:
-                    if data != station.get('@Typ'):
-                        continue
-                    values = station.get('Wert')
-                    if values is not None:
-                        details[data] = {
-                            'current': values[0],
-                            'max': list(values[4].items())[1][1],
-                            'mean': list(values[3].items())[1][1]}
+        shd = SwissHydroData()
+        shd.load_station_data(self.station)
 
-                    details['location'] = station.get('Name')
-                    details['update_time'] = station.get('Zeit')
+        data["temperature"] = shd.get_latest_temperature()
+        data["level"] = shd.get_latest_level()
+        data["discharge"] = shd.get_latest_discharge()
+        data["min_temperature"] = shd.get_min_temperature()
+        data["min_level"] = shd.get_min_level()
+        data["min_discharge"] = shd.get_min_discharge()
+        data["max_temperature"] = shd.get_max_temperature()
+        data["max_level"] = shd.get_max_level()
+        data["max_discharge"] = shd.get_max_discharge()
+        data["mean_temperature"] = shd.get_mean_temperature()
+        data["mean_level"] = shd.get_mean_level()
+        data["mean_discharge"] = shd.get_mean_discharge()
 
-            self.measurings = details
-        except AttributeError:
-            self.measurings = None
+        self.measurements = data

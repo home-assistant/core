@@ -1459,6 +1459,9 @@ suds-passworddigest-homeassistant==0.1.2a0.dev0
 # homeassistant.components.camera.onvif
 suds-py3==1.3.3.0
 
+# homeassistant.components.sensor.swiss_hydrological_data
+swisshydrodata==0.0.2
+
 # homeassistant.components.tahoma
 tahoma-api==0.0.13
 
@@ -1591,7 +1594,6 @@ xknx==0.9.1
 
 # homeassistant.components.media_player.bluesound
 # homeassistant.components.sensor.startca
-# homeassistant.components.sensor.swiss_hydrological_data
 # homeassistant.components.sensor.ted5000
 # homeassistant.components.sensor.yr
 # homeassistant.components.sensor.zestimate
