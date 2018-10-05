@@ -30,6 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 CONF_ENTITIES = 'entities'
 CONF_VIEW = 'view'
 CONF_CONTROL = 'control'
+CONF_MODE = 'mode'
 
 ATTR_ADD_ENTITIES = 'add_entities'
 ATTR_AUTO = 'auto'
@@ -39,12 +40,15 @@ ATTR_OBJECT_ID = 'object_id'
 ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
 ATTR_VISIBLE = 'visible'
+ATTR_MODE = 'mode'
 
 SERVICE_SET_VISIBILITY = 'set_visibility'
 SERVICE_SET = 'set'
 SERVICE_REMOVE = 'remove'
 
 CONTROL_TYPES = vol.In(['hidden', None])
+
+GROUP_MODE_ALL = 'all'
 
 SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -60,6 +64,7 @@ SET_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ICON): cv.string,
     vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
     vol.Optional(ATTR_VISIBLE): cv.boolean,
+    vol.Optional(ATTR_MODE): cv.string,
     vol.Exclusive(ATTR_ENTITIES, 'entities'): cv.entity_ids,
     vol.Exclusive(ATTR_ADD_ENTITIES, 'entities'): cv.entity_ids,
 })
@@ -85,6 +90,7 @@ GROUP_SCHEMA = vol.Schema({
     CONF_NAME: cv.string,
     CONF_ICON: cv.icon,
     CONF_CONTROL: CONTROL_TYPES,
+    CONF_MODE: cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -215,7 +221,8 @@ async def async_setup(hass, config):
                 service.data.get(ATTR_ADD_ENTITIES) or None
 
             extra_arg = {attr: service.data[attr] for attr in (
-                ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL
+                ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL,
+                ATTR_MODE
             ) if service.data.get(attr) is not None}
 
             await Group.async_create_group(
@@ -310,19 +317,21 @@ async def _async_process_config(hass, config, component):
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
         control = conf.get(CONF_CONTROL)
+        mode = conf.get(CONF_MODE)
 
         # Don't create tasks and await them all. The order is important as
         # groups get a number based on creation order.
         await Group.async_create_group(
             hass, name, entity_ids, icon=icon, view=view,
-            control=control, object_id=object_id)
+            control=control, object_id=object_id, mode=mode)
 
 
 class Group(Entity):
     """Track a group of entity ids."""
 
     def __init__(self, hass, name, order=None, visible=True, icon=None,
-                 view=False, control=None, user_defined=True, entity_ids=None):
+                 view=False, control=None, user_defined=True, entity_ids=None,
+                 mode=None):
         """Initialize a group.
 
         This Object has factory function for creation.
@@ -341,6 +350,9 @@ class Group(Entity):
         self.visible = visible
         self.control = control
         self.user_defined = user_defined
+        self.mode = any
+        if mode == GROUP_MODE_ALL:
+            self.mode = all
         self._order = order
         self._assumed_state = False
         self._async_unsub_state_changed = None
@@ -348,18 +360,19 @@ class Group(Entity):
     @staticmethod
     def create_group(hass, name, entity_ids=None, user_defined=True,
                      visible=True, icon=None, view=False, control=None,
-                     object_id=None):
+                     object_id=None, mode=None):
         """Initialize a group."""
         return run_coroutine_threadsafe(
             Group.async_create_group(
                 hass, name, entity_ids, user_defined, visible, icon, view,
-                control, object_id),
+                control, object_id, mode),
             hass.loop).result()
 
     @staticmethod
     async def async_create_group(hass, name, entity_ids=None,
                                  user_defined=True, visible=True, icon=None,
-                                 view=False, control=None, object_id=None):
+                                 view=False, control=None, object_id=None,
+                                 mode=None):
         """Initialize a group.
 
         This method must be run in the event loop.
@@ -368,7 +381,7 @@ class Group(Entity):
             hass, name,
             order=len(hass.states.async_entity_ids(DOMAIN)),
             visible=visible, icon=icon, view=view, control=control,
-            user_defined=user_defined, entity_ids=entity_ids
+            user_defined=user_defined, entity_ids=entity_ids, mode=mode
         )
 
         group.entity_id = async_generate_entity_id(
@@ -559,11 +572,13 @@ class Group(Entity):
 
         if tr_state is None or ((gr_state == gr_on and
                                  tr_state.state == gr_off) or
+                                 (gr_state == gr_off and
+                                 tr_state.state == gr_on) or
                                 tr_state.state not in (gr_on, gr_off)):
             if states is None:
                 states = self._tracking_states
 
-            if any(state.state == gr_on for state in states):
+            if self.mode(state.state == gr_on for state in states):
                 self._state = gr_on
             else:
                 self._state = gr_off
@@ -576,7 +591,7 @@ class Group(Entity):
             if states is None:
                 states = self._tracking_states
 
-            self._assumed_state = any(
+            self._assumed_state = self.mode(
                 state.attributes.get(ATTR_ASSUMED_STATE) for state
                 in states)
 
