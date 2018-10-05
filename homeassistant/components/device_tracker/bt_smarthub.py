@@ -1,6 +1,8 @@
 """
-Support for BT Smart Hub.
+Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6).
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.bt_smarthub/
 """
 import logging
 
@@ -34,7 +36,6 @@ class BTSmartHubScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialise the scanner."""
-
         _LOGGER.info("Initialising BT Smart Hub")
         self.host = config[CONF_HOST]
         self.last_results = {}
@@ -46,11 +47,10 @@ class BTSmartHubScanner(DeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-
         return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
-
+        """Return the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
@@ -60,7 +60,7 @@ class BTSmartHubScanner(DeviceScanner):
 
     def _update_info(self):
         """Ensure the information from the BT Home Hub 5 is up to date.
-         Return boolean if scanning successful
+        Return boolean if scanning successful
         """
         if not self.success_init:
             return False
