@@ -96,6 +96,7 @@ TEST_REQUIREMENTS = (
     'rflink',
     'ring_doorbell',
     'rxv',
+    'simplisafe-python',
     'sleepyq',
     'smhi-pkg',
     'somecomfort',
