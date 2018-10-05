@@ -91,6 +91,6 @@ class BTSmartHubScanner(DeviceScanner):
                     'host': device['UserHostName'],
                     'status': device['Active']
                 }
-            except:
+            except KeyError:
                 pass
         return devices
