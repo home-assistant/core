@@ -1217,7 +1217,7 @@ pytouchline==0.7
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==5.6.0
+pytradfri[async]==6.0.1
 
 # homeassistant.components.sensor.trafikverket_weatherstation
 pytrafikverket==0.1.5.8
