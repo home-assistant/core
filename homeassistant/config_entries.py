@@ -147,6 +147,7 @@ FLOWS = [
     'nest',
     'openuv',
     'smhi',
+    'simplisafe',
     'sonos',
     'tradfri',
     'upnp',
