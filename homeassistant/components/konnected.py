@@ -85,7 +85,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SWITCHES): vol.All(
                     cv.ensure_list, [_SWITCH_SCHEMA]),
                 vol.Optional(CONF_HOST): cv.string,
-                vol.Optional(CONF_PORT): cv.positive_int,
+                vol.Optional(CONF_PORT): cv.port,
                 vol.Optional(CONF_BLINK): cv.boolean,
                 vol.Optional(CONF_DISCOVERY): cv.boolean,
             }],
@@ -130,9 +130,8 @@ async def async_setup(hass, config):
 
     def manual_discovery(event):
         """Init devices on the network with manually assigned addresses."""
-        specified = list(filter(  # list of devices where host and port is set
-            lambda dev: dev.get(CONF_HOST) and dev.get(CONF_PORT),
-            cfg.get(CONF_DEVICES)))
+        specified = [dev for dev in cfg.get(CONF_DEVICES) if
+                     dev.get(CONF_HOST) and dev.get(CONF_PORT)]
 
         while specified:
             for dev in specified:
@@ -148,10 +147,10 @@ async def async_setup(hass, config):
                         discovered.setup()
                         specified.remove(dev)
                     else:
-                        _LOGGER.err("""
-                            Konnected device %s was manually configured, but
-                            its mac address is not found in configuration.yaml
-                        """, discovered.device_id)
+                        _LOGGER.error("Konnected device %s was manually "
+                                      "configured, but its mac address is not "
+                                      "found in configuration.yaml",
+                                      discovered.device_id)
                 except konnected.Client.ClientError as err:
                     _LOGGER.error(err)
                     time.sleep(10)  # try again in 10 seconds
