@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_scanner(hass, config):
-    #Return a BT SmartHub scanner if successful.
+    """Return a BT SmartHub scanner if successful."""
     scanner = BTSmartHubScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -60,7 +60,9 @@ class BTSmartHubScanner(DeviceScanner):
 
     def _update_info(self):
         """Ensure the information from the BT Home Hub 5 is up to date.
-        Return boolean if scanning successful."""
+        
+        Return boolean if scanning successful.
+        """
         if not self.success_init:
             return False
 
