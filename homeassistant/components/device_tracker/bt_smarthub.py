@@ -60,7 +60,7 @@ class BTSmartHubScanner(DeviceScanner):
 
     def _update_info(self):
         """Ensure the information from the BT Home Hub 5 is up to date.
-        
+
         Return boolean if scanning successful.
         """
         if not self.success_init:
