@@ -47,7 +47,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
 
             try:
                 # pylint: disable=unused-variable
-                option = ZWaveOption(
+                option = ZWaveOption(  # noqa: F841
                     user_input[CONF_USB_STICK_PATH],
                     user_path=self.hass.config.config_dir
                 )
@@ -58,6 +58,18 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
                     data_schema=vol.Schema(fields),
                     errors=errors
                 )
+
+            if user_input.get(CONF_NETWORK_KEY) is None:
+                # Generate a random key
+                from random import choice
+                key = str()
+                for i in range(16):
+                    key += '0x'
+                    key += choice('1234567890ABCDEF')
+                    key += choice('1234567890ABCDEF')
+                    if i < 15:
+                        key += ', '
+                user_input[CONF_NETWORK_KEY] = key
 
             return self.async_create_entry(
                 title='Z-Wave',
