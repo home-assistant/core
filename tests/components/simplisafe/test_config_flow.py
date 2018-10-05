@@ -1,11 +1,19 @@
 """Define tests for the SimpliSafe config flow."""
-from unittest.mock import patch
+import json
+from unittest.mock import mock_open, patch, MagicMock, PropertyMock
 
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN, config_flow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry, mock_coro
+
+
+def mock_api():
+    """Mock SimpliSafe API class."""
+    api = MagicMock()
+    type(api).refresh_token = PropertyMock(return_value='12345abc')
+    return api
 
 
 async def test_duplicate_error(hass):
@@ -49,3 +57,53 @@ async def test_show_form(hass):
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
+
+
+async def test_step_import(hass):
+    """Test that the import step works."""
+    conf = {
+        CONF_USERNAME: 'user@email.com',
+        CONF_PASSWORD: 'password',
+    }
+
+    flow = config_flow.SimpliSafeFlowHandler()
+    flow.hass = hass
+
+    mop = mock_open(read_data=json.dumps({'refresh_token': '12345'}))
+
+    with patch('simplipy.API.login_via_credentials',
+               return_value=mock_coro(return_value=mock_api())):
+        with patch('homeassistant.util.json.open', mop, create=True):
+            with patch('homeassistant.util.json.os.open', return_value=0):
+                with patch('homeassistant.util.json.os.replace'):
+                    result = await flow.async_step_import(import_config=conf)
+
+                    assert result[
+                        'type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+                    assert result['title'] == 'user@email.com'
+                    assert result['data'] == conf
+
+
+async def test_step_user(hass):
+    """Test that the user step works."""
+    conf = {
+        CONF_USERNAME: 'user@email.com',
+        CONF_PASSWORD: 'password',
+    }
+
+    flow = config_flow.SimpliSafeFlowHandler()
+    flow.hass = hass
+
+    mop = mock_open(read_data=json.dumps({'refresh_token': '12345'}))
+
+    with patch('simplipy.API.login_via_credentials',
+               return_value=mock_coro(return_value=mock_api())):
+        with patch('homeassistant.util.json.open', mop, create=True):
+            with patch('homeassistant.util.json.os.open', return_value=0):
+                with patch('homeassistant.util.json.os.replace'):
+                    result = await flow.async_step_user(user_input=conf)
+
+                    assert result[
+                        'type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+                    assert result['title'] == 'user@email.com'
+                    assert result['data'] == conf

@@ -10,7 +10,7 @@ from homeassistant.const import (CONF_CODE, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.json import save_json
 
-from .const import DATA_CLIENT, DATA_FILE_SCAFFOLD, DOMAIN, LOGGER
+from .const import DATA_FILE_SCAFFOLD, DOMAIN
 
 
 @callback
