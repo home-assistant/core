@@ -221,10 +221,10 @@ async def test_homekit_stop(hass):
 
 
 async def test_homekit_too_many_accessories(hass, hk_driver):
-    """Test adding too many accessories to homekit."""
+    """Test adding too many accessories to HomeKit."""
     homekit = HomeKit(hass, None, None, None, None, None)
     homekit.bridge = Mock()
-    homekit.bridge.accessories = list(range(0, MAX_DEVICES + 1))
+    homekit.bridge.accessories = range(MAX_DEVICES + 1)
     homekit.driver = hk_driver
 
     with patch('pyhap.accessory_driver.AccessoryDriver.start'), \
