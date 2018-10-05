@@ -26,8 +26,7 @@ from .const import (
 
 CONF_TOKEN_FILE = 'token_file'
 
-
-REQUIREMENTS = ['simplisafe-python==3.1.3']
+REQUIREMENTS = ['simplisafe-python==3.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ async def async_setup(hass, config):
         if account[CONF_USERNAME] in configured_instances(hass):
             continue
 
-        hass.async_add_job(
+        hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={'source': SOURCE_IMPORT},
@@ -82,39 +81,24 @@ async def async_setup_entry(hass, config_entry):
     from simplipy import API
     from simplipy.errors import SimplipyError
 
-    username = config_entry.data[CONF_USERNAME]
-    password = config_entry.data[CONF_PASSWORD]
-
-    token_filepath = hass.config.path(DATA_FILE_SCAFFOLD.format(username))
-    token_data = await hass.async_add_executor_job(
-        load_json, token_filepath)
+    token_filepath = hass.config.path(
+        DATA_FILE_SCAFFOLD.format(config_entry.data[CONF_USERNAME]))
+    token_data = await hass.async_add_executor_job(load_json, token_filepath)
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        if token_data:
-            try:
-                simplisafe = await API.login_via_token(
-                    token_data['refresh_token'], websession)
-                _LOGGER.debug('Logging in with refresh token')
-            except SimplipyError:
-                _LOGGER.info('Refresh token expired; using credentials')
-                simplisafe = await API.login_via_credentials(
-                    username, password, websession)
-        else:
-            simplisafe = await API.login_via_credentials(
-                username, password, websession)
-            _LOGGER.debug('Logging in with credentials')
+        simplisafe = await API.login_via_token(
+            token_data['refresh_token'], websession)
     except SimplipyError as err:
         _LOGGER.error("There was an error during setup: %s", err)
-        return
+        return False
+
+    await hass.async_add_executor_job(
+        save_json, token_filepath, {'refresh_token': simplisafe.refresh_token})
 
     systems = await simplisafe.get_systems()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = systems
-
-    token_data = {'refresh_token': simplisafe.refresh_token}
-    await hass.async_add_executor_job(
-        save_json, token_filepath, token_data)
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(
@@ -126,6 +110,11 @@ async def async_setup_entry(hass, config_entry):
             _LOGGER.debug('Updating system data: %s', system.system_id)
             await system.update()
             async_dispatcher_send(hass, TOPIC_UPDATE.format(system.system_id))
+
+            if system.api.refresh_token_dirty:
+                await hass.async_add_executor_job(
+                    save_json, token_filepath,
+                    {'refresh_token': system.api.refresh_token})
 
     hass.data[DOMAIN][DATA_LISTENER][
         config_entry.entry_id] = async_track_time_interval(

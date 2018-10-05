@@ -31,9 +31,10 @@ async def async_setup_platform(
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a SimpliSafe alarm control panel based on a config entry."""
     systems = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-    async_add_entities(
-        [SimpliSafeAlarm(system, entry.data.get(CONF_CODE))
-         for system in systems], True)
+    async_add_entities([
+        SimpliSafeAlarm(system, entry.data.get(CONF_CODE))
+        for system in systems
+    ], True)
 
 
 class SimpliSafeAlarm(AlarmControlPanel):
@@ -117,20 +118,24 @@ class SimpliSafeAlarm(AlarmControlPanel):
 
     async def async_update(self):
         """Update alarm status."""
-        await self._system.update()
+        from simplipy.system import SystemStates
 
-        if self._system.state == self._system.SystemStates.off:
-            self._state = STATE_ALARM_DISARMED
-        elif self._system.state in (self._system.SystemStates.home,
-                                    self._system.SystemStates.home_count):
-            self._state = STATE_ALARM_ARMED_HOME
-        elif self._system.state in (self._system.SystemStates.away,
-                                    self._system.SystemStates.away_count,
-                                    self._system.SystemStates.exit_delay):
-            self._state = STATE_ALARM_ARMED_AWAY
-        else:
-            self._state = None
+        await self._system.update()
 
         self._attrs[ATTR_ALARM_ACTIVE] = self._system.alarm_going_off
         if self._system.temperature:
             self._attrs[ATTR_TEMPERATURE] = self._system.temperature
+
+        if self._system.state == SystemStates.error:
+            return
+
+        if self._system.state == SystemStates.off:
+            self._state = STATE_ALARM_DISARMED
+        elif self._system.state in (SystemStates.home,
+                                    SystemStates.home_count):
+            self._state = STATE_ALARM_ARMED_HOME
+        elif self._system.state in (SystemStates.away, SystemStates.away_count,
+                                    SystemStates.exit_delay):
+            self._state = STATE_ALARM_ARMED_AWAY
+        else:
+            self._state = None

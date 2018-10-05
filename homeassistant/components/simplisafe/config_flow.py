@@ -6,7 +6,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.const import (CONF_CODE, CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.const import (
+    CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME)
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.json import save_json
 
@@ -56,7 +57,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
             return await self._show_form()
 
         if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return await self._show_form({'base': 'identifier_exists'})
+            return await self._show_form({CONF_USERNAME: 'identifier_exists'})
 
         username = user_input[CONF_USERNAME]
         websession = aiohttp_client.async_get_clientsession(self.hass)
@@ -74,5 +75,5 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
 
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],
-            data=user_input,
+            data={CONF_USERNAME: username},
         )
