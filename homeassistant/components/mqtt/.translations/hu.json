@@ -16,6 +16,12 @@
                 },
                 "description": "K\u00e9rlek, add meg az MQTT br\u00f3ker kapcsol\u00f3d\u00e1si adatait.",
                 "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Felfedez\u00e9s enged\u00e9lyez\u00e9se"
+                },
+                "description": "Szeretn\u00e9d, hogy a Home Assistant csatlakozzon a hass.io addon {addon} \u00e1ltal biztos\u00edtott MQTT br\u00f3kerhez?"
             }
         },
         "title": "MQTT"
