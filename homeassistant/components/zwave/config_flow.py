@@ -47,7 +47,10 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
 
             try:
                 # pylint: disable=unused-variable
-                options = ZWaveOption(user_input[CONF_USB_STICK_PATH])
+                option = ZWaveOption(
+                    user_input[CONF_USB_STICK_PATH],
+                    user_path=self.hass.config.config_dir
+                )
             except ZWaveException:
                 errors['base'] = 'option_error'
                 return self.async_show_form(
