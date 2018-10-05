@@ -44,7 +44,6 @@ class SimpliSafeAlarm(AlarmControlPanel):
         """Initialize the SimpliSafe alarm."""
         self._attrs = {}
         self._code = code
-        self._dispatch_remove = None
         self._system = system
         self._state = None
 
@@ -91,9 +90,9 @@ class SimpliSafeAlarm(AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._dispatch_remove = async_dispatcher_connect(
+        listener = async_dispatcher_connect(
             self.hass, TOPIC_UPDATE, self._update_data)
-        self.async_on_remove(self._dispatch_remove)
+        self.async_on_remove(listener)
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

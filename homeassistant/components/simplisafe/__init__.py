@@ -126,6 +126,9 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
+    await hass.config_entries.async_forward_entry_unload(
+        entry, 'alarm_control_panel')
+
     hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
     remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
     remove_listener()
