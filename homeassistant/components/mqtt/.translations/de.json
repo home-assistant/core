@@ -17,6 +17,13 @@
                 },
                 "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein.",
                 "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Suche aktivieren"
+                },
+                "description": "Soll sich Home Assistant zu dem MQTT-Broker des hass.io Add-Ons {addon} verbinden?",
+                "title": "MQTT Broker via Hass.io Add-on"
             }
         },
         "title": "MQTT"

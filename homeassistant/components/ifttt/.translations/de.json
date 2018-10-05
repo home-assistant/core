@@ -4,6 +4,9 @@
             "not_internet_accessible": "Auf Ihre Home Assistant-Instanz muss vom Internet aus zugegriffen werden k\u00f6nnen, um IFTTT-Nachrichten zu empfangen.",
             "one_instance_allowed": "Nur eine einzige Instanz ist notwendig."
         },
+        "create_entry": {
+            "default": "Um Nachrichten an Home Assistant zu senden, musst du einen Web Request vom [IFTTT Webhook applet]({applet_url}) schicken.\n\nFüge die folgende Information ein:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/json\n\nLies [die Dokumentation]({docs_url}) um herauszufinden wie man Automations für eingehende Daten konfiguriert."
+        },
         "step": {
             "user": {
                 "description": "Bist du sicher, dass du IFTTT einrichten m\u00f6chtest?",
