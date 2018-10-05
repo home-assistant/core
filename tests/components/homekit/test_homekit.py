@@ -1,12 +1,12 @@
 """Tests for the HomeKit component."""
-from unittest.mock import patch, ANY, Mock, MagicMock, PropertyMock
+from unittest.mock import patch, ANY, Mock
 
 import pytest
 
 from homeassistant import setup
 from homeassistant.components.homekit import (
-    generate_aid, HomeKit, STATUS_READY, STATUS_RUNNING,
-    STATUS_STOPPED, STATUS_WAIT, MAX_DEVICES)
+    generate_aid, HomeKit, MAX_DEVICES, STATUS_READY,
+    STATUS_RUNNING, STATUS_STOPPED, STATUS_WAIT)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     CONF_AUTO_START, BRIDGE_NAME, DEFAULT_PORT, DOMAIN, HOMEKIT_FILE,
@@ -173,7 +173,8 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
     """Test HomeKit start method."""
     pin = b'123-45-678'
     homekit = HomeKit(hass, None, None, None, {}, {'cover.demo': {}})
-    homekit.bridge = mock_bridge = MagicMock()
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = []
     homekit.driver = hk_driver
 
     hass.states.async_set('light.demo', 'on')
@@ -190,7 +191,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
 
     mock_add_acc.assert_called_with(state)
     mock_setup_msg.assert_called_with(hass, pin)
-    hk_driver_add_acc.assert_called_with(mock_bridge)
+    hk_driver_add_acc.assert_called_with(homekit.bridge)
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
 
@@ -222,9 +223,8 @@ async def test_homekit_stop(hass):
 async def test_homekit_too_many_accessories(hass, hk_driver):
     """Test adding too many accessories to homekit."""
     homekit = HomeKit(hass, None, None, None, None, None)
-    homekit.bridge = mock_bridge = MagicMock()
-    type(mock_bridge).accessories = PropertyMock(
-        return_value=range(0, MAX_DEVICES+1))
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = list(range(0, MAX_DEVICES + 1))
     homekit.driver = hk_driver
 
     with patch('pyhap.accessory_driver.AccessoryDriver.start'), \
