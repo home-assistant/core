@@ -517,8 +517,6 @@ class TodoistProjectData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
-        _LOGGER.debug("Updating %s", self._name)
-
         if self._id is None:
             self._api.reset_state()
             self._api.sync()
@@ -531,7 +529,7 @@ class TodoistProjectData:
 
         # If we have no data, we can just return right away.
         if not project_task_data:
-            _LOGGER.debug("no data")
+            _LOGGER.debug("No data for %s", self._name)
             self.event = None
             return True
 
@@ -546,7 +544,7 @@ class TodoistProjectData:
 
         if not project_tasks:
             # We had no valid tasks
-            _LOGGER.debug("no valid tasks")
+            _LOGGER.debug("No valid tasks for %s", self._name)
             self.event = None
             return True
 
