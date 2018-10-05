@@ -28,7 +28,7 @@ async def test_duplicate_error(hass):
     flow.hass = hass
 
     result = await flow.async_step_user(user_input=conf)
-    assert result['errors'] == {'base': 'identifier_exists'}
+    assert result['errors'] == {CONF_USERNAME: 'identifier_exists'}
 
 
 async def test_invalid_credentials(hass):
@@ -81,7 +81,7 @@ async def test_step_import(hass):
                     assert result[
                         'type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
                     assert result['title'] == 'user@email.com'
-                    assert result['data'] == conf
+                    assert result['data'] == {CONF_USERNAME: 'user@email.com'}
 
 
 async def test_step_user(hass):
@@ -106,4 +106,4 @@ async def test_step_user(hass):
                     assert result[
                         'type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
                     assert result['title'] == 'user@email.com'
-                    assert result['data'] == conf
+                    assert result['data'] == {CONF_USERNAME: 'user@email.com'}
