@@ -6,8 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME)
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.json import save_json
 
