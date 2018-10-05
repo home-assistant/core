@@ -27,7 +27,7 @@ class TestRMVtransportSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_transportnsw_config(self):   
+    def test_transportnsw_config(self):
         """Test minimal TransportNSW configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG)
         state = self.hass.states.get('sensor.manly_bus')
