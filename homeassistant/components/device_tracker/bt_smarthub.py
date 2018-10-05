@@ -79,7 +79,8 @@ class BTSmartHubScanner(DeviceScanner):
         """Retrieve data from BT Smarthub and return parsed result"""
         import btsmarthub_devicelist
         """Request data from bt smarthub into a list of dicts"""
-        data = btsmarthub_devicelist.get_devicelist(router_ip=self.host, only_active_devices=True)
+        data = btsmarthub_devicelist.get_devicelist(
+          router_ip=self.host, only_active_devices=True)
         """Renaming keys from parsed result"""
         devices = {}
         for device in data:
