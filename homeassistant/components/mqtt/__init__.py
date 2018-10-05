@@ -154,7 +154,7 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> \
         ConfigType:
     """Validate that a device info entry has at least one identifying value."""
     if not value.get(CONF_IDENTIFIERS) and not value.get(CONF_CONNECTIONS):
-        raise vol.Invalid("Device must has at least one identifying value in"
+        raise vol.Invalid("Device must have at least one identifying value in "
                           "'identifiers' and/or 'connections'")
     return value
 
@@ -217,9 +217,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_IDENTIFIERS, default=list):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_CONNECTIONS, default=list):
-        vol.All(cv.ensure_list, [vol.Schema({
-            cv.string: cv.string,
-        })]),
+        vol.All(cv.ensure_list, [vol.All(vol.Length(2), [cv.string])]),
     vol.Optional(CONF_MANUFACTURER): cv.string,
     vol.Optional(CONF_MODEL): cv.string,
     vol.Optional(CONF_NAME): cv.string,
@@ -911,16 +909,14 @@ class MqttEntityDeviceInfo(Entity):
         if not self._device_config:
             return None
 
-        connections = set()
-        for conn in self._device_config[CONF_CONNECTIONS]:
-            connections |= set(conn.items())
-
         return {
             'identifiers': {
                 (DOMAIN, id_)
                 for id_ in self._device_config[CONF_IDENTIFIERS]
             },
-            'connections': connections,
+            'connections': {
+                tuple(x) for x in self._device_config[CONF_CONNECTIONS]
+            },
             'manufacturer': self._device_config.get(CONF_MANUFACTURER),
             'model': self._device_config.get(CONF_MODEL),
             'name': self._device_config.get(CONF_NAME),

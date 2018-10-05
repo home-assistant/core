@@ -201,17 +201,17 @@ class TestMQTTComponent(unittest.TestCase):
         })
         # just connection
         mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
-            'connections': [{
-                'mac': '02:5b:26:a8:dc:12',
-            }]
+            'connections': [
+                ['mac', '02:5b:26:a8:dc:12'],
+            ]
         })
         # full device info
         mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
             'identifiers': ['helloworld', 'hello'],
-            'connections': [{
-                "mac": "02:5b:26:a8:dc:12",
-                "zigbee": "zigbee_id",
-            }],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+                ["zigbee", "zigbee_id"],
+            ],
             'manufacturer': 'Whatever',
             'name': 'Beer',
             'model': 'Glass',

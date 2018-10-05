@@ -427,9 +427,9 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
         'state_topic': 'test-topic',
         'device': {
             'identifiers': ['helloworld'],
-            'connections': [{
-                "mac": "02:5b:26:a8:dc:12",
-            }],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
             'manufacturer': 'Whatever',
             'name': 'Beer',
             'model': 'Glass',
