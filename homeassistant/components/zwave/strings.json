@@ -14,6 +14,7 @@
             }
         },
         "error": {
+            "option_error": "Z-Wave validation failed. Is the path to the USB stick correct?"
         },
         "abort": {
             "already_configured": "Z-Wave is already configured",

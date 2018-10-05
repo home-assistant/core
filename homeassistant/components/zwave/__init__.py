@@ -254,6 +254,8 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
+    _LOGGER.debug("Setting up Z-Wave from config entry")
+    
     from pydispatch import dispatcher
     # pylint: disable=import-error
     from openzwave.option import ZWaveOption

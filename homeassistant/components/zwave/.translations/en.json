@@ -4,7 +4,9 @@
             "already_configured": "Z-Wave is already configured",
             "one_instance_only": "Component only supports one Z-Wave instance"
         },
-        "error": {},
+        "error": {
+            "option_error": "Z-Wave validation failed. Is the path to the USB stick correct?"
+        },
         "step": {
             "init": {
                 "data": {

@@ -32,20 +32,66 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         if self._async_current_entries():
             return self.async_abort(reason='one_instance_only')
-
-        if user_input is not None:
-            return self.async_create_entry(
-                title="Z-Wave",
-                data={
-                    CONF_USB_STICK_PATH: user_input[CONF_USB_STICK_PATH],
-                    CONF_NETWORK_KEY: user_input[CONF_NETWORK_KEY],
-                },
-            )
+        
+        errors = {}
 
         fields = OrderedDict()
         fields[vol.Required(CONF_USB_STICK_PATH,
                             default=DEFAULT_CONF_USB_STICK_PATH)] = str
         fields[vol.Optional(CONF_NETWORK_KEY)] = str
+
+        if user_input is not None:
+            # Check if USB path is valid
+            from openzwave.option import ZWaveOption
+            from openzwave.object import ZWaveException
+
+            try:
+                options = ZWaveOption(user_input[CONF_USB_STICK_PATH])
+            except ZWaveException:
+                errors['base'] = 'option_error'
+                return self.async_show_form(
+                    step_id='init',
+                    data_schema=vol.Schema(fields),
+                    errors=errors
+                )
+
+            return self.async_create_entry(
+                    title='Z-Wave',
+                    data={
+                        CONF_USB_STICK_PATH: user_input[CONF_USB_STICK_PATH],
+                        CONF_NETWORK_KEY: user_input[CONF_NETWORK_KEY],
+                    },
+                )
+
+            '''
+            network = ZWaveNetwork(options, autostart=False)
+
+            from pydispatch import dispatcher
+            dispatcher.connect(
+                self.network_started, ZWaveNetwork.SIGNAL_NETWORK_STARTED, weak=False)
+            dispatcher.connect(
+                self.network_failed, ZWaveNetwork.SIGNAL_NETWORK_FAILED, weak=False)
+            network.start()
+
+            def network_started(self, network):
+                name = network.home_id
+                network.stop()
+                return self.async_create_entry(
+                    title=name,
+                    data={
+                        CONF_USB_STICK_PATH: user_input[CONF_USB_STICK_PATH],
+                        CONF_NETWORK_KEY: user_input[CONF_NETWORK_KEY],
+                    },
+                )
+            
+            def network_failed(self, network):
+                errors['base'] = 'network_failed'
+                return self.async_show_form(
+                    step_id='init',
+                    data_schema=vol.Schema(fields),
+                    errors=errors
+                )
+            '''
 
         return self.async_show_form(
             step_id='init', data_schema=vol.Schema(fields)
