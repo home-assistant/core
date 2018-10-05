@@ -565,16 +565,16 @@ async def test_humanify_alexa_event(hass):
     })
 
     results = list(logbook.humanify(hass, [
-        ha.Event(EVENT_ALEXA_SMART_HOME, { 'request': {
+        ha.Event(EVENT_ALEXA_SMART_HOME, {'request': {
             'namespace': 'Alexa.Discovery',
             'name': 'Discover',
         }}),
-        ha.Event(EVENT_ALEXA_SMART_HOME, { 'request': {
+        ha.Event(EVENT_ALEXA_SMART_HOME, {'request': {
             'namespace': 'Alexa.PowerController',
             'name': 'TurnOn',
             'entity_id': 'light.kitchen'
         }}),
-        ha.Event(EVENT_ALEXA_SMART_HOME, { 'request': {
+        ha.Event(EVENT_ALEXA_SMART_HOME, {'request': {
             'namespace': 'Alexa.PowerController',
             'name': 'TurnOn',
             'entity_id': 'light.non_existing'
