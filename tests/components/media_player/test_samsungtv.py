@@ -13,8 +13,8 @@ from homeassistant.components.media_player import SUPPORT_TURN_ON, \
     MEDIA_TYPE_CHANNEL, MEDIA_TYPE_URL
 from homeassistant.components.media_player.samsungtv import setup_platform, \
     CONF_TIMEOUT, SamsungTVDevice, SUPPORT_SAMSUNGTV
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_ON, \
-    CONF_MAC, STATE_OFF
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, \
+    CONF_MAC, STATE_OFF, STATE_UNKNOWN
 from tests.common import MockDependency
 from homeassistant.util import dt as dt_util
 from datetime import timedelta
@@ -109,7 +109,7 @@ class TestSamsungTv(unittest.TestCase):
         mocked_popen.return_value = ping
         ping.returncode = 0
         self.device.update()
-        self.assertEqual(STATE_ON, self.device._state)
+        self.assertEqual(STATE_UNKNOWN, self.device._state)
 
     @mock.patch(
         'homeassistant.components.media_player.samsungtv.subprocess.Popen'
@@ -143,12 +143,12 @@ class TestSamsungTv(unittest.TestCase):
             'ping', '-n', '-q', '-c3', timeout_arg, 'fake']
         expected_call = call(ping_command, stderr=-3, stdout=-1)
         self.assertEqual(mocked_popen.call_args, expected_call)
-        self.assertEqual(STATE_ON, self.device._state)
+        self.assertEqual(STATE_UNKNOWN, self.device._state)
 
     def test_send_key(self):
         """Test for send key."""
         self.device.send_key('KEY_POWER')
-        self.assertEqual(STATE_ON, self.device._state)
+        self.assertEqual(STATE_UNKNOWN, self.device._state)
 
     def test_send_key_broken_pipe(self):
         """Testing broken pipe Exception."""
@@ -158,7 +158,7 @@ class TestSamsungTv(unittest.TestCase):
         self.device.get_remote = mock.Mock(return_value=_remote)
         self.device.send_key('HELLO')
         self.assertIsNone(self.device._remote)
-        self.assertEqual(STATE_ON, self.device._state)
+        self.assertEqual(STATE_UNKNOWN, self.device._state)
 
     def test_send_key_connection_closed_retry_succeed(self):
         """Test retry on connection closed."""
@@ -169,7 +169,7 @@ class TestSamsungTv(unittest.TestCase):
         self.device.get_remote = mock.Mock(return_value=_remote)
         command = 'HELLO'
         self.device.send_key(command)
-        self.assertEqual(STATE_ON, self.device._state)
+        self.assertEqual(STATE_UNKNOWN, self.device._state)
         # verify that _remote.control() get called twice because of retry logic
         expected = [mock.call(command),
                     mock.call(command)]
@@ -184,7 +184,7 @@ class TestSamsungTv(unittest.TestCase):
         self.device.get_remote = mock.Mock(return_value=_remote)
         self.device.send_key('HELLO')
         self.assertIsNone(self.device._remote)
-        self.assertEqual(STATE_ON, self.device._state)
+        self.assertEqual(STATE_UNKNOWN, self.device._state)
 
     def test_send_key_os_error(self):
         """Testing broken pipe Exception."""
@@ -209,8 +209,8 @@ class TestSamsungTv(unittest.TestCase):
 
     def test_state(self):
         """Test for state property."""
-        self.device._state = STATE_ON
-        self.assertEqual(STATE_ON, self.device.state)
+        self.device._state = STATE_UNKNOWN
+        self.assertEqual(STATE_UNKNOWN, self.device.state)
         self.device._state = STATE_OFF
         self.assertEqual(STATE_OFF, self.device.state)
 
