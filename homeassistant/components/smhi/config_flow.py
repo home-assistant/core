@@ -94,12 +94,6 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
                 return True
         return False
 
-    def _home_location_exists(self) -> bool:
-        """Return True if home location exists."""
-        if slugify(HOME_LOCATION_NAME) in smhi_locations(self.hass):
-            return True
-        return False
-
     def _name_in_configuration_exists(self, name: str) -> bool:
         """Return True if name exists in configuration."""
         if name in smhi_locations(self.hass):

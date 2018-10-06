@@ -32,30 +32,6 @@ async def test_homeassistant_location_exists() -> None:
         assert await flow._homeassistant_location_exists() is False
 
 
-# pylint: disable=W0212
-async def test_home_location_exists() -> None:
-    """Test if home location exists in configuration."""
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-
-    # Check not exists
-    with patch.object(config_flow, 'smhi_locations',
-                      return_value={
-                          'test': 'something', 'test2': 'something else'
-                          }):
-
-        assert flow._home_location_exists() is False
-
-    # Check exists
-    with patch.object(config_flow, 'smhi_locations',
-                      return_value={
-                          'test': 'something', 'home': 'config'
-                          }):
-
-        assert flow._home_location_exists() is True
-
-
 async def test_name_in_configuration_exists() -> None:
     """Test if home location exists in configuration."""
     hass = Mock()
@@ -84,6 +60,12 @@ async def test_name_in_configuration_exists() -> None:
         assert flow._name_in_configuration_exists('name_exist') is True
 
 
+def test_smhi_locations(hass) -> None:
+    """Test return empty set."""
+    locations = config_flow.smhi_locations(hass)
+    assert not locations
+
+
 async def test_show_config_form() -> None:
     """Test show configuration form."""
     hass = Mock()
@@ -96,11 +78,24 @@ async def test_show_config_form() -> None:
     assert result['step_id'] == 'init'
 
 
+async def test_show_config_form_default_values() -> None:
+    """Test show configuration form."""
+    hass = Mock()
+    flow = config_flow.SmhiFlowHandler()
+    flow.hass = hass
+
+    result = await flow._show_config_form(
+        name="test", latitude='65', longitude='17')
+
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'init'
+
+
 async def test_flow_with_home_location(hass) -> None:
     """Test config flow .
 
     Tests the flow when a default location is configured
-    then it should return a create_entry and not show GUI
+    then it should return a form with default values
     """
     flow = config_flow.SmhiFlowHandler()
     flow.hass = hass
@@ -112,9 +107,8 @@ async def test_flow_with_home_location(hass) -> None:
         hass.config.longitude = 59.3262
 
         result = await flow.async_step_init()
-        assert result['data'] == {
-            'name': 'Home', 'latitude': 17.8419, 'longitude': 59.3262
-            }
+        assert result['type'] == 'form'
+        assert result['step_id'] == 'init'
 
 
 async def test_flow_show_form() -> None:
@@ -133,8 +127,10 @@ async def test_flow_show_form() -> None:
                      return_value=mock_coro()) as config_form, \
         patch.object(flow, '_homeassistant_location_exists',
                      return_value=mock_coro(True)), \
-        patch.object(flow, '_home_location_exists',
-                     return_value=True):
+        patch.object(config_flow, 'smhi_locations',
+                     return_value={
+                         'test': 'something', 'name_exist': 'config'
+                         }):
         await flow.async_step_init()
         assert len(config_form.mock_calls) == 1
 
@@ -145,8 +141,10 @@ async def test_flow_show_form() -> None:
                      return_value=mock_coro()) as config_form, \
         patch.object(flow, '_homeassistant_location_exists',
                      return_value=mock_coro(False)), \
-        patch.object(flow, '_home_location_exists',
-                     return_value=False):
+        patch.object(config_flow, 'smhi_locations',
+                     return_value={
+                         'test': 'something', 'name_exist': 'config'
+                         }):
 
         await flow.async_step_init()
         assert len(config_form.mock_calls) == 1
@@ -168,8 +166,10 @@ async def test_flow_show_form_name_exists() -> None:
                      return_value=mock_coro()) as config_form, \
         patch.object(flow, '_name_in_configuration_exists',
                      return_value=True), \
-        patch.object(flow, '_home_location_exists',
-                     return_value=True), \
+        patch.object(config_flow, 'smhi_locations',
+                     return_value={
+                         'test': 'something', 'name_exist': 'config'
+                         }), \
         patch.object(flow, '_check_location',
                      return_value=mock_coro(True)):
 
@@ -198,8 +198,10 @@ async def test_flow_entry_created_from_user_input() -> None:
                      return_value=False), \
         patch.object(flow, '_homeassistant_location_exists',
                      return_value=mock_coro(False)), \
-        patch.object(flow, '_home_location_exists',
-                     return_value=False), \
+        patch.object(config_flow, 'smhi_locations',
+                     return_value={
+                         'test': 'something', 'name_exist': 'config'
+                         }), \
         patch.object(flow, '_check_location',
                      return_value=mock_coro(True)):
 
@@ -232,8 +234,10 @@ async def test_flow_entry_created_user_input_faulty() -> None:
                      return_value=False), \
         patch.object(flow, '_homeassistant_location_exists',
                      return_value=mock_coro(False)), \
-        patch.object(flow, '_home_location_exists',
-                     return_value=False), \
+        patch.object(config_flow, 'smhi_locations',
+                     return_value={
+                         'test': 'something', 'name_exist': 'config'
+                         }), \
         patch.object(flow, '_check_location',
                      return_value=mock_coro(False)):
 
