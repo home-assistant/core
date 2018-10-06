@@ -15,7 +15,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from .const import (CONF_CONTROLLER, CONF_POE_CONTROL, CONF_SITE_ID,
                     CONTROLLER_ID, DOMAIN, LOGGER)
 from .controller import UniFiController, get_controller
-from .errors import AuthenticationRequired, CannotConnect, UserLevel
+from .errors import (
+    AlreadyConfigured, AuthenticationRequired, CannotConnect, UserLevel)
 
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = 'default'
@@ -90,7 +91,14 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
         errors = {}
 
         if user_input is not None:
+
             try:
+                controller_id = CONTROLLER_ID.format(
+                    host=user_input[CONF_HOST], site=user_input[CONF_SITE_ID]
+                )
+                if controller_id in self.hass.data[DOMAIN]:
+                    raise AlreadyConfigured
+
                 controller_data = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_USERNAME: user_input[CONF_USERNAME],
@@ -121,6 +129,9 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
                     title=name,
                     data=data
                 )
+
+            except AlreadyConfigured:
+                errors['base'] = 'already_configured'
 
             except AuthenticationRequired:
                 errors['base'] = 'faulty_credentials'
