@@ -91,6 +91,11 @@ class AugustLock(LockDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
+        if self._lock_detail is not None:
+            battery_level = self._lock_detail.battery_level
+        else:
+            battery_level = None
+
         return {
-            ATTR_BATTERY_LEVEL: self._lock_detail.battery_level,
+            ATTR_BATTERY_LEVEL: battery_level,
         }
