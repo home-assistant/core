@@ -41,6 +41,7 @@ ATTR_TO_HA_IMPERIAL = {
     'charging_status': ['mdi:battery-charging', None]
 }
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BMW sensors."""
     accounts = hass.data[BMW_DOMAIN]
@@ -140,7 +141,7 @@ class BMWConnectedDriveSensor(Entity):
             self._state = getattr(vehicle_state, self._attribute).value
         elif self.unit_of_measurement == VOLUME_GALLONS:
             self._state = round(liter_to_gallon(getattr(vehicle_state,
-                                                  self._attribute)))
+                                                        self._attribute)))
         elif self.unit_of_measurement == LENGTH_MILES:
             value = getattr(vehicle_state, self._attribute)
             self._state = round(convert(value, LENGTH_KILOMETERS,
