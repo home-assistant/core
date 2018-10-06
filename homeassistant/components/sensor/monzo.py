@@ -160,7 +160,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                      refresh_cb=lambda x: None)
 
         if int(time.time()) - expires_at > 3600:
-            authd_client.client.refresh_token()
+            authd_client.refresh_token()
 
         client = monzo.Monzo.from_oauth_session(authd_client)
         account_id = config.get(CONF_ID)
