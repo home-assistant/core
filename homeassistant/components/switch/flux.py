@@ -72,7 +72,7 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
     for light in lights:
         if is_on(hass, light):
             service_data = {ATTR_ENTITY_ID: light}
-            if [x_val, y_val] is not None:
+            if x_val is not None and y_val is not None:
                 service_data[ATTR_XY_COLOR] = [x_val, y_val]
             if brightness is not None:
                 service_data[ATTR_BRIGHTNESS] = brightness
