@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA)
 from homeassistant.components.rflink import (
-    CONF_DEVICES, DATA_ENTITY_LOOKUP, DOMAIN,
+    CONF_ALIASES, CONF_DEVICES, DATA_ENTITY_LOOKUP, DOMAIN,
     EVENT_KEY_COMMAND, RflinkDevice, cv, vol)
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_DEVICE_CLASS, CONF_PLATFORM, STATE_OFF,
@@ -34,6 +34,8 @@ PLATFORM_SCHEMA = vol.Schema({
                 cv.boolean,
             vol.Optional(CONF_OFF_DELAY):
                 vol.All(vol.Coerce(int), vol.Range(min=0)),
+            vol.Optional(CONF_ALIASES, default=[]):
+                vol.All(cv.ensure_list, [cv.string]),
         },
     }),
 })
@@ -46,9 +48,14 @@ def devices_from_config(domain_config, hass=None):
         device = RflinkBinarySensor(device_id, hass, **config)
         devices.append(device)
 
-        # Register entity to listen to incoming rflink events
+        # Register entity (and aliases) to listen to incoming rflink events
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][device_id].append(device)
+        aliases = config.get(CONF_ALIASES)
+        if aliases:
+            for _id in aliases:
+                hass.data[DATA_ENTITY_LOOKUP][
+                    EVENT_KEY_COMMAND][_id].append(device)
     return devices
 
 
@@ -61,7 +68,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 class RflinkBinarySensor(RflinkDevice):
     """Representation of an Rflink sensor."""
 
-    def __init__(self, device_id, hass, device_class, force_update, off_delay,
+    def __init__(self, device_id, hass, device_class=None,
+                 force_update=None, off_delay=None,
                  **kwargs):
         """Handle sensor specific args and super init."""
         self._device_class = device_class
