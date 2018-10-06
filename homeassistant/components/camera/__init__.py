@@ -166,8 +166,7 @@ def _get_camera_from_entity_id(hass, entity_id):
 
 async def async_setup(hass, config):
     """Set up the camera component."""
-    component = hass.data[DOMAIN] = \
-        EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))

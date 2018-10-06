@@ -99,7 +99,7 @@ def is_on(hass, entity_id: str = None) -> bool:
 
 async def async_setup(hass, config: dict):
     """Expose fan control via statemachine and services."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_FANS)
 
     await component.async_setup(config)

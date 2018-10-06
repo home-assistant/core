@@ -31,6 +31,7 @@ class EntityComponent:
     def __init__(self, logger, domain, hass,
                  scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None):
         """Initialize an entity component."""
+        hass.data[domain] = self
         self.logger = logger
         self.hass = hass
         self.domain = domain

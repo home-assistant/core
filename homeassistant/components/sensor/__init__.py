@@ -36,8 +36,7 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 async def async_setup(hass, config):
     """Track states and offer events for sensors."""
-    component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     await component.async_setup(config)
     return True

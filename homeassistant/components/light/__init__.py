@@ -238,7 +238,7 @@ class SetIntentHandler(intent.IntentHandler):
 
 async def async_setup(hass, config):
     """Expose light control via state machine and services."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
     await component.async_setup(config)
 

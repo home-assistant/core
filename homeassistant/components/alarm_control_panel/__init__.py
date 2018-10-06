@@ -18,6 +18,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'alarm_control_panel'
 SCAN_INTERVAL = timedelta(seconds=30)
 ATTR_CHANGED_BY = 'changed_by'
@@ -32,8 +34,7 @@ ALARM_SERVICE_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Track states and offer events for sensors."""
-    component = hass.data[DOMAIN] = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     await component.async_setup(config)
 
