@@ -398,6 +398,18 @@ class LIFXLight(Light):
         self.lock = asyncio.Lock()
 
     @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (LIFX_DOMAIN, self.unique_id)
+            },
+            'name': self.name,
+            'model': aiolifx().products.product_map.get(self.bulb.product),
+            'manufacturer': 'LIFX',
+        }
+
+    @property
     def available(self):
         """Return the availability of the bulb."""
         return self.registered
