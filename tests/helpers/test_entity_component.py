@@ -415,3 +415,9 @@ async def test_unload_entry_fails_if_never_loaded(hass):
 
     with pytest.raises(ValueError):
         await component.async_unload_entry(entry)
+
+
+async def test_add_component_to_hass_data(hass):
+    """Test that component is added to hass data during initialization."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    assert hass.data.get(DOMAIN) == component
