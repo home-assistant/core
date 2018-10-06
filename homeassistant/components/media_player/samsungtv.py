@@ -127,12 +127,12 @@ class SamsungTVDevice(MediaPlayerDevice):
         if sys.platform == 'win32':
             timeout_arg = '-w {}000'.format(self._config['timeout'])
             _ping_cmd = [
-                'ping', '-n 3', timeout_arg, self._config['host']]
+                'ping', '-n 1', timeout_arg, self._config['host']]
         else:
             timeout_arg = '-W{}'.format(self._config['timeout'])
             _ping_cmd = [
                 'ping', '-n', '-q',
-                '-c3', timeout_arg, self._config['host']]
+                '-c1', timeout_arg, self._config['host']]
 
         ping = subprocess.Popen(
             _ping_cmd,
