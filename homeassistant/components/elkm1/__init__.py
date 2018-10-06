@@ -45,11 +45,12 @@ SUPPORTED_DOMAINS = ['alarm_control_panel']
 
 
 def host_validator(config):
+    """Validate that a host is properly configured."""
     if config[CONF_HOST].startswith('elks://'):
         if CONF_USERNAME not in config or CONF_PASSWORD not in config:
             raise vol.Invalid("Specify username and password for elks://")
-    elif not config[CONF_HOST].startswith('elk://') and \
-        not config[CONF_HOST].startswith('serial://'):
+    elif not config[CONF_HOST].startswith('elk://') and not config[
+            CONF_HOST].startswith('serial://'):
         raise vol.Invalid("Invalid host URL")
     return config
 
