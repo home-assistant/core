@@ -11,8 +11,10 @@ import requests
 import voluptuous as vol
 from aiohttp.hdrs import CONTENT_TYPE
 
+from homeassistant.components.discovery import SERVICE_OCTOPRINT
 from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON,
                                  CONF_NAME, CONF_PORT, CONF_SSL)
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import slugify as util_slugify
@@ -52,8 +54,19 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the OctoPrint component."""
     printers = hass.data[DOMAIN] = {}
+    printers_to_setup = []
 
-    for printer in config[DOMAIN]:
+    def device_discovered(service, info):
+        """ Called when a Awesome device has been discovered. """
+        _LOGGER.debug('Found an Octoprint server: %s', info)
+
+    discovery.listen(hass, SERVICE_OCTOPRINT, device_discovered)
+
+    if DOMAIN in config:
+        for printer in config[DOMAIN]:
+            printers_to_setup.append(printer)
+
+    for printer in printers_to_setup:
         name = printer[CONF_NAME]
         ssl = 's' if printer[CONF_SSL] else ''
         base_url = 'http{}://{}:{}/api/'.format(ssl,
