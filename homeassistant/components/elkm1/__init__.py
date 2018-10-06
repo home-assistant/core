@@ -1,8 +1,6 @@
 """
 Support the ElkM1 Gold and ElkM1 EZ8 alarm / integration panels.
 
-Uses https://pypi.org/project/elkm1-lib/
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/elkm1/
 """
