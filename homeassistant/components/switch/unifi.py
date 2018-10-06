@@ -45,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         switches_off = {}
     controller.api.clients.process_raw([switch['data']
                                         for switch in switches_off.values()]
-                                      )
+                                       )
 
     progress = None
     update_progress = set()
