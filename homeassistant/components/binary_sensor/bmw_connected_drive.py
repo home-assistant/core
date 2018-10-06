@@ -8,6 +8,9 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
+from homeassistant.const import (CONF_UNIT_SYSTEM_IMPERIAL, LENGTH_KILOMETERS,
+                                 LENGTH_MILES)
+from homeassistant.util.distance import convert
 
 DEPENDENCIES = ['bmw_connected_drive']
 
@@ -42,13 +45,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 _LOGGER.debug('BMW with a high voltage battery')
                 for key, value in sorted(SENSOR_TYPES_ELEC.items()):
                     device = BMWConnectedDriveSensor(account, vehicle, key,
-                                                     value[0], value[1])
+                                                     value[0], value[1],
+                                                     account.unit_system)
                     devices.append(device)
             elif vehicle.has_internal_combustion_engine:
                 _LOGGER.debug('BMW with an internal combustion engine')
                 for key, value in sorted(SENSOR_TYPES.items()):
                     device = BMWConnectedDriveSensor(account, vehicle, key,
-                                                     value[0], value[1])
+                                                     value[0], value[1],
+                                                     account.unit_system)
                     devices.append(device)
     add_entities(devices, True)
 
@@ -57,7 +62,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
     """Representation of a BMW vehicle binary sensor."""
 
     def __init__(self, account, vehicle, attribute: str, sensor_name,
-                 device_class):
+                 device_class, unit_system):
         """Constructor."""
         self._account = account
         self._vehicle = vehicle
@@ -67,6 +72,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         self._sensor_name = sensor_name
         self._device_class = device_class
         self._state = None
+        self._unit_system = unit_system
 
     @property
     def should_poll(self) -> bool:
@@ -117,7 +123,8 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['lights_parking'] = vehicle_state.parking_lights.value
         elif self._attribute == 'condition_based_services':
             for report in vehicle_state.condition_based_services:
-                result.update(self._format_cbs_report(report))
+                result.update(
+                    self._format_cbs_report(report, self._unit_system))
         elif self._attribute == 'check_control_messages':
             check_control_messages = vehicle_state.check_control_messages
             if not check_control_messages:
@@ -176,7 +183,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
                            'CONNECTED')
 
     @staticmethod
-    def _format_cbs_report(report):
+    def _format_cbs_report(report, unit_system):
         result = {}
         service_type = report.service_type.lower().replace('_', ' ')
         result['{} status'.format(service_type)] = report.state.value
@@ -184,8 +191,16 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['{} date'.format(service_type)] = \
                 report.due_date.strftime('%Y-%m-%d')
         if report.due_distance is not None:
-            result['{} distance'.format(service_type)] = \
-                '{} km'.format(report.due_distance)
+            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+                value = convert(report.due_distance, LENGTH_KILOMETERS,
+                                LENGTH_MILES)
+                distance = round(value)
+                result['{} distance'.format(service_type)] = \
+                    '{} {}'.format(distance, LENGTH_MILES)
+            else:
+                result['{} distance'.format(service_type)] = \
+                    '{} {}'.format(report.due_distance, LENGTH_KILOMETERS)
+
         return result
 
     def update_callback(self):
