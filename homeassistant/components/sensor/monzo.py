@@ -168,7 +168,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         #Create sensors to be added to hass
         dev = []
-        print("making a sensor")
         for resource in config.get(CONF_MONITORED_RESOURCES):
             if resource == 'pots':
                 for pot in client.get_pots()['pots']:
@@ -181,7 +180,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         # No existing OAuth session
         # Need to authenticate
-        print("trying to reauth")
         redirect_uri = '{}{}'.format(hass.config.api.base_url,
                                      MONZO_AUTH_CALLBACK_PATH)
 
@@ -284,7 +282,6 @@ class MonzoSensor(Entity):
         self.config_path = config_path
         self.resource_type = resource_type
         self.extra = extra
-        print("made a sensor")
 
         if self.resource_type == 'pots':
             pots = self.client.get_pots()['pots']
