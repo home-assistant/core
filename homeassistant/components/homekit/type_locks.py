@@ -22,7 +22,6 @@ STATE_TO_SERVICE = {STATE_LOCKED: 'lock',
                     STATE_UNLOCKED: 'unlock'}
 
 
-
 @TYPES.register('Lock')
 class Lock(HomeAccessory):
     """Generate a Lock accessory for a lock entity.
@@ -55,8 +54,7 @@ class Lock(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
             params[ATTR_CODE] = self._code
-        super().set_state(DOMAIN, service, params, service)
-
+        self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update lock after state changed."""

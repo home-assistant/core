@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     DOMAIN as HA_DOMAIN, State, callback, split_entity_id)
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
-from homeassistant.components.homekit.accessories import EVENT_HOMEKIT_CHANGED
+from homeassistant.components.homekit.const import EVENT_HOMEKIT_CHANGED
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -296,7 +296,7 @@ def humanify(hass, events):
                 if message:
                     action = message
                 elif entity_id:
-                    action = "Send command for {}".format(
+                    action = "send command for {}".format(
                         entity_id)
 
                 yield {
@@ -308,7 +308,6 @@ def humanify(hass, events):
                     'context_id': event.context.id,
                     'context_user_id': event.context.user_id
                 }
-
 
 
 def _get_events(hass, config, start_day, end_day):

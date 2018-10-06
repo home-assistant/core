@@ -22,6 +22,9 @@ FEATURE_PLAY_PAUSE = 'play_pause'
 FEATURE_PLAY_STOP = 'play_stop'
 FEATURE_TOGGLE_MUTE = 'toggle_mute'
 
+# #### HomeKit Component Event ####
+EVENT_HOMEKIT_CHANGED = 'homekit_state_change'
+
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = 'start'
 
