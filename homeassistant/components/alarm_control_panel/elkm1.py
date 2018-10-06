@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMING, STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.components.elkm1 import (
-    DOMAIN as ELK_DOMAIN, create_elk_entities, ElkDeviceBase)
+    DOMAIN as ELK_DOMAIN, create_elk_entities, ElkEntity)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -39,8 +39,7 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema({
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info):
-    """Setup the ElkM1 alarm platform."""
-
+    """Set up the ElkM1 alarm platform."""
     elk = hass.data[ELK_DOMAIN]['elk']
     entities = create_elk_entities(hass, elk.areas, 'area', ElkArea, [])
     async_add_entities(entities, True)
@@ -75,15 +74,14 @@ async def async_setup_platform(hass, config, async_add_entities,
 def _arm_services():
     from elkm1_lib.const import ArmLevel
 
-    ARM_SERVICES = {
+    return {
         'elkm1_alarm_arm_vacation': ArmLevel.ARMED_VACATION.value,
         'elkm1_alarm_arm_home_instant': ArmLevel.ARMED_STAY_INSTANT.value,
         'elkm1_alarm_arm_night_instant': ArmLevel.ARMED_NIGHT_INSTANT.value,
     }
-    return ARM_SERVICES
 
 
-class ElkArea(ElkDeviceBase, alarm.AlarmControlPanel):
+class ElkArea(ElkEntity, alarm.AlarmControlPanel):
     """Representation of an Area / Partition within the ElkM1 alarm panel."""
 
     def __init__(self, element, elk, elk_data):
@@ -118,7 +116,7 @@ class ElkArea(ElkDeviceBase, alarm.AlarmControlPanel):
 
     @property
     def state(self):
-        """The state of the element."""
+        """Return the state of the element."""
         return self._state
 
     @property
@@ -144,7 +142,7 @@ class ElkArea(ElkDeviceBase, alarm.AlarmControlPanel):
     def _element_changed(self, element, changeset):
         from elkm1_lib.const import ArmedStatus
 
-        ELK_STATE_TO_HASS_STATE = {
+        elk_state_to_hass_state = {
             ArmedStatus.DISARMED.value: STATE_ALARM_DISARMED,
             ArmedStatus.ARMED_AWAY.value: STATE_ALARM_ARMED_AWAY,
             ArmedStatus.ARMED_STAY.value: STATE_ALARM_ARMED_HOME,
@@ -162,7 +160,7 @@ class ElkArea(ElkDeviceBase, alarm.AlarmControlPanel):
             self._state = STATE_ALARM_ARMING \
                 if self._element.is_exit else STATE_ALARM_PENDING
         else:
-            self._state = ELK_STATE_TO_HASS_STATE[self._element.armed_status]
+            self._state = elk_state_to_hass_state[self._element.armed_status]
 
     def _entry_exit_timer_is_running(self):
         return self._element.timer1 > 0 or self._element.timer2 > 0
@@ -174,25 +172,25 @@ class ElkArea(ElkDeviceBase, alarm.AlarmControlPanel):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._element.disarm(code)
+        self._element.disarm(int(code))
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         from elkm1_lib.const import ArmLevel
 
-        self._element.arm(ArmLevel.ARMED_STAY.value, code)
+        self._element.arm(ArmLevel.ARMED_STAY.value, int(code))
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         from elkm1_lib.const import ArmLevel
 
-        self._element.arm(ArmLevel.ARMED_AWAY.value, code)
+        self._element.arm(ArmLevel.ARMED_AWAY.value, int(code))
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
         from elkm1_lib.const import ArmLevel
 
-        self._element.arm(ArmLevel.ARMED_NIGHT.value, code)
+        self._element.arm(ArmLevel.ARMED_NIGHT.value, int(code))
 
     async def _arm_service(self, arm_level, code):
         self._element.arm(arm_level, code)

@@ -85,7 +85,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
-
     from elkm1_lib.const import Max
     from elkm1_lib.message import housecode_to_index
     import elkm1_lib as elkm1
@@ -113,7 +112,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         return i
 
     def parse_range(config, item, set_to, values, max_):
-        """Parse a range list, e.g. range in form of 3 or 2-7"""
+        """Parse a range list, e.g. range in form of 3 or 2-7."""
         ranges = config.get(item, [])
         for rng in ranges:
             rng = str(rng)
@@ -171,7 +170,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 
 
 def create_elk_entities(hass, elk_elements, element_type, class_, entities):
-    """Helper to create the ElkM1 devices of a particular class."""
+    """Create the ElkM1 devices of a particular class."""
     elk_data = hass.data[DOMAIN]
     elk = elk_data['elk']
     for element in elk_elements:
@@ -180,9 +179,11 @@ def create_elk_entities(hass, elk_elements, element_type, class_, entities):
     return entities
 
 
-class ElkDeviceBase(Entity):
-    """Sensor devices on the Elk."""
+class ElkEntity(Entity):
+    """Base class for all Elk entities."""
+
     def __init__(self, platform, element, elk, elk_data):
+        """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
         self._state = None
@@ -207,7 +208,7 @@ class ElkDeviceBase(Entity):
 
     @property
     def device_state_attributes(self):
-        """Default attributes of the element, if not overridden."""
+        """Return the default attributes of the element."""
         return {**self._element.as_dict(), **self.initial_attrs()}
 
     @property
@@ -216,7 +217,7 @@ class ElkDeviceBase(Entity):
         return self._elk.is_connected()
 
     def initial_attrs(self):
-        """The underlying element's attributes as a dict."""
+        """Return the underlying element's attributes as a dict."""
         attrs = {}
         attrs['index'] = self._element.index + 1
         return attrs
@@ -226,7 +227,7 @@ class ElkDeviceBase(Entity):
 
     @callback
     def _element_callback(self, element, changeset):
-        """Callback handler from the Elk - required to be supplied."""
+        """Handle callback from an Elk element that has changed."""
         self._element_changed(element, changeset)
         self.async_schedule_update_ha_state(True)
 
