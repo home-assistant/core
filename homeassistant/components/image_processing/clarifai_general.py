@@ -24,7 +24,7 @@ CONF_CONCEPTS = 'concepts'
 DEFAULT_CONCEPTS = 'None'
 EVENT_MODEL_PREDICTION = 'image_processing.model_prediction'
 
-REQUIREMENTS = ['clarifai==2.2.3']
+REQUIREMENTS = ['clarifai==2.3.2']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
