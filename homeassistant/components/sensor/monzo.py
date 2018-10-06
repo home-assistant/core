@@ -113,8 +113,8 @@ def request_oauth_completion(hass):
 
         return
 
-def monzo_configuration_callback(callback_data):
-    """Handle configuration updates."""
+    def monzo_configuration_callback(callback_data):
+        """Handle configuration updates."""
 
     start_url = '{}{}'.format(hass.config.api.base_url, MONZO_AUTH_START)
 
