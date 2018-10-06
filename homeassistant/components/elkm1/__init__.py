@@ -10,10 +10,9 @@ https://home-assistant.io/components/elkm1/
 import logging
 
 import voluptuous as vol
-from homeassistant.const import (ATTR_ENTITY_ID, CONF_EXCLUDE,
-                                 CONF_HOST, CONF_INCLUDE, CONF_PASSWORD,
-                                 CONF_TEMPERATURE_UNIT, CONF_USERNAME,
-                                 STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_EXCLUDE, CONF_HOST, CONF_INCLUDE, CONF_PASSWORD,
+    CONF_TEMPERATURE_UNIT, CONF_USERNAME, STATE_UNKNOWN, TEMP_FAHRENHEIT)
 from homeassistant.core import HomeAssistant, callback  # noqa
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
@@ -33,10 +32,10 @@ CONF_TASK = 'task'
 CONF_THERMOSTAT = 'thermostat'
 CONF_USER = 'user'
 CONF_PANEL = 'panel'
-CONF_PLC = 'plc'  # Not light because HASS complains about this
+CONF_PLC = 'plc'
 CONF_ZONE = 'zone'
 
-CONF_ENABLED = 'enabled'    # True to enable subdomain
+CONF_ENABLED = 'enabled'
 CONF_HIDE = 'hide'
 CONF_SHOW = 'show'
 
@@ -45,9 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA_SUBDOMAIN = vol.Schema({
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
     vol.Optional(CONF_INCLUDE): list,
-    vol.Optional(CONF_EXCLUDE): list,
-    vol.Optional(CONF_HIDE): list,
-    vol.Optional(CONF_SHOW): list,
+    vol.Optional(CONF_EXCLUDE): list
     })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -55,8 +52,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TEMPERATURE_UNIT, default='fahrenheit'):
-            vol.In(['celsius', 'fahrenheit']),
+        vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT):
+            cv.temperature_unit,
         vol.Optional(CONF_AREA): CONFIG_SCHEMA_SUBDOMAIN,
         vol.Optional(CONF_COUNTER): CONFIG_SCHEMA_SUBDOMAIN,
         vol.Optional(CONF_KEYPAD): CONFIG_SCHEMA_SUBDOMAIN,
@@ -70,8 +67,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-SUPPORTED_DOMAINS = ['sensor', 'switch', 'alarm_control_panel',
-                     'climate', 'light']
+SUPPORTED_DOMAINS = ['alarm_control_panel',]
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
@@ -99,7 +95,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         """Parse a value as an int or housecode."""
         i = int(val) if val.isdigit() else (housecode_to_index(val) + 1)
         if i < 1 or i > max_:
-            raise ValueError('Value not in range 1 to %d: "%s"' % (max_, val))
+            raise vol.Invalid('Value not in range 1-%d: "%s"' % (max_, val))
         return i
 
     def parse_range(config, item, set_to, values, max_):
@@ -118,22 +114,18 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     def parse_config(item, max_):
         """Parse a config for an element type such as: zones, plc, etc."""
         if item not in config_raw:
-            return (True, [True] * max_, [True] * max_)
+            return (True, [True] * max_)
 
         conf = config_raw[item]
 
         if CONF_ENABLED in conf and not conf[CONF_ENABLED]:
-            return (False, [False] * max_, [False] * max_)
+            return (False, [False] * max_)
 
         included = [CONF_INCLUDE not in conf] * max_
         parse_range(conf, CONF_INCLUDE, True, included, max_)
         parse_range(conf, CONF_EXCLUDE, False, included, max_)
 
-        shown = [None] * max_
-        parse_range(conf, CONF_SHOW, True, shown, max_)
-        parse_range(conf, CONF_HIDE, False, shown, max_)
-
-        return (True, included, shown)
+        return (True, included)
 
     config_raw = hass_config.get(DOMAIN)
     config = {}
@@ -141,19 +133,13 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     host = config_raw[CONF_HOST]
     username = config_raw.get(CONF_USERNAME)
     password = config_raw.get(CONF_PASSWORD)
-    if host.startswith('elks:'):
-        if username is None or password is None:
-            _LOGGER.error('Specify username & password for secure connection')
-            return False
+    if host.startswith('elks:') and (username is None or password is None): 
+        raise vol.Invalid("Specify username & password for elks://")
 
     for item, max_ in configs.items():
         config[item] = {}
-        try:
-            (config[item]['enabled'], config[item]['included'],
-             config[item]['shown']) = parse_config(item, max_)
-        except ValueError as err:
-            _LOGGER.error("Config item: %s; %s", item, err)
-            return False
+        (config[item]['enabled'], config[item]['included']) = \
+                parse_config(item, max_)
 
     config['temperature_unit'] = config_raw[CONF_TEMPERATURE_UNIT]
 
@@ -163,54 +149,30 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     hass.data[DOMAIN] = {'elk': elk, 'config': config,
                          'entities': {}, 'keypads': {}}
     for component in SUPPORTED_DOMAINS:
-        hass.async_add_job(
-            discovery.async_load_platform(hass, component, DOMAIN, None, None))
+        hass.async_create_task(
+            discovery.async_load_platform(hass, component, DOMAIN))
     return True
 
 
-def create_elk_devices(hass, elk_elements, element_type, class_, devices):
+def create_elk_entities(hass, elk_elements, element_type, class_, entities):
     """Helper to create the ElkM1 devices of a particular class."""
-    config = hass.data[DOMAIN]['config']
+    elk_data = hass.data[DOMAIN]
+    elk = elk_data['elk']
     for element in elk_elements:
-        if config[element_type]['included'][element.index]:
-            devices.append(class_(element, hass, config[element_type]))
-    return devices
-
-
-def register_elk_service(hass, domain, service_name, schema, service_handler):
-    """Map services to methods."""
-    async def async_service_handler(service):
-        for entity_id in service.data.get(ATTR_ENTITY_ID, []):
-            entity = hass.data[DOMAIN]['entities'].get(entity_id)
-            if not entity:
-                continue
-
-            handler = getattr(entity, service_handler)
-            if not handler:
-                continue
-
-            kwargs = {key: val for key, val in service.data.items()
-                      if key != ATTR_ENTITY_ID}
-            await handler(**kwargs)
-
-    hass.services.async_register(
-        domain, service_name, async_service_handler, schema=schema)
+        if elk_data['config'][element_type]['included'][element.index]:
+            entities.append(class_(element, elk, elk_data))
+    return entities
 
 
 class ElkDeviceBase(Entity):
     """Sensor devices on the Elk."""
-    def __init__(self, platform, element, hass, config):
-        self._elk = hass.data[DOMAIN]['elk']
+    def __init__(self, platform, element, elk, elk_data):
+        self._elk = elk
         self._element = element
-        self._hass = hass
-        self._show_override = config['shown'][element.index]
-        self._hidden = False
-        self._state = STATE_UNKNOWN
-        self._temperature_unit = TEMP_CELSIUS if hass.data[DOMAIN][
-            'config']['temperature_unit'] == 'celsius' else TEMP_FAHRENHEIT
-        self._unique_id = platform + '.elkm1_' + \
-            self._element.default_name('_').lower()
-        self.entity_id = self._unique_id
+        self._state = None
+        self._temperature_unit = elk_data['config']['temperature_unit']
+        self._unique_id = 'elkm1_{}'.format(
+            self._element.default_name('_').lower())
 
     @property
     def name(self):
@@ -223,32 +185,24 @@ class ElkDeviceBase(Entity):
         return self._unique_id
 
     @property
-    def state(self):
-        """The state of the element."""
-        return self._state
-
-    @property
     def should_poll(self) -> bool:
         """Don't poll this device."""
         return False
-
-    @property
-    def hidden(self):
-        """Return if the element is hidden."""
-        if self._show_override is None:
-            return self._hidden
-        return not self._show_override
 
     @property
     def device_state_attributes(self):
         """Default attributes of the element, if not overridden."""
         return {**self._element.as_dict(), **self.initial_attrs()}
 
+    @property
+    def available(self):
+        """Is the entity available to be updated."""
+        return self._elk.is_connected()
+
     def initial_attrs(self):
         """The underlying element's attributes as a dict."""
         attrs = {}
         attrs['index'] = self._element.index + 1
-        attrs['state'] = self._state
         return attrs
 
     def _element_changed(self, element, changeset):
@@ -264,4 +218,3 @@ class ElkDeviceBase(Entity):
         """Register callback for ElkM1 changes and update entity state."""
         self._element.add_callback(self._element_callback)
         self._element_callback(self._element, {})
-        self._hass.data[DOMAIN]['entities'][self.entity_id] = self
