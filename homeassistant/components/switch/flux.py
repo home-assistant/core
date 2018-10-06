@@ -71,36 +71,44 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
+            service_data = {ATTR_ENTITY_ID: light}
+            if x_val is not None and y_val is not None:
+                service_data[ATTR_XY_COLOR] = [x_val, y_val]
+            if brightness is not None:
+                service_data[ATTR_BRIGHTNESS] = brightness
+                service_data[ATTR_WHITE_VALUE] = brightness
+            if transition is not None:
+                service_data[ATTR_TRANSITION] = transition
             hass.services.call(
-                LIGHT_DOMAIN, SERVICE_TURN_ON, {
-                    ATTR_XY_COLOR: [x_val, y_val],
-                    ATTR_BRIGHTNESS: brightness,
-                    ATTR_TRANSITION: transition,
-                    ATTR_WHITE_VALUE: brightness,
-                    ATTR_ENTITY_ID: light})
+                LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
 def set_lights_temp(hass, lights, mired, brightness, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
+            service_data = {ATTR_ENTITY_ID: light}
+            if mired is not None:
+                service_data[ATTR_COLOR_TEMP] = int(mired)
+            if brightness is not None:
+                service_data[ATTR_BRIGHTNESS] = brightness
+            if transition is not None:
+                service_data[ATTR_TRANSITION] = transition
             hass.services.call(
-                LIGHT_DOMAIN, SERVICE_TURN_ON, {
-                    ATTR_COLOR_TEMP: int(mired),
-                    ATTR_BRIGHTNESS: brightness,
-                    ATTR_TRANSITION: transition,
-                    ATTR_ENTITY_ID: light})
+                LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
 def set_lights_rgb(hass, lights, rgb, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
+            service_data = {ATTR_ENTITY_ID: light}
+            if rgb is not None:
+                service_data[ATTR_RGB_COLOR] = rgb
+            if transition is not None:
+                service_data[ATTR_TRANSITION] = transition
             hass.services.call(
-                LIGHT_DOMAIN, SERVICE_TURN_ON, {
-                    ATTR_RGB_COLOR: rgb,
-                    ATTR_TRANSITION: transition,
-                    ATTR_ENTITY_ID: light})
+                LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
