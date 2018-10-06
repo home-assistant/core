@@ -11,8 +11,8 @@ import logging
 
 import voluptuous as vol
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_EXCLUDE, CONF_HOST, CONF_INCLUDE, CONF_PASSWORD,
-    CONF_TEMPERATURE_UNIT, CONF_USERNAME, STATE_UNKNOWN, TEMP_FAHRENHEIT)
+    CONF_EXCLUDE, CONF_HOST, CONF_INCLUDE, CONF_PASSWORD,
+    CONF_TEMPERATURE_UNIT, CONF_USERNAME, TEMP_FAHRENHEIT)
 from homeassistant.core import HomeAssistant, callback  # noqa
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
@@ -67,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-SUPPORTED_DOMAINS = ['alarm_control_panel',]
+SUPPORTED_DOMAINS = ['alarm_control_panel']
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
@@ -133,13 +133,13 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     host = config_raw[CONF_HOST]
     username = config_raw.get(CONF_USERNAME)
     password = config_raw.get(CONF_PASSWORD)
-    if host.startswith('elks:') and (username is None or password is None): 
+    if host.startswith('elks:') and (username is None or password is None):
         raise vol.Invalid("Specify username & password for elks://")
 
     for item, max_ in configs.items():
         config[item] = {}
         (config[item]['enabled'], config[item]['included']) = \
-                parse_config(item, max_)
+            parse_config(item, max_)
 
     config['temperature_unit'] = config_raw[CONF_TEMPERATURE_UNIT]
 
