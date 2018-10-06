@@ -72,7 +72,7 @@ def setup(hass, config):
     global HUB
     HUB = VerisureHub(config[DOMAIN], verisure)
     HUB.update_overview = Throttle(
-            config[DOMAIN][CONF_SCAN_INTERVAL])(HUB.update_overview)
+        config[DOMAIN][CONF_SCAN_INTERVAL])(HUB.update_overview)
     if not HUB.login():
         return False
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
