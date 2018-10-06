@@ -478,12 +478,17 @@ class InsteonEntity(Entity):
     @property
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
-        name = ''
+
         if self._insteon_device_state.group == 0x01:
-            name = self._insteon_device.id
+            addr = self._insteon_device.id
         else:
-            name = '{:s}_{:d}'.format(self._insteon_device.id,
-                                      self._insteon_device_state.group)
+            addr = '{:s}_{:d}'.format(self._insteon_device.id,
+                                         self._insteon_device_state.group)
+        if self._insteon_device.description is None:
+            name = addr
+        else:
+            name = '{:s} {:s}'.format(self._insteon_device.description,
+                                      addr)
         return name
 
     @property
