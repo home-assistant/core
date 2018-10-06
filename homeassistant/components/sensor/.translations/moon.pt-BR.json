@@ -1,12 +1,12 @@
 {
     "state": {
-        "first_quarter": "Quarto crescente",
+        "first_quarter": "Quarto Crescente",
         "full_moon": "Lua cheia",
-        "last_quarter": "Quarto minguante",
+        "last_quarter": "Quarto Minguante",
         "new_moon": "Lua Nova",
-        "waning_crescent": "Minguante",
-        "waning_gibbous": "Minguante gibosa",
-        "waxing_crescent": "Crescente",
-        "waxing_gibbous": "Crescente gibosa"
+        "waning_crescent": "Lua Minguante",
+        "waning_gibbous": "Lua Balsâmica",
+        "waxing_crescent": " Lua Crescente",
+        "waxing_gibbous": "Lua Gibosa"
     }
 }
