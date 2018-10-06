@@ -1,15 +1,15 @@
 {
     "config": {
-        "title": "Unifi Controller",
+        "title": "UniFi Controller",
         "step": {
             "init": {
-                "title": "Set up Unifi Controller",
+                "title": "Set up UniFi Controller",
                 "data": {
                     "host": "Host",
                     "username": "User name",
                     "password": "Password",
-                    "port": "Port (default value: '8443')",
-                    "site": "Site id (default value: 'default')",
+                    "port": "Port",
+                    "site": "Site ID",
                     "verify_ssl": "Controller using proper certificate"
                 }
             }

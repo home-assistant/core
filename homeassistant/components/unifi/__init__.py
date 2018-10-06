@@ -143,9 +143,10 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_PORT): int,
-                vol.Optional(CONF_SITE_ID): str,
-                vol.Optional(CONF_VERIFY_SSL): bool,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                vol.Optional(CONF_SITE_ID, default=DEFAULT_SITE_ID): str,
+                vol.Optional(
+                    CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
             }),
             errors=errors,
         )
