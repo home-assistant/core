@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     DOMAIN as HA_DOMAIN, State, callback, split_entity_id)
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
+from homeassistant.components.homekit.accessories import EVENT_HOMEKIT_CHANGED
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -56,7 +57,7 @@ CONFIG_SCHEMA = vol.Schema({
 ALL_EVENT_TYPES = [
     EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_ALEXA_SMART_HOME
+    EVENT_ALEXA_SMART_HOME, EVENT_HOMEKIT_CHANGED
 ]
 
 LOG_MESSAGE_SCHEMA = vol.Schema({
@@ -286,6 +287,28 @@ def humanify(hass, events):
                     'context_id': event.context.id,
                     'context_user_id': event.context.user_id
                 }
+
+            elif event.event_type == EVENT_HOMEKIT_CHANGED:
+                data = event.data
+                entity_id = data.get(ATTR_ENTITY_ID)
+                message = data.get('message')
+
+                if message:
+                    action = message
+                elif entity_id:
+                    action = "Send command for {}".format(
+                        entity_id)
+
+                yield {
+                    'when': event.time_fired,
+                    'name': 'HomeKit',
+                    'message': action,
+                    'domain': 'homekit',
+                    'entity_id': entity_id,
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
+
 
 
 def _get_events(hass, config, start_day, end_day):

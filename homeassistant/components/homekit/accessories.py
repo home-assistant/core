@@ -9,12 +9,13 @@ from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.const import (
-    __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL)
+    __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID)
 from homeassistant.core import callback as ha_callback
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.event import (
     async_track_state_change, track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
+
 
 from .const import (
     BRIDGE_MODEL, BRIDGE_SERIAL_NUMBER, CHAR_BATTERY_LEVEL,
@@ -25,6 +26,7 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
+EVENT_HOMEKIT_CHANGED = 'homekit_state_change'
 
 def debounce(func):
     """Decorate function to debounce callbacks from HomeKit."""
@@ -136,6 +138,47 @@ class HomeAccessory(Accessory):
         Overridden by accessory types.
         """
         raise NotImplementedError()
+
+    def sent_logbook_message(self, homekit_event, logbook_message):
+        """ Sent event to logbook."""
+
+        if logbook_message:
+            logbook_attr_message = "{} for {}".format(
+                logbook_message, self.display_name)
+        elif service:
+            logbook_attr_message = "{} for {}".format(
+                service, self.display_name)
+        else:
+            logbook_attr_message = "for {}".format(
+                self.display_name)
+
+        self.hass.bus.fire(homekit_event, {
+            ATTR_ENTITY_ID: self.entity_id,
+            'message': logbook_attr_message
+        })
+
+
+    def set_state(self, DOMAIN, service, params, logbook_message):
+        """ Sent event for logbook that a change was initiated from homekit.
+
+        Then call the service to change the state.
+        This method is to be called from methods that change states using
+        super().set_state(DOMAIN, service, params, logbook_message).
+        """
+
+        try:
+            if logbook_message:
+                message = "Send command {}".format(logbook_message)
+            else:
+                message = "Send command {}".format(service)
+
+            self.sent_logbook_message(EVENT_HOMEKIT_CHANGED, message)
+        except Exception as ex:
+            _LOGGER.error(
+                "Logbook error when trying to send message. Error is: %s.",
+                 str(ex))
+        self.hass.services.call(DOMAIN, service, params)
+
 
 
 class HomeBridge(Bridge):

@@ -20,6 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
+from .accessories import EVENT_HOMEKIT_CHANGED
 from .const import (
     BRIDGE_NAME, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST,
     CONF_FILTER, DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO,
@@ -176,8 +177,16 @@ def get_accessory(hass, driver, state, aid, config):
     if a_type is None:
         return None
 
+    message = "Add accessory {}".format(a_type)
+
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
+
+    accessory = TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
+    accessory.sent_logbook_message(
+        EVENT_HOMEKIT_CHANGED, message
+    )
+
+    return accessory
 
 
 def generate_aid(entity_id):
