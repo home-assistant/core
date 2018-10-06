@@ -21,8 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import (
-    DOMAIN, SENSOR_TYPES, READ_COMMAND, WRITE_COMMAND,
-    STATE_DAY, STATE_NIGHT)
+    DOMAIN, SENSOR_TYPES, READ_COMMAND, WRITE_COMMAND)
 
 REQUIREMENTS = ['ebusdpy==0.0.4']
 

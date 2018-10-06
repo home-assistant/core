@@ -16,6 +16,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SCAN_INTERVAL = timedelta(seconds=10)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
+
 _LOGGER = logging.getLogger(__name__)
 
 
