@@ -17,7 +17,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_DEVICE, CONF_NAME)
+    ATTR_ATTRIBUTION, CONF_DEVICE, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 TELEINFO_AVAILABLE_VALUES = ['HCHC', 'HCHP', 'IINST', 'IMAX', 'PAPP', 'ISOUSC']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up for the Teleinfo device."""
     from kylin import exceptions
     import kylin
@@ -50,16 +50,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         teleinfo = kylin.Kylin(port=config.get(CONF_DEVICE), timeout=2)
         teleinfo_data = TeleinfoData(teleinfo)
+        teleinfo_data.open()
 
     except exceptions.KylinSerialError as err:
-        _LOGGER.critical("Serial error with Teleinfo: %s", err)
+        _LOGGER.error("Serial error with Teleinfo: %s", err)
         return
 
-    if not teleinfo_data.update():
-        _LOGGER.critical("Can't retrieve Teleinfo from device")
+    teleinfo_data.update()
+    if not teleinfo_data.frame:
+        _LOGGER.error("Can't retrieve Teleinfo from device")
         return
-
-    add_devices([TeleinfoSensor(teleinfo_data, config.get(CONF_NAME))], True)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, teleinfo_data.stop_serial_read())
+    add_entities([TeleinfoSensor(teleinfo_data, config.get(CONF_NAME))], True)
 
 
 class TeleinfoSensor(Entity):
@@ -122,18 +125,18 @@ class TeleinfoData():
         """Return the Teleinfo frame data."""
         return self._frame
 
+    def open(self):
+        self._teleinfo.open()
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Teleinfo device."""
-        self._teleinfo.open()
         self._frame = self._teleinfo.readframe()
-        self._teleinfo.close()
         if not self._frame:
             _LOGGER.warning("No energy data received from Teleinfo")
-            return None
         return self._frame
 
-    def _stop(self, event):
+    def stop_serial_read(self):
         """HA is shutting down, close port."""
         if self._teleinfo is not None:
             self._teleinfo.close()
