@@ -62,8 +62,8 @@ async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old way of setting up components.
 
-    Can only be called when a user accidentally mentions smhi in their
-    config. But even in that case it would have been ignored.
+    Can only be called when a user accidentally mentions smhi in the
+    config. In that case it will be ignored.
     """
     pass
 
@@ -92,7 +92,7 @@ class SmhiWeather(WeatherEntity):
     def __init__(self, name: str, latitude: str,
                  longitude: str,
                  session: aiohttp.ClientSession = None) -> None:
-        """Initialize the Smhi weather entity."""
+        """Initialize the SMHI weather entity."""
         from smhi import Smhi
 
         self._name = name
@@ -105,7 +105,7 @@ class SmhiWeather(WeatherEntity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
-        """Refresh the forecast data from smhi weather API."""
+        """Refresh the forecast data from SMHI weather API."""
         from smhi.smhi_lib import SmhiForecastException
 
         def fail():
@@ -119,13 +119,9 @@ class SmhiWeather(WeatherEntity):
                 self._forecasts = await self.get_weather_forecast()
                 self._fail_count = 0
 
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, SmhiForecastException):
             _LOGGER.error("Failed to connect to SMHI API, "
-                          "timeout, retry in 5 minutes")
-            fail()
-        except SmhiForecastException:
-            _LOGGER.exception("Failed to connect to SMHI API, "
-                              "retry in 5 minutes")
+                          "retry in 5 minutes")
             fail()
 
     async def retry_update(self):
@@ -239,6 +235,6 @@ class SmhiWeather(WeatherEntity):
 
     @property
     def device_state_attributes(self) -> Dict:
-        """Return smhi specific attributes."""
+        """Return SMHI specific attributes."""
         if self.cloudiness:
             return {ATTR_SMHI_CLOUDINESS: self.cloudiness}

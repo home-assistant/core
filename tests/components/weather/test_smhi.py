@@ -32,7 +32,7 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
     This test are deeper integrated with the core. Since only
     config_flow is used the component are setup with
     "async_forward_entry_setup". The actual result are tested
-    with the enity state rather than "per function" unity tests
+    with the entity state rather than "per function" unity tests
     """
     from smhi.smhi_lib import APIURL_TEMPLATE
 

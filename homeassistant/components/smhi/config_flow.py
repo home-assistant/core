@@ -1,17 +1,13 @@
 """Config flow to configure smhi component.
 
 First time the user creates the configuration and
-a location is set in the hass configuration yaml it
-will use that location and create a default
-home location. This behavior will change when
-configuration flow supports default values.
+a valid location is set in the hass configuration yaml
+it will use that location and use it as default values.
 
-When home location exists a form will show
-to add additional locations for weather data.
-
+Additional locations can be added in config form.
 The input location will be checked by invoking
 the API. Exception will be thrown if the location
-is not supported by the API (Swedish location only)
+is not supported by the API (Swedish locations only)
 """
 import voluptuous as vol
 
@@ -29,20 +25,20 @@ REQUIREMENTS = ['smhi-pkg==1.0.3']
 
 @callback
 def smhi_locations(hass: HomeAssistant):
-    """Return configurations of smhi component."""
+    """Return configurations of SMHI component."""
     return set((slugify(entry.data[CONF_NAME])) for
                entry in hass.config_entries.async_entries(DOMAIN))
 
 
 @config_entries.HANDLERS.register(DOMAIN)
 class SmhiFlowHandler(data_entry_flow.FlowHandler):
-    """Smhi config flow."""
+    """Config flow for SMHI component."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self) -> None:
-        """Initialize smhi forecast configuration flow."""
+        """Initialize SMHI forecast configuration flow."""
         self._errors = {}
 
     async def async_step_user(self, user_input=None):
