@@ -123,12 +123,8 @@ class WaterHeaterDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
-        if self.is_on is False:
-            return STATE_OFF
         if self.current_operation:
             return self.current_operation
-        if self.is_on:
-            return STATE_ON
         return None
 
     @property
@@ -189,11 +185,6 @@ class WaterHeaterDevice(Entity):
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
-        return None
-
-    @property
-    def is_on(self):
-        """Return true if on."""
         return None
 
     def set_temperature(self, **kwargs):
