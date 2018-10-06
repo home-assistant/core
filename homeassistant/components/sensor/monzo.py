@@ -53,7 +53,8 @@ DEFAULT_CONFIG = {
 
 MONZO_RESOURCES_LIST = {
     'balance': ['Account Balance', 'GBP', 'cash'],
-    'dailyspend': ['Spent Today', 'GBP', 'cash']
+    'dailyspend': ['Spent Today', 'GBP', 'cash'],
+    'pots': ['Balance', 'GBP', 'cash']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -169,6 +170,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         dev = []
         print("making a sensor")
         for resource in config.get(CONF_MONITORED_RESOURCES):
+            if resource == 'pots':
+                for pot in client.get_pots()['pots']:
+                    dev.append(MonzoSensor(client, config_path, resource, pot['id']))
+            else:
                 dev.append(MonzoSensor(client, config_path, resource, account_id))
 
         add_entities(dev, True)
@@ -279,16 +284,25 @@ class MonzoSensor(Entity):
         self.config_path = config_path
         self.resource_type = resource_type
         self.extra = extra
-        self._name = 'Monzo Balance'
         print("made a sensor")
-        self._name = MONZO_RESOURCES_LIST[self.resource_type][0]
-        self._unit_of_measurement = MONZO_RESOURCES_LIST[self.resource_type][1]
-        self._state = 0
+
+        if self.resource_type == 'pots':
+            pots = self.client.get_pots()['pots']
+            pot = [pot for pot in pots if (pot['id'] == self._account_id)][0]
+            self._name = pot['name']
+        else:
+            self._name = MONZO_RESOURCES_LIST[self.resource_type][0]
 
         if account_id == "":
             self._account_id = self.client.get_first_account()['id']
         else:
             self._account_id = account_id
+
+        if self.resource_type in ['balance', 'dailyspend']:
+            self._unit_of_measurement = self.client.get_balance(self._account_id)['currency']
+        else:
+            self._unit_of_measurement = 'GBP'#self.client.get_pot(self._account_id)['currency']
+        self._state = 0
 
     @property
     def name(self):
@@ -327,6 +341,10 @@ class MonzoSensor(Entity):
             self._state = self.client.get_balance(self._account_id)['balance'] / 100
         elif self.resource_type == 'dailyspend':
             self._state = self.client.get_balance(self._account_id)['spend_today'] / 100
+        elif self.resource_type == 'pots':
+            pots = self.client.get_pots()['pots']
+            pot = [pot for pot in pots if (pot['id'] ==self._account_id)][0]
+            self._state = pot['balance'] / 100
 
         token = self.client.oauth_session.session.token
         config_contents = {
