@@ -468,7 +468,12 @@ class InsteonEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self.name
+        if self._insteon_device_state.group == 0x01:
+            uid = self._insteon_device.id
+        else:
+            uid = '{:s}_{:d}'.format(self._insteon_device.id,
+                                     self._insteon_device_state.group)
+        return uid
 
     @property
     def name(self):
