@@ -8,7 +8,7 @@ https://home-assistant.io/components/alarm_control_panel.elkm1/
 import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    ATTR_CODE, ATTR_ENTITY_ID, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMING, STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.components.elkm1 import (
@@ -22,8 +22,13 @@ DEPENDENCIES = [ELK_DOMAIN]
 SIGNAL_ARM_ENTITY = 'elkm1_arm'
 SIGNAL_DISPLAY_MESSAGE = 'elkm1_display_message'
 
+ELK_ALARM_SERVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
+    vol.Required(ATTR_CODE): vol.All(vol.Coerce(int), vol.Range(0, 999999)),
+})
+
 DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
     vol.Optional('clear', default=2): vol.In([0, 1, 2]),
     vol.Optional('beep', default=False): cv.boolean,
     vol.Optional('timeout', default=0): vol.Range(min=0, max=65535),
@@ -40,23 +45,27 @@ async def async_setup_platform(hass, config, async_add_entities,
     entities = create_elk_entities(hass, elk.areas, 'area', ElkArea, [])
     async_add_entities(entities, True)
 
+    def _dispatch(signal, entity_ids, *args):
+        for entity_id in entity_ids:
+            async_dispatcher_send(
+                hass, '{}_{}'.format(signal, entity_id), *args)
+
     def _arm_service(service):
         entity_ids = service.data.get(ATTR_ENTITY_ID, [])
         arm_level = _arm_services().get(service.service)
-        code = service.data.get('code')
-        if arm_level and code:
-            args = (entity_ids, arm_level, code)
-            async_dispatcher_send(hass, SIGNAL_ARM_ENTITY, *args)
+        args = (arm_level, service.data.get(ATTR_CODE))
+        _dispatch(SIGNAL_ARM_ENTITY, entity_ids, *args)
 
     for service in _arm_services():
         hass.services.async_register(
-            alarm.DOMAIN, service, _arm_service, alarm.ALARM_SERVICE_SCHEMA)
+            alarm.DOMAIN, service, _arm_service, ELK_ALARM_SERVICE_SCHEMA)
 
     def _display_message_service(service):
+        entity_ids = service.data.get(ATTR_ENTITY_ID, [])
         data = service.data
         args = (data['clear'], data['beep'], data['timeout'],
                 data['line1'], data['line2'])
-        async_dispatcher_send(hass, SIGNAL_DISPLAY_MESSAGE, *args)
+        _dispatch(SIGNAL_DISPLAY_MESSAGE, entity_ids, *args)
 
     hass.services.async_register(
         alarm.DOMAIN, 'elkm1_alarm_display_message',
@@ -88,9 +97,11 @@ class ElkArea(ElkDeviceBase, alarm.AlarmControlPanel):
         for keypad in self._elk.keypads:
             keypad.add_callback(self._watch_keypad)
         async_dispatcher_connect(
-            self.hass, SIGNAL_ARM_ENTITY, self._arm_service)
+            self.hass, '{}_{}'.format(SIGNAL_ARM_ENTITY, self.entity_id),
+            self._arm_service)
         async_dispatcher_connect(
-            self.hass, SIGNAL_DISPLAY_MESSAGE, self._display_message)
+            self.hass, '{}_{}'.format(SIGNAL_DISPLAY_MESSAGE, self.entity_id),
+            self._display_message)
 
     def _watch_keypad(self, keypad, changeset):
         if keypad.area != self._element.index:
@@ -163,29 +174,28 @@ class ElkArea(ElkDeviceBase, alarm.AlarmControlPanel):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._element.disarm(int(code))
+        self._element.disarm(code)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         from elkm1_lib.const import ArmLevel
 
-        self._element.arm(ArmLevel.ARMED_STAY.value, int(code))
+        self._element.arm(ArmLevel.ARMED_STAY.value, code)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         from elkm1_lib.const import ArmLevel
 
-        self._element.arm(ArmLevel.ARMED_AWAY.value, int(code))
+        self._element.arm(ArmLevel.ARMED_AWAY.value, code)
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
         from elkm1_lib.const import ArmLevel
 
-        self._element.arm(ArmLevel.ARMED_NIGHT.value, int(code))
+        self._element.arm(ArmLevel.ARMED_NIGHT.value, code)
 
-    async def _arm_service(self, entity_ids, arm_level, code):
-        if self.entity_id in entity_ids:
-            self._element.arm(arm_level, int(code))
+    async def _arm_service(self, arm_level, code):
+        self._element.arm(arm_level, code)
 
     async def _display_message(self, clear, beep, timeout, line1, line2):
         """Display a message on all keypads for the area."""

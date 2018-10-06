@@ -41,6 +41,19 @@ CONF_SHOW = 'show'
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORTED_DOMAINS = ['alarm_control_panel']
+
+
+def host_validator(config):
+    if config[CONF_HOST].startswith('elks://'):
+        if CONF_USERNAME not in config or CONF_PASSWORD not in config:
+            raise vol.Invalid("Specify username and password for elks://")
+    elif not config[CONF_HOST].startswith('elk://') and \
+        not config[CONF_HOST].startswith('serial://'):
+        raise vol.Invalid("Invalid host URL")
+    return config
+
+
 CONFIG_SCHEMA_SUBDOMAIN = vol.Schema({
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
     vol.Optional(CONF_INCLUDE): list,
@@ -48,26 +61,27 @@ CONFIG_SCHEMA_SUBDOMAIN = vol.Schema({
     })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT):
-            cv.temperature_unit,
-        vol.Optional(CONF_AREA): CONFIG_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_COUNTER): CONFIG_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_KEYPAD): CONFIG_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_OUTPUT): CONFIG_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_PLC): CONFIG_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_SETTING): CONFIG_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_TASK): CONFIG_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_THERMOSTAT): CONFIG_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_USER): CONFIG_SCHEMA_SUBDOMAIN,
-        vol.Optional(CONF_ZONE): CONFIG_SCHEMA_SUBDOMAIN,
-    })
+    DOMAIN: vol.Schema(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_USERNAME): cv.string,
+            vol.Optional(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT):
+                cv.temperature_unit,
+            vol.Optional(CONF_AREA): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_COUNTER): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_KEYPAD): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_OUTPUT): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_PLC): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_SETTING): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_TASK): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_THERMOSTAT): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_USER): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_ZONE): CONFIG_SCHEMA_SUBDOMAIN,
+        },
+        host_validator,
+    )
 }, extra=vol.ALLOW_EXTRA)
-
-SUPPORTED_DOMAINS = ['alarm_control_panel']
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
@@ -134,9 +148,6 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     host = config_raw[CONF_HOST]
     username = config_raw.get(CONF_USERNAME)
     password = config_raw.get(CONF_PASSWORD)
-    if host.startswith('elks:') and (username is None or password is None):
-        _LOGGER.error("Specify username & password for elks://")
-        return False
 
     for item, max_ in configs.items():
         config[item] = {}
