@@ -18,7 +18,6 @@ from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.const import ATTR_ID
 from homeassistant.const import CONF_ID
 from homeassistant.helpers.entity import Entity
-#from homeassistant.helpers.icon import icon_for_battery_level
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
