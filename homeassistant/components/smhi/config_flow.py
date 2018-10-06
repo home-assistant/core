@@ -13,8 +13,6 @@ The input location will be checked by invoking
 the API. Exception will be thrown if the location
 is not supported by the API (Swedish location only)
 """
-from typing import Dict
-
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -55,15 +53,6 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
         """Handle the flow logic for SMHI location config."""
         self._errors = {}
 
-        # If hass config has the location set and
-        # is a valid coordinate andit is not configured
-        # already, the defaultlocation is created at
-        # home coordinates
-        if not self._home_location_exists() and \
-           await self._homeassistant_location_exists():
-            return await self._create_home_location_entry()
-
-        # Add the location if not already exists
         if user_input is not None:
             is_ok = await self._check_location(
                 user_input[CONF_LONGITUDE],
@@ -80,6 +69,17 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
                 self._errors[CONF_NAME] = 'name_exists'
             else:
                 self._errors['base'] = 'wrong_location'
+
+        # If hass config has the location set and
+        # is a valid coordinate the default location
+        # is set as default values in the form
+        if not smhi_locations(self.hass):
+            if await self._homeassistant_location_exists():
+                return await self._show_config_form(
+                    name=HOME_LOCATION_NAME,
+                    latitude=self.hass.config.latitude,
+                    longitude=self.hass.config.longitude
+                )
 
         return await self._show_config_form()
 
@@ -106,24 +106,17 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
             return True
         return False
 
-    async def _create_home_location_entry(self) -> Dict:
-        """Create default home location entry."""
-        return self.async_create_entry(
-            title=HOME_LOCATION_NAME,
-            data={
-                CONF_NAME: HOME_LOCATION_NAME,
-                CONF_LATITUDE: self.hass.config.latitude,
-                CONF_LONGITUDE: self.hass.config.longitude
-            })
-
-    async def _show_config_form(self):
+    async def _show_config_form(self,
+                                name: str = None,
+                                latitude: str = None,
+                                longitude: str = None):
         """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id='init',
             data_schema=vol.Schema({
-                vol.Required(CONF_NAME): str,
-                vol.Required(CONF_LATITUDE): cv.latitude,
-                vol.Required(CONF_LONGITUDE): cv.longitude
+                vol.Required(CONF_NAME, default=name): str,
+                vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
+                vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude
             }),
             errors=self._errors,
         )
