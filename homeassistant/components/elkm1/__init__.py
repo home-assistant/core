@@ -198,7 +198,7 @@ class ElkEntity(Entity):
 
     @property
     def unique_id(self):
-        """Unique id of the element."""
+        """Return unique id of the element."""
         return self._unique_id
 
     @property
