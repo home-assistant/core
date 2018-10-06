@@ -10,8 +10,11 @@ import logging
 
 from datetime import timedelta
 
-from homeassistant.components.switch import SwitchDevice
 from homeassistant.components import unifi
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.unifi.const import (
+    CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID)
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
@@ -36,7 +39,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     Switches are controlling switch ports with Poe.
     """
-    controller = hass.data[unifi.DOMAIN][config_entry.data['host']]
+    controller_id = CONTROLLER_ID.format(
+        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
+        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
+    )
+    controller = hass.data[unifi.DOMAIN][controller_id]
     switches = {}
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)

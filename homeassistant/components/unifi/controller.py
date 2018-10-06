@@ -6,9 +6,10 @@ import async_timeout
 from aiohttp import CookieJar
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 
-from .const import LOGGER
+from .const import CONF_CONTROLLER, CONF_POE_CONTROL, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -27,7 +28,7 @@ class UniFiController:
     @property
     def host(self):
         """Return the host of this controller."""
-        return self.config_entry.data['host']
+        return self.config_entry.data[CONF_CONTROLLER][CONF_HOST]
 
     @property
     def mac(self):
@@ -45,7 +46,7 @@ class UniFiController:
 
         try:
             self.api = await get_controller(
-                self.hass, **self.config_entry.data)
+                self.hass, **self.config_entry.data[CONF_CONTROLLER])
             await self.api.initialize()
 
         except CannotConnect:
@@ -69,8 +70,10 @@ class UniFiController:
                 'Unknown error connecting with UniFi controller.')
             return False
 
-        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-            self.config_entry, 'switch'))
+        if self.config_entry.data[CONF_POE_CONTROL]:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, 'switch'))
 
         return True
 

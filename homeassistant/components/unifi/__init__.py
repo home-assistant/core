@@ -10,9 +10,11 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import CONF_SITE_ID, DOMAIN, LOGGER
+from .const import (CONF_CONTROLLER, CONF_POE_CONTROL, CONF_SITE_ID,
+    CONTROLLER_ID, DOMAIN, LOGGER)
 from .controller import UniFiController, get_controller
 from .errors import AuthenticationRequired, CannotConnect, UserLevel
 
@@ -34,7 +36,11 @@ async def async_setup_entry(hass, config_entry):
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][controller.host] = controller
+    controller_id = CONTROLLER_ID.format(
+        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
+        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
+    )
+    hass.data[DOMAIN][controller_id] = controller
 
     if not await controller.async_setup():
         return False
@@ -47,12 +53,8 @@ async def async_setup_entry(hass, config_entry):
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
-        # identifiers={
-        #     (DOMAIN, config.bridgeid)
-        # },
         manufacturer='Ubiquity',
         # name=config.name,
-        # model=config.raw['modelid'],
         # sw_version=config.raw['swversion'],
     )
 
@@ -61,7 +63,11 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    controller = hass.data[DOMAIN].pop(config_entry.data['host'])
+    controller_id = CONTROLLER_ID.format(
+        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
+        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
+    )
+    controller = hass.data[DOMAIN].pop(controller_id)
     return await controller.async_reset()
 
 
@@ -86,7 +92,7 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
 
         if user_input is not None:
             try:
-                data = {
+                controller_data = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
@@ -96,16 +102,21 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
                     CONF_VERIFY_SSL: user_input.get(
                         CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                 }
-                controller = await get_controller(self.hass, **data)
+                controller = await get_controller(self.hass, **controller_data)
 
                 sites = await controller.sites()
-                name = data[CONF_SITE_ID]
+                name = controller_data[CONF_SITE_ID]
                 for site in sites.values():
-                    if data[CONF_SITE_ID] == site['name']:
+                    if name == site['name']:
                         if site['role'] != 'admin':
                             raise UserLevel
                         name = site['desc']
                         break
+
+                data = {
+                    CONF_CONTROLLER: controller_data,
+                    CONF_POE_CONTROL: True
+                }
 
                 return self.async_create_entry(
                     title=name,
