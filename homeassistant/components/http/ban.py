@@ -88,10 +88,14 @@ async def process_wrong_login(request):
     """
     remote_addr = request[KEY_REAL_IP]
 
+    log_path = request.path
+    last_slash_index = log_path.find('/', 5)
+    if (last_slash_index > 0):
+        log_path = log_path[:last_slash_index + 1] + '...'
     msg = ('Login attempt or request with invalid authentication '
            'from {}. Method: {}, Path: {}'.format(remote_addr,
                                                   request.method,
-                                                  request.path))
+                                                  log_path))
     _LOGGER.warning(msg)
 
     hass = request.app['hass']
