@@ -144,7 +144,7 @@ async def get_controller(
     import aiounifi
 
     if verify_ssl:
-        session = aiohttp_client.async_create_clientsession(hass)
+        session = aiohttp_client.async_get_clientsession(hass)
     else:
         session = aiohttp_client.async_create_clientsession(
             hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True))

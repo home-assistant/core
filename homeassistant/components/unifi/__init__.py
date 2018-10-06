@@ -40,10 +40,11 @@ async def async_setup_entry(hass, config_entry):
         host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
         site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
     )
-    hass.data[DOMAIN][controller_id] = controller
 
     if not await controller.async_setup():
         return False
+
+    hass.data[DOMAIN][controller_id] = controller
 
     if controller.mac is None:
         return True
@@ -53,7 +54,7 @@ async def async_setup_entry(hass, config_entry):
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
-        manufacturer='Ubiquity',
+        manufacturer='Ubiquiti',
         # name=config.name,
         # sw_version=config.raw['swversion'],
     )
@@ -96,7 +97,8 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
                 controller_id = CONTROLLER_ID.format(
                     host=user_input[CONF_HOST], site=user_input[CONF_SITE_ID]
                 )
-                if controller_id in self.hass.data[DOMAIN]:
+                if DOMAIN in self.hass.data and \
+                   controller_id in self.hass.data[DOMAIN]:
                     raise AlreadyConfigured
 
                 controller_data = {
@@ -143,7 +145,7 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
                 errors['base'] = 'user_privilege'
 
             except Exception:  # pylint: disable=broad-except
-                LOGGER.exception(
+                LOGGER.error(
                     'Unknown error connecting with UniFi Controller at %s',
                     user_input[CONF_HOST])
                 return self.async_abort(reason='unknown')
