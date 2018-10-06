@@ -282,17 +282,17 @@ class MonzoSensor(Entity):
         self.resource_type = resource_type
         self.extra = extra
 
+        if account_id == "":
+            self._account_id = self.client.get_first_account()['id']
+        else:
+            self._account_id = account_id
+
         if self.resource_type == 'pots':
             pots = self.client.get_pots()['pots']
             pot = [pot for pot in pots if (pot['id'] == self._account_id)][0]
             self._name = pot['name']
         else:
             self._name = MONZO_RESOURCES_LIST[self.resource_type][0]
-
-        if account_id == "":
-            self._account_id = self.client.get_first_account()['id']
-        else:
-            self._account_id = account_id
 
         if self.resource_type in ['balance', 'dailyspend']:
             self._unit_of_measurement = self.client.get_balance(self._account_id)['currency']
