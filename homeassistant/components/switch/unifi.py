@@ -43,9 +43,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     switches_off = await store.async_load()
     if switches_off is None:
         switches_off = {}
-    controller.api.clients.process_raw([switch['data']
-                                        for switch in switches_off.values()]
-                                       )
+    controller.api.clients.process_raw(
+        [switch['data'] for switch in switches_off.values()]
+    )
 
     progress = None
     update_progress = set()
@@ -130,8 +130,8 @@ async def async_update_items(controller, async_add_entities,
             }
             store.async_delay_save(_data_to_save, SAVE_DELAY)
 
-        elif switch.port.poe_mode != 'off' and \
-           switch.client.mac in switches_off:
+        elif (switch.port.poe_mode != 'off' and
+              switch.client.mac in switches_off):
             del switches_off[switch.client.mac]
             store.async_delay_save(_data_to_save, SAVE_DELAY)
 
