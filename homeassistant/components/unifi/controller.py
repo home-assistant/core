@@ -93,8 +93,10 @@ class UniFiController:
         if self.api is None:
             return True
 
-        return await self.hass.config_entries.async_forward_entry_unload(
-            self.config_entry, 'switch')
+        if self.config_entry.data[CONF_POE_CONTROL]:
+            return await self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'switch')
+        return True
 
     async def request_update(self):
         """Only allow one request at a time."""

@@ -10,11 +10,10 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import (CONF_CONTROLLER, CONF_POE_CONTROL, CONF_SITE_ID,
-    CONTROLLER_ID, DOMAIN, LOGGER)
+                    CONTROLLER_ID, DOMAIN, LOGGER)
 from .controller import UniFiController, get_controller
 from .errors import AuthenticationRequired, CannotConnect, UserLevel
 
@@ -22,7 +21,7 @@ DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = 'default'
 DEFAULT_VERIFY_SSL = False
 
-REQUIREMENTS = ['aiounifi==2']
+REQUIREMENTS = ['aiounifi==3']
 
 
 async def async_setup(hass, config):
