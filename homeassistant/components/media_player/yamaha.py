@@ -184,13 +184,11 @@ class YamahaDevice(MediaPlayerDevice):
         self._playback_support = self.receiver.get_playback_support()
         self._is_playback_supported = self.receiver.is_playback_supported(
             self._current_source)
-        try:
+        if self._zone == "Main_Zone":
             self._sound_mode = self.receiver.surround_program
-        except:
-            self._sound_mode = None
-        try:
             self._sound_mode_list = self.receiver.surround_programs()
-        except:
+        else:
+            self._sound_mode = None
             self._sound_mode_list = None
 
     def build_source_list(self):
