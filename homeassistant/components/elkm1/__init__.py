@@ -95,7 +95,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         """Parse a value as an int or housecode."""
         i = int(val) if val.isdigit() else (housecode_to_index(val) + 1)
         if i < 1 or i > max_:
-            raise vol.Invalid('Value not in range 1-%d: "%s"' % (max_, val))
+            raise ValueError('Value not in range 1 to %d: "%s"' % (max_, val))
         return i
 
     def parse_range(config, item, set_to, values, max_):
@@ -134,23 +134,28 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     username = config_raw.get(CONF_USERNAME)
     password = config_raw.get(CONF_PASSWORD)
     if host.startswith('elks:') and (username is None or password is None):
-        raise vol.Invalid("Specify username & password for elks://")
+        _LOGGER.error("Specify username & password for elks://")
+        return False
 
     for item, max_ in configs.items():
         config[item] = {}
-        (config[item]['enabled'], config[item]['included']) = \
-            parse_config(item, max_)
+        try:
+            (config[item]['enabled'], config[item]['included']) = \
+                parse_config(item, max_)
+        except ValueError as err:
+            _LOGGER.error("Config item: %s; %s", item, err)
+            return False
 
     config['temperature_unit'] = config_raw[CONF_TEMPERATURE_UNIT]
 
     elk = elkm1.Elk({'url': host, 'userid': username, 'password': password})
     elk.connect()
 
-    hass.data[DOMAIN] = {'elk': elk, 'config': config,
-                         'entities': {}, 'keypads': {}}
+    hass.data[DOMAIN] = {'elk': elk, 'config': config, 'keypads': {}}
     for component in SUPPORTED_DOMAINS:
         hass.async_create_task(
             discovery.async_load_platform(hass, component, DOMAIN))
+
     return True
 
 

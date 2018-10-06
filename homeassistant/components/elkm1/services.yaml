@@ -51,23 +51,3 @@ alarm_display_message:
     line2:
       description: Up to 16 characters of text (truncated if too long). Default blank.
       example: the universe, and everything.
-
-sensor_speak_word:
-  description: Speak a word. See list in ElkM1 ASCII Protocol documentation.
-  fields:
-    entity_id:
-      description: Name of panel to speak.
-      example: 'sensor.elkm1_panel_001'
-    number:
-      description: Word number to speak.
-      example: 458
-
-sensor_speak_phrase:
-  description: Speak a phrase. See list in ElkM1 ASCII Protocol documentation.
-  fields:
-    entity_id:
-      description: Name of panel to speak.
-      example: 'sensor.elkm1_panel_001'
-    number:
-      description: Phrase number to speak.
-      example: 42
