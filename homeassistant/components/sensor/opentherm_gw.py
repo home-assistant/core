@@ -23,6 +23,7 @@ DEPENDENCIES = ['opentherm_gw']
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the OpenTherm Gateway sensors."""
@@ -100,9 +101,11 @@ async def async_setup_platform(hass, config, async_add_entities,
         gw_vars.DATA_OEM_DIAG: [None, None, "OEM Diagnostic Code"],
         gw_vars.DATA_CH_BURNER_STARTS: [
             None, None, "Central Heating Burner Starts"],
-        gw_vars.DATA_CH_PUMP_STARTS: [None, None, "Central Heating Pump Starts"],
+        gw_vars.DATA_CH_PUMP_STARTS: [
+            None, None, "Central Heating Pump Starts"],
         gw_vars.DATA_DHW_PUMP_STARTS: [None, None, "Hot Water Pump Starts"],
-        gw_vars.DATA_DHW_BURNER_STARTS: [None, None, "Hot Water Burner Starts"],
+        gw_vars.DATA_DHW_BURNER_STARTS: [
+            None, None, "Hot Water Burner Starts"],
         gw_vars.DATA_CH_BURNER_HOURS: [
             None, UNIT_HOUR, "Central Heating Burner Hours"],
         gw_vars.DATA_CH_PUMP_HOURS: [
@@ -112,8 +115,10 @@ async def async_setup_platform(hass, config, async_add_entities,
             None, UNIT_HOUR, "Hot Water Burner Hours"],
         gw_vars.DATA_MASTER_OT_VERSION: [
             None, None, "Thermostat OpenTherm Version"],
-        gw_vars.DATA_SLAVE_OT_VERSION: [None, None, "Boiler OpenTherm Version"],
-        gw_vars.DATA_MASTER_PRODUCT_TYPE: [None, None, "Thermostat Product Type"],
+        gw_vars.DATA_SLAVE_OT_VERSION: [
+            None, None, "Boiler OpenTherm Version"],
+        gw_vars.DATA_MASTER_PRODUCT_TYPE: [
+            None, None, "Thermostat Product Type"],
         gw_vars.DATA_MASTER_PRODUCT_VERSION: [
             None, None, "Thermostat Product Version"],
         gw_vars.DATA_SLAVE_PRODUCT_TYPE: [None, None, "Boiler Product Type"],
