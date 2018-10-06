@@ -85,7 +85,7 @@ def test_valid_api_key(mock_app):
     mock_app.assert_called_with(api_key=MOCK_API_KEY)
 
 
-def test_invalid_api_key(mock_app_with_error, caplog): #
+def test_invalid_api_key(mock_app_with_error, caplog):
     """Test that an invalid api key is caught."""
     assert cg.validate_api_key(MOCK_API_KEY) is None
     assert "Clarifai error: API Key not found" in caplog.text
