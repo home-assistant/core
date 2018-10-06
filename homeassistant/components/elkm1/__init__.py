@@ -94,8 +94,9 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     def parse_value(val, max_):
         """Parse a value as an int or housecode."""
         i = int(val) if val.isdigit() else (housecode_to_index(val) + 1)
-        if i < 1 or i > max_:
-            raise ValueError('Value not in range 1 to %d: "%s"' % (max_, val))
+        msg = 'Value not in range 1 to {}: "{}"'.format(max_, val)
+        schema = vol.Schema(vol.Range(1, max_, msg=msg))
+        schema(i)
         return i
 
     def parse_range(config, item, set_to, values, max_):
@@ -142,7 +143,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         try:
             (config[item]['enabled'], config[item]['included']) = \
                 parse_config(item, max_)
-        except ValueError as err:
+        except (ValueError, vol.Invalid) as err:
             _LOGGER.error("Config item: %s; %s", item, err)
             return False
 
