@@ -7,14 +7,7 @@ https://home-assistant.io/components/ebus/
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
-
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 
 DOMAIN = 'ebus'
 
@@ -24,6 +17,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass, config):
     """Set up climate devices."""

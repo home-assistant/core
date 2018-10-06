@@ -1,9 +1,6 @@
 """Constants for ebus component."""
 DOMAIN = 'ebus'
 
-STATE_DAY = 'day'
-STATE_NIGHT = 'night'
-
 READ_COMMAND = 'read -m {2} -c {0} {1}\n'
 WRITE_COMMAND = 'write -c {0} {1} {2}\n'
 
