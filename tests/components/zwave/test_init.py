@@ -35,6 +35,7 @@ def test_valid_device_config(hass, mock_openzwave):
         'zwave': {
             'device_config': device_config
         }})
+    yield from hass.async_block_till_done()
 
     assert result
 
@@ -51,6 +52,7 @@ def test_invalid_device_config(hass, mock_openzwave):
         'zwave': {
             'device_config': device_config
         }})
+    yield from hass.async_block_till_done()
 
     assert not result
 
@@ -75,6 +77,7 @@ def test_network_options(hass, mock_openzwave):
             'usb_path': 'mock_usb_path',
             'config_path': 'mock_config_path',
         }})
+    yield from hass.async_block_till_done()
 
     assert result
 

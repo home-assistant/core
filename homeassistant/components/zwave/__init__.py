@@ -254,8 +254,6 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    _LOGGER.debug("Setting up Z-Wave from config entry")
-
     from pydispatch import dispatcher
     # pylint: disable=import-error
     from openzwave.option import ZWaveOption
@@ -287,7 +285,6 @@ async def async_setup_entry(hass, config_entry):
         options.addOption("NetworkKey", config_entry.data[CONF_NETWORK_KEY])
 
     options.lock()
-
     network = hass.data[DATA_NETWORK] = ZWaveNetwork(options, autostart=False)
     hass.data[DATA_DEVICES] = {}
     hass.data[DATA_ENTITY_VALUES] = []
@@ -777,11 +774,7 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.info("Z-Wave network autoheal is enabled")
         async_track_time_change(hass, heal_network, hour=0, minute=0, second=0)
 
-    if hass.state == CoreState.not_running:
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, start_zwave)
-    else:
-        start_zwave(None)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 
     return True
 
