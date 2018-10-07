@@ -109,10 +109,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertEqual(STATE_ON, group_state.state)
 
     def test_allgroup_stays_off_if_all_are_off_and_one_turns_on(self):
-        """
-        Test if group with all: true stays off if all devices were turned off
-        and one turns on.
-        """
+        """group with all: true, stay off if one device turns on."""
         self.hass.states.set('light.Bowl', STATE_OFF)
         self.hass.states.set('light.Ceiling', STATE_OFF)
         test_group = group.Group.create_group(
@@ -127,9 +124,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertEqual(STATE_OFF, group_state.state)
 
     def test_allgroup_turn_on_if_last_turns_on(self):
-        """
-        Test if group with all: true turns on if last off-device turns on.
-        """
+        """group with all: true, turn on if all devices are on."""
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
         test_group = group.Group.create_group(
