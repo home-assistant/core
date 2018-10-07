@@ -28,21 +28,16 @@ CONF_OUTPUT = 'output'
 CONF_SETTING = 'setting'
 CONF_TASK = 'task'
 CONF_THERMOSTAT = 'thermostat'
-CONF_USER = 'user'
-CONF_PANEL = 'panel'
 CONF_PLC = 'plc'
 CONF_ZONE = 'zone'
-
 CONF_ENABLED = 'enabled'
-CONF_HIDE = 'hide'
-CONF_SHOW = 'show'
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_DOMAINS = ['alarm_control_panel']
 
 
-def host_validator(config):
+def _host_validator(config):
     """Validate that a host is properly configured."""
     if config[CONF_HOST].startswith('elks://'):
         if CONF_USERNAME not in config or CONF_PASSWORD not in config:
@@ -53,18 +48,29 @@ def host_validator(config):
     return config
 
 
+def _elk_range_validator(rng):
+    def _elk_value(val):
+        from elkm1_lib.message import housecode_to_index
+        return int(val) if val.isdigit() else (housecode_to_index(val) + 1)
+
+    vals = [s.strip() for s in str(rng).split('-')]
+    start = _elk_value(vals[0])
+    end = start if len(vals) == 1 else _elk_value(vals[1])
+    return (start, end)
+
+
 CONFIG_SCHEMA_SUBDOMAIN = vol.Schema({
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-    vol.Optional(CONF_INCLUDE): list,
-    vol.Optional(CONF_EXCLUDE): list
-    })
+    vol.Optional(CONF_INCLUDE, default=[]): [_elk_range_validator],
+    vol.Optional(CONF_EXCLUDE, default=[]): [_elk_range_validator],
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema(
         {
             vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_USERNAME): cv.string,
-            vol.Optional(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_USERNAME, default=''): cv.string,
+            vol.Optional(CONF_PASSWORD, default=''): cv.string,
             vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT):
                 cv.temperature_unit,
             vol.Optional(CONF_AREA): CONFIG_SCHEMA_SUBDOMAIN,
@@ -75,10 +81,9 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_SETTING): CONFIG_SCHEMA_SUBDOMAIN,
             vol.Optional(CONF_TASK): CONFIG_SCHEMA_SUBDOMAIN,
             vol.Optional(CONF_THERMOSTAT): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_USER): CONFIG_SCHEMA_SUBDOMAIN,
             vol.Optional(CONF_ZONE): CONFIG_SCHEMA_SUBDOMAIN,
         },
-        host_validator,
+        _host_validator,
     )
 }, extra=vol.ALLOW_EXTRA)
 
@@ -86,7 +91,6 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
     from elkm1_lib.const import Max
-    from elkm1_lib.message import housecode_to_index
     import elkm1_lib as elkm1
 
     configs = {
@@ -94,71 +98,35 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         CONF_COUNTER: Max.COUNTERS.value,
         CONF_KEYPAD: Max.KEYPADS.value,
         CONF_OUTPUT: Max.OUTPUTS.value,
-        CONF_PANEL: 1,
         CONF_PLC: Max.LIGHTS.value,
         CONF_SETTING: Max.SETTINGS.value,
         CONF_TASK: Max.TASKS.value,
         CONF_THERMOSTAT: Max.THERMOSTATS.value,
-        CONF_USER: Max.USERS.value,
         CONF_ZONE: Max.ZONES.value,
     }
 
-    def parse_value(val, max_):
-        """Parse a value as an int or housecode."""
-        i = int(val) if val.isdigit() else (housecode_to_index(val) + 1)
-        msg = 'Value not in range 1 to {}: "{}"'.format(max_, val)
-        schema = vol.Schema(vol.Range(1, max_, msg=msg))
-        schema(i)
-        return i
-
-    def parse_range(config, item, set_to, values, max_):
-        """Parse a range list, e.g. range in form of 3 or 2-7."""
-        ranges = config.get(item, [])
+    def _included(ranges, set_to, values):
         for rng in ranges:
-            rng = str(rng)
-            if '-' in rng:
-                rng_vals = [s.strip() for s in rng.split('-')]
-                start = parse_value(rng_vals[0], max_)
-                end = parse_value(rng_vals[1], max_)
-            else:
-                start = end = parse_value(rng, max_)
-            values[start-1:end] = [set_to] * (end - start + 1)
+            if not rng[0] <= rng[1] <= len(values):
+                raise vol.Invalid("Invalid range {}".format(rng))
+            values[rng[0]-1:rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
-    def parse_config(item, max_):
-        """Parse a config for an element type such as: zones, plc, etc."""
-        if item not in config_raw:
-            return (True, [True] * max_)
-
-        conf = config_raw[item]
-
-        if CONF_ENABLED in conf and not conf[CONF_ENABLED]:
-            return (False, [False] * max_)
-
-        included = [CONF_INCLUDE not in conf] * max_
-        parse_range(conf, CONF_INCLUDE, True, included, max_)
-        parse_range(conf, CONF_EXCLUDE, False, included, max_)
-
-        return (True, included)
-
-    config_raw = hass_config.get(DOMAIN)
-    config = {}
-
-    host = config_raw[CONF_HOST]
-    username = config_raw.get(CONF_USERNAME)
-    password = config_raw.get(CONF_PASSWORD)
+    conf = hass_config.get(DOMAIN)
+    config = {'temperature_unit': conf[CONF_TEMPERATURE_UNIT]}
+    config['panel'] = {'enabled': True, 'included': [True]}
 
     for item, max_ in configs.items():
-        config[item] = {}
+        config[item] = {'enabled': conf[item][CONF_ENABLED],
+                        'included': [len(conf[item]['include']) == 0] * max_}
         try:
-            (config[item]['enabled'], config[item]['included']) = \
-                parse_config(item, max_)
+            _included(conf[item]['include'], True, config[item]['included'])
+            _included(conf[item]['exclude'], False, config[item]['included'])
         except (ValueError, vol.Invalid) as err:
             _LOGGER.error("Config item: %s; %s", item, err)
             return False
 
-    config['temperature_unit'] = config_raw[CONF_TEMPERATURE_UNIT]
-
-    elk = elkm1.Elk({'url': host, 'userid': username, 'password': password})
+    elk = elkm1.Elk({'url': conf[CONF_HOST], 'userid': conf[CONF_USERNAME],
+                     'password': conf[CONF_PASSWORD]})
     elk.connect()
 
     hass.data[DOMAIN] = {'elk': elk, 'config': config, 'keypads': {}}
@@ -172,10 +140,11 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 def create_elk_entities(hass, elk_elements, element_type, class_, entities):
     """Create the ElkM1 devices of a particular class."""
     elk_data = hass.data[DOMAIN]
-    elk = elk_data['elk']
-    for element in elk_elements:
-        if elk_data['config'][element_type]['included'][element.index]:
-            entities.append(class_(element, elk, elk_data))
+    if elk_data['config'][element_type]['enabled']:
+        elk = elk_data['elk']
+        for element in elk_elements:
+            if elk_data['config'][element_type]['included'][element.index]:
+                entities.append(class_(element, elk, elk_data))
     return entities
 
 
