@@ -1,16 +1,30 @@
 """Component to embed LIFX."""
 import asyncio
+import socket
 
 import async_timeout
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
 
 DOMAIN = 'lifx'
 REQUIREMENTS = ['aiolifx==0.6.3']
 
-UDP_BROADCAST_PORT = 56700
+CONF_SERVER = 'server'
+CONF_BROADCAST = 'broadcast'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: {
+        LIGHT_DOMAIN: {
+            vol.Optional(CONF_SERVER): cv.string,
+            vol.Optional(CONF_BROADCAST): cv.string,
+        }
+    }
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
@@ -29,7 +43,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up LIFX from a config entry."""
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-        entry, 'light'))
+        entry, LIGHT_DOMAIN))
     return True
 
 
@@ -41,7 +55,7 @@ async def _async_has_devices(hass):
     lifx_discovery = aiolifx.LifxDiscovery(hass.loop, manager)
     coro = hass.loop.create_datagram_endpoint(
         lambda: lifx_discovery,
-        local_addr=('0.0.0.0', UDP_BROADCAST_PORT))
+        family=socket.AF_INET)
     hass.async_create_task(coro)
 
     has_devices = await manager.found_devices()

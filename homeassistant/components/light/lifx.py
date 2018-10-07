@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lifx/
 """
 import asyncio
+import socket
 from datetime import timedelta
 from functools import partial
 import logging
@@ -17,12 +18,12 @@ from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME, ATTR_COLOR_TEMP,
     ATTR_EFFECT, ATTR_HS_COLOR, ATTR_KELVIN, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    ATTR_XY_COLOR, COLOR_GROUP, DOMAIN, LIGHT_TURN_ON_SCHEMA, PLATFORM_SCHEMA,
+    ATTR_XY_COLOR, COLOR_GROUP, DOMAIN as LIGHT_DOMAIN, LIGHT_TURN_ON_SCHEMA,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_TRANSITION, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
     preprocess_turn_on_alternatives)
 from homeassistant.components.lifx import (
-    UDP_BROADCAST_PORT, DOMAIN as LIFX_DOMAIN)
+    DOMAIN as LIFX_DOMAIN, CONF_SERVER, CONF_BROADCAST)
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -41,16 +42,6 @@ DISCOVERY_INTERVAL = 60
 MESSAGE_TIMEOUT = 1.0
 MESSAGE_RETRIES = 8
 UNAVAILABLE_GRACE = 90
-
-CONF_SERVER = 'server'
-CONF_BROADCAST = 'broadcast'
-
-CONFIG = {
-    vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
-    vol.Optional(CONF_BROADCAST, default='255.255.255.255'): cv.string,
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(CONFIG)
 
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
@@ -143,44 +134,31 @@ async def async_setup_platform(hass,
                                config,
                                async_add_entities,
                                discovery_info=None):
-    """Set up the LIFX light platform.
-
-    Deprecated.
-    """
-    _LOGGER.warning('Loading LIFX via light platform config is deprecated.')
-    await _async_setup_platform(
-        hass, config, async_add_entities, discovery_info)
+    """Set up the LIFX light platform. Obsolete."""
+    _LOGGER.warning('LIFX no longer works with light platform configuration.')
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up LIFX from a config entry."""
-    try:
-        config = vol.Schema(CONFIG)(hass.data[LIFX_DOMAIN].get('light', {}))
-        await _async_setup_platform(hass, config, async_add_entities, None)
-    except vol.Error as ex:
-        _LOGGER.error("Invalid configuration: %s", ex)
-
-
-async def _async_setup_platform(hass,
-                                config,
-                                async_add_entities,
-                                discovery_info=None):
-    """Set up the LIFX platform."""
     if sys.platform == 'win32':
         _LOGGER.warning("The lifx platform is known to not work on Windows. "
                         "Consider using the lifx_legacy platform instead")
 
-    server_addr = config.get(CONF_SERVER)
+    config = hass.data[LIFX_DOMAIN].get(LIGHT_DOMAIN, {})
 
     lifx_manager = LIFXManager(hass, async_add_entities)
-    lifx_discovery = aiolifx().LifxDiscovery(
-        hass.loop,
-        lifx_manager,
-        discovery_interval=DISCOVERY_INTERVAL,
-        broadcast_ip=config.get(CONF_BROADCAST))
 
-    coro = hass.loop.create_datagram_endpoint(
-        lambda: lifx_discovery, local_addr=(server_addr, UDP_BROADCAST_PORT))
+    broadcast_ip = config.get(CONF_BROADCAST)
+    kwargs = {'discovery_interval': DISCOVERY_INTERVAL}
+    if broadcast_ip:
+        kwargs['broadcast_ip'] = broadcast_ip
+    lifx_discovery = aiolifx().LifxDiscovery(hass.loop, lifx_manager, **kwargs)
+
+    kwargs = {'family': socket.AF_INET}
+    local_addr = config.get(CONF_SERVER)
+    if local_addr is not None:
+        kwargs['local_addr'] = (local_addr, 0)
+    coro = hass.loop.create_datagram_endpoint(lambda: lifx_discovery, **kwargs)
 
     hass.async_add_job(coro)
 
@@ -257,7 +235,7 @@ class LIFXManager:
                 await asyncio.wait(tasks, loop=self.hass.loop)
 
         self.hass.services.async_register(
-            DOMAIN, SERVICE_LIFX_SET_STATE, service_handler,
+            LIGHT_DOMAIN, SERVICE_LIFX_SET_STATE, service_handler,
             schema=LIFX_SET_STATE_SCHEMA)
 
     def register_effects(self):
@@ -270,15 +248,15 @@ class LIFXManager:
                     entities, service.service, **service.data)
 
         self.hass.services.async_register(
-            DOMAIN, SERVICE_EFFECT_PULSE, service_handler,
+            LIGHT_DOMAIN, SERVICE_EFFECT_PULSE, service_handler,
             schema=LIFX_EFFECT_PULSE_SCHEMA)
 
         self.hass.services.async_register(
-            DOMAIN, SERVICE_EFFECT_COLORLOOP, service_handler,
+            LIGHT_DOMAIN, SERVICE_EFFECT_COLORLOOP, service_handler,
             schema=LIFX_EFFECT_COLORLOOP_SCHEMA)
 
         self.hass.services.async_register(
-            DOMAIN, SERVICE_EFFECT_STOP, service_handler,
+            LIGHT_DOMAIN, SERVICE_EFFECT_STOP, service_handler,
             schema=LIFX_EFFECT_STOP_SCHEMA)
 
     async def start_effect(self, entities, service, **kwargs):
@@ -582,7 +560,7 @@ class LIFXLight(Light):
         data = {
             ATTR_ENTITY_ID: self.entity_id,
         }
-        await self.hass.services.async_call(DOMAIN, service, data)
+        await self.hass.services.async_call(LIGHT_DOMAIN, service, data)
 
     async def async_update(self):
         """Update bulb status."""
