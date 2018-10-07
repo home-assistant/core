@@ -170,11 +170,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         dev = []
         for resource in config.get(CONF_MONITORED_RESOURCES):
             if resource == 'pots':
-                for pot in client.get_pots()['pots']:
+                pot_ids = [pot['id'] for pot in client.get_pots()['pots']]
+                for pot in pot_ids:
                     new_sensor = MonzoSensor(client,
                                              config_path,
                                              resource,
-                                             pot['id'])
+                                             pot)
                     dev.append(new_sensor)
             else:
                 new_sensor = MonzoSensor(client,
