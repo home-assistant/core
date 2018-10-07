@@ -160,7 +160,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         kwargs['local_addr'] = (local_addr, 0)
     coro = hass.loop.create_datagram_endpoint(lambda: lifx_discovery, **kwargs)
 
-    hass.async_add_job(coro)
+    hass.async_create_task(coro)
 
     @callback
     def cleanup(event):
@@ -230,7 +230,7 @@ class LIFXManager:
             for light in self.service_to_entities(service):
                 if service.service == SERVICE_LIFX_SET_STATE:
                     task = light.set_state(**service.data)
-                tasks.append(self.hass.async_add_job(task))
+                tasks.append(self.hass.async_create_task(task))
             if tasks:
                 await asyncio.wait(tasks, loop=self.hass.loop)
 
