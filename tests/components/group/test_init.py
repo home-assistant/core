@@ -108,6 +108,41 @@ class TestComponentsGroup(unittest.TestCase):
         group_state = self.hass.states.get(test_group.entity_id)
         self.assertEqual(STATE_ON, group_state.state)
 
+    def test_allgroup_stays_off_if_all_are_off_and_one_turns_on(self):
+        """
+        Test if group with all: true stays off if all devices were turned off
+        and one turns on.
+        """
+        self.hass.states.set('light.Bowl', STATE_OFF)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group.create_group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False,
+            mode=True)
+
+        # Turn one on
+        self.hass.states.set('light.Ceiling', STATE_ON)
+        self.hass.block_till_done()
+
+        group_state = self.hass.states.get(test_group.entity_id)
+        self.assertEqual(STATE_OFF, group_state.state)
+
+    def test_allgroup_turn_on_if_last_turns_on(self):
+        """
+        Test if group with all: true turns on if all last off device turns on.
+        """
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group.create_group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False,
+            mode=True)
+
+        # Turn one on
+        self.hass.states.set('light.Ceiling', STATE_ON)
+        self.hass.block_till_done()
+
+        group_state = self.hass.states.get(test_group.entity_id)
+        self.assertEqual(STATE_ON, group_state.state)
+
     def test_is_on(self):
         """Test is_on method."""
         self.hass.states.set('light.Bowl', STATE_ON)
