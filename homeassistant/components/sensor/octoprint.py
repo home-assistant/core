@@ -8,6 +8,7 @@ import logging
 
 import requests
 
+from homeassistant.components.octoprint import SENSOR_TYPES
 from homeassistant.const import (TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 
@@ -19,19 +20,14 @@ DEFAULT_NAME = 'OctoPrint'
 NOTIFICATION_ID = 'octoprint_notification'
 NOTIFICATION_TITLE = 'OctoPrint sensor setup error'
 
-SENSOR_TYPES = {
-    'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
-    'Current State': ['printer', 'state', 'text', None],
-    'Job Percentage': ['job', 'progress', 'completion', '%'],
-    'Time Remaining': ['job', 'progress', 'printTimeLeft', 'seconds'],
-    'Time Elapsed': ['job', 'progress', 'printTime', 'seconds'],
-}
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint sensors."""
+    if discovery_info is None:
+        return
+
     name = discovery_info['name']
-    monitored_conditions = list(SENSOR_TYPES)
+    monitored_conditions = discovery_info['sensors']
     octoprint_api = hass.data[DOMAIN][name]
     tools = octoprint_api.get_tools()
 

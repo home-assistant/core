@@ -8,6 +8,7 @@ import logging
 
 import requests
 
+from homeassistant.components.octoprint import BINARY_SENSOR_TYPES
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,25 +17,23 @@ DEPENDENCIES = ['octoprint']
 DOMAIN = "octoprint"
 DEFAULT_NAME = 'OctoPrint'
 
-SENSOR_TYPES = {
-    # API Endpoint, Group, Key, unit
-    'Printing': ['printer', 'state', 'printing', None],
-    'Printing Error': ['printer', 'state', 'error', None]
-}
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""
+    if discovery_info is None:
+        return
+
     name = discovery_info['name']
-    monitored_conditions = list(SENSOR_TYPES)
+    monitored_conditions = discovery_info['sensors']
     octoprint_api = hass.data[DOMAIN][name]
 
     devices = []
     for octo_type in monitored_conditions:
         new_sensor = OctoPrintBinarySensor(
-            octoprint_api, octo_type, SENSOR_TYPES[octo_type][2],
-            name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
-            SENSOR_TYPES[octo_type][1], 'flags')
+            octoprint_api, octo_type, BINARY_SENSOR_TYPES[octo_type][2],
+            name, BINARY_SENSOR_TYPES[octo_type][3],
+            BINARY_SENSOR_TYPES[octo_type][0],
+            BINARY_SENSOR_TYPES[octo_type][1], 'flags')
         devices.append(new_sensor)
     add_entities(devices, True)
 

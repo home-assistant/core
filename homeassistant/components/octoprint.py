@@ -12,8 +12,10 @@ import voluptuous as vol
 from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant.components.discovery import SERVICE_OCTOPRINT
-from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON,
-                                 CONF_NAME, CONF_PORT, CONF_SSL)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON, CONF_NAME, CONF_PORT,
+    CONF_SSL, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
+    CONF_BINARY_SENSORS)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -38,6 +40,33 @@ def has_all_unique_names(value):
     return value
 
 
+BINARY_SENSOR_TYPES = {
+    # API Endpoint, Group, Key, unit
+    'Printing': ['printer', 'state', 'printing', None],
+    'Printing Error': ['printer', 'state', 'error', None]
+}
+
+BINARY_SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSOR_TYPES)):
+        vol.All(cv.ensure_list, [vol.In(BINARY_SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
+SENSOR_TYPES = {
+    # API Endpoint, Group, Key, unit
+    'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
+    'Current State': ['printer', 'state', 'text', None],
+    'Job Percentage': ['job', 'progress', 'completion', '%'],
+    'Time Remaining': ['job', 'progress', 'printTimeLeft', 'seconds'],
+    'Time Elapsed': ['job', 'progress', 'printTime', 'seconds'],
+}
+
+SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, has_all_unique_names, [vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
@@ -46,7 +75,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=80): cv.port,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
-        vol.Optional(CONF_BED, default=False): cv.boolean
+        vol.Optional(CONF_BED, default=False): cv.boolean,
+        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+        vol.Optional(CONF_BINARY_SENSORS, default={}): BINARY_SENSOR_SCHEMA
     })]),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -54,19 +85,14 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the OctoPrint component."""
     printers = hass.data[DOMAIN] = {}
-    printers_to_setup = []
 
     def device_discovered(service, info):
-        """ Called when a Awesome device has been discovered. """
+        """ Called when an Octoprint server has been discovered. """
         _LOGGER.debug('Found an Octoprint server: %s', info)
 
     discovery.listen(hass, SERVICE_OCTOPRINT, device_discovered)
 
-    if DOMAIN in config:
-        for printer in config[DOMAIN]:
-            printers_to_setup.append(printer)
-
-    for printer in printers_to_setup:
+    for printer in config[DOMAIN]:
         name = printer[CONF_NAME]
         ssl = 's' if printer[CONF_SSL] else ''
         base_url = 'http{}://{}:{}/api/'.format(ssl,
@@ -84,8 +110,12 @@ def setup(hass, config):
         except requests.exceptions.RequestException as conn_err:
             _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
 
-        load_platform(hass, 'sensor', DOMAIN, {'name': name})
-        load_platform(hass, 'binary_sensor', DOMAIN, {'name': name})
+        sensors = printer[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
+        load_platform(hass, 'sensor', DOMAIN, {'name': name,
+                                               'sensors': sensors})
+        b_sensors = printer[CONF_BINARY_SENSORS][CONF_MONITORED_CONDITIONS]
+        load_platform(hass, 'binary_sensor', DOMAIN, {'name': name,
+                                                      'sensors': b_sensors})
     return True
 
 
