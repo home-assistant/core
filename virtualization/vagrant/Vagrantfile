@@ -15,6 +15,8 @@ Vagrant.configure(2) do |config|
   end
   config.vm.provider :hyperv do |h, override|
     override.vm.box = "generic/debian9"
+    override.vm.hostname = "contrib-stretch"
+    h.vmname = "home-assistant"
     h.cpus = 2
     h.memory = 1024
     h.maxmemory = 1024

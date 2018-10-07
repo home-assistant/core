@@ -7,10 +7,10 @@ echo.############################################################
 echo.
 echo.Use `./provision.bat` to interact with HASS. E.g:
 echo.
-echo.- setup the environment: `./provision.sh start`
-echo.- restart HASS process: `./provision.sh restart`
-echo.- run test suit: `./provision.sh tests`
-echo.- destroy the host and start anew: `./provision.sh recreate`
+echo.- setup the environment: `./provision.bat start`
+echo.- restart HASS process: `./provision.bat restart`
+echo.- run test suit: `./provision.bat tests`
+echo.- destroy the host and start anew: `./provision.bat recreate`
 echo.
 echo.Official documentation at https://home-assistant.io/docs/installation/vagrant/
 echo.
@@ -21,14 +21,14 @@ goto:eof
 if "%*"=="setup" (
     if exist setup_done del setup_done
     vagrant up --provision
-    echo $null >> setup_done
+    copy /y nul setup_done
 ) else (
 if "%*"=="tests" (
-    echo $null >> run_tests
+    copy /y nul run_tests
     vagrant provision
 ) else (
 if "%*"=="restart" (
-    echo $null >> restart
+    copy /y nul restart
     vagrant provision
 ) else (
 if "%*"=="start" (
