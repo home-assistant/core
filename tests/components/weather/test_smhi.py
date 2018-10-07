@@ -8,7 +8,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME,
     ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE,
     ATTR_FORECAST_TEMP_LOW, ATTR_WEATHER_VISIBILITY, ATTR_WEATHER_ATTRIBUTION,
-    ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED, smhi as weather_smhi,
+    ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION, smhi as weather_smhi,
     DOMAIN as WEATHER_DOMAIN)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -67,6 +68,7 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
                                                     tzinfo=timezone.utc)
     assert forecast[ATTR_FORECAST_TEMP] == 20
     assert forecast[ATTR_FORECAST_TEMP_LOW] == 6
+    assert forecast[ATTR_FORECAST_PRECIPITATION] == 0
     assert forecast[ATTR_FORECAST_CONDITION] == 'partlycloudy'
 
 
@@ -100,6 +102,7 @@ def test_properties_unknown_symbol() -> None:
     hass = Mock()
     data = Mock()
     data.temperature = 5
+    data.mean_precipitation = 1
     data.humidity = 5
     data.wind_speed = 10
     data.wind_direction = 180
@@ -111,6 +114,7 @@ def test_properties_unknown_symbol() -> None:
 
     data2 = Mock()
     data2.temperature = 5
+    data2.mean_precipitation = 1
     data2.humidity = 5
     data2.wind_speed = 10
     data2.wind_direction = 180
@@ -122,8 +126,9 @@ def test_properties_unknown_symbol() -> None:
 
     data3 = Mock()
     data3.temperature = 5
+    data3.mean_precipitation = 1
     data3.humidity = 5
-    data.wind_speed = 10
+    data3.wind_speed = 10
     data3.wind_direction = 180
     data3.horizontal_visibility = 6
     data3.pressure = 1008

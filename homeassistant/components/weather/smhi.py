@@ -23,13 +23,14 @@ from homeassistant.util import dt, Throttle
 
 from homeassistant.components.weather import (
     WeatherEntity, ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME)
+    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME,
+    ATTR_FORECAST_PRECIPITATION)
 
 from homeassistant.components.smhi.const import (
     ENTITY_ID_SENSOR_FORMAT, ATTR_SMHI_CLOUDINESS)
 
 DEPENDENCIES = ['smhi']
-REQUIREMENTS = ['smhi-pkg==1.0.3']
+REQUIREMENTS = ['smhi-pkg==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -227,6 +228,8 @@ class SmhiWeather(WeatherEntity):
                         forecast.temperature_max,
                     ATTR_FORECAST_TEMP_LOW:
                         forecast.temperature_min,
+                    ATTR_FORECAST_PRECIPITATION:
+                        round(forecast.mean_precipitation*24),
                     ATTR_FORECAST_CONDITION:
                         condition
                     })
