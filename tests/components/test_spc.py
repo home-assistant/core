@@ -59,7 +59,8 @@ async def test_update_alarm_device(hass):
                    return_value=mock_coro(True)):
             assert await async_setup_component(hass, 'spc', config) is True
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
     entity_id = 'alarm_control_panel.house'
 
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
