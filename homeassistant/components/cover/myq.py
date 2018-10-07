@@ -21,16 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'myq'
 
-STATE_STOPPED = 'stopped'
-STATE_TRANSITION = 'transition'
-
 MYQ_TO_HASS = {
     'closed': STATE_CLOSED,
     'closing': STATE_CLOSING,
     'open': STATE_OPEN,
-    'opening': STATE_OPENING,
-    'stopped': STATE_STOPPED,
-    'transition': STATE_TRANSITION
+    'opening': STATE_OPENING
 }
 
 NOTIFICATION_ID = 'myq_notification'
@@ -101,6 +96,8 @@ class MyQDevice(CoverDevice):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
+        if self._status in [None, False]:
+            return None
         return MYQ_TO_HASS.get(self._status) == STATE_CLOSED
 
     @property
@@ -133,4 +130,4 @@ class MyQDevice(CoverDevice):
 
     def update(self):
         """Update status of cover."""
-        self._status = MYQ_TO_HASS.get(self.myq.get_status(self.device_id))
+        self._status = self.myq.get_status(self.device_id)
