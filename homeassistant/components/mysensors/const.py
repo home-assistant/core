@@ -16,6 +16,7 @@ CONF_TOPIC_OUT_PREFIX = 'topic_out_prefix'
 CONF_VERSION = 'version'
 
 DOMAIN = 'mysensors'
+MYSENSORS_GATEWAY_READY = 'mysensors_gateway_ready_{}'
 MYSENSORS_GATEWAYS = 'mysensors_gateways'
 PLATFORM = 'platform'
 SCHEMA = 'schema'
