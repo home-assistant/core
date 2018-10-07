@@ -43,7 +43,7 @@ _VALID_STATES = [STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE,
 
 VACUUM_SCHEMA = vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
     vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
 
@@ -77,7 +77,7 @@ async def async_setup_platform(
     for device, device_config in config[CONF_VACUUMS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
 
-        state_template = device_config[CONF_VALUE_TEMPLATE]
+        state_template = device_config.get(CONF_VALUE_TEMPLATE)
         battery_level_template = device_config.get(CONF_BATTERY_LEVEL_TEMPLATE)
         fan_speed_template = device_config.get(CONF_FAN_SPEED_TEMPLATE)
 
@@ -144,7 +144,7 @@ class TemplateVacuum(StateVacuumDevice):
         self._template = state_template
         self._battery_level_template = battery_level_template
         self._fan_speed_template = fan_speed_template
-        self._supported_features = SUPPORT_STATE | SUPPORT_START
+        self._supported_features = SUPPORT_START
 
         self._start_script = Script(hass, start_action)
 
@@ -178,11 +178,13 @@ class TemplateVacuum(StateVacuumDevice):
             self._set_fan_speed_script = Script(hass, set_fan_speed_action)
             self._supported_features |= SUPPORT_FAN_SPEED
 
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._battery_level = None
         self._fan_speed = None
 
-        self._template.hass = self.hass
+        if self._template:
+            self._template.hass = self.hass
+            self._supported_features |= SUPPORT_STATE
         if self._battery_level_template:
             self._battery_level_template.hass = self.hass
             self._supported_features |= SUPPORT_BATTERY
@@ -303,23 +305,24 @@ class TemplateVacuum(StateVacuumDevice):
     async def async_update(self):
         """Update the state from the template."""
         # Update state
-        try:
-            state = self._template.async_render()
-        except TemplateError as ex:
-            _LOGGER.error(ex)
-            state = None
-            self._state = None
+        if self._template is not None:
+            try:
+                state = self._template.async_render()
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                state = None
+                self._state = None
 
-        # Validate state
-        if state in _VALID_STATES:
-            self._state = state
-        elif state == STATE_UNKNOWN:
-            self._state = None
-        else:
-            _LOGGER.error(
-                'Received invalid vacuum state: %s. Expected: %s.',
-                state, ', '.join(_VALID_STATES))
-            self._state = None
+            # Validate state
+            if state in _VALID_STATES:
+                self._state = state
+            elif state == STATE_UNKNOWN:
+                self._state = None
+            else:
+                _LOGGER.error(
+                    'Received invalid vacuum state: %s. Expected: %s.',
+                    state, ', '.join(_VALID_STATES))
+                self._state = None
 
         # Update battery level if 'battery_level_template' is configured
         if self._battery_level_template is not None:
