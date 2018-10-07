@@ -11,8 +11,7 @@ from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP,
-    DEFAULT_TEMP_STEP)
+    SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
 from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (get_test_home_assistant, mock_mqtt_component,
                           async_fire_mqtt_message, fire_mqtt_message,
@@ -59,8 +58,6 @@ class TestMQTTClimate(unittest.TestCase):
         self.assertEqual("off", state.attributes.get('operation_mode'))
         self.assertEqual(DEFAULT_MIN_TEMP, state.attributes.get('min_temp'))
         self.assertEqual(DEFAULT_MAX_TEMP, state.attributes.get('max_temp'))
-        self.assertEqual(DEFAULT_TEMP_STEP,
-                         state.attributes.get('target_temp_step'))
 
     def test_supported_features(self):
         """Test the supported_features."""
