@@ -37,7 +37,7 @@ async def async_setup_platform(
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches for UniFi component.
 
-    Switches are controlling switch ports with Poe.
+    Switches are controlling network switch ports with Poe.
     """
     controller_id = CONTROLLER_ID.format(
         host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
@@ -213,10 +213,10 @@ class UniFiSwitch(SwitchDevice):
 
     @property
     def device(self):
-        """Shortcut to switch that client is connected to."""
+        """Shortcut to the switch that client is connected to."""
         return self.controller.api.devices[self.client.sw_mac]
 
     @property
     def port(self):
-        """Shortcut to switch port that client is connected to."""
+        """Shortcut to the switch port that client is connected to."""
         return self.device.ports[self.client.sw_port]

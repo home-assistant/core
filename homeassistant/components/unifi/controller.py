@@ -33,12 +33,10 @@ class UniFiController:
     @property
     def mac(self):
         """Return the mac address of this controller."""
-        controller_mac = None
         for client in self.api.clients.values():
             if self.host == client.ip:
-                controller_mac = client.mac
-                break
-        return controller_mac
+                return client.mac
+        return None
 
     async def async_setup(self, tries=0):
         """Set up a UniFi controller."""
@@ -66,7 +64,7 @@ class UniFiController:
             return False
 
         except Exception:  # pylint: disable=broad-except
-            LOGGER.exception(
+            LOGGER.error(
                 'Unknown error connecting with UniFi controller.')
             return False
 
