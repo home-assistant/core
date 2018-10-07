@@ -142,6 +142,7 @@ FLOWS = [
     'hue',
     'ifttt',
     'ios',
+    'lifx',
     'mqtt',
     'nest',
     'openuv',
