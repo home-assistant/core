@@ -227,7 +227,7 @@ async def async_setup(hass, config):
                 object_id=object_id,
                 entity_ids=entity_ids,
                 user_defined=False,
-                mode=service.data.get(ATTR_ALL)
+                mode=service.data.get(ATTR_ALL),
                 **extra_arg
             )
             return
