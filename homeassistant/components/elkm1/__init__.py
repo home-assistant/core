@@ -6,6 +6,7 @@ https://home-assistant.io/components/elkm1/
 """
 
 import logging
+import re
 
 import voluptuous as vol
 from homeassistant.const import (
@@ -49,9 +50,14 @@ def _host_validator(config):
 
 
 def _elk_range_validator(rng):
+    def _housecode_to_int(val):
+        match = re.search(r'^([a-p])(0[1-9]|1[0-6]|[1-9])$', val.lower())
+        if match:
+            return (ord(match.group(1)) - ord('a')) * 16 + int(match.group(2))
+        raise vol.Invalid("Invalid range")
+
     def _elk_value(val):
-        from elkm1_lib.message import housecode_to_index
-        return int(val) if val.isdigit() else (housecode_to_index(val) + 1)
+        return int(val) if val.isdigit() else _housecode_to_int(val)
 
     vals = [s.strip() for s in str(rng).split('-')]
     start = _elk_value(vals[0])
