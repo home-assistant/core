@@ -155,12 +155,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         client_id = config_file.get(ATTR_CLIENT_ID)
         client_secret = config_file.get(ATTR_CLIENT_SECRET)
         authd_client = monzo.MonzoOAuth2Client(
-                                     client_id=client_id,
-                                     client_secret=client_secret,
-                                     access_token=access_token,
-                                     refresh_token=refresh_token,
-                                     expires_at=expires_at,
-                                     refresh_cb=lambda x: None)
+            client_id=client_id,
+            client_secret=client_secret,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            expires_at=expires_at,
+            refresh_cb=lambda x: None)
 
         if int(time.time()) - expires_at > 3600:
             authd_client.refresh_token()
@@ -299,7 +299,7 @@ class MonzoSensor(Entity):
 
         if self.resource_type == 'pots':
             pots = self.client.get_pots()['pots']
-            pot = [pot for pot in pots if (pot['id'] == self._account_id)][0]
+            pot = [pot for pot in pots if pot['id'] == self._account_id][0]
             self._name = pot['name']
         else:
             self._name = MONZO_RESOURCES_LIST[self.resource_type][0]
@@ -343,14 +343,14 @@ class MonzoSensor(Entity):
 
     def update(self):
         """Get the latest data from the Monzo API and update the states."""
-        id = self._account_id
+        acc_id = self._account_id
         if self.resource_type == 'balance':
-            self._state = self.client.get_balance(id)['balance'] / 100
+            self._state = self.client.get_balance(acc_id)['balance'] / 100
         elif self.resource_type == 'dailyspend':
-            self._state = self.client.get_balance(id)['spend_today'] / 100
+            self._state = self.client.get_balance(acc_id)['spend_today'] / 100
         elif self.resource_type == 'pots':
             pots = self.client.get_pots()['pots']
-            pot = [pot for pot in pots if (pot['id'] == id)][0]
+            pot = [pot for pot in pots if pot['id'] == acc_id][0]
             self._state = pot['balance'] / 100
 
         token = self.client.oauth_session.session.token
