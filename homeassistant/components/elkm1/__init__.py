@@ -35,7 +35,7 @@ CONF_ENABLED = 'enabled'
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ['alarm_control_panel']
+SUPPORTED_DOMAINS = ['alarm_control_panel', 'light']
 
 
 def _host_validator(config):
