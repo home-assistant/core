@@ -338,9 +338,9 @@ def async_track_utc_time_change(hass, action,
 
         return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
 
-    matching_seconds = _parse_time_expression(second, 0, 59)
-    matching_minutes = _parse_time_expression(minute, 0, 59)
-    matching_hours = _parse_time_expression(hour, 0, 23)
+    matching_seconds = dt_util.parse_time_expression(second, 0, 59)
+    matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
+    matching_hours = dt_util.parse_time_expression(hour, 0, 23)
 
     next_time = None
 
@@ -349,7 +349,7 @@ def async_track_utc_time_change(hass, action,
         nonlocal next_time
 
         localized_now = dt_util.as_local(now) if local else now
-        next_time = _find_next_time_expression_time(
+        next_time = dt_util.find_next_time_expression_time(
             localized_now, matching_seconds, matching_minutes,
             matching_hours)
 
@@ -411,106 +411,3 @@ def _process_state_match(parameter):
 
     parameter = tuple(parameter)
     return lambda state: state in parameter
-
-
-def _parse_time_expression(parameter, min_value, max_value):
-    """Parse the time expression part and return a list of times to match."""
-    if parameter is None or parameter == MATCH_ALL:
-        res = [x for x in range(min_value, max_value + 1)]
-    elif isinstance(parameter, str) and parameter.startswith('/'):
-        parameter = float(parameter[1:])
-        res = [x for x in range(min_value, max_value + 1)
-               if x % parameter == 0]
-    elif not hasattr(parameter, '__iter__'):
-        res = [int(parameter)]
-    else:
-        res = list(sorted(int(x) for x in parameter))
-
-    for x in res:
-        if x < min_value or x > max_value:
-            raise ValueError(
-                "Time expression '{}': parameter {} out of range ({} to {})"
-                "".format(parameter, x, min_value, max_value)
-            )
-
-    return res
-
-
-def _find_next_time_expression_time(now, seconds, minutes, hours):
-    """Find the next datetime from now for which the time expression matches.
-
-    The algorithm looks at each time unit separately and tries to find the
-    next one that matches for each. If any of them would roll over, all
-    time units below that are reset to the first matching value.
-
-    Timezones are also handled (the tzinfo of the now object is used), inluding
-    daylight saving time.
-    """
-    if not seconds or not minutes or not hours:
-        raise ValueError("Cannot find a next time: Time expression never "
-                         "matches!")
-
-    # Copy now
-    result = now.replace()
-
-    # Match next second
-    next_second = next((x for x in seconds if x >= result.second), None)
-    if next_second is None:
-        # No second to match in this minute. Roll-over to next minute.
-        next_second = seconds[0]
-        result += timedelta(minutes=1)
-
-    result = result.replace(second=next_second)
-
-    # Match next minute
-    next_minute = next((x for x in minutes if x >= result.minute), None)
-    if next_minute != result.minute:
-        # We're in the next minute. Seconds needs to be reset.
-        result = result.replace(second=seconds[0])
-
-    if next_minute is None:
-        # No minute to match in this hour. Roll-over to next hour.
-        next_minute = minutes[0]
-        result += timedelta(hours=1)
-
-    result = result.replace(minute=next_minute)
-
-    # Match next hour
-    next_hour = next((x for x in hours if x >= result.hour), None)
-    if next_hour != result.hour:
-        # We're in the next hour. Seconds+minutes needs to be reset.
-        result.replace(second=seconds[0], minute=minutes[0])
-
-    if next_hour is None:
-        # No minute to match in this day. Roll-over to next day.
-        next_hour = hours[0]
-        result += timedelta(days=1)
-
-    result = result.replace(hour=next_hour)
-
-    # Now we need to handle timezones. We will make this datetime object
-    # "naive" first and then re-convert it to the target timezone.
-    # This is so that we can call pytz's localize and handle DST changes.
-    tz = result.tzinfo
-    result = result.replace(tzinfo=None)
-
-    try:
-        result = tz.localize(result, is_dst=None)
-    except pytz.AmbiguousTimeError:
-        # This happens when we're leaving daylight saving time and local
-        # clocks are rolled back. In this case, we want to trigger
-        # on both the DST and non-DST time. So when "now" is in the DST
-        # use the DST-on time, and if not, use the DST-off time.
-        use_dst = bool(now.dst())
-        result = tz.localize(result, is_dst=use_dst)
-    except pytz.NonExistentTimeError:
-        # This happens when we're entering daylight saving time and local
-        # clocks are rolled forward, thus there are local times that do
-        # not exist. In this case, we want to trigger on the next time
-        # that *does* exist.
-        # In the worst case, this will run through all the seconds in the
-        # time shift, but that's max 3600 operations for once per year
-        result = result.replace(tzinfo=tz) + timedelta(seconds=1)
-        return _find_next_time_expression_time(result, seconds, minutes, hours)
-
-    return result

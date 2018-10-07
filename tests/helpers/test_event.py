@@ -85,38 +85,6 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(2, len(runs))
 
-    def test_track_time_change(self):
-        """Test tracking time change."""
-        wildcard_runs = []
-        specific_runs = []
-
-        unsub = track_time_change(self.hass, lambda x: wildcard_runs.append(1))
-        unsub_utc = track_utc_time_change(
-            self.hass, lambda x: specific_runs.append(1), second=[0, 30])
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
-        self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
-        self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(2, len(wildcard_runs))
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
-
-        unsub()
-        unsub_utc()
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
-
     def test_track_state_change(self):
         """Test track_state_change."""
         # 2 lists to track how often our callbacks get called
@@ -543,6 +511,39 @@ class TestTrackTimeChange(unittest.TestCase):
     def _send_time_changed(self, now):
         """Send a time changed event."""
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
+
+    def test_track_time_change(self):
+        """Test tracking time change."""
+        wildcard_runs = []
+        specific_runs = []
+
+        unsub = track_time_change(self.hass,
+                                  lambda x: wildcard_runs.append(1))
+        unsub_utc = track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), second=[0, 30])
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(2, len(wildcard_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+        self.assertEqual(3, len(wildcard_runs))
+
+        unsub()
+        unsub_utc()
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+        self.assertEqual(3, len(wildcard_runs))
 
     def test_periodic_task_minute(self):
         """Test periodic tasks per minute."""
