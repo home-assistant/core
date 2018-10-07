@@ -306,7 +306,7 @@ def find_next_time_expression_time(now, seconds, minutes, hours):
 
     result = result.replace(hour=next_hour)
 
-    if result.tzinfo is None or result.tzinfo is pytz.UTC:
+    if result.tzinfo is None:
         return result
 
     # Now we need to handle timezones. We will make this datetime object
