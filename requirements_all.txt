@@ -106,7 +106,7 @@ aiohue==1.5.0
 # homeassistant.components.sensor.imap
 aioimaplib==0.7.13
 
-# homeassistant.components.light.lifx
+# homeassistant.components.lifx
 aiolifx==0.6.3
 
 # homeassistant.components.light.lifx
