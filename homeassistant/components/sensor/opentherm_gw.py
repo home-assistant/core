@@ -124,6 +124,27 @@ async def async_setup_platform(hass, config, async_add_entities,
         gw_vars.DATA_SLAVE_PRODUCT_TYPE: [None, None, "Boiler Product Type"],
         gw_vars.DATA_SLAVE_PRODUCT_VERSION: [
             None, None, "Boiler Product Version"],
+        gw_vars.OTGW_MODE: [None, None, "Gateway/Monitor Mode"],
+        gw_vars.OTGW_DHW_OVRD: [None, None, "Gateway Hot Water Override Mode"],
+        gw_vars.OTGW_ABOUT: [None, None, "Gateway Firmware Version"],
+        gw_vars.OTGW_BUILD: [None, None, "Gateway Firmware Build"],
+        gw_vars.OTGW_CLOCKMHZ: [None, None, "Gateway Clock Speed"],
+        gw_vars.OTGW_LED_A: [None, None, "Gateway LED A Mode"],
+        gw_vars.OTGW_LED_B: [None, None, "Gateway LED B Mode"],
+        gw_vars.OTGW_LED_C: [None, None, "Gateway LED C Mode"],
+        gw_vars.OTGW_LED_D: [None, None, "Gateway LED D Mode"],
+        gw_vars.OTGW_LED_E: [None, None, "Gateway LED E Mode"],
+        gw_vars.OTGW_LED_F: [None, None, "Gateway LED F Mode"],
+        gw_vars.OTGW_GPIO_A: [None, None, "Gateway GPIO A Mode"],
+        gw_vars.OTGW_GPIO_B: [None, None, "Gateway GPIO B Mode"],
+        gw_vars.OTGW_SB_TEMP: [
+            DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS,
+            "Gateway Setback Temperature"],
+        gw_vars.OTGW_SETP_OVRD_MODE: [
+            None, None, "Gateway Room Setpoint Override Mode"],
+        gw_vars.OTGW_SMART_PWR: [None, None, "Gateway Smart Power Mode"],
+        gw_vars.OTGW_THRM_DETECT: [None, None, "Gateway Thermostat Detection"],
+        gw_vars.OTGW_VREF: [None, None, "Gateway Reference Voltage Setting"],
     }
     sensors = []
     for var in discovery_info:

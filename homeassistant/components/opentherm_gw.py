@@ -80,7 +80,7 @@ async def connect_and_subscribe(hass, device_path, gateway):
 
 
 async def setup_monitored_vars(hass, monitored_vars):
-    """Setup requested sensors."""
+    """Set up requested sensors."""
     gw_vars = hass.data[DATA_OPENTHERM_GW][DATA_GW_VARS]
     # Use dict to prepare for binary sensor support.
     sensor_type_map = {
@@ -131,6 +131,24 @@ async def setup_monitored_vars(hass, monitored_vars):
             gw_vars.DATA_MASTER_PRODUCT_VERSION,
             gw_vars.DATA_SLAVE_PRODUCT_TYPE,
             gw_vars.DATA_SLAVE_PRODUCT_VERSION,
+            gw_vars.OTGW_MODE,
+            gw_vars.OTGW_DHW_OVRD,
+            gw_vars.OTGW_ABOUT,
+            gw_vars.OTGW_BUILD,
+            gw_vars.OTGW_CLOCKMHZ,
+            gw_vars.OTGW_LED_A,
+            gw_vars.OTGW_LED_B,
+            gw_vars.OTGW_LED_C,
+            gw_vars.OTGW_LED_D,
+            gw_vars.OTGW_LED_E,
+            gw_vars.OTGW_LED_F,
+            gw_vars.OTGW_GPIO_A,
+            gw_vars.OTGW_GPIO_B,
+            gw_vars.OTGW_SB_TEMP,
+            gw_vars.OTGW_SETP_OVRD_MODE,
+            gw_vars.OTGW_SMART_PWR,
+            gw_vars.OTGW_THRM_DETECT,
+            gw_vars.OTGW_VREF,
         ]
     }
     sensors = []
