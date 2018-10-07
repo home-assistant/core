@@ -128,7 +128,7 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_allgroup_turn_on_if_last_turns_on(self):
         """
-        Test if group with all: true turns on if all last off device turns on.
+        Test if group with all: true turns on if last off-device turns on.
         """
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
