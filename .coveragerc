@@ -102,6 +102,9 @@ omit =
     homeassistant/components/egardia.py
     homeassistant/components/*/egardia.py
 
+    homeassistant/components/elkm1/*
+    homeassistant/components/*/elkm1.py
+
     homeassistant/components/enocean.py
     homeassistant/components/*/enocean.py
 
