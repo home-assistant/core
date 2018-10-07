@@ -75,10 +75,10 @@ SENSOR_TYPES = {
         'PowerEnergyConsumptionThisMonth':
             ['PrEnergySumHcThisMonth', 'kWh', 'mdi:flash', 0]
     },
-	'ehp': {
+    'ehp': {
         'HWTemperature':
             ['HwcTemp', '°C', 'mdi:thermometer', 4],
-        'OutsideTemp': 
-            ['OutsideTemp', '°C', 'mdi:thermometer',4]
+        'OutsideTemp':
+            ['OutsideTemp', '°C', 'mdi:thermometer', 4]
     }
 }
