@@ -30,7 +30,8 @@ ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_REGION): vol.Any('north_america', 'china',
                                        'rest_of_world'),
-    vol.Optional(CONF_UNIT_SYSTEM): vol.Any('metric', 'imperial'),
+    vol.Optional(CONF_UNIT_SYSTEM): vol.Any(CONF_UNIT_SYSTEM_METRIC,
+                                            CONF_UNIT_SYSTEM_IMPERIAL),
     vol.Optional(CONF_READ_ONLY, default=False): cv.boolean,
 })
 
