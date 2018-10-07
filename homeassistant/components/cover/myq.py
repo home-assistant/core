@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_CLOSING,
-    STATE_OPEN, STATE_OPENING, STATE_UNKNOWN)
+    STATE_OPEN, STATE_OPENING)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pymyq==0.0.15']
@@ -30,8 +30,7 @@ MYQ_TO_HASS = {
     'open': STATE_OPEN,
     'opening': STATE_OPENING,
     'stopped': STATE_STOPPED,
-    'transition': STATE_TRANSITION,
-    'unknown': STATE_UNKNOWN
+    'transition': STATE_TRANSITION
 }
 
 NOTIFICATION_ID = 'myq_notification'
@@ -82,7 +81,7 @@ class MyQDevice(CoverDevice):
         self.myq = myq
         self.device_id = device['deviceid']
         self._name = device['name']
-        self._status = STATE_CLOSED
+        self._status = None
 
     @property
     def device_class(self):
@@ -102,17 +101,17 @@ class MyQDevice(CoverDevice):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        return MYQ_TO_HASS[self._status] == STATE_CLOSED
+        return MYQ_TO_HASS.get(self._status) == STATE_CLOSED
 
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
-        return MYQ_TO_HASS[self._status] == STATE_CLOSING
+        return MYQ_TO_HASS.get(self._status) == STATE_CLOSING
 
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        return MYQ_TO_HASS[self._status] == STATE_OPENING
+        return MYQ_TO_HASS.get(self._status) == STATE_OPENING
 
     def close_cover(self, **kwargs):
         """Issue close command to cover."""
@@ -134,6 +133,4 @@ class MyQDevice(CoverDevice):
 
     def update(self):
         """Update status of cover."""
-        status = self.myq.get_status(self.device_id)
-        if status in MYQ_TO_HASS:
-            self._status = status
+        self._status = MYQ_TO_HASS.get(self.myq.get_status(self.device_id))
