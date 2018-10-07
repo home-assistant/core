@@ -117,13 +117,13 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                 raise vol.Invalid("Invalid range {}".format(rng))
             values[rng[0]-1:rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
-    conf = hass_config.get(DOMAIN)
+    conf = hass_config[DOMAIN]
     config = {'temperature_unit': conf[CONF_TEMPERATURE_UNIT]}
     config['panel'] = {'enabled': True, 'included': [True]}
 
     for item, max_ in configs.items():
         config[item] = {'enabled': conf[item][CONF_ENABLED],
-                        'included': [len(conf[item]['include']) == 0] * max_}
+                        'included': [not conf[item]['include']] * max_,
         try:
             _included(conf[item]['include'], True, config[item]['included'])
             _included(conf[item]['exclude'], False, config[item]['included'])
