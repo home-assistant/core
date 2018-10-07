@@ -136,10 +136,10 @@ class Ebusd(Entity):
         """Initialize the sensor."""
         self._state = None
         self._client_name = name
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._icon = SENSOR_TYPES[sensor_type][2]
-        self._type = SENSOR_TYPES[sensor_type][3]
+        self._name = SENSOR_TYPES[data._circuit][sensor_type][0]
+        self._unit_of_measurement = SENSOR_TYPES[data._circuit][sensor_type][1]
+        self._icon = SENSOR_TYPES[data._circuit][sensor_type][2]
+        self._type = SENSOR_TYPES[data._circuit][sensor_type][3]
         self.data = data
 
     @property
@@ -181,5 +181,9 @@ class Ebusd(Entity):
                     self._state = STATE_OFF
             elif self._type == 3:
                 self._state = self.data.value[self._name]
+            elif self._type == 4:
+                if 'ok' not in self.data.value[self._name].split(';'):
+                    return
+                self._state = self.data.value[self._name].partition(';')[0]
         except RuntimeError:
             _LOGGER.debug("EbusdData.update exception")
