@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         dev = []
         for variable in config[CONF_MONITORED_CONDITIONS]:
-            dev.append(Ebusd(data, variable, name))
+            dev.append(Ebusd(data, circuit, variable, name))
 
         add_devices(dev)
         hass.services.register(DOMAIN, SERVICE_EBUSD_WRITE, data.write)
@@ -132,14 +132,14 @@ class EbusdData:
 class Ebusd(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, data, sensor_type, name):
+    def __init__(self, data, circuit, sensor_type, name):
         """Initialize the sensor."""
         self._state = None
         self._client_name = name
-        self._name = SENSOR_TYPES[data._circuit][sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[data._circuit][sensor_type][1]
-        self._icon = SENSOR_TYPES[data._circuit][sensor_type][2]
-        self._type = SENSOR_TYPES[data._circuit][sensor_type][3]
+        self._name = SENSOR_TYPES[circuit][sensor_type][0]
+        self._unit_of_measurement = SENSOR_TYPES[circuit][sensor_type][1]
+        self._icon = SENSOR_TYPES[circuit][sensor_type][2]
+        self._type = SENSOR_TYPES[circuit][sensor_type][3]
         self.data = data
 
     @property
