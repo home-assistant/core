@@ -49,7 +49,6 @@ REQUIREMENTS = ['pyotgw==0.1b0']
 
 _LOGGER = logging.getLogger(__name__)
 
-
 async def async_setup(hass, config):
     """Set up the OpenTherm Gateway component."""
     conf = config.get(DOMAIN)
@@ -78,7 +77,6 @@ async def connect_and_subscribe(hass, conf):
         """Handle reports from the OpenTherm Gateway."""
         async_dispatcher_send(hass, SIGNAL_OPENTHERM_GW_UPDATE, status)
     gateway.subscribe(handle_report)
-
 
 async def setup_monitored_vars(hass, monitored_vars):
     """Setup requested sensors and binary_sensors."""
