@@ -5,15 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rmvtransport/
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+from homeassistant.util import Throttle
+from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['PyRMVtransport==0.1']
+REQUIREMENTS = ['PyRMVtransport==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +50,8 @@ ICONS = {
 }
 ATTRIBUTION = "Data provided by opendata.rmv.de"
 
+SCAN_INTERVAL = timedelta(seconds=60)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NEXT_DEPARTURE): [{
         vol.Required(CONF_STATION): cv.string,
@@ -63,12 +69,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the RMV departure sensor."""
+    session = async_get_clientsession(hass)
+
     sensors = []
     for next_departure in config.get(CONF_NEXT_DEPARTURE):
         sensors.append(
             RMVDepartureSensor(
+                hass.loop,
+                session,
                 next_departure[CONF_STATION],
                 next_departure.get(CONF_DESTINATIONS),
                 next_departure.get(CONF_DIRECTIONS),
@@ -77,21 +88,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 next_departure.get(CONF_TIME_OFFSET),
                 next_departure.get(CONF_MAX_JOURNEYS),
                 next_departure.get(CONF_NAME)))
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class RMVDepartureSensor(Entity):
     """Implementation of an RMV departure sensor."""
 
-    def __init__(self, station, destinations, directions,
+    def __init__(self, loop, session, station, destinations, directions,
                  lines, products, time_offset, max_journeys, name):
         """Initialize the sensor."""
+        self._loop = loop
+        self._session = session
         self._station = station
         self._name = name
         self._state = None
-        self.data = RMVDepartureData(station, destinations, directions, lines,
-                                     products, time_offset, max_journeys)
+        self.data = RMVDepartureData(loop, session, station, destinations,
+                                     directions, lines, products, time_offset,
+                                     max_journeys)
         self._icon = ICONS[None]
+
+        if self.data is None:
+            raise PlatformNotReady
 
     @property
     def name(self):
@@ -134,9 +151,10 @@ class RMVDepartureSensor(Entity):
         """Return the unit this state is expressed in."""
         return "min"
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data and update the state."""
-        self.data.update()
+        await self.data.async_update()
+
         if not self.data.departures:
             self._state = None
             self._icon = ICONS[None]
@@ -151,10 +169,13 @@ class RMVDepartureSensor(Entity):
 class RMVDepartureData:
     """Pull data from the opendata.rmv.de web page."""
 
-    def __init__(self, station_id, destinations, directions,
+    def __init__(self, loop, session, station_id, destinations, directions,
                  lines, products, time_offset, max_journeys):
         """Initialize the sensor."""
-        import RMVtransport
+        from RMVtransport import RMVtransport
+
+        self._loop = loop
+        self._session = session
         self.station = None
         self._station_id = station_id
         self._destinations = destinations
@@ -163,15 +184,16 @@ class RMVDepartureData:
         self._products = products
         self._time_offset = time_offset
         self._max_journeys = max_journeys
-        self.rmv = RMVtransport.RMVtransport()
+        self.rmv = RMVtransport(self._loop, self._session)
         self.departures = []
 
-    def update(self):
+    @Throttle(SCAN_INTERVAL)
+    async def async_update(self):
         """Update the connection data."""
         try:
-            _data = self.rmv.get_departures(self._station_id,
-                                            products=self._products,
-                                            maxJourneys=50)
+            _data = await self.rmv.get_departures(self._station_id,
+                                                  products=self._products,
+                                                  maxJourneys=50)
         except ValueError:
             self.departures = []
             _LOGGER.warning("Returned data not understood")
