@@ -154,13 +154,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # Load existing OAuth session
         client_id = config_file.get(ATTR_CLIENT_ID)
         client_secret = config_file.get(ATTR_CLIENT_SECRET)
-        authd_client = monzo.MonzoOAuth2Client(
-            client_id=client_id,
-            client_secret=client_secret,
-            access_token=access_token,
-            refresh_token=refresh_token,
-            expires_at=expires_at,
-            refresh_cb=lambda x: None)
+        authd_client = monzo.MonzoOAuth2Client(client_id=client_id,
+                                               client_secret=client_secret,
+                                               access_token=access_token,
+                                               refresh_token=refresh_token,
+                                               expires_at=expires_at,
+                                               refresh_cb=lambda x: None)
 
         if int(time.time()) - expires_at > 3600:
             authd_client.refresh_token()
