@@ -87,11 +87,11 @@ def request_app_setup(hass, config, add_entities, config_path,
                               MONZO_AUTH_CALLBACK_PATH)
 
     description = """Please create a Monzo Client at
-                       https://developers.monzo.com/.
-                       For the OAuth 2.0 Application Type choose Confidential.
-                       Set the Redirect URL to {}.
-                       They will provide you a Client ID and secret.
-                       These need to be saved into the file located at: {}.
+                       https://developers.monzo.com
+                       Set the Redirect URL to {}
+                       and the OAuth 2.0 Application Type to Confidential.
+                       They will provide you with a Client ID and Secret
+                       which need to be saved into the file located at: {}.
                        Then come back here and hit the below button.
                        """.format(start_url, config_path)
 
@@ -99,8 +99,7 @@ def request_app_setup(hass, config, add_entities, config_path,
 
     _CONFIGURING['monzo'] = configurator.request_config(
         'Monzo', monzo_configuration_callback,
-        description=description, submit_caption=submit,
-        description_image="/static/images/config_fitbit_app.png"
+        description=description, submit_caption=submit
     )
 
 
