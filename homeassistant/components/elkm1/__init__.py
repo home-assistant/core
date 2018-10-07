@@ -123,7 +123,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 
     for item, max_ in configs.items():
         config[item] = {'enabled': conf[item][CONF_ENABLED],
-                        'included': [not conf[item]['include']] * max_,
+                        'included': [not conf[item]['include']] * max_}
         try:
             _included(conf[item]['include'], True, config[item]['included'])
             _included(conf[item]['exclude'], False, config[item]['included'])
