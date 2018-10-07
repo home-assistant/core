@@ -24,8 +24,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     name = discovery_info['name']
+    base_url = discovery_info['base_url']
     monitored_conditions = discovery_info['sensors']
-    octoprint_api = hass.data[DOMAIN][name]
+    octoprint_api = hass.data[DOMAIN][base_url]
 
     devices = []
     for octo_type in monitored_conditions:

@@ -104,7 +104,7 @@ def setup(hass, config):
         try:
             octoprint_api = OctoPrintAPI(base_url, api_key, bed,
                                          number_of_tools)
-            printers[name] = octoprint_api
+            printers[base_url] = octoprint_api
             octoprint_api.get('printer')
             octoprint_api.get('job')
         except requests.exceptions.RequestException as conn_err:
@@ -112,9 +112,11 @@ def setup(hass, config):
 
         sensors = printer[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
         load_platform(hass, 'sensor', DOMAIN, {'name': name,
+                                               'base_url': base_url,
                                                'sensors': sensors})
         b_sensors = printer[CONF_BINARY_SENSORS][CONF_MONITORED_CONDITIONS]
         load_platform(hass, 'binary_sensor', DOMAIN, {'name': name,
+                                                      'base_url': base_url,
                                                       'sensors': b_sensors})
     return True
 
