@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         perms = session.user.get_residential_permissions()
         all_switches = []
         for permission in perms:
-            if permission.residentailAccountId is not None:
+            if permission.residentialAccountId is not None:
                 acct = ResidentialAccount(session, permission.residentialAccountId)
                 for residence in acct.get_residences():
                     for switch in residence.get_iot_switches():
