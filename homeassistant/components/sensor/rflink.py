@@ -67,9 +67,14 @@ def devices_from_config(domain_config, hass=None):
         device = RflinkSensor(device_id, hass, **config)
         devices.append(device)
 
-        # Register entity to listen to incoming rflink events
+        # Register entity (and aliases) to listen to incoming rflink events
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_SENSOR][device_id].append(device)
+        aliases = config.get(CONF_ALIASES)
+        if aliases:
+            for _id in aliases:
+                hass.data[DATA_ENTITY_LOOKUP][
+                    EVENT_KEY_SENSOR][_id].append(device)
     return devices
 
 
