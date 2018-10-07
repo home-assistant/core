@@ -6,27 +6,33 @@ from homeassistant.components.unifi import controller, errors
 
 from tests.common import mock_coro
 
+CONTROLLER_DATA = {
+    unifi.CONF_HOST: '1.2.3.4',
+    unifi.CONF_USERNAME: 'username',
+    unifi.CONF_PASSWORD: 'password',
+    unifi.CONF_PORT: 1234,
+    unifi.CONF_SITE_ID: 'site',
+    unifi.CONF_VERIFY_SSL: True
+}
+
+ENTRY_CONFIG = {
+    unifi.CONF_CONTROLLER: CONTROLLER_DATA,
+    unifi.CONF_POE_CONTROL: True
+    }
+
 
 async def test_controller_setup():
-    """Test a successful setup."""
+    """Successful setup."""
     hass = Mock()
     entry = Mock()
+    entry.data = ENTRY_CONFIG
     api = Mock()
     api.initialize.return_value = mock_coro(True)
-    entry.data = {
-        unifi.CONF_CONTROLLER: {
-            unifi.CONF_HOST: '1.2.3.4',
-            unifi.CONF_USERNAME: 'username',
-            unifi.CONF_PASSWORD: 'password',
-            unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
-            unifi.CONF_VERIFY_SSL: True
-        },
-        unifi.CONF_POE_CONTROL: True
-    }
+
     unifi_controller = controller.UniFiController(hass, entry)
 
-    with patch.object(controller, 'get_controller', return_value=mock_coro(api)):
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)):
         assert await unifi_controller.async_setup() is True
 
     assert unifi_controller.api is api
@@ -36,71 +42,64 @@ async def test_controller_setup():
 
 
 async def test_controller_host():
-    """Test a successful setup."""
+    """Config entry host and controller host are the same."""
     hass = Mock()
     entry = Mock()
-    entry.data = {
-        unifi.CONF_CONTROLLER: {
-            unifi.CONF_HOST: '1.2.3.4',
-            unifi.CONF_USERNAME: 'username',
-            unifi.CONF_PASSWORD: 'password',
-            unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
-            unifi.CONF_VERIFY_SSL: True
-        },
-        unifi.CONF_POE_CONTROL: True
-    }
+    entry.data = ENTRY_CONFIG
+
     unifi_controller = controller.UniFiController(hass, entry)
 
     assert unifi_controller.host == '1.2.3.4'
 
 
 async def test_controller_mac():
-    """Test a successful setup."""
+    """Test that it is possible to identify controller mac."""
     hass = Mock()
     entry = Mock()
+    entry.data = ENTRY_CONFIG
     client = Mock()
     client.ip = '1.2.3.4'
     client.mac = '00:11:22:33:44:55'
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.clients = {'client1': client}
-    entry.data = {
-        unifi.CONF_CONTROLLER: {
-            unifi.CONF_HOST: '1.2.3.4',
-            unifi.CONF_USERNAME: 'username',
-            unifi.CONF_PASSWORD: 'password',
-            unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
-            unifi.CONF_VERIFY_SSL: True
-        },
-        unifi.CONF_POE_CONTROL: True
-    }
+
     unifi_controller = controller.UniFiController(hass, entry)
 
-    with patch.object(controller, 'get_controller', return_value=mock_coro(api)):
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)):
         assert await unifi_controller.async_setup() is True
 
     assert unifi_controller.mac == '00:11:22:33:44:55'
 
-
-async def test_controller_not_accessible():
-    """Test a successful setup."""
+async def test_controller_no_mac():
+    """Test that it works to not find the controllers mac."""
     hass = Mock()
     entry = Mock()
+    entry.data = ENTRY_CONFIG
+    client = Mock()
+    client.ip = '5.6.7.8'
     api = Mock()
     api.initialize.return_value = mock_coro(True)
-    entry.data = {
-        unifi.CONF_CONTROLLER: {
-            unifi.CONF_HOST: '1.2.3.4',
-            unifi.CONF_USERNAME: 'username',
-            unifi.CONF_PASSWORD: 'password',
-            unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
-            unifi.CONF_VERIFY_SSL: True
-        },
-        unifi.CONF_POE_CONTROL: True
-    }
+    api.clients = {'client1': client}
+
+    unifi_controller = controller.UniFiController(hass, entry)
+
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)):
+        assert await unifi_controller.async_setup() is True
+
+    assert unifi_controller.mac is None
+
+
+async def test_controller_not_accessible():
+    """Retry to login gets scheduled when connection fails."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+    api = Mock()
+    api.initialize.return_value = mock_coro(True)
+
     unifi_controller = controller.UniFiController(hass, entry)
 
     with patch.object(controller, 'get_controller',
@@ -113,22 +112,13 @@ async def test_controller_not_accessible():
 
 
 async def test_controller_unknown_error():
-    """Test a successful setup."""
+    """Unknown errors are handled."""
     hass = Mock()
     entry = Mock()
+    entry.data = ENTRY_CONFIG
     api = Mock()
     api.initialize.return_value = mock_coro(True)
-    entry.data = {
-        unifi.CONF_CONTROLLER: {
-            unifi.CONF_HOST: '1.2.3.4',
-            unifi.CONF_USERNAME: 'username',
-            unifi.CONF_PASSWORD: 'password',
-            unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
-            unifi.CONF_VERIFY_SSL: True
-        },
-        unifi.CONF_POE_CONTROL: True
-    }
+
     unifi_controller = controller.UniFiController(hass, entry)
 
     with patch.object(controller, 'get_controller', side_effect=Exception):
@@ -138,20 +128,11 @@ async def test_controller_unknown_error():
 
 
 async def test_reset_cancels_retry_setup():
-    """Test resetting a bridge while we're waiting to retry setup."""
+    """Resetting a controller while we're waiting to retry setup."""
     hass = Mock()
     entry = Mock()
-    entry.data = {
-        unifi.CONF_CONTROLLER: {
-            unifi.CONF_HOST: '1.2.3.4',
-            unifi.CONF_USERNAME: 'username',
-            unifi.CONF_PASSWORD: 'password',
-            unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
-            unifi.CONF_VERIFY_SSL: True
-        },
-        unifi.CONF_POE_CONTROL: True
-    }
+    entry.data = ENTRY_CONFIG
+
     unifi_controller = controller.UniFiController(hass, entry)
 
     with patch.object(controller, 'get_controller',
@@ -169,20 +150,11 @@ async def test_reset_cancels_retry_setup():
 
 
 async def test_reset_if_entry_had_wrong_auth():
-    """Test calling reset when the entry contained wrong auth."""
+    """Calling reset when the entry contains wrong auth."""
     hass = Mock()
     entry = Mock()
-    entry.data = {
-        unifi.CONF_CONTROLLER: {
-            unifi.CONF_HOST: '1.2.3.4',
-            unifi.CONF_USERNAME: 'username',
-            unifi.CONF_PASSWORD: 'password',
-            unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
-            unifi.CONF_VERIFY_SSL: True
-        },
-        unifi.CONF_POE_CONTROL: True
-    }
+    entry.data = ENTRY_CONFIG
+
     unifi_controller = controller.UniFiController(hass, entry)
 
     with patch.object(controller, 'get_controller',
@@ -195,25 +167,17 @@ async def test_reset_if_entry_had_wrong_auth():
 
 
 async def test_reset_unloads_entry_if_setup():
-    """Test calling reset while the entry has been setup."""
+    """Calling reset when the entry has been setup."""
     hass = Mock()
     entry = Mock()
+    entry.data = ENTRY_CONFIG
     api = Mock()
     api.initialize.return_value = mock_coro(True)
-    entry.data = {
-        unifi.CONF_CONTROLLER: {
-            unifi.CONF_HOST: '1.2.3.4',
-            unifi.CONF_USERNAME: 'username',
-            unifi.CONF_PASSWORD: 'password',
-            unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
-            unifi.CONF_VERIFY_SSL: True
-        },
-        unifi.CONF_POE_CONTROL: True
-    }
+
     unifi_controller = controller.UniFiController(hass, entry)
 
-    with patch.object(controller, 'get_controller', return_value=mock_coro(api)):
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)):
         assert await unifi_controller.async_setup() is True
 
     assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
@@ -226,31 +190,223 @@ async def test_reset_unloads_entry_if_setup():
 
 
 async def test_reset_unloads_entry_without_poe_control():
-    """Test calling reset while the entry has been setup."""
+    """Calling reset while the entry has been setup."""
     hass = Mock()
     entry = Mock()
+    entry.data = dict(ENTRY_CONFIG)
+    entry.data[unifi.CONF_POE_CONTROL] = False
     api = Mock()
     api.initialize.return_value = mock_coro(True)
-    entry.data = {
-        unifi.CONF_CONTROLLER: {
-            unifi.CONF_HOST: '1.2.3.4',
-            unifi.CONF_USERNAME: 'username',
-            unifi.CONF_PASSWORD: 'password',
-            unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
-            unifi.CONF_VERIFY_SSL: True
-        },
-        unifi.CONF_POE_CONTROL: False
-    }
+
     unifi_controller = controller.UniFiController(hass, entry)
 
-    with patch.object(controller, 'get_controller', return_value=mock_coro(api)):
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)):
         assert await unifi_controller.async_setup() is True
 
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 0
+    assert not hass.config_entries.async_forward_entry_setup.mock_calls
 
     hass.config_entries.async_forward_entry_unload.return_value = \
         mock_coro(True)
     assert await unifi_controller.async_reset()
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 0
+    assert not hass.config_entries.async_forward_entry_unload.mock_calls
+
+
+async def test_controller_request_update():
+    """First request returns result on success."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+    api = Mock()
+    api.initialize.return_value = mock_coro(True)
+    update = Mock()
+
+    unifi_controller = controller.UniFiController(hass, entry)
+
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)), \
+         patch.object(controller.UniFiController, 'async_update',
+                      return_value=mock_coro(update)):
+        assert await unifi_controller.async_setup() is True
+        assert await unifi_controller.request_update() == update
+
+
+async def test_controller_parallell_request_update():
+    """Second request gets queued and returns result on success."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+    api = Mock()
+    api.initialize.return_value = mock_coro(True)
+    update = Mock()
+
+    unifi_controller = controller.UniFiController(hass, entry)
+    unifi_controller.progress = mock_coro(update)
+
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)), \
+         patch.object(controller.UniFiController, 'async_update',
+                      return_value=mock_coro()):
+        assert await unifi_controller.async_setup() is True
+        assert await unifi_controller.request_update() == update
+
+
+async def test_controller_update():
+    """Running update refreshes data and keeps controller available."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+    api = Mock()
+    api.initialize.return_value = mock_coro(True)
+    api.clients.update.return_value = mock_coro(True)
+    api.devices.update.return_value = mock_coro(True)
+
+    unifi_controller = controller.UniFiController(hass, entry)
+
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)):
+        assert await unifi_controller.async_setup() is True
+        await unifi_controller.async_update()
+
+    assert unifi_controller.available is True
+
+
+async def test_controller_update_make_available():
+    """Running update refreshes data and makes controller available."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+    api = Mock()
+    api.initialize.return_value = mock_coro(True)
+    api.clients.update.return_value = mock_coro(True)
+    api.devices.update.return_value = mock_coro(True)
+
+    unifi_controller = controller.UniFiController(hass, entry)
+    unifi_controller.available = False
+
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)):
+        assert await unifi_controller.async_setup() is True
+        await unifi_controller.async_update()
+
+    assert unifi_controller.available is True
+
+
+async def test_controller_failed_update_successful_login():
+    """Running update can login when requested."""
+    import aiounifi
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+    api = Mock()
+    api.initialize.return_value = mock_coro(True)
+    api.clients.update.side_effect = aiounifi.LoginRequired
+    api.login = Mock()
+    api.login.return_value = mock_coro()
+
+    unifi_controller = controller.UniFiController(hass, entry)
+
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)):
+
+        assert await unifi_controller.async_setup() is True
+        await unifi_controller.async_update()
+
+    assert unifi_controller.available is True
+
+
+async def test_controller_failed_update_failed_login():
+    """Failing to login sets controller to unavailable."""
+    import aiounifi
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+    api = Mock()
+    api.initialize.return_value = mock_coro(True)
+    api.clients.update.side_effect = aiounifi.LoginRequired
+    api.login = Mock()
+    api.login.side_effect = aiounifi.AiounifiException
+
+    unifi_controller = controller.UniFiController(hass, entry)
+
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)):
+
+        assert await unifi_controller.async_setup() is True
+        await unifi_controller.async_update()
+
+    assert unifi_controller.available is False
+
+
+async def test_controller_failed_update_controller_unavailable():
+    """Fail update sets controller to unavailable"""
+    import aiounifi
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+    api = Mock()
+    api.initialize.return_value = mock_coro(True)
+    api.clients.update.side_effect = aiounifi.AiounifiException
+
+    unifi_controller = controller.UniFiController(hass, entry)
+
+    with patch.object(controller, 'get_controller',
+                      return_value=mock_coro(api)):
+
+        assert await unifi_controller.async_setup() is True
+        await unifi_controller.async_update()
+
+    assert unifi_controller.available is False
+
+
+async def test_get_controller(hass):
+    """Successful call."""
+    with patch('aiounifi.Controller.login', return_value=mock_coro()):
+        assert await controller.get_controller(hass, **CONTROLLER_DATA)
+
+
+async def test_get_controller_verify_ssl_false(hass):
+    """Successful call with verify ssl set to false."""
+    controller_data = dict(CONTROLLER_DATA)
+    controller_data[unifi.CONF_VERIFY_SSL] = False
+    with patch('aiounifi.Controller.login', return_value=mock_coro()):
+        assert await controller.get_controller(hass, **controller_data)
+
+
+async def test_get_controller_login_failed(hass):
+    """Check that get_controller can handle a failed login."""
+    import aiounifi
+    result = None
+    with patch('aiounifi.Controller.login', side_effect=aiounifi.Unauthorized):
+        try:
+            result = await controller.get_controller(hass, **CONTROLLER_DATA)
+        except errors.AuthenticationRequired:
+            pass
+        assert result is None
+
+
+async def test_get_controller_controller_unavailable(hass):
+    """Check that get_controller can handle controller being unavailable."""
+    import aiounifi
+    result = None
+    with patch('aiounifi.Controller.login',
+               side_effect=aiounifi.RequestError):
+        try:
+            result = await controller.get_controller(hass, **CONTROLLER_DATA)
+        except errors.CannotConnect:
+            pass
+        assert result is None
+
+
+async def test_get_controller_unknown_error(hass):
+    """Check that get_controller can handle unkown errors."""
+    import aiounifi
+    result = None
+    with patch('aiounifi.Controller.login',
+               side_effect=aiounifi.AiounifiException):
+        try:
+            result = await controller.get_controller(hass, **CONTROLLER_DATA)
+        except errors.AuthenticationRequired:
+            pass
+        assert result is None
