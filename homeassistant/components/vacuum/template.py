@@ -10,10 +10,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED, DOMAIN, PLATFORM_SCHEMA, SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STOP,
-    SUPPORT_STATE, SUPPORT_START, VACUUM_SERVICE_SCHEMA, StateVacuumDevice,
+    ATTR_FAN_SPEED, DOMAIN, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
+    SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
+    SUPPORT_STOP, SUPPORT_STATE, SUPPORT_START, StateVacuumDevice,
     STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE, STATE_RETURNING,
     STATE_ERROR)
 from homeassistant.const import (
@@ -38,8 +37,9 @@ CONF_CLEAN_SPOT_ACTION = 'clean_spot'
 CONF_LOCATE_ACTION = 'locate'
 CONF_SET_FAN_SPEED_ACTION = 'set_fan_speed'
 
-_VALID_STATES = [STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE, STATE_RETURNING, STATE_ERROR]
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+_VALID_STATES = [STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE,
+                 STATE_RETURNING, STATE_ERROR]
 
 VACUUM_SCHEMA = vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
@@ -94,7 +94,8 @@ async def async_setup_platform(
         entity_ids = set()
         manual_entity_ids = device_config.get(CONF_ENTITY_ID)
 
-        for template in (state_template, battery_level_template, fan_speed_template):
+        for template in (state_template, battery_level_template,
+                         fan_speed_template):
             if template is None:
                 continue
             template.hass = hass
@@ -130,11 +131,11 @@ class TemplateVacuum(StateVacuumDevice):
     """A template vacuum component."""
 
     def __init__(self, hass, device_id, friendly_name,
-                state_template, battery_level_template, fan_speed_template,
-                start_action, pause_action, stop_action, return_to_base_action, clean_spot_action,
-                locate_action, set_fan_speed_action, fan_speed_list, entity_ids):
+                 state_template, battery_level_template, fan_speed_template,
+                 start_action, pause_action, stop_action,
+                 return_to_base_action, clean_spot_action, locate_action,
+                 set_fan_speed_action, fan_speed_list, entity_ids):
         """Initialize the fan."""
-
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass)
@@ -274,7 +275,8 @@ class TemplateVacuum(StateVacuumDevice):
 
         if fan_speed in self._fan_speed_list:
             self._fan_speed = fan_speed
-            await self._set_fan_speed_script.async_run({ATTR_FAN_SPEED: fan_speed})
+            await self._set_fan_speed_script.async_run(
+                {ATTR_FAN_SPEED: fan_speed})
         else:
             _LOGGER.error(
                 'Received invalid fan speed: %s. Expected: %s.',
