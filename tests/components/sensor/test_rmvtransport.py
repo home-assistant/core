@@ -1,6 +1,5 @@
 """The tests for the rmvtransport platform."""
 import asyncio
-import logging
 import unittest
 from unittest.mock import patch
 import datetime
