@@ -63,7 +63,6 @@ homeassistant/components/device_tracker/huawei_router.py @abmantis
 homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/history_graph.py @andrey-git
 homeassistant/components/influx.py @fabaff
-homeassistant/components/light/lifx.py @amelchio
 homeassistant/components/light/lifx_legacy.py @amelchio
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
@@ -179,6 +178,10 @@ homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
 homeassistant/components/konnected.py @heythisisnate
 homeassistant/components/*/konnected.py @heythisisnate
+
+# L
+homeassistant/components/lifx.py @amelchio
+homeassistant/components/*/lifx.py @amelchio
 
 # M
 homeassistant/components/matrix.py @tinloaf
