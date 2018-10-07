@@ -30,7 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 CONF_ENTITIES = 'entities'
 CONF_VIEW = 'view'
 CONF_CONTROL = 'control'
-CONF_MODE = 'mode'
+CONF_ALL = 'all'
 
 ATTR_ADD_ENTITIES = 'add_entities'
 ATTR_AUTO = 'auto'
@@ -40,15 +40,13 @@ ATTR_OBJECT_ID = 'object_id'
 ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
 ATTR_VISIBLE = 'visible'
-ATTR_MODE = 'mode'
+ATTR_ALL = 'all'
 
 SERVICE_SET_VISIBILITY = 'set_visibility'
 SERVICE_SET = 'set'
 SERVICE_REMOVE = 'remove'
 
 CONTROL_TYPES = vol.In(['hidden', None])
-
-GROUP_MODE_ALL = 'all'
 
 SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -64,7 +62,7 @@ SET_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ICON): cv.string,
     vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
     vol.Optional(ATTR_VISIBLE): cv.boolean,
-    vol.Optional(ATTR_MODE): cv.string,
+    vol.Optional(ATTR_ALL): cv.boolean,
     vol.Exclusive(ATTR_ENTITIES, 'entities'): cv.entity_ids,
     vol.Exclusive(ATTR_ADD_ENTITIES, 'entities'): cv.entity_ids,
 })
@@ -90,7 +88,7 @@ GROUP_SCHEMA = vol.Schema({
     CONF_NAME: cv.string,
     CONF_ICON: cv.icon,
     CONF_CONTROL: CONTROL_TYPES,
-    CONF_MODE: cv.string,
+    CONF_ALL: cv.boolean,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -221,8 +219,7 @@ async def async_setup(hass, config):
                 service.data.get(ATTR_ADD_ENTITIES) or None
 
             extra_arg = {attr: service.data[attr] for attr in (
-                ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL,
-                ATTR_MODE
+                ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL
             ) if service.data.get(attr) is not None}
 
             await Group.async_create_group(
@@ -230,6 +227,7 @@ async def async_setup(hass, config):
                 object_id=object_id,
                 entity_ids=entity_ids,
                 user_defined=False,
+                mode=service.data.get(ATTR_ALL)
                 **extra_arg
             )
             return
@@ -270,6 +268,10 @@ async def async_setup(hass, config):
 
             if ATTR_VIEW in service.data:
                 group.view = service.data[ATTR_VIEW]
+                need_update = True
+
+            if ATTR_ALL in service.data:
+                group.mode = all if service.data[ATTR_ALL] else any
                 need_update = True
 
             if need_update:
@@ -317,7 +319,7 @@ async def _async_process_config(hass, config, component):
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
         control = conf.get(CONF_CONTROL)
-        mode = conf.get(CONF_MODE)
+        mode = conf.get(CONF_ALL)
 
         # Don't create tasks and await them all. The order is important as
         # groups get a number based on creation order.
@@ -351,7 +353,7 @@ class Group(Entity):
         self.control = control
         self.user_defined = user_defined
         self.mode = any
-        if mode == GROUP_MODE_ALL:
+        if mode:
             self.mode = all
         self._order = order
         self._assumed_state = False

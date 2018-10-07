@@ -40,9 +40,9 @@ set:
     add_entities:
       description: List of members they will change on group listening.
       example: domain.entity_id1, domain.entity_id2
-    mode:
+    all:
       description: Set the on/off-mode of the group.
-      example: all
+      example: True
 
 remove:
   description: Remove a user group.
