@@ -152,9 +152,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     expires_at = config_file.get(ATTR_LAST_SAVED_AT)
     if None not in (access_token, refresh_token):
         # Load existing OAuth session
+        client_id = config_file.get(ATTR_CLIENT_ID)
+        client_secret = config_file.get(ATTR_CLIENT_SECRET)
         authd_client = monzo.MonzoOAuth2Client(
-                                     client_id=config_file.get(ATTR_CLIENT_ID),
-                                     client_secret=config_file.get(ATTR_CLIENT_SECRET),
+                                     client_id=client_id,
+                                     client_secret=client_secret,
                                      access_token=access_token,
                                      refresh_token=refresh_token,
                                      expires_at=expires_at,
@@ -171,9 +173,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for resource in config.get(CONF_MONITORED_RESOURCES):
             if resource == 'pots':
                 for pot in client.get_pots()['pots']:
-                    dev.append(MonzoSensor(client, config_path, resource, pot['id']))
+                    new_sensor = MonzoSensor(client,
+                                             config_path,
+                                             resource,
+                                             pot['id'])
+                    dev.append(new_sensor)
             else:
-                dev.append(MonzoSensor(client, config_path, resource, account_id))
+                new_sensor = MonzoSensor(client,
+                                         config_path,
+                                         resource,
+                                         account_id)
+                dev.append(new_sensor)
 
         add_entities(dev, True)
 
@@ -276,17 +286,16 @@ class MonzoAuthCallbackView(HomeAssistantView):
 class MonzoSensor(Entity):
     """Implementation of a Monzo sensor."""
 
-    def __init__(self, client, config_path, resource_type, account_id, extra=None):
+    def __init__(self, client, config_path, resource_type, account_id):
         """Initialize the Monzo sensor."""
         self.client = client
         self.config_path = config_path
         self.resource_type = resource_type
-        self.extra = extra
 
         if account_id == "":
-            self._account_id = self.client.get_first_account()['id']
-        else:
-            self._account_id = account_id
+            account_id = self.client.get_first_account()['id']
+
+        self._account_id = account_id
 
         if self.resource_type == 'pots':
             pots = self.client.get_pots()['pots']
@@ -296,7 +305,8 @@ class MonzoSensor(Entity):
             self._name = MONZO_RESOURCES_LIST[self.resource_type][0]
 
         if self.resource_type in ['balance', 'dailyspend']:
-            self._unit_of_measurement = self.client.get_balance(self._account_id)['currency']
+            currency = self.client.get_balance(self._account_id)['currency']
+            self._unit_of_measurement = currency
         else:
             self._unit_of_measurement = 'GBP'
         self._state = 0
