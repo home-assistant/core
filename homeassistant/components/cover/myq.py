@@ -11,8 +11,8 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN)
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_OPEN,
-    STATE_CLOSING, STATE_OPENING)
+    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_CLOSING,
+    STATE_OPEN, STATE_OPENING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pymyq==0.0.15']
@@ -21,11 +21,17 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'myq'
 
+STATE_STOPPED = 'stopped'
+STATE_TRANSITION = 'transition'
+
 MYQ_TO_HASS = {
     'closed': STATE_CLOSED,
-    'open': STATE_OPEN,
     'closing': STATE_CLOSING,
-    'opening': STATE_OPENING
+    'open': STATE_OPEN,
+    'opening': STATE_OPENING,
+    'stopped': STATE_STOPPED,
+    'transition': STATE_TRANSITION,
+    'unknown': STATE_UNKNOWN
 }
 
 NOTIFICATION_ID = 'myq_notification'
@@ -128,4 +134,6 @@ class MyQDevice(CoverDevice):
 
     def update(self):
         """Update status of cover."""
-        self._status = self.myq.get_status(self.device_id)
+        status = self.myq.get_status(self.device_id)
+        if status in MYQ_TO_HASS:
+            self._status = status
