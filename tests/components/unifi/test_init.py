@@ -66,8 +66,8 @@ async def test_controller_fail_setup(hass):
     })
     entry.add_to_hass(hass)
 
-    with patch.object(unifi, 'UniFiController') as mock_controller:
-        mock_controller.return_value.async_setup.return_value = mock_coro(False)
+    with patch.object(unifi, 'UniFiController') as mock_cntrlr:
+        mock_cntrlr.return_value.async_setup.return_value = mock_coro(False)
         assert await unifi.async_setup_entry(hass, entry) is False
 
     controller_id = unifi.CONTROLLER_ID.format(
@@ -135,7 +135,6 @@ async def test_unload_entry(hass):
 
 async def test_flow_works(hass, aioclient_mock):
     """Test config flow."""
-
     flow = unifi.UnifiFlowHandler()
     flow.hass = hass
 
@@ -185,7 +184,6 @@ async def test_flow_works(hass, aioclient_mock):
 
 async def test_controller_site_already_configured(hass, aioclient_mock):
     """Test config flow."""
-
     flow = unifi.UnifiFlowHandler()
     flow.hass = hass
 
@@ -209,7 +207,6 @@ async def test_controller_site_already_configured(hass, aioclient_mock):
 
 async def test_user_permissions_low(hass, aioclient_mock):
     """Test config flow."""
-
     flow = unifi.UnifiFlowHandler()
     flow.hass = hass
 

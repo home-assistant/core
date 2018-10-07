@@ -72,6 +72,7 @@ async def test_controller_mac():
 
     assert unifi_controller.mac == '00:11:22:33:44:55'
 
+
 async def test_controller_no_mac():
     """Test that it works to not find the controllers mac."""
     hass = Mock()
@@ -226,8 +227,8 @@ async def test_controller_request_update():
 
     with patch.object(controller, 'get_controller',
                       return_value=mock_coro(api)), \
-         patch.object(controller.UniFiController, 'async_update',
-                      return_value=mock_coro(update)):
+        patch.object(controller.UniFiController, 'async_update',
+                     return_value=mock_coro(update)):
         assert await unifi_controller.async_setup() is True
         assert await unifi_controller.request_update() == update
 
@@ -246,8 +247,8 @@ async def test_controller_parallell_request_update():
 
     with patch.object(controller, 'get_controller',
                       return_value=mock_coro(api)), \
-         patch.object(controller.UniFiController, 'async_update',
-                      return_value=mock_coro()):
+        patch.object(controller.UniFiController, 'async_update',
+                     return_value=mock_coro()):
         assert await unifi_controller.async_setup() is True
         assert await unifi_controller.request_update() == update
 
@@ -340,7 +341,7 @@ async def test_controller_failed_update_failed_login():
 
 
 async def test_controller_failed_update_controller_unavailable():
-    """Fail update sets controller to unavailable"""
+    """Fail update sets controller to unavailable."""
     import aiounifi
     hass = Mock()
     entry = Mock()
