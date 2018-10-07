@@ -32,7 +32,12 @@ async def test_import(hass):
         'usb_path': '/dev/ttyUSB1',
         'database_path': 'zigbee.db',
         'baudrate': 28800,
-        'radio_type': RadioType.xbee
+        'radio_type': RadioType.xbee,
+        'device_config': {
+            '01:23:45:67:89:ab:cd:ef-1': {
+                'type': 'light'
+            }
+        }
     })
 
     assert result['type'] == 'create_entry'
@@ -41,7 +46,12 @@ async def test_import(hass):
         'database_path': 'zigbee.db',
         'usb_path': '/dev/ttyUSB1',
         'baudrate': 28800,
-        'radio_type': 'xbee'
+        'radio_type': 'xbee',
+        'device_config': {
+            '01:23:45:67:89:ab:cd:ef-1': {
+                'type': 'light'
+            }
+        }
     }
 
 
