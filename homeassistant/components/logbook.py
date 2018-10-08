@@ -14,14 +14,15 @@ from homeassistant.loader import bind_hass
 from homeassistant.components import sun
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_HIDDEN, ATTR_NAME, CONF_EXCLUDE,
-    CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED, HTTP_BAD_REQUEST, STATE_NOT_HOME,
-    STATE_OFF, STATE_ON)
+    ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_HIDDEN, ATTR_NAME, ATTR_SERVICE,
+    CONF_EXCLUDE, CONF_INCLUDE, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED,
+    HTTP_BAD_REQUEST, STATE_NOT_HOME, STATE_OFF, STATE_ON)
 from homeassistant.core import (
     DOMAIN as HA_DOMAIN, State, callback, split_entity_id)
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
-from homeassistant.components.homekit.const import EVENT_HOMEKIT_CHANGED
+from homeassistant.components.homekit.const import (
+    ATTR_DISPLAY_NAME, ATTR_VALUE, EVENT_HOMEKIT_CHANGED)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -291,23 +292,20 @@ def humanify(hass, events):
             elif event.event_type == EVENT_HOMEKIT_CHANGED:
                 data = event.data
                 entity_id = data.get(ATTR_ENTITY_ID)
-                display_name = data.get('display_name')
-                message = data.get('message')
+                dsp_name = data.get(ATTR_DISPLAY_NAME) or entity_id
+                service = data.get(ATTR_SERVICE) or ''
+                attribute = data.get(ATTR_VALUE)
 
-                if message:
-                    action = "send command {}".format(message)
-                elif entity_id:
-                    action = "send command {}".format(entity_id)
-                else:
-                    action = "send command"
+                attr_msg = " to {}".format(attribute) if attribute else ''
+                dsp_msg = " for {}".format(dsp_name) if dsp_name else ''
 
-                if display_name:
-                    action = "{} for {}".format(action, display_name)
+                message = "send command {}{}{}".format(
+                    service, attr_msg, dsp_msg)
 
                 yield {
                     'when': event.time_fired,
                     'name': 'HomeKit',
-                    'message': action,
+                    'message': message,
                     'domain': 'homekit',
                     'entity_id': entity_id,
                     'context_id': event.context.id,

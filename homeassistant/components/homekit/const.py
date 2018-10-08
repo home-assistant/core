@@ -5,6 +5,10 @@ DOMAIN = 'homekit'
 HOMEKIT_FILE = '.homekit.state'
 HOMEKIT_NOTIFY_ID = 4663548
 
+# #### Attributes ####
+ATTR_DISPLAY_NAME = 'display_name'
+ATTR_VALUE = 'attribute'
+
 # #### Config ####
 CONF_AUTO_START = 'auto_start'
 CONF_ENTITY_CONFIG = 'entity_config'

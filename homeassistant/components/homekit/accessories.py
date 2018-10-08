@@ -9,18 +9,19 @@ from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.const import (
-    __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID)
+    __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID,
+    ATTR_SERVICE)
 from homeassistant.core import callback as ha_callback
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.event import (
     async_track_state_change, track_point_in_utc_time)
-from homeassistant.components.logbook import ATTR_MESSAGE
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    BRIDGE_MODEL, BRIDGE_SERIAL_NUMBER, CHAR_BATTERY_LEVEL,
-    CHAR_CHARGING_STATE, CHAR_STATUS_LOW_BATTERY, DEBOUNCE_TIMEOUT,
-    EVENT_HOMEKIT_CHANGED, MANUFACTURER, SERV_BATTERY_SERVICE)
+    ATTR_DISPLAY_NAME, ATTR_VALUE, BRIDGE_MODEL, BRIDGE_SERIAL_NUMBER,
+    CHAR_BATTERY_LEVEL, CHAR_CHARGING_STATE, CHAR_STATUS_LOW_BATTERY,
+    DEBOUNCE_TIMEOUT, EVENT_HOMEKIT_CHANGED, MANUFACTURER,
+    SERV_BATTERY_SERVICE)
 from .util import (
     convert_to_float, show_setup_message, dismiss_setup_message)
 
@@ -138,23 +139,16 @@ class HomeAccessory(Accessory):
         """
         raise NotImplementedError()
 
-    def call_service(self, acc_domain, service, params, logbook_message=None):
-        """Sent event for logbook that a change was initiated from homekit.
-
-        Then call the service to change the state.
-        This method is to be called from methods that change states using
-        self.call_service(DOMAIN, service, params, logbook_message).
-        """
-        if logbook_message is None:
-            logbook_message = service
-
+    def call_service(self, domain, service, params, attribute=None):
+        """Fire event and call service for changes from HomeKit."""
         self.hass.bus.fire(EVENT_HOMEKIT_CHANGED, {
             ATTR_ENTITY_ID: self.entity_id,
-            'display_name': self.display_name,
-            ATTR_MESSAGE: logbook_message
+            ATTR_DISPLAY_NAME: self.display_name,
+            ATTR_SERVICE: service,
+            ATTR_VALUE: attribute
         })
 
-        self.hass.services.call(acc_domain, service, params)
+        self.hass.services.call(domain, service, params)
 
 
 class HomeBridge(Bridge):
