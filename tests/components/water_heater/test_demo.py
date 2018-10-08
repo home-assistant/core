@@ -2,7 +2,7 @@
 import unittest
 
 from homeassistant.util.unit_system import (
-    IMPERIAL_SYSTEM, METRIC_SYSTEM
+    IMPERIAL_SYSTEM
 )
 from homeassistant.setup import setup_component
 from homeassistant.components import water_heater
