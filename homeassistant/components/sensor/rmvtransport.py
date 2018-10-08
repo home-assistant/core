@@ -78,7 +78,6 @@ async def async_setup_platform(hass, config, async_add_entities,
     for next_departure in config.get(CONF_NEXT_DEPARTURE):
         sensors.append(
             RMVDepartureSensor(
-                hass.loop,
                 session,
                 next_departure[CONF_STATION],
                 next_departure.get(CONF_DESTINATIONS),
@@ -94,15 +93,14 @@ async def async_setup_platform(hass, config, async_add_entities,
 class RMVDepartureSensor(Entity):
     """Implementation of an RMV departure sensor."""
 
-    def __init__(self, loop, session, station, destinations, directions,
-                 lines, products, time_offset, max_journeys, name):
+    def __init__(self, session, station, destinations, directions, lines,
+                 products, time_offset, max_journeys, name):
         """Initialize the sensor."""
-        self._loop = loop
         self._session = session
         self._station = station
         self._name = name
         self._state = None
-        self.data = RMVDepartureData(loop, session, station, destinations,
+        self.data = RMVDepartureData(session, station, destinations,
                                      directions, lines, products, time_offset,
                                      max_journeys)
         self._icon = ICONS[None]
@@ -169,12 +167,11 @@ class RMVDepartureSensor(Entity):
 class RMVDepartureData:
     """Pull data from the opendata.rmv.de web page."""
 
-    def __init__(self, loop, session, station_id, destinations, directions,
-                 lines, products, time_offset, max_journeys):
+    def __init__(self, session, station_id, destinations, directions, lines,
+                 products, time_offset, max_journeys):
         """Initialize the sensor."""
         from RMVtransport import RMVtransport
 
-        self._loop = loop
         self._session = session
         self.station = None
         self._station_id = station_id
@@ -184,7 +181,7 @@ class RMVDepartureData:
         self._products = products
         self._time_offset = time_offset
         self._max_journeys = max_journeys
-        self.rmv = RMVtransport(self._loop, self._session)
+        self.rmv = RMVtransport(self._session)
         self.departures = []
 
     @Throttle(SCAN_INTERVAL)
