@@ -616,7 +616,7 @@ class TestCoverMQTT(unittest.TestCase):
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
             False, None, 100, 0, 0, 100, False, False, None, None, None,
-            None)
+            None, None)
 
         self.assertEqual(44, mqtt_cover.find_percentage_in_range(44))
 
@@ -627,7 +627,7 @@ class TestCoverMQTT(unittest.TestCase):
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
             False, None, 180, 80, 80, 180, False, False, None, None, None,
-            None)
+            None, None)
 
         self.assertEqual(40, mqtt_cover.find_percentage_in_range(120))
 
@@ -638,7 +638,7 @@ class TestCoverMQTT(unittest.TestCase):
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
             False, None, 100, 0, 0, 100, False, True, None, None, None,
-            None)
+            None, None)
 
         self.assertEqual(56, mqtt_cover.find_percentage_in_range(44))
 
@@ -649,7 +649,7 @@ class TestCoverMQTT(unittest.TestCase):
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
             False, None, 180, 80, 80, 180, False, True, None, None, None,
-            None)
+            None, None)
 
         self.assertEqual(60, mqtt_cover.find_percentage_in_range(120))
 
@@ -660,7 +660,7 @@ class TestCoverMQTT(unittest.TestCase):
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
             False, None, 100, 0, 0, 100, False, False, None, None, None,
-            None)
+            None, None)
 
         self.assertEqual(44, mqtt_cover.find_in_range_from_percent(44))
 
@@ -671,7 +671,7 @@ class TestCoverMQTT(unittest.TestCase):
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
             False, None, 180, 80, 80, 180, False, False, None, None, None,
-            None)
+            None, None)
 
         self.assertEqual(120, mqtt_cover.find_in_range_from_percent(40))
 
@@ -682,7 +682,7 @@ class TestCoverMQTT(unittest.TestCase):
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
             False, None, 100, 0, 0, 100, False, True, None, None, None,
-            None)
+            None, None)
 
         self.assertEqual(44, mqtt_cover.find_in_range_from_percent(56))
 
@@ -693,7 +693,7 @@ class TestCoverMQTT(unittest.TestCase):
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
             False, None, 180, 80, 80, 180, False, True, None, None, None,
-            None)
+            None, None)
 
         self.assertEqual(120, mqtt_cover.find_in_range_from_percent(60))
 
