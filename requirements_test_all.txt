@@ -25,7 +25,7 @@ HAP-python==2.2.2
 PyRMVtransport==0.1
 
 # homeassistant.components.sensor.transport_nsw
-PyTransportNSW==0.0.7
+PyTransportNSW==0.0.8
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5

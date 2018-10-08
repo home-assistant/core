@@ -32,9 +32,6 @@ class TestRMVtransportSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to run when tests begin."""
         self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG
-        self.reference = {}
-        self.entities = []
 
     def tearDown(self):
         """Stop everything that was started."""
