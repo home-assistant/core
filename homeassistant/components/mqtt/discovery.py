@@ -49,6 +49,7 @@ CONFIG_ENTRY_PLATFORMS = {
     'switch': ['mqtt'],
     'climate': ['mqtt'],
     'alarm_control_panel': ['mqtt'],
+    'fan': ['mqtt'],
 }
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
