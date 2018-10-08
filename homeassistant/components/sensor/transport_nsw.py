@@ -11,53 +11,53 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+from homeassistant.const import (CONF_NAME, CONF_API_KEY, ATTR_ATTRIBUTION)
 
-REQUIREMENTS = ['PyTransportNSW==0.0.6']
+REQUIREMENTS = ['PyTransportNSW==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STOP_ID = 'stopid'
+ATTR_STOP_ID = 'stop_id'
 ATTR_ROUTE = 'route'
 ATTR_DUE_IN = 'due'
 ATTR_DELAY = 'delay'
-ATTR_REALTIME = 'realtime'
+ATTR_REAL_TIME = 'real_time'
 
 CONF_ATTRIBUTION = "Data provided by Transport NSW"
-CONF_STOP_ID = 'stopid'
+CONF_STOP_ID = 'stop_id'
 CONF_ROUTE = 'route'
-CONF_APIKEY = 'apikey'
+CONF_API_KEY = 'api_key'
 
 DEFAULT_NAME = "Next Bus"
 ICON = "mdi:bus"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_ID): cv.string,
-    vol.Required(CONF_APIKEY): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_ROUTE, default=""): cv.string,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transport NSW sensor."""
-    name = config.get(CONF_NAME)
-    stopid = config.get(CONF_STOP_ID)
+    stop_id = config[CONF_STOP_ID]
+    api_key = config[CONF_API_KEY]
     route = config.get(CONF_ROUTE)
-    apikey = config.get(CONF_APIKEY)
+    name = config.get(CONF_NAME)
 
-    data = PublicTransportData(stopid, route, apikey)
-    add_devices([TransportNSWSensor(data, stopid, route, name)], True)
+    data = PublicTransportData(stop_id, route, api_key)
+    add_entities([TransportNSWSensor(data, stop_id, route, name)], True)
 
 
 class TransportNSWSensor(Entity):
     """Implementation of an Transport NSW sensor."""
 
-    def __init__(self, data, stopid, route, name):
+    def __init__(self, data, stop_id, route, name):
         """Initialize the sensor."""
         self.data = data
         self._name = name
-        self._stopid = stopid
+        self._stop_id = stop_id
         self._route = route
         self._times = self._state = None
 
@@ -76,11 +76,11 @@ class TransportNSWSensor(Entity):
         """Return the state attributes."""
         if self._times is not None:
             return {
-                ATTR_DUE_IN: self._times[0][ATTR_DUE_IN],
-                ATTR_STOP_ID: self._stopid,
-                ATTR_ROUTE: self._times[0][ATTR_ROUTE],
-                ATTR_DELAY: self._times[0][ATTR_DELAY],
-                ATTR_REALTIME: self._times[0][ATTR_REALTIME],
+                ATTR_DUE_IN: self._times[ATTR_DUE_IN],
+                ATTR_STOP_ID: self._stop_id,
+                ATTR_ROUTE: self._times[ATTR_ROUTE],
+                ATTR_DELAY: self._times[ATTR_DELAY],
+                ATTR_REAL_TIME: self._times[ATTR_REAL_TIME],
                 ATTR_ATTRIBUTION: CONF_ATTRIBUTION
             }
 
@@ -99,7 +99,7 @@ class TransportNSWSensor(Entity):
         self.data.update()
         self._times = self.data.info
         try:
-            self._state = self._times[0][ATTR_DUE_IN]
+            self._state = self._times[ATTR_DUE_IN]
         except TypeError:
             pass
 
@@ -107,25 +107,24 @@ class TransportNSWSensor(Entity):
 class PublicTransportData(object):
     """The Class for handling the data retrieval."""
 
-    def __init__(self, stopid, route, apikey):
+    def __init__(self, stop_id, route, api_key):
         """Initialize the data object."""
         import TransportNSW
-        self._stopid = stopid
+        self._stop_id = stop_id
         self._route = route
-        self._apikey = apikey
-        self.info = [{ATTR_ROUTE: self._route,
+        self._api_key = api_key
+        self.info = {ATTR_ROUTE: self._route,
                       ATTR_DUE_IN: 'n/a',
                       ATTR_DELAY: 'n/a',
-                      ATTR_REALTIME: 'n/a'}]
+                      ATTR_REAL_TIME: 'n/a'}
         self.tnsw = TransportNSW.TransportNSW()
 
     def update(self):
         """Get the next leave time."""
-        _data = self.tnsw.get_departures(self._stopid,
+        _data = self.tnsw.get_departures(self._stop_id,
                                          self._route,
-                                         self._apikey)
-        self.info = [{ATTR_ROUTE: _data[0]['route'],
-                      ATTR_DUE_IN: _data[0]['due'],
-                      ATTR_DELAY: _data[0]['delay'],
-                      ATTR_REALTIME: _data[0]['realtime']}]
-        return
+                                         self._api_key)
+        self.info = {ATTR_ROUTE: _data['route'],
+                      ATTR_DUE_IN: _data['due'],
+                      ATTR_DELAY: _data['delay'],
+                      ATTR_REAL_TIME: _data['real_time']}
