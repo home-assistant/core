@@ -30,8 +30,6 @@ ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_REGION): vol.Any('north_america', 'china',
                                        'rest_of_world'),
-    vol.Optional(CONF_UNIT_SYSTEM): vol.Any(CONF_UNIT_SYSTEM_METRIC,
-                                            CONF_UNIT_SYSTEM_IMPERIAL),
     vol.Optional(CONF_READ_ONLY, default=False): cv.boolean,
 })
 
@@ -90,9 +88,7 @@ def setup_account(account_config: dict, hass, name: str) \
     region = account_config[CONF_REGION]
     read_only = account_config[CONF_READ_ONLY]
 
-    if account_config.get(CONF_UNIT_SYSTEM):
-        unit_system = account_config[CONF_UNIT_SYSTEM]
-    elif hass.config.units.is_imperial:
+    if hass.config.units.is_imperial:
         unit_system = CONF_UNIT_SYSTEM_IMPERIAL
     else:
         unit_system = CONF_UNIT_SYSTEM_METRIC
