@@ -130,13 +130,16 @@ class AuthManager:
             name=name,
             system_generated=True,
             is_active=True,
+            groups=[],
         )
 
     async def async_create_user(self, name: str) -> models.User:
         """Create a user."""
+        group = (await self._store.async_get_groups())[0]
         kwargs = {
             'name': name,
             'is_active': True,
+            'groups': [group]
         }  # type: Dict[str, Any]
 
         if await self._user_should_be_owner():
