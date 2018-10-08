@@ -1,6 +1,7 @@
 """Helpers to execute scripts."""
 
 import logging
+from contextlib import suppress
 from itertools import islice
 from typing import Optional, Sequence
 
@@ -95,10 +96,8 @@ class Script():
                 def async_script_delay(now):
                     """Handle delay."""
                     # pylint: disable=cell-var-from-loop
-                    try:
+                    with suppress(ValueError):
                         self._async_listener.remove(unsub)
-                    except ValueError:
-                        pass
 
                     self.hass.async_create_task(
                         self.async_run(variables, context))
@@ -244,10 +243,8 @@ class Script():
         @callback
         def async_script_timeout(now):
             """Call after timeout is retrieve."""
-            try:
+            with suppress(ValueError):
                 self._async_listener.remove(unsub)
-            except ValueError:
-                pass
 
             # Check if we want to continue to execute
             # the script after the timeout
