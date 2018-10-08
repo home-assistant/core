@@ -146,7 +146,7 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
                 return
 
             if (self._state and self._off_delay is not None):
-
+                @callback
                 def off_delay_listener(now):
                     """Switch device off after a delay."""
                     self._delay_listener = None
