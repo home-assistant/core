@@ -6,11 +6,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME)
 from homeassistant.helpers import aiohttp_client
-from homeassistant.util.json import save_json
 
-from .const import DATA_FILE_SCAFFOLD, DOMAIN
+from .const import DOMAIN
 
 
 @callback
@@ -60,7 +60,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
 
         username = user_input[CONF_USERNAME]
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        token_file = self.hass.config.path(DATA_FILE_SCAFFOLD.format(username))
 
         try:
             simplisafe = await API.login_via_credentials(
@@ -68,11 +67,10 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
         except SimplipyError:
             return await self._show_form({'base': 'invalid_credentials'})
 
-        config_data = {'refresh_token': simplisafe.refresh_token}
-        await self.hass.async_add_executor_job(
-            save_json, self.hass.config.path(token_file), config_data)
-
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],
-            data={CONF_USERNAME: username},
+            data={
+                CONF_USERNAME: username,
+                CONF_TOKEN: simplisafe.refresh_token
+            },
         )

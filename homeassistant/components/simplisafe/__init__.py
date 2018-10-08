@@ -12,19 +12,16 @@ from homeassistant.components.alarm_control_panel import (
     SCAN_INTERVAL as DEFAULT_SCAN_INTERVAL)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    CONF_CODE, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
+    CONF_CODE, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_USERNAME)
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.json import load_json, save_json
 
 from homeassistant.helpers import config_validation as cv
 
 from .config_flow import configured_instances
-from .const import (
-    DATA_CLIENT, DATA_FILE_SCAFFOLD, DATA_LISTENER, DOMAIN, TOPIC_UPDATE)
-
-CONF_TOKEN_FILE = 'token_file'
+from .const import DATA_CLIENT, DATA_LISTENER, DOMAIN, TOPIC_UPDATE
 
 REQUIREMENTS = ['simplisafe-python==3.1.6']
 
@@ -46,6 +43,16 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.ensure_list, [ACCOUNT_CONFIG_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+
+@callback
+def _async_save_refresh_token(hass, config_entry, token):
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            CONF_USERNAME: config_entry.data[CONF_USERNAME],
+            CONF_TOKEN: token
+        })
 
 
 async def async_setup(hass, config):
@@ -77,25 +84,20 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up OpenUV as config entry."""
+    """Set up SimpliSafe as config entry."""
     from simplipy import API
     from simplipy.errors import SimplipyError
-
-    token_filepath = hass.config.path(
-        DATA_FILE_SCAFFOLD.format(config_entry.data[CONF_USERNAME]))
-    token_data = await hass.async_add_executor_job(load_json, token_filepath)
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
         simplisafe = await API.login_via_token(
-            token_data['refresh_token'], websession)
+            config_entry.data[CONF_TOKEN], websession)
     except SimplipyError as err:
         _LOGGER.error("There was an error during setup: %s", err)
         return False
 
-    await hass.async_add_executor_job(
-        save_json, token_filepath, {'refresh_token': simplisafe.refresh_token})
+    _async_save_refresh_token(hass, config_entry, simplisafe.refresh_token)
 
     systems = await simplisafe.get_systems()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = systems
@@ -112,9 +114,8 @@ async def async_setup_entry(hass, config_entry):
             async_dispatcher_send(hass, TOPIC_UPDATE.format(system.system_id))
 
             if system.api.refresh_token_dirty:
-                await hass.async_add_executor_job(
-                    save_json, token_filepath,
-                    {'refresh_token': system.api.refresh_token})
+                _async_save_refresh_token(
+                    hass, config_entry, system.api.refresh_token)
 
     hass.data[DOMAIN][DATA_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
