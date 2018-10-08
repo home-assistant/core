@@ -114,9 +114,9 @@ class PublicTransportData(object):
         self._route = route
         self._api_key = api_key
         self.info = {ATTR_ROUTE: self._route,
-                      ATTR_DUE_IN: 'n/a',
-                      ATTR_DELAY: 'n/a',
-                      ATTR_REAL_TIME: 'n/a'}
+                     ATTR_DUE_IN: 'n/a',
+                     ATTR_DELAY: 'n/a',
+                     ATTR_REAL_TIME: 'n/a'}
         self.tnsw = TransportNSW.TransportNSW()
 
     def update(self):
@@ -125,6 +125,6 @@ class PublicTransportData(object):
                                          self._route,
                                          self._api_key)
         self.info = {ATTR_ROUTE: _data['route'],
-                      ATTR_DUE_IN: _data['due'],
-                      ATTR_DELAY: _data['delay'],
-                      ATTR_REAL_TIME: _data['real_time']}
+                     ATTR_DUE_IN: _data['due'],
+                     ATTR_DELAY: _data['delay'],
+                     ATTR_REAL_TIME: _data['real_time']}

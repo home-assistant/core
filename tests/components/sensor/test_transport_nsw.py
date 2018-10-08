@@ -14,7 +14,7 @@ VALID_CONFIG = {'sensor': {
     }
 
 
-def get_departuresMock(_stop_id, route, api_key): 
+def get_departuresMock(_stop_id, route, api_key):
     """Mock TransportNSW departures loading."""
     data = {
         'stopid': '209516',
@@ -24,6 +24,7 @@ def get_departuresMock(_stop_id, route, api_key):
         'realtime': 'y'
         }
     return data
+
 
 class TestRMVtransportSensor(unittest.TestCase):
     """Test the TransportNSW sensor."""
