@@ -84,6 +84,7 @@ TEST_REQUIREMENTS = (
     'pysonos',
     'pyqwikswitch',
     'PyRMVtransport',
+    'PyTransportNSW',
     'pyspcwebgw',
     'python-forecastio',
     'python-nest',
