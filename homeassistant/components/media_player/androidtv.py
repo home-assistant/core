@@ -120,6 +120,7 @@ SERVICE_KEY_SCHEMA = vol.Schema({
 
 DATA_KEY = '{}.androidtv'.format(DOMAIN)
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the androidtv platform."""
     if DATA_KEY not in hass.data:
