@@ -909,16 +909,26 @@ class MqttEntityDeviceInfo(Entity):
         if not self._device_config:
             return None
 
-        return {
+        info = {
             'identifiers': {
                 (DOMAIN, id_)
                 for id_ in self._device_config[CONF_IDENTIFIERS]
             },
             'connections': {
                 tuple(x) for x in self._device_config[CONF_CONNECTIONS]
-            },
-            'manufacturer': self._device_config.get(CONF_MANUFACTURER),
-            'model': self._device_config.get(CONF_MODEL),
-            'name': self._device_config.get(CONF_NAME),
-            'sw_version': self._device_config.get(CONF_SW_VERSION),
+            }
         }
+
+        if CONF_MANUFACTURER in self._device_config:
+            info['manufacturer'] = self._device_config[CONF_MANUFACTURER]
+
+        if CONF_MODEL in self._device_config:
+            info['model'] = self._device_config[CONF_MODEL]
+
+        if CONF_NAME in self._device_config:
+            info['name'] = self._device_config[CONF_NAME]
+
+        if CONF_SW_VERSION in self._device_config:
+            info['sw_version'] = self._device_config[CONF_SW_VERSION]
+
+        return info
