@@ -95,7 +95,11 @@ class Script():
                 def async_script_delay(now):
                     """Handle delay."""
                     # pylint: disable=cell-var-from-loop
-                    self._async_remove_listener()
+                    try:
+                        self._async_listener.remove(unsub)
+                    except ValueError:
+                        pass
+
                     self.hass.async_create_task(
                         self.async_run(variables, context))
 
@@ -240,7 +244,10 @@ class Script():
         @callback
         def async_script_timeout(now):
             """Call after timeout is retrieve."""
-            self._async_remove_listener()
+            try:
+                self._async_listener.remove(unsub)
+            except ValueError:
+                pass
 
             # Check if we want to continue to execute
             # the script after the timeout
