@@ -91,7 +91,7 @@ async def async_send_message(sender, password, recipient, use_tls,
             self.add_event_handler(
                 'failed_auth', self.disconnect_on_login_fail)
             self.add_event_handler('session_start', self.start)
-            # TODO test room
+
             if room:
                 self.register_plugin('xep_0045')  # MUC
             if not verify_certificate:
@@ -105,8 +105,8 @@ async def async_send_message(sender, password, recipient, use_tls,
             """Start the communication and sends the message."""
             _LOGGER.debug("event handler callback called on start")
 
-            self.send_presence()
             self.get_roster()
+            self.send_presence()
             _LOGGER.debug("sender {}, message: {}".format(sender, message))
             if room:
                 _LOGGER.debug("Joining room %s.", room)
@@ -125,8 +125,6 @@ async def async_send_message(sender, password, recipient, use_tls,
         @staticmethod
         def discard_ssl_invalid_cert(event):
             """Do nothing if ssl certificate is invalid."""
-            _LOGGER.debug("event handler callback called "
-                          "on discard_ssl_invalid_cert")
             _LOGGER.info('Ignoring invalid ssl certificate as requested.')
 
     SendNotificationBot()
