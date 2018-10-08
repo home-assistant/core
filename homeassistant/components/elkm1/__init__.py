@@ -35,7 +35,7 @@ CONF_ENABLED = 'enabled'
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ['alarm_control_panel', 'light']
+SUPPORTED_DOMAINS = ['alarm_control_panel', 'light', 'switch']
 
 
 def _host_validator(config):
@@ -197,7 +197,7 @@ class ElkEntity(Entity):
         return attrs
 
     def _element_changed(self, element, changeset):
-        raise NotImplementedError()
+        pass
 
     @callback
     def _element_callback(self, element, changeset):
