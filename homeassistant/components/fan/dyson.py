@@ -11,17 +11,15 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import (
-    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity,
-    SUPPORT_NIGHT_MODE, SUPPORT_ANGLE, FLOW_FRONT, FLOW_BACK,
-    SUPPORT_FLOW_DIRECTION, SUPPORT_TIMER)
+    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.const import CONF_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NIGHT_MODE = 'night_mode'
 
-ATTR_IS_NIGHT_MODE = 'is_night_mode'
-ATTR_IS_AUTO_MODE = 'is_auto_mode'
+ATTR_IS_NIGHT_MODE = 'night_mode'
+ATTR_IS_AUTO_MODE = 'auto_mode'
 
 DEPENDENCIES = ['dyson']
 DYSON_FAN_DEVICES = 'dyson_fan_devices'
@@ -187,7 +185,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         return None
 
     @property
-    def night_mode(self):
+    def is_night_mode(self):
         """Return Night mode."""
         return self._device.state.night_mode == "ON"
 
@@ -241,6 +239,14 @@ class DysonPureCoolLinkDevice(FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
+
+    @property
+    def device_state_attributes(self) -> dict:
+        """Return optional state attributes."""
+        return {
+            ATTR_IS_NIGHT_MODE: self.is_night_mode,
+            ATTR_IS_AUTO_MODE: self.is_auto_mode
+            }
 
 
 class DysonPureCoolDevice(FanEntity):
@@ -320,34 +326,6 @@ class DysonPureCoolDevice(FanEntity):
         else:
             self._device.disable_night_mode()
 
-    def set_angle(self, angle_low: int = None, angle_high: int = None) -> None:
-        """Set fan angle."""
-
-        _LOGGER.debug("Set fan oscillation angle from %s to %s for device %s",
-                      angle_low, angle_high, self.name)
-
-        self._device.enable_oscillation(angle_low, angle_high)
-
-    def set_timer(self, timer: str = None) -> None:
-        """Set timer."""
-
-        _LOGGER.debug("Set fan sleep timer to %s for device %s", timer, self.name)
-
-        if timer == 'OFF':
-            self._device.disable_sleep_timer()
-        else:
-            self._device.enable_sleep_timer(int(timer))
-
-    def set_flow_direction(self, flow_direction: str = None):
-        """Set flow direction."""
-
-        _LOGGER.debug("Set fan flow direction to %s for device %s", flow_direction, self.name)
-
-        if flow_direction == FLOW_FRONT:
-            self._device.enable_frontal_direction()
-        else:
-            self._device.disable_frontal_direction()
-
     @property
     def oscillating(self):
         """Return the oscillation state."""
@@ -372,32 +350,14 @@ class DysonPureCoolDevice(FanEntity):
         return None
 
     @property
-    def night_mode(self):
+    def is_night_mode(self):
         """Return Night mode."""
         return self._device.state.night_mode == "ON"
 
     @property
-    def angle_low(self):
-        """Return Night mode."""
-        return self._device.state.oscillation_angle_low
-
-    @property
-    def angle_high(self):
-        """Return Night mode."""
-        return self._device.state.oscillation_angle_high
-
-    @property
-    def timer(self):
-        return self._device.state.sleep_timer
-
-    @property
-    def flow_direction(self):
-        from libpurecoollink.const import FrontalDirection
-
-        if self._device.state.front_direction == FrontalDirection.FRONTAL_ON.value:
-            return FLOW_FRONT
-
-        return FLOW_BACK
+    def is_auto_mode(self):
+        """Return auto mode."""
+        return self._device.state.auto_mode == "ON"
 
     @property
     def speed_list(self) -> list:
@@ -424,16 +384,12 @@ class DysonPureCoolDevice(FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_OSCILLATE | \
-            SUPPORT_SET_SPEED | \
-            SUPPORT_NIGHT_MODE | \
-            SUPPORT_ANGLE | \
-            SUPPORT_TIMER | \
-            SUPPORT_FLOW_DIRECTION
+            SUPPORT_SET_SPEED
 
     @property
     def device_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
-            ATTR_IS_NIGHT_MODE: self.night_mode,
+            ATTR_IS_NIGHT_MODE: self.is_night_mode,
             ATTR_IS_AUTO_MODE: self.is_auto_mode
-            }
+        }

@@ -18,6 +18,7 @@ from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,18 +36,10 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
-SUPPORT_NIGHT_MODE = 8
-SUPPORT_ANGLE = 16
-SUPPORT_TIMER = 32
-SUPPORT_FLOW_DIRECTION = 64
 
 SERVICE_SET_SPEED = 'set_speed'
 SERVICE_OSCILLATE = 'oscillate'
 SERVICE_SET_DIRECTION = 'set_direction'
-SERVICE_SET_NIGHT_MODE = 'set_night_mode'
-SERVICE_SET_ANGLE = 'set_angle'
-SERVICE_SET_TIMER = 'set_timer'
-SERVICE_SET_FLOW_DIRECTION = 'set_flow_direction'
 
 SPEED_OFF = 'off'
 SPEED_LOW = 'low'
@@ -56,29 +49,16 @@ SPEED_HIGH = 'high'
 DIRECTION_FORWARD = 'forward'
 DIRECTION_REVERSE = 'reverse'
 
-FLOW_FRONT = 'front'
-FLOW_BACK = 'back'
-
 ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
 ATTR_OSCILLATING = 'oscillating'
 ATTR_DIRECTION = 'direction'
-ATTR_NIGHT_MODE = 'night_mode'
-ATTR_ANGLE_LOW = 'angle_low'
-ATTR_ANGLE_HIGH = 'angle_high'
-ATTR_TIMER = 'timer'
-ATTR_FLOW_DIRECTION = 'flow_direction'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
     'oscillating': ATTR_OSCILLATING,
     'direction': ATTR_DIRECTION,
-    'night_mode': ATTR_NIGHT_MODE,
-    'angle_low': ATTR_ANGLE_LOW,
-    'angle_high': ATTR_ANGLE_HIGH,
-    'timer': ATTR_TIMER,
-    'flow_direction': ATTR_FLOW_DIRECTION,
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
@@ -107,27 +87,6 @@ FAN_TOGGLE_SCHEMA = vol.Schema({
 FAN_SET_DIRECTION_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_DIRECTION): cv.string
-})  # type: dict
-
-FAN_SET_NIGHT_MODE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_NIGHT_MODE): cv.boolean
-})  # type: dict
-
-FAN_SET_ANGLE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_ANGLE_LOW): cv.positive_int,
-    vol.Optional(ATTR_ANGLE_HIGH): cv.positive_int
-})  # type: dict
-
-FAN_SET_TIMER_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TIMER): cv.string
-})  # type: dict
-
-FAN_SET_FLOW_DIRECTION_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_FLOW_DIRECTION): cv.string
 })  # type: dict
 
 
@@ -210,62 +169,6 @@ def set_direction(hass, entity_id: str = None, direction: str = None) -> None:
     hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, data)
 
 
-@bind_hass
-def set_night_mode(hass, entity_id: str = None,
-                   night_mode: bool = True) -> None:
-    """Set night mode"""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_NIGHT_MODE, night_mode),
-        ] if value is not None
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_NIGHT_MODE, data)
-
-
-@bind_hass
-def set_angle(hass, entity_id: str = None,
-              angle_low: int = None,
-              angle_high: int = None) -> None:
-    """Set oscillation angle"""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_ANGLE_LOW, angle_low),
-            (ATTR_ANGLE_HIGH, angle_high),
-        ] if value is not None
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_ANGLE, data)
-
-
-@bind_hass
-def set_timer(hass, entity_id: str = None, timer: str = None) -> None:
-    """Set oscillation angle"""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_TIMER, timer),
-        ] if value is not None
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_ANGLE, data)
-
-
-@bind_hass
-def set_flow_direction(hass, entity_id: str = None, flow_direction: str = None) -> None:
-    """Set oscillation angle"""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_FLOW_DIRECTION, flow_direction),
-        ] if value is not None
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_ANGLE, data)
-
-
 @asyncio.coroutine
 def async_setup(hass, config: dict):
     """Expose fan control via statemachine and services."""
@@ -345,18 +248,6 @@ class FanEntity(ToggleEntity):
         return self.hass.async_add_job(
             ft.partial(self.turn_on, speed, **kwargs))
 
-    def turn_off(self, **kwargs):
-        """Turn off the fan."""
-        raise NotImplementedError()
-
-    def async_turn_off(self, **kwargs):
-        """Turn off the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
-            ft.partial(self.turn_off, **kwargs))
-
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         pass
@@ -368,57 +259,13 @@ class FanEntity(ToggleEntity):
         """
         return self.hass.async_add_job(self.oscillate, oscillating)
 
-    def set_night_mode(self, night_mode: bool) -> None:
-        """Oscillate the fan."""
-        pass
-
-    def async_set_night_mode(self, night_mode: bool):
-        """Set fan night mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self, night_mode)
-
-    def set_angle(self, angle_low: int = None, angle_high: int = None) -> None:
-        """set the oscillation angle of the the fan."""
-        pass
-
-    def async_set_angle(self, angle_low: int = None, angle_high: int = None):
-        """set the oscillation angle of the the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_angle, angle_low, angle_high)
-
-    def set_timer(self: ToggleEntity, timer: str = None) -> None:
-        """set the timer of the the fan."""
-        pass
-
-    def async_set_timer(self, timer: str = None):
-        """set the timer of the the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_timer, timer)
-
-    def set_flow_direction(self, flow_direction: str = None) -> None:
-        """set flow direction of the the fan."""
-        pass
-
-    def async_set_flow_direction(self, flow_direction: str = None):
-        """set the flow direction of the the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_flow_direction, flow_direction)
-
     @property
     def is_on(self):
         """Return true if the entity is on."""
         return self.speed not in [SPEED_OFF, STATE_UNKNOWN]
 
     @property
-    def speed(self):
+    def speed(self) -> str:
         """Return the current speed."""
         return None
 
@@ -430,31 +277,6 @@ class FanEntity(ToggleEntity):
     @property
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
-        return None
-
-    @property
-    def night_mode(self):
-        """Return night mode status"""
-        return None
-
-    @property
-    def angle_low(self):
-        """Return angle low status"""
-        return None
-
-    @property
-    def angle_high(self):
-        """Return angle low status"""
-        return None
-
-    @property
-    def timer(self):
-        """Return timer status"""
-        return None
-
-    @property
-    def flow_direction(self):
-        """Return flow direction status"""
         return None
 
     @property
