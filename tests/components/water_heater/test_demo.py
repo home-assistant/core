@@ -2,7 +2,7 @@
 import unittest
 
 from homeassistant.util.unit_system import (
-    IMPERIAL_SYSTEM
+    IMPERIAL_SYSTEM, METRIC_SYSTEM
 )
 from homeassistant.setup import setup_component
 from homeassistant.components import water_heater
@@ -12,6 +12,7 @@ from tests.components.water_heater import common
 
 
 ENTITY_WATER_HEATER = 'water_heater.demo_water_heater'
+ENTITY_WATER_HEATER_CELSIUS = 'water_heater.demo_water_heater_celsius'
 
 
 class TestDemowater_heater(unittest.TestCase):
@@ -102,7 +103,16 @@ class TestDemowater_heater(unittest.TestCase):
 
     def test_set_away_mode_off(self):
         """Test setting the away mode off/false."""
-        common.set_away_mode(self.hass, False, ENTITY_WATER_HEATER)
+        common.set_away_mode(self.hass, False, ENTITY_WATER_HEATER_CELSIUS)
         self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_WATER_HEATER)
+        state = self.hass.states.get(ENTITY_WATER_HEATER_CELSIUS)
         self.assertEqual('off', state.attributes.get('away_mode'))
+
+    def test_set_only_target_temp_with_convert(self):
+        """Test the setting of the target temperature."""
+        state = self.hass.states.get(ENTITY_WATER_HEATER_CELSIUS)
+        self.assertEqual(113, state.attributes.get('temperature'))
+        common.set_temperature(self.hass, 114, ENTITY_WATER_HEATER_CELSIUS)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_WATER_HEATER_CELSIUS)
+        self.assertEqual(114, state.attributes.get('temperature'))

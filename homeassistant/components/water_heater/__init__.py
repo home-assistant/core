@@ -123,9 +123,7 @@ class WaterHeaterDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
-        if self.current_operation:
-            return self.current_operation
-        return None
+        return self.current_operation
 
     @property
     def precision(self):
