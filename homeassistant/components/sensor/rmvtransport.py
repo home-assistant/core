@@ -16,7 +16,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['PyRMVtransport==0.1.1']
+REQUIREMENTS = ['PyRMVtransport==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
