@@ -367,6 +367,7 @@ def async_track_utc_time_change(hass, action,
         # Prevent "can't compare offset-naive and offset-aware" errors,
         # let's make everything timezone-aware
         if now.tzinfo is None:
+            # pylint: disable=no-value-for-parameter
             now = pytz.UTC.localize(now)
 
         if last_now is None or now < last_now:
