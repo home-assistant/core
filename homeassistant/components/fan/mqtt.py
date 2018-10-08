@@ -10,7 +10,7 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components import mqtt
+from homeassistant.components import fan, mqtt
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, STATE_ON, STATE_OFF,
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON)
@@ -19,11 +19,13 @@ from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH, FanEntity,
                                           SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
                                           SPEED_OFF, ATTR_SPEED)
+from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,14 +84,26 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
-    """Set up the MQTT fan platform."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
+    """Set up MQTT fan through configuration.yaml."""
+    await _async_setup_entity(hass, config, async_add_entities)
 
-    discovery_hash = None
-    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
-        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up MQTT fan dynamically through MQTT discovery."""
+    async def async_discover(discovery_payload):
+        """Discover and add a MQTT fan."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(hass, config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
+
+    async_dispatcher_connect(
+        hass, MQTT_DISCOVERY_NEW.format(fan.DOMAIN, 'mqtt'),
+        async_discover)
+
+
+async def _async_setup_entity(hass, config, async_add_entities,
+                              discovery_hash=None):
+    """Set up the MQTT fan."""
     async_add_entities([MqttFan(
         config.get(CONF_NAME),
         {
