@@ -15,7 +15,7 @@ DEPENDENCIES = [ELK_DOMAIN]
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the Elk switch platform."""
+    """Create the Elk-M1 switch platform."""
     if discovery_info is None:
         return
     elk = hass.data[ELK_DOMAIN]['elk']
