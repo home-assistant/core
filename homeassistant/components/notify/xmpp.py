@@ -14,10 +14,22 @@ from homeassistant.components.notify import (
 from homeassistant.const import (
     CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM)
 
-REQUIREMENTS = ['sleekxmpp==1.3.2',
+REQUIREMENTS = ['aioxmpp==0.10.1',
+                'lxml==4.2.5',
+                'sortedcollections==1.0.1',
+                'tzlocal==1.5.1',
+                'pyOpenSSL==18.0.0',
+                #'pyasn1==0.4.4',
+                #'pyasn1-modules==0.2.2',
+                'aiosasl==0.3.1',
+                'multidict==4.4.2',
+                'aioopenssl==0.4.0',
+                ##
+                'sleekxmpp==1.3.2',
                 'dnspython3==1.15.0',
                 'pyasn1==0.3.7',
-                'pyasn1-modules==0.1.5']
+                'pyasn1-modules==0.1.5'
+                ]
 
 _LOGGER = logging.getLogger(__name__)
 
