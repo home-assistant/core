@@ -229,3 +229,6 @@ warrant==0.6.1
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
+
+# homeassistant.components.octoprint
+octoclient=0.2.dev1

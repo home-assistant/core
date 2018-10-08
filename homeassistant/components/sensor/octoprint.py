@@ -20,16 +20,16 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
 DOMAIN = "octoprint"
-DEFAULT_NAME = 'OctoPrint'
+DEFAULT_NAME = 'octoprint'
 NOTIFICATION_ID = 'octoprint_notification'
 NOTIFICATION_TITLE = 'OctoPrint sensor setup error'
 
 SENSOR_TYPES = {
     'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
     'Current State': ['printer', 'state', 'text', None],
-    'Job Percentage': ['job', 'progress', 'completion', '%'],
-    'Time Remaining': ['job', 'progress', 'printTimeLeft', 'seconds'],
-    'Time Elapsed': ['job', 'progress', 'printTime', 'seconds'],
+    'Job Percentage': ['job_info', 'progress', 'completion', '%'],
+    'Time Remaining': ['job_info', 'progress', 'printTimeLeft', 'seconds'],
+    'Time Elapsed': ['job_info', 'progress', 'printTime', 'seconds'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -42,13 +42,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint sensors."""
     name = config.get(CONF_NAME)
-    if name not in hass.data[DOMAIN]:
-        _LOGGER.error("No Octoprint %s exists", name)
-        return
 
-    if "api" in hass.data[DOMAIN][name]:
-        _LOGGER.debug("Getting Octoprint sensor %s", name)
-        octoprint_api = hass.data[DOMAIN][name]["api"]
+    if name in hass.data[DOMAIN]:
+        octoprint_api = hass.data[DOMAIN][name]
         monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
         tools = octoprint_api.get_tools()
 
@@ -67,6 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devices = []
         types = ["actual", "target"]
         for octo_type in monitored_conditions:
+            _LOGGER.debug("Setting up Octoprint {} sensor {}".format(octo_type, name))
             if octo_type == "Temperatures":
                 for tool in tools:
                     for temp_type in types:
@@ -74,7 +71,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                             octoprint_api,
                             temp_type,
                             temp_type,
-                            name,
                             SENSOR_TYPES[octo_type][3],
                             SENSOR_TYPES[octo_type][0],
                             SENSOR_TYPES[octo_type][1],
@@ -86,7 +82,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     octoprint_api,
                     octo_type,
                     SENSOR_TYPES[octo_type][2],
-                    name,
                     SENSOR_TYPES[octo_type][3],
                     SENSOR_TYPES[octo_type][0],
                     SENSOR_TYPES[octo_type][1]
@@ -94,35 +89,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 devices.append(new_sensor)
         add_entities(devices, True)
     else:
-        _LOGGER.error("No Octoprint API exists for %s", name)
+        _LOGGER.error("Unable to setup sensors due to Octoprint {} not found".format(name))
+
+    return
 
 
 class OctoPrintSensor(Entity):
     """Representation of an OctoPrint sensor."""
 
-    def __init__(self, api, condition, sensor_type, sensor_name, unit,
+    def __init__(self, api, condition, sensor_type, unit,
                  endpoint, group, tool=None):
         """Initialize a new OctoPrint sensor."""
+        self.sensor_name = api.name
         if tool is None:
-            self._name = '{} {}'.format(sensor_name, condition)
+            self._name = '{} {}'.format(self.sensor_name, condition)
             self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
-            self.friendly_name = condition
+            self.friendly_name = "{} - {}".format(self.sensor_name, condition)
         else:
             self._name = '{} {} {} {}'.format(
-                sensor_name,
+                self.sensor_name,
                 condition,
                 tool,
                 'temp'
             )
             self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
             self.friendly_name = '{} - {} {} {}'.format(
-                sensor_name,
+                self.sensor_name,
                 condition,
                 tool,
                 'temp'
             )
 
-        self.sensor_name = sensor_name
         self.sensor_type = sensor_type
         self.api = api
         self._state = None

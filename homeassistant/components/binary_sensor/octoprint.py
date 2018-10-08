@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
 DOMAIN = "octoprint"
-DEFAULT_NAME = 'OctoPrint'
+DEFAULT_NAME = 'octoprint'
 
 SENSOR_TYPES = {
     # API Endpoint, Group, Key, unit
@@ -38,50 +38,42 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""
     name = config.get(CONF_NAME)
 
-    if discovery_info is not None:
-        if 'name' in discovery_info:
-            name = discovery_info['name']
-
     if name in hass.data[DOMAIN]:
-        if "api" in hass.data[DOMAIN][name]:
-            _LOGGER.debug('Octoprint API %s found for ', name)
-            octoprint_api = hass.data[DOMAIN][name]["api"]
-            monitored_conditions = config.get(
-                CONF_MONITORED_CONDITIONS, SENSOR_TYPES.keys())
+        octoprint_api = hass.data[DOMAIN][name]
+        monitored_conditions = config.get(
+            CONF_MONITORED_CONDITIONS, SENSOR_TYPES.keys())
 
-            devices = []
-            for octo_type in monitored_conditions:
-                new_sensor = OctoPrintBinarySensor(
-                    octoprint_api,
-                    octo_type, SENSOR_TYPES[octo_type][2],
-                    name,
-                    SENSOR_TYPES[octo_type][3],
-                    SENSOR_TYPES[octo_type][0],
-                    SENSOR_TYPES[octo_type][1],
-                    'flags'
-                )
-                devices.append(new_sensor)
-            add_entities(devices, True)
-        else:
-            _LOGGER.error('No Octoprint API %s found for ', name)
+        devices = []
+        for octo_type in monitored_conditions:
+            _LOGGER.debug('Setting up Octoprint {} binary sensor {}'.format(name, octo_type))
+            new_sensor = OctoPrintBinarySensor(
+                octoprint_api,
+                octo_type, SENSOR_TYPES[octo_type][2],
+                SENSOR_TYPES[octo_type][3],
+                SENSOR_TYPES[octo_type][0],
+                SENSOR_TYPES[octo_type][1],
+                'flags'
+            )
+            devices.append(new_sensor)
+        add_entities(devices, True)
     else:
-        _LOGGER.error('No Octoprint %s found', name)
+        _LOGGER.error('Unable to setup binary sensors due to Octoprint {} not found'.format(name))
 
 
 class OctoPrintBinarySensor(BinarySensorDevice):
     """Representation an OctoPrint binary sensor."""
 
-    def __init__(self, api, condition, sensor_type, sensor_name, unit,
+    def __init__(self, api, condition, sensor_type, unit,
                  endpoint, group, tool=None):
         """Initialize a new OctoPrint sensor."""
-        self.sensor_name = sensor_name
+        self.sensor_name = api.name
         if tool is None:
-            self._name = '{} {}'.format(sensor_name, condition)
+            self._name = '{} {}'.format(self.sensor_name, condition)
             self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
         else:
-            self._name = '{} {}'.format(sensor_name, condition)
+            self._name = '{} {}'.format(self.sensor_name, condition)
             self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
-        self.friendly_name = '{} - {}'.format(sensor_name, condition)
+        self.friendly_name = '{} - {}'.format(self.sensor_name, condition)
         self.sensor_type = sensor_type
         self.api = api
         self._state = False

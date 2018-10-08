@@ -7,27 +7,29 @@ https://home-assistant.io/components/octoprint/
 import asyncio
 import logging
 import time
+from threading import Lock
 from typing import TypeVar, Union, Sequence
 
-import requests
 import voluptuous as vol
-from aiohttp.hdrs import CONTENT_TYPE
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, \
-    CONTENT_TYPE_JSON, CONF_NAME
+    CONF_NAME
 
-# from homeassistant.helpers.entity import Entity, async_generate_entity_id
+REQUIREMENTS = ['octoclient==0.2.dev1']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'octoprint'
 ENTITY_ID_FORMAT = 'octoprint.{}'
+DEFAULT_NAME = 'octoprint'
+DATA_OCTOPRINT = 'data_octoprint'
 CONF_NUMBER_OF_TOOLS = 'number_of_tools'
 CONF_BED = 'bed'
 
 # pylint: disable=invalid-name
 T = TypeVar('T')
+
+
 # pylint: enable=invalid-name
 
 
@@ -55,11 +57,14 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the OctoPrint component."""
-    octoprints = hass.data[DOMAIN] = {}
+    if DOMAIN not in hass.data:
+        octoprints = hass.data[DOMAIN] = {}
 
     @asyncio.coroutine
     def async_setup_octoprint(octo_config):
         """Set up an Octoprint service."""
+        from octoclient import OctoClient
+
         name = octo_config[CONF_NAME]
         _LOGGER.debug("Configuring Octoprint %s", octo_config[CONF_NAME])
 
@@ -69,64 +74,97 @@ def async_setup(hass, config):
                 schema = 'https'
 
         if CONF_PORT in octo_config:
-            url = '{}:{}'.format(
-                octo_config[CONF_HOST],
-                octo_config[CONF_PORT]
+            if octo_config[CONF_HOST].find('/'):
+                host = octo_config[CONF_HOST].split('/', 1)[0]
+                path = octo_config[CONF_HOST].split('/', 1)[1]
+            else:
+                host = octo_config[CONF_HOST]
+                path = ''
+            url = '{}:{}/{}'.format(
+                host,
+                octo_config[CONF_PORT],
+                path
             )
         else:
             url = '{}'.format(octo_config[CONF_HOST])
 
-        base_url = '{}://{}/api/'.format(schema, url)
-        api_key = octo_config[CONF_API_KEY]
-        number_of_tools = octo_config[CONF_NUMBER_OF_TOOLS]
-        bed = octo_config[CONF_BED]
+        base_url = '{}://{}'.format(schema, url)
 
         try:
-            octoprint_api = OctoPrintAPI(
-                name,
-                base_url,
-                api_key,
-                bed,
-                number_of_tools
-            )
-            octoprint_api.get('printer')
-            octoprint_api.get('job')
-            octoprints[name] = {"api": octoprint_api}
-            _LOGGER.debug("Setup Octoprint %r", octoprints[name])
-        except requests.exceptions.RequestException as conn_err:
+            octoprint = OctoClient(url=base_url, apikey=octo_config[CONF_API_KEY])
+            octoprint_api = OctoprintHandle(name, octoprint, octo_config[CONF_NUMBER_OF_TOOLS], octo_config[CONF_BED])
+            octoprint_api.get("printer")
+            octoprint_api.get("job_info")
+            octoprints[name] = octoprint_api
+            _LOGGER.debug("Setup Octoprint {}".format(octoprints[name]))
+        except Exception as e:
             _LOGGER.error(
-                "Error setting up OctoPrint %s API: %r",
-                name,
-                conn_err
+                "Error setting up OctoPrint {} API: {}".format(
+                    name,
+                    str(e)
+                )
             )
 
     tasks = [async_setup_octoprint(conf) for conf in config[DOMAIN]]
     if tasks:
         yield from asyncio.wait(tasks, loop=hass.loop)
+
     _LOGGER.info("Finished setting up Octoprint %r", hass.data[DOMAIN])
     return True
 
 
-class OctoPrintAPI:
-    """Simple JSON wrapper for OctoPrint's API."""
+class OctoprintHandle:
+    """Keep the Octoprint instance in one place and centralize the update."""
 
-    def __init__(self, name, api_url, key, bed, number_of_tools):
-        """Initialize OctoPrint API and set headers needed later."""
-        self._name = name
-        self.api_url = api_url
-        self.headers = {
-            CONTENT_TYPE: CONTENT_TYPE_JSON,
-            'X-Api-Key': key,
-        }
-        self.printer_last_reading = [{}, None]
-        self.job_last_reading = [{}, None]
-        self.job_available = False
+    def __init__(self, name, octoprint, number_of_tools=0, bed=0, scan_interval=30):
+        """Initialize the Octoprint Handle."""
+        self.name = name
+        self.octoprint = octoprint
+        self.printer_last_reading = [{}, 0]
+        self.job_info_last_reading = [{}, 0]
+        self.scan_interval = scan_interval
+        self.mutex = Lock()
+        self.job_info_available = False
         self.printer_available = False
         self.printer_error_logged = False
-        self.job_error_logged = False
+        self.job_info_error_logged = False
         self.bed = bed
         self.number_of_tools = number_of_tools
-        self.available = False
+
+    def get(self, endpoint):
+        """Pull the latest data from Octoprint."""
+        # Acquire mutex to prevent simultaneous update from multiple threads
+        with self.mutex:
+            status = self._update_status(endpoint)
+
+        return status
+
+    @property
+    def available(self):
+        return self.printer_available and self.job_info_available
+
+    def _update_status(self, status_type):
+        now = time.time()
+
+        # Only update every update_interval
+        last_reading = getattr(self, "{}_last_reading".format(status_type))
+        if (now - last_reading[1]) >= self.scan_interval:
+            _LOGGER.debug("Updating {} status".format(status_type))
+            try:
+                last_reading[1] = now
+                last_reading[0] = getattr(self.octoprint, status_type)()
+                setattr(self, "{}_last_reading".format(status_type), last_reading)
+                setattr(self, "{}_error_logged".format(status_type), False)
+                setattr(self, "{}_available".format(status_type), True)
+                return last_reading[0]
+            except Exception as e:
+                last_reading[1] = now
+                setattr(self, "{}_last_reading".format(status_type), last_reading)
+                setattr(self, "{}_error_logged".format(status_type), True)
+                setattr(self, "{}_available".format(status_type), False)
+                _LOGGER.error("Error communicating with Octoprint {}. {}".format(self.name, str(e)))
+
+        return last_reading[0]
 
     def get_tools(self):
         """Get the list of tools that temperature is monitored on."""
@@ -141,58 +179,6 @@ class OctoPrintAPI:
             if temps is not None:
                 tools = temps.keys()
         return tools
-
-    def get(self, endpoint):
-        """Send a get request, and return the response as a dict."""
-        # Only query the API at most every 30 seconds
-        now = time.time()
-        if endpoint == "job":
-            last_time = self.job_last_reading[1]
-            if last_time is not None:
-                if now - last_time < 30.0:
-                    return self.job_last_reading[0]
-        elif endpoint == "printer":
-            last_time = self.printer_last_reading[1]
-            if last_time is not None:
-                if now - last_time < 30.0:
-                    return self.printer_last_reading[0]
-
-        url = self.api_url + endpoint
-        try:
-            response = requests.get(
-                url, headers=self.headers, timeout=9)
-            response.raise_for_status()
-            if endpoint == "job":
-                self.job_last_reading[0] = response.json()
-                self.job_last_reading[1] = time.time()
-                self.job_available = True
-            elif endpoint == "printer":
-                self.printer_last_reading[0] = response.json()
-                self.printer_last_reading[1] = time.time()
-                self.printer_available = True
-            self.available = self.printer_available and self.job_available
-            if self.available:
-                self.job_error_logged = False
-                self.printer_error_logged = False
-            return response.json()
-        except Exception as conn_exc:  # pylint: disable=broad-except
-            log_string = "Failed to update OctoPrint status. " + \
-                         "  Error: %s" % (conn_exc)
-            # Only log the first failure
-            if endpoint == "job":
-                log_string = "Endpoint: job " + log_string
-                if not self.job_error_logged:
-                    _LOGGER.error(log_string)
-                    self.job_error_logged = True
-                    self.job_available = False
-            elif endpoint == "printer":
-                log_string = "Endpoint: printer " + log_string
-                if not self.printer_error_logged:
-                    _LOGGER.error(log_string)
-                    self.printer_error_logged = True
-                    self.printer_available = False
-            self.available = False
-            return None
 
     def update(self, sensor_type, end_point, group, tool=None):
         """Return the value for sensor_type from the provided endpoint."""
@@ -213,7 +199,8 @@ def get_value_from_json(json_dict, sensor_type, group, tool):
         return json_dict[group][sensor_type]
 
     if tool is not None:
-        if sensor_type in json_dict[group][tool]:
-            return json_dict[group][tool][sensor_type]
+        if tool in json_dict[group]:
+            if sensor_type in json_dict[group][tool]:
+                return json_dict[group][tool][sensor_type]
 
     return None
