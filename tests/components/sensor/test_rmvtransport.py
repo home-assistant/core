@@ -4,8 +4,7 @@ import unittest
 from unittest.mock import patch
 import datetime
 
-from homeassistant.setup import setup_component
-from homeassistant.bootstrap import async_setup_component
+from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 from tests.common import get_test_home_assistant
