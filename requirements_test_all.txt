@@ -24,12 +24,9 @@ HAP-python==2.2.2
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.1
 
-<<<<<<< HEAD
 # homeassistant.components.notify.yessssms
 YesssSMS==0.2.3
 
-=======
->>>>>>> 4751f9008e5d835e5505df04634ee2a97e3417fa
 # homeassistant.components.sensor.transport_nsw
 PyTransportNSW==0.0.8
 
