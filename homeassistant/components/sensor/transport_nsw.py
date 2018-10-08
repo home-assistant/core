@@ -46,18 +46,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
 
     data = PublicTransportData(stop_id, route, api_key)
-    add_entities([TransportNSWSensor(data, stop_id, route, name)], True)
+    add_entities([TransportNSWSensor(data, stop_id, name)], True)
 
 
 class TransportNSWSensor(Entity):
     """Implementation of an Transport NSW sensor."""
 
-    def __init__(self, data, stop_id, route, name):
+    def __init__(self, data, stop_id, name):
         """Initialize the sensor."""
         self.data = data
         self._name = name
         self._stop_id = stop_id
-        self._route = route
         self._times = self._state = None
 
     @property
