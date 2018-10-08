@@ -352,7 +352,7 @@ def async_track_utc_time_change(hass, action,
             matching_hours)
 
     # Make sure rolling back the clock doesn't prevent the timer from
-    # triggering
+    # triggering.
     last_now = None
 
     @callback
@@ -372,6 +372,9 @@ def async_track_utc_time_change(hass, action,
             hass.async_run_job(action, event.data[ATTR_NOW])
             calculate_next(now + timedelta(seconds=1))
 
+    # We can't use async_track_point_in_utc_time here because it would
+    # break in the case that the system time abruptly jumps backwards.
+    # Our custom last_now logic takes care of resolving that scenario.
     return hass.bus.async_listen(EVENT_TIME_CHANGED,
                                  pattern_time_change_listener)
 
