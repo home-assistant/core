@@ -1,16 +1,19 @@
 """The tests for the rmvtransport platform."""
-import asyncio
-import unittest
-from unittest.mock import patch
 import datetime
+from unittest.mock import patch
 
+# from homeassistant.components.sensor import rmvtransport
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component
-from tests.common import get_test_home_assistant
+import pytest
+from tests.common import mock_coro
 
-VALID_CONFIG_MINIMAL = {'sensor': {'platform': 'rmvtransport',
-                                   'next_departure': [{'station': '3000010'}]}}
+
+VALID_CONFIG_MINIMAL = {'sensor': {
+    'platform': 'rmvtransport',
+    'next_departure': [
+        {'station': '3000010'}
+        ]}}
 
 VALID_CONFIG_NAME = {'sensor': {
     'platform': 'rmvtransport',
@@ -43,8 +46,7 @@ VALID_CONFIG_DEST = {'sensor': {
         ]}}
 
 
-def get_departuresMock(stationId, maxJourneys,
-                       products):  # pylint: disable=invalid-name
+def get_departuresMock():  # pylint: disable=invalid-name
     """Mock rmvtransport departures loading."""
     data = {'station': 'Frankfurt (Main) Hauptbahnhof',
             'stationId': '3000010', 'filter': '11111111111', 'journeys': [
@@ -99,111 +101,72 @@ def get_departuresMock(stationId, maxJourneys,
     return data
 
 
-def get_errDeparturesMock(stationId, maxJourneys,
-                          products):  # pylint: disable=invalid-name
+def get_errDeparturesMock():  # pylint: disable=invalid-name
     """Mock rmvtransport departures erroneous loading."""
     raise ValueError
 
 
-class TestRMVtransportSensor(unittest.TestCase):
-    """Test the rmvtransport sensor."""
+async def test_rmvtransport_min_config(hass):
+    """Test minimal rmvtransport configuration."""
+    with patch('RMVtransport.RMVtransport.get_departures',
+               return_value=mock_coro(get_departuresMock())):
+        assert await async_setup_component(hass, 'sensor',
+                                           VALID_CONFIG_MINIMAL) is True
 
-    def setUp(self):
-        """Set up things to run when tests begin."""
-        self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG_MINIMAL
-        self.reference = {}
-        self.entities = []
+    state = hass.states.get('sensor.frankfurt_main_hauptbahnhof')
+    assert state.state == '7'
+    assert state.attributes['departure_time'] == \
+        datetime.datetime(2018, 8, 6, 14, 21)
+    assert state.attributes['direction'] == \
+        'Frankfurt (Main) Hugo-Junkers-Straße/Schleife'
+    assert state.attributes['product'] == 'Tram'
+    assert state.attributes['line'] == 12
+    assert state.attributes['icon'] == 'mdi:tram'
+    assert state.attributes['friendly_name'] == 'Frankfurt (Main) Hauptbahnhof'
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    @asyncio.coroutine
-    @patch('RMVtransport.RMVtransport.get_departures',
-           side_effect=get_departuresMock)
-    def test_rmvtransport_min_config(self, mock_get_departures):
-        """Test minimal rmvtransport configuration."""
-        with assert_setup_component(1):
-            yield from async_setup_component(self.hass,
-                                             'sensor',
-                                             VALID_CONFIG_MINIMAL)
+async def test_rmvtransport_name_config(hass):
+    """Test custom name configuration."""
+    with patch('RMVtransport.RMVtransport.get_departures',
+               return_value=mock_coro(get_departuresMock())):
+        assert await async_setup_component(hass, 'sensor', VALID_CONFIG_NAME)
 
-        state = self.hass.states.get('sensor.frankfurt_main_hauptbahnhof')
-        assert state.state == '0'
+    # await hass.async_block_till_done()
+    state = hass.states.get('sensor.my_station')
+    assert state.attributes['friendly_name'] == 'My Station'
 
-        yield from self.hass.async_block_till_done()
-        state = self.hass.states.get('sensor.frankfurt_main_hauptbahnhof')
 
-        self.assertEqual(state.state, '7')
-        self.assertEqual(state.attributes['departure_time'],
-                         datetime.datetime(2018, 8, 6, 14, 21))
-        self.assertEqual(state.attributes['direction'],
-                         'Frankfurt (Main) Hugo-Junkers-Straße/Schleife')
-        self.assertEqual(state.attributes['product'], 'Tram')
-        self.assertEqual(state.attributes['line'], 12)
-        self.assertEqual(state.attributes['icon'], 'mdi:tram')
-        self.assertEqual(state.attributes['friendly_name'],
-                         'Frankfurt (Main) Hauptbahnhof')
+@pytest.mark.xfail(raises=ValueError)
+async def test_rmvtransport_err_config(hass):
+    """Test erroneous rmvtransport configuration."""
+    with patch('RMVtransport.RMVtransport.get_departures',
+               return_value=mock_coro(get_errDeparturesMock())):
+        await async_setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
 
-    @asyncio.coroutine
-    @patch('RMVtransport.RMVtransport.get_departures',
-           side_effect=get_departuresMock)
-    def test_rmvtransport_name_config(self, mock_get_departures):
-        """Test custom name configuration."""
-        with assert_setup_component(1):
-            yield from async_setup_component(self.hass,
-                                             'sensor',
-                                             VALID_CONFIG_NAME)
 
-        state = self.hass.states.get('sensor.my_station')
-        self.assertEqual(state.attributes['friendly_name'], 'My Station')
+async def test_rmvtransport_misc_config(hass):
+    """Test misc configuration."""
+    with patch('RMVtransport.RMVtransport.get_departures',
+               return_value=mock_coro(get_departuresMock())):
+        assert await async_setup_component(hass, 'sensor', VALID_CONFIG_MISC)
 
-    @asyncio.coroutine
-    @patch('RMVtransport.RMVtransport.get_departures',
-           side_effect=get_errDeparturesMock)
-    def test_rmvtransport_err_config(self, mock_get_departures):
-        """Test erroneous rmvtransport configuration."""
-        with assert_setup_component(1):
-            yield from async_setup_component(self.hass,
-                                             'sensor',
-                                             VALID_CONFIG_MINIMAL)
+    await hass.async_block_till_done()
+    state = hass.states.get('sensor.frankfurt_main_hauptbahnhof')
+    assert state.attributes['friendly_name'] == 'Frankfurt (Main) Hauptbahnhof'
+    assert state.attributes['line'] == 21
 
-    @asyncio.coroutine
-    @patch('RMVtransport.RMVtransport.get_departures',
-           side_effect=get_departuresMock)
-    def test_rmvtransport_misc_config(self, mock_get_departures):
-        """Test misc configuration."""
-        with assert_setup_component(1):
-            yield from async_setup_component(self.hass,
-                                             'sensor',
-                                             VALID_CONFIG_MISC)
 
-        state = self.hass.states.get('sensor.frankfurt_main_hauptbahnhof')
-        self.assertEqual(state.attributes['friendly_name'],
-                         'Frankfurt (Main) Hauptbahnhof')
-        self.assertEqual(state.attributes['line'], 21)
+async def test_rmvtransport_dest_config(hass):
+    """Test misc configuration."""
+    with patch('RMVtransport.RMVtransport.get_departures',
+               return_value=mock_coro(get_departuresMock())):
+        assert await async_setup_component(hass, 'sensor', VALID_CONFIG_DEST)
 
-    @asyncio.coroutine
-    @patch('RMVtransport.RMVtransport.get_departures',
-           side_effect=get_departuresMock)
-    def test_rmvtransport_dest_config(self, mock_get_departures):
-        """Test misc configuration."""
-        with assert_setup_component(1):
-            yield from async_setup_component(self.hass,
-                                             'sensor',
-                                             VALID_CONFIG_DEST)
-
-        state = self.hass.states.get('sensor.frankfurt_main_hauptbahnhof')
-        assert state.state == '0'
-
-        yield from self.hass.async_block_till_done()
-        state = self.hass.states.get('sensor.frankfurt_main_hauptbahnhof')
-
-        self.assertEqual(state.state, '11')
-        self.assertEqual(state.attributes['direction'],
-                         'Frankfurt (Main) Hugo-Junkers-Straße/Schleife')
-        self.assertEqual(state.attributes['line'], 12)
-        self.assertEqual(state.attributes['minutes'], 11)
-        self.assertEqual(state.attributes['departure_time'],
-                         datetime.datetime(2018, 8, 6, 14, 25))
+    state = hass.states.get('sensor.frankfurt_main_hauptbahnhof')
+    assert state.state == '11'
+    assert state.attributes['direction'] == \
+        'Frankfurt (Main) Hugo-Junkers-Straße/Schleife'
+    assert state.attributes['line'] == 12
+    assert state.attributes['minutes'] == 11
+    assert state.attributes['departure_time'] == \
+        datetime.datetime(2018, 8, 6, 14, 25)
