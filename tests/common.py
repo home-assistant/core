@@ -345,17 +345,42 @@ def mock_device_registry(hass, mock_entries=None):
     return registry
 
 
+class MockGroup(auth_models.Group):
+    """Mock a group in Home Assistant."""
+
+    def __init__(self, id=None, name='Mock Group'):
+        """Mock a group."""
+        kwargs = {
+            'name': name
+        }
+        if id is not None:
+            kwargs['id'] = id
+
+        super().__init__(**kwargs)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        return self.add_to_auth_manager(hass.auth)
+
+    def add_to_auth_manager(self, auth_mgr):
+        """Test helper to add entry to hass."""
+        ensure_auth_manager_loaded(auth_mgr)
+        auth_mgr._store._groups[self.id] = self
+        return self
+
+
 class MockUser(auth_models.User):
     """Mock a user in Home Assistant."""
 
     def __init__(self, id=None, is_owner=False, is_active=True,
-                 name='Mock User', system_generated=False):
+                 name='Mock User', system_generated=False, groups=None):
         """Initialize mock user."""
         kwargs = {
             'is_owner': is_owner,
             'is_active': is_active,
             'name': name,
             'system_generated': system_generated,
+            'groups': groups or [],
         }
         if id is not None:
             kwargs['id'] = id
