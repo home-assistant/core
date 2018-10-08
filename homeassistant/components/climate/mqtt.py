@@ -75,6 +75,7 @@ CONF_SEND_IF_OFF = 'send_if_off'
 
 CONF_MIN_TEMP = 'min_temp'
 CONF_MAX_TEMP = 'max_temp'
+CONF_TEMP_STEP = 'temp_step'
 
 SCHEMA_BASE = CLIMATE_PLATFORM_SCHEMA.extend(MQTT_BASE_PLATFORM_SCHEMA.schema)
 PLATFORM_SCHEMA = SCHEMA_BASE.extend({
@@ -124,7 +125,8 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
 
     vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float)
+    vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_TEMP_STEP, default=1.0): vol.Coerce(float)
 
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -213,6 +215,7 @@ async def _async_setup_entity(hass, config, async_add_entities,
             config.get(CONF_PAYLOAD_NOT_AVAILABLE),
             config.get(CONF_MIN_TEMP),
             config.get(CONF_MAX_TEMP),
+            config.get(CONF_TEMP_STEP),
             discovery_hash,
         )])
 
@@ -226,7 +229,7 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
                  current_swing_mode, current_operation, aux, send_if_off,
                  payload_on, payload_off, availability_topic,
                  payload_available, payload_not_available,
-                 min_temp, max_temp, discovery_hash):
+                 min_temp, max_temp, temp_step, discovery_hash):
         """Initialize the climate device."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
@@ -249,7 +252,7 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
         self._fan_list = fan_mode_list
         self._operation_list = mode_list
         self._swing_list = swing_mode_list
-        self._target_temperature_step = 1
+        self._target_temperature_step = temp_step
         self._send_if_off = send_if_off
         self._payload_on = payload_on
         self._payload_off = payload_off
