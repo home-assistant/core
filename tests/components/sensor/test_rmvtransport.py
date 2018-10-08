@@ -163,7 +163,7 @@ async def test_rmvtransport_misc_config(hass):
 
 
 async def test_rmvtransport_dest_config(hass):
-    """Test misc configuration."""
+    """Test destination configuration."""
     with patch('RMVtransport.RMVtransport.get_departures',
                return_value=mock_coro(get_departures_mock())):
         assert await async_setup_component(hass, 'sensor', VALID_CONFIG_DEST)
@@ -179,7 +179,7 @@ async def test_rmvtransport_dest_config(hass):
 
 
 async def test_rmvtransport_no_departures(hass):
-    """Test misc configuration."""
+    """Test for no departures."""
     with patch('RMVtransport.RMVtransport.get_departures',
                return_value=mock_coro(get_no_departures_mock())):
         assert await async_setup_component(hass, 'sensor',
