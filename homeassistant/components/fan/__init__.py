@@ -345,6 +345,18 @@ class FanEntity(ToggleEntity):
         return self.hass.async_add_job(
             ft.partial(self.turn_on, speed, **kwargs))
 
+    def turn_off(self, **kwargs):
+        """Turn off the fan."""
+        raise NotImplementedError()
+
+    def async_turn_off(self, **kwargs):
+        """Turn off the fan.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(
+            ft.partial(self.turn_off, **kwargs))
+
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         pass
@@ -361,7 +373,7 @@ class FanEntity(ToggleEntity):
         pass
 
     def async_set_night_mode(self, night_mode: bool):
-        """Oscillate the fan.
+        """Set fan night mode.
 
         This method must be run in the event loop and returns a coroutine.
         """

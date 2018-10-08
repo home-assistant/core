@@ -11,7 +11,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import (
-    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity, SUPPORT_NIGHT_MODE, SUPPORT_ANGLE, FLOW_FRONT, FLOW_BACK,
+    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity,
+    SUPPORT_NIGHT_MODE, SUPPORT_ANGLE, FLOW_FRONT, FLOW_BACK,
     SUPPORT_FLOW_DIRECTION, SUPPORT_TIMER)
 from homeassistant.const import CONF_ENTITY_ID
 
@@ -36,6 +37,7 @@ DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
     from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+    from libpurecoollink.dyson_pure_cool import DysonPureCool
 
     _LOGGER.debug("Creating new Dyson fans")
     if DYSON_FAN_DEVICES not in hass.data:
@@ -185,11 +187,11 @@ class DysonPureCoolLinkDevice(FanEntity):
         return None
 
     @property
-    def is_night_mode(self):
+    def night_mode(self):
         """Return Night mode."""
         return self._device.state.night_mode == "ON"
 
-    def night_mode(self, night_mode: bool) -> None:
+    def set_night_mode(self, night_mode: bool) -> None:
         """Turn fan in night mode."""
         from libpurecoollink.const import NightMode
 
@@ -253,7 +255,7 @@ class DysonPureCoolDevice(FanEntity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.async_add_job(
+        yield from self.hass.async_add_job(
             self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
@@ -275,7 +277,7 @@ class DysonPureCoolDevice(FanEntity):
         """Return the display name of this fan."""
         return self._device.name
 
-    def turn_on(self, speed: str = None) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         from libpurecoollink.const import FanSpeed
 
@@ -290,7 +292,7 @@ class DysonPureCoolDevice(FanEntity):
         else:
             self._device.turn_on()
 
-    def turn_off(self, *args, **kwargs) -> None:
+    def turn_off(self, **kwargs):
         """Turn off the fan."""
 
         _LOGGER.debug("Turn off fan %s", self.name)
@@ -394,8 +396,8 @@ class DysonPureCoolDevice(FanEntity):
 
         if self._device.state.front_direction == FrontalDirection.FRONTAL_ON.value:
             return FLOW_FRONT
-        else:
-            return FLOW_BACK
+
+        return FLOW_BACK
 
     @property
     def speed_list(self) -> list:
@@ -432,6 +434,6 @@ class DysonPureCoolDevice(FanEntity):
     def device_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
-            ATTR_IS_NIGHT_MODE: self.is_night_mode,
+            ATTR_IS_NIGHT_MODE: self.night_mode,
             ATTR_IS_AUTO_MODE: self.is_auto_mode
             }
