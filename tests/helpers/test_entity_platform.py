@@ -719,6 +719,8 @@ async def test_device_info_called(hass):
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_entity_ids()) == 2
+
     device = registry.async_get_device({('hue', '1234')}, set())
     assert device is not None
     assert device.identifiers == {('hue', '1234')}

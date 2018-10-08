@@ -273,6 +273,7 @@ class EntityPlatform:
                 config_entry_id = None
 
             device_info = entity.device_info
+            device_id = None
 
             if config_entry_id is not None and device_info is not None:
                 processed_dev_info = {
@@ -292,9 +293,8 @@ class EntityPlatform:
 
                 device = device_registry.async_get_or_create(
                     **processed_dev_info)
-                device_id = device.id
-            else:
-                device_id = None
+                if device:
+                    device_id = device.id
 
             entry = entity_registry.async_get_or_create(
                 self.domain, self.platform_name, entity.unique_id,
