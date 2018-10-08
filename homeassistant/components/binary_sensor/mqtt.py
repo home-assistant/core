@@ -15,11 +15,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON,
-    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS)
+    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS, CONF_DEVICE)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
-    MqttAvailability, MqttDiscoveryUpdate)
+    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -44,6 +44,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     # Integrations shouldn't never expose unique_id through configuration
     # this here is an exception because MQTT is a msg transport, not a protocol
     vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -86,22 +87,25 @@ async def _async_setup_entity(hass, config, async_add_entities,
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         value_template,
         config.get(CONF_UNIQUE_ID),
+        config.get(CONF_DEVICE),
         discovery_hash,
     )])
 
 
 class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
-                       BinarySensorDevice):
+                       MqttEntityDeviceInfo, BinarySensorDevice):
     """Representation a binary sensor that is updated by MQTT."""
 
     def __init__(self, name, state_topic, availability_topic, device_class,
                  qos, force_update, payload_on, payload_off, payload_available,
                  payload_not_available, value_template,
-                 unique_id: Optional[str], discovery_hash):
+                 unique_id: Optional[str], device_config: Optional[ConfigType],
+                 discovery_hash):
         """Initialize the MQTT binary sensor."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash)
+        MqttEntityDeviceInfo.__init__(self, device_config)
         self._name = name
         self._state = None
         self._state_topic = state_topic
