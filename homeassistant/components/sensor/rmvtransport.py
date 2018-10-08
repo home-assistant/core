@@ -105,9 +105,6 @@ class RMVDepartureSensor(Entity):
                                      max_journeys)
         self._icon = ICONS[None]
 
-        if self.data is None:
-            raise PlatformNotReady
-
     @property
     def name(self):
         """Return the name of the sensor."""
