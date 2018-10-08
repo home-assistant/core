@@ -254,7 +254,8 @@ def async_publish(hass: HomeAssistantType, topic: Any, payload, qos=None,
     """Publish message to an MQTT topic."""
     data = _build_publish_data(topic, qos, retain)
     data[ATTR_PAYLOAD] = payload
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
 
 
 @bind_hass
@@ -411,7 +412,7 @@ async def async_setup_entry(hass, entry):
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
         conf = CONFIG_SCHEMA({
-            DOMAIN: entry.data
+            DOMAIN: entry.data,
         })[DOMAIN]
     elif any(key in conf for key in entry.data):
         _LOGGER.warning(
@@ -426,24 +427,21 @@ async def async_setup_entry(hass, entry):
     keepalive = conf[CONF_KEEPALIVE]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
+    certificate = conf.get(CONF_CERTIFICATE)
     client_key = conf.get(CONF_CLIENT_KEY)
     client_cert = conf.get(CONF_CLIENT_CERT)
     tls_insecure = conf.get(CONF_TLS_INSECURE)
     protocol = conf[CONF_PROTOCOL]
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
-    if (conf.get(CONF_CERTIFICATE) is None and
-            19999 < conf[CONF_PORT] < 30000 and
-            conf[CONF_BROKER].endswith('.cloudmqtt.com')):
+    if (certificate is None and 19999 < conf[CONF_PORT] < 30000 and
+            broker.endswith('.cloudmqtt.com')):
         certificate = os.path.join(
             os.path.dirname(__file__), 'addtrustexternalcaroot.crt')
 
     # When the certificate is set to auto, use bundled certs from requests
-    elif conf.get(CONF_CERTIFICATE) == 'auto':
+    elif certificate == 'auto':
         certificate = requests.certs.where()
-
-    else:
-        certificate = None
 
     if CONF_WILL_MESSAGE in conf:
         will_message = Message(**conf[CONF_WILL_MESSAGE])
@@ -673,7 +671,7 @@ class MQTT:
             if any(other.topic == topic for other in self.subscriptions):
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
-            self.hass.async_add_job(self._async_unsubscribe(topic))
+            self.hass.async_create_task(self._async_unsubscribe(topic))
 
         return async_remove
 

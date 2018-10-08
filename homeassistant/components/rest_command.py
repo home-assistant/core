@@ -53,8 +53,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the REST command component."""
     websession = async_get_clientsession(hass)
 
@@ -87,8 +86,7 @@ def async_setup(hass, config):
                 headers = {}
             headers[hdrs.CONTENT_TYPE] = content_type
 
-        @asyncio.coroutine
-        def async_service_handler(service):
+        async def async_service_handler(service):
             """Execute a shell command service."""
             payload = None
             if template_payload:
@@ -98,7 +96,7 @@ def async_setup(hass, config):
 
             try:
                 with async_timeout.timeout(timeout, loop=hass.loop):
-                    request = yield from getattr(websession, method)(
+                    request = await getattr(websession, method)(
                         template_url.async_render(variables=service.data),
                         data=payload,
                         auth=auth,

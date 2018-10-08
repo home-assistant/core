@@ -166,10 +166,15 @@ async def get_gateway_info(hass, host, identity, key):
             psk=key,
             loop=hass.loop
         )
+
         api = factory.request
         gateway = Gateway()
         gateway_info_result = await api(gateway.get_gateway_info())
-    except RequestError:
+
+        await factory.shutdown()
+    except (OSError, RequestError):
+        # We're also catching OSError as PyTradfri doesn't catch that one yet
+        # Upstream PR: https://github.com/ggravlingen/pytradfri/pull/189
         raise AuthError('cannot_connect')
 
     return {

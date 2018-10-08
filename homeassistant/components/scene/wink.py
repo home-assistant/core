@@ -4,7 +4,6 @@ Support for Wink scenes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.wink/
 """
-import asyncio
 import logging
 
 from homeassistant.components.scene import Scene
@@ -33,8 +32,7 @@ class WinkScene(WinkDevice, Scene):
         super().__init__(wink, hass)
         hass.data[DOMAIN]['entities']['scene'].append(self)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['scene'].append(self)
 

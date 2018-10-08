@@ -51,6 +51,7 @@ TEST_REQUIREMENTS = (
     'foobot_async',
     'gTTS-token',
     'geojson_client',
+    'georss_client',
     'hangups',
     'HAP-python',
     'ha-ffmpeg',
@@ -63,7 +64,6 @@ TEST_REQUIREMENTS = (
     'influxdb',
     'libpurecoollink',
     'libsoundtouch',
-    'locationsharinglib',
     'mficlient',
     'numpy',
     'paho-mqtt',
@@ -104,7 +104,8 @@ TEST_REQUIREMENTS = (
     'yahoo-finance',
     'pythonwhois',
     'wakeonlan',
-    'vultr'
+    'vultr',
+    'YesssSMS',
 )
 
 IGNORE_PACKAGES = (

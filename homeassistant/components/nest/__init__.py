@@ -105,7 +105,7 @@ async def async_setup(hass, config):
     filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
     access_token_cache_file = hass.config.path(filename)
 
-    hass.async_add_job(hass.config_entries.flow.async_init(
+    hass.async_create_task(hass.config_entries.flow.async_init(
         DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
         data={
             'nest_conf_path': access_token_cache_file,

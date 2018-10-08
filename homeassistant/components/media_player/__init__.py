@@ -28,7 +28,6 @@ from homeassistant.const import (
     SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE,
     STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -865,8 +864,8 @@ class MediaPlayerImageView(HomeAssistantView):
             body=data, content_type=content_type, headers=headers)
 
 
-@callback
-def websocket_handle_thumbnail(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_handle_thumbnail(hass, connection, msg):
     """Handle get media player cover command.
 
     Async friendly.
@@ -875,24 +874,20 @@ def websocket_handle_thumbnail(hass, connection, msg):
     player = component.get_entity(msg['entity_id'])
 
     if player is None:
-        connection.send_message_outside(websocket_api.error_message(
+        connection.send_message(websocket_api.error_message(
             msg['id'], 'entity_not_found', 'Entity not found'))
         return
 
-    async def send_image():
-        """Send image."""
-        data, content_type = await player.async_get_media_image()
+    data, content_type = await player.async_get_media_image()
 
-        if data is None:
-            connection.send_message_outside(websocket_api.error_message(
-                msg['id'], 'thumbnail_fetch_failed',
-                'Failed to fetch thumbnail'))
-            return
+    if data is None:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'thumbnail_fetch_failed',
+            'Failed to fetch thumbnail'))
+        return
 
-        connection.send_message_outside(websocket_api.result_message(
-            msg['id'], {
-                'content_type': content_type,
-                'content': base64.b64encode(data).decode('utf-8')
-            }))
-
-    hass.async_add_job(send_image())
+    connection.send_message(websocket_api.result_message(
+        msg['id'], {
+            'content_type': content_type,
+            'content': base64.b64encode(data).decode('utf-8')
+        }))

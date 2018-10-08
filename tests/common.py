@@ -392,7 +392,7 @@ def ensure_auth_manager_loaded(auth_mgr):
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
     if store._users is None:
-        store._users = OrderedDict()
+        store._set_defaults()
 
 
 class MockModule:
