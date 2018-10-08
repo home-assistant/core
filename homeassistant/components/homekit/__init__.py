@@ -177,7 +177,6 @@ def get_accessory(hass, driver, state, aid, config):
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-
     return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
 
 

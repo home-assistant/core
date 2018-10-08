@@ -291,13 +291,18 @@ def humanify(hass, events):
             elif event.event_type == EVENT_HOMEKIT_CHANGED:
                 data = event.data
                 entity_id = data.get(ATTR_ENTITY_ID)
+                display_name = data.get('display_name')
                 message = data.get('message')
 
                 if message:
-                    action = message
+                    action = "send command {}".format(message)
                 elif entity_id:
-                    action = "send command for {}".format(
-                        entity_id)
+                    action = "send command {}".format(entity_id)
+                else:
+                    action = "send command"
+
+                if display_name:
+                    action = "{} for {}".format(action, display_name)
 
                 yield {
                     'when': event.time_fired,

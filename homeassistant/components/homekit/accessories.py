@@ -138,20 +138,6 @@ class HomeAccessory(Accessory):
         """
         raise NotImplementedError()
 
-    def sent_logbook_message(self, homekit_event, logbook_message):
-        """Sent event to logbook."""
-        if logbook_message:
-            logbook_attr_message = "{} for {}".format(
-                logbook_message, self.display_name)
-        else:
-            logbook_attr_message = "for {}".format(
-                self.display_name)
-
-        self.hass.bus.fire(homekit_event, {
-            ATTR_ENTITY_ID: self.entity_id,
-            ATTR_MESSAGE: logbook_attr_message
-        })
-
     def call_service(self, acc_domain, service, params, logbook_message=None):
         """Sent event for logbook that a change was initiated from homekit.
 
@@ -159,12 +145,15 @@ class HomeAccessory(Accessory):
         This method is to be called from methods that change states using
         self.call_service(DOMAIN, service, params, logbook_message).
         """
-        if logbook_message is not None:
-            message = "send command {}".format(logbook_message)
-        else:
-            message = "send command {}".format(service)
+        if logbook_message is None:
+            logbook_message = service
 
-        self.sent_logbook_message(EVENT_HOMEKIT_CHANGED, message)
+        self.hass.bus.fire(EVENT_HOMEKIT_CHANGED, {
+            ATTR_ENTITY_ID: self.entity_id,
+            'display_name': self.display_name,
+            ATTR_MESSAGE: logbook_message
+        })
+
         self.hass.services.call(acc_domain, service, params)
 
 
