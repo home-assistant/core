@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC,
+                                 CONF_UNIT_SYSTEM_METRIC,
                                  CONF_UNIT_SYSTEM_IMPERIAL)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_utc_time_change
