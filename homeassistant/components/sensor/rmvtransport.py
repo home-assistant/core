@@ -95,7 +95,6 @@ class RMVDepartureSensor(Entity):
     def __init__(self, session, station, destinations, directions, lines,
                  products, time_offset, max_journeys, name):
         """Initialize the sensor."""
-        self._session = session
         self._station = station
         self._name = name
         self._state = None
@@ -168,7 +167,6 @@ class RMVDepartureData:
         """Initialize the sensor."""
         from RMVtransport import RMVtransport
 
-        self._session = session
         self.station = None
         self._station_id = station_id
         self._destinations = destinations
@@ -177,7 +175,7 @@ class RMVDepartureData:
         self._products = products
         self._time_offset = time_offset
         self._max_journeys = max_journeys
-        self.rmv = RMVtransport(self._session)
+        self.rmv = RMVtransport(session)
         self.departures = []
 
     @Throttle(SCAN_INTERVAL)
