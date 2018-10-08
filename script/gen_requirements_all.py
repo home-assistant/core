@@ -96,6 +96,7 @@ TEST_REQUIREMENTS = (
     'ring_doorbell',
     'rxv',
     'sleepyq',
+    'smhi-pkg',
     'somecomfort',
     'sqlalchemy',
     'statsd',
