@@ -101,7 +101,7 @@ def get_departures_mock():
 
 
 def get_no_departures_mock():
-    """Mock rmvtransport departures loading."""
+    """Mock empty rmvtransport departures loading."""
     data = {'station': 'Frankfurt (Main) Hauptbahnhof',
             'stationId': '3000010',
             'filter': '11111111111',
