@@ -91,6 +91,7 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
         """Initialize Area as Alarm Control Panel."""
         super().__init__('alarm_control_panel', element, elk, elk_data)
         self._changed_by_entity_id = ''
+        self._state = None
 
     async def async_added_to_hass(self):
         """Register callback for ElkM1 changes."""

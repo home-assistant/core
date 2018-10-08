@@ -161,7 +161,6 @@ class ElkEntity(Entity):
         """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
-        self._state = None
         self._temperature_unit = elk_data['config']['temperature_unit']
         self._unique_id = 'elkm1_{}'.format(
             self._element.default_name('_').lower())
