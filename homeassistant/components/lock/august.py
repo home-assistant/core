@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
 
     for lock in data.locks:
-        _LOGGER.debug("Adding lock for %s.", lock.device_name)
+        _LOGGER.debug("Adding lock for %s", lock.device_name)
         devices.append(AugustLock(data, lock))
 
     add_entities(devices, True)
@@ -43,17 +43,14 @@ class AugustLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock the device."""
-        _LOGGER.debug("Locking %s.", self.entity_id)
         self._data.lock(self._lock.device_id)
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        _LOGGER.debug("Unlocking %s.", self.entity_id)
         self._data.unlock(self._lock.device_id)
 
     def update(self):
         """Get the latest state of the sensor."""
-        old_status = self._lock_status
         self._lock_status = self._data.get_lock_status(self._lock.device_id)
         self._lock_detail = self._data.get_lock_detail(self._lock.device_id)
 
@@ -64,13 +61,6 @@ class AugustLock(LockDevice):
 
         if activity is not None:
             self._changed_by = activity.operated_by
-
-        if old_status == self._lock_status:
-            _LOGGER.debug("%s not changed; current status is %s.",
-                          self.entity_id, self._lock_status)
-        else:
-            _LOGGER.debug("%s changed from %s to %s.",
-                          self.entity_id, old_status, self._lock_status)
 
     @property
     def name(self):
@@ -91,11 +81,9 @@ class AugustLock(LockDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        if self._lock_detail is not None:
-            battery_level = self._lock_detail.battery_level
-        else:
-            battery_level = None
+        if self._lock_detail is None:
+            return
 
         return {
-            ATTR_BATTERY_LEVEL: battery_level,
+            ATTR_BATTERY_LEVEL: self._lock_detail.battery_level,
         }

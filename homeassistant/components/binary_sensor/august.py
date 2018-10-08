@@ -4,7 +4,6 @@ Support for August binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.august/
 """
-
 import logging
 from datetime import timedelta, datetime
 
@@ -71,8 +70,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for sensor_type in SENSOR_TYPES:
             if SENSOR_TYPES[sensor_type][1] == 'door':
                 continue
-            _LOGGER.debug("Adding doorbell sensor class %s for %s.",
-                          doorbell.device_name, SENSOR_TYPES[sensor_type][1])
+            _LOGGER.debug("Adding doorbell sensor class %s for %s",
+                          SENSOR_TYPES[sensor_type][1], doorbell.device_name)
             devices.append(AugustBinarySensor(data, sensor_type, doorbell))
 
     from august.lock import LockDoorStatus
@@ -85,12 +84,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if state_provider(data, lock) is LockDoorStatus.UNKNOWN:
                 _LOGGER.debug(
                     ("Not adding sensor class %s for lock %s "
-                     "as status is unknown."),
-                    SENSOR_TYPES[sensor_type][2], lock.device_name
+                     "as status is unknown"),
+                    SENSOR_TYPES[sensor_type][1], lock.device_name
                 )
             else:
                 _LOGGER.debug(
-                    "Adding lock sensor class %s for %s.",
+                    "Adding lock sensor class %s for %s",
                     SENSOR_TYPES[sensor_type][1], lock.device_name
                 )
                 devices.append(AugustBinarySensor(data, sensor_type, lock))
@@ -112,8 +111,10 @@ class AugustBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         from august.lock import LockDoorStatus
+
+        # For door sensor, return true if open or unknown,
+        # otherwise return false.
         if SENSOR_TYPES[self._sensor_type][1] == 'door':
-            # For sensor type door, return true open/unknown or false for close
             return self._state is not LockDoorStatus.CLOSED
 
         return self._state
@@ -132,12 +133,4 @@ class AugustBinarySensor(BinarySensorDevice):
     def update(self):
         """Get the latest state of the sensor."""
         state_provider = SENSOR_TYPES[self._sensor_type][2]
-        old_state = self._state
         self._state = state_provider(self._data, self._device)
-
-        if old_state == self._state:
-            _LOGGER.debug("%s not changed; current state is %s.",
-                          self.entity_id, self._state)
-        else:
-            _LOGGER.debug("%s changed from %s to %s.",
-                          self.entity_id, old_state, self._state)
