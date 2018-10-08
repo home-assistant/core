@@ -21,11 +21,13 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers import config_validation as cv
 
 from .config_flow import configured_instances
-from .const import DATA_CLIENT, DATA_LISTENER, DOMAIN, TOPIC_UPDATE
+from .const import DATA_CLIENT, DOMAIN, TOPIC_UPDATE
 
 REQUIREMENTS = ['simplisafe-python==3.1.6']
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_LISTENER = 'listener'
 
 CONF_ACCOUNTS = 'accounts'
 
