@@ -38,8 +38,11 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema({
 
 
 async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info):
+                               discovery_info=None):
     """Set up the ElkM1 alarm platform."""
+    if discovery_info is None:
+        return
+
     elk = hass.data[ELK_DOMAIN]['elk']
     entities = create_elk_entities(hass, elk.areas, 'area', ElkArea, [])
     async_add_entities(entities, True)
@@ -88,6 +91,7 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
         """Initialize Area as Alarm Control Panel."""
         super().__init__('alarm_control_panel', element, elk, elk_data)
         self._changed_by_entity_id = ''
+        self._state = None
 
     async def async_added_to_hass(self):
         """Register callback for ElkM1 changes."""
