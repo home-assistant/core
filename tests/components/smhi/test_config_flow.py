@@ -75,7 +75,7 @@ async def test_show_config_form() -> None:
     result = await flow._show_config_form()
 
     assert result['type'] == 'form'
-    assert result['step_id'] == 'init'
+    assert result['step_id'] == 'user'
 
 
 async def test_show_config_form_default_values() -> None:
@@ -88,7 +88,7 @@ async def test_show_config_form_default_values() -> None:
         name="test", latitude='65', longitude='17')
 
     assert result['type'] == 'form'
-    assert result['step_id'] == 'init'
+    assert result['step_id'] == 'user'
 
 
 async def test_flow_with_home_location(hass) -> None:
@@ -106,9 +106,9 @@ async def test_flow_with_home_location(hass) -> None:
         hass.config.latitude = 17.8419
         hass.config.longitude = 59.3262
 
-        result = await flow.async_step_init()
+        result = await flow.async_step_user()
         assert result['type'] == 'form'
-        assert result['step_id'] == 'init'
+        assert result['step_id'] == 'user'
 
 
 async def test_flow_show_form() -> None:
@@ -131,7 +131,7 @@ async def test_flow_show_form() -> None:
                      return_value={
                          'test': 'something', 'name_exist': 'config'
                          }):
-        await flow.async_step_init()
+        await flow.async_step_user()
         assert len(config_form.mock_calls) == 1
 
     # Test show form when home assistant config not and
@@ -146,7 +146,7 @@ async def test_flow_show_form() -> None:
                          'test': 'something', 'name_exist': 'config'
                          }):
 
-        await flow.async_step_init()
+        await flow.async_step_user()
         assert len(config_form.mock_calls) == 1
 
 
@@ -173,7 +173,7 @@ async def test_flow_show_form_name_exists() -> None:
         patch.object(flow, '_check_location',
                      return_value=mock_coro(True)):
 
-        await flow.async_step_init(user_input=test_data)
+        await flow.async_step_user(user_input=test_data)
 
         assert len(config_form.mock_calls) == 1
         assert len(flow._errors) == 1
@@ -205,7 +205,7 @@ async def test_flow_entry_created_from_user_input() -> None:
         patch.object(flow, '_check_location',
                      return_value=mock_coro(True)):
 
-        result = await flow.async_step_init(user_input=test_data)
+        result = await flow.async_step_user(user_input=test_data)
 
         assert result['type'] == 'create_entry'
         assert result['data'] == test_data
@@ -241,21 +241,10 @@ async def test_flow_entry_created_user_input_faulty() -> None:
         patch.object(flow, '_check_location',
                      return_value=mock_coro(False)):
 
-        await flow.async_step_init(user_input=test_data)
+        await flow.async_step_user(user_input=test_data)
 
         assert len(config_form.mock_calls) == 1
         assert len(flow._errors) == 1
-
-
-async def test_async_step_user(hass) -> None:
-    """Test the async_step_user."""
-    hass = Mock()
-    flow = config_flow.SmhiFlowHandler()
-    flow.hass = hass
-    with patch.object(flow, 'async_step_init',
-                      return_value=mock_coro()) as step_init:
-        await flow.async_step_user()
-        assert len(step_init.mock_calls) == 1
 
 
 async def test_check_location_correct() -> None:

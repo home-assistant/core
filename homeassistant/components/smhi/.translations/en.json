@@ -5,7 +5,7 @@
             "wrong_location": "Location in Sweden only"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "latitude": "Latitude",
                     "longitude": "Longitude",

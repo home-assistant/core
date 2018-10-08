@@ -2,7 +2,7 @@
     "config": {
         "title": "Swedish weather service (SMHI)",
         "step": {
-            "init": {
+            "user": {
                 "title": "Location in Sweden",
                 "data": {
                     "name": "Name",

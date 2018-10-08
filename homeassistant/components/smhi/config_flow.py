@@ -43,10 +43,6 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(self, user_input=None):
-        """Handle the flow logic for SMHI location config."""
         self._errors = {}
 
         if user_input is not None:
@@ -102,7 +98,7 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
                                 longitude: str = None):
         """Show the configuration form to edit location data."""
         return self.async_show_form(
-            step_id='init',
+            step_id='user',
             data_schema=vol.Schema({
                 vol.Required(CONF_NAME, default=name): str,
                 vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,

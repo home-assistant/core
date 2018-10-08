@@ -5,7 +5,7 @@
             "wrong_location": "Endast plats i Sverige"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "latitude": "Latitud",
                     "longitude": "Longitud",
