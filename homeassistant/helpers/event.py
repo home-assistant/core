@@ -370,11 +370,7 @@ def async_track_utc_time_change(hass, action,
 
         if next_time <= now:
             hass.async_run_job(action, event.data[ATTR_NOW])
-            base = now
-            if next_time == now:
-                # Make sure not to trigger on duplicate times
-                base = now + timedelta(seconds=1)
-            calculate_next(base)
+            calculate_next(now + timedelta(seconds=1))
 
     return hass.bus.async_listen(EVENT_TIME_CHANGED,
                                  pattern_time_change_listener)
