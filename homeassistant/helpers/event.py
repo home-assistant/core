@@ -2,8 +2,6 @@
 from datetime import timedelta
 import functools as ft
 
-import pytz
-
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.sun import get_astral_event_next
 from ..core import HomeAssistant, callback
@@ -363,12 +361,6 @@ def async_track_utc_time_change(hass, action,
         nonlocal next_time, last_now
 
         now = event.data[ATTR_NOW]
-
-        # Prevent "can't compare offset-naive and offset-aware" errors,
-        # let's make everything timezone-aware
-        if now.tzinfo is None:
-            # pylint: disable=no-value-for-parameter
-            now = pytz.UTC.localize(now)
 
         if last_now is None or now < last_now:
             # Time rolled back or next time not yet calculated
