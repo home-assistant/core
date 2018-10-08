@@ -36,7 +36,7 @@ class HomematicipGenericDevice(Entity):
         """Register callbacks."""
         self._device.on_update(self._device_changed)
 
-    def _device_changed(self, json, **kwargs):
+    def _device_changed(self, *args, **kwargs):
         """Handle device state changes."""
         _LOGGER.debug("Event %s (%s)", self.name, self._device.modelType)
         self.async_schedule_update_ha_state()

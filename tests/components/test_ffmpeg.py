@@ -3,10 +3,44 @@ import asyncio
 from unittest.mock import patch, MagicMock
 
 import homeassistant.components.ffmpeg as ffmpeg
+from homeassistant.components.ffmpeg import (
+    DOMAIN, SERVICE_RESTART, SERVICE_START, SERVICE_STOP)
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import callback
 from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro)
+
+
+@callback
+def async_start(hass, entity_id=None):
+    """Start a FFmpeg process on entity.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_START, data))
+
+
+@callback
+def async_stop(hass, entity_id=None):
+    """Stop a FFmpeg process on entity.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_STOP, data))
+
+
+@callback
+def async_restart(hass, entity_id=None):
+    """Restart a FFmpeg process on entity.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_RESTART, data))
 
 
 class MockFFmpegDev(ffmpeg.FFmpegBase):
@@ -106,7 +140,7 @@ def test_setup_component_test_service_start(hass):
     ffmpeg_dev = MockFFmpegDev(hass, False)
     yield from ffmpeg_dev.async_added_to_hass()
 
-    ffmpeg.async_start(hass)
+    async_start(hass)
     yield from hass.async_block_till_done()
 
     assert ffmpeg_dev.called_start
@@ -122,7 +156,7 @@ def test_setup_component_test_service_stop(hass):
     ffmpeg_dev = MockFFmpegDev(hass, False)
     yield from ffmpeg_dev.async_added_to_hass()
 
-    ffmpeg.async_stop(hass)
+    async_stop(hass)
     yield from hass.async_block_till_done()
 
     assert ffmpeg_dev.called_stop
@@ -138,7 +172,7 @@ def test_setup_component_test_service_restart(hass):
     ffmpeg_dev = MockFFmpegDev(hass, False)
     yield from ffmpeg_dev.async_added_to_hass()
 
-    ffmpeg.async_restart(hass)
+    async_restart(hass)
     yield from hass.async_block_till_done()
 
     assert ffmpeg_dev.called_stop
@@ -155,7 +189,7 @@ def test_setup_component_test_service_start_with_entity(hass):
     ffmpeg_dev = MockFFmpegDev(hass, False)
     yield from ffmpeg_dev.async_added_to_hass()
 
-    ffmpeg.async_start(hass, 'test.ffmpeg_device')
+    async_start(hass, 'test.ffmpeg_device')
     yield from hass.async_block_till_done()
 
     assert ffmpeg_dev.called_start

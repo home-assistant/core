@@ -128,6 +128,23 @@ class TestSamsungTv(unittest.TestCase):
         self.device.update()
         self.assertEqual(STATE_OFF, self.device._state)
 
+    @mock.patch(
+        'homeassistant.components.media_player.samsungtv.subprocess.Popen'
+    )
+    def test_timeout(self, mocked_popen):
+        """Test timeout use."""
+        ping = mock.Mock()
+        mocked_popen.return_value = ping
+        ping.returncode = 0
+        self.device.update()
+        expected_timeout = self.device._config['timeout']
+        timeout_arg = '-W{}'.format(expected_timeout)
+        ping_command = [
+            'ping', '-n', '-q', '-c3', timeout_arg, 'fake']
+        expected_call = call(ping_command, stderr=-3, stdout=-1)
+        self.assertEqual(mocked_popen.call_args, expected_call)
+        self.assertEqual(STATE_ON, self.device._state)
+
     def test_send_key(self):
         """Test for send key."""
         self.device.send_key('KEY_POWER')

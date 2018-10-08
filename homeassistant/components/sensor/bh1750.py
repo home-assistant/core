@@ -4,7 +4,6 @@ Support for BH1750 light sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bh1750/
 """
-import asyncio
 from functools import partial
 import logging
 
@@ -66,9 +65,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=import-error
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the BH1750 sensor."""
     import smbus
     from i2csense.bh1750 import BH1750
@@ -80,7 +78,7 @@ def async_setup_platform(hass, config, async_add_entities,
 
     bus = smbus.SMBus(bus_number)
 
-    sensor = yield from hass.async_add_job(
+    sensor = await hass.async_add_job(
         partial(BH1750, bus, i2c_address,
                 operation_mode=operation_mode,
                 measurement_delay=config.get(CONF_DELAY),
@@ -133,10 +131,9 @@ class BH1750Sensor(Entity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_ILLUMINANCE
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from the BH1750 and update the states."""
-        yield from self.hass.async_add_job(self.bh1750_sensor.update)
+        await self.hass.async_add_job(self.bh1750_sensor.update)
         if self.bh1750_sensor.sample_ok \
                 and self.bh1750_sensor.light_level >= 0:
             self._state = int(round(self.bh1750_sensor.light_level

@@ -4,7 +4,6 @@ Support for Speedtest.net.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.speedtest/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -139,10 +138,9 @@ class SpeedtestSensor(Entity):
         elif self.type == 'upload':
             self._state = round(self._data['upload'] / 10**6, 2)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Handle all entity which are about to be added."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
+        state = await async_get_last_state(self.hass, self.entity_id)
         if not state:
             return
         self._state = state.state
