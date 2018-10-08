@@ -37,8 +37,8 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the ElkM1 alarm platform."""
     if discovery_info is None:
         return
