@@ -4,6 +4,7 @@ Support for MQTT discovery.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/#discovery
 """
+import asyncio
 import json
 import logging
 import re
@@ -51,6 +52,7 @@ CONFIG_ENTRY_PLATFORMS = {
 }
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
+DATA_CONFIG_ENTRY_LOCK = 'mqtt_config_entry_lock'
 CONFIG_ENTRY_IS_SETUP = 'mqtt_config_entry_is_setup'
 MQTT_DISCOVERY_UPDATED = 'mqtt_discovery_updated_{}'
 MQTT_DISCOVERY_NEW = 'mqtt_discovery_new_{}_{}'
@@ -119,14 +121,16 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                 return
 
             config_entries_key = '{}.{}'.format(component, platform)
-            if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
-                hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
-                await hass.config_entries.async_forward_entry_setup(
-                    config_entry, component)
+            async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
+                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                    await hass.config_entries.async_forward_entry_setup(
+                        config_entry, component)
+                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
             async_dispatcher_send(hass, MQTT_DISCOVERY_NEW.format(
                 component, platform), payload)
 
+    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     await mqtt.async_subscribe(
