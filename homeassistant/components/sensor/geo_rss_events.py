@@ -145,3 +145,4 @@ class GeoRssServiceSensor(Entity):
             # If no events were found due to an error then just set state to
             # zero.
             self._state = 0
+            self._state_attributes = {}
