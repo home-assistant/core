@@ -36,6 +36,8 @@ def _get_alarm_state(area):
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the SPC alarm control panel platform."""
+    if discovery_info is None:
+        return
     api = hass.data[DATA_API]
     async_add_entities([SpcAlarm(area=area, api=api)
                         for area in api.areas.values()])
