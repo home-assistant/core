@@ -73,7 +73,7 @@ async def async_unload_entry(hass, config_entry):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class UnifiFlowHandler(data_entry_flow.FlowHandler):
+class UnifiFlowHandler(config_entries.ConfigFlow):
     """Handle a UniFi config flow."""
 
     VERSION = 1
@@ -90,22 +90,19 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
         if user_input is not None:
 
             try:
-                controller_id = CONTROLLER_ID.format(
-                    host=user_input[CONF_HOST], site=user_input[CONF_SITE_ID]
-                )
-                if DOMAIN in self.hass.data and \
-                   controller_id in self.hass.data[DOMAIN]:
-                    raise AlreadyConfigured
+                for entry in self._async_current_entries():
+                    controller = entry.data[CONF_CONTROLLER]
+                    if controller[CONF_HOST] == user_input[CONF_HOST] and \
+                       controller[CONF_SITE_ID] == user_input[CONF_SITE_ID]:
+                        raise AlreadyConfigured
 
                 controller_data = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
-                    CONF_SITE_ID: user_input.get(
-                        CONF_SITE_ID, DEFAULT_SITE_ID),
-                    CONF_VERIFY_SSL: user_input.get(
-                        CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                    CONF_PORT: user_input.get(CONF_PORT),
+                    CONF_SITE_ID: user_input.get(CONF_SITE_ID),
+                    CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
                 }
                 controller = await get_controller(self.hass, **controller_data)
 

@@ -187,12 +187,13 @@ async def test_controller_site_already_configured(hass, aioclient_mock):
     flow = unifi.UnifiFlowHandler()
     flow.hass = hass
 
-    controller_id = unifi.CONTROLLER_ID.format(
-        host='1.2.3.4', site='default'
-    )
-    hass.data[unifi.DOMAIN] = {
-        controller_id: True
-    }
+    entry = MockConfigEntry(domain=unifi.DOMAIN, data={
+        'controller': {
+            'host': '1.2.3.4',
+            'site': 'default',
+        }
+    })
+    entry.add_to_hass(hass)
 
     result = await flow.async_step_user(user_input={
         unifi.CONF_HOST: '1.2.3.4',
