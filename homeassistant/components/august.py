@@ -233,7 +233,7 @@ class AugustData:
     def get_lock_status(self, lock_id):
         """Return status if the door is locked or unlocked.
 
-        This is status for the lock itself
+        This is status for the lock itself.
         """
         self._update_locks()
         return self._lock_status_by_id.get(lock_id)
@@ -241,7 +241,7 @@ class AugustData:
     def get_lock_door_status(self, lock_id):
         """Return status if the door is open or closed.
 
-        This is the status from the door sensor
+        This is the status from the door sensor.
         """
         self._update_locks()
         return self._lock_door_status_by_id.get(lock_id)
@@ -259,7 +259,7 @@ class AugustData:
 
         _LOGGER.debug("Start retrieving locks status")
         for lock in self._locks:
-            _LOGGER.debug("Updating status for %s.",
+            _LOGGER.debug("Updating status for %s",
                           lock.device_name)
             door_status_by_id[lock.device_id] = self._api.get_lock_door_status(
                 self._access_token, lock.device_id)
