@@ -578,7 +578,7 @@ maxcube-api==0.1.0
 messagebird==1.2.0
 
 # homeassistant.components.octoprint
-octoclient=0.2.dev1
+octoclient==0.2.dev1
 
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
