@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_RADIUS, CONF_URL)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['georss_client==0.1']
+REQUIREMENTS = ['georss_client==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
