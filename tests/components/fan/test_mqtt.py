@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 
 from tests.common import (
     mock_mqtt_component, async_fire_mqtt_message, fire_mqtt_message,
-    get_test_home_assistant, async_mock_mqtt_component)
+    get_test_home_assistant, async_mock_mqtt_component, MockConfigEntry)
 
 
 class TestMqttFan(unittest.TestCase):
@@ -108,7 +108,8 @@ class TestMqttFan(unittest.TestCase):
 
 async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
     """Test removal of discovered fan."""
-    await async_start(hass, 'homeassistant', {})
+    entry = MockConfigEntry(domain='mqtt')
+    await async_start(hass, 'homeassistant', {}, entry)
     data = (
         '{ "name": "Beer",'
         '  "command_topic": "test_topic" }'
