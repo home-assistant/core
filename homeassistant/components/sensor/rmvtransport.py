@@ -15,7 +15,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 from homeassistant.util import Throttle
-from homeassistant.exceptions import PlatformNotReady
 
 REQUIREMENTS = ['PyRMVtransport==0.1.1']
 
