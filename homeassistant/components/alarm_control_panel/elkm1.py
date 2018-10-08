@@ -37,9 +37,12 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None):
     """Set up the ElkM1 alarm platform."""
+    if discovery_info is None:
+        return
+
     elk = hass.data[ELK_DOMAIN]['elk']
     entities = create_elk_entities(hass, elk.areas, 'area', ElkArea, [])
     async_add_entities(entities, True)

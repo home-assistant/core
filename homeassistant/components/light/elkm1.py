@@ -13,17 +13,19 @@ from homeassistant.components.elkm1 import (
 DEPENDENCIES = [ELK_DOMAIN]
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None):
     """Set up the Elk light platform."""
+    if discovery_info is None:
+        return
     elk = hass.data[ELK_DOMAIN]['elk']
     async_add_entities(
         create_elk_entities(hass, elk.lights, 'plc', ElkLight, []), True)
-    return True
 
 
 class ElkLight(ElkEntity, Light):
     """Elk lighting device."""
+
     def __init__(self, element, elk, elk_data):
         """Initialize light."""
         super().__init__('light', element, elk, elk_data)
@@ -41,18 +43,17 @@ class ElkLight(ElkEntity, Light):
 
     @property
     def is_on(self) -> bool:
-        """Is there light?"""
+        """Get the current brightness."""
         return self._brightness != 0
 
     def _element_changed(self, element, changeset):
-        """Callback handler from the Elk."""
         status = self._element.status if self._element.status != 1 else 100
         self._brightness = round(status * 2.55)
 
     async def async_turn_on(self, **kwargs):
-        """Let there be light!"""
+        """Turn on the light."""
         self._element.level(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
 
     async def async_turn_off(self, **kwargs):
-        """In the darkness..."""
+        """Turn off the light."""
         self._element.level(0)
