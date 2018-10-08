@@ -36,7 +36,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             elif model in ['natgas', 'sensor_natgas']:
                 devices.append(XiaomiNatgasSensor(device, gateway))
             elif model in ['switch', 'sensor_switch',
-                           'sensor_switch.aq2', 'sensor_switch.aq3']:
+                           'sensor_switch.aq2', 'sensor_switch.aq3',
+                           'remote.b1acn01']:
                 if 'proto' not in device or int(device['proto'][0:1]) == 1:
                     data_key = 'status'
                 else:
