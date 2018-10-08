@@ -18,11 +18,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
+from homeassistant.components.http import real_ip
+
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
     HueOneLightChangeView, HueGroupView)
 from .upnp import DescriptionXmlView, UPNPResponderThread
-from homeassistant.components.http import real_ip
 
 DOMAIN = 'emulated_hue'
 
