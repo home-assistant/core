@@ -94,4 +94,6 @@ class BTSmartHubScanner(DeviceScanner):
                 }
             except KeyError:
                 pass
+        if devices == {}:
+            return None
         return devices
