@@ -715,8 +715,6 @@ async def async_setup_entry(hass, config_entry):
                                test_network)
         hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK,
                                stop_network)
-        hass.services.register(DOMAIN, const.SERVICE_START_NETWORK,
-                               start_zwave)
         hass.services.register(DOMAIN, const.SERVICE_RENAME_NODE, rename_node,
                                schema=RENAME_NODE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_RENAME_VALUE,
@@ -775,6 +773,9 @@ async def async_setup_entry(hass, config_entry):
         async_track_time_change(hass, heal_network, hour=0, minute=0, second=0)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
+
+    hass.services.async_register(DOMAIN, const.SERVICE_START_NETWORK,
+                                 start_zwave)
 
     return True
 

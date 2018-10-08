@@ -25,10 +25,6 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
         self.usb_path = CONF_USB_STICK_PATH
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         if self._async_current_entries():
             return self.async_abort(reason='one_instance_only')
@@ -46,15 +42,17 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
             from openzwave.object import ZWaveException
 
             try:
+                from functools import partial
                 # pylint: disable=unused-variable
-                option = ZWaveOption(  # noqa: F841
-                    user_input[CONF_USB_STICK_PATH],
-                    user_path=self.hass.config.config_dir
+                option = await self.hass.async_add_executor_job(  # noqa: F841
+                    partial(ZWaveOption,
+                            user_input[CONF_USB_STICK_PATH],
+                            user_path=self.hass.config.config_dir)
                 )
             except ZWaveException:
                 errors['base'] = 'option_error'
                 return self.async_show_form(
-                    step_id='init',
+                    step_id='user',
                     data_schema=vol.Schema(fields),
                     errors=errors
                 )
@@ -80,7 +78,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
             )
 
         return self.async_show_form(
-            step_id='init', data_schema=vol.Schema(fields)
+            step_id='user', data_schema=vol.Schema(fields)
         )
 
     async def async_step_import(self, info):

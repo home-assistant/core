@@ -2,7 +2,7 @@
     "config": {
         "title": "Z-Wave",
         "step": {
-            "init": {
+            "user": {
                 "title": "Set up Z-Wave",
                 "description": "See https://www.home-assistant.io/docs/z-wave/installation/ for information on the configuration variables",
                 "data": {

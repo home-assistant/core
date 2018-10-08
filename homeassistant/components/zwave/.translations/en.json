@@ -8,7 +8,7 @@
             "option_error": "Z-Wave validation failed. Is the path to the USB stick correct?"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "network_key": "Network Key (leave blank to auto-generate)",
                     "usb_path": "USB Path"
