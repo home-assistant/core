@@ -1,11 +1,10 @@
 """The tests for the rmvtransport platform."""
 import datetime
 from unittest.mock import patch
+import pytest
 
-# from homeassistant.components.sensor import rmvtransport
 from homeassistant.setup import async_setup_component
 
-import pytest
 from tests.common import mock_coro
 
 
@@ -46,7 +45,7 @@ VALID_CONFIG_DEST = {'sensor': {
         ]}}
 
 
-def get_departuresMock():  # pylint: disable=invalid-name
+def get_departures_mock():
     """Mock rmvtransport departures loading."""
     data = {'station': 'Frankfurt (Main) Hauptbahnhof',
             'stationId': '3000010', 'filter': '11111111111', 'journeys': [
@@ -101,7 +100,7 @@ def get_departuresMock():  # pylint: disable=invalid-name
     return data
 
 
-def get_no_departuresMock():  # pylint: disable=invalid-name
+def get_no_departures_mock():
     """Mock rmvtransport departures loading."""
     data = {'station': 'Frankfurt (Main) Hauptbahnhof',
             'stationId': '3000010',
@@ -110,7 +109,7 @@ def get_no_departuresMock():  # pylint: disable=invalid-name
     return data
 
 
-def get_errDeparturesMock():  # pylint: disable=invalid-name
+def get_err_departures_mock():
     """Mock rmvtransport departures erroneous loading."""
     raise ValueError
 
@@ -118,7 +117,7 @@ def get_errDeparturesMock():  # pylint: disable=invalid-name
 async def test_rmvtransport_min_config(hass):
     """Test minimal rmvtransport configuration."""
     with patch('RMVtransport.RMVtransport.get_departures',
-               return_value=mock_coro(get_departuresMock())):
+               return_value=mock_coro(get_departures_mock())):
         assert await async_setup_component(hass, 'sensor',
                                            VALID_CONFIG_MINIMAL) is True
 
@@ -137,7 +136,7 @@ async def test_rmvtransport_min_config(hass):
 async def test_rmvtransport_name_config(hass):
     """Test custom name configuration."""
     with patch('RMVtransport.RMVtransport.get_departures',
-               return_value=mock_coro(get_departuresMock())):
+               return_value=mock_coro(get_departures_mock())):
         assert await async_setup_component(hass, 'sensor', VALID_CONFIG_NAME)
 
     state = hass.states.get('sensor.my_station')
@@ -148,14 +147,14 @@ async def test_rmvtransport_name_config(hass):
 async def test_rmvtransport_err_config(hass):
     """Test erroneous rmvtransport configuration."""
     with patch('RMVtransport.RMVtransport.get_departures',
-               return_value=mock_coro(get_errDeparturesMock())):
+               return_value=mock_coro(get_err_departures_mock())):
         await async_setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
 
 
 async def test_rmvtransport_misc_config(hass):
     """Test misc configuration."""
     with patch('RMVtransport.RMVtransport.get_departures',
-               return_value=mock_coro(get_departuresMock())):
+               return_value=mock_coro(get_departures_mock())):
         assert await async_setup_component(hass, 'sensor', VALID_CONFIG_MISC)
 
     state = hass.states.get('sensor.frankfurt_main_hauptbahnhof')
@@ -166,7 +165,7 @@ async def test_rmvtransport_misc_config(hass):
 async def test_rmvtransport_dest_config(hass):
     """Test misc configuration."""
     with patch('RMVtransport.RMVtransport.get_departures',
-               return_value=mock_coro(get_departuresMock())):
+               return_value=mock_coro(get_departures_mock())):
         assert await async_setup_component(hass, 'sensor', VALID_CONFIG_DEST)
 
     state = hass.states.get('sensor.frankfurt_main_hauptbahnhof')
@@ -182,7 +181,7 @@ async def test_rmvtransport_dest_config(hass):
 async def test_rmvtransport_no_departures(hass):
     """Test misc configuration."""
     with patch('RMVtransport.RMVtransport.get_departures',
-               return_value=mock_coro(get_no_departuresMock())):
+               return_value=mock_coro(get_no_departures_mock())):
         assert await async_setup_component(hass, 'sensor',
                                            VALID_CONFIG_MINIMAL)
 
