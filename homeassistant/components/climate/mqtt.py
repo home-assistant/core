@@ -237,7 +237,10 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
         self._value_templates = value_templates
         self._qos = qos
         self._retain = retain
-        self._target_temperature = target_temperature
+        if self._topic[CONF_TEMPERATURE_STATE_TOPIC] is None:
+            self._target_temperature = target_temperature
+        else:
+            self._target_temperature = None
         self._unit_of_measurement = hass.config.units.temperature_unit
         self._away = away
         self._hold = hold
