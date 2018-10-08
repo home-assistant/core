@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_API_KEY, ATTR_ATTRIBUTION)
 
-REQUIREMENTS = ['PyTransportNSW==0.0.7']
+REQUIREMENTS = ['PyTransportNSW==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,6 @@ ATTR_REAL_TIME = 'real_time'
 CONF_ATTRIBUTION = "Data provided by Transport NSW"
 CONF_STOP_ID = 'stop_id'
 CONF_ROUTE = 'route'
-CONF_API_KEY = 'api_key'
 
 DEFAULT_NAME = "Next Bus"
 ICON = "mdi:bus"

@@ -58,7 +58,7 @@ PyRMVtransport==0.1
 PySwitchbot==0.3
 
 # homeassistant.components.sensor.transport_nsw
-PyTransportNSW==0.0.7
+PyTransportNSW==0.0.8
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.11.1
