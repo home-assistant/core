@@ -653,6 +653,19 @@ class TestMQTTClimate(unittest.TestCase):
         self.assertIsInstance(max_temp, float)
         self.assertEqual(60, max_temp)
 
+    def test_temp_step_custom(self):
+        """Test a custom temp step."""
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config['climate']['temp_step'] = 0.01
+
+        assert setup_component(self.hass, climate.DOMAIN, config)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        temp_step = state.attributes.get('target_temp_step')
+
+        self.assertIsInstance(temp_step, float)
+        self.assertEqual(0.01, temp_step)
+
 
 async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
     """Test removal of discovered climate."""
