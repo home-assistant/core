@@ -63,7 +63,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devices = []
         types = ["actual", "target"]
         for octo_type in monitored_conditions:
-            _LOGGER.debug("Setting up Octoprint {} sensor {}".format(octo_type, name))
+            _LOGGER.debug(
+                "Setting up Octoprint {} sensor {}".format(
+                    octo_type,
+                    name
+                )
+            )
             if octo_type == "Temperatures":
                 for tool in tools:
                     for temp_type in types:
@@ -89,7 +94,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 devices.append(new_sensor)
         add_entities(devices, True)
     else:
-        _LOGGER.error("Unable to setup sensors due to Octoprint {} not found".format(name))
+        _LOGGER.error(
+            "Unable to setup sensors"
+            " due to Octoprint {} not found".format(name)
+        )
 
     return
 

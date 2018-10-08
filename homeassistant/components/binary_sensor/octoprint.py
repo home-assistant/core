@@ -45,7 +45,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         devices = []
         for octo_type in monitored_conditions:
-            _LOGGER.debug('Setting up Octoprint {} binary sensor {}'.format(name, octo_type))
+            _LOGGER.debug(
+                'Setting up Octoprint {} binary sensor {}'.format(
+                    name,
+                    octo_type
+                )
+            )
             new_sensor = OctoPrintBinarySensor(
                 octoprint_api,
                 octo_type, SENSOR_TYPES[octo_type][2],
@@ -57,7 +62,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             devices.append(new_sensor)
         add_entities(devices, True)
     else:
-        _LOGGER.error('Unable to setup binary sensors due to Octoprint {} not found'.format(name))
+        _LOGGER.error(
+            'Unable to setup binary sensors'
+            'due to Octoprint {} not found'.format(name)
+        )
 
 
 class OctoPrintBinarySensor(BinarySensorDevice):

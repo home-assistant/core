@@ -11,9 +11,10 @@ from threading import Lock
 from typing import TypeVar, Union, Sequence
 
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, \
-    CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, \
+    CONF_SSL, CONF_NAME
 
 REQUIREMENTS = ['octoclient==0.2.dev1']
 
@@ -91,8 +92,16 @@ def async_setup(hass, config):
         base_url = '{}://{}'.format(schema, url)
 
         try:
-            octoprint = OctoClient(url=base_url, apikey=octo_config[CONF_API_KEY])
-            octoprint_api = OctoprintHandle(name, octoprint, octo_config[CONF_NUMBER_OF_TOOLS], octo_config[CONF_BED])
+            octoprint = OctoClient(
+                url=base_url,
+                apikey=octo_config[CONF_API_KEY]
+            )
+            octoprint_api = OctoprintHandle(
+                name,
+                octoprint,
+                octo_config[CONF_NUMBER_OF_TOOLS],
+                octo_config[CONF_BED]
+            )
             octoprint_api.get("printer")
             octoprint_api.get("job_info")
             octoprints[name] = octoprint_api
@@ -116,7 +125,8 @@ def async_setup(hass, config):
 class OctoprintHandle:
     """Keep the Octoprint instance in one place and centralize the update."""
 
-    def __init__(self, name, octoprint, number_of_tools=0, bed=0, scan_interval=30):
+    def __init__(self, name, octoprint, number_of_tools=0,
+                 bed=0, scan_interval=30):
         """Initialize the Octoprint Handle."""
         self.name = name
         self.octoprint = octoprint
@@ -153,16 +163,29 @@ class OctoprintHandle:
             try:
                 last_reading[1] = now
                 last_reading[0] = getattr(self.octoprint, status_type)()
-                setattr(self, "{}_last_reading".format(status_type), last_reading)
+                setattr(
+                    self,
+                    "{}_last_reading".format(status_type),
+                    last_reading
+                )
                 setattr(self, "{}_error_logged".format(status_type), False)
                 setattr(self, "{}_available".format(status_type), True)
                 return last_reading[0]
             except Exception as e:
                 last_reading[1] = now
-                setattr(self, "{}_last_reading".format(status_type), last_reading)
+                setattr(
+                    self,
+                    "{}_last_reading".format(status_type),
+                    last_reading
+                )
                 setattr(self, "{}_error_logged".format(status_type), True)
                 setattr(self, "{}_available".format(status_type), False)
-                _LOGGER.error("Error communicating with Octoprint {}. {}".format(self.name, str(e)))
+                _LOGGER.error(
+                    "Error communicating with Octoprint {}. {}".format(
+                        self.name,
+                        str(e)
+                    )
+                )
 
         return last_reading[0]
 
