@@ -468,22 +468,17 @@ class InsteonEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        if self._insteon_device_state.group == 0x01:
-            uid = self._insteon_device.id
-        else:
-            uid = '{:s}_{:d}'.format(self._insteon_device.id,
-                                     self._insteon_device_state.group)
-        return uid
+        return self._generate_network_address()
 
     @property
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
-        name = ''
-        if self._insteon_device_state.group == 0x01:
-            name = self._insteon_device.id
+        addr = self._generate_network_address()
+        if self._insteon_device.description is None:
+            name = addr
         else:
-            name = '{:s}_{:d}'.format(self._insteon_device.id,
-                                      self._insteon_device_state.group)
+            name = '{:s} {:s}'.format(self._insteon_device.description,
+                                      addr)
         return name
 
     @property
@@ -525,6 +520,15 @@ class InsteonEntity(Entity):
     def _aldb_loaded(self):
         """All-Link Database loaded for the device."""
         self.print_aldb()
+
+    def _generate_network_address(self):
+        """Get the formatted network address for the device."""
+        if self._insteon_device_state.group == 0x01:
+            addr = self._insteon_device.id
+        else:
+            addr = '{:s}_{:d}'.format(self._insteon_device.id,
+                                      self._insteon_device_state.group)
+        return addr
 
 
 def print_aldb_to_log(aldb):
