@@ -246,7 +246,7 @@ async def test_user_credentials_faulty(hass, aioclient_mock):
 
     with patch.object(unifi, 'get_controller',
                       side_effect=unifi.errors.AuthenticationRequired):
-        result = await flow.async_step_init({
+        result = await flow.async_step_user({
             unifi.CONF_HOST: '1.2.3.4',
             unifi.CONF_USERNAME: 'username',
             unifi.CONF_PASSWORD: 'password',
@@ -264,7 +264,7 @@ async def test_controller_is_unavailable(hass, aioclient_mock):
 
     with patch.object(unifi, 'get_controller',
                       side_effect=unifi.errors.CannotConnect):
-        result = await flow.async_step_init({
+        result = await flow.async_step_user({
             unifi.CONF_HOST: '1.2.3.4',
             unifi.CONF_USERNAME: 'username',
             unifi.CONF_PASSWORD: 'password',
@@ -282,7 +282,7 @@ async def test_controller_unkown_problem(hass, aioclient_mock):
 
     with patch.object(unifi, 'get_controller',
                       side_effect=Exception):
-        result = await flow.async_step_init({
+        result = await flow.async_step_user({
             unifi.CONF_HOST: '1.2.3.4',
             unifi.CONF_USERNAME: 'username',
             unifi.CONF_PASSWORD: 'password',

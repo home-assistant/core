@@ -85,10 +85,6 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(self, user_input=None):
-        """Handle a flow start."""
         errors = {}
 
         if user_input is not None:
@@ -151,7 +147,7 @@ class UnifiFlowHandler(data_entry_flow.FlowHandler):
                 return self.async_abort(reason='unknown')
 
         return self.async_show_form(
-            step_id='init',
+            step_id='user',
             data_schema=vol.Schema({
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_USERNAME): str,
