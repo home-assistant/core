@@ -4,11 +4,9 @@ Provide functionality to interact with AndroidT devices on the network.
 Example config:
 media_player:
   - platform: androidtv
-    devices:
-      192.168.1.37:
-        name: MIBOX3 ANDROID TV
-        port: 5555
-        scan_interval: 10
+    host: 192.168.1.37
+    name: MIBOX3 ANDROID TV
+
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.androidtv/
@@ -82,7 +80,7 @@ ACTIONS = {
 KNOWN_APPS = {
     "dream": "Screensaver",
     "kodi": "Kodi",
-    "netfilx": "Netflix",
+    "netflix": "Netflix",
     "plex": "Plex",
     "spotify": "Spotify",
     "tvlauncher": "Homescreen",
@@ -121,7 +119,6 @@ SERVICE_KEY_SCHEMA = vol.Schema({
 })
 
 DATA_KEY = '{}.androidtv'.format(DOMAIN)
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the androidtv platform."""
