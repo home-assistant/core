@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                             'dual_channel', hass, gateway))
             elif model in ['cube', 'sensor_cube', 'sensor_cube.aqgl01']:
                 devices.append(XiaomiCube(device, hass, gateway))
-            elif model in ['vibration']:
+            elif model in ['vibration', 'vibration.aq1']:
                 devices.append(XiaomiVibration(device, 'Vibration',
                                                'status', gateway))
             else:
