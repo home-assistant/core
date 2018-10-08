@@ -64,13 +64,14 @@ class XmppNotificationService(BaseNotificationService):
         data = '{}: {}'.format(title, message) if title else message
 
         # TODO allow /home-assistant part of the resource to be configured
-        await async_send_message('{}/home-assistant'.format(self._sender),
-                     self._password, self._recipient, self._tls,
-                     self._verify, self._room, self._loop, data)
+        await async_send_message(
+            '{}/home-assistant'.format(self._sender),
+            self._password, self._recipient, self._tls,
+            self._verify, self._room, self._loop, data)
 
 
 async def async_send_message(sender, password, recipient, use_tls,
-                 verify_certificate, room, loop, message):
+                             verify_certificate, room, loop, message):
     """Send a message over XMPP."""
     import slixmpp
 
@@ -85,7 +86,7 @@ async def async_send_message(sender, password, recipient, use_tls,
             # need hass.loop!!
             self.loop = loop
 
-            self.force_starttls = use_tls  # NOT optional will be forced TODO docs
+            self.force_starttls = use_tls
             self.use_ipv6 = False
             self.add_event_handler(
                 'failed_auth', self.disconnect_on_login_fail)
