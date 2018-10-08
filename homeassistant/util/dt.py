@@ -1,8 +1,8 @@
 """Helper methods to handle the time in Home Assistant."""
 import datetime as dt
 import re
-from typing import Any, Union, Optional, Tuple, \
-    List, cast, Dict  # noqa pylint: disable=unused-import
+from typing import (Any, Union, Optional,  # noqa pylint: disable=unused-import
+                    Tuple, List, cast, Dict)
 
 import pytz
 import pytz.exceptions as pytzexceptions
