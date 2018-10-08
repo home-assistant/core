@@ -132,6 +132,7 @@ homeassistant/components/vacuum/roomba.py @pschmitt
 homeassistant/components/weather/__init__.py @fabaff
 homeassistant/components/weather/darksky.py @fabaff
 homeassistant/components/weather/demo.py @fabaff
+homeassistant/components/weather/met.py @danielhiversen
 homeassistant/components/weather/openweathermap.py @fabaff
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
