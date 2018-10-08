@@ -101,6 +101,15 @@ def get_departuresMock():  # pylint: disable=invalid-name
     return data
 
 
+def get_no_departuresMock():  # pylint: disable=invalid-name
+    """Mock rmvtransport departures loading."""
+    data = {'station': 'Frankfurt (Main) Hauptbahnhof',
+            'stationId': '3000010',
+            'filter': '11111111111',
+            'journeys': []}
+    return data
+
+
 def get_errDeparturesMock():  # pylint: disable=invalid-name
     """Mock rmvtransport departures erroneous loading."""
     raise ValueError
@@ -131,7 +140,6 @@ async def test_rmvtransport_name_config(hass):
                return_value=mock_coro(get_departuresMock())):
         assert await async_setup_component(hass, 'sensor', VALID_CONFIG_NAME)
 
-    # await hass.async_block_till_done()
     state = hass.states.get('sensor.my_station')
     assert state.attributes['friendly_name'] == 'My Station'
 
@@ -150,7 +158,6 @@ async def test_rmvtransport_misc_config(hass):
                return_value=mock_coro(get_departuresMock())):
         assert await async_setup_component(hass, 'sensor', VALID_CONFIG_MISC)
 
-    await hass.async_block_till_done()
     state = hass.states.get('sensor.frankfurt_main_hauptbahnhof')
     assert state.attributes['friendly_name'] == 'Frankfurt (Main) Hauptbahnhof'
     assert state.attributes['line'] == 21
@@ -170,3 +177,14 @@ async def test_rmvtransport_dest_config(hass):
     assert state.attributes['minutes'] == 11
     assert state.attributes['departure_time'] == \
         datetime.datetime(2018, 8, 6, 14, 25)
+
+
+async def test_rmvtransport_no_departures(hass):
+    """Test misc configuration."""
+    with patch('RMVtransport.RMVtransport.get_departures',
+               return_value=mock_coro(get_no_departuresMock())):
+        assert await async_setup_component(hass, 'sensor',
+                                           VALID_CONFIG_MINIMAL)
+
+    state = hass.states.get('sensor.frankfurt_main_hauptbahnhof')
+    assert not state
