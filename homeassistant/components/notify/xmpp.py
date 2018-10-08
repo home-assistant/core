@@ -81,44 +81,51 @@ async def async_send_message(sender, password, recipient, use_tls,
             """Initialize the Jabber Bot."""
             super(SendNotificationBot, self).__init__(sender, password)
             _LOGGER.debug("async_send_message SendNotificationBot __init__")
-            _LOGGER.debug("sender {}, message: {}".format(sender, message))
 
             # need hass.loop!!
             self.loop = loop
 
             self.force_starttls = use_tls  # NOT optional will be forced TODO docs
             self.use_ipv6 = False
-            self.add_event_handler('failed_auth', self.check_credentials)
+            self.add_event_handler(
+                'failed_auth', self.disconnect_on_login_fail)
             self.add_event_handler('session_start', self.start)
+            # TODO test room
             if room:
                 self.register_plugin('xep_0045')  # MUC
             if not verify_certificate:
                 self.add_event_handler('ssl_invalid_cert',
                                        self.discard_ssl_invalid_cert)
 
+            _LOGGER.debug("before connect")
             self.connect(force_starttls=self.force_starttls, use_ssl=False)
 
         def start(self, event):
             """Start the communication and sends the message."""
+            _LOGGER.debug("event handler callback called on start")
 
             self.send_presence()
             self.get_roster()
-
+            _LOGGER.debug("sender {}, message: {}".format(sender, message))
             if room:
                 _LOGGER.debug("Joining room %s.", room)
-                self.plugin['xep_0045'].joinMUC(room, sender, wait=True)
+                self.plugin['xep_0045'].join_muc(room, sender, wait=True)
                 self.send_message(mto=room, mbody=message, mtype='groupchat')
             else:
                 self.send_message(mto=recipient, mbody=message, mtype='chat')
             self.disconnect(wait=True)
 
-        def check_credentials(self, event):
+        def disconnect_on_login_fail(self, event):
             """Disconnect from the server if credentials are invalid."""
+            _LOGGER.debug("event handler callback called "
+                          "on disconnect on login fail")
             self.disconnect()
 
         @staticmethod
         def discard_ssl_invalid_cert(event):
             """Do nothing if ssl certificate is invalid."""
+            _LOGGER.debug("event handler callback called "
+                          "on discard_ssl_invalid_cert")
             _LOGGER.info('Ignoring invalid ssl certificate as requested.')
 
     SendNotificationBot()
