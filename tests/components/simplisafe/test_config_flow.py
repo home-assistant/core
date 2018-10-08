@@ -4,7 +4,7 @@ from unittest.mock import mock_open, patch, MagicMock, PropertyMock
 
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN, config_flow
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -81,7 +81,10 @@ async def test_step_import(hass):
                     assert result[
                         'type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
                     assert result['title'] == 'user@email.com'
-                    assert result['data'] == {CONF_USERNAME: 'user@email.com'}
+                    assert result['data'] == {
+                        CONF_USERNAME: 'user@email.com',
+                        CONF_TOKEN: '12345abc'
+                    }
 
 
 async def test_step_user(hass):
@@ -106,4 +109,7 @@ async def test_step_user(hass):
                     assert result[
                         'type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
                     assert result['title'] == 'user@email.com'
-                    assert result['data'] == {CONF_USERNAME: 'user@email.com'}
+                    assert result['data'] == {
+                        CONF_USERNAME: 'user@email.com',
+                        CONF_TOKEN: '12345abc'
+                    }
