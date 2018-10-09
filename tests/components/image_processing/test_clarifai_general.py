@@ -39,12 +39,14 @@ VALID_CONFIG = {
 
 class MockErrorResponse:
     """Mock Clarifai response to bad API key."""
+
     status_code = 404
     reason = 'Failure'
     content = json.dumps({'status': {'description': 'API key not found'}})
 
     @staticmethod
     def json():
+        """Handle json."""
         return {}
 
 
