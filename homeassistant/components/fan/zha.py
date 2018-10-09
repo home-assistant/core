@@ -7,6 +7,7 @@ at https://home-assistant.io/components/fan.zha/
 import logging
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.components.zha import helpers, const
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.fan import (
     DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED)
@@ -45,15 +46,23 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Zigbee Home Automation fans from config entry."""
-    discovery_info = hass.data.get(const.DISCOVERY_KEY, {})
+    """Set up the Zigbee Home Automation fan from config entry."""
+    async def async_discover(discovery_info):
+        await _async_setup_entity(hass, config_entry, async_add_entities,
+                                  discovery_info)
+
+    async_dispatcher_connect(
+        hass, const.ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+
+
+async def _async_setup_entity(hass, config_entry, async_add_entities,
+                              discovery_info=None):
+    """Set up the ZHA fan."""
+    discovery_info = helpers.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
-    entities = []
-    for device in discovery_info['fan'].values():
-        entities.append(ZhaFan(**device))
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities([ZhaFan(**discovery_info)], update_before_add=True)
 
 
 class ZhaFan(ZhaEntity, FanEntity):

@@ -6,7 +6,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 
 from .const import (
-    DOMAIN, CONF_BAUDRATE, CONF_DATABASE, CONF_RADIO_TYPE, CONF_USB_PATH
+    DOMAIN, BAUD_RATES, CONF_BAUDRATE, CONF_DATABASE, CONF_RADIO_TYPE,
+    CONF_USB_PATH, RadioType
 )
 
 
@@ -38,8 +39,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow):
         fields = OrderedDict()
         fields[vol.Required(CONF_DATABASE)] = str
         fields[vol.Required(CONF_USB_PATH)] = str
-        fields[vol.Optional(CONF_RADIO_TYPE, default='ezsp')] = str
-        fields[vol.Optional(CONF_BAUDRATE, default=57600)] = vol.Coerce(int)
+        fields[vol.Optional(CONF_RADIO_TYPE, default='ezsp')] = vol.In(
+            RadioType.list()
+        )
+        fields[vol.Optional(CONF_BAUDRATE, default=57600)] = vol.All(
+            vol.Coerce(int), vol.In(BAUD_RATES)
+        )
 
         return self.async_show_form(
             step_id='init', data_schema=vol.Schema(fields), errors=errors

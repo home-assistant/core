@@ -9,6 +9,7 @@ import logging
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.components.zha import helpers, const
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,18 +34,28 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation binary sensor from config entry."""
-    discovery_info = hass.data.get(const.DISCOVERY_KEY, {})
+    async def async_discover(discovery_info):
+        await _async_setup_entity(hass, config_entry, async_add_entities,
+                                  discovery_info)
+
+    async_dispatcher_connect(
+        hass, const.ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+
+
+async def _async_setup_entity(hass, config_entry, async_add_entities,
+                              discovery_info=None):
+    """Set up the ZHA binary sensor."""
+    discovery_info = helpers.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
     from zigpy.zcl.clusters.general import OnOff
     from zigpy.zcl.clusters.security import IasZone
     entities = []
-    for device in discovery_info['binary_sensor'].values():
-        if IasZone.cluster_id in device['in_clusters']:
-            entities.append(await _async_setup_iaszone(device))
-        elif OnOff.cluster_id in device['out_clusters']:
-            entities.append(await _async_setup_remote(device))
+    if IasZone.cluster_id in discovery_info['in_clusters']:
+        entities.append(await _async_setup_iaszone(discovery_info))
+    elif OnOff.cluster_id in discovery_info['out_clusters']:
+        entities.append(await _async_setup_remote(discovery_info))
     async_add_entities(entities, update_before_add=True)
 
 
