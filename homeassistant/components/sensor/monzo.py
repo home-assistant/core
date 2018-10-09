@@ -114,11 +114,12 @@ class MonzoSensor(Entity):
 
     async def async_update(self):
         """Update the state."""
-        balance = self.monzo.data[DATA_BALANCE]
-        pots = self.monzo.data[DATA_POTS]
         if self._sensor_type == TYPE_BALANCE:
+            balance = self.monzo.data[DATA_BALANCE]
             self._state = balance['balance'] / 100
         elif self._sensor_type == TYPE_DAILY_SPEND:
+            balance = self.monzo.data[DATA_BALANCE]
             self._state = balance['spend_today'] / 100
         elif self._sensor_type == TYPE_POTS:
+            pots = self.monzo.data[DATA_POTS]
             self._state = pots[0]['balance'] / 100

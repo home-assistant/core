@@ -118,7 +118,7 @@ async def async_setup_entry(hass, config_entry):
     """Set up Monzo as a config entry."""
     from monzo import Monzo, MonzoOAuth2Client
 
-    sensors = config_entry.data.get(CONF_SENSORS, {}).get(
+    sensors = hass.data[DATA_MONZO_CONFIG].get(CONF_SENSORS, {}).get(
               CONF_MONITORED_CONDITIONS, list(SENSORS))
 
     client_id = hass.data[DATA_MONZO_CONFIG][CONF_CLIENT_ID]
