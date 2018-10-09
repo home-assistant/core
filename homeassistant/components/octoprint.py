@@ -87,7 +87,7 @@ def setup(hass, config):
     printers = hass.data[DOMAIN] = {}
 
     def device_discovered(service, info):
-        """ Called when an Octoprint server has been discovered. """
+        """Get called when an Octoprint server has been discovered."""
         _LOGGER.debug('Found an Octoprint server: %s', info)
 
     discovery.listen(hass, SERVICE_OCTOPRINT, device_discovered)
