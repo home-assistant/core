@@ -1,4 +1,5 @@
 """The tests for the clarifai_general component."""
+import json
 from unittest.mock import patch
 
 from clarifai.rest import ApiError
@@ -13,7 +14,6 @@ import homeassistant.components.image_processing.clarifai_general as cg
 
 MOCK_NAME = 'mock_name'
 MOCK_API_KEY = '12345'
-MOCK_KEY_ERROR = {'status': {'description': 'API key not found'}}
 MOCK_RESPONSE = {'status': {'description': 'Ok'},
                  'outputs': [{'data': {'concepts': [{'name': 'dog',
                                                      'value': 0.85432},
@@ -37,6 +37,17 @@ VALID_CONFIG = {
     }
 
 
+class MockErrorResponse:
+    """Mock Clarifai response to bad API key."""
+    status_code = 404
+    reason = 'Failure'
+    content = json.dumps({'status': {'description': 'API key not found'}})
+
+    @staticmethod
+    def json():
+        return {}
+
+
 @pytest.fixture
 def mock_app():
     """Return a mock ClarifaiApp object."""
@@ -47,8 +58,14 @@ def mock_app():
 @pytest.fixture
 def mock_app_with_error():
     """Throw an ApiError."""
+    resource = 'https://www.mock.com/url'
+    params = {}
+    method = 'GET'
+    response = MockErrorResponse()
+    error = ApiError(resource, params, method, response)
+
     with patch('clarifai.rest.ClarifaiApp',
-               side_effect=ApiError) as _mock_mock_app_with_error:
+               side_effect=error) as _mock_mock_app_with_error:
         yield _mock_mock_app_with_error
 
 
@@ -88,7 +105,7 @@ def test_valid_api_key(mock_app):
 def test_invalid_api_key(mock_app_with_error, caplog):
     """Test that an invalid api key is caught."""
     assert cg.validate_api_key(MOCK_API_KEY) is None
-    assert "Clarifai error: API Key not found" in caplog.text
+    assert "Clarifai error: API key not found" in caplog.text
 
 
 async def test_setup_platform(hass, mock_app, mock_image):
