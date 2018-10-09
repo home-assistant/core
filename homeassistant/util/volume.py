@@ -36,7 +36,12 @@ def convert(volume: float, from_unit: str, to_unit: str) -> float:
     if from_unit == to_unit:
         return volume
 
+    result = volume
+    
     if from_unit == VOLUME_LITERS and to_unit == VOLUME_GALLONS:
-        return __liter_to_gallon(volume)
+        result = __liter_to_gallon(volume)
     elif from_unit == VOLUME_GALLONS and to_unit == VOLUME_LITERS:
-        return __gallon_to_liter(volume)
+        result = __gallon_to_liter(volume)
+
+    return result
+
