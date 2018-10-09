@@ -53,12 +53,15 @@ BINARY_SENSOR_SCHEMA = vol.Schema({
 })
 
 SENSOR_TYPES = {
-    # API Endpoint, Group, Key, unit
+    # API Endpoint, Group, Key, unit, icon
     'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
-    'Current State': ['printer', 'state', 'text', None],
-    'Job Percentage': ['job', 'progress', 'completion', '%'],
-    'Time Remaining': ['job', 'progress', 'printTimeLeft', 'seconds'],
-    'Time Elapsed': ['job', 'progress', 'printTime', 'seconds'],
+    'Current State': ['printer', 'state', 'text', None, 'mdi:printer-3d'],
+    'Job Percentage': ['job', 'progress', 'completion', '%',
+                       'mdi:file-percent'],
+    'Time Remaining': ['job', 'progress', 'printTimeLeft', 'seconds',
+                       'mdi:clock-end'],
+    'Time Elapsed': ['job', 'progress', 'printTime', 'seconds',
+                     'mdi:clock-start'],
 }
 
 SENSOR_SCHEMA = vol.Schema({

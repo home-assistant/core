@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             new_sensor = OctoPrintSensor(
                 octoprint_api, octo_type, SENSOR_TYPES[octo_type][2],
                 name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
-                SENSOR_TYPES[octo_type][1])
+                SENSOR_TYPES[octo_type][1], None, SENSOR_TYPES[octo_type][4])
             devices.append(new_sensor)
     add_entities(devices, True)
 
@@ -67,7 +67,7 @@ class OctoPrintSensor(Entity):
     """Representation of an OctoPrint sensor."""
 
     def __init__(self, api, condition, sensor_type, sensor_name, unit,
-                 endpoint, group, tool=None):
+                 endpoint, group, tool=None, icon=None):
         """Initialize a new OctoPrint sensor."""
         self.sensor_name = sensor_name
         if tool is None:
@@ -82,6 +82,7 @@ class OctoPrintSensor(Entity):
         self.api_endpoint = endpoint
         self.api_group = group
         self.api_tool = tool
+        self._icon = icon
         _LOGGER.debug("Created OctoPrint sensor %r", self)
 
     @property
@@ -114,3 +115,8 @@ class OctoPrintSensor(Entity):
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
             return
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return self._icon
