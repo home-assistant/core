@@ -1,5 +1,6 @@
 """Implement the auth feature from Hass.io for Add-ons."""
 import logging
+from ipaddress import ip_address
 import os
 
 from aiohttp import web
@@ -38,7 +39,7 @@ class HassIOAuth(HomeAssistantView):
     async def post(self, request):
         """Handle new discovery requests."""
         hassio_ip = os.environ['HASSIO'].split(':')[0]
-        if request[KEY_REAL_IP] != hassio_ip:
+        if request[KEY_REAL_IP] != ip_address(hassio_ip):
             _LOGGER.error(
                 "Invalid auth request from %s", request[KEY_REAL_IP])
             raise HTTPForbidden()
@@ -49,7 +50,7 @@ class HassIOAuth(HomeAssistantView):
 
     def _get_provider(self):
         """Return Homeassistant auth provider."""
-        for prv in self.hass.auth.auth_provider:
+        for prv in self.hass.auth.auth_providers:
             if prv.type == 'homeassistant':
                 return prv
 
