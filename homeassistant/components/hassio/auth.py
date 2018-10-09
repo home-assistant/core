@@ -1,4 +1,4 @@
-"""Implement the serivces discovery feature from Hass.io for Add-ons."""
+"""Implement the auth feature from Hass.io for Add-ons."""
 import asyncio
 import logging
 import os
