@@ -3,6 +3,7 @@
 DEVICE_CLASS = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
+CUSTOM_CLUSTER_MAPPINGS = {}
 COMPONENT_CLUSTERS = {}
 
 
@@ -12,8 +13,9 @@ def populate_data():
     These cannot be module level, as importing bellows must be done in a
     in a function.
     """
-    from zigpy import zcl
+    from zigpy import zcl, quirks
     from zigpy.profiles import PROFILES, zha, zll
+    from homeassistant.components.sensor import zha as sensor_zha
 
     DEVICE_CLASS[zha.PROFILE_ID] = {
         zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
@@ -56,6 +58,12 @@ def populate_data():
     })
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'binary_sensor',
+    })
+
+    # A map of device/cluster to component/sub-component
+    CUSTOM_CLUSTER_MAPPINGS.update({
+        (quirks.smartthings.SmartthingsTemperatureHumiditySensor, 64581):
+            ('sensor', sensor_zha.RelativeHumiditySensor)
     })
 
     # A map of hass components to all Zigbee clusters it could use
