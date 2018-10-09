@@ -122,12 +122,13 @@ class Thermostat(HomeAccessory):
             if self.support_power_state is True:
                 params = {ATTR_ENTITY_ID: self.entity_id}
                 if hass_value == STATE_OFF:
-                    self.hass.services.call(DOMAIN, SERVICE_TURN_OFF, params)
+                    self.call_service(DOMAIN, SERVICE_TURN_OFF, params)
                     return
                 self.hass.services.call(DOMAIN, SERVICE_TURN_ON, params)
             params = {ATTR_ENTITY_ID: self.entity_id,
                       ATTR_OPERATION_MODE: hass_value}
-            self.hass.services.call(DOMAIN, SERVICE_SET_OPERATION_MODE, params)
+            self.call_service(
+                DOMAIN, SERVICE_SET_OPERATION_MODE, params, hass_value)
 
     @debounce
     def set_cooling_threshold(self, value):
@@ -140,7 +141,8 @@ class Thermostat(HomeAccessory):
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_TARGET_TEMP_HIGH: temperature_to_states(value, self._unit),
             ATTR_TARGET_TEMP_LOW: temperature_to_states(low, self._unit)}
-        self.hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, params)
+        log_value = "cooling threshold {:.2f}°C".format(value)
+        self.call_service(DOMAIN, SERVICE_SET_TEMPERATURE, params, log_value)
 
     @debounce
     def set_heating_threshold(self, value):
@@ -153,7 +155,8 @@ class Thermostat(HomeAccessory):
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_TARGET_TEMP_HIGH: temperature_to_states(high, self._unit),
             ATTR_TARGET_TEMP_LOW: temperature_to_states(value, self._unit)}
-        self.hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, params)
+        log_value = "heating threshold {:.2f}°C".format(value)
+        self.call_service(DOMAIN, SERVICE_SET_TEMPERATURE, params, log_value)
 
     @debounce
     def set_target_temperature(self, value):
@@ -164,7 +167,8 @@ class Thermostat(HomeAccessory):
         params = {
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_TEMPERATURE: temperature_to_states(value, self._unit)}
-        self.hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, params)
+        log_value = "target {:.2f}°C".format(value)
+        self.call_service(DOMAIN, SERVICE_SET_TEMPERATURE, params, log_value)
 
     def update_state(self, new_state):
         """Update security state after state changed."""

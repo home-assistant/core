@@ -59,7 +59,7 @@ class SecuritySystem(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._alarm_code:
             params[ATTR_CODE] = self._alarm_code
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update security state after state changed."""

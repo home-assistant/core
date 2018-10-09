@@ -61,7 +61,7 @@ class Fan(HomeAccessory):
         self._flag[CHAR_ACTIVE] = True
         service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def set_direction(self, value):
         """Set state if call came from HomeKit."""
@@ -69,7 +69,7 @@ class Fan(HomeAccessory):
         self._flag[CHAR_ROTATION_DIRECTION] = True
         direction = DIRECTION_REVERSE if value == 1 else DIRECTION_FORWARD
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_DIRECTION: direction}
-        self.hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, params)
+        self.call_service(DOMAIN, SERVICE_SET_DIRECTION, params, direction)
 
     def set_oscillating(self, value):
         """Set state if call came from HomeKit."""
@@ -78,7 +78,7 @@ class Fan(HomeAccessory):
         oscillating = True if value == 1 else False
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_OSCILLATING: oscillating}
-        self.hass.services.call(DOMAIN, SERVICE_OSCILLATE, params)
+        self.call_service(DOMAIN, SERVICE_OSCILLATE, params, oscillating)
 
     def update_state(self, new_state):
         """Update fan after state change."""
