@@ -9,11 +9,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
+    MEDIA_TYPE_MOVIE, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, STATE_HOME)
+    CONF_HOST, STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-roku==3.1.5']
@@ -40,13 +40,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hosts = []
 
     if discovery_info:
-        host = discovery_info.get("host")
+        host = discovery_info.get('host')
 
         if host in KNOWN_HOSTS:
             return
 
         _LOGGER.debug("Discovered Roku: %s", host)
-        hosts.append(discovery_info.get("host"))
+        hosts.append(discovery_info.get('host'))
 
     elif CONF_HOST in config:
         hosts.append(config.get(CONF_HOST))

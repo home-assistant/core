@@ -4,7 +4,6 @@ Support for Melnor RainCloud sprinkler water timer.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/raincloud/
 """
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -148,8 +147,7 @@ class RainCloudEntity(Entity):
         """Return the name of the sensor."""
         return self._name
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback)

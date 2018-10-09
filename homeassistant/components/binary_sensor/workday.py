@@ -4,7 +4,6 @@ Sensor to indicate whether the current day is a workday.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.workday/
 """
-import asyncio
 import logging
 from datetime import datetime, timedelta
 
@@ -15,35 +14,38 @@ from homeassistant.const import CONF_NAME, WEEKDAYS
 from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['holidays==0.9.7']
 
-REQUIREMENTS = ['holidays==0.9.6']
+_LOGGER = logging.getLogger(__name__)
 
 # List of all countries currently supported by holidays
 # There seems to be no way to get the list out at runtime
-ALL_COUNTRIES = ['Argentina', 'AR', 'Australia', 'AU', 'Austria', 'AT',
-                 'Belgium', 'BE', 'Canada', 'CA', 'Colombia', 'CO', 'Czech',
-                 'CZ', 'Denmark', 'DK', 'England', 'EuropeanCentralBank',
-                 'ECB', 'TAR', 'Finland', 'FI', 'France', 'FRA', 'Germany',
-                 'DE', 'Hungary', 'HU', 'India', 'IND', 'Ireland',
-                 'Isle of Man', 'Italy', 'IT', 'Japan', 'JP', 'Mexico', 'MX',
-                 'Netherlands', 'NL', 'NewZealand', 'NZ', 'Northern Ireland',
-                 'Norway', 'NO', 'Polish', 'PL', 'Portugal', 'PT',
-                 'PortugalExt', 'PTE', 'Scotland', 'Slovenia', 'SI',
-                 'Slovakia', 'SK', 'South Africa', 'ZA', 'Spain', 'ES',
-                 'Sweden', 'SE', 'Switzerland', 'CH', 'UnitedKingdom', 'UK',
-                 'UnitedStates', 'US', 'Wales']
+ALL_COUNTRIES = [
+    'Argentina', 'AR', 'Australia', 'AU', 'Austria', 'AT', 'Belarus', 'BY'
+    'Belgium', 'BE', 'Canada', 'CA', 'Colombia', 'CO', 'Czech', 'CZ',
+    'Denmark', 'DK', 'England', 'EuropeanCentralBank', 'ECB', 'TAR',
+    'Finland', 'FI', 'France', 'FRA', 'Germany', 'DE', 'Hungary', 'HU',
+    'India', 'IND', 'Ireland', 'Isle of Man', 'Italy', 'IT', 'Japan', 'JP',
+    'Mexico', 'MX', 'Netherlands', 'NL', 'NewZealand', 'NZ',
+    'Northern Ireland', 'Norway', 'NO', 'Polish', 'PL', 'Portugal', 'PT',
+    'PortugalExt', 'PTE', 'Scotland', 'Slovenia', 'SI', 'Slovakia', 'SK',
+    'South Africa', 'ZA', 'Spain', 'ES', 'Sweden', 'SE', 'Switzerland', 'CH',
+    'UnitedKingdom', 'UK', 'UnitedStates', 'US', 'Wales',
+]
+
+ALLOWED_DAYS = WEEKDAYS + ['holiday']
+
 CONF_COUNTRY = 'country'
 CONF_PROVINCE = 'province'
 CONF_WORKDAYS = 'workdays'
+CONF_EXCLUDES = 'excludes'
+CONF_OFFSET = 'days_offset'
+
 # By default, Monday - Friday are workdays
 DEFAULT_WORKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri']
-CONF_EXCLUDES = 'excludes'
 # By default, public holidays, Saturdays and Sundays are excluded from workdays
 DEFAULT_EXCLUDES = ['sat', 'sun', 'holiday']
 DEFAULT_NAME = 'Workday Sensor'
-ALLOWED_DAYS = WEEKDAYS + ['holiday']
-CONF_OFFSET = 'days_offset'
 DEFAULT_OFFSET = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -86,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             _LOGGER.error("There is no province/state %s in country %s",
                           province, country)
-            return False
+            return
 
     _LOGGER.debug("Found the following holidays for your configuration:")
     for date, name in sorted(obj_holidays.items()):
@@ -159,8 +161,7 @@ class IsWorkdaySensor(BinarySensorDevice):
             CONF_OFFSET: self._days_offset
         }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get date and look whether it is a holiday."""
         # Default is no workday
         self._state = False

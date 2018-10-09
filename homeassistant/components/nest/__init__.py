@@ -105,7 +105,7 @@ async def async_setup(hass, config):
     filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
     access_token_cache_file = hass.config.path(filename)
 
-    hass.async_add_job(hass.config_entries.flow.async_init(
+    hass.async_create_task(hass.config_entries.flow.async_init(
         DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
         data={
             'nest_conf_path': access_token_cache_file,
@@ -308,6 +308,37 @@ class NestSensorDevice(Entity):
     def should_poll(self):
         """Do not need poll thanks using Nest streaming API."""
         return False
+
+    @property
+    def unique_id(self):
+        """Return unique id based on device serial and variable."""
+        return "{}-{}".format(self.device.serial, self.variable)
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        if not hasattr(self.device, 'name_long'):
+            name = self.structure.name
+            model = "Structure"
+        else:
+            name = self.device.name_long
+            if self.device.is_thermostat:
+                model = 'Thermostat'
+            elif self.device.is_camera:
+                model = 'Camera'
+            elif self.device.is_smoke_co_alarm:
+                model = 'Nest Protect'
+            else:
+                model = None
+
+        return {
+            'identifiers': {
+                (DOMAIN, self.device.serial)
+            },
+            'name': name,
+            'manufacturer': 'Nest Labs',
+            'model': model,
+        }
 
     def update(self):
         """Do not use NestSensorDevice directly."""

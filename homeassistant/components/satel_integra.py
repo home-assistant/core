@@ -67,8 +67,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Satel Integra component."""
     conf = config.get(DOMAIN)
 
@@ -83,13 +82,12 @@ def async_setup(hass, config):
 
     hass.data[DATA_SATEL] = controller
 
-    result = yield from controller.connect()
+    result = await controller.connect()
 
     if not result:
         return False
 
-    @asyncio.coroutine
-    def _close():
+    async def _close():
         controller.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close())
@@ -105,7 +103,7 @@ def async_setup(hass, config):
         async_load_platform(hass, 'binary_sensor', DOMAIN,
                             {CONF_ZONES: zones}, config))
 
-    yield from asyncio.wait([task_control_panel, task_zones], loop=hass.loop)
+    await asyncio.wait([task_control_panel, task_zones], loop=hass.loop)
 
     @callback
     def alarm_status_update_callback(status):

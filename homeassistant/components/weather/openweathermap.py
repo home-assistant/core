@@ -11,7 +11,9 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, ATTR_FORECAST_WIND_SPEED,
+    ATTR_FORECAST_WIND_BEARING,
+    PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
     CONF_API_KEY, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE,
     CONF_NAME, STATE_UNKNOWN)
@@ -21,9 +23,6 @@ from homeassistant.util import Throttle
 REQUIREMENTS = ['pyowm==2.9.0']
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_FORECAST_WIND_SPEED = 'wind_speed'
-ATTR_FORECAST_WIND_BEARING = 'wind_bearing'
 
 ATTRIBUTION = 'Data provided by OpenWeatherMap'
 
@@ -131,6 +130,9 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
+        if self.hass.config.units.name == 'imperial':
+            return round(self.data.get_wind().get('speed') * 2.24, 2)
+
         return round(self.data.get_wind().get('speed') * 3.6, 2)
 
     @property

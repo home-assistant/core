@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyatmo==1.1.1']
+REQUIREMENTS = ['pyatmo==1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,10 +101,10 @@ class CameraData:
         return self.module_names
 
     def get_camera_type(self, camera=None, home=None, cid=None):
-        """Return all module available on the API as a list."""
-        for camera_name in self.camera_names:
-            self.camera_type = self.camera_data.cameraType(camera_name)
-            return self.camera_type
+        """Return camera type for a camera, cid has preference over camera."""
+        self.camera_type = self.camera_data.cameraType(camera=camera,
+                                                       home=home, cid=cid)
+        return self.camera_type
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

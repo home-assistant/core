@@ -13,8 +13,10 @@ from homeassistant.components.light import (
     SUPPORT_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
-from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
-    KEY_API
+from homeassistant.components.tradfri import (
+    KEY_GATEWAY, KEY_API, DOMAIN as TRADFRI_DOMAIN)
+from homeassistant.components.tradfri.const import (
+    CONF_IMPORT_GROUPS, CONF_GATEWAY_ID)
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,28 +33,21 @@ SUPPORTED_FEATURES = SUPPORT_TRANSITION
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
 
-async def async_setup_platform(hass, config,
-                               async_add_entities, discovery_info=None):
-    """Set up the IKEA Tradfri Light platform."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Load Tradfri lights based on a config entry."""
+    gateway_id = config_entry.data[CONF_GATEWAY_ID]
+    api = hass.data[KEY_API][config_entry.entry_id]
+    gateway = hass.data[KEY_GATEWAY][config_entry.entry_id]
 
-    gateway_id = discovery_info['gateway']
-    api = hass.data[KEY_API][gateway_id]
-    gateway = hass.data[KEY_GATEWAY][gateway_id]
-
-    devices_command = gateway.get_devices()
-    devices_commands = await api(devices_command)
+    devices_commands = await api(gateway.get_devices())
     devices = await api(devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
     if lights:
         async_add_entities(
             TradfriLight(light, api, gateway_id) for light in lights)
 
-    allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
-    if allow_tradfri_groups:
-        groups_command = gateway.get_groups()
-        groups_commands = await api(groups_command)
+    if config_entry.data[CONF_IMPORT_GROUPS]:
+        groups_commands = await api(gateway.get_groups())
         groups = await api(groups_commands)
         if groups:
             async_add_entities(
@@ -132,7 +127,7 @@ class TradfriGroup(Light):
             cmd = self._group.observe(callback=self._observe_update,
                                       err_callback=self._async_start_observe,
                                       duration=0)
-            self.hass.async_add_job(self._api(cmd))
+            self.hass.async_create_task(self._api(cmd))
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
@@ -167,6 +162,7 @@ class TradfriLight(Light):
         self._hs_color = None
         self._features = SUPPORTED_FEATURES
         self._available = True
+        self._gateway_id = gateway_id
 
         self._refresh(light)
 
@@ -174,6 +170,22 @@ class TradfriLight(Light):
     def unique_id(self):
         """Return unique ID for light."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        info = self._light.device_info
+
+        return {
+            'identifiers': {
+                (TRADFRI_DOMAIN, self._light.id)
+            },
+            'name': self._name,
+            'manufacturer': info.manufacturer,
+            'model': info.model_number,
+            'sw_version': info.firmware_version,
+            'via_hub': (TRADFRI_DOMAIN, self._gateway_id),
+        }
 
     @property
     def min_mireds(self):
@@ -334,7 +346,7 @@ class TradfriLight(Light):
             cmd = self._light.observe(callback=self._observe_update,
                                       err_callback=self._async_start_observe,
                                       duration=0)
-            self.hass.async_add_job(self._api(cmd))
+            self.hass.async_create_task(self._api(cmd))
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()

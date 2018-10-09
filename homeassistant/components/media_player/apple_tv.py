@@ -4,22 +4,20 @@ Support for Apple TV.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.apple_tv/
 """
-import asyncio
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.apple_tv import (
     ATTR_ATV, ATTR_POWER, DATA_APPLE_TV, DATA_ENTITIES)
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF, MediaPlayerDevice, MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW)
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
-    STATE_OFF, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
+    STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
+from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
-
 
 DEPENDENCIES = ['apple_tv']
 
@@ -30,9 +28,8 @@ SUPPORT_APPLE_TV = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
                    SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Apple TV platform."""
     if not discovery_info:
         return
@@ -72,8 +69,7 @@ class AppleTvDevice(MediaPlayerDevice):
         self._power.listeners.append(self)
         self.atv.push_updater.listener = self
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
         self._power.init()
 
@@ -165,10 +161,9 @@ class AppleTvDevice(MediaPlayerDevice):
         if state in (STATE_PLAYING, STATE_PAUSED):
             return dt_util.utcnow()
 
-    @asyncio.coroutine
-    def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        yield from self.atv.airplay.play_url(media_id)
+        await self.atv.airplay.play_url(media_id)
 
     @property
     def media_image_hash(self):
@@ -177,12 +172,11 @@ class AppleTvDevice(MediaPlayerDevice):
         if self._playing and state not in [STATE_OFF, STATE_IDLE]:
             return self._playing.hash
 
-    @asyncio.coroutine
-    def async_get_media_image(self):
+    async def async_get_media_image(self):
         """Fetch media image of current playing image."""
         state = self.state
         if self._playing and state not in [STATE_OFF, STATE_IDLE]:
-            return (yield from self.atv.metadata.artwork()), 'image/png'
+            return (await self.atv.metadata.artwork()), 'image/png'
 
         return None, None
 
@@ -202,13 +196,11 @@ class AppleTvDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         return SUPPORT_APPLE_TV
 
-    @asyncio.coroutine
-    def async_turn_on(self):
+    async def async_turn_on(self):
         """Turn the media player on."""
         self._power.set_power_on(True)
 
-    @asyncio.coroutine
-    def async_turn_off(self):
+    async def async_turn_off(self):
         """Turn the media player off."""
         self._playing = None
         self._power.set_power_on(False)

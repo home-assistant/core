@@ -13,7 +13,10 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['hbmqtt==0.9.2']
+REQUIREMENTS = ['hbmqtt==0.9.4']
+
+_LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['http']
 
 # None allows custom config to be created through generate_config
@@ -26,8 +29,6 @@ HBMQTT_CONFIG_SCHEMA = vol.Any(None, vol.Schema({
         str: vol.Schema(dict)
     })
 }, extra=vol.ALLOW_EXTRA))
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
@@ -85,6 +86,10 @@ def generate_config(hass, passwd, password):
             'allow-anonymous': password is None
         },
         'plugins': ['auth_anonymous'],
+        'topic-check': {
+            'enabled': True,
+            'plugins': ['topic_taboo'],
+        },
     }
 
     if password:

@@ -16,7 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['WazeRouteCalculator==0.6']
 
@@ -71,7 +70,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([sensor])
 
     # Wait until start event is sent to load this component.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, sensor.update)
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_START, lambda _: sensor.update())
 
 
 def _get_location_from_attributes(state):
@@ -182,7 +182,6 @@ class WazeTravelTime(Entity):
 
         return friendly_name
 
-    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Fetch new state data for the sensor."""
         import WazeRouteCalculator

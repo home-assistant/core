@@ -7,7 +7,6 @@ https://www.fido.ca/pages/#/my-account/wireless
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fido/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -70,16 +69,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Fido sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
     httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
     fido_data = FidoData(username, password, httpsession)
-    ret = yield from fido_data.async_update()
+    ret = await fido_data.async_update()
     if ret is False:
         return
 
@@ -134,10 +132,9 @@ class FidoSensor(Entity):
             'number': self._number,
         }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from Fido and update the state."""
-        yield from self.fido_data.async_update()
+        await self.fido_data.async_update()
         if self.type == 'balance':
             if self.fido_data.data.get(self.type) is not None:
                 self._state = round(self.fido_data.data[self.type], 2)
