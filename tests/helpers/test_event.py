@@ -85,38 +85,6 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(2, len(runs))
 
-    def test_track_time_change(self):
-        """Test tracking time change."""
-        wildcard_runs = []
-        specific_runs = []
-
-        unsub = track_time_change(self.hass, lambda x: wildcard_runs.append(1))
-        unsub_utc = track_utc_time_change(
-            self.hass, lambda x: specific_runs.append(1), second=[0, 30])
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
-        self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
-        self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-        self.assertEqual(2, len(wildcard_runs))
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
-
-        unsub()
-        unsub_utc()
-
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
-
     def test_track_state_change(self):
         """Test track_state_change."""
         # 2 lists to track how often our callbacks get called
@@ -526,12 +494,64 @@ class TestEventHelpers(unittest.TestCase):
         """Send a time changed event."""
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
 
+
+class TestTrackTimeChange(unittest.TestCase):
+    """Test track time change methods."""
+
+    def setUp(self):
+        """Set up the tests."""
+        self.orig_default_time_zone = dt_util.DEFAULT_TIME_ZONE
+        self.hass = get_test_home_assistant()
+
+    def tearDown(self):
+        """Stop everything that was started."""
+        dt_util.set_default_time_zone(self.orig_default_time_zone)
+        self.hass.stop()
+
+    def _send_time_changed(self, now):
+        """Send a time changed event."""
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
+
+    def test_track_time_change(self):
+        """Test tracking time change."""
+        wildcard_runs = []
+        specific_runs = []
+
+        unsub = track_time_change(self.hass,
+                                  lambda x: wildcard_runs.append(1))
+        unsub_utc = track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), second=[0, 30])
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(2, len(wildcard_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+        self.assertEqual(3, len(wildcard_runs))
+
+        unsub()
+        unsub_utc()
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+        self.assertEqual(3, len(wildcard_runs))
+
     def test_periodic_task_minute(self):
         """Test periodic tasks per minute."""
         specific_runs = []
 
         unsub = track_utc_time_change(
-            self.hass, lambda x: specific_runs.append(1), minute='/5')
+            self.hass, lambda x: specific_runs.append(1), minute='/5',
+            second=0)
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
         self.hass.block_till_done()
@@ -556,7 +576,8 @@ class TestEventHelpers(unittest.TestCase):
         specific_runs = []
 
         unsub = track_utc_time_change(
-            self.hass, lambda x: specific_runs.append(1), hour='/2')
+            self.hass, lambda x: specific_runs.append(1), hour='/2',
+            minute=0, second=0)
 
         self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
         self.hass.block_till_done()
@@ -566,7 +587,7 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
-        self._send_time_changed(datetime(2014, 5, 24, 0, 0, 0))
+        self._send_time_changed(datetime(2014, 5, 25, 0, 0, 0))
         self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
@@ -584,67 +605,137 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(3, len(specific_runs))
 
-    def test_periodic_task_day(self):
-        """Test periodic tasks per day."""
-        specific_runs = []
-
-        unsub = track_utc_time_change(
-            self.hass, lambda x: specific_runs.append(1), day='/2')
-
-        self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
-        self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-
-        self._send_time_changed(datetime(2014, 5, 3, 12, 0, 0))
-        self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-
-        self._send_time_changed(datetime(2014, 5, 4, 0, 0, 0))
-        self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-
-        unsub()
-
-        self._send_time_changed(datetime(2014, 5, 4, 0, 0, 0))
-        self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-
-    def test_periodic_task_year(self):
-        """Test periodic tasks per year."""
-        specific_runs = []
-
-        unsub = track_utc_time_change(
-            self.hass, lambda x: specific_runs.append(1), year='/2')
-
-        self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
-        self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-
-        self._send_time_changed(datetime(2015, 5, 2, 0, 0, 0))
-        self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
-
-        self._send_time_changed(datetime(2016, 5, 2, 0, 0, 0))
-        self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-
-        unsub()
-
-        self._send_time_changed(datetime(2016, 5, 2, 0, 0, 0))
-        self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
-
     def test_periodic_task_wrong_input(self):
         """Test periodic tasks with wrong input."""
         specific_runs = []
 
         with pytest.raises(ValueError):
             track_utc_time_change(
-                self.hass, lambda x: specific_runs.append(1), year='/two')
+                self.hass, lambda x: specific_runs.append(1), hour='/two')
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
         self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))
+
+    def test_periodic_task_clock_rollback(self):
+        """Test periodic tasks with the time rolling backwards."""
+        specific_runs = []
+
+        unsub = track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), hour='/2', minute=0,
+            second=0)
+
+        self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 23, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 0, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(3, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(4, len(specific_runs))
+
+        unsub()
+
+        self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(4, len(specific_runs))
+
+    def test_periodic_task_duplicate_time(self):
+        """Test periodic tasks not triggering on duplicate time."""
+        specific_runs = []
+
+        unsub = track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), hour='/2', minute=0,
+            second=0)
+
+        self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 25, 0, 0, 0))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        unsub()
+
+    def test_periodic_task_entering_dst(self):
+        """Test periodic task behavior when entering dst."""
+        tz = dt_util.get_time_zone('Europe/Vienna')
+        dt_util.set_default_time_zone(tz)
+        specific_runs = []
+
+        unsub = track_time_change(
+            self.hass, lambda x: specific_runs.append(1), hour=2, minute=30,
+            second=0)
+
+        self._send_time_changed(
+            tz.localize(datetime(2018, 3, 25, 1, 50, 0)))
+        self.hass.block_till_done()
+        self.assertEqual(0, len(specific_runs))
+
+        self._send_time_changed(
+            tz.localize(datetime(2018, 3, 25, 3, 50, 0)))
+        self.hass.block_till_done()
+        self.assertEqual(0, len(specific_runs))
+
+        self._send_time_changed(
+            tz.localize(datetime(2018, 3, 26, 1, 50, 0)))
+        self.hass.block_till_done()
+        self.assertEqual(0, len(specific_runs))
+
+        self._send_time_changed(
+            tz.localize(datetime(2018, 3, 26, 2, 50, 0)))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        unsub()
+
+    def test_periodic_task_leaving_dst(self):
+        """Test periodic task behavior when leaving dst."""
+        tz = dt_util.get_time_zone('Europe/Vienna')
+        dt_util.set_default_time_zone(tz)
+        specific_runs = []
+
+        unsub = track_time_change(
+            self.hass, lambda x: specific_runs.append(1), hour=2, minute=30,
+            second=0)
+
+        self._send_time_changed(
+            tz.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=False))
+        self.hass.block_till_done()
+        self.assertEqual(0, len(specific_runs))
+
+        self._send_time_changed(
+            tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=False))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(
+            tz.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=True))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(
+            tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        unsub()
 
     def test_call_later(self):
         """Test calling an action later."""
