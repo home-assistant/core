@@ -61,7 +61,7 @@ class HassIOAuth(HomeAssistantView):
         provider = self._get_provider()
 
         try:
-            provider.async_validate_login(username, password)
+            await provider.async_validate_login(username, password)
         except HomeAssistantError:
             raise HTTPUnauthorized() from None
 
