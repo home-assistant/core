@@ -66,7 +66,7 @@ DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
-SUPPORTED_PLATFORMS = ['sensor', 'switch']
+SUPPORTED_PLATFORMS = ['light', 'sensor', 'switch']
 
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -226,7 +226,6 @@ async def async_setup_platform(hass, config, async_add_entities,
         discovery_info[const.DISCOVERY_DEVICE], None)
     if device is None:
         return False
-    _LOGGER.info('add_entities: %s', device)
     async_add_entities([device])
     return True
 
