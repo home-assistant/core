@@ -3,7 +3,6 @@ import asyncio
 import logging
 import os
 
-from aiohttp import web
 from aiohttp.web_exceptions import (
     HTTPForbidden, HTTPNotFound, HTTPOk, HTTPUnauthorized)
 
@@ -57,7 +56,7 @@ class HassIOAuth(HomeAssistantView):
 
         _LOGGER.error("Can't find Home Assistant auth.")
         raise HTTPNotFound()
-        
+
     async def _check_login(self, username, password):
         """Check User credentials."""
         provider = self._get_provider()
