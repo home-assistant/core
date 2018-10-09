@@ -1,5 +1,5 @@
 """The test for the Template sensor platform."""
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -52,7 +52,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "State",
+                            'value_template':
+                                "{{ states.sensor.test_state.state }}",
                             'icon_template':
                                 "{% if states.sensor.test_state.state == "
                                 "'Works' %}"
@@ -82,7 +83,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "State",
+                            'value_template':
+                                "{{ states.sensor.test_state.state }}",
                             'entity_picture_template':
                                 "{% if states.sensor.test_state.state == "
                                 "'Works' %}"
@@ -112,7 +114,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "State",
+                            'value_template':
+                                "{{ states.sensor.test_state.state }}",
                             'friendly_name_template':
                                 "It {{ states.sensor.test_state.state }}."
                         }
@@ -276,7 +279,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test': {
-                            'value_template': '{{ foo }}',
+                            'value_template':
+                                '{{ states.sensor.test_sensor.state }}',
                             'device_class': 'foobarnotreal',
                         },
                     },
@@ -291,10 +295,14 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test1': {
-                            'value_template': '{{ foo }}',
+                            'value_template':
+                                '{{ states.sensor.test_sensor.state }}',
                             'device_class': 'temperature',
                         },
-                        'test2': {'value_template': '{{ foo }}'},
+                        'test2': {
+                            'value_template':
+                                '{{ states.sensor.test_sensor.state }}'
+                        },
                     }
                 }
             })
@@ -304,3 +312,38 @@ class TestTemplateSensor:
         assert state.attributes['device_class'] == 'temperature'
         state = self.hass.states.get('sensor.test2')
         assert 'device_class' not in state.attributes
+
+
+async def test_no_template_match_all(hass, caplog):
+    """Test that we do not allow sensors that match on all."""
+    await async_setup_component(hass, 'sensor', {
+        'sensor': {
+            'platform': 'template',
+            'sensors': {
+                'invalid_state': {
+                    'value_template': '{{ 1 + 1 }}',
+                },
+                'invalid_icon': {
+                    'value_template':
+                        '{{ states.sensor.test_sensor.state }}',
+                    'icon_template': '{{ 1 + 1 }}',
+                },
+                'invalid_entity_picture': {
+                    'value_template':
+                        '{{ states.sensor.test_sensor.state }}',
+                    'entity_picture_template': '{{ 1 + 1 }}',
+                },
+                'invalid_friendly_name': {
+                    'value_template':
+                        '{{ states.sensor.test_sensor.state }}',
+                    'friendly_name_template': '{{ 1 + 1 }}',
+                },
+            }
+        }
+    })
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+    assert 'invalid_state: value_template' in caplog.text
+    assert 'invalid_icon: icon_template' in caplog.text
+    assert 'invalid_entity_picture: entity_picture_template' in caplog.text
+    assert 'invalid_friendly_name: friendly_name_template' in caplog.text
