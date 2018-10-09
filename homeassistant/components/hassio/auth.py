@@ -1,5 +1,4 @@
 """Implement the auth feature from Hass.io for Add-ons."""
-import asyncio
 import logging
 import os
 
