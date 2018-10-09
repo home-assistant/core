@@ -153,7 +153,7 @@ def test_entities_domain_and_entity_ids():
     assert compiled('light.kitchen', []) is False
 
 
-def test_policy_perm_filter_entities():
+def test_policy_perm_filter_states():
     """Test filtering entitites."""
     states = [
         State('light.kitchen', 'on'),
@@ -168,7 +168,7 @@ def test_policy_perm_filter_entities():
             }
         }
     })
-    filtered = perm.filter_entities(states)
+    filtered = perm.filter_states(states)
     assert len(filtered) == 2
     assert filtered == [states[0], states[2]]
 
@@ -181,7 +181,7 @@ def test_owner_permissions():
         State('light.living_room', 'off'),
         State('light.balcony', 'on'),
     ]
-    assert permissions.OwnerPermissions.filter_entities(states) == states
+    assert permissions.OwnerPermissions.filter_states(states) == states
 
 
 def test_default_policy_allow_all():
@@ -193,7 +193,7 @@ def test_default_policy_allow_all():
         State('light.living_room', 'off'),
         State('light.balcony', 'on'),
     ]
-    assert perm.filter_entities(states) == states
+    assert perm.filter_states(states) == states
 
 
 def test_merging_permissions_true_rules_all():

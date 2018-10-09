@@ -7,7 +7,7 @@ import attr
 
 from homeassistant.util import dt as dt_util
 
-from . import permissions as perm_pkg
+from . import permissions as perm_mdl
 from .util import generate_secret
 
 TOKEN_TYPE_NORMAL = 'normal'
@@ -20,7 +20,7 @@ class Group:
     """A group."""
 
     name = attr.ib(type=str)  # type: Optional[str]
-    policy = attr.ib(type=perm_pkg.PolicyType)
+    policy = attr.ib(type=perm_mdl.PolicyType)
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
 
 
@@ -47,23 +47,23 @@ class User:
     )  # type: Dict[str, RefreshToken]
 
     _permissions = attr.ib(
-        type=perm_pkg.PolicyPermissions,
+        type=perm_mdl.PolicyPermissions,
         init=False,
         cmp=False,
         default=None,
     )
 
     @property
-    def permissions(self) -> perm_pkg.AbstractPermissions:
+    def permissions(self) -> perm_mdl.AbstractPermissions:
         """Return permissions object for user."""
         if self.is_owner:
-            return perm_pkg.OwnerPermissions
+            return perm_mdl.OwnerPermissions
 
         if self._permissions is not None:
             return self._permissions
 
-        self._permissions = perm_pkg.PolicyPermissions(
-            perm_pkg.merge_policies([
+        self._permissions = perm_mdl.PolicyPermissions(
+            perm_mdl.merge_policies([
                 group.policy for group in self.groups]))
 
         return self._permissions

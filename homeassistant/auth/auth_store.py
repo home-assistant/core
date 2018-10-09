@@ -10,15 +10,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
+from .permissions import DEFAULT_POLICY
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'
 INITIAL_GROUP_NAME = 'All Access'
-
-DEFAULT_POLICY = {
-    # Whitelist all entities
-    'entities': True,
-}
 
 
 class AuthStore:

@@ -36,8 +36,8 @@ class AbstractPermissions:
         """Test if we can access entity."""
         raise NotImplementedError
 
-    def filter_entities(self, entities: List[State]) -> List[State]:
-        """Filter a list of entities for what the user is allowed to see."""
+    def filter_states(self, states: List[State]) -> List[State]:
+        """Filter a list of states for what the user is allowed to see."""
         raise NotImplementedError
 
 
@@ -54,11 +54,11 @@ class PolicyPermissions(AbstractPermissions):
         func = self._policy_func('entities', _compile_entities)
         return func(entity_id, keys)
 
-    def filter_entities(self, entities: List[State]) -> List[State]:
-        """Filter a list of entities for what the user is allowed to see."""
+    def filter_states(self, states: List[State]) -> List[State]:
+        """Filter a list of states for what the user is allowed to see."""
         func = self._policy_func('entities', _compile_entities)
         keys = ('read',)
-        return [entity for entity in entities if func(entity.entity_id, keys)]
+        return [entity for entity in states if func(entity.entity_id, keys)]
 
     def _policy_func(self, category: str,
                      compile_func: Callable[[CategoryType], Callable]) \
@@ -89,9 +89,9 @@ class _OwnerPermissions(AbstractPermissions):
         """Test if we can access entity."""
         return True
 
-    def filter_entities(self, entities: List[State]) -> List[State]:
-        """Filter a list of entities for what the user is allowed to see."""
-        return entities
+    def filter_states(self, states: List[State]) -> List[State]:
+        """Filter a list of states for what the user is allowed to see."""
+        return states
 
 
 OwnerPermissions = _OwnerPermissions()  # pylint: disable=invalid-name
@@ -102,10 +102,16 @@ def _compile_entities(policy: CategoryType) \
     """Compile policy into a function that tests policy."""
     # None, Empty Dict, False
     if not policy:
-        return lambda entity_id, keys: False
+        def apply_policy_deny_all(entity_id, keys):
+            return False
+
+        return apply_policy_deny_all
 
     if policy is True:
-        return lambda entity_id, keys: True
+        def apply_policy_allow_all(entity_id, keys):
+            return True
+
+        return apply_policy_allow_all
 
     assert isinstance(policy, dict)
 
@@ -190,6 +196,14 @@ def _merge_policies(sources: List[CategoryType]) -> CategoryType:
     # When merging policies, the most permissive wins.
     # This means we order it like this:
     # True > Dict > False > None
+    #
+    # True: allow everything
+    # Dict: specify more granular permissions
+    # False: do not allow
+    # None: no opinion
+    #
+    # If there are multiple sources with a dict as policy, we recursively
+    # merge each key in the source.
 
     policy = None  # type: CategoryType
     seen = set()  # type: Set[str]
