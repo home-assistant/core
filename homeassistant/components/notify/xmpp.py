@@ -14,10 +14,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import (
     CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM)
 
-REQUIREMENTS = ['slixmpp==1.4.0',
-                'aiodns==1.1.1',
-                'pyasn1==0.3.7',
-                'pyasn1-modules==0.1.5']
+REQUIREMENTS = ['slixmpp==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the Jabber (XMPP) notification service."""
-    _LOGGER.debug("async_get_service")
     return XmppNotificationService(
         config.get(CONF_SENDER), config.get(CONF_PASSWORD),
         config.get(CONF_RECIPIENT), config.get(CONF_TLS),
@@ -55,15 +51,13 @@ class XmppNotificationService(BaseNotificationService):
         self._tls = tls
         self._verify = verify
         self._room = room
-        _LOGGER.debug("XmppNotificationService __init__")
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        _LOGGER.debug("XmppNotificationService async_send_message 1")
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = '{}: {}'.format(title, message) if title else message
 
-        # TODO allow /home-assistant part of the resource to be configured
+        # MAYBE allow /home-assistant part of the resource to be configured
         await async_send_message(
             '{}/home-assistant'.format(self._sender),
             self._password, self._recipient, self._tls,
@@ -81,7 +75,6 @@ async def async_send_message(sender, password, recipient, use_tls,
         def __init__(self):
             """Initialize the Jabber Bot."""
             super(SendNotificationBot, self).__init__(sender, password)
-            _LOGGER.debug("async_send_message SendNotificationBot __init__")
 
             # need hass.loop!!
             self.loop = loop
@@ -98,16 +91,12 @@ async def async_send_message(sender, password, recipient, use_tls,
                 self.add_event_handler('ssl_invalid_cert',
                                        self.discard_ssl_invalid_cert)
 
-            _LOGGER.debug("before connect")
             self.connect(force_starttls=self.force_starttls, use_ssl=False)
 
         def start(self, event):
             """Start the communication and sends the message."""
-            _LOGGER.debug("event handler callback called on start")
-
             self.get_roster()
             self.send_presence()
-            _LOGGER.debug("sender {}, message: {}".format(sender, message))
             if room:
                 _LOGGER.debug("Joining room %s.", room)
                 self.plugin['xep_0045'].join_muc(room, sender, wait=True)
@@ -118,8 +107,7 @@ async def async_send_message(sender, password, recipient, use_tls,
 
         def disconnect_on_login_fail(self, event):
             """Disconnect from the server if credentials are invalid."""
-            _LOGGER.debug("event handler callback called "
-                          "on disconnect on login fail")
+            _LOGGER.warning('Login failed.')
             self.disconnect()
 
         @staticmethod
