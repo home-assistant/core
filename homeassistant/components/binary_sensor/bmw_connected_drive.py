@@ -8,9 +8,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
-from homeassistant.const import (CONF_UNIT_SYSTEM_IMPERIAL, LENGTH_KILOMETERS,
-                                 LENGTH_MILES)
-from homeassistant.util.distance import convert
+from homeassistant.const import LENGTH_KILOMETERS
 
 DEPENDENCIES = ['bmw_connected_drive']
 
@@ -46,14 +44,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 for key, value in sorted(SENSOR_TYPES_ELEC.items()):
                     device = BMWConnectedDriveSensor(account, vehicle, key,
                                                      value[0], value[1],
-                                                     account.unit_system)
+                                                     hass.config.units)
                     devices.append(device)
             elif vehicle.has_internal_combustion_engine:
                 _LOGGER.debug('BMW with an internal combustion engine')
                 for key, value in sorted(SENSOR_TYPES.items()):
                     device = BMWConnectedDriveSensor(account, vehicle, key,
                                                      value[0], value[1],
-                                                     account.unit_system)
+                                                     hass.config.units)
                     devices.append(device)
     add_entities(devices, True)
 
@@ -191,16 +189,10 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['{} date'.format(service_type)] = \
                 report.due_date.strftime('%Y-%m-%d')
         if report.due_distance is not None:
-            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-                value = convert(report.due_distance, LENGTH_KILOMETERS,
-                                LENGTH_MILES)
-                distance = round(value)
-                result['{} distance'.format(service_type)] = \
-                    '{} {}'.format(distance, LENGTH_MILES)
-            else:
-                result['{} distance'.format(service_type)] = \
-                    '{} {}'.format(report.due_distance, LENGTH_KILOMETERS)
-
+            distance = round(unit_system.length(report.due_distance,
+                                                LENGTH_KILOMETERS))
+            result['{} distance'.format(service_type)] =  '{} {}'.format(
+                distance, unit_system.length_unit)
         return result
 
     def update_callback(self):

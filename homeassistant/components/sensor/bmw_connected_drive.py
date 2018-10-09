@@ -12,8 +12,6 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.const import (CONF_UNIT_SYSTEM_IMPERIAL, VOLUME_LITERS,
                                  VOLUME_GALLONS, LENGTH_KILOMETERS,
                                  LENGTH_MILES)
-from homeassistant.util.volume import liter_to_gallon
-from homeassistant.util.distance import convert
 
 DEPENDENCIES = ['bmw_connected_drive']
 
@@ -49,18 +47,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                   ', '.join([a.name for a in accounts]))
     devices = []
     for account in accounts:
-        if account.unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-            attribute_info = ATTR_TO_HA_IMPERIAL
-        else:
-            attribute_info = ATTR_TO_HA_METRIC
         for vehicle in account.account.vehicles:
             for attribute_name in vehicle.drive_train_attributes:
                 device = BMWConnectedDriveSensor(account, vehicle,
                                                  attribute_name,
-                                                 attribute_info)
+                                                 hass.config.units)
                 devices.append(device)
             device = BMWConnectedDriveSensor(account, vehicle, 'mileage',
-                                             attribute_info)
+                                             hass.config.units)
             devices.append(device)
     add_entities(devices, True)
 
@@ -68,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BMWConnectedDriveSensor(Entity):
     """Representation of a BMW vehicle sensor."""
 
-    def __init__(self, account, vehicle, attribute: str, attribute_info):
+    def __init__(self, account, vehicle, attribute: str, unit_system):
         """Constructor."""
         self._vehicle = vehicle
         self._account = account
@@ -76,7 +70,12 @@ class BMWConnectedDriveSensor(Entity):
         self._state = None
         self._name = '{} {}'.format(self._vehicle.name, self._attribute)
         self._unique_id = '{}-{}'.format(self._vehicle.vin, self._attribute)
-        self._attribute_info = attribute_info
+        self._unit_system = unit_system
+
+        if self._unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL:
+            self._attribute_info = ATTR_TO_HA_IMPERIAL
+        else:
+            self._attribute_info = ATTR_TO_HA_METRIC
 
     @property
     def should_poll(self) -> bool:
@@ -102,7 +101,7 @@ class BMWConnectedDriveSensor(Entity):
         from bimmer_connected.state import ChargingState
         vehicle_state = self._vehicle.state
         charging_state = vehicle_state.charging_status in \
-            [ChargingState.CHARGING]
+                         [ChargingState.CHARGING]
 
         if self._attribute == 'charging_level_hv':
             return icon_for_battery_level(
@@ -140,12 +139,14 @@ class BMWConnectedDriveSensor(Entity):
         if self._attribute == 'charging_status':
             self._state = getattr(vehicle_state, self._attribute).value
         elif self.unit_of_measurement == VOLUME_GALLONS:
-            self._state = round(liter_to_gallon(getattr(vehicle_state,
-                                                        self._attribute)))
+            value = getattr(vehicle_state, self._attribute)
+            value_converted = self._unit_system.volume(value, VOLUME_LITERS)
+            self._state = round(value_converted)
         elif self.unit_of_measurement == LENGTH_MILES:
             value = getattr(vehicle_state, self._attribute)
-            self._state = round(convert(value, LENGTH_KILOMETERS,
-                                        LENGTH_MILES))
+            value_converted = self._unit_system.length(value,
+                                                       LENGTH_KILOMETERS)
+            self._state = round(value_converted)
         else:
             self._state = getattr(vehicle_state, self._attribute)
 

@@ -9,9 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_UNIT_SYSTEM_METRIC,
-                                 CONF_UNIT_SYSTEM_IMPERIAL)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.helpers.config_validation as cv
@@ -87,15 +85,11 @@ def setup_account(account_config: dict, hass, name: str) \
     password = account_config[CONF_PASSWORD]
     region = account_config[CONF_REGION]
     read_only = account_config[CONF_READ_ONLY]
-
-    if hass.config.units.is_imperial:
-        unit_system = CONF_UNIT_SYSTEM_IMPERIAL
-    else:
-        unit_system = CONF_UNIT_SYSTEM_METRIC
+    # unit_system = hass.config.units
 
     _LOGGER.debug('Adding new account %s', name)
     cd_account = BMWConnectedDriveAccount(username, password, region, name,
-                                          read_only, unit_system)
+                                          read_only)#, unit_system)
 
     def execute_service(call):
         """Execute a service for a vehicle.
@@ -133,8 +127,10 @@ def setup_account(account_config: dict, hass, name: str) \
 class BMWConnectedDriveAccount:
     """Representation of a BMW vehicle."""
 
+    # def __init__(self, username: str, password: str, region_str: str,
+    #              name: str, read_only, unit_system) -> None:
     def __init__(self, username: str, password: str, region_str: str,
-                 name: str, read_only, unit_system) -> None:
+                 name: str, read_only) -> None:
         """Constructor."""
         from bimmer_connected.account import ConnectedDriveAccount
         from bimmer_connected.country_selector import get_region_from_name
@@ -144,7 +140,7 @@ class BMWConnectedDriveAccount:
         self.read_only = read_only
         self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
-        self.unit_system = unit_system
+        # self.unit_system = unit_system
         self._update_listeners = []
 
     def update(self, *_):
