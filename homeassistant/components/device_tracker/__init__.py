@@ -15,7 +15,9 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.components import group, zone
-from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, SERVICE_SET
+from homeassistant.components.group import (
+    ATTR_ADD_ENTITIES, ATTR_ENTITIES, ATTR_OBJECT_ID, ATTR_VISIBLE,
+    DOMAIN as DOMAIN_GROUP, SERVICE_SET)
 from homeassistant.components.zone.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
@@ -32,9 +34,9 @@ from homeassistant.util.yaml import dump
 
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.const import (
-    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_MAC,
-    DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID,
-    CONF_ICON, ATTR_ICON, ATTR_NAME)
+    ATTR_ENTITY_ID, ATTR_GPS_ACCURACY, ATTR_ICON, ATTR_LATITUDE,
+    ATTR_LONGITUDE, ATTR_NAME, CONF_ICON, CONF_MAC, CONF_NAME,
+    DEVICE_DEFAULT_NAME, STATE_NOT_HOME, STATE_HOME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -317,11 +319,11 @@ class DeviceTracker:
         if self.group and self.track_new:
             self.hass.async_create_task(
                 self.hass.async_call(
-                    DOMAIN_GROUP, SERVICE_SET, dict(
-                        object_id=util.slugify(GROUP_NAME_ALL_DEVICES),
-                        visible=False,
-                        name=GROUP_NAME_ALL_DEVICES,
-                        add=[device.entity_id])))
+                    DOMAIN_GROUP, SERVICE_SET, {
+                        ATTR_OBJECT_ID: util.slugify(GROUP_NAME_ALL_DEVICES),
+                        ATTR_VISIBLE: False,
+                        ATTR_NAME: GROUP_NAME_ALL_DEVICES,
+                        ATTR_ADD_ENTITIES: [device.entity_id]}))
 
         self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
             ATTR_ENTITY_ID: device.entity_id,
@@ -356,11 +358,11 @@ class DeviceTracker:
 
         self.hass.async_create_task(
             self.hass.services.async_call(
-                DOMAIN_GROUP, SERVICE_SET, dict(
-                    object_id=util.slugify(GROUP_NAME_ALL_DEVICES),
-                    visible=False,
-                    name=GROUP_NAME_ALL_DEVICES,
-                    entities=entity_ids)))
+                DOMAIN_GROUP, SERVICE_SET, {
+                    ATTR_OBJECT_ID: util.slugify(GROUP_NAME_ALL_DEVICES),
+                    ATTR_VISIBLE: False,
+                    ATTR_NAME: GROUP_NAME_ALL_DEVICES,
+                    ATTR_ENTITIES: entity_ids}))
 
     @callback
     def async_update_stale(self, now: dt_util.dt.datetime):
@@ -371,7 +373,7 @@ class DeviceTracker:
         for device in self.devices.values():
             if (device.track and device.last_update_home) and \
                device.stale(now):
-                self.hass.async_add_job(device.async_update_ha_state(True))
+                self.hass.async_create_task(device.async_update_ha_state(True))
 
     async def async_setup_tracked_device(self):
         """Set up all not exists tracked devices.
@@ -386,7 +388,7 @@ class DeviceTracker:
         tasks = []
         for device in self.devices.values():
             if device.track and not device.last_seen:
-                tasks.append(self.hass.async_add_job(
+                tasks.append(self.hass.async_create_task(
                     async_init_single_device(device)))
 
         if tasks:
@@ -718,10 +720,10 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                                  zone_home.attributes[ATTR_LONGITUDE]]
                 kwargs['gps_accuracy'] = 0
 
-            hass.async_add_job(async_see_device(**kwargs))
+            hass.async_create_task(async_see_device(**kwargs))
 
     async_track_time_interval(hass, async_device_tracker_scan, interval)
-    hass.async_add_job(async_device_tracker_scan(None))
+    hass.async_create_task(async_device_tracker_scan(None))
 
 
 def update_config(path: str, dev_id: str, device: Device):

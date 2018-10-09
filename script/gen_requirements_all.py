@@ -51,6 +51,7 @@ TEST_REQUIREMENTS = (
     'foobot_async',
     'gTTS-token',
     'geojson_client',
+    'georss_client',
     'hangups',
     'HAP-python',
     'ha-ffmpeg',
@@ -95,6 +96,7 @@ TEST_REQUIREMENTS = (
     'ring_doorbell',
     'rxv',
     'sleepyq',
+    'smhi-pkg',
     'somecomfort',
     'sqlalchemy',
     'statsd',
@@ -103,7 +105,8 @@ TEST_REQUIREMENTS = (
     'yahoo-finance',
     'pythonwhois',
     'wakeonlan',
-    'vultr'
+    'vultr',
+    'YesssSMS',
 )
 
 IGNORE_PACKAGES = (

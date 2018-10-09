@@ -46,6 +46,7 @@ DIR_LEFT = "LEFT"
 DIR_RIGHT = "RIGHT"
 ZOOM_OUT = "ZOOM_OUT"
 ZOOM_IN = "ZOOM_IN"
+PTZ_NONE = "NONE"
 
 SERVICE_PTZ = "onvif_ptz"
 
@@ -65,9 +66,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SERVICE_PTZ_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_PAN: vol.In([DIR_LEFT, DIR_RIGHT]),
-    ATTR_TILT: vol.In([DIR_UP, DIR_DOWN]),
-    ATTR_ZOOM: vol.In([ZOOM_OUT, ZOOM_IN])
+    ATTR_PAN: vol.In([DIR_LEFT, DIR_RIGHT, PTZ_NONE]),
+    ATTR_TILT: vol.In([DIR_UP, DIR_DOWN, PTZ_NONE]),
+    ATTR_ZOOM: vol.In([ZOOM_OUT, ZOOM_IN, PTZ_NONE])
 })
 
 

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD is already configured",
+            "no_devices_discovered": "No UPnP/IGDs discovered",
+            "no_sensors_or_port_mapping": "Enable at least sensors or port mapping"
+        },
+        "step": {
+            "init": {
+                "title": "UPnP/IGD"
+            },
+            "user": {
+                "data": {
+                    "enable_port_mapping": "Enable port mapping for Home Assistant",
+                    "enable_sensors": "Add traffic sensors",
+                    "igd": "UPnP/IGD"
+                },
+                "title": "Configuration options for the UPnP/IGD"
+            }
+        },
+        "title": "UPnP/IGD"
+    }
+}

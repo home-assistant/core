@@ -54,27 +54,6 @@ SERVICE_FFMPEG_SCHEMA = vol.Schema({
 })
 
 
-@callback
-def async_start(hass, entity_id=None):
-    """Start a FFmpeg process on entity."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_START, data))
-
-
-@callback
-def async_stop(hass, entity_id=None):
-    """Stop a FFmpeg process on entity."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_STOP, data))
-
-
-@callback
-def async_restart(hass, entity_id=None):
-    """Restart a FFmpeg process on entity."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_RESTART, data))
-
-
 async def async_setup(hass, config):
     """Set up the FFmpeg component."""
     conf = config.get(DOMAIN, {})

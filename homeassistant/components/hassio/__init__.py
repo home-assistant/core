@@ -19,7 +19,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
-from .handler import HassIO
+from .handler import HassIO, HassioAPIError
+from .discovery import async_setup_discovery
 from .http import HassIOView
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,10 +137,12 @@ def is_hassio(hass):
 async def async_check_config(hass):
     """Check configuration over Hass.io API."""
     hassio = hass.data[DOMAIN]
-    result = await hassio.check_homeassistant_config()
 
-    if not result:
-        return "Hass.io config check API error"
+    try:
+        result = await hassio.check_homeassistant_config()
+    except HassioAPIError as err:
+        _LOGGER.error("Error on Hass.io API: %s", err)
+
     if result['result'] == "error":
         return result['message']
     return None
@@ -147,18 +150,14 @@ async def async_check_config(hass):
 
 async def async_setup(hass, config):
     """Set up the Hass.io component."""
-    try:
-        host = os.environ['HASSIO']
-    except KeyError:
-        _LOGGER.error("Missing HASSIO environment variable.")
+    # Check local setup
+    for env in ('HASSIO', 'HASSIO_TOKEN'):
+        if os.environ.get(env):
+            continue
+        _LOGGER.error("Missing %s environment variable.", env)
         return False
 
-    try:
-        os.environ['HASSIO_TOKEN']
-    except KeyError:
-        _LOGGER.error("Missing HASSIO_TOKEN environment variable.")
-        return False
-
+    host = os.environ['HASSIO']
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
@@ -229,13 +228,13 @@ async def async_setup(hass, config):
             payload = data
 
         # Call API
-        ret = await hassio.send_command(
-            api_command.format(addon=addon, snapshot=snapshot),
-            payload=payload, timeout=MAP_SERVICE_API[service.service][2]
-        )
-
-        if not ret or ret['result'] != "ok":
-            _LOGGER.error("Error on Hass.io API: %s", ret['message'])
+        try:
+            await hassio.send_command(
+                api_command.format(addon=addon, snapshot=snapshot),
+                payload=payload, timeout=MAP_SERVICE_API[service.service][2]
+            )
+        except HassioAPIError as err:
+            _LOGGER.error("Error on Hass.io API: %s", err)
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(
@@ -243,9 +242,11 @@ async def async_setup(hass, config):
 
     async def update_homeassistant_version(now):
         """Update last available Home Assistant version."""
-        data = await hassio.get_homeassistant_info()
-        if data:
+        try:
+            data = await hassio.get_homeassistant_info()
             hass.data[DATA_HOMEASSISTANT_VERSION] = data['last_version']
+        except HassioAPIError as err:
+            _LOGGER.warning("Can't read last version: %s", err)
 
         hass.helpers.event.async_track_point_in_utc_time(
             update_homeassistant_version, utcnow() + HASSIO_UPDATE_INTERVAL)
@@ -275,5 +276,8 @@ async def async_setup(hass, config):
                     SERVICE_CHECK_CONFIG):
         hass.services.async_register(
             HASS_DOMAIN, service, async_handle_core_service)
+
+    # Init discovery Hass.io feature
+    async_setup_discovery(hass, hassio, config)
 
     return True

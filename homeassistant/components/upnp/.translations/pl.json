@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD jest ju\u017c skonfigurowane",
+            "no_devices_discovered": "Nie wykryto urz\u0105dze\u0144 UPnP/IGD",
+            "no_sensors_or_port_mapping": "W\u0142\u0105cz przynajmniej sensory lub mapowanie port\u00f3w"
+        },
+        "error": {
+            "few": "kilka",
+            "many": "wiele",
+            "one": "jeden",
+            "other": "inne"
+        },
+        "step": {
+            "init": {
+                "title": "UPnP/IGD"
+            },
+            "user": {
+                "data": {
+                    "enable_port_mapping": "W\u0142\u0105cz mapowanie port\u00f3w dla Home Assistant'a",
+                    "enable_sensors": "Dodaj sensor ruchu sieciowego",
+                    "igd": "UPnP/IGD"
+                },
+                "title": "Opcje konfiguracji dla UPnP/IGD"
+            }
+        },
+        "title": "UPnP/IGD"
+    }
+}

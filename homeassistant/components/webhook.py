@@ -3,7 +3,6 @@
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/webhook/
 """
-import json
 import logging
 
 from aiohttp.web import Response
@@ -76,16 +75,8 @@ class WebhookView(HomeAssistantView):
                 'Received message for unregistered webhook %s', webhook_id)
             return Response(status=200)
 
-        body = await request.text()
         try:
-            data = json.loads(body) if body else {}
-        except ValueError:
-            _LOGGER.warning(
-                'Received webhook %s with invalid JSON', webhook_id)
-            return Response(status=200)
-
-        try:
-            response = await handler(hass, webhook_id, data)
+            response = await handler(hass, webhook_id, request)
             if response is None:
                 response = Response(status=200)
             return response

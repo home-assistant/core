@@ -133,9 +133,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Sync version of async add devices."""
         hass.add_job(async_add_entities, devices, update_before_add)
 
-    hass.add_job(_setup_platform, hass,
-                 hass.data[SONOS_DOMAIN].get('media_player', {}),
-                 add_entities, None)
+    hass.async_add_executor_job(
+        _setup_platform, hass, hass.data[SONOS_DOMAIN].get('media_player', {}),
+        add_entities, None)
 
 
 def _setup_platform(hass, config, add_entities, discovery_info):
@@ -335,13 +335,13 @@ class SonosDevice(MediaPlayerDevice):
     def __init__(self, player):
         """Initialize the Sonos device."""
         self._receives_events = False
-        self._volume_increment = 5
+        self._volume_increment = 2
         self._unique_id = player.uid
         self._player = player
         self._model = None
         self._player_volume = None
         self._player_muted = None
-        self._play_mode = None
+        self._shuffle = None
         self._name = None
         self._coordinator = None
         self._sonos_group = None
@@ -366,7 +366,7 @@ class SonosDevice(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
         self.hass.data[DATA_SONOS].devices.append(self)
-        self.hass.async_add_job(self._subscribe_to_player_events)
+        self.hass.async_add_executor_job(self._subscribe_to_player_events)
 
     @property
     def unique_id(self):
@@ -437,7 +437,7 @@ class SonosDevice(MediaPlayerDevice):
         speaker_info = self.soco.get_speaker_info(True)
         self._name = speaker_info['zone_name']
         self._model = speaker_info['model_name']
-        self._play_mode = self.soco.play_mode
+        self._shuffle = self.soco.shuffle
 
         self.update_volume()
 
@@ -530,7 +530,7 @@ class SonosDevice(MediaPlayerDevice):
         if new_status == 'TRANSITIONING':
             return
 
-        self._play_mode = self.soco.play_mode
+        self._shuffle = self.soco.shuffle
 
         if self.soco.is_playing_tv:
             self.update_media_linein(SOURCE_TV)
@@ -755,7 +755,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_coordinator
     def shuffle(self):
         """Shuffling state."""
-        return 'SHUFFLE' in self._play_mode
+        return self._shuffle
 
     @property
     def media_content_type(self):
@@ -835,7 +835,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_coordinator
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
-        self.soco.play_mode = 'SHUFFLE_NOREPEAT' if shuffle else 'NORMAL'
+        self.soco.shuffle = shuffle
 
     @soco_error()
     def mute_volume(self, mute):

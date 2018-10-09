@@ -1,4 +1,5 @@
 """Test MQTT fans."""
+import json
 import unittest
 
 from homeassistant.setup import setup_component, async_setup_component
@@ -8,7 +9,7 @@ from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 
 from tests.common import (
     mock_mqtt_component, async_fire_mqtt_message, fire_mqtt_message,
-    get_test_home_assistant, async_mock_mqtt_component)
+    get_test_home_assistant, async_mock_mqtt_component, MockConfigEntry)
 
 
 class TestMqttFan(unittest.TestCase):
@@ -108,7 +109,8 @@ class TestMqttFan(unittest.TestCase):
 
 async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
     """Test removal of discovered fan."""
-    await async_start(hass, 'homeassistant', {})
+    entry = MockConfigEntry(domain='mqtt')
+    await async_start(hass, 'homeassistant', {}, entry)
     data = (
         '{ "name": "Beer",'
         '  "command_topic": "test_topic" }'
@@ -150,3 +152,42 @@ async def test_unique_id(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(fan.DOMAIN)) == 1
+
+
+async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+    """Test MQTT fan device registry integration."""
+    entry = MockConfigEntry(domain='mqtt')
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps({
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'state_topic': 'test-topic',
+        'command_topic': 'test-command-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    })
+    async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.identifiers == {('mqtt', 'helloworld')}
+    assert device.connections == {('mac', "02:5b:26:a8:dc:12")}
+    assert device.manufacturer == 'Whatever'
+    assert device.name == 'Beer'
+    assert device.model == 'Glass'
+    assert device.sw_version == '0.1-beta'

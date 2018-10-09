@@ -9,6 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
@@ -17,7 +18,7 @@ from .const import (
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
-REQUIREMENTS = ['pytradfri[async]==5.6.0']
+REQUIREMENTS = ['pytradfri[async]==6.0.1']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = '.tradfri_psk.conf'
@@ -87,6 +88,13 @@ async def async_setup_entry(hass, entry):
         psk=entry.data[CONF_KEY],
         loop=hass.loop
     )
+
+    async def on_hass_stop(event):
+        """Close connection when hass stops."""
+        await factory.shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+
     api = factory.request
     gateway = Gateway()
 

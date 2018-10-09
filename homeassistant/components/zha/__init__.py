@@ -109,7 +109,8 @@ async def async_setup(hass, config):
     await APPLICATION_CONTROLLER.startup(auto_form=True)
 
     for device in APPLICATION_CONTROLLER.devices.values():
-        hass.async_add_job(listener.async_device_initialized(device, False))
+        hass.async_create_task(
+            listener.async_device_initialized(device, False))
 
     async def permit(service):
         """Allow devices to join this network."""
@@ -161,7 +162,8 @@ class ApplicationListener:
 
     def device_initialized(self, device):
         """Handle device joined and basic information discovered."""
-        self._hass.async_add_job(self.async_device_initialized(device, True))
+        self._hass.async_create_task(
+            self.async_device_initialized(device, True))
 
     def device_left(self, device):
         """Handle device leaving the network."""
@@ -170,7 +172,7 @@ class ApplicationListener:
     def device_removed(self, device):
         """Handle device being removed from the network."""
         for device_entity in self._device_registry[device.ieee]:
-            self._hass.async_add_job(device_entity.async_remove())
+            self._hass.async_create_task(device_entity.async_remove())
 
     async def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""
@@ -274,13 +276,21 @@ class ApplicationListener:
                                              device_classes, discovery_attr,
                                              is_new_join):
         """Try to set up an entity from a "bare" cluster."""
+        import homeassistant.components.zha.const as zha_const
         if cluster.cluster_id in profile_clusters:
             return
 
-        component = None
+        component = sub_component = None
         for cluster_type, candidate_component in device_classes.items():
             if isinstance(cluster, cluster_type):
                 component = candidate_component
+                break
+
+        for signature, comp in zha_const.CUSTOM_CLUSTER_MAPPINGS.items():
+            if (isinstance(endpoint.device, signature[0]) and
+                    cluster.cluster_id == signature[1]):
+                component = comp[0]
+                sub_component = comp[1]
                 break
 
         if component is None:
@@ -299,6 +309,8 @@ class ApplicationListener:
             'entity_suffix': '_{}'.format(cluster.cluster_id),
         }
         discovery_info[discovery_attr] = {cluster.cluster_id: cluster}
+        if sub_component:
+            discovery_info.update({'sub_component': sub_component})
         self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
 
         await discovery.async_load_platform(

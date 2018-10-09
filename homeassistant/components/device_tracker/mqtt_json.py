@@ -55,7 +55,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
                 return
 
             kwargs = _parse_see_args(dev_id, data)
-            hass.async_add_job(async_see(**kwargs))
+            hass.async_create_task(async_see(**kwargs))
 
         await mqtt.async_subscribe(
             hass, topic, async_message_received, qos)

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD ass scho konfigur\u00e9iert",
+            "no_devices_discovered": "Keng UPnP/IGDs entdeckt",
+            "no_sensors_or_port_mapping": "Aktiv\u00e9ier op mannst Sensoren oder Port Mapping"
+        },
+        "error": {
+            "one": "Een",
+            "other": "Aaner"
+        },
+        "step": {
+            "init": {
+                "title": "UPnP/IGD"
+            },
+            "user": {
+                "data": {
+                    "enable_port_mapping": "Port Mapping fir Home Assistant aktiv\u00e9ieren",
+                    "enable_sensors": "Trafic Sensoren dob\u00e4isetzen",
+                    "igd": "UPnP/IGD"
+                },
+                "title": "Konfiguratiouns Optiounen fir UPnP/IGD"
+            }
+        },
+        "title": "UPnP/IGD"
+    }
+}
