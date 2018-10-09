@@ -102,13 +102,13 @@ def _compile_entities(policy: CategoryType) \
     """Compile policy into a function that tests policy."""
     # None, Empty Dict, False
     if not policy:
-        def apply_policy_deny_all(entity_id, keys):
+        def apply_policy_deny_all(entity_id: str, keys: Tuple[str]) -> bool:
             return False
 
         return apply_policy_deny_all
 
     if policy is True:
-        def apply_policy_allow_all(entity_id, keys):
+        def apply_policy_allow_all(entity_id: str, keys: Tuple[str]) -> bool:
             return True
 
         return apply_policy_allow_all
