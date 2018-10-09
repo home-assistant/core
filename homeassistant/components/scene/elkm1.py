@@ -2,7 +2,7 @@
 Support for control of ElkM1 tasks ("macros").
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.elkm1/
+https://home-assistant.io/components/sensor.elkm1/
 """
 
 
@@ -15,7 +15,7 @@ DEPENDENCIES = [ELK_DOMAIN]
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Create the Elk-M1 switch platform."""
+    """Create the Elk-M1 sensor platform."""
     if discovery_info is None:
         return
     elk = hass.data[ELK_DOMAIN]['elk']
