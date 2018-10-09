@@ -147,8 +147,8 @@ class HomeAccessory(Accessory):
             ATTR_SERVICE: service,
             ATTR_VALUE: value
         }
-        self.hass.bus.fire(EVENT_HOMEKIT_CHANGED, event_data)
 
+        self.hass.bus.fire(EVENT_HOMEKIT_CHANGED, event_data)
         self.hass.services.call(domain, service, service_data)
 
 

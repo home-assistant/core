@@ -292,11 +292,10 @@ def humanify(hass, events):
 
             elif event.event_type == EVENT_HOMEKIT_CHANGED:
                 data = event.data
-                entity_id = data[ATTR_ENTITY_ID]
+                entity_id = data.get(ATTR_ENTITY_ID)
+                value = data.get(ATTR_VALUE)
 
-                value_msg = " to {}".format(
-                    data.get[ATTR_VALUE]) if data.get[ATTR_VALUE] else ''
-
+                value_msg = " to {}".format(value) if value else ''
                 message = "send command {}{} for {}".format(
                     data[ATTR_SERVICE], value_msg, data[ATTR_DISPLAY_NAME])
 
