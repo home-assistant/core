@@ -59,22 +59,19 @@ class BTSmartHubScanner(DeviceScanner):
         return None
 
     def _update_info(self):
-        """Ensure the information from the BT Home Hub 5 is up to date.
-
-        Return boolean if scanning successful.
-        """
+        """Ensure the information from the BT Home Hub 5 is up to date."""
         if not self.success_init:
-            return False
+            return
 
         _LOGGER.info("Scanning")
         data = self.get_bt_smarthub_data()
         if not data:
             _LOGGER.warning("Error scanning devices")
-            return False
+            return
 
         clients = [client for client in data.values()]
         self.last_results = clients
-        return True
+        return
 
     def get_bt_smarthub_data(self):
         """Retrieve data from BT Smarthub and return parsed result."""
