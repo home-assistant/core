@@ -1027,7 +1027,7 @@ pyoppleio==1.0.5
 # homeassistant.components.iota
 pyota==2.0.5
 
-# homeassistant.components.climate.opentherm_gw
+# homeassistant.components.opentherm_gw
 pyotgw==0.1b0
 
 # homeassistant.auth.mfa_modules.notify
