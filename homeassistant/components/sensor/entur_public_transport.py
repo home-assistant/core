@@ -231,7 +231,7 @@ class PublicTransportData:
                 self._process_place(quey)
 
     def _process_place(self, place_dict: dict) -> None:
-        """Extracts information from place dictionary."""
+        """Extract travel information from place dictionary."""
         place_id = place_dict['id']
         info = {ATTR_STOP_ID: place_id,
                 CONF_NAME: place_dict['name']}
