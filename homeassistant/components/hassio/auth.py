@@ -35,7 +35,7 @@ class HassIOAuth(HomeAssistantView):
     def __init__(self, hass, hassio_ip):
         """Initialize WebView."""
         self.hass = hass
-        sel.hassio_ip = hassio_ip
+        self.hassio_ip = hassio_ip
 
     async def post(self, request):
         """Handle new discovery requests."""
