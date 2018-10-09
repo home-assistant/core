@@ -97,7 +97,9 @@ HM_IGNORE_DISCOVERY_NODE = [
 ]
 
 HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
-    'ACTUAL_TEMPERATURE': ['IPAreaThermostat', 'IPWeatherSensor'],
+    'ACTUAL_TEMPERATURE': [
+        'IPAreaThermostat', 'IPWeatherSensor',
+        'IPWeatherSensorPlus', 'IPWeatherSensorBasic'],
 }
 
 HM_ATTRIBUTE_SUPPORT = {
