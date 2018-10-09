@@ -820,6 +820,7 @@ omit =
     homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rainbird.py
     homeassistant/components/switch/rest.py
+    homeassistant/components/switch/recswitch.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/snmp.py
     homeassistant/components/switch/switchbot.py
