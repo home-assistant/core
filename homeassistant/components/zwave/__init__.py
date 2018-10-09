@@ -284,7 +284,7 @@ async def async_setup_entry(hass, config_entry):
     if CONF_NETWORK_KEY in config_entry.data:
         options.addOption("NetworkKey", config_entry.data[CONF_NETWORK_KEY])
 
-    options.lock()
+    await hass.async_add_executor_job(options.lock)
     network = hass.data[DATA_NETWORK] = ZWaveNetwork(options, autostart=False)
     hass.data[DATA_DEVICES] = {}
     hass.data[DATA_ENTITY_VALUES] = []
