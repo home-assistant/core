@@ -101,17 +101,12 @@ def get_departures_mock():
 
 
 def get_no_departures_mock():
-    """Mock empty rmvtransport departures loading."""
+    """Mock no departures in results."""
     data = {'station': 'Frankfurt (Main) Hauptbahnhof',
             'stationId': '3000010',
             'filter': '11111111111',
             'journeys': []}
     return data
-
-
-def get_err_departures_mock():
-    """Mock rmvtransport departures erroneous loading."""
-    raise ValueError
 
 
 async def test_rmvtransport_min_config(hass):
@@ -141,14 +136,6 @@ async def test_rmvtransport_name_config(hass):
 
     state = hass.states.get('sensor.my_station')
     assert state.attributes['friendly_name'] == 'My Station'
-
-
-@pytest.mark.xfail(raises=ValueError)
-async def test_rmvtransport_err_config(hass):
-    """Test erroneous rmvtransport configuration."""
-    with patch('RMVtransport.RMVtransport.get_departures',
-               return_value=mock_coro(get_err_departures_mock())):
-        await async_setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
 
 
 async def test_rmvtransport_misc_config(hass):
