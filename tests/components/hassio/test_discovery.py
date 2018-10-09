@@ -31,6 +31,8 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
             'result': 'ok', 'data': {'name': "Mosquitto Test"}
         })
 
+    assert aioclient_mock.call_count == 0
+
     with patch('homeassistant.components.mqtt.'
                'config_flow.FlowHandler.async_step_hassio',
                Mock(return_value=mock_coro({"type": "abort"}))) as mock_mqtt:
