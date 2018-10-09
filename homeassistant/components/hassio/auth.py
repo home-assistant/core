@@ -39,7 +39,7 @@ class HassIOAuth(HomeAssistantView):
 
     async def post(self, request):
         """Handle new discovery requests."""
-        if request[KEY_REAL_IP] != hassio_ip:
+        if request[KEY_REAL_IP] != self.hassio_ip:
             _LOGGER.error(
                 "Invalid auth request from %s", request[KEY_REAL_IP])
             raise HTTPForbidden()
@@ -49,7 +49,7 @@ class HassIOAuth(HomeAssistantView):
 
     def _get_provider(self):
         """Return Homeassistant auth provider."""
-        for prv in hass.auth.auth_provider:
+        for prv in self.hass.auth.auth_provider:
             if prv.type == 'homeassistant':
                 return prv
 
@@ -59,7 +59,7 @@ class HassIOAuth(HomeAssistantView):
     async def _check_login(self, username, password):
         """Check User credentials."""
         provider = self._get_provider()
- 
+
         try:
             provider.async_validate_login(username, password)
         except HomeAssistantError:
