@@ -1,5 +1,6 @@
 """
-Support for realtime information about public transport departures in Norway from Entur.
+Support for realtime information about public transport departures 
+in Norway from Entur.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.entur_public_transport/
@@ -24,7 +25,10 @@ _GRAPHQL_STOP_TEMPLATE = """
   stopPlaces(ids: [$stops]) {
     id
     name
-    estimatedCalls(startTime: \"$time\", timeRange: 72100, numberOfDepartures: 2) {
+    estimatedCalls(
+        startTime: \"$time\", 
+        timeRange: 72100, 
+        numberOfDepartures: 2) {
       realtime
       aimedArrivalTime
       aimedDepartureTime
@@ -53,7 +57,10 @@ _GRAPHQL_QUAY_TEMPLATE = """
   quays(ids:[$quays]) {
     id
     name
-    estimatedCalls(startTime: \"$time\", timeRange: 72100, numberOfDepartures: 2) {
+    estimatedCalls(
+        startTime: \"$time\", 
+        timeRange: 72100, 
+        numberOfDepartures: 2) {
       realtime
       aimedArrivalTime
       aimedDepartureTime
@@ -109,7 +116,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def due_in_minutes(timestamp: str) -> str:
     """Get the time in minutes from a timestamp.
 
-    The timestamp should be in the format year-month-yearThour:minute:second+timezone
+    The timestamp should be in the format 
+    year-month-yearThour:minute:second+timezone
     """
     if timestamp is None:
         return 'Unknown'
@@ -122,7 +130,8 @@ def due_in_minutes(timestamp: str) -> str:
 def time_diff_in_minutes(timestamp1: str, timestamp2: str) -> str:
     """Get the time in minutes from a timestamp.
 
-    The timestamp should be in the format year-month-yearThour:minute:second+timezone
+    The timestamp should be in the format 
+    year-month-yearThour:minute:second+timezone
     """
     if timestamp1 is None:
         return 'Unknown'
@@ -289,7 +298,8 @@ class EnturPublicTransportSensor(Entity):
 
                 ATTR_ROUTE: self._times[ATTR_ROUTE],
                 ATTR_DELAY: self._times[ATTR_DELAY],
-                ATTR_EXPECTED_IN: due_in_minutes(self._times[ATTR_EXPECTED_AT]),
+                ATTR_EXPECTED_IN: due_in_minutes(
+                    self._times[ATTR_EXPECTED_AT]),
                 ATTR_EXPECTED_AT: self._times[ATTR_EXPECTED_AT],
                 ATTR_REALTIME: self._times[ATTR_REALTIME],
 
