@@ -14,6 +14,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_CODE, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_USERNAME)
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -23,7 +24,7 @@ from homeassistant.helpers import config_validation as cv
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DOMAIN, TOPIC_UPDATE
 
-REQUIREMENTS = ['simplisafe-python==3.1.6']
+REQUIREMENTS = ['simplisafe-python==3.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,8 +97,10 @@ async def async_setup_entry(hass, config_entry):
         simplisafe = await API.login_via_token(
             config_entry.data[CONF_TOKEN], websession)
     except SimplipyError as err:
-        _LOGGER.error("There was an error during setup: %s", err)
-        return False
+        if 403 in str(err):
+            _LOGGER.error('Invalid credentials provided')
+            return False
+        raise ConfigEntryNotReady
 
     _async_save_refresh_token(hass, config_entry, simplisafe.refresh_token)
 

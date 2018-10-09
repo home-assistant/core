@@ -83,14 +83,15 @@ class SimpliSafeAlarm(AlarmControlPanel):
             _LOGGER.warning("Wrong code entered for %s", state)
         return check
 
+    @callback
+    def _update_data(self):
+        """Update the state."""
+        self.async_schedule_update_ha_state(True)
+
     async def async_added_to_hass(self):
         """Register callbacks."""
-        @callback
-        def update(self):
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        listener = async_dispatcher_connect(self.hass, TOPIC_UPDATE, update)
+        listener = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, self._update_data)
         self.async_on_remove(listener)
 
     async def async_alarm_disarm(self, code=None):
