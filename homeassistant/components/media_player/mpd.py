@@ -79,7 +79,7 @@ class MpdDevice(MediaPlayerDevice):
 
         # set up MPD client
         self._client = mpd.MPDClient()
-        self._client.timeout = 5
+        self._client.timeout = 30
         self._client.idletimeout = None
 
     def _connect(self):
