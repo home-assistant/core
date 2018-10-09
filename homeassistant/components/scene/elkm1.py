@@ -1,5 +1,5 @@
 """
-Support for control of ElkM1 outputs (relays) and tasks ("macros).
+Support for control of ElkM1 tasks ("macros").
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.elkm1/
@@ -8,7 +8,7 @@ https://home-assistant.io/components/switch.elkm1/
 
 from homeassistant.components.elkm1 import (
     DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities)
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.scene import Scene
 
 DEPENDENCIES = [ELK_DOMAIN]
 
@@ -19,26 +19,17 @@ async def async_setup_platform(hass, config, async_add_entities,
     if discovery_info is None:
         return
     elk = hass.data[ELK_DOMAIN]['elk']
-    entities = create_elk_entities(hass, elk.outputs, 'output', ElkOutput, [])
+    entities = create_elk_entities(hass, elk.tasks, 'task', ElkTask, [])
     async_add_entities(entities, True)
 
 
-class ElkOutput(ElkEntity, SwitchDevice):
-    """Elk output as switch."""
+class ElkTask(ElkEntity, Scene):
+    """Elk-M1 task as scene."""
 
     def __init__(self, element, elk, elk_data):
         """Initialize output."""
         super().__init__(element, elk, elk_data)
 
-    @property
-    def is_on(self) -> bool:
-        """Get the current output status."""
-        return self._element.output_on
-
-    async def async_turn_on(self, **kwargs):
-        """Turn on the output."""
-        self._element.turn_on(0)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn off the output."""
-        self._element.turn_off()
+    async def async_activate(self, **kwargs):
+        """Activate the task."""
+        self._element.activate()

@@ -28,7 +28,7 @@ class ElkLight(ElkEntity, Light):
 
     def __init__(self, element, elk, elk_data):
         """Initialize light."""
-        super().__init__('light', element, elk, elk_data)
+        super().__init__(element, elk, elk_data)
         self._brightness = self._element.status
 
     @property

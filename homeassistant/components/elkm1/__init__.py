@@ -35,7 +35,7 @@ CONF_ENABLED = 'enabled'
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ['alarm_control_panel', 'light', 'switch']
+SUPPORTED_DOMAINS = ['alarm_control_panel', 'light', 'scene', 'switch']
 
 
 def _host_validator(config):
@@ -157,7 +157,7 @@ def create_elk_entities(hass, elk_elements, element_type, class_, entities):
 class ElkEntity(Entity):
     """Base class for all Elk entities."""
 
-    def __init__(self, platform, element, elk, elk_data):
+    def __init__(self, element, elk, elk_data):
         """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
