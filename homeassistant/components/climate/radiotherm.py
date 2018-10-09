@@ -4,7 +4,6 @@ Support for Radio Thermostat wifi-enabled home thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.radiotherm/
 """
-import asyncio
 import datetime
 import logging
 
@@ -145,8 +144,7 @@ class RadioThermostat(ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         # Set the time on the device.  This shouldn't be in the
         # constructor because it's a network call.  We can't put it in
@@ -174,8 +172,8 @@ class RadioThermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return {
-            ATTR_FAN: self._fmode,
-            ATTR_MODE: self._tmode,
+            ATTR_FAN: self._fstate,
+            ATTR_MODE: self._tstate,
         }
 
     @property

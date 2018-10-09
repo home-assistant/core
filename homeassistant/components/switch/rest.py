@@ -47,9 +47,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the RESTful switch."""
     body_off = config.get(CONF_BODY_OFF)
     body_on = config.get(CONF_BODY_ON)
@@ -77,7 +76,7 @@ def async_setup_platform(hass, config, async_add_entities,
         switch = RestSwitch(name, resource, method, headers, auth, body_on,
                             body_off, is_on_template, timeout)
 
-        req = yield from switch.get_device_state(hass)
+        req = await switch.get_device_state(hass)
         if req.status >= 400:
             _LOGGER.error("Got non-ok response from resource: %s", req.status)
         else:
@@ -116,13 +115,12 @@ class RestSwitch(SwitchDevice):
         """Return true if device is on."""
         return self._state
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         body_on_t = self._body_on.async_render()
 
         try:
-            req = yield from self.set_device_state(body_on_t)
+            req = await self.set_device_state(body_on_t)
 
             if req.status == 200:
                 self._state = True
@@ -131,15 +129,14 @@ class RestSwitch(SwitchDevice):
                     "Can't turn on %s. Is resource/endpoint offline?",
                     self._resource)
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error while turn on %s", self._resource)
+            _LOGGER.error("Error while switching on %s", self._resource)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         body_off_t = self._body_off.async_render()
 
         try:
-            req = yield from self.set_device_state(body_off_t)
+            req = await self.set_device_state(body_off_t)
             if req.status == 200:
                 self._state = False
             else:
@@ -147,35 +144,35 @@ class RestSwitch(SwitchDevice):
                     "Can't turn off %s. Is resource/endpoint offline?",
                     self._resource)
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error while turn off %s", self._resource)
+            _LOGGER.error("Error while switching off %s", self._resource)
 
-    @asyncio.coroutine
-    def set_device_state(self, body):
+    async def set_device_state(self, body):
         """Send a state update to the device."""
         websession = async_get_clientsession(self.hass)
 
         with async_timeout.timeout(self._timeout, loop=self.hass.loop):
-            req = yield from getattr(websession, self._method)(
+            req = await getattr(websession, self._method)(
                 self._resource, auth=self._auth, data=bytes(body, 'utf-8'),
                 headers=self._headers)
             return req
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the current state, catching errors."""
         try:
-            yield from self.get_device_state(self.hass)
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.exception("Error while fetch data.")
+            await self.get_device_state(self.hass)
+        except asyncio.TimeoutError:
+            _LOGGER.exception("Timed out while fetching data")
+        except aiohttp.ClientError as err:
+            _LOGGER.exception("Error while fetching data: %s", err)
 
-    @asyncio.coroutine
-    def get_device_state(self, hass):
+    async def get_device_state(self, hass):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass)
 
         with async_timeout.timeout(self._timeout, loop=hass.loop):
-            req = yield from websession.get(self._resource, auth=self._auth)
-            text = yield from req.text()
+            req = await websession.get(self._resource, auth=self._auth,
+                                       headers=self._headers)
+            text = await req.text()
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_with_possible_json_value(

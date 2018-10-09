@@ -17,7 +17,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID)
-from homeassistant.components import logbook
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
 from homeassistant.helpers.entity import ToggleEntity
@@ -115,70 +114,26 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@bind_hass
-def turn_on(hass, entity_id=None):
-    """Turn on specified automation or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
-
-
-@bind_hass
-def turn_off(hass, entity_id=None):
-    """Turn off specified automation or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-@bind_hass
-def toggle(hass, entity_id=None):
-    """Toggle specified automation or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
-
-
-@bind_hass
-def trigger(hass, entity_id=None):
-    """Trigger specified automation or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
-
-
-@bind_hass
-def reload(hass):
-    """Reload the automation from config."""
-    hass.services.call(DOMAIN, SERVICE_RELOAD)
-
-
-@bind_hass
-def async_reload(hass):
-    """Reload the automation from config.
-
-    Returns a coroutine object.
-    """
-    return hass.services.async_call(DOMAIN, SERVICE_RELOAD)
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the automation."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_ALL_AUTOMATIONS)
 
-    yield from _async_process_config(hass, config, component)
+    await _async_process_config(hass, config, component)
 
-    @asyncio.coroutine
-    def trigger_service_handler(service_call):
+    async def trigger_service_handler(service_call):
         """Handle automation triggers."""
         tasks = []
         for entity in component.async_extract_from_service(service_call):
             tasks.append(entity.async_trigger(
-                service_call.data.get(ATTR_VARIABLES), True))
+                service_call.data.get(ATTR_VARIABLES),
+                skip_condition=True,
+                context=service_call.context))
 
         if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks, loop=hass.loop)
 
-    @asyncio.coroutine
-    def turn_onoff_service_handler(service_call):
+    async def turn_onoff_service_handler(service_call):
         """Handle automation turn on/off service calls."""
         tasks = []
         method = 'async_{}'.format(service_call.service)
@@ -186,10 +141,9 @@ def async_setup(hass, config):
             tasks.append(getattr(entity, method)())
 
         if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks, loop=hass.loop)
 
-    @asyncio.coroutine
-    def toggle_service_handler(service_call):
+    async def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
         tasks = []
         for entity in component.async_extract_from_service(service_call):
@@ -199,15 +153,14 @@ def async_setup(hass, config):
                 tasks.append(entity.async_turn_on())
 
         if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks, loop=hass.loop)
 
-    @asyncio.coroutine
-    def reload_service_handler(service_call):
+    async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
-        conf = yield from component.async_prepare_reload()
+        conf = await component.async_prepare_reload()
         if conf is None:
             return
-        yield from _async_process_config(hass, conf, component)
+        await _async_process_config(hass, conf, component)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
@@ -272,15 +225,14 @@ class AutomationEntity(ToggleEntity):
         """Return True if entity is on."""
         return self._async_detach_triggers is not None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self) -> None:
         """Startup with initial state or previous state."""
         if self._initial_state is not None:
             enable_automation = self._initial_state
             _LOGGER.debug("Automation %s initial state %s from config "
                           "initial_state", self.entity_id, enable_automation)
         else:
-            state = yield from async_get_last_state(self.hass, self.entity_id)
+            state = await async_get_last_state(self.hass, self.entity_id)
             if state:
                 enable_automation = state.state == STATE_ON
                 self._last_triggered = state.attributes.get('last_triggered')
@@ -298,54 +250,50 @@ class AutomationEntity(ToggleEntity):
 
         # HomeAssistant is starting up
         if self.hass.state == CoreState.not_running:
-            @asyncio.coroutine
-            def async_enable_automation(event):
+            async def async_enable_automation(event):
                 """Start automation on startup."""
-                yield from self.async_enable()
+                await self.async_enable()
 
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, async_enable_automation)
 
         # HomeAssistant is running
         else:
-            yield from self.async_enable()
+            await self.async_enable()
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on and update the state."""
         if self.is_on:
             return
 
-        yield from self.async_enable()
+        await self.async_enable()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         if not self.is_on:
             return
 
         self._async_detach_triggers()
         self._async_detach_triggers = None
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_trigger(self, variables, skip_condition=False):
+    async def async_trigger(self, variables, skip_condition=False,
+                            context=None):
         """Trigger automation.
 
         This method is a coroutine.
         """
         if skip_condition or self._cond_func(variables):
-            yield from self._async_action(self.entity_id, variables)
+            self.async_set_context(context)
+            await self._async_action(self.entity_id, variables, context)
             self._last_triggered = utcnow()
-            yield from self.async_update_ha_state()
+            await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from HASS."""
-        yield from self.async_turn_off()
+        await self.async_turn_off()
 
-    @asyncio.coroutine
-    def async_enable(self):
+    async def async_enable(self):
         """Enable this automation entity.
 
         This method is a coroutine.
@@ -353,9 +301,9 @@ class AutomationEntity(ToggleEntity):
         if self.is_on:
             return
 
-        self._async_detach_triggers = yield from self._async_attach_triggers(
+        self._async_detach_triggers = await self._async_attach_triggers(
             self.async_trigger)
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
     @property
     def device_state_attributes(self):
@@ -368,8 +316,7 @@ class AutomationEntity(ToggleEntity):
         }
 
 
-@asyncio.coroutine
-def _async_process_config(hass, config, component):
+async def _async_process_config(hass, config, component):
     """Process config and add automations.
 
     This method is a coroutine.
@@ -411,20 +358,19 @@ def _async_process_config(hass, config, component):
             entities.append(entity)
 
     if entities:
-        yield from component.async_add_entities(entities)
+        await component.async_add_entities(entities)
 
 
 def _async_get_action(hass, config, name):
     """Return an action based on a configuration."""
     script_obj = script.Script(hass, config, name)
 
-    @asyncio.coroutine
-    def action(entity_id, variables):
+    async def action(entity_id, variables, context):
         """Execute an action."""
         _LOGGER.info('Executing %s', name)
-        logbook.async_log_entry(
-            hass, name, 'has been triggered', DOMAIN, entity_id)
-        yield from script_obj.async_run(variables)
+        hass.components.logbook.async_log_entry(
+            name, 'has been triggered', DOMAIN, entity_id)
+        await script_obj.async_run(variables, context)
 
     return action
 
@@ -448,8 +394,7 @@ def _async_process_if(hass, config, p_config):
     return if_action
 
 
-@asyncio.coroutine
-def _async_process_trigger(hass, config, trigger_configs, name, action):
+async def _async_process_trigger(hass, config, trigger_configs, name, action):
     """Set up the triggers.
 
     This method is a coroutine.
@@ -457,13 +402,13 @@ def _async_process_trigger(hass, config, trigger_configs, name, action):
     removes = []
 
     for conf in trigger_configs:
-        platform = yield from async_prepare_setup_platform(
+        platform = await async_prepare_setup_platform(
             hass, config, DOMAIN, conf.get(CONF_PLATFORM))
 
         if platform is None:
             return None
 
-        remove = yield from platform.async_trigger(hass, conf, action)
+        remove = await platform.async_trigger(hass, conf, action)
 
         if not remove:
             _LOGGER.error("Error setting up trigger %s", name)

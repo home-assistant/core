@@ -9,24 +9,24 @@ import logging
 import threading
 from typing import Optional, Tuple
 
-import voluptuous as vol
 import attr
+import voluptuous as vol
 
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import (dispatcher_send,
-                                              async_dispatcher_connect)
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING)
+from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 DEPENDENCIES = ('cast',)
@@ -57,8 +57,8 @@ SIGNAL_CAST_DISCOVERED = 'cast_discovered'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_IGNORE_CEC, default=[]): vol.All(cv.ensure_list,
-                                                       [cv.string])
+    vol.Optional(CONF_IGNORE_CEC, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -212,9 +212,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if not isinstance(config, list):
         config = [config]
 
-    await asyncio.wait([
+    # no pending task
+    done, _ = await asyncio.wait([
         _async_setup_platform(hass, cfg, async_add_entities, None)
         for cfg in config])
+    if any([task.exception() for task in done]):
+        raise PlatformNotReady
 
 
 async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -246,8 +249,8 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         if cast_device is not None:
             async_add_entities([cast_device])
 
-    async_dispatcher_connect(hass, SIGNAL_CAST_DISCOVERED,
-                             async_cast_discovered)
+    remove_handler = async_dispatcher_connect(
+        hass, SIGNAL_CAST_DISCOVERED, async_cast_discovered)
     # Re-play the callback for all past chromecasts, store the objects in
     # a list to avoid concurrent modification resulting in exception.
     for chromecast in list(hass.data[KNOWN_CHROMECAST_INFO_KEY]):
@@ -261,8 +264,11 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         info = await hass.async_add_job(_fill_out_missing_chromecast_info,
                                         info)
         if info.friendly_name is None:
-            # HTTP dial failed, so we won't be able to connect.
+            _LOGGER.debug("Cannot retrieve detail information for chromecast"
+                          " %s, the device may not be online", info)
+            remove_handler()
             raise PlatformNotReady
+
         hass.async_add_job(_discover_chromecast, hass, info)
 
 
@@ -337,7 +343,7 @@ class CastDevice(MediaPlayerDevice):
                 # Discovered is not our device.
                 return
             _LOGGER.debug("Discovered chromecast with same UUID: %s", discover)
-            self.hass.async_add_job(self.async_set_cast_info(discover))
+            self.hass.async_create_task(self.async_set_cast_info(discover))
 
         async def async_stop(event):
             """Disconnect socket on Home Assistant stop."""
@@ -346,7 +352,7 @@ class CastDevice(MediaPlayerDevice):
         async_dispatcher_connect(self.hass, SIGNAL_CAST_DISCOVERED,
                                  async_cast_discovered)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
-        self.hass.async_add_job(self.async_set_cast_info(self._cast_info))
+        self.hass.async_create_task(self.async_set_cast_info(self._cast_info))
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""
@@ -364,12 +370,11 @@ class CastDevice(MediaPlayerDevice):
 
         if self._chromecast is not None:
             if old_cast_info.host_port == cast_info.host_port:
-                # Nothing connection-related updated
+                _LOGGER.debug("No connection related update: %s",
+                              cast_info.host_port)
                 return
             await self._async_disconnect()
 
-        # Failed connection will unfortunately never raise an exception, it
-        # will instead just try connecting indefinitely.
         # pylint: disable=protected-access
         _LOGGER.debug("Connecting to cast device %s", cast_info)
         chromecast = await self.hass.async_add_job(
@@ -400,7 +405,12 @@ class CastDevice(MediaPlayerDevice):
 
         await self.hass.async_add_job(self._chromecast.disconnect)
 
-        # Invalidate some attributes
+        self._invalidate()
+
+        self.async_schedule_update_ha_state()
+
+    def _invalidate(self):
+        """Invalidate some attributes."""
         self._chromecast = None
         self.cast_status = None
         self.media_status = None
@@ -408,8 +418,6 @@ class CastDevice(MediaPlayerDevice):
         if self._status_listener is not None:
             self._status_listener.invalidate()
             self._status_listener = None
-
-        self.async_schedule_update_ha_state()
 
     # ========== Callbacks ==========
     def new_cast_status(self, cast_status):
@@ -425,7 +433,16 @@ class CastDevice(MediaPlayerDevice):
 
     def new_connection_status(self, connection_status):
         """Handle updates of connection status."""
-        from pychromecast.socket_client import CONNECTION_STATUS_CONNECTED
+        from pychromecast.socket_client import CONNECTION_STATUS_CONNECTED, \
+            CONNECTION_STATUS_DISCONNECTED
+
+        _LOGGER.debug("Received cast device connection status: %s",
+                      connection_status.status)
+        if connection_status.status == CONNECTION_STATUS_DISCONNECTED:
+            self._available = False
+            self._invalidate()
+            self.schedule_update_ha_state()
+            return
 
         new_available = connection_status.status == CONNECTION_STATUS_CONNECTED
         if new_available != self._available:

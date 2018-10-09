@@ -190,10 +190,13 @@ class EntityComponent:
                sorted(self.entities,
                       key=lambda entity: entity.name or entity.entity_id)]
 
-        self.hass.components.group.async_set_group(
-            slugify(self.group_name), name=self.group_name,
-            visible=False, entity_ids=ids
-        )
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                'group', 'set', dict(
+                    object_id=slugify(self.group_name),
+                    name=self.group_name,
+                    visible=False,
+                    entities=ids)))
 
     async def _async_reset(self):
         """Remove entities and reset the entity component to initial values.
@@ -212,7 +215,9 @@ class EntityComponent:
         self.config = None
 
         if self.group_name is not None:
-            self.hass.components.group.async_remove(slugify(self.group_name))
+            await self.hass.services.async_call(
+                'group', 'remove', dict(
+                    object_id=slugify(self.group_name)))
 
     async def async_remove_entity(self, entity_id):
         """Remove an entity managed by one of the platforms."""

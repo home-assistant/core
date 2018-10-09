@@ -7,6 +7,7 @@ https://home-assistant.io/components/zha/
 import collections
 import enum
 import logging
+import time
 
 import voluptuous as vol
 
@@ -14,10 +15,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant import const as ha_const
 from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
+from homeassistant.helpers.entity_component import EntityComponent
 
 REQUIREMENTS = [
-    'bellows==0.6.0',
-    'zigpy==0.1.0',
+    'bellows==0.7.0',
+    'zigpy==0.2.0',
     'zigpy-xbee==0.1.1',
 ]
 
@@ -107,7 +109,8 @@ async def async_setup(hass, config):
     await APPLICATION_CONTROLLER.startup(auto_form=True)
 
     for device in APPLICATION_CONTROLLER.devices.values():
-        hass.async_add_job(listener.async_device_initialized(device, False))
+        hass.async_create_task(
+            listener.async_device_initialized(device, False))
 
     async def permit(service):
         """Allow devices to join this network."""
@@ -139,6 +142,7 @@ class ApplicationListener:
         """Initialize the listener."""
         self._hass = hass
         self._config = config
+        self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._device_registry = collections.defaultdict(list)
         hass.data[DISCOVERY_KEY] = hass.data.get(DISCOVERY_KEY, {})
 
@@ -158,7 +162,8 @@ class ApplicationListener:
 
     def device_initialized(self, device):
         """Handle device joined and basic information discovered."""
-        self._hass.async_add_job(self.async_device_initialized(device, True))
+        self._hass.async_create_task(
+            self.async_device_initialized(device, True))
 
     def device_left(self, device):
         """Handle device leaving the network."""
@@ -167,7 +172,7 @@ class ApplicationListener:
     def device_removed(self, device):
         """Handle device being removed from the network."""
         for device_entity in self._device_registry[device.ieee]:
-            self._hass.async_add_job(device_entity.async_remove())
+            self._hass.async_create_task(device_entity.async_remove())
 
     async def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""
@@ -175,11 +180,16 @@ class ApplicationListener:
         import homeassistant.components.zha.const as zha_const
         zha_const.populate_data()
 
+        device_manufacturer = device_model = None
+
         for endpoint_id, endpoint in device.endpoints.items():
             if endpoint_id == 0:  # ZDO
                 continue
 
-            discovered_info = await _discover_endpoint_info(endpoint)
+            if endpoint.manufacturer is not None:
+                device_manufacturer = endpoint.manufacturer
+            if endpoint.model is not None:
+                device_model = endpoint.model
 
             component = None
             profile_clusters = ([], [])
@@ -212,10 +222,11 @@ class ApplicationListener:
                     'endpoint': endpoint,
                     'in_clusters': {c.cluster_id: c for c in in_clusters},
                     'out_clusters': {c.cluster_id: c for c in out_clusters},
+                    'manufacturer': endpoint.manufacturer,
+                    'model': endpoint.model,
                     'new_join': join,
                     'unique_id': device_key,
                 }
-                discovery_info.update(discovered_info)
                 self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
 
                 await discovery.async_load_platform(
@@ -234,7 +245,6 @@ class ApplicationListener:
                     device_key,
                     zha_const.SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
                     'in_clusters',
-                    discovered_info,
                     join,
                 )
 
@@ -246,9 +256,16 @@ class ApplicationListener:
                     device_key,
                     zha_const.SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
                     'out_clusters',
-                    discovered_info,
                     join,
                 )
+
+        endpoint_entity = ZhaDeviceEntity(
+            device,
+            device_manufacturer,
+            device_model,
+            self,
+        )
+        await self._component.async_add_entities([endpoint_entity])
 
     def register_entity(self, ieee, entity_obj):
         """Record the creation of a hass entity associated with ieee."""
@@ -257,7 +274,7 @@ class ApplicationListener:
     async def _attempt_single_cluster_device(self, endpoint, cluster,
                                              profile_clusters, device_key,
                                              device_classes, discovery_attr,
-                                             entity_info, is_new_join):
+                                             is_new_join):
         """Try to set up an entity from a "bare" cluster."""
         if cluster.cluster_id in profile_clusters:
             return
@@ -277,12 +294,13 @@ class ApplicationListener:
             'endpoint': endpoint,
             'in_clusters': {},
             'out_clusters': {},
+            'manufacturer': endpoint.manufacturer,
+            'model': endpoint.model,
             'new_join': is_new_join,
             'unique_id': cluster_key,
             'entity_suffix': '_{}'.format(cluster.cluster_id),
         }
         discovery_info[discovery_attr] = {cluster.cluster_id: cluster}
-        discovery_info.update(entity_info)
         self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
 
         await discovery.async_load_platform(
@@ -338,6 +356,7 @@ class Entity(entity.Entity):
         self._in_listeners = {}
         self._out_listeners = {}
 
+        self._initialized = False
         application_listener.register_entity(ieee, self)
 
     async def async_added_to_hass(self):
@@ -349,6 +368,8 @@ class Entity(entity.Entity):
             cluster.add_listener(self._in_listeners.get(cluster_id, self))
         for cluster_id, cluster in self._out_clusters.items():
             cluster.add_listener(self._out_listeners.get(cluster_id, self))
+
+        self._initialized = True
 
     @property
     def unique_id(self) -> str:
@@ -369,38 +390,75 @@ class Entity(entity.Entity):
         pass
 
 
-async def _discover_endpoint_info(endpoint):
-    """Find some basic information about an endpoint."""
-    extra_info = {
-        'manufacturer': None,
-        'model': None,
-    }
-    if 0 not in endpoint.in_clusters:
-        return extra_info
+class ZhaDeviceEntity(entity.Entity):
+    """A base class for ZHA devices."""
 
-    async def read(attributes):
-        """Read attributes and update extra_info convenience function."""
-        result, _ = await endpoint.in_clusters[0].read_attributes(
-            attributes,
-            allow_cache=True,
-        )
-        extra_info.update(result)
+    def __init__(self, device, manufacturer, model, application_listener,
+                 keepalive_interval=7200, **kwargs):
+        """Init ZHA endpoint entity."""
+        self._device_state_attributes = {
+            'nwk': '0x{0:04x}'.format(device.nwk),
+            'ieee': str(device.ieee),
+            'lqi': device.lqi,
+            'rssi': device.rssi,
+        }
 
-    await read(['manufacturer', 'model'])
-    if extra_info['manufacturer'] is None or extra_info['model'] is None:
-        # Some devices fail at returning multiple results. Attempt separately.
-        await read(['manufacturer'])
-        await read(['model'])
+        ieee = device.ieee
+        ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
+        if manufacturer is not None and model is not None:
+            self._unique_id = "{}_{}_{}".format(
+                slugify(manufacturer),
+                slugify(model),
+                ieeetail,
+            )
+            self._device_state_attributes['friendly_name'] = "{} {}".format(
+                manufacturer,
+                model,
+            )
+        else:
+            self._unique_id = str(ieeetail)
 
-    for key, value in extra_info.items():
-        if isinstance(value, bytes):
-            try:
-                extra_info[key] = value.decode('ascii').strip()
-            except UnicodeDecodeError:
-                # Unsure what the best behaviour here is. Unset the key?
-                pass
+        self._device = device
+        self._state = 'offline'
+        self._keepalive_interval = keepalive_interval
 
-    return extra_info
+        application_listener.register_entity(ieee, self)
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def state(self) -> str:
+        """Return the state of the entity."""
+        return self._state
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        update_time = None
+        if self._device.last_seen is not None and self._state == 'offline':
+            time_struct = time.localtime(self._device.last_seen)
+            update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
+            self._device_state_attributes['last_seen'] = update_time
+        if ('last_seen' in self._device_state_attributes and
+                self._state != 'offline'):
+            del self._device_state_attributes['last_seen']
+        self._device_state_attributes['lqi'] = self._device.lqi
+        self._device_state_attributes['rssi'] = self._device.rssi
+        return self._device_state_attributes
+
+    async def async_update(self):
+        """Handle polling."""
+        if self._device.last_seen is None:
+            self._state = 'offline'
+        else:
+            difference = time.time() - self._device.last_seen
+            if difference > self._keepalive_interval:
+                self._state = 'offline'
+            else:
+                self._state = 'online'
 
 
 def get_discovery_info(hass, discovery_info):
@@ -420,7 +478,7 @@ def get_discovery_info(hass, discovery_info):
     return all_discovery_info.get(discovery_key, None)
 
 
-async def safe_read(cluster, attributes, allow_cache=True):
+async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
     """Swallow all exceptions from network read.
 
     If we throw during initialization, setup fails. Rather have an entity that
@@ -431,7 +489,47 @@ async def safe_read(cluster, attributes, allow_cache=True):
         result, _ = await cluster.read_attributes(
             attributes,
             allow_cache=allow_cache,
+            only_cache=only_cache
         )
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
+
+
+async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
+                              min_report=300, max_report=900,
+                              reportable_change=1):
+    """Configure attribute reporting for a cluster.
+
+    while swallowing the DeliverError exceptions in case of unreachable
+    devices.
+    """
+    from zigpy.exceptions import DeliveryError
+
+    attr_name = cluster.attributes.get(attr, [attr])[0]
+    cluster_name = cluster.ep_attribute
+    if not skip_bind:
+        try:
+            res = await cluster.bind()
+            _LOGGER.debug(
+                "%s: bound  '%s' cluster: %s", entity_id, cluster_name, res[0]
+            )
+        except DeliveryError as ex:
+            _LOGGER.debug(
+                "%s: Failed to bind '%s' cluster: %s",
+                entity_id, cluster_name, str(ex)
+            )
+
+    try:
+        res = await cluster.configure_reporting(attr, min_report,
+                                                max_report, reportable_change)
+        _LOGGER.debug(
+            "%s: reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
+            entity_id, attr_name, cluster_name, min_report, max_report,
+            reportable_change, res
+        )
+    except DeliveryError as ex:
+        _LOGGER.debug(
+            "%s: failed to set reporting for '%s' attr on '%s' cluster: %s",
+            entity_id, attr_name, cluster_name, str(ex)
+        )

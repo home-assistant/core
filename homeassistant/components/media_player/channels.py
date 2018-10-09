@@ -9,17 +9,17 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE, SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_PLAY_MEDIA, SUPPORT_SELECT_SOURCE, DOMAIN, PLATFORM_SCHEMA,
+    DOMAIN, MEDIA_TYPE_CHANNEL, MEDIA_TYPE_EPISODE, MEDIA_TYPE_MOVIE,
+    MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_VOLUME_MUTE,
     MediaPlayerDevice)
-
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING,
-    ATTR_ENTITY_ID)
-
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_PAUSED,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['pychannels==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,16 +52,11 @@ CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend({
     vol.Required(ATTR_SECONDS): vol.Coerce(int),
 })
 
-REQUIREMENTS = ['pychannels==1.0.0']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Channels platform."""
     device = ChannelsPlayer(
-        config.get('name'),
-        config.get(CONF_HOST),
-        config.get(CONF_PORT)
-        )
+        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT))
 
     if DATA_CHANNELS not in hass.data:
         hass.data[DATA_CHANNELS] = []
@@ -77,8 +72,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                        device.entity_id == entity_id), None)
 
         if device is None:
-            _LOGGER.warning("Unable to find Channels with entity_id: %s",
-                            entity_id)
+            _LOGGER.warning(
+                "Unable to find Channels with entity_id: %s", entity_id)
             return
 
         if service.service == SERVICE_SEEK_FORWARD:
@@ -90,12 +85,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device.seek_by(seconds)
 
     hass.services.register(
-        DOMAIN, SERVICE_SEEK_FORWARD, service_handler,
-        schema=CHANNELS_SCHEMA)
+        DOMAIN, SERVICE_SEEK_FORWARD, service_handler, schema=CHANNELS_SCHEMA)
 
     hass.services.register(
-        DOMAIN, SERVICE_SEEK_BACKWARD, service_handler,
-        schema=CHANNELS_SCHEMA)
+        DOMAIN, SERVICE_SEEK_BACKWARD, service_handler, schema=CHANNELS_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_SEEK_BY, service_handler,

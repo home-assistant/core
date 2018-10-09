@@ -273,18 +273,28 @@ class EntityPlatform:
                 config_entry_id = None
 
             device_info = entity.device_info
+            device_id = None
+
             if config_entry_id is not None and device_info is not None:
+                processed_dev_info = {
+                    'config_entry_id': config_entry_id
+                }
+                for key in (
+                        'connections',
+                        'identifiers',
+                        'manufacturer',
+                        'model',
+                        'name',
+                        'sw_version',
+                        'via_hub',
+                ):
+                    if key in device_info:
+                        processed_dev_info[key] = device_info[key]
+
                 device = device_registry.async_get_or_create(
-                    config_entry=config_entry_id,
-                    connections=device_info.get('connections', []),
-                    identifiers=device_info.get('identifiers', []),
-                    manufacturer=device_info.get('manufacturer'),
-                    model=device_info.get('model'),
-                    name=device_info.get('name'),
-                    sw_version=device_info.get('sw_version'))
-                device_id = device.id
-            else:
-                device_id = None
+                    **processed_dev_info)
+                if device:
+                    device_id = device.id
 
             entry = entity_registry.async_get_or_create(
                 self.domain, self.platform_name, entity.unique_id,

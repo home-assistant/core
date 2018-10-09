@@ -142,7 +142,7 @@ class HomematicipHAP:
             # Explicitly getting an update as device states might have
             # changed during access point disconnect."""
 
-            job = self.hass.async_add_job(self.get_state())
+            job = self.hass.async_create_task(self.get_state())
             job.add_done_callback(self.get_state_finished)
 
     async def get_state(self):
@@ -161,7 +161,7 @@ class HomematicipHAP:
             # so reconnect loop is taking over.
             _LOGGER.error(
                 "Updating state after HMIP access point reconnect failed")
-            self.hass.async_add_job(self.home.disable_events())
+            self.hass.async_create_task(self.home.disable_events())
 
     def set_all_to_unavailable(self):
         """Set all devices to unavailable and tell Home Assistant."""
@@ -212,7 +212,7 @@ class HomematicipHAP:
                           "Retrying in %d seconds",
                           self.config_entry.data.get(HMIPC_HAPID), retry_delay)
             try:
-                self._retry_task = self.hass.async_add_job(asyncio.sleep(
+                self._retry_task = self.hass.async_create_task(asyncio.sleep(
                     retry_delay, loop=self.hass.loop))
                 await self._retry_task
             except asyncio.CancelledError:

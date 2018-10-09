@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "title": "Home Assistant iOS"
+            }
+        },
+        "title": "Home Assistant iOS"
+    }
+}

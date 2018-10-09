@@ -84,6 +84,17 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Optional(const.ATTR_CONFIG_SIZE, default=2): vol.Coerce(int)
 })
 
+SET_NODE_VALUE_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int)
+})
+
+REFRESH_NODE_VALUE_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int)
+})
+
 SET_POLL_INTENSITY_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
@@ -264,7 +275,9 @@ async def async_setup(hass, config):
                                     ZWaveNetwork.SIGNAL_SCENE_EVENT,
                                     ZWaveNetwork.SIGNAL_NODE_EVENT,
                                     ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED,
-                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED):
+                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED,
+                                    ZWaveNetwork
+                                    .SIGNAL_ALL_NODES_QUERIED_SOME_DEAD):
                 pprint(_obj_to_dict(value))
 
             print("")
@@ -345,6 +358,12 @@ async def async_setup(hass, config):
                      "have been queried")
         hass.bus.fire(const.EVENT_NETWORK_COMPLETE)
 
+    def network_complete_some_dead():
+        """Handle the querying of all nodes on network."""
+        _LOGGER.info("Z-Wave network is complete. All nodes on the network "
+                     "have been queried, but some node are marked dead")
+        hass.bus.fire(const.EVENT_NETWORK_COMPLETE_SOME_DEAD)
+
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
     dispatcher.connect(
@@ -353,6 +372,9 @@ async def async_setup(hass, config):
         network_ready, ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED, weak=False)
     dispatcher.connect(
         network_complete, ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED, weak=False)
+    dispatcher.connect(
+        network_complete_some_dead,
+        ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD, weak=False)
 
     def add_node(service):
         """Switch into inclusion mode."""
@@ -491,6 +513,23 @@ async def async_setup(hass, config):
         _LOGGER.info("Setting unknown config parameter %s on Node %s "
                      "with selection %s", param, node_id,
                      selection)
+
+    def refresh_node_value(service):
+        """Refresh the specified value from a node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        value_id = service.data.get(const.ATTR_VALUE_ID)
+        node = network.nodes[node_id]
+        node.values[value_id].refresh()
+        _LOGGER.info("Node %s value %s refreshed", node_id, value_id)
+
+    def set_node_value(service):
+        """Set the specified value on a node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        value_id = service.data.get(const.ATTR_VALUE_ID)
+        value = service.data.get(const.ATTR_CONFIG_VALUE)
+        node = network.nodes[node_id]
+        node.values[value_id].data = value
+        _LOGGER.info("Node %s value %s set to %s", node_id, value_id, value)
 
     def print_config_parameter(service):
         """Print a config parameter from a node."""
@@ -662,6 +701,12 @@ async def async_setup(hass, config):
         hass.services.register(DOMAIN, const.SERVICE_SET_CONFIG_PARAMETER,
                                set_config_parameter,
                                schema=SET_CONFIG_PARAMETER_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_SET_NODE_VALUE,
+                               set_node_value,
+                               schema=SET_NODE_VALUE_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_REFRESH_NODE_VALUE,
+                               refresh_node_value,
+                               schema=REFRESH_NODE_VALUE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_PRINT_CONFIG_PARAMETER,
                                print_config_parameter,
                                schema=PRINT_CONFIG_PARAMETER_SCHEMA)

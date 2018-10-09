@@ -3,14 +3,56 @@
 import unittest
 from unittest.mock import patch
 
-from homeassistant.core import callback
-from homeassistant.setup import setup_component
 from homeassistant.components import script
+from homeassistant.components.script import DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID, SERVICE_RELOAD, SERVICE_TOGGLE, SERVICE_TURN_OFF)
+from homeassistant.core import Context, callback, split_entity_id
+from homeassistant.loader import bind_hass
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
 
 ENTITY_ID = 'script.test'
+
+
+@bind_hass
+def turn_on(hass, entity_id, variables=None, context=None):
+    """Turn script on.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    _, object_id = split_entity_id(entity_id)
+
+    hass.services.call(DOMAIN, object_id, variables, context=context)
+
+
+@bind_hass
+def turn_off(hass, entity_id):
+    """Turn script on.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
+
+
+@bind_hass
+def toggle(hass, entity_id):
+    """Toggle the script.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
+
+
+@bind_hass
+def reload(hass):
+    """Reload script component.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_RELOAD)
 
 
 class TestScriptComponent(unittest.TestCase):
@@ -76,17 +118,17 @@ class TestScriptComponent(unittest.TestCase):
             }
         })
 
-        script.turn_on(self.hass, ENTITY_ID)
+        turn_on(self.hass, ENTITY_ID)
         self.hass.block_till_done()
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
         # Calling turn_on a second time should not advance the script
-        script.turn_on(self.hass, ENTITY_ID)
+        turn_on(self.hass, ENTITY_ID)
         self.hass.block_till_done()
         self.assertEqual(0, len(events))
 
-        script.turn_off(self.hass, ENTITY_ID)
+        turn_off(self.hass, ENTITY_ID)
         self.hass.block_till_done()
         self.assertFalse(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
@@ -121,12 +163,12 @@ class TestScriptComponent(unittest.TestCase):
             }
         })
 
-        script.toggle(self.hass, ENTITY_ID)
+        toggle(self.hass, ENTITY_ID)
         self.hass.block_till_done()
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
-        script.toggle(self.hass, ENTITY_ID)
+        toggle(self.hass, ENTITY_ID)
         self.hass.block_till_done()
         self.assertFalse(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
@@ -134,6 +176,7 @@ class TestScriptComponent(unittest.TestCase):
     def test_passing_variables(self):
         """Test different ways of passing in variables."""
         calls = []
+        context = Context()
 
         @callback
         def record_call(service):
@@ -155,23 +198,25 @@ class TestScriptComponent(unittest.TestCase):
             },
         })
 
-        script.turn_on(self.hass, ENTITY_ID, {
+        turn_on(self.hass, ENTITY_ID, {
             'greeting': 'world'
-        })
+        }, context=context)
 
         self.hass.block_till_done()
 
         assert len(calls) == 1
-        assert calls[-1].data['hello'] == 'world'
+        assert calls[0].context is context
+        assert calls[0].data['hello'] == 'world'
 
         self.hass.services.call('script', 'test', {
             'greeting': 'universe',
-        })
+        }, context=context)
 
         self.hass.block_till_done()
 
         assert len(calls) == 2
-        assert calls[-1].data['hello'] == 'universe'
+        assert calls[1].context is context
+        assert calls[1].data['hello'] == 'universe'
 
     def test_reload_service(self):
         """Verify that the turn_on service."""
@@ -201,7 +246,7 @@ class TestScriptComponent(unittest.TestCase):
                     }}}):
             with patch('homeassistant.config.find_config_file',
                        return_value=''):
-                script.reload(self.hass)
+                reload(self.hass)
                 self.hass.block_till_done()
 
         assert self.hass.states.get(ENTITY_ID) is None

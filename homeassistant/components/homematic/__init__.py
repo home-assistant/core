@@ -4,7 +4,6 @@ Support for HomeMatic devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematic/
 """
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -18,9 +17,8 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.47']
+REQUIREMENTS = ['pyhomematic==0.1.50']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +75,8 @@ HM_DEVICE_TYPES = {
         'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
         'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
-        'IPKeySwitchPowermeter', 'IPThermostatWall230V'],
+        'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
+        'IPWeatherSensorBasic'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
@@ -87,7 +86,7 @@ HM_DEVICE_TYPES = {
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
         'WiredSensor', 'PresenceIP', 'IPWeatherSensor', 'IPPassageSensor',
-        'SmartwareMotion'],
+        'SmartwareMotion', 'IPWeatherSensorPlus'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
     DISCOVER_LOCKS: ['KeyMatic']
 }
@@ -107,6 +106,7 @@ HM_ATTRIBUTE_SUPPORT = {
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_PEER': ['rssi', {}],
+    'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
     'BATTERY_STATE': ['battery', {}],
     'CONTROL_MODE': ['mode', {
@@ -241,78 +241,6 @@ SCHEMA_SERVICE_PUT_PARAMSET = vol.Schema({
     vol.Required(ATTR_PARAMSET_KEY): vol.All(cv.string, vol.Upper),
     vol.Required(ATTR_PARAMSET): dict,
 })
-
-
-@bind_hass
-def virtualkey(hass, address, channel, param, interface=None):
-    """Send virtual keypress to homematic controller."""
-    data = {
-        ATTR_ADDRESS: address,
-        ATTR_CHANNEL: channel,
-        ATTR_PARAM: param,
-        ATTR_INTERFACE: interface,
-    }
-
-    hass.services.call(DOMAIN, SERVICE_VIRTUALKEY, data)
-
-
-@bind_hass
-def set_variable_value(hass, entity_id, value):
-    """Change value of a Homematic system variable."""
-    data = {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_VALUE: value,
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_VARIABLE_VALUE, data)
-
-
-@bind_hass
-def set_device_value(hass, address, channel, param, value, interface=None):
-    """Call setValue XML-RPC method of supplied interface."""
-    data = {
-        ATTR_ADDRESS: address,
-        ATTR_CHANNEL: channel,
-        ATTR_PARAM: param,
-        ATTR_VALUE: value,
-        ATTR_INTERFACE: interface,
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_DEVICE_VALUE, data)
-
-
-@bind_hass
-def put_paramset(hass, interface, address, paramset_key, paramset):
-    """Call putParamset XML-RPC method of supplied interface."""
-    data = {
-        ATTR_INTERFACE: interface,
-        ATTR_ADDRESS: address,
-        ATTR_PARAMSET_KEY: paramset_key,
-        ATTR_PARAMSET: paramset,
-    }
-
-    hass.services.call(DOMAIN, SERVICE_PUT_PARAMSET, data)
-
-
-@bind_hass
-def set_install_mode(hass, interface, mode=None, time=None, address=None):
-    """Call setInstallMode XML-RPC method of supplied interface."""
-    data = {
-        key: value for key, value in (
-            (ATTR_INTERFACE, interface),
-            (ATTR_MODE, mode),
-            (ATTR_TIME, time),
-            (ATTR_ADDRESS, address)
-        ) if value
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_INSTALL_MODE, data)
-
-
-@bind_hass
-def reconnect(hass):
-    """Reconnect to CCU/Homegear."""
-    hass.services.call(DOMAIN, SERVICE_RECONNECT, {})
 
 
 def setup(hass, config):
@@ -786,10 +714,9 @@ class HMDevice(Entity):
         if self._state:
             self._state = self._state.upper()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Load data init callbacks."""
-        yield from self.hass.async_add_job(self.link_homematic)
+        await self.hass.async_add_job(self.link_homematic)
 
     @property
     def unique_id(self):

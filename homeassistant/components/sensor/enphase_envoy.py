@@ -14,25 +14,27 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS)
 
 
-REQUIREMENTS = ['envoy_reader==0.1']
+REQUIREMENTS = ['envoy_reader==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
     "production": ("Envoy Current Energy Production", 'W'),
     "daily_production": ("Envoy Today's Energy Production", "Wh"),
-    "7_days_production": ("Envoy Last Seven Days Energy Production", "Wh"),
+    "seven_days_production": ("Envoy Last Seven Days Energy Production", "Wh"),
     "lifetime_production": ("Envoy Lifetime Energy Production", "Wh"),
     "consumption": ("Envoy Current Energy Consumption", "W"),
     "daily_consumption": ("Envoy Today's Energy Consumption", "Wh"),
-    "7_days_consumption": ("Envoy Last Seven Days Energy Consumption", "Wh"),
+    "seven_days_consumption": ("Envoy Last Seven Days Energy Consumption",
+                               "Wh"),
     "lifetime_consumption": ("Envoy Lifetime Energy Consumption", "Wh")
     }
 
 
 ICON = 'mdi:flash'
+CONST_DEFAULT_HOST = "envoy"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP_ADDRESS): cv.string,
+    vol.Optional(CONF_IP_ADDRESS, default=CONST_DEFAULT_HOST): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
         vol.All(cv.ensure_list, [vol.In(list(SENSORS))])})
 
@@ -81,27 +83,6 @@ class Envoy(Entity):
 
     def update(self):
         """Get the energy production data from the Enphase Envoy."""
-        import envoy_reader
+        from envoy_reader import EnvoyReader
 
-        if self._type == "production":
-            self._state = int(envoy_reader.production(self._ip_address))
-        elif self._type == "daily_production":
-            self._state = int(envoy_reader.daily_production(self._ip_address))
-        elif self._type == "7_days_production":
-            self._state = int(envoy_reader.seven_days_production(
-                self._ip_address))
-        elif self._type == "lifetime_production":
-            self._state = int(envoy_reader.lifetime_production(
-                self._ip_address))
-
-        elif self._type == "consumption":
-            self._state = int(envoy_reader.consumption(self._ip_address))
-        elif self._type == "daily_consumption":
-            self._state = int(envoy_reader.daily_consumption(
-                self._ip_address))
-        elif self._type == "7_days_consumption":
-            self._state = int(envoy_reader.seven_days_consumption(
-                self._ip_address))
-        elif self._type == "lifetime_consumption":
-            self._state = int(envoy_reader.lifetime_consumption(
-                self._ip_address))
+        self._state = getattr(EnvoyReader(self._ip_address), self._type)()

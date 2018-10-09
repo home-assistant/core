@@ -3,6 +3,9 @@
         "first_quarter": "Primo quarto",
         "full_moon": "Luna piena",
         "last_quarter": "Ultimo quarto",
-        "new_moon": "Nuova luna"
+        "new_moon": "Nuova luna",
+        "waning_gibbous": "Gibbosa calante",
+        "waxing_crescent": "Luna crescente",
+        "waxing_gibbous": "Gibbosa crescente"
     }
 }
