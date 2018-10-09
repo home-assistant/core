@@ -15,7 +15,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PIN, CONF_URL, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['fints==0.2.1']
+REQUIREMENTS = ['fints==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
