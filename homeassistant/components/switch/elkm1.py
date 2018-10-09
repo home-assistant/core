@@ -26,10 +26,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 class ElkOutput(ElkEntity, SwitchDevice):
     """Elk output as switch."""
 
-    def __init__(self, element, elk, elk_data):
-        """Initialize output."""
-        super().__init__(element, elk, elk_data)
-
     @property
     def is_on(self) -> bool:
         """Get the current output status."""

@@ -26,10 +26,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 class ElkTask(ElkEntity, Scene):
     """Elk-M1 task as scene."""
 
-    def __init__(self, element, elk, elk_data):
-        """Initialize output."""
-        super().__init__(element, elk, elk_data)
-
-    async def async_activate(self, **kwargs):
+    async def async_activate(self):
         """Activate the task."""
         self._element.activate()
