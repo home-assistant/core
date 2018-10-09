@@ -44,7 +44,8 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
         })
 
 
-async def test_hassio_discovery_startup_done(hass, aioclient_mock, hassio_client):
+async def test_hassio_discovery_startup_done(hass, aioclient_mock, 
+                                             hassio_client):
     """Test startup and discovery with hass discovery."""
     aioclient_mock.get(
         "http://127.0.0.1/discovery", json={
@@ -72,8 +73,9 @@ async def test_hassio_discovery_startup_done(hass, aioclient_mock, hassio_client
                   'get_homeassistant_info',
                   Mock(side_effect=HassioAPIError()),
             patch('homeassistant.components.mqtt.'
-               'config_flow.FlowHandler.async_step_hassio',
-               Mock(return_value=mock_coro({"type": "abort"}))) as mock_mqtt:):
+                  'config_flow.FlowHandler.async_step_hassio',
+                  Mock(return_value=mock_coro({"type": "abort"}))
+            ) as mock_mqtt:):
         await hass.async_start()
         await async_setup_component(hass, 'hassio', {
             'http': {
