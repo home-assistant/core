@@ -187,9 +187,9 @@ class PublicTransportData:
                                ATTR_DELAY: 'Unknown'}
 
         self.template_string = "{\n"
-        if len(self.stops) > 0:
+        if self.stops:
             self.template_string += _GRAPHQL_STOP_TEMPLATE
-        if len(self.quays) > 0:
+        if self.quays:
             self.template_string += _GRAPHQL_QUAY_TEMPLATE
         self.template_string += "}"
         self.template = Template(self.template_string)
@@ -235,7 +235,8 @@ class PublicTransportData:
         place_id = place_dict['id']
         info = {ATTR_STOP_ID: place_id,
                 CONF_NAME: place_dict['name']}
-        if len(place_dict['estimatedCalls']) > 0:
+        number_of_calls = len(place_dict['estimatedCalls'])
+        if number_of_calls > 0:
             call = place_dict['estimatedCalls'][0]
             info[ATTR_EXPECTED_AT] = call['expectedDepartureTime']
             info[ATTR_REALTIME] = call['realtime']
@@ -245,7 +246,7 @@ class PublicTransportData:
             info[ATTR_DELAY] = time_diff_in_minutes(
                 call['expectedDepartureTime'],
                 call['aimedDepartureTime'])
-        if len(place_dict['estimatedCalls']) > 1:
+        if number_of_calls > 1:
             call = place_dict['estimatedCalls'][1]
             info[ATTR_NEXT_UP_AT] = call['expectedDepartureTime']
             info[ATTR_NEXT_UP_REALTIME] = call['realtime']
