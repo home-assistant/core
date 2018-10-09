@@ -139,16 +139,17 @@ class HomeAccessory(Accessory):
         """
         raise NotImplementedError()
 
-    def call_service(self, domain, service, params, attribute=None):
+    def call_service(self, domain, service, service_data, value=None):
         """Fire event and call service for changes from HomeKit."""
-        self.hass.bus.fire(EVENT_HOMEKIT_CHANGED, {
+        event_data = {
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_DISPLAY_NAME: self.display_name,
             ATTR_SERVICE: service,
-            ATTR_VALUE: attribute
-        })
+            ATTR_VALUE: value
+        }
+        self.hass.bus.fire(EVENT_HOMEKIT_CHANGED, event_data)
 
-        self.hass.services.call(domain, service, params)
+        self.hass.services.call(domain, service, service_data)
 
 
 class HomeBridge(Bridge):

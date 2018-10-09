@@ -22,7 +22,8 @@ from homeassistant.core import (
     DOMAIN as HA_DOMAIN, State, callback, split_entity_id)
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.homekit.const import (
-    ATTR_DISPLAY_NAME, ATTR_VALUE, EVENT_HOMEKIT_CHANGED)
+    ATTR_DISPLAY_NAME, ATTR_VALUE, DOMAIN as DOMAIN_HOMEKIT,
+    EVENT_HOMEKIT_CHANGED)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -291,22 +292,19 @@ def humanify(hass, events):
 
             elif event.event_type == EVENT_HOMEKIT_CHANGED:
                 data = event.data
-                entity_id = data.get(ATTR_ENTITY_ID)
-                dsp_name = data.get(ATTR_DISPLAY_NAME) or entity_id
-                service = data.get(ATTR_SERVICE) or ''
-                attribute = data.get(ATTR_VALUE)
+                entity_id = data[ATTR_ENTITY_ID]
 
-                attr_msg = " to {}".format(attribute) if attribute else ''
-                dsp_msg = " for {}".format(dsp_name) if dsp_name else ''
+                value_msg = " to {}".format(
+                    data.get[ATTR_VALUE]) if data.get[ATTR_VALUE] else ''
 
-                message = "send command {}{}{}".format(
-                    service, attr_msg, dsp_msg)
+                message = "send command {}{} for {}".format(
+                    data[ATTR_SERVICE], value_msg, data[ATTR_DISPLAY_NAME])
 
                 yield {
                     'when': event.time_fired,
                     'name': 'HomeKit',
                     'message': message,
-                    'domain': 'homekit',
+                    'domain': DOMAIN_HOMEKIT,
                     'entity_id': entity_id,
                     'context_id': event.context.id,
                     'context_user_id': event.context.user_id
