@@ -87,7 +87,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, host, port, name, timeout, mac):
+    def __init__(self, host, port, name, mac, timeout=0):
         """Initialize the Samsung device."""
         from samsungctl import exceptions
         from samsungctl import Remote
