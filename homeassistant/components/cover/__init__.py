@@ -83,7 +83,7 @@ def is_closed(hass, entity_id=None):
 
 async def async_setup(hass, config):
     """Track states and offer events for covers."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_COVERS)
 
     await component.async_setup(config)

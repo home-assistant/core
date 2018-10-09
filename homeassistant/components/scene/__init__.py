@@ -17,6 +17,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import HASS_DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'scene'
 STATE = 'scening'
 STATES = 'states'
@@ -62,8 +64,7 @@ SCENE_SERVICE_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the scenes."""
-    logger = logging.getLogger(__name__)
-    component = hass.data[DOMAIN] = EntityComponent(logger, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await component.async_setup(config)
 

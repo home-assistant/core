@@ -188,7 +188,7 @@ async def async_setup(hass, config):
     component = hass.data.get(DOMAIN)
 
     if component is None:
-        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+        component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await _async_process_config(hass, config, component)
 
@@ -393,8 +393,7 @@ class Group(Entity):
         component = hass.data.get(DOMAIN)
 
         if component is None:
-            component = hass.data[DOMAIN] = \
-                EntityComponent(_LOGGER, DOMAIN, hass)
+            component = EntityComponent(_LOGGER, DOMAIN, hass)
 
         await component.async_add_entities([group], True)
 

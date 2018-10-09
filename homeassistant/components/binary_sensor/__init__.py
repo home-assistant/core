@@ -15,6 +15,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'binary_sensor'
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -50,8 +52,7 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 async def async_setup(hass, config):
     """Track states and offer events for binary sensors."""
-    component = hass.data[DOMAIN] = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     await component.async_setup(config)
     return True

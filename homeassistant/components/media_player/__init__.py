@@ -201,8 +201,7 @@ SCHEMA_WEBSOCKET_GET_THUMBNAIL = \
 
 async def async_setup(hass, config):
     """Track states and offer events for media_players."""
-    component = hass.data[DOMAIN] = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     hass.components.websocket_api.async_register_command(
         WS_TYPE_MEDIA_PLAYER_THUMBNAIL, websocket_handle_thumbnail,

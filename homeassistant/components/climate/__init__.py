@@ -143,8 +143,7 @@ SET_SWING_MODE_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up climate devices."""
-    component = hass.data[DOMAIN] = \
-        EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
 
     component.async_register_entity_service(

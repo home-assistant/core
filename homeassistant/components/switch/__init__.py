@@ -19,6 +19,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID)
 from homeassistant.components import group
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'switch'
 DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -42,8 +44,6 @@ SWITCH_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @bind_hass
 def is_on(hass, entity_id=None):
@@ -57,7 +57,7 @@ def is_on(hass, entity_id=None):
 
 async def async_setup(hass, config):
     """Track states and offer events for switches."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES)
     await component.async_setup(config)
 
