@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
+STATE_AWAY = 'away'
+
 OPERATION_LIST = [STATE_HEAT, STATE_ECO, STATE_OFF, STATE_ON]
 
 MIN_TEMPERATURE = 8
@@ -113,6 +115,8 @@ class FritzboxThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
+        if self._device.holiday_active:
+            return STATE_AWAY
         if self._target_temperature == ON_API_TEMPERATURE:
             return STATE_ON
         if self._target_temperature == OFF_API_TEMPERATURE:
