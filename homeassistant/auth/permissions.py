@@ -103,12 +103,14 @@ def _compile_entities(policy: CategoryType) \
     # None, Empty Dict, False
     if not policy:
         def apply_policy_deny_all(entity_id: str, keys: Tuple[str]) -> bool:
+            """Decline all."""
             return False
 
         return apply_policy_deny_all
 
     if policy is True:
         def apply_policy_allow_all(entity_id: str, keys: Tuple[str]) -> bool:
+            """Approve all."""
             return True
 
         return apply_policy_allow_all
@@ -158,22 +160,32 @@ def _compile_entities(policy: CategoryType) \
 
         funcs.append(allowed_domain)
 
+    # Can happen if no valid subcategories specified
     if not funcs:
-        return lambda entity_id, keys: False
+        def apply_policy_deny_all_2(entity_id: str, keys: Tuple[str]) -> bool:
+            """Decline all."""
+            return False
+
+        return apply_policy_deny_all_2
 
     if len(funcs) == 1:
         func = funcs[0]
-        return lambda entity_id, keys: func(entity_id, keys) is True
 
-    def apply_policy(entity_id: str, keys: Tuple[str]) -> bool:
-        """Apply several policies."""
+        def apply_policy_func(entity_id: str, keys: Tuple[str]) -> bool:
+            """Apply a single policy function."""
+            return func(entity_id, keys) is True
+
+        return apply_policy_func
+
+    def apply_policy_funcs(entity_id: str, keys: Tuple[str]) -> bool:
+        """Apply several policy functions."""
         for func in funcs:
             result = func(entity_id, keys)
             if result is not None:
                 return result
         return False
 
-    return apply_policy
+    return apply_policy_funcs
 
 
 def merge_policies(policies: List[PolicyType]) -> PolicyType:
