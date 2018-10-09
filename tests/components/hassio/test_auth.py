@@ -1,5 +1,4 @@
 """The tests for the hassio component."""
-import asyncio
 from unittest.mock import patch, Mock
 
 from homeassistant.const import HTTP_HEADER_HA_AUTH
