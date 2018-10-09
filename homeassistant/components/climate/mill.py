@@ -65,6 +65,11 @@ class MilHeater(ClimateDevice):
         return SUPPORT_FLAGS
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._heater.device_id == 0
+
+    @property
     def state(self):
         """Return the current state."""
         return STATE_ON if self._heater.power_status == 1 else STATE_OFF
@@ -157,6 +162,8 @@ class MilHeater(ClimateDevice):
 
 
 """Library to handle connection with mill."""
+# Based on https://pastebin.com/53Nk0wJA and Postman capturing from the app
+# All requests are send unencrypted from the :(
 import asyncio
 import datetime as dt
 import json
@@ -400,6 +407,7 @@ class Mill:
                 heater = self.heaters.get(_id, Heater())
                 heater.device_id = _id
                 heater.current_temp = _heater.get('currentTemp')
+                heater.device_status = _heater.get('deviceStatus')
                 heater.name = _heater.get('deviceName')
                 heater.fan_status = _heater.get('fanStatus')
                 heater.set_temp = _heater.get('holidayTemp')
@@ -476,6 +484,7 @@ class Mill:
 
 class Room:
     """Representation of room."""
+
     room_id = None
     comfort_temp = None
     away_temp = None
@@ -487,6 +496,7 @@ class Room:
 
 class Heater:
     """Representation of heater."""
+
     device_id = None
     current_temp = None
     name = None
