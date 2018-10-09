@@ -82,7 +82,7 @@ def mock_image():
 @pytest.fixture
 def mock_response():
     """Return a mock response from Clarifai."""
-    with patch('homeassistant.components.image_processing.' \
+    with patch('homeassistant.components.image_processing.'
                'clarifai_general.ClarifaiClassifier.model.predict_by_base64',
                return_value=MOCK_RESPONSE) as _mock_response:
         yield _mock_response
