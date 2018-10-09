@@ -109,6 +109,7 @@ def setup(hass, config):
             octoprint_api.get('job')
         except requests.exceptions.RequestException as conn_err:
             _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
+            continue
 
         sensors = printer[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
         load_platform(hass, 'sensor', DOMAIN, {'name': name,
