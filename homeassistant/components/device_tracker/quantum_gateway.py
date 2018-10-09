@@ -21,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_HOST = 'myfiosgateway.com'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string
 })
 
 
