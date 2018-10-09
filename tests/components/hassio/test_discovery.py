@@ -44,7 +44,7 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
         })
 
 
-async def test_hassio_discovery_startup_done(hass, aioclient_mock, 
+async def test_hassio_discovery_startup_done(hass, aioclient_mock,
                                              hassio_client):
     """Test startup and discovery with hass discovery."""
     aioclient_mock.get(
