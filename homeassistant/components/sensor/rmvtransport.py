@@ -16,7 +16,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['PyRMVtransport==0.1.2']
+REQUIREMENTS = ['PyRMVtransport==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ CONF_LINES = 'lines'
 CONF_PRODUCTS = 'products'
 CONF_TIME_OFFSET = 'time_offset'
 CONF_MAX_JOURNEYS = 'max_journeys'
+CONF_TIMEOUT = 'timeout'
 
 DEFAULT_NAME = 'RMV Journey'
 
@@ -50,6 +51,7 @@ ICONS = {
 ATTRIBUTION = "Data provided by opendata.rmv.de"
 
 SCAN_INTERVAL = timedelta(seconds=60)
+TIMEOUT = None
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NEXT_DEPARTURE): [{
@@ -64,13 +66,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.All(cv.ensure_list, [vol.In(VALID_PRODUCTS)]),
         vol.Optional(CONF_TIME_OFFSET, default=0): cv.positive_int,
         vol.Optional(CONF_MAX_JOURNEYS, default=5): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}]
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}],
+    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int
 })
 
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the RMV departure sensor."""
+    global TIMEOUT
+    TIMEOUT = config.get(CONF_TIMEOUT)
+
     session = async_get_clientsession(hass)
 
     sensors = []
@@ -175,7 +181,7 @@ class RMVDepartureData:
         self._products = products
         self._time_offset = time_offset
         self._max_journeys = max_journeys
-        self.rmv = RMVtransport(session)
+        self.rmv = RMVtransport(session, TIMEOUT)
         self.departures = []
 
     @Throttle(SCAN_INTERVAL)
