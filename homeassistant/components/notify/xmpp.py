@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM)
+    CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM, CONF_RESOURCE)
 
 REQUIREMENTS = ['slixmpp==1.4.0']
 
@@ -28,24 +28,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TLS, default=True): cv.boolean,
     vol.Optional(CONF_VERIFY, default=True): cv.boolean,
     vol.Optional(CONF_ROOM, default=''): cv.string,
+    vol.Optional(CONF_RESOURCE, default="home-assistant"): cv.string,
 })
 
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the Jabber (XMPP) notification service."""
     return XmppNotificationService(
-        config.get(CONF_SENDER), config.get(CONF_PASSWORD),
-        config.get(CONF_RECIPIENT), config.get(CONF_TLS),
-        config.get(CONF_VERIFY), config.get(CONF_ROOM), hass.loop)
+        config.get(CONF_SENDER), config.get(CONF_RESOURCE),
+        config.get(CONF_PASSWORD), config.get(CONF_RECIPIENT),
+        config.get(CONF_TLS), config.get(CONF_VERIFY),
+        config.get(CONF_ROOM), hass.loop)
 
 
 class XmppNotificationService(BaseNotificationService):
     """Implement the notification service for Jabber (XMPP)."""
 
-    def __init__(self, sender, password, recipient, tls, verify, room, loop):
+    def __init__(self,
+                 sender,
+                 resource,
+                 password,
+                 recipient,
+                 tls,
+                 verify,
+                 room,
+                 loop):
         """Initialize the service."""
         self._loop = loop
         self._sender = sender
+        self._resource = resource
         self._password = password
         self._recipient = recipient
         self._tls = tls
@@ -57,9 +68,8 @@ class XmppNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = '{}: {}'.format(title, message) if title else message
 
-        # MAYBE allow /home-assistant part of the resource to be configured
         await async_send_message(
-            '{}/home-assistant'.format(self._sender),
+            '{}/{}'.format(self._sender, self._resource),
             self._password, self._recipient, self._tls,
             self._verify, self._room, self._loop, data)
 

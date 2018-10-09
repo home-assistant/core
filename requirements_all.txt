@@ -87,7 +87,6 @@ afsapi==0.0.4
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
 
-# homeassistant.components.notify.xmpp
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
 
@@ -791,12 +790,6 @@ pyalarmdotcom==0.3.2
 
 # homeassistant.components.arlo
 pyarlo==0.2.0
-
-# homeassistant.components.notify.xmpp
-pyasn1-modules==0.1.5
-
-# homeassistant.components.notify.xmpp
-pyasn1==0.3.7
 
 # homeassistant.components.netatmo
 pyatmo==1.2
