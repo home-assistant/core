@@ -251,7 +251,7 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 @ha.callback
 def async_fire_time_changed(hass, time):
     """Fire a time changes event."""
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {'now': time})
+    hass.bus.async_fire(EVENT_TIME_CHANGED, {'now': date_util.as_utc(time)})
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
