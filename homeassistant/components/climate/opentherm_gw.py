@@ -2,7 +2,7 @@
 Support for OpenTherm Gateway climate devices.
 
 For more details about this platform, please refer to the documentation at
-http://home-assistant.io/components/opentherm_gw/
+http://home-assistant.io/components/climate.opentherm_gw/
 """
 import logging
 

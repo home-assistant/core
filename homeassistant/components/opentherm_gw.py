@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 http://home-assistant.io/components/opentherm_gw/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import (CONF_DEVICE, CONF_NAME, PRECISION_HALVES,
@@ -36,8 +37,7 @@ CLIMATE_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICE): cv.string,
-        vol.Optional(CONF_CLIMATE, default=CLIMATE_SCHEMA({})):
-            CLIMATE_SCHEMA,
+        vol.Optional(CONF_CLIMATE, default={}): CLIMATE_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -48,26 +48,24 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the OpenTherm Gateway component."""
-    conf = config.get(DOMAIN)
-    if conf is None:
-        return True
-
     import pyotgw
+    conf = config[DOMAIN]
+    gateway = pyotgw.pyotgw()
     hass.data[DATA_OPENTHERM_GW] = {
-        DATA_DEVICE: pyotgw.pyotgw(),
+        DATA_DEVICE: gateway,
         DATA_GW_VARS: pyotgw.vars,
     }
-    hass.async_add_job(connect_and_subscribe, hass, conf)
+    hass.async_create_task(connect_and_subscribe(
+        hass, conf[CONF_DEVICE], gateway))
     hass.async_create_task(async_load_platform(
         hass, 'climate', DOMAIN, conf.get(CONF_CLIMATE)))
     return True
 
 
-async def connect_and_subscribe(hass, conf):
+async def connect_and_subscribe(hass, device_path, gateway):
     """Connect to serial device and subscribe report handler."""
-    gateway = hass.data[DATA_OPENTHERM_GW][DATA_DEVICE]
-    await gateway.connect(hass.loop, conf[CONF_DEVICE])
-    _LOGGER.debug("Connected to OpenTherm Gateway at %s", conf[CONF_DEVICE])
+    await gateway.connect(hass.loop, device_path)
+    _LOGGER.debug("Connected to OpenTherm Gateway at %s", device_path)
 
     async def handle_report(status):
         """Handle reports from the OpenTherm Gateway."""
