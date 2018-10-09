@@ -51,7 +51,6 @@ ICONS = {
 ATTRIBUTION = "Data provided by opendata.rmv.de"
 
 SCAN_INTERVAL = timedelta(seconds=60)
-TIMEOUT = None
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NEXT_DEPARTURE): [{
@@ -74,8 +73,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the RMV departure sensor."""
-    global TIMEOUT
-    TIMEOUT = config.get(CONF_TIMEOUT)
+    timeout = config.get(CONF_TIMEOUT)
 
     session = async_get_clientsession(hass)
 
@@ -91,7 +89,8 @@ async def async_setup_platform(hass, config, async_add_entities,
                 next_departure.get(CONF_PRODUCTS),
                 next_departure.get(CONF_TIME_OFFSET),
                 next_departure.get(CONF_MAX_JOURNEYS),
-                next_departure.get(CONF_NAME)))
+                next_departure.get(CONF_NAME),
+                timeout))
     async_add_entities(sensors, True)
 
 
@@ -99,14 +98,14 @@ class RMVDepartureSensor(Entity):
     """Implementation of an RMV departure sensor."""
 
     def __init__(self, session, station, destinations, directions, lines,
-                 products, time_offset, max_journeys, name):
+                 products, time_offset, max_journeys, name, timeout):
         """Initialize the sensor."""
         self._station = station
         self._name = name
         self._state = None
         self.data = RMVDepartureData(session, station, destinations,
                                      directions, lines, products, time_offset,
-                                     max_journeys)
+                                     max_journeys, timeout)
         self._icon = ICONS[None]
 
     @property
@@ -169,7 +168,7 @@ class RMVDepartureData:
     """Pull data from the opendata.rmv.de web page."""
 
     def __init__(self, session, station_id, destinations, directions, lines,
-                 products, time_offset, max_journeys):
+                 products, time_offset, max_journeys, timeout):
         """Initialize the sensor."""
         from RMVtransport import RMVtransport
 
@@ -181,7 +180,7 @@ class RMVDepartureData:
         self._products = products
         self._time_offset = time_offset
         self._max_journeys = max_journeys
-        self.rmv = RMVtransport(session, TIMEOUT)
+        self.rmv = RMVtransport(session, timeout)
         self.departures = []
 
     @Throttle(SCAN_INTERVAL)
