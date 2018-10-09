@@ -96,45 +96,6 @@ class UniFiController:
                 self.config_entry, 'switch')
         return True
 
-    async def request_update(self):
-        """Only allow one request at a time."""
-        if self.progress is not None:
-            return await self.progress
-
-        self.progress = asyncio.ensure_future(self.async_update())
-        result = await self.progress
-        self.progress = None
-        return result
-
-    async def async_update(self):
-        """Synchronize update requests between platforms."""
-        import aiounifi
-
-        try:
-            with async_timeout.timeout(4):
-                await self.api.clients.update()
-                await self.api.devices.update()
-
-        except aiounifi.LoginRequired:
-            try:
-                with async_timeout.timeout(5):
-                    await self.api.login()
-            except (asyncio.TimeoutError, aiounifi.AiounifiException):
-                self.available = False
-                return
-
-        except (asyncio.TimeoutError, aiounifi.AiounifiException):
-            if self.available:
-                LOGGER.error('Unable to reach controller %s', self.host)
-                self.available = False
-            return
-
-        if not self.available:
-            LOGGER.info('Reconnected to controller %s', self.host)
-            self.available = True
-
-        return
-
 
 async def get_controller(
         hass, host, username, password, port, site, verify_ssl):

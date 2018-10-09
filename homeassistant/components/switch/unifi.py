@@ -10,22 +10,19 @@ import logging
 
 from datetime import timedelta
 
+import async_timeout
+
 from homeassistant.components import unifi
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.unifi.const import (
-    CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID)
+    CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN)
 from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-DEPENDENCIES = ['unifi']
+DEPENDENCIES = [DOMAIN]
 SCAN_INTERVAL = timedelta(seconds=15)
 
 LOGGER = logging.getLogger(__name__)
-
-STORAGE_KEY = 'unifi.poe_off_clients'
-STORAGE_VERSION = 1
-SAVE_DELAY = 10
 
 
 async def async_setup_platform(
@@ -46,14 +43,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     controller = hass.data[unifi.DOMAIN][controller_id]
     switches = {}
 
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-    switches_off = await store.async_load()
-    if switches_off is None:
-        switches_off = {}
-    controller.api.clients.process_raw(
-        [switch['data'] for switch in switches_off.values()]
-    )
-
     progress = None
     update_progress = set()
 
@@ -65,9 +54,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if progress is not None:
             return await progress
 
-        progress = asyncio.ensure_future(controller.request_update())
+        progress = asyncio.ensure_future(update_controller())
         result = await progress
-        await update_controller()
         progress = None
         update_progress.clear()
         return result
@@ -76,7 +64,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         tasks = [async_update_items(
             controller, async_add_entities, request_update,
-            switches, switches_off, update_progress, store
+            switches, update_progress
         )]
         await asyncio.wait(tasks)
 
@@ -84,9 +72,34 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def async_update_items(controller, async_add_entities,
-                             request_controller_update, switches, switches_off,
-                             progress_waiting, store):
+                             request_controller_update, switches,
+                             progress_waiting):
     """Update POE port state from the controller."""
+    import aiounifi
+
+    try:
+        with async_timeout.timeout(4):
+            await controller.api.clients.update()
+            await controller.api.devices.update()
+
+    except aiounifi.LoginRequired:
+        try:
+            with async_timeout.timeout(5):
+                await controller.api.login()
+        except (asyncio.TimeoutError, aiounifi.AiounifiException):
+            controller.available = False
+            return
+
+    except (asyncio.TimeoutError, aiounifi.AiounifiException):
+        if controller.available:
+            LOGGER.error('Unable to reach controller %s', controller.host)
+            controller.available = False
+        return
+
+    if not controller.available:
+        LOGGER.info('Reconnected to controller %s', controller.host)
+        controller.available = True
+
     if not controller.available:
         for client_id, client in switches.items():
             if client_id not in progress_waiting:
@@ -110,37 +123,13 @@ async def async_update_items(controller, async_add_entities,
         client = controller.api.clients[client_id]
         if not client.is_wired or client.sw_mac not in devices or \
            not devices[client.sw_mac].ports[client.sw_port].port_poe or \
-           not devices[client.sw_mac].ports[client.sw_port].poe_enable and \
-           client.mac not in switches_off:
+           not devices[client.sw_mac].ports[client.sw_port].poe_enable:
             continue
 
-        poe_mode = None
-        if client.mac in switches_off:
-            poe_mode = switches_off[client.mac]['poe_mode']
-
         switches[client_id] = UniFiSwitch(
-            client, controller, request_controller_update, poe_mode)
+            client, controller, request_controller_update)
         new_switches.append(switches[client_id])
         LOGGER.debug("New UniFi switch %s (%s)", client.hostname, client.mac)
-
-    @callback
-    def _data_to_save():
-        """Update storage with devices that has got its' POE off."""
-        return switches_off
-
-    for switch in switches.values():
-        if switch.port.poe_mode == 'off' and \
-           switch.client.mac not in switches_off:
-            switches_off[switch.client.mac] = {
-                'data': switch.client.raw,
-                'poe_mode': switch.poe_mode
-            }
-            store.async_delay_save(_data_to_save, SAVE_DELAY)
-
-        elif (switch.port.poe_mode != 'off' and
-              switch.client.mac in switches_off):
-            del switches_off[switch.client.mac]
-            store.async_delay_save(_data_to_save, SAVE_DELAY)
 
     if new_switches:
         async_add_entities(new_switches)
@@ -149,12 +138,13 @@ async def async_update_items(controller, async_add_entities,
 class UniFiSwitch(SwitchDevice):
     """Representation of a client that uses POE."""
 
-    def __init__(self, client, controller,
-                 request_controller_update, poe_mode):
+    def __init__(self, client, controller, request_controller_update):
         """Set up switch."""
         self.client = client
         self.controller = controller
-        self.poe_mode = poe_mode
+        self.poe_mode = None
+        if self.port.poe_mode != 'off':
+            self.poe_mode = self.port.poe_mode
         self.async_request_controller_update = request_controller_update
 
     async def async_update(self):
@@ -199,7 +189,10 @@ class UniFiSwitch(SwitchDevice):
         attributes = {
             'power': self.port.poe_power,
             'received': self.client.wired_rx_bytes / 1000000,
-            'sent': self.client.wired_tx_bytes / 1000000
+            'sent': self.client.wired_tx_bytes / 1000000,
+            'switch': self.client.sw_mac,
+            'port': self.client.sw_port,
+            'poe_mode': self.poe_mode
         }
         return attributes
 

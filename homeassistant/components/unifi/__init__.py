@@ -7,7 +7,7 @@ https://home-assistant.io/components/unifi/
 
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
