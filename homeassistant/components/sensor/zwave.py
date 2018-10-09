@@ -5,12 +5,29 @@ For more details about this platform, please refer to the documentation
 at https://home-assistant.io/components/sensor.zwave/
 """
 import logging
+from homeassistant.core import callback
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components import zwave
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.components.zwave import async_setup_platform  # noqa pylint: disable=unused-import
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old method of setting up Z-Wave sensors."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave Sensor from Config Entry."""
+    @callback
+    def async_add_sensor(sensor):
+        """Add Z-Wave Sensor."""
+        async_add_entities([sensor])
+
+    async_dispatcher_connect(hass, 'zwave_new_sensor', async_add_sensor)
 
 
 def get_device(node, values, **kwargs):
