@@ -1,5 +1,6 @@
 """
 Support for mill wifi-enabled home heaters.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.mill/
 """
@@ -11,7 +12,7 @@ from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, SUPPORT_ON_OFF)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_STATE, ATTR_TEMPERATURE, CONF_EMAIL, CONF_PASSWORD,
+    ATTR_TEMPERATURE, CONF_EMAIL, CONF_PASSWORD,
     STATE_ON, STATE_OFF, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -256,7 +257,6 @@ class Mill:
 
     async def request(self, command, payload, retry=2):
         """Request data."""
-
         if self._token is None:
             _LOGGER.error("No token")
             return
@@ -414,6 +414,7 @@ class Mill:
         loop.run_until_complete(task)
 
     async def throttle_update_heaters(self):
+        """Throttle update device."""
         if (self._throttle_time is not None
                 and dt.datetime.now() - self._throttle_time < MIN_TIME_BETWEEN_UPDATES):
             return
@@ -421,7 +422,7 @@ class Mill:
         await self.update_heaters()
 
     async def update_device(self, device_id):
-        """Find the current data from self.data."""
+        """Update device."""
         await self.throttle_update_heaters()
         return self.heaters.get(device_id)
 
@@ -449,7 +450,7 @@ class Mill:
         await self.request("/deviceControl", payload)
 
     def sync_heater_control(self, device_id, fan_status=None,
-                                power_status=None):
+                            power_status=None):
         """Set heater temps."""
         loop = asyncio.get_event_loop()
         task = loop.create_task(self.heater_control(device_id,
@@ -474,6 +475,7 @@ class Mill:
 
 
 class Room:
+    """Representation of room."""
     room_id = None
     comfort_temp = None
     away_temp = None
@@ -484,6 +486,7 @@ class Room:
 
 
 class Heater:
+    """Representation of heater."""
     device_id = None
     current_temp = None
     name = None
