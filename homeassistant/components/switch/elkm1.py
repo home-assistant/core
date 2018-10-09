@@ -1,5 +1,5 @@
 """
-Support for control of ElkM1 outputs (relays) and tasks ("macros).
+Support for control of ElkM1 outputs (relays).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.elkm1/
