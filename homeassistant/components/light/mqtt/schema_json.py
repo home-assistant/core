@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_RGB, CONF_WHITE_VALUE, CONF_XY, STATE_ON)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.color as color_util
 
@@ -121,7 +121,8 @@ async def async_setup_entity_json(hass: HomeAssistantType, config: ConfigType,
     )])
 
 
-class MqttLightJson(MqttAvailability, MqttDiscoveryUpdate, Light):
+class MqttLightJson(MqttAvailability, MqttDiscoveryUpdate, Light,
+                    RestoreEntity):
     """Representation of a MQTT JSON light."""
 
     def __init__(self, name, unique_id, effect_list, topic, qos, retain,
@@ -183,10 +184,9 @@ class MqttLightJson(MqttAvailability, MqttDiscoveryUpdate, Light):
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        await MqttAvailability.async_added_to_hass(self)
-        await MqttDiscoveryUpdate.async_added_to_hass(self)
+        await super().async_added_to_hass()
 
-        last_state = await async_get_last_state(self.hass, self.entity_id)
+        last_state = await self.async_get_last_state()
 
         @callback
         def state_received(topic, payload, qos):
