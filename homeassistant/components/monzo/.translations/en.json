@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "You can only configure a single Nest account.",
+            "authorize_url_fail": "Unknown error generating an authorize url.",
+            "authorize_url_timeout": "Timeout generating authorize url.",
+            "no_flows": "You need to configure Nest before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/nest/)."
+        },
+        "error": {
+            "internal_error": "Internal error validating code",
+            "invalid_code": "Invalid code",
+            "timeout": "Timeout validating code",
+            "unknown": "Unknown error validating code"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "client_id": "Client ID",
+                    "client_secret": "Client Secret"
+                },
+                "description": "Set up a [Monzo OAuth Client](https://developers.monzo.com) and enter the details here.",
+                "title": "OAuth Application Setup"
+            },
+            "link": {
+                "description": "To link your Monzo account, [authorize your account]({url}).",
+                "title": "Link Monzo Account"
+            }
+        },
+        "title": "Monzo"
+    }
+}
