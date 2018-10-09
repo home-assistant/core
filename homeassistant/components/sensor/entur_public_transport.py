@@ -1,5 +1,5 @@
 """
-Support for realtime information about public transport departures 
+Support for realtime information about public transport departures
 in Norway from Entur.
 
 For more details about this platform, please refer to the documentation at
@@ -26,8 +26,8 @@ _GRAPHQL_STOP_TEMPLATE = """
     id
     name
     estimatedCalls(
-        startTime: \"$time\", 
-        timeRange: 72100, 
+        startTime: \"$time\",
+        timeRange: 72100,
         numberOfDepartures: 2) {
       realtime
       aimedArrivalTime
@@ -58,8 +58,8 @@ _GRAPHQL_QUAY_TEMPLATE = """
     id
     name
     estimatedCalls(
-        startTime: \"$time\", 
-        timeRange: 72100, 
+        startTime: \"$time\",
+        timeRange: 72100,
         numberOfDepartures: 2) {
       realtime
       aimedArrivalTime
@@ -116,7 +116,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def due_in_minutes(timestamp: str) -> str:
     """Get the time in minutes from a timestamp.
 
-    The timestamp should be in the format 
+    The timestamp should be in the format
     year-month-yearThour:minute:second+timezone
     """
     if timestamp is None:
@@ -130,7 +130,7 @@ def due_in_minutes(timestamp: str) -> str:
 def time_diff_in_minutes(timestamp1: str, timestamp2: str) -> str:
     """Get the time in minutes from a timestamp.
 
-    The timestamp should be in the format 
+    The timestamp should be in the format
     year-month-yearThour:minute:second+timezone
     """
     if timestamp1 is None:
