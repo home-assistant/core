@@ -1,7 +1,7 @@
 """The tests for the logbook component."""
 # pylint: disable=protected-access,invalid-name
 import logging
-from datetime import timedelta
+from datetime import (timedelta, datetime)
 import unittest
 
 from homeassistant.components import sun
@@ -564,11 +564,79 @@ async def test_logbook_view_period_entity(hass, aiohttp_client):
     await async_setup_component(hass, 'logbook', {})
     await hass.components.recorder.wait_connection_ready()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    entity_id = 'switch.test'
+    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
     client = await aiohttp_client(hass.http.app)
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries without filters
     response = await client.get(
-        '/api/logbook/{}?period=3&entity=sun.sun'.format(
-            dt_util.utcnow().isoformat()))
+        '/api/logbook/{}'.format(start_date.isoformat()))
     assert response.status == 200
+    json = await response.json()
+    assert len(json) == 1
+    assert json[0]['entity_id'] == entity_id
+
+    # Test today entries with filter by period
+    response = await client.get(
+        '/api/logbook/{}?period=1'.format(start_date.isoformat()))
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 1
+    assert json[0]['entity_id'] == entity_id
+
+    # Test today entries with filter by entity_id
+    response = await client.get(
+        '/api/logbook/{}?entity=switch.test'.format(
+            start_date.isoformat()))
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 1
+    assert json[0]['entity_id'] == entity_id
+
+    # Test entries for 3 days with filter by entity_id
+    response = await client.get(
+        '/api/logbook/{}?period=3&entity=switch.test'.format(
+            start_date.isoformat()))
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 1
+    assert json[0]['entity_id'] == entity_id
+
+    # Tomorrow time 00:00:00
+    start = (dt_util.utcnow() + timedelta(days=1)).date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test tomorrow entries without filters
+    response = await client.get(
+        '/api/logbook/{}'.format(start_date.isoformat()))
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 0
+
+    # Test tomorrow entries with filter by entity_id
+    response = await client.get(
+        '/api/logbook/{}?entity=switch.test'.format(
+            start_date.isoformat()))
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 0
+
+    # Test entries from tomorrow to 3 days ago with filter by entity_id
+    response = await client.get(
+        '/api/logbook/{}?period=3&entity=switch.test'.format(
+            start_date.isoformat()))
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 1
+    assert json[0]['entity_id'] == entity_id
 
 
 async def test_humanify_alexa_event(hass):
