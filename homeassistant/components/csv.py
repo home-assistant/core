@@ -12,6 +12,9 @@ import queue
 import threading
 import os
 from typing import Dict
+import gzip
+import shutil
+from datetime import datetime
 
 import asyncio
 import voluptuous as vol
@@ -33,6 +36,12 @@ DOMAIN = 'csv'
 
 CONF_DATA_DIR = 'data_dir'
 CONF_SEPARATOR = 'separator'
+CONF_GZIP = 'gzip'
+CONF_PURGE_KEEP_DAYS = 'purge_keep_days'
+
+CONST_PREFIX_FILE = 'events_'
+CONST_DATE_FORMAT = "%Y-%m-%d"
+CONST_DATE_FORMAT_LEN = 10
 
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
@@ -47,8 +56,11 @@ FILTER_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: FILTER_SCHEMA.extend({
-        vol.Required(CONF_DATA_DIR): cv.string,
+        vol.Required(CONF_DATA_DIR): vol.All(cv.isdir, cv.string),
         vol.Optional(CONF_SEPARATOR, default=','): cv.string,
+        vol.Optional(CONF_GZIP, default=True): cv.boolean,
+        vol.Optional(CONF_PURGE_KEEP_DAYS, default=10):
+            vol.All(vol.Coerce(int), vol.Range(min=1))
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -58,6 +70,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config.get(DOMAIN, {})
     data_dir = conf.get(CONF_DATA_DIR)
     separator = conf.get(CONF_SEPARATOR)
+    gzip_conf = conf.get(CONF_GZIP)
+    purge_keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
 
@@ -68,7 +82,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     instance = hass.data[DOMAIN] = Csv(hass=hass, data_dir=data_dir,
                                        include=include, exclude=exclude,
-                                       separator=separator)
+                                       separator=separator,
+                                       gzip_conf=gzip_conf,
+                                       purge_keep_days=purge_keep_days)
     instance.async_initialize()
     instance.start()
 
@@ -79,12 +95,16 @@ class Csv(threading.Thread):
     """Thread that writes to the file."""
 
     def __init__(self, hass: HomeAssistant, data_dir: str,
-                 include: Dict, exclude: Dict, separator: str) -> None:
+                 include: Dict, exclude: Dict, separator: str,
+                 gzip_conf: bool, purge_keep_days: int) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name='CSV')
         self.hass = hass
         self.data_dir = data_dir
         self.separator = separator
+        self.gzip_conf = gzip_conf
+        self.last_run_day = None
+        self.purge_keep_days = purge_keep_days
         self.queue = queue.Queue()
         self.async_db_ready = asyncio.Future(loop=hass.loop)
 
@@ -172,7 +192,8 @@ class Csv(threading.Thread):
 
             origin = event.origin
             time_fired = event.time_fired
-            file_name = 'events_' + time_fired.strftime("%Y-%m-%d") + '.csv'
+            time_fired_date = time_fired.strftime(CONST_DATE_FORMAT)
+            file_name = CONST_PREFIX_FILE + time_fired_date + '.csv'
             file_path = os.path.join(self.data_dir, file_name)
 
             try:
@@ -192,4 +213,49 @@ class Csv(threading.Thread):
                 _LOGGER.error("Failed to write to file %s: %s",
                               file_path, err)
 
+            if self.gzip_conf or self.purge_keep_days > 0:
+                if self.last_run_day is None or \
+                   self.last_run_day != time_fired_date:
+                    try:
+                        self._process_old_files(file_name, time_fired)
+                    finally:
+                        self.last_run_day = time_fired_date
+
             self.queue.task_done()
+
+    def _process_old_files(self, curr_file_name, time_fired):
+        """Gzip/Remove files from previous days."""
+        # pylint: disable=W0612
+        for dirpath, dirnames, filenames in os.walk(self.data_dir):
+            for filename in filenames:
+                if filename.startswith(CONST_PREFIX_FILE) \
+                   and not filename == curr_file_name:
+                    file_path = os.path.join(dirpath, filename)
+                    if self._file_too_old(filename, time_fired):
+                        try:
+                            os.remove(file_path)
+                        except IOError as err:
+                            _LOGGER.error("Failed to remove file %s: %s",
+                                          file_path, err)
+                    elif filename.endswith('.csv'):
+                        try:
+                            with open(file_path, 'rb') as fin, \
+                                    gzip.open(file_path + '.gz', 'wb') as fout:
+                                shutil.copyfileobj(fin, fout)
+                            os.remove(file_path)
+                        except IOError as err:
+                            _LOGGER.error("Failed to gzip file %s: %s",
+                                          file_path, err)
+
+    def _file_too_old(self, filename, time_fired) -> bool:
+        """Check if file is too old."""
+        too_old = False
+        if len(filename) > (len(CONST_PREFIX_FILE) + CONST_DATE_FORMAT_LEN):
+            end_of_date = len(CONST_PREFIX_FILE) + CONST_DATE_FORMAT_LEN
+            date_part = filename[len(CONST_PREFIX_FILE):end_of_date]
+            parsed = datetime.strptime(date_part, CONST_DATE_FORMAT)
+            tfired = time_fired.replace(tzinfo=None)
+            delta = tfired - parsed
+            if delta.days > self.purge_keep_days:
+                too_old = True
+        return too_old
