@@ -58,7 +58,7 @@ class HassIOAuth(HomeAssistantView):
         _LOGGER.error("Can't find Home Assistant auth.")
         raise HTTPNotFound()
         
-    asnyc def _check_login(self, username, password):
+    async def _check_login(self, username, password):
         """Check User credentials."""
         provider = self._get_provider()
  
