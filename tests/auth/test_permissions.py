@@ -196,7 +196,7 @@ def test_default_policy_allow_all():
     assert perm.filter_states(states) == states
 
 
-def test_merging_permissions_true_rules_all():
+def test_merging_permissions_true_rules_dict():
     """Test merging policy with two entities."""
     policy1 = {
         'something_else': True,
@@ -222,25 +222,24 @@ def test_merging_permissions_true_rules_all():
 def test_merging_permissions_multiple_subcategories():
     """Test merging policy with two entities."""
     policy1 = {
-        'entities': {
-            'entity_ids': {
-                'light.kitchen': True,
-            }
-        }
+        'entities': None
     }
     policy2 = {
         'entities': {
-            'entity_ids': {
-                'light.kitchen': False,
-                'light.living_room': False,
-            }
+            'entity_ids': True,
         }
     }
-    assert permissions.merge_policies([policy1, policy2]) == {
-        'entities': {
-            'entity_ids': {
-                'light.kitchen': True,
-                'light.living_room': False,
-            }
-        }
+    policy3 = {
+        'entities': True
     }
+    policy4 = {
+        'entities': False
+    }
+    assert permissions.merge_policies([policy1, policy2]) == policy2
+    assert permissions.merge_policies([policy1, policy3]) == policy3
+    assert permissions.merge_policies([policy1, policy4]) == policy4
+
+    assert permissions.merge_policies([policy2, policy3]) == policy3
+    assert permissions.merge_policies([policy2, policy4]) == policy4
+
+    assert permissions.merge_policies([policy3, policy4]) == policy4

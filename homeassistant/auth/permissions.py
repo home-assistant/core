@@ -10,7 +10,7 @@ CategoryType = Union[Mapping[str, 'CategoryType'], bool, None]
 PolicyType = Mapping[str, CategoryType]
 
 
-# Policy if user has no policy applied.
+# Default policy if group has no policy applied.
 DEFAULT_POLICY = {
     "entities": True
 }  # type: PolicyType
@@ -195,11 +195,11 @@ def _merge_policies(sources: List[CategoryType]) -> CategoryType:
     """Merge a policy."""
     # When merging policies, the most permissive wins.
     # This means we order it like this:
-    # True > Dict > False > None
+    # False > True > Dict > None
     #
+    # False: do not allow
     # True: allow everything
     # Dict: specify more granular permissions
-    # False: do not allow
     # None: no opinion
     #
     # If there are multiple sources with a dict as policy, we recursively
@@ -210,19 +210,24 @@ def _merge_policies(sources: List[CategoryType]) -> CategoryType:
     for source in sources:
         if source is None:
             continue
-        # A source that's True will always win. Shortcut return.
-        if source is True:
-            return True
+
+        # A source that's False will always win. Shortcut return.
         if source is False:
-            if policy is None:
-                policy = False
+            return False
+
+        if source is True:
+            policy = True
             continue
 
-        # Source is a dict
-        if policy is False or policy is None:
+        assert isinstance(source, dict)
+
+        # True > Dict, skipping source
+        if policy is True:
+            continue
+
+        if policy is None:
             policy = {}
 
-        assert isinstance(source, dict)
         assert isinstance(policy, dict)
 
         for key in source:
