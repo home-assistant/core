@@ -191,7 +191,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         if report.due_distance is not None:
             distance = round(unit_system.length(report.due_distance,
                                                 LENGTH_KILOMETERS))
-            result['{} distance'.format(service_type)] =  '{} {}'.format(
+            result['{} distance'.format(service_type)] = '{} {}'.format(
                 distance, unit_system.length_unit)
         return result
 

@@ -89,7 +89,7 @@ def setup_account(account_config: dict, hass, name: str) \
 
     _LOGGER.debug('Adding new account %s', name)
     cd_account = BMWConnectedDriveAccount(username, password, region, name,
-                                          read_only)#, unit_system)
+                                          read_only)
 
     def execute_service(call):
         """Execute a service for a vehicle.

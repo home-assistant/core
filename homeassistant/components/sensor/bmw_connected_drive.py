@@ -100,8 +100,8 @@ class BMWConnectedDriveSensor(Entity):
         """Icon to use in the frontend, if any."""
         from bimmer_connected.state import ChargingState
         vehicle_state = self._vehicle.state
-        charging_state = vehicle_state.charging_status in \
-                         [ChargingState.CHARGING]
+        charging_state = vehicle_state.charging_status in [
+            ChargingState.CHARGING]
 
         if self._attribute == 'charging_level_hv':
             return icon_for_battery_level(
