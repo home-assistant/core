@@ -79,7 +79,7 @@ async def test_hassio_discovery_startup_done(hass, aioclient_mock,
             patch('homeassistant.components.mqtt.'
                   'config_flow.FlowHandler.async_step_hassio',
                   Mock(return_value=mock_coro({"type": "abort"}))
-            ) as mock_mqtt:
+                  ) as mock_mqtt:
         await hass.async_start()
         await async_setup_component(hass, 'hassio', {
             'http': {
