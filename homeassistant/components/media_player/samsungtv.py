@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Samsung TV Remote'
 DEFAULT_PORT = 55000
-DEFAULT_TIMEOUT = 0
+DEFAULT_TIMEOUT = 1
 
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = 'samsungtv_known_devices'
