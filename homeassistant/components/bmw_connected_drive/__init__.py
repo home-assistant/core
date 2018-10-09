@@ -85,7 +85,6 @@ def setup_account(account_config: dict, hass, name: str) \
     password = account_config[CONF_PASSWORD]
     region = account_config[CONF_REGION]
     read_only = account_config[CONF_READ_ONLY]
-    # unit_system = hass.config.units
 
     _LOGGER.debug('Adding new account %s', name)
     cd_account = BMWConnectedDriveAccount(username, password, region, name,
@@ -127,8 +126,6 @@ def setup_account(account_config: dict, hass, name: str) \
 class BMWConnectedDriveAccount:
     """Representation of a BMW vehicle."""
 
-    # def __init__(self, username: str, password: str, region_str: str,
-    #              name: str, read_only, unit_system) -> None:
     def __init__(self, username: str, password: str, region_str: str,
                  name: str, read_only) -> None:
         """Constructor."""
@@ -140,7 +137,6 @@ class BMWConnectedDriveAccount:
         self.read_only = read_only
         self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
-        # self.unit_system = unit_system
         self._update_listeners = []
 
     def update(self, *_):
