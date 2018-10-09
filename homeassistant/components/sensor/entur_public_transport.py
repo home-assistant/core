@@ -1,6 +1,5 @@
 """
-Support for realtime information about public transport departures
-in Norway from Entur.
+Real-time information about public transport departures in Norway.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.entur_public_transport/
@@ -92,13 +91,13 @@ ATTR_ROUTE = 'Route'
 ATTR_EXPECTED_IN = 'Due in'
 ATTR_EXPECTED_AT = 'Due at'
 ATTR_DELAY = 'Delay'
-ATTR_REALTIME = 'Realtime'
+ATTR_REALTIME = 'Real-time'
 
 ATTR_NEXT_UP_ROUTE = 'Next departure route'
 ATTR_NEXT_UP_IN = 'Next departure in'
 ATTR_NEXT_UP_AT = 'Next departure at'
 ATTR_NEXT_UP_DELAY = 'Next departure delay'
-ATTR_NEXT_UP_REALTIME = 'Next departure is realtime'
+ATTR_NEXT_UP_REALTIME = 'Next departure is real-time'
 
 CONF_ATTRIBUTION = "Data provided by entur.org under NLOD."
 CONF_STOP_IDS = 'stop_ids'
@@ -166,7 +165,6 @@ class PublicTransportData:
 
     def __init__(self, stops: list, quays: list):
         """Initialize the data object."""
-
         self.stops = stops
         self.stops_string = "\"" + "\",\"".join(stops) + "\""
         self.quays = quays
@@ -199,7 +197,6 @@ class PublicTransportData:
     @Throttle(SCAN_INTERVAL)
     def update(self) -> None:
         """Get the latest data from api.entur.org."""
-
         query = self.template.substitute(
             stops=self.stops_string,
             quays=self.quays_string,
@@ -234,6 +231,7 @@ class PublicTransportData:
                 self._process_place(quey)
 
     def _process_place(self, place_dict: dict) -> None:
+        """Extracts information from place dictionary."""
         place_id = place_dict['id']
         info = {ATTR_STOP_ID: place_id,
                 CONF_NAME: place_dict['name']}
@@ -264,7 +262,7 @@ class EnturPublicTransportSensor(Entity):
     """Implementation of a Entur public transport sensor."""
 
     def __init__(self, data: PublicTransportData, stop: str):
-        """Initialize the sensor"""
+        """Initialize the sensor."""
         self.data = data
         self._stop = stop
         self._times = {ATTR_STOP_ID: 'Unknown',
