@@ -292,7 +292,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {'load_power': self._load_power}
+        attrs = {'current_power_w': self._load_power}
         return attrs
 
     def update(self):
