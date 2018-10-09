@@ -8,14 +8,13 @@ import logging
 
 import requests
 
-from homeassistant.components.octoprint import BINARY_SENSOR_TYPES
+from homeassistant.components.octoprint import (BINARY_SENSOR_TYPES,
+                                                DOMAIN as COMPONENT_DOMAIN)
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
-DOMAIN = "octoprint"
-DEFAULT_NAME = 'OctoPrint'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -26,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = discovery_info['name']
     base_url = discovery_info['base_url']
     monitored_conditions = discovery_info['sensors']
-    octoprint_api = hass.data[DOMAIN][base_url]
+    octoprint_api = hass.data[COMPONENT_DOMAIN][base_url]
 
     devices = []
     for octo_type in monitored_conditions:

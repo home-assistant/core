@@ -8,15 +8,14 @@ import logging
 
 import requests
 
-from homeassistant.components.octoprint import SENSOR_TYPES
+from homeassistant.components.octoprint import (SENSOR_TYPES,
+                                                DOMAIN as COMPONENT_DOMAIN)
 from homeassistant.const import (TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
-DOMAIN = "octoprint"
-DEFAULT_NAME = 'OctoPrint'
 NOTIFICATION_ID = 'octoprint_notification'
 NOTIFICATION_TITLE = 'OctoPrint sensor setup error'
 
@@ -29,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = discovery_info['name']
     base_url = discovery_info['base_url']
     monitored_conditions = discovery_info['sensors']
-    octoprint_api = hass.data[DOMAIN][base_url]
+    octoprint_api = hass.data[COMPONENT_DOMAIN][base_url]
     tools = octoprint_api.get_tools()
 
     if "Temperatures" in monitored_conditions:
