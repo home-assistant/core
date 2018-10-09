@@ -4,7 +4,7 @@ import os
 
 from aiohttp import web
 from aiohttp.web_exceptions import (
-    HTTPForbidden, HTTPNotFound, HTTPOk, HTTPUnauthorized)
+    HTTPForbidden, HTTPNotFound, HTTPUnauthorized)
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
