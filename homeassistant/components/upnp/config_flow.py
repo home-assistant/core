@@ -125,8 +125,8 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
             data_schema=vol.Schema(
                 OrderedDict([
                     (vol.Required('name'), vol.In(names)),
-                    (vol.Optional('enable_sensors'), bool),
-                    (vol.Optional('enable_port_mapping'), bool),
+                    (vol.Optional('enable_sensors', default=False), bool),
+                    (vol.Optional('enable_port_mapping', default=False), bool),
                 ])
             ))
 
