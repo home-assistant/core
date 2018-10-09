@@ -4,9 +4,11 @@ import logging
 import os
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPForbidden
+from aiohttp.web_exceptions import (
+    HTTPForbidden, HTTPNotFound, HTTPOk, HTTPUnauthorized)
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 
@@ -45,3 +47,24 @@ class HassIOAuth(HomeAssistantView):
             raise HTTPForbidden()
 
         data = await request.json()
+        await self._check_login(data[ATTR_USERNAME], data[ATTR_PASSWORD])
+
+    def _get_provider(self):
+        """Return Homeassistant auth provider."""
+        for prv in hass.auth.auth_provider:
+            if prv.type == 'homeassistant':
+                return prv
+
+        _LOGGER.error("Can't find Home Assistant auth.")
+        raise HTTPNotFound()
+        
+    asnyc def _check_login(self, username, password):
+        """Check User credentials."""
+        provider = self._get_provider()
+ 
+        try:
+            provider.async_validate_login(username, password)
+        except HomeAssistantError:
+            raise HTTPUnauthorized() from None
+
+        raise HTTPOk()
