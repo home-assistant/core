@@ -5,7 +5,6 @@ import logging
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.util.json import save_json
 
 from .const import DOMAIN
 
@@ -84,7 +83,7 @@ class MonzoAuthCallbackView(HomeAssistantView):
         <body><h1>{}</h1></body></html>""".format(response_message)
 
         if result:
-            config_contents = {
+            tokens = {
                 ATTR_CLIENT_ID: self.oauth.client_id,
                 ATTR_CLIENT_SECRET: self.oauth.client_secret,
                 ATTR_ACCESS_TOKEN: result.get('access_token'),
@@ -92,15 +91,15 @@ class MonzoAuthCallbackView(HomeAssistantView):
                 ATTR_LAST_SAVED_AT: int(time.time())
             }
 
-        access_token_cache_file = hass.config.path(MONZO_CONFIG_FILE)
-        save_json(access_token_cache_file, config_contents)
+        #access_token_cache_file = hass.config.path(MONZO_CONFIG_FILE)
+        #save_json(access_token_cache_file, config_contents)
 
         hass.async_add_job(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
                 'client_id': self.oauth.client_id,
                 'client_secret': self.oauth.client_secret,
-                'monzo_conf_path': access_token_cache_file
+                'tokens': tokens
             }))
 
         return html_response
