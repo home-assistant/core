@@ -3,9 +3,8 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant import setup
-import homeassistant.components as core
-from homeassistant.const import (STATE_ON, STATE_OFF,
-                                 STATE_LOCKED, STATE_UNLOCKED)
+from homeassistant.components import lock
+from homeassistant.const import STATE_ON, STATE_OFF
 
 from tests.common import (get_test_home_assistant,
                           assert_setup_component)
@@ -63,13 +62,13 @@ class TestTemplateLock:
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test_template_lock')
-        assert state.state == STATE_LOCKED
+        assert state.state == lock.STATE_LOCKED
 
         self.hass.states.set('switch.test_state', STATE_OFF)
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test_template_lock')
-        assert state.state == STATE_UNLOCKED
+        assert state.state == lock.STATE_UNLOCKED
 
     def test_template_state_boolean_on(self):
         """Test the setting of the state with boolean on."""
@@ -94,7 +93,7 @@ class TestTemplateLock:
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.template_lock')
-        assert state.state == STATE_LOCKED
+        assert state.state == lock.STATE_LOCKED
 
     def test_template_state_boolean_off(self):
         """Test the setting of the state with off."""
@@ -119,7 +118,7 @@ class TestTemplateLock:
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.template_lock')
-        assert state.state == STATE_UNLOCKED
+        assert state.state == lock.STATE_UNLOCKED
 
     def test_template_syntax_error(self):
         """Test templating syntax error."""
@@ -233,9 +232,11 @@ class TestTemplateLock:
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.template_lock')
-        assert state.state == STATE_UNLOCKED
+        assert state.state == lock.STATE_UNLOCKED
 
-        core.lock.lock(self.hass, 'lock.template_lock')
+        self.hass.services.call(lock.DOMAIN, lock.SERVICE_LOCK, {
+            lock.ATTR_ENTITY_ID: 'lock.template_lock'
+        })
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -264,9 +265,11 @@ class TestTemplateLock:
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.template_lock')
-        assert state.state == STATE_LOCKED
+        assert state.state == lock.STATE_LOCKED
 
-        core.lock.unlock(self.hass, 'lock.template_lock')
+        self.hass.services.call(lock.DOMAIN, lock.SERVICE_UNLOCK, {
+            lock.ATTR_ENTITY_ID: 'lock.template_lock'
+        })
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
