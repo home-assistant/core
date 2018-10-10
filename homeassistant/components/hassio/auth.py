@@ -45,7 +45,7 @@ class HassIOAuth(HomeAssistantView):
         self.hass = hass
 
     @RequestDataValidator(SCHEMA_API_AUTH)
-    async def post(self, request):
+    async def post(self, request, data):
         """Handle new discovery requests."""
         hassio_ip = os.environ['HASSIO'].split(':')[0]
         if request[KEY_REAL_IP] != ip_address(hassio_ip):
@@ -53,7 +53,6 @@ class HassIOAuth(HomeAssistantView):
                 "Invalid auth request from %s", request[KEY_REAL_IP])
             raise HTTPForbidden()
 
-        data = await request.json()
         await self._check_login(data[ATTR_USERNAME], data[ATTR_PASSWORD])
         return web.Response(status=200)
 
