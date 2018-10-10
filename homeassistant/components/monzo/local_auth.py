@@ -1,14 +1,12 @@
 """Local Nest authentication."""
 import time
-import asyncio
-from functools import partial
+import logging
 
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.util.json import save_json
 
-from . import config_flow
 from .const import DOMAIN
 
 MONZO_AUTH_CALLBACK_PATH = '/api/monzo/callback'
@@ -21,6 +19,9 @@ ATTR_CLIENT_SECRET = 'client_secret'
 ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
 ATTR_LAST_SAVED_AT = 'last_saved_at'
+
+_LOGGER = logging.getLogger(__name__)
+
 
 class MonzoAuthCallbackView(HomeAssistantView):
     """Monzo Authorization Callback View."""
@@ -94,14 +95,12 @@ class MonzoAuthCallbackView(HomeAssistantView):
         access_token_cache_file = hass.config.path(MONZO_CONFIG_FILE)
         save_json(access_token_cache_file, config_contents)
 
-
         hass.async_add_job(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
                 'client_id': self.oauth.client_id,
                 'client_secret': self.oauth.client_secret,
                 'monzo_conf_path': access_token_cache_file
-            })
-        )
+            }))
 
         return html_response

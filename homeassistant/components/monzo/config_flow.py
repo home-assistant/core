@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.util.json import load_json
 
 from .local_auth import MonzoAuthCallbackView
@@ -19,6 +18,7 @@ CONF_CLIENT_SECRET = 'client_secret'
 
 MONZO_AUTH_START = '/api/monzo'
 MONZO_AUTH_CALLBACK_PATH = '/api/monzo/callback'
+
 
 @callback
 def configured_instances(hass):
@@ -31,7 +31,7 @@ def configured_instances(hass):
 
 @config_entries.HANDLERS.register(DOMAIN)
 class MonzoFlowHandler(config_entries.ConfigFlow):
-    """Handle an OpenUV config flow."""
+    """Handle an Monzo config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
@@ -52,7 +52,6 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
                     errors['base'] = 'identifier_exists'
                 else:
                     return await self._set_up_redirect(user_input)
-                    errors['base'] = 'invalid_api_key'
 
         data_schema = OrderedDict()
         data_schema[vol.Required(CONF_CLIENT_ID)] = str
@@ -71,14 +70,15 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         implementation type we expect a pin or an external component to
         deliver the authentication code.
         """
-
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
         errors = {}
         print(MONZO_AUTH_START)
-        monzo_auth_start_redirect = '{}{}'.format(self.hass.config.api.base_url,
-                            MONZO_AUTH_START)
+        monzo_auth_start_redirect = '{}{}'.format(
+            self.hass.config.api.base_url,
+            MONZO_AUTH_START)
+
         return self.async_show_form(
             step_id='link',
             description_placeholders={
@@ -97,25 +97,22 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         print(user_input)
 
         if user_input is not None:
-            try:
-                client_id = user_input.get(CONF_CLIENT_ID, None)
-                client_secret = user_input.get(CONF_CLIENT_SECRET, None)
-                redirect_uri = '{}{}'.format(self.hass.config.api.base_url,
-                    MONZO_AUTH_CALLBACK_PATH)
+            client_id = user_input.get(CONF_CLIENT_ID, None)
+            client_secret = user_input.get(CONF_CLIENT_SECRET, None)
+            redirect_uri = '{}{}'.format(self.hass.config.api.base_url,
+                                         MONZO_AUTH_CALLBACK_PATH)
 
-                oauth = MonzoOAuth2Client(client_id=client_id,
-                                          client_secret=client_secret,
-                                          redirect_uri=redirect_uri)
+            oauth = MonzoOAuth2Client(client_id=client_id,
+                                      client_secret=client_secret,
+                                      redirect_uri=redirect_uri)
 
-                monzo_auth_start_url, _ = oauth.authorize_token_url()
+            monzo_auth_start_url, _ = oauth.authorize_token_url()
 
-                self.hass.http.register_redirect(MONZO_AUTH_START,
-                                            monzo_auth_start_url)
-                self.hass.http.register_view(MonzoAuthCallbackView(
-                    self.async_step_import, oauth))
+            self.hass.http.register_redirect(MONZO_AUTH_START,
+                                             monzo_auth_start_url)
+            self.hass.http.register_view(MonzoAuthCallbackView(
+                self.async_step_import, oauth))
 
-            except:
-                pass
         return await self.async_step_link(user_input)
 
     async def async_step_import(self, info):
