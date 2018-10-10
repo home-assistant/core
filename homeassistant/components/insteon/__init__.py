@@ -535,15 +535,6 @@ class InsteonEntity(Entity):
         """All-Link Database loaded for the device."""
         self.print_aldb()
 
-    def _generate_network_address(self):
-        """Get the formatted network address for the device."""
-        if self._insteon_device_state.group == 0x01:
-            addr = self._insteon_device.id
-        else:
-            addr = '{:s}_{:d}'.format(self._insteon_device.id,
-                                      self._insteon_device_state.group)
-        return addr
-
     def _get_label(self):
         """ Get the device label for grouped devices"""
 
