@@ -89,9 +89,6 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
     async def _set_up_redirect(self, user_input=None):
         from monzo import MonzoOAuth2Client
 
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason='already_setup')
-
         if user_input is not None:
             client_id = user_input.get(CONF_CLIENT_ID, None)
             client_secret = user_input.get(CONF_CLIENT_SECRET, None)
