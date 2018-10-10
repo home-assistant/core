@@ -47,16 +47,16 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             client_id = user_input.get(CONF_CLIENT_ID, None)
             client_secret = user_input.get(CONF_CLIENT_SECRET, None)
-
-            if client_id in configured_instances(self.hass):
-                errors['base'] = 'identifier_exists'
-            else:
-                return await self.async_step_link(user_input)
-                errors['base'] = 'invalid_api_key'
+            if None not in (client_id, client_secret):
+                if client_id in configured_instances(self.hass):
+                    errors['base'] = 'identifier_exists'
+                else:
+                    return await self._set_up_redirect(user_input)
+                    errors['base'] = 'invalid_api_key'
 
         data_schema = OrderedDict()
-        data_schema[vol.Required(CONF_CLIENT_ID)] = cv.string
-        data_schema[vol.Required(CONF_CLIENT_SECRET)] = cv.string
+        data_schema[vol.Required(CONF_CLIENT_ID)] = str
+        data_schema[vol.Required(CONF_CLIENT_SECRET)] = str
 
         return self.async_show_form(
             step_id='init',
@@ -122,6 +122,11 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         """Import existing auth from Monzo."""
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
+
+        client_id = info.get(CONF_CLIENT_ID, None)
+        client_secret = info.get(CONF_CLIENT_SECRET, None)
+        if None in (client_id, client_secret):
+            return await self.async_step_init(info)
 
         config_path = info['monzo_conf_path']
 

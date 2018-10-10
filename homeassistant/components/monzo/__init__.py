@@ -74,8 +74,8 @@ SENSOR_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
+        vol.Optional(CONF_CLIENT_ID): cv.string,
+        vol.Optional(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_SENSORS): SENSOR_SCHEMA
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -93,8 +93,8 @@ async def async_setup(hass, config):
         return True
 
     conf = config[DOMAIN]
-    client_id = conf.get(CONF_CLIENT_ID)
-    client_secret = conf.get(CONF_CLIENT_SECRET)
+    client_id = conf.get(CONF_CLIENT_ID, None)
+    client_secret = conf.get(CONF_CLIENT_SECRET, None)
 
     filename = config.get(CONF_FILENAME, MONZO_CONFIG_FILE)
     access_token_cache_file = hass.config.path(filename)
@@ -120,8 +120,8 @@ async def async_setup_entry(hass, config_entry):
     sensors = hass.data[DATA_MONZO_CONFIG].get(CONF_SENSORS, {}).get(
               CONF_MONITORED_CONDITIONS, list(SENSORS))
 
-    client_id = hass.data[DATA_MONZO_CONFIG][CONF_CLIENT_ID]
-    client_secret = hass.data[DATA_MONZO_CONFIG][CONF_CLIENT_SECRET]
+    client_id = config_entry.data['tokens'][CONF_CLIENT_ID]
+    client_secret = config_entry.data['tokens'][CONF_CLIENT_SECRET]
     access_token = config_entry.data['tokens']['access_token']
     refresh_token = config_entry.data['tokens']['refresh_token']
     last_saved_at = config_entry.data['tokens']['last_saved_at']
