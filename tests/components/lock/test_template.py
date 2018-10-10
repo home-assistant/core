@@ -208,6 +208,40 @@ class TestTemplateLock:
 
         assert self.hass.states.all() == []
 
+    def test_no_template_match_all(self, caplog):
+        """Test that we do not allow locks that match on all."""
+        with assert_setup_component(1, 'lock'):
+            assert setup.setup_component(self.hass, 'lock', {
+                'lock': {
+                    'platform': 'template',
+                    'value_template': '{{ 1 + 1 }}',
+                    'lock': {
+                        'service': 'switch.turn_on',
+                        'entity_id': 'switch.test_state'
+                    },
+                    'unlock': {
+                        'service': 'switch.turn_off',
+                        'entity_id': 'switch.test_state'
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('lock.template_lock')
+        assert state.state == lock.STATE_UNLOCKED
+
+        assert ('Template lock Template Lock has no entity ids configured '
+                'to track nor were we able to extract the entities to track '
+                'from the value_template template. This entity will only '
+                'be able to be updated manually.') in caplog.text
+
+        self.hass.states.set('lock.template_lock', lock.STATE_LOCKED)
+        self.hass.block_till_done()
+        state = self.hass.states.get('lock.template_lock')
+        assert state.state == lock.STATE_LOCKED
+
     def test_lock_action(self):
         """Test lock action."""
         assert setup.setup_component(self.hass, 'lock', {
