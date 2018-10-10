@@ -6,8 +6,7 @@ https://home-assistant.io/components/light.plum_lightpad
 """
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
-from homeassistant.components.plum_lightpad import (
-    PLUM_DATA, LOGICAL_LOAD_LOCATED, LIGHTPAD_LOCATED)
+from homeassistant.components.plum_lightpad import PLUM_DATA
 import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['plum_lightpad']
@@ -18,23 +17,18 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Setup the Plum Lightpad Light."""
     plum = hass.data[PLUM_DATA]
 
-    async def new_load(event):
-        """Callback handler when a new logical load is discovered."""
-        logical_load = plum.get_load(event.data['llid'])
-        async_add_entities([
-            PlumLight(load=logical_load)
-        ])
+    if discovery_info is not None:
+        if 'lpid' in discovery_info:
+            lightpad = plum.get_lightpad(discovery_info['lpid'])
+            async_add_entities([
+                GlowRing(lightpad=lightpad)
+            ])
 
-    hass.bus.async_listen(LOGICAL_LOAD_LOCATED, new_load)
-
-    async def new_lightpad(event):
-        """Callback when a new Lightpad is discovered."""
-        lightpad = plum.get_lightpad(event.data['lpid'])
-        async_add_entities([
-            GlowRing(lightpad=lightpad)
-        ])
-
-    hass.bus.async_listen(LIGHTPAD_LOCATED, new_lightpad)
+        if 'llid' in discovery_info:
+            logical_load = plum.get_load(discovery_info['llid'])
+            async_add_entities([
+                PlumLight(load=logical_load)
+            ])
 
 
 class PlumLight(Light):
@@ -121,26 +115,6 @@ class GlowRing(Light):
         self._white = config['glowColor']['white']
         self._brightness = config['glowIntensity'] * 255.0
         self.schedule_update_ha_state()
-
-    @property
-    def red(self):
-        """Return the Red value 0..255."""
-        return self._red
-
-    @property
-    def green(self):
-        """Return the Green value 0..255."""
-        return self._green
-
-    @property
-    def blue(self):
-        """Return the Blue value 0..255."""
-        return self._blue
-
-    @property
-    def white_value(self):
-        """White Color value from 0..255."""
-        return self._white
 
     @property
     def rgb_color(self):

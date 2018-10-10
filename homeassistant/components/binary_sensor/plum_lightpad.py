@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.plum_lightpad
 """
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.plum_lightpad import PLUM_DATA, LIGHTPAD_LOCATED
+from homeassistant.components.plum_lightpad import PLUM_DATA
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
@@ -17,15 +17,11 @@ async def async_setup_platform(hass, config, add_devices,
     """Set up the motion sensors for the Plum Lightpad  platform."""
     plum = hass.data[PLUM_DATA]
 
-    async def new_lightpad(event):
-        """Callback when a new Lightpad is discovered."""
-        lightpad = plum.get_lightpad(event.data['lpid'])
+    if discovery_info is not None:
+        lightpad = plum.get_lightpad(discovery_info['lpid'])
         add_devices([
-            PlumMotionSensor(lightpad=lightpad, hass=hass),
+            PlumMotionSensor(lightpad=lightpad, hass=hass)
         ])
-
-    hass.bus.async_listen(LIGHTPAD_LOCATED, new_lightpad)
-
 
 class PlumMotionSensor(BinarySensorDevice):
     """Representation of a Lightpad's motion detection."""

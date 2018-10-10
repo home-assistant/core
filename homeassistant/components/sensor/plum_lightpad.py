@@ -4,8 +4,7 @@ Support for Plum Lightpad switches.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.plum_lightpad
 """
-from homeassistant.components.plum_lightpad import (
-    PLUM_DATA, LOGICAL_LOAD_LOCATED)
+from homeassistant.components.plum_lightpad import PLUM_DATA
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['plum_lightpad']
@@ -17,14 +16,12 @@ async def async_setup_platform(hass, config, add_devices,
     """Setup the Power Sensor support within Plum Lightpads."""
     plum = hass.data[PLUM_DATA]
 
-    async def new_load(event):
-        """Callback handler when a new logical load is discovered."""
-        logical_load = plum.get_load(event.data['llid'])
-        add_devices([
-            PowerSensor(load=logical_load)
-        ])
-
-    hass.bus.async_listen(LOGICAL_LOAD_LOCATED, new_load)
+    if discovery_info is not None:
+        if 'llid' in discovery_info:
+            logical_load = plum.get_load(discovery_info['llid'])
+            add_devices([
+                PowerSensor(load=logical_load)
+            ])
 
 
 class PowerSensor(Entity):

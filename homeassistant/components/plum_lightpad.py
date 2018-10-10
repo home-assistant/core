@@ -27,8 +27,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 PLUM_DATA = 'plum'
-LIGHTPAD_LOCATED = 'plum.lightpad.found'
-LOGICAL_LOAD_LOCATED = 'plum.logicalLoad.found'
 
 
 async def async_setup(hass, config):
@@ -48,17 +46,15 @@ async def async_setup(hass, config):
 
     await plum.loadCloudData()
 
-    discovery.load_platform(hass, 'light', DOMAIN, None, conf)
-    discovery.load_platform(hass, 'sensor', DOMAIN, None, conf)
-    discovery.load_platform(hass, 'binary_sensor', DOMAIN, None, conf)
-
-    async def new_load(event_data):
+    async def new_load(event):
         """Called when a new LogicalLoad is detected."""
-        hass.bus.async_fire(LOGICAL_LOAD_LOCATED, event_data)
+        await discovery.async_load_platform(hass, 'light', DOMAIN, event, conf)
+        await discovery.async_load_platform(hass, 'sensor', DOMAIN, event, conf)
 
-    async def new_lightpad(event_data):
+    async def new_lightpad(event):
         """Called when a new Lightpad is detected."""
-        hass.bus.async_fire(LIGHTPAD_LOCATED, event_data)
+        await discovery.async_load_platform(hass, 'light', DOMAIN, event, conf)
+        await discovery.async_load_platform(hass, 'binary_sensor', DOMAIN, event, conf)
 
     hass.async_add_job(plum.discover(hass.loop, new_load, new_lightpad))
 
