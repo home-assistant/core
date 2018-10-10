@@ -1,4 +1,4 @@
-"""Local Nest authentication."""
+"""Local Monzo authentication."""
 import time
 import logging
 
@@ -6,16 +6,12 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ACCESS_TOKEN,
+    CONF_REFRESH_TOKEN, CONF_LAST_SAVED_AT)
 
 MONZO_AUTH_CALLBACK_PATH = '/api/monzo/callback'
 MONZO_AUTH_CALLBACK_NAME = 'api:monzo'
-
-ATTR_CLIENT_ID = 'client_id'
-ATTR_CLIENT_SECRET = 'client_secret'
-ATTR_ACCESS_TOKEN = 'access_token'
-ATTR_REFRESH_TOKEN = 'refresh_token'
-ATTR_LAST_SAVED_AT = 'last_saved_at'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +43,7 @@ class MonzoAuthCallbackView(HomeAssistantView):
         result = None
         if data.get('code') is not None:
             redirect_uri = '{}{}'.format(
-                hass.config.api.base_url, MONZO_AUTH_CALLBACK_PATH)
+                hass.config.api.base_url, MonzoAuthCallbackView.url)
 
             try:
                 result = self.oauth.fetch_access_token(data.get('code'),
@@ -81,18 +77,18 @@ class MonzoAuthCallbackView(HomeAssistantView):
 
         if result:
             tokens = {
-                ATTR_CLIENT_ID: self.oauth.client_id,
-                ATTR_CLIENT_SECRET: self.oauth.client_secret,
-                ATTR_ACCESS_TOKEN: result.get('access_token'),
-                ATTR_REFRESH_TOKEN: result.get('refresh_token'),
-                ATTR_LAST_SAVED_AT: int(time.time())
+                CONF_CLIENT_ID: self.oauth.client_id,
+                CONF_CLIENT_SECRET: self.oauth.client_secret,
+                CONF_ACCESS_TOKEN: result.get('access_token'),
+                CONF_REFRESH_TOKEN: result.get('refresh_token'),
+                CONF_LAST_SAVED_AT: int(time.time())
             }
 
         hass.async_add_job(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
-                'client_id': self.oauth.client_id,
-                'client_secret': self.oauth.client_secret,
+                CONF_CLIENT_ID: self.oauth.client_id,
+                CONF_CLIENT_SECRET: self.oauth.client_secret,
                 'tokens': tokens
             }))
 
