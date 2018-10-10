@@ -2,7 +2,7 @@
     "config": {
         "error": {
             "name_exists": "Name already exists",
-            "wrong_location": "Location in Sweden only"
+            "wrong_location": "Location Sweden only"
         },
         "step": {
             "user": {
