@@ -76,7 +76,6 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
-        #flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
         print('user_input')
         print(user_input)
         errors = {}
@@ -122,26 +121,22 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         config_path = info['monzo_conf_path']
 
         if not await self.hass.async_add_job(os.path.isfile, config_path):
-            self.flow_impl = DOMAIN
             return await self.async_step_link(info)
 
-        #flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
-        flow = None
         tokens = await self.hass.async_add_job(load_json, config_path)
 
         if not tokens:
             return await self.async_step_link(info)
 
         return self._entry_from_tokens(
-            'Monzo (import from configuration.yaml)', flow, tokens)
+            'Monzo (import from configuration.yaml)', tokens)
 
     @callback
-    def _entry_from_tokens(self, title, flow, tokens):
+    def _entry_from_tokens(self, title, tokens):
         """Create an entry from tokens."""
         return self.async_create_entry(
             title=title,
             data={
-                'tokens': tokens,
-                #'impl_domain': flow['domain'],
+                'tokens': tokens
             },
         )
