@@ -593,7 +593,7 @@ miflora==0.4.0
 # homeassistant.components.sensor.mitemp_bt
 mitemp_bt==0.0.1
 
-# homeassistant.components.sensor.monzo
+# homeassistant.components.monzo
 monzotomtest==0.6.1
 
 # homeassistant.components.sensor.mopar
