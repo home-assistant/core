@@ -68,8 +68,6 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         self._sensor_name = sensor_name
         self._device_class = device_class
         self._state = None
-        # self._unit_system = unit_system
-        # self._unit_system = self.hass.config.units
 
     @property
     def should_poll(self) -> bool:
