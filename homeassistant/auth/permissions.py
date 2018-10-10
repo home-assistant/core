@@ -19,11 +19,11 @@ CAT_ENTITIES = 'entities'
 ENTITY_DOMAINS = 'domains'
 ENTITY_ENTITY_IDS = 'entity_ids'
 
-VALUES_SCHEMA = vol.Any(bool, vol.Schema({
-    str: bool
+VALUES_SCHEMA = vol.Any(True, vol.Schema({
+    str: True
 }))
 
-ENTITY_POLICY_SCHEMA = vol.Any(bool, vol.Schema({
+ENTITY_POLICY_SCHEMA = vol.Any(True, vol.Schema({
     vol.Optional(ENTITY_DOMAINS): VALUES_SCHEMA,
     vol.Optional(ENTITY_ENTITY_IDS): VALUES_SCHEMA,
 }))
