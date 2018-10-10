@@ -29,12 +29,13 @@ PACKAGES=(
   ffmpeg
   # homeassistant.components.sensor.iperf3
   iperf3
+  # homeassistant.components.sensor.gitlab_ci
+  git
 )
 
 # Required debian packages for building dependencies
 PACKAGES_DEV=(
   cmake
-  git
   swig
 )
 
