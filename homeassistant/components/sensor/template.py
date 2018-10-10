@@ -57,6 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
+        invalid_templates = []
 
         for tpl_name, template in (
                 (CONF_VALUE_TEMPLATE, state_template),
@@ -74,16 +75,17 @@ async def async_setup_platform(hass, config, async_add_entities,
             template_entity_ids = template.extract_entities()
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL
-                _LOGGER.error(
-                    "Unable to extract entities from %s: %s. You need to "
-                    "manually specify entity_ids to track for this template.",
-                    device, tpl_name)
+                # Cut off _template from name
+                invalid_templates.append(tpl_name[:-9])
             elif entity_ids != MATCH_ALL:
                 entity_ids |= set(template_entity_ids)
 
-        # Not going to set up this entity.
-        if entity_ids == MATCH_ALL:
-            continue
+        if invalid_templates:
+            _LOGGER.warning(
+                'Template sensor %s has no entity ids configured to track nor'
+                ' were we able to extract the entities to track from the %s '
+                'template(s). This entity will only be able to be updated '
+                'manually.', device, ', '.join(invalid_templates))
 
         if manual_entity_ids is not None:
             entity_ids = manual_entity_ids
@@ -135,6 +137,10 @@ class SensorTemplate(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+        # We don't render on every update
+        if self._entities == MATCH_ALL:
+            return
+
         @callback
         def template_sensor_state_listener(entity, old_state, new_state):
             """Handle device state changes."""

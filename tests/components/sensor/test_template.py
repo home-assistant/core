@@ -342,8 +342,43 @@ async def test_no_template_match_all(hass, caplog):
         }
     })
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-    assert 'invalid_state: value_template' in caplog.text
-    assert 'invalid_icon: icon_template' in caplog.text
-    assert 'invalid_entity_picture: entity_picture_template' in caplog.text
-    assert 'invalid_friendly_name: friendly_name_template' in caplog.text
+    assert len(hass.states.async_all()) == 4
+    assert ('Template sensor invalid_state has no entity ids '
+            'configured to track nor were we able to extract the entities to '
+            'track from the value template') in caplog.text
+    assert ('Template sensor invalid_icon has no entity ids '
+            'configured to track nor were we able to extract the entities to '
+            'track from the icon template') in caplog.text
+    assert ('Template sensor invalid_entity_picture has no entity ids '
+            'configured to track nor were we able to extract the entities to '
+            'track from the entity_picture template') in caplog.text
+    assert ('Template sensor invalid_friendly_name has no entity ids '
+            'configured to track nor were we able to extract the entities to '
+            'track from the friendly_name template') in caplog.text
+
+    assert hass.states.get('sensor.invalid_state').state == 'unknown'
+    assert hass.states.get('sensor.invalid_icon').state == 'unknown'
+    assert hass.states.get('sensor.invalid_entity_picture').state == 'unknown'
+    assert hass.states.get('sensor.invalid_friendly_name').state == 'unknown'
+
+    hass.states.async_set('sensor.test_sensor', 'hello')
+    await hass.async_block_till_done()
+
+    assert hass.states.get('sensor.invalid_state').state == 'unknown'
+    assert hass.states.get('sensor.invalid_icon').state == 'unknown'
+    assert hass.states.get('sensor.invalid_entity_picture').state == 'unknown'
+    assert hass.states.get('sensor.invalid_friendly_name').state == 'unknown'
+
+    await hass.helpers.entity_component.async_update_entity(
+        'sensor.invalid_state')
+    await hass.helpers.entity_component.async_update_entity(
+        'sensor.invalid_icon')
+    await hass.helpers.entity_component.async_update_entity(
+        'sensor.invalid_entity_picture')
+    await hass.helpers.entity_component.async_update_entity(
+        'sensor.invalid_friendly_name')
+
+    assert hass.states.get('sensor.invalid_state').state == '2'
+    assert hass.states.get('sensor.invalid_icon').state == 'hello'
+    assert hass.states.get('sensor.invalid_entity_picture').state == 'hello'
+    assert hass.states.get('sensor.invalid_friendly_name').state == 'hello'
