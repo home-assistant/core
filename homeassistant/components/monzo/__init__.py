@@ -20,6 +20,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
+from . import config_flow
+
 
 REQUIREMENTS = ['monzotomtest==0.6.1']
 
