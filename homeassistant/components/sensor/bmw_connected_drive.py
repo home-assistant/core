@@ -161,4 +161,3 @@ class BMWConnectedDriveSensor(Entity):
         Show latest data after startup.
         """
         self._account.add_update_listener(self.update_callback)
-        
