@@ -29,7 +29,7 @@ DEFAULT_ALLOW_TRADFRI_GROUPS = True
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Inclusive(CONF_HOST, 'gateway'): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_ALLOW_TRADFRI_GROUPS,
                      default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
     })
