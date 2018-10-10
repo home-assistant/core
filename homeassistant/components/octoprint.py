@@ -88,6 +88,7 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the OctoPrint component."""
     printers = hass.data[DOMAIN] = {}
+    success = False
 
     def device_discovered(service, info):
         """Get called when an Octoprint server has been discovered."""
@@ -122,7 +123,9 @@ def setup(hass, config):
         load_platform(hass, 'binary_sensor', DOMAIN, {'name': name,
                                                       'base_url': base_url,
                                                       'sensors': b_sensors})
-    return True
+        success = True
+
+    return success
 
 
 class OctoPrintAPI:
