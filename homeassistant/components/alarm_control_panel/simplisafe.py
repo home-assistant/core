@@ -42,6 +42,7 @@ class SimpliSafeAlarm(AlarmControlPanel):
 
     def __init__(self, system, code):
         """Initialize the SimpliSafe alarm."""
+        self._async_unsub_dispatcher_connect = None
         self._attrs = {}
         self._code = code
         self._system = system
@@ -83,16 +84,20 @@ class SimpliSafeAlarm(AlarmControlPanel):
             _LOGGER.warning("Wrong code entered for %s", state)
         return check
 
-    @callback
-    def _update_data(self):
-        """Update the state."""
-        self.async_schedule_update_ha_state(True)
-
     async def async_added_to_hass(self):
         """Register callbacks."""
-        listener = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, self._update_data)
-        self.async_on_remove(listener)
+        @callback
+        def update():
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, update)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
