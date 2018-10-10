@@ -22,6 +22,8 @@ class TestFritzboxClimate(unittest.TestCase):
         self.device.device_lock = True
         self.device.lock = False
         self.device.battery_low = True
+        self.device.summer_active = False
+        self.device.holiday_active = False
         self.device.set_target_temperature = Mock()
         self.device.update = Mock()
         mock_fritz = Mock()
