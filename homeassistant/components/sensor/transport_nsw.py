@@ -96,10 +96,7 @@ class TransportNSWSensor(Entity):
         """Get the latest data from Transport NSW and update the states."""
         self.data.update()
         self._times = self.data.info
-        try:
-            self._state = self._times[ATTR_DUE_IN]
-        except TypeError:
-            pass
+        self._state = self._times[ATTR_DUE_IN]
 
 
 class PublicTransportData:
