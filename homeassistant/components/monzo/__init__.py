@@ -28,11 +28,11 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 
+MONZO_CONFIG_FILE = 'monzo.conf'
+
 DATA_MONZO_CLIENT = 'data_client'
 DATA_MONZO_LISTENER = 'data_listener'
 DATA_MONZO_CONFIG = 'monzo_config'
-MONZO_CONFIG_FILE = 'monzo.conf'
-
 DATA_BALANCE = 'balance'
 DATA_POTS = 'pots'
 
@@ -47,11 +47,6 @@ TOPIC_UPDATE = '{0}_data_update'.format(DOMAIN)
 TYPE_BALANCE = 'balance'
 TYPE_DAILY_SPEND = 'dailyspend'
 TYPE_POTS = 'pots'
-
-DEFAULT_CONFIG = {
-    'client_id': 'CLIENT_ID_HERE',
-    'client_secret': 'CLIENT_SECRET_HERE'
-}
 
 SENSORS = {
     TYPE_BALANCE: ['Account Balance', 'mdi:cash', 'GBP'],
@@ -158,7 +153,7 @@ async def async_setup_entry(hass, config_entry):
 
 
 async def async_unload_entry(hass, config_entry):
-    """Unload an Monzo config entry."""
+    """Unload a Monzo config entry."""
     for component in ('sensor',):
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
