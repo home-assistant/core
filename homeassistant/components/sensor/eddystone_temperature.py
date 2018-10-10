@@ -138,8 +138,7 @@ class Monitor:
                 additional_info['namespace'], additional_info['instance'],
                 packet.temperature)
 
-        # pylint: disable=import-error
-        from beacontools import (
+        from beacontools import (  # pylint: disable=import-error
             BeaconScanner, EddystoneFilter, EddystoneTLMFrame)
         device_filters = [EddystoneFilter(d.namespace, d.instance)
                           for d in devices]

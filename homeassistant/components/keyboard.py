@@ -20,8 +20,7 @@ TAP_KEY_SCHEMA = vol.Schema({})
 
 def setup(hass, config):
     """Listen for keyboard events."""
-    # pylint: disable=import-error
-    import pykeyboard
+    import pykeyboard  # pylint: disable=import-error
 
     keyboard = pykeyboard.PyKeyboard()
     keyboard.special_key_assignment()
