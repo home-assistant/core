@@ -8,11 +8,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.const import (CONF_DEVICE, CONF_MONITORED_VARIABLES,
                                  CONF_NAME, PRECISION_HALVES, PRECISION_TENTHS,
                                  PRECISION_WHOLE)
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'opentherm_gw'
