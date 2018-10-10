@@ -104,8 +104,7 @@ async def async_setup(hass, config):
         data={
             'client_id': client_id,
             'client_secret': client_secret,
-            'monzo_conf_path': access_token_cache_file,
-            'hass': hass
+            'monzo_conf_path': access_token_cache_file
         }
     ))
 
