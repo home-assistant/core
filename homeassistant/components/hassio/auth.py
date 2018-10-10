@@ -4,8 +4,7 @@ from ipaddress import ip_address
 import os
 
 from aiohttp import web
-from aiohttp.web_exceptions import (
-    HTTPForbidden, HTTPNotFound, HTTPUnauthorized)
+from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -72,4 +71,4 @@ class HassIOAuth(HomeAssistantView):
         try:
             await provider.async_validate_login(username, password)
         except HomeAssistantError:
-            raise HTTPUnauthorized() from None
+            raise HTTPForbidden() from None
