@@ -5,30 +5,21 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/nest/
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 import time
-
-
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (ATTR_ATTRIBUTION,
-    CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
-    CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import callback
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_FILENAME, CONF_SENSORS,
+    CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send, \
-    async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-
 from .const import DOMAIN
-from . import config_flow
-
 
 REQUIREMENTS = ['monzotomtest==0.6.1']
 
@@ -83,8 +74,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up Monzo components."""
-    from monzo import Monzo, MonzoOAuth2Client
-
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_MONZO_CLIENT] = {}
     hass.data[DOMAIN][DATA_MONZO_LISTENER] = {}
@@ -113,12 +102,13 @@ async def async_setup(hass, config):
 
     return True
 
+
 async def async_setup_entry(hass, config_entry):
     """Set up Monzo as a config entry."""
     from monzo import Monzo, MonzoOAuth2Client
 
     sensors = hass.data[DATA_MONZO_CONFIG].get(CONF_SENSORS, {}).get(
-              CONF_MONITORED_CONDITIONS, list(SENSORS))
+        CONF_MONITORED_CONDITIONS, list(SENSORS))
 
     client_id = config_entry.data['tokens'][CONF_CLIENT_ID]
     client_secret = config_entry.data['tokens'][CONF_CLIENT_SECRET]
@@ -127,17 +117,17 @@ async def async_setup_entry(hass, config_entry):
     last_saved_at = config_entry.data['tokens']['last_saved_at']
 
     print("Making a Monzo OAuth")
-    oAuthClient = MonzoOAuth2Client(client_id=client_id,
-                                    client_secret=client_secret,
-                                    access_token=access_token,
-                                    refresh_token=refresh_token,
-                                    expires_at=last_saved_at,
-                                    refresh_cb=lambda x: None)
+    oauth_client = MonzoOAuth2Client(client_id=client_id,
+                                     client_secret=client_secret,
+                                     access_token=access_token,
+                                     refresh_token=refresh_token,
+                                     expires_at=last_saved_at,
+                                     refresh_cb=lambda x: None)
 
     if int(time.time()) - last_saved_at > 3600:
-            oAuthClient.refresh_token()
+        oauth_client.refresh_token()
 
-    monzo = MonzoObject(Monzo.from_oauth_session(oAuthClient), sensors)
+    monzo = MonzoObject(Monzo.from_oauth_session(oauth_client), sensors)
 
     await monzo.async_update()
     # Make Monzo client available
@@ -165,6 +155,7 @@ async def async_setup_entry(hass, config_entry):
 
     return True
 
+
 async def async_unload_entry(hass, config_entry):
     """Unload an Monzo config entry."""
     for component in ('sensor',):
@@ -178,6 +169,7 @@ async def async_unload_entry(hass, config_entry):
     remove_listener()
 
     return True
+
 
 class MonzoObject:
     """Define a generic Monzo object."""
@@ -199,6 +191,7 @@ class MonzoObject:
             all_pots = self.client.get_pots()['pots']
             open_pots = [pot for pot in all_pots if not pot['deleted']]
             self.data[DATA_POTS] = open_pots
+
 
 class MonzoEntity(Entity):
     """Define a generic Monzo entity."""
