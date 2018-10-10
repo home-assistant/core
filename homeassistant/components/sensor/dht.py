@@ -53,8 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DHT sensor."""
-    # pylint: disable=import-error
-    import Adafruit_DHT
+    import Adafruit_DHT  # pylint: disable=import-error
 
     SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
     available_sensors = {
