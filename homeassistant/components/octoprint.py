@@ -31,12 +31,8 @@ DEFAULT_NAME = 'OctoPrint'
 
 def has_all_unique_names(value):
     """Validate that printers have an unique name."""
-    names = []
-    for printer in value:
-        name = printer['name'] if 'name' in printer else DEFAULT_NAME
-        names.append(util_slugify(name))
-    schema = vol.Schema(vol.Unique())
-    schema(names)
+    names = [util_slugify(printer['name']) for printer in value]
+    vol.Schema(vol.Unique())(names)
     return value
 
 
@@ -71,7 +67,7 @@ SENSOR_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, has_all_unique_names, [vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
@@ -81,7 +77,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_BED, default=False): cv.boolean,
         vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
         vol.Optional(CONF_BINARY_SENSORS, default={}): BINARY_SENSOR_SCHEMA
-    })]),
+    })], has_all_unique_names),
 }, extra=vol.ALLOW_EXTRA)
 
 
