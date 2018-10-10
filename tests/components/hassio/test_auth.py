@@ -52,3 +52,44 @@ async def test_login_error(hass, hassio_client):
         # Check we got right response
         assert resp.status == 401
         mock_login.assert_called_with("test", "123456")
+
+
+async def test_login_no_data(hass, hassio_client):
+    """Test auth with no data -> error."""
+    await register_auth_provider(hass, {'type': 'homeassistant'})
+
+    with patch('homeassistant.auth.providers.homeassistant.'
+               'HassAuthProvider.async_validate_login',
+               Mock(side_effect=HomeAssistantError())) as mock_login:
+        resp = await hassio_client.post(
+            '/api/hassio_auth',
+            headers={
+                HTTP_HEADER_HA_AUTH: API_PASSWORD
+            }
+        )
+
+        # Check we got right response
+        assert resp.status == 400
+        assert not mock_login.called
+
+
+async def test_login_no_username(hass, hassio_client):
+    """Test auth with no username in data -> error."""
+    await register_auth_provider(hass, {'type': 'homeassistant'})
+
+    with patch('homeassistant.auth.providers.homeassistant.'
+               'HassAuthProvider.async_validate_login',
+               Mock(side_effect=HomeAssistantError())) as mock_login:
+        resp = await hassio_client.post(
+            '/api/hassio_auth',
+            json={
+                "password": "123456"
+            },
+            headers={
+                HTTP_HEADER_HA_AUTH: API_PASSWORD
+            }
+        )
+
+        # Check we got right response
+        assert resp.status == 400
+        assert not mock_login.called
