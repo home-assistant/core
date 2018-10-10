@@ -15,17 +15,21 @@ DEFAULT_POLICY = {
     "entities": True
 }  # type: PolicyType
 
+CAT_ENTITIES = 'entities'
+ENTITY_DOMAINS = 'domains'
+ENTITY_ENTITY_IDS = 'entity_ids'
+
+VALUES_SCHEMA = vol.Any(bool, vol.Schema({
+    str: bool
+}))
+
 ENTITY_POLICY_SCHEMA = vol.Any(bool, vol.Schema({
-    vol.Optional('domains'): vol.Any(bool, vol.Schema({
-        str: bool
-    })),
-    vol.Optional('entity_ids'): vol.Any(bool, vol.Schema({
-        str: bool
-    })),
+    vol.Optional(ENTITY_DOMAINS): VALUES_SCHEMA,
+    vol.Optional(ENTITY_ENTITY_IDS): VALUES_SCHEMA,
 }))
 
 POLICY_SCHEMA = vol.Schema({
-    vol.Optional('entities'): ENTITY_POLICY_SCHEMA
+    vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA
 })
 
 
@@ -51,12 +55,12 @@ class PolicyPermissions(AbstractPermissions):
 
     def check_entity(self, entity_id: str, *keys: str) -> bool:
         """Test if we can access entity."""
-        func = self._policy_func('entities', _compile_entities)
+        func = self._policy_func(CAT_ENTITIES, _compile_entities)
         return func(entity_id, keys)
 
     def filter_states(self, states: List[State]) -> List[State]:
         """Filter a list of states for what the user is allowed to see."""
-        func = self._policy_func('entities', _compile_entities)
+        func = self._policy_func(CAT_ENTITIES, _compile_entities)
         keys = ('read',)
         return [entity for entity in states if func(entity.entity_id, keys)]
 
@@ -117,8 +121,8 @@ def _compile_entities(policy: CategoryType) \
 
     assert isinstance(policy, dict)
 
-    domains = policy.get('domains')
-    entity_ids = policy.get('entity_ids')
+    domains = policy.get(ENTITY_DOMAINS)
+    entity_ids = policy.get(ENTITY_ENTITY_IDS)
 
     funcs = []  # type: List[Callable[[str, Tuple[str]], Union[None, bool]]]
 
