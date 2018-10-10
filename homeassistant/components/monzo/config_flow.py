@@ -71,39 +71,13 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         implementation type we expect a pin or an external component to
         deliver the authentication code.
         """
-        from monzo import MonzoOAuth2Client
 
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
-        print('user_input')
-        print(user_input)
         errors = {}
-
-
-        hass = user_input['hass']
-        if user_input is not None:
-            try:
-                client_id = user_input.get(CONF_CLIENT_ID, None)
-                client_secret = user_input.get(CONF_CLIENT_SECRET, None)
-                redirect_uri = '{}{}'.format(hass.config.api.base_url,
-                    MONZO_AUTH_CALLBACK_PATH)
-
-                oauth = MonzoOAuth2Client(client_id=client_id,
-                                          client_secret=client_secret,
-                                          redirect_uri=redirect_uri)
-
-                monzo_auth_start_url, _ = oauth.authorize_token_url()
-
-                hass.http.register_redirect(MONZO_AUTH_START,
-                                            monzo_auth_start_url)
-                hass.http.register_view(MonzoAuthCallbackView(
-                    self.async_step_import, oauth))
-            except:
-                pass
-
         print(MONZO_AUTH_START)
-        monzo_auth_start_redirect = '{}{}'.format(hass.config.api.base_url,
+        monzo_auth_start_redirect = '{}{}'.format(self.hass.config.api.base_url,
                             MONZO_AUTH_START)
         return self.async_show_form(
             step_id='link',
@@ -113,6 +87,37 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
             errors=errors,
         )
 
+    async def _set_up_redirect(self, user_input=None):
+        from monzo import MonzoOAuth2Client
+
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return self.async_abort(reason='already_setup')
+
+        print('user_input')
+        print(user_input)
+
+        if user_input is not None:
+            try:
+                client_id = user_input.get(CONF_CLIENT_ID, None)
+                client_secret = user_input.get(CONF_CLIENT_SECRET, None)
+                redirect_uri = '{}{}'.format(self.hass.config.api.base_url,
+                    MONZO_AUTH_CALLBACK_PATH)
+
+                oauth = MonzoOAuth2Client(client_id=client_id,
+                                          client_secret=client_secret,
+                                          redirect_uri=redirect_uri)
+
+                monzo_auth_start_url, _ = oauth.authorize_token_url()
+
+                self.hass.http.register_redirect(MONZO_AUTH_START,
+                                            monzo_auth_start_url)
+                self.hass.http.register_view(MonzoAuthCallbackView(
+                    self.async_step_import, oauth))
+
+            except:
+                pass
+        return await self.async_step_link(user_input)
+
     async def async_step_import(self, info):
         """Import existing auth from Monzo."""
         if self.hass.config_entries.async_entries(DOMAIN):
@@ -121,12 +126,12 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         config_path = info['monzo_conf_path']
 
         if not await self.hass.async_add_job(os.path.isfile, config_path):
-            return await self.async_step_link(info)
+            return await self._set_up_redirect(info)
 
         tokens = await self.hass.async_add_job(load_json, config_path)
 
         if not tokens:
-            return await self.async_step_link(info)
+            return await self._set_up_redirect(info)
 
         return self._entry_from_tokens(
             'Monzo (import from configuration.yaml)', tokens)
