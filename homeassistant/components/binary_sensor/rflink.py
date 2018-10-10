@@ -2,14 +2,14 @@
 Support for Rflink binary sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rflink/
+https://home-assistant.io/components/binary_sensor.rflink/
 """
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA)
+    DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.components.rflink import (
-    CONF_ALIASES, CONF_DEVICES, DATA_ENTITY_LOOKUP, DOMAIN,
+    CONF_ALIASES, CONF_DEVICES, DATA_ENTITY_LOOKUP,
     EVENT_KEY_COMMAND, RflinkDevice, cv, vol)
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_DEVICE_CLASS, CONF_PLATFORM, STATE_OFF,
@@ -23,29 +23,27 @@ DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): DOMAIN,
-    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
-        cv.string: {
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema({
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS):
-                DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE):
                 cv.boolean,
             vol.Optional(CONF_OFF_DELAY):
                 vol.All(vol.Coerce(int), vol.Range(min=0)),
             vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
-        },
-    }),
-})
+        })
+    },
+}, extra=vol.ALLOW_EXTRA)
 
 
-def devices_from_config(domain_config, hass=None):
+def devices_from_config(hass, domain_config):
     """Parse configuration and add Rflink sensor devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
-        device = RflinkBinarySensor(device_id, hass, **config)
+        device = RflinkBinarySensor(hass, device_id, **config)
         devices.append(device)
 
         # Register entity (and aliases) to listen to incoming rflink events
@@ -62,16 +60,17 @@ def devices_from_config(domain_config, hass=None):
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Rflink platform."""
-    async_add_entities(devices_from_config(config, hass))
+    async_add_entities(devices_from_config(hass, config))
 
 
-class RflinkBinarySensor(RflinkDevice):
-    """Representation of an Rflink sensor."""
+class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
+    """Representation of an Rflink binary sensor."""
 
-    def __init__(self, device_id, hass, device_class=None,
+    def __init__(self, hass, device_id, device_class=None,
                  force_update=None, off_delay=None,
                  **kwargs):
         """Handle sensor specific args and super init."""
+        self._state = None
         self._device_class = device_class
         self._force_update = force_update
         self._off_delay = off_delay
@@ -92,6 +91,7 @@ class RflinkBinarySensor(RflinkDevice):
                 self._delay_listener = None
                 self._state = False
                 self.async_schedule_update_ha_state()
+
             if self._delay_listener is not None:
                 self._delay_listener()
             self._delay_listener = evt.async_call_later(
@@ -99,9 +99,9 @@ class RflinkBinarySensor(RflinkDevice):
         self.async_schedule_update_ha_state()
 
     @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        return STATE_ON if self.is_on else STATE_OFF
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self._state
 
     @property
     def device_class(self):
