@@ -2,7 +2,7 @@
 Support for OpenTherm Gateway sensors.
 
 For more details about this platform, please refer to the documentation at
-http://home-assistant.io/components/opentherm_gw/
+http://home-assistant.io/components/sensor.opentherm_gw/
 """
 import logging
 
