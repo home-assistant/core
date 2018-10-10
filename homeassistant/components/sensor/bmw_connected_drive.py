@@ -42,6 +42,11 @@ ATTR_TO_HA_IMPERIAL = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BMW sensors."""
+    if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+        attribute_info = ATTR_TO_HA_IMPERIAL
+    else:
+        attribute_info = ATTR_TO_HA_METRIC
+
     accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
                   ', '.join([a.name for a in accounts]))
@@ -51,10 +56,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             for attribute_name in vehicle.drive_train_attributes:
                 device = BMWConnectedDriveSensor(account, vehicle,
                                                  attribute_name,
-                                                 hass.config.units)
+                                                 attribute_info)
                 devices.append(device)
             device = BMWConnectedDriveSensor(account, vehicle, 'mileage',
-                                             hass.config.units)
+                                             attribute_info)
             devices.append(device)
     add_entities(devices, True)
 
@@ -62,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BMWConnectedDriveSensor(Entity):
     """Representation of a BMW vehicle sensor."""
 
-    def __init__(self, account, vehicle, attribute: str, unit_system):
+    def __init__(self, account, vehicle, attribute: str, attribute_info):
         """Constructor."""
         self._vehicle = vehicle
         self._account = account
@@ -70,12 +75,7 @@ class BMWConnectedDriveSensor(Entity):
         self._state = None
         self._name = '{} {}'.format(self._vehicle.name, self._attribute)
         self._unique_id = '{}-{}'.format(self._vehicle.vin, self._attribute)
-        self._unit_system = unit_system
-
-        if self._unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            self._attribute_info = ATTR_TO_HA_IMPERIAL
-        else:
-            self._attribute_info = ATTR_TO_HA_METRIC
+        self._attribute_info = attribute_info
 
     @property
     def should_poll(self) -> bool:
@@ -140,12 +140,13 @@ class BMWConnectedDriveSensor(Entity):
             self._state = getattr(vehicle_state, self._attribute).value
         elif self.unit_of_measurement == VOLUME_GALLONS:
             value = getattr(vehicle_state, self._attribute)
-            value_converted = self._unit_system.volume(value, VOLUME_LITERS)
+            value_converted = self.hass.config.units.volume(value,
+                                                            VOLUME_LITERS)
             self._state = round(value_converted)
         elif self.unit_of_measurement == LENGTH_MILES:
             value = getattr(vehicle_state, self._attribute)
-            value_converted = self._unit_system.length(value,
-                                                       LENGTH_KILOMETERS)
+            value_converted = self.hass.config.units.length(value,
+                                                            LENGTH_KILOMETERS)
             self._state = round(value_converted)
         else:
             self._state = getattr(vehicle_state, self._attribute)
@@ -160,3 +161,4 @@ class BMWConnectedDriveSensor(Entity):
         Show latest data after startup.
         """
         self._account.add_update_listener(self.update_callback)
+        
