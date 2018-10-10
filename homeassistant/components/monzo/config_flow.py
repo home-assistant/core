@@ -116,18 +116,25 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
+        # Create config entry after auth process
+        tokens = info.get('tokens', None)
+        if tokens is not None:
+            return self._entry_from_tokens('Monzo', tokens)
+
+        # Check if component has been initalized without any credentials.
         client_id = info.get(CONF_CLIENT_ID, None)
         client_secret = info.get(CONF_CLIENT_SECRET, None)
         if None in (client_id, client_secret):
             return await self.async_step_init(info)
 
+        # Check if a file to import from exists.
+        # If file is empty or missing, start auth process.
         config_path = info['monzo_conf_path']
 
         if not await self.hass.async_add_job(os.path.isfile, config_path):
             return await self._set_up_redirect(info)
 
         tokens = await self.hass.async_add_job(load_json, config_path)
-
         if not tokens:
             return await self._set_up_redirect(info)
 
