@@ -11,8 +11,6 @@ from .const import DOMAIN
 MONZO_AUTH_CALLBACK_PATH = '/api/monzo/callback'
 MONZO_AUTH_CALLBACK_NAME = 'api:monzo'
 
-MONZO_CONFIG_FILE = 'monzo.conf'
-
 ATTR_CLIENT_ID = 'client_id'
 ATTR_CLIENT_SECRET = 'client_secret'
 ATTR_ACCESS_TOKEN = 'access_token'
@@ -48,9 +46,8 @@ class MonzoAuthCallbackView(HomeAssistantView):
 
         result = None
         if data.get('code') is not None:
-            url = MONZO_AUTH_CALLBACK_PATH
             redirect_uri = '{}{}'.format(
-                hass.config.api.base_url, url)
+                hass.config.api.base_url, MONZO_AUTH_CALLBACK_PATH)
 
             try:
                 result = self.oauth.fetch_access_token(data.get('code'),
