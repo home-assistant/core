@@ -25,7 +25,7 @@ CONFIG_FILE = '.tradfri_psk.conf'
 KEY_GATEWAY = 'tradfri_gateway'
 KEY_API = 'tradfri_api'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
-DEFAULT_ALLOW_TRADFRI_GROUPS = True
+DEFAULT_ALLOW_TRADFRI_GROUPS = False
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
