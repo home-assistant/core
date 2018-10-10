@@ -220,7 +220,7 @@ class HarmonyRemote(remote.RemoteDevice):
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)
         delay_secs = kwargs.get(ATTR_DELAY_SECS, self._delay_secs)
         hold_secs = kwargs.get(ATTR_HOLD_SECS)
-        _LOGGER.debug("Sending command to device %s, device)
+        _LOGGER.debug("Sending command to device %s", device)
 
         for _ in range(num_repeats):
             for command in commands:
