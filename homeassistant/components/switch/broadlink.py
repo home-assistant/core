@@ -293,7 +293,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     def current_power_w(self):
         """Return the current power usage in Watt."""
         try:
-            return round(self._load_power,2)
+            return round(self._load_power, 2)
         except (ValueError, TypeError):
             return None
 
