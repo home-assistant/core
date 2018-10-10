@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'https://api.entur.org/journeyplanner/2.0/index/graphql'
+RESOURCE = 'https://api.entur.org/journeyplanner/2.0/index/graphql'
 _GRAPHQL_STOP_TEMPLATE = """
   stopPlaces(ids: [$stops]) {
     id
@@ -144,7 +144,7 @@ def time_diff_in_minutes(timestamp1: str, timestamp2: str) -> str:
     return str(int(diff.total_seconds() / 60))
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dublin public transport sensor."""
     stop_ids = config.get(CONF_STOP_IDS)
 
@@ -203,7 +203,7 @@ class PublicTransportData:
             time=datetime.utcnow().strftime("%Y-%m-%dT%XZ"))
         headers = {'ET-Client-Name': 'home-assistant'}
         response = requests.post(
-            _RESOURCE,
+            RESOURCE,
             json={"query": query},
             timeout=10,
             headers=headers)
@@ -231,12 +231,11 @@ class PublicTransportData:
                 self._process_place(quey)
 
     def _process_place(self, place_dict: dict) -> None:
-        """Extract travel information from place dictionary."""
+        """Extract information from place dictionary."""
         place_id = place_dict['id']
         info = {ATTR_STOP_ID: place_id,
                 CONF_NAME: place_dict['name']}
-        number_of_calls = len(place_dict['estimatedCalls'])
-        if number_of_calls > 0:
+        if place_dict['estimatedCalls']:
             call = place_dict['estimatedCalls'][0]
             info[ATTR_EXPECTED_AT] = call['expectedDepartureTime']
             info[ATTR_REALTIME] = call['realtime']
@@ -246,7 +245,7 @@ class PublicTransportData:
             info[ATTR_DELAY] = time_diff_in_minutes(
                 call['expectedDepartureTime'],
                 call['aimedDepartureTime'])
-        if number_of_calls > 1:
+        if len(place_dict['estimatedCalls']) > 1:
             call = place_dict['estimatedCalls'][1]
             info[ATTR_NEXT_UP_AT] = call['expectedDepartureTime']
             info[ATTR_NEXT_UP_REALTIME] = call['realtime']
