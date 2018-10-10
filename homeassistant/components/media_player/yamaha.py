@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.yamaha/
 """
 import logging
+import xml
 
 import requests
 import voluptuous as vol
@@ -184,8 +185,12 @@ class YamahaDevice(MediaPlayerDevice):
         self._playback_support = self.receiver.get_playback_support()
         self._is_playback_supported = self.receiver.is_playback_supported(
             self._current_source)
-        self._sound_mode = self.receiver.surround_program
-        self._sound_mode_list = self.receiver.surround_programs()
+        try:
+            self._sound_mode = self.receiver.surround_program
+            self._sound_mode_list = self.receiver.surround_programs()
+        except xml.etree.ElementTree.ParseError:
+            self._sound_mode = "none"
+            self._sound_mode_list = ["none"]
 
     def build_source_list(self):
         """Build the source list."""
