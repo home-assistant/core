@@ -468,17 +468,31 @@ class InsteonEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._generate_network_address()
+        if self._insteon_device_state.group == 0x01:
+            uid = self._insteon_device.id
+        else:
+            uid = '{:s}_{:d}'.format(self._insteon_device.id,
+                                     self._insteon_device_state.group)
+        return uid
 
     @property
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
-        addr = self._generate_network_address()
+
+        # Set a base description
+        description = self._insteon_device.description
         if self._insteon_device.description is None:
-            name = addr
-        else:
-            name = '{:s} {:s}'.format(self._insteon_device.description,
-                                      addr)
+            description = 'Unknown Device'
+
+        # Get an extension label if there is one
+        extension = self._get_label()
+        if extension:
+            extension = ' ' + extension
+        name = '{:s} {:s}{:s}'.format(
+            description,
+            self._insteon_device.address.human,
+            extension
+        )
         return name
 
     @property
@@ -529,6 +543,134 @@ class InsteonEntity(Entity):
             addr = '{:s}_{:d}'.format(self._insteon_device.id,
                                       self._insteon_device_state.group)
         return addr
+
+    def _get_label(self):
+        """ Get the device label for grouped devices"""
+
+        def def_group_label(d):
+            return 'Group {:d}'.format(d.group)
+
+        def empty_label(d):
+            return ''
+
+        label_func = DESCRIPTOR_MAPPER[
+            [self._insteon_device, self._insteon_device_state,
+             self._insteon_device_state.group]]
+        if label_func is None:
+            if len(self._insteon_device.states) > 1:
+                label_func = def_group_label
+            else:
+                label_func = empty_label
+        return format(label_func(self))
+
+
+# Descriptor Label Tuple
+Descriptor = collections.namedtuple('Descriptor',
+                                    'device state group descriptor')
+
+
+class DescriptorMapper:
+    """Maps the Device, State, and Group to a descriptive label function
+     for a grouped devices instance."""
+
+    def __init__(self):
+        from insteonplm.devices.dimmableLightingControl import \
+            DimmableLightingControl_2475F, DimmableLightingControl_2334_222_6, \
+            DimmableLightingControl_2334_222_8
+        from insteonplm.states.dimmable import DimmableSwitch_Fan, \
+            DimmableSwitch, DimmableKeypadA
+        from insteonplm.devices.sensorsActuators import SensorsActuators_2450
+        from insteonplm.devices.securityHealthSafety import \
+            SecurityHealthSafety_2842_222, SecurityHealthSafety_2852_222
+        from insteonplm.devices.switchedLightingControl import \
+            SwitchedLightingControl_2663_222
+        from insteonplm.states.sensor import IoLincSensor, OnOffSensor, \
+            LeakSensorDryWet, LeakSensorHeartbeat
+        from insteonplm.states.onOff import OpenClosedRelay, OnOffKeypad, \
+            OnOffSwitch_OutletTop, OnOffSwitch_OutletBottom
+
+        def button_6_label(d): return \
+            {1: 'Main', 3: 'Button A', 4: 'Button B', 5: 'Button C',
+             6: 'Button D', 7: 'Button E'}[d.group]
+
+        def button_8_label(d): return \
+            {1: 'Main', 2: 'Button B', 3: 'Button C', 4: 'Button D',
+             5: 'Button E', 6: 'Button F', 7: 'Button G', 8: 'Button H'}[
+                d.group]
+
+        self.name_maps = [
+            # FanLinc
+            Descriptor(DimmableLightingControl_2475F, DimmableSwitch, 0x01,
+                       lambda d: 'Light'),
+            Descriptor(DimmableLightingControl_2475F, DimmableSwitch_Fan, 0x02,
+                       lambda d: 'Fan'),
+            # I/O Linc
+            Descriptor(SensorsActuators_2450, OpenClosedRelay, 0x01,
+                       lambda d: 'Relay'),
+            Descriptor(SensorsActuators_2450, IoLincSensor, 0x02,
+                       lambda d: 'Sensor'),
+
+            # Keypads
+            Descriptor(DimmableLightingControl_2334_222_6, OnOffKeypad,
+                       None, button_6_label),
+            Descriptor(DimmableLightingControl_2334_222_6, DimmableKeypadA,
+                       None, button_6_label),
+            Descriptor(DimmableLightingControl_2334_222_8, OnOffKeypad,
+                       None, button_8_label),
+            Descriptor(DimmableLightingControl_2334_222_8, DimmableKeypadA,
+                       None, button_8_label),
+
+            # Moton Sensor model 2842-222.
+            Descriptor(SecurityHealthSafety_2842_222, OnOffSensor,
+                       0x01, lambda d: 'Motion'),
+            Descriptor(SecurityHealthSafety_2842_222, OnOffSensor,
+                       0x02, lambda d: 'Light'),
+            Descriptor(SecurityHealthSafety_2842_222, OnOffSensor,
+                       0x03, lambda d: 'Battery'),
+
+            # Water Leak Sensor model 2852-222.
+            Descriptor(SecurityHealthSafety_2852_222, LeakSensorDryWet,
+                       0x01, lambda d: 'Dry'),
+            Descriptor(SecurityHealthSafety_2852_222, LeakSensorDryWet,
+                       0x02, lambda d: 'Wet'),
+            Descriptor(SecurityHealthSafety_2852_222, LeakSensorHeartbeat,
+                       0x04, lambda d: 'Heartbeat'),
+
+            # On/Off outlet model 2663-222 Switched Lighting Control
+            Descriptor(SwitchedLightingControl_2663_222, OnOffSwitch_OutletTop,
+                       0x01, lambda d: 'Top'),
+            Descriptor(SwitchedLightingControl_2663_222,
+                       OnOffSwitch_OutletBottom, 0x02, lambda d: 'Bottom'),
+        ]
+
+    def __len__(self):
+        """Return the number of Entity Descriptors mapped."""
+        return len(self.name_maps)
+
+    def __iter__(self):
+        """Itterate through the Entity Descriptors."""
+        for namemap in self.name_maps:
+            yield namemap
+
+    def __getitem__(self, key):
+        """Return a Entity Descriptors."""
+        device, state, group = key
+        descriptor = None
+        for name_map in self.name_maps:
+            if isinstance(device, name_map.device) \
+                    and isinstance(state, name_map.state) \
+                    and group == name_map.group:
+                descriptor = name_map.descriptor
+
+            if not descriptor:
+                for name_map in self.name_maps:
+                    if isinstance(device, name_map.device) \
+                            and isinstance(state, name_map.state):
+                        descriptor = name_map.descriptor
+        return descriptor
+
+
+DESCRIPTOR_MAPPER = DescriptorMapper()
 
 
 def print_aldb_to_log(aldb):
