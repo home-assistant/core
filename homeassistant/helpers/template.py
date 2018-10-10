@@ -367,18 +367,9 @@ class TemplateMethods:
 
         while to_process:
             value = to_process.pop(0)
+            point_state = self._resolve_state(value)
 
-            if isinstance(value, State):
-                latitude = value.attributes.get(ATTR_LATITUDE)
-                longitude = value.attributes.get(ATTR_LONGITUDE)
-
-                if latitude is None or longitude is None:
-                    _LOGGER.warning(
-                        "Distance:State does not contains a location: %s",
-                        value)
-                    return None
-
-            else:
+            if point_state is None:
                 # We expect this and next value to be lat&lng
                 if not to_process:
                     _LOGGER.warning(
@@ -393,6 +384,22 @@ class TemplateMethods:
                 if latitude is None or longitude is None:
                     _LOGGER.warning("Distance:Unable to process latitude and "
                                     "longitude: %s, %s", value, value_2)
+                    return None
+
+            else:
+                if not loc_helper.has_location(point_state):
+                    _LOGGER.warning(
+                        "distance:State does not contain valid location: %s",
+                        point_state)
+                    return None
+
+                latitude = point_state.attributes.get(ATTR_LATITUDE)
+                longitude = point_state.attributes.get(ATTR_LONGITUDE)
+
+                if latitude is None or longitude is None:
+                    _LOGGER.warning(
+                        "Distance:State does not contains a location: %s",
+                        value)
                     return None
 
             locations.append((latitude, longitude))
