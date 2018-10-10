@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
 from homeassistant.const import (CONF_DEVICE, CONF_MONITORED_VARIABLES,
                                  CONF_NAME, PRECISION_HALVES, PRECISION_TENTHS,
                                  PRECISION_WHOLE)
@@ -17,8 +18,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'opentherm_gw'
-
-COMP_SENSOR = 'sensor'
 
 CONF_CLIMATE = 'climate'
 CONF_FLOOR_TEMP = 'floor_temperature'
