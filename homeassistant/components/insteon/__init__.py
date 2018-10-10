@@ -538,10 +538,10 @@ class InsteonEntity(Entity):
     def _get_label(self):
         """ Get the device label for grouped devices"""
 
-        def def_group_label(d):
-            return 'Group {:d}'.format(d.group)
+        def def_group_label(device):
+            return 'Group {:d}'.format(device.group)
 
-        def empty_label(d):
+        def empty_label(device):
             return ''
 
         label_func = DESCRIPTOR_MAPPER[
@@ -581,14 +581,27 @@ class DescriptorMapper:
         from insteonplm.states.onOff import OpenClosedRelay, OnOffKeypad, \
             OnOffSwitch_OutletTop, OnOffSwitch_OutletBottom
 
-        def button_6_label(d): return \
-            {1: 'Main', 3: 'Button A', 4: 'Button B', 5: 'Button C',
-             6: 'Button D', 7: 'Button E'}[d.group]
+        def button_6_label(device):
+            return {
+                1: 'Main',
+                3: 'Button A',
+                4: 'Button B',
+                5: 'Button C',
+                6: 'Button D',
+                7: 'Button E'
+            }[device.group]
 
-        def button_8_label(d): return \
-            {1: 'Main', 2: 'Button B', 3: 'Button C', 4: 'Button D',
-             5: 'Button E', 6: 'Button F', 7: 'Button G', 8: 'Button H'}[
-                d.group]
+        def button_8_label(device):
+            return {
+                1: 'Main',
+                2: 'Button B',
+                3: 'Button C',
+                4: 'Button D',
+                5: 'Button E',
+                6: 'Button F',
+                7: 'Button G',
+                8: 'Button H'
+            }[device.group]
 
         self.name_maps = [
             # FanLinc
@@ -653,12 +666,12 @@ class DescriptorMapper:
                     and isinstance(state, name_map.state) \
                     and group == name_map.group:
                 descriptor = name_map.descriptor
-
-            if not descriptor:
-                for name_map in self.name_maps:
-                    if isinstance(device, name_map.device) \
-                            and isinstance(state, name_map.state):
-                        descriptor = name_map.descriptor
+                
+        if not descriptor:
+            for name_map in self.name_maps:
+                if isinstance(device, name_map.device) \
+                        and isinstance(state, name_map.state):
+                    descriptor = name_map.descriptor
         return descriptor
 
 
