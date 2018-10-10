@@ -71,17 +71,17 @@ class ArduinoBoard:
         self._port = port
         self._board = PyMata(self._port, verbose=False)
 
-    def set_mode(self, pin, direction, mode, cb=None):
+    def set_mode(self, pin, direction, mode, callback=None):
         """Set the mode and the direction of a given pin."""
         if mode == 'analog' and direction == 'in':
             self._board.set_pin_mode(
-                pin, self._board.INPUT, self._board.ANALOG, cb=cb)
+                pin, self._board.INPUT, self._board.ANALOG, cb=callback)
         elif mode == 'analog' and direction == 'out':
             self._board.set_pin_mode(
                 pin, self._board.OUTPUT, self._board.ANALOG)
         elif mode == 'digital' and direction == 'in':
             self._board.set_pin_mode(
-                pin, self._board.INPUT, self._board.DIGITAL, cb=cb)
+                pin, self._board.INPUT, self._board.DIGITAL, cb=callback)
         elif mode == 'digital' and direction == 'out':
             self._board.set_pin_mode(
                 pin, self._board.OUTPUT, self._board.DIGITAL)
