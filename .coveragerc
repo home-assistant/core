@@ -239,6 +239,9 @@ omit =
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
+    homeassistant/components/monzo/__init__.py
+    homeassistant/components/*/monzo.py
+
     homeassistant/components/mychevy.py
     homeassistant/components/*/mychevy.py
 
@@ -774,7 +777,6 @@ omit =
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/mitemp_bt.py
     homeassistant/components/sensor/modem_callerid.py
-    homeassistant/components/sensor/monzo.py
     homeassistant/components/sensor/mopar.py
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/mvglive.py
