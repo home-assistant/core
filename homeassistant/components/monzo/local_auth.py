@@ -16,20 +16,9 @@ MONZO_AUTH_CALLBACK_NAME = 'api:monzo'
 
 MONZO_CONFIG_FILE = 'monzo.conf'
 
-
 ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
 ATTR_LAST_SAVED_AT = 'last_saved_at'
-
-@callback
-def initialize(hass, client_id, client_secret):
-    """Initialize a local auth provider."""
-    config_flow.register_flow_implementation(
-        hass, DOMAIN, 'configuration.yaml',
-        partial(generate_auth_url, client_id),
-        partial(resolve_auth_code, hass, client_id, client_secret)
-    )
-
 
 class MonzoAuthCallbackView(HomeAssistantView):
     """Monzo Authorization Callback View."""
@@ -112,26 +101,3 @@ class MonzoAuthCallbackView(HomeAssistantView):
         )
 
         return html_response
-
-
-async def resolve_auth_code(hass, client_id, client_secret, code):
-    """Resolve an authorization code."""
-    from nest.nest import NestAuth, AuthorizationError
-
-    result = asyncio.Future()
-    auth = NestAuth(
-        client_id=client_id,
-        client_secret=client_secret,
-        auth_callback=result.set_result,
-    )
-    auth.pin = code
-
-    try:
-        await hass.async_add_job(auth.login)
-        return await result
-    except AuthorizationError as err:
-        if err.response.status_code == 401:
-            raise config_flow.CodeInvalid()
-        else:
-            raise config_flow.NestAuthError('Unknown error: {} ({})'.format(
-                err, err.response.status_code))
