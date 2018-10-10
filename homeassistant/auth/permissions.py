@@ -211,9 +211,8 @@ def _merge_policies(sources: List[CategoryType]) -> CategoryType:
     """Merge a policy."""
     # When merging policies, the most permissive wins.
     # This means we order it like this:
-    # False > True > Dict > None
+    # True > Dict > None
     #
-    # False: do not allow
     # True: allow everything
     # Dict: specify more granular permissions
     # None: no opinion
@@ -227,19 +226,11 @@ def _merge_policies(sources: List[CategoryType]) -> CategoryType:
         if source is None:
             continue
 
-        # A source that's False will always win. Shortcut return.
-        if source is False:
-            return False
-
+        # A source that's True will always win. Shortcut return.
         if source is True:
-            policy = True
-            continue
+            return True
 
         assert isinstance(source, dict)
-
-        # True > Dict, skipping source
-        if policy is True:
-            continue
 
         if policy is None:
             policy = {}

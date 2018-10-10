@@ -1,4 +1,7 @@
 """Tests for the auth permission system."""
+import pytest
+import voluptuous as vol
+
 from homeassistant.core import State
 from homeassistant.auth import permissions
 
@@ -21,9 +24,8 @@ def test_entities_empty():
 def test_entities_false():
     """Test entity ID policy."""
     policy = False
-    permissions.ENTITY_POLICY_SCHEMA(policy)
-    compiled = permissions._compile_entities(policy)
-    assert compiled('light.kitchen', []) is False
+    with pytest.raises(vol.Invalid):
+        permissions.ENTITY_POLICY_SCHEMA(policy)
 
 
 def test_entities_true():
@@ -42,16 +44,6 @@ def test_entities_domains_true():
     permissions.ENTITY_POLICY_SCHEMA(policy)
     compiled = permissions._compile_entities(policy)
     assert compiled('light.kitchen', []) is True
-
-
-def test_entities_domains_false():
-    """Test entity ID policy."""
-    policy = {
-        'domains': False
-    }
-    permissions.ENTITY_POLICY_SCHEMA(policy)
-    compiled = permissions._compile_entities(policy)
-    assert compiled('light.kitchen', []) is False
 
 
 def test_entities_domains_domain_true():
@@ -74,10 +66,8 @@ def test_entities_domains_domain_false():
             'light': False
         }
     }
-    permissions.ENTITY_POLICY_SCHEMA(policy)
-    compiled = permissions._compile_entities(policy)
-    assert compiled('light.kitchen', []) is False
-    assert compiled('switch.kitchen', []) is False
+    with pytest.raises(vol.Invalid):
+        permissions.ENTITY_POLICY_SCHEMA(policy)
 
 
 def test_entities_entity_ids_true():
@@ -95,9 +85,8 @@ def test_entities_entity_ids_false():
     policy = {
         'entity_ids': False
     }
-    permissions.ENTITY_POLICY_SCHEMA(policy)
-    compiled = permissions._compile_entities(policy)
-    assert compiled('light.kitchen', []) is False
+    with pytest.raises(vol.Invalid):
+        permissions.ENTITY_POLICY_SCHEMA(policy)
 
 
 def test_entities_entity_ids_entity_id_true():
@@ -113,17 +102,6 @@ def test_entities_entity_ids_entity_id_true():
     assert compiled('switch.kitchen', []) is False
 
 
-def test_entities_precision_order():
-    """Test entity ID policy."""
-    policy = {
-        'entity_ids': False,
-        'domains': True,
-    }
-    permissions.ENTITY_POLICY_SCHEMA(policy)
-    compiled = permissions._compile_entities(policy)
-    assert compiled('light.kitchen', []) is False
-
-
 def test_entities_entity_ids_entity_id_false():
     """Test entity ID policy."""
     policy = {
@@ -131,26 +109,8 @@ def test_entities_entity_ids_entity_id_false():
             'light.kitchen': False
         }
     }
-    permissions.ENTITY_POLICY_SCHEMA(policy)
-    compiled = permissions._compile_entities(policy)
-    assert compiled('light.kitchen', []) is False
-    assert compiled('switch.kitchen', []) is False
-
-
-def test_entities_domain_and_entity_ids():
-    """Test entity ID policy whitelist domain, decline entity."""
-    policy = {
-        'domains': {
-            'light': True,
-        },
-        'entity_ids': {
-            'light.kitchen': False
-        }
-    }
-    permissions.ENTITY_POLICY_SCHEMA(policy)
-    compiled = permissions._compile_entities(policy)
-    assert compiled('light.living_room', []) is True
-    assert compiled('light.kitchen', []) is False
+    with pytest.raises(vol.Invalid):
+        permissions.ENTITY_POLICY_SCHEMA(policy)
 
 
 def test_policy_perm_filter_states():
@@ -232,14 +192,7 @@ def test_merging_permissions_multiple_subcategories():
     policy3 = {
         'entities': True
     }
-    policy4 = {
-        'entities': False
-    }
     assert permissions.merge_policies([policy1, policy2]) == policy2
     assert permissions.merge_policies([policy1, policy3]) == policy3
-    assert permissions.merge_policies([policy1, policy4]) == policy4
 
     assert permissions.merge_policies([policy2, policy3]) == policy3
-    assert permissions.merge_policies([policy2, policy4]) == policy4
-
-    assert permissions.merge_policies([policy3, policy4]) == policy4
