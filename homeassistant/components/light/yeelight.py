@@ -282,7 +282,8 @@ class YeelightLight(Light):
         import yeelight
         if self._bulb_device is None:
             try:
-                self._bulb_device = yeelight.Bulb(self._ipaddr, model=self._model)
+                self._bulb_device = yeelight.Bulb(self._ipaddr,
+                                                  model=self._model)
                 self._bulb_device.get_properties()  # force init for type
 
                 self._available = True
@@ -311,8 +312,10 @@ class YeelightLight(Light):
 
             if self._min_mireds is None:
                 model_specs = self._bulb.get_model_specs()
-                self._min_mireds = kelvin_to_mired(model_specs['color_temp']['max'])
-                self._max_mireds = kelvin_to_mired(model_specs['color_temp']['min'])
+                self._min_mireds = \
+                    kelvin_to_mired(model_specs['color_temp']['max'])
+                self._max_mireds = \
+                    kelvin_to_mired(model_specs['color_temp']['min'])
 
             self._is_on = self._properties.get('power') == 'on'
 
