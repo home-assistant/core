@@ -64,13 +64,14 @@ async def async_setup(hass, config):
         ))
 
     host = conf.get(CONF_HOST)
+    import_groups = conf[CONF_ALLOW_TRADFRI_GROUPS]
 
     if host is None or host in configured_hosts or host in legacy_hosts:
         return True
 
     hass.async_create_task(hass.config_entries.flow.async_init(
         DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
-        data={'host': host}
+        data={CONF_HOST: host, CONF_IMPORT_GROUPS: import_groups}
     ))
 
     return True
