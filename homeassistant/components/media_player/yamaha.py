@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.yamaha/
 """
 import logging
+import xml
 
 import requests
 import voluptuous as vol
@@ -19,7 +20,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
-import xml
 
 REQUIREMENTS = ['rxv==0.5.1']
 
