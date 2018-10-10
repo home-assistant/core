@@ -12,19 +12,15 @@
       },
       "link": {
         "title": "Link Monzo Account",
-        "description": "To link your Monzo account, [authorize your account]({url}).",
+        "description": "To link your Monzo account, [authorize your account]({url})."
         }
     },
     "error": {
-      "timeout": "Timeout validating code",
-      "invalid_code": "Invalid code",
       "unknown": "Unknown error validating code",
       "internal_error": "Internal error validating code"
     },
     "abort": {
-      "already_setup": "You can only configure a single Monzo account.",
-      "authorize_url_timeout": "Timeout generating authorize url.",
-      "authorize_url_fail": "Unknown error generating an authorize url."
+      "already_setup": "You can only configure a single Monzo account."
     }
   }
 }

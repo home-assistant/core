@@ -16,6 +16,8 @@ MONZO_AUTH_CALLBACK_NAME = 'api:monzo'
 
 MONZO_CONFIG_FILE = 'monzo.conf'
 
+ATTR_CLIENT_ID = 'client_id'
+ATTR_CLIENT_SECRET = 'client_secret'
 ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
 ATTR_LAST_SAVED_AT = 'last_saved_at'
@@ -82,6 +84,8 @@ class MonzoAuthCallbackView(HomeAssistantView):
 
         if result:
             config_contents = {
+                ATTR_CLIENT_ID: self.oauth.client_id,
+                ATTR_CLIENT_SECRET: self.oauth.client_secret,
                 ATTR_ACCESS_TOKEN: result.get('access_token'),
                 ATTR_REFRESH_TOKEN: result.get('refresh_token'),
                 ATTR_LAST_SAVED_AT: int(time.time())
