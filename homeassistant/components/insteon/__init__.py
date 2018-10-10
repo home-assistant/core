@@ -575,7 +575,8 @@ class DescriptorMapper:
 
     def __init__(self):
         from insteonplm.devices.dimmableLightingControl import \
-            DimmableLightingControl_2475F, DimmableLightingControl_2334_222_6, \
+            DimmableLightingControl_2475F, \
+            DimmableLightingControl_2334_222_6, \
             DimmableLightingControl_2334_222_8
         from insteonplm.states.dimmable import DimmableSwitch_Fan, \
             DimmableSwitch, DimmableKeypadA
