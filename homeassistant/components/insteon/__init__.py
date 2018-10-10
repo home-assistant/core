@@ -666,7 +666,6 @@ class DescriptorMapper:
                     and isinstance(state, name_map.state) \
                     and group == name_map.group:
                 descriptor = name_map.descriptor
-                
         if not descriptor:
             for name_map in self.name_maps:
                 if isinstance(device, name_map.device) \
