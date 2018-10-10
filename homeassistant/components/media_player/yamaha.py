@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
+import xml
 
 REQUIREMENTS = ['rxv==0.5.1']
 
@@ -184,8 +185,12 @@ class YamahaDevice(MediaPlayerDevice):
         self._playback_support = self.receiver.get_playback_support()
         self._is_playback_supported = self.receiver.is_playback_supported(
             self._current_source)
-        self._sound_mode = self.receiver.surround_program
-        self._sound_mode_list = self.receiver.surround_programs()
+        try:
+            self._sound_mode = self.receiver.surround_program
+            self._sound_mode_list = self.receiver.surround_programs()
+        except xml.etree.ElementTree.ParseError:
+            self._sound_mode = "none"
+            self._sound_mode_list = ["none"]
 
     def build_source_list(self):
         """Build the source list."""
