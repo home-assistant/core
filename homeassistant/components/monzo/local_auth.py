@@ -91,9 +91,6 @@ class MonzoAuthCallbackView(HomeAssistantView):
                 ATTR_LAST_SAVED_AT: int(time.time())
             }
 
-        #access_token_cache_file = hass.config.path(MONZO_CONFIG_FILE)
-        #save_json(access_token_cache_file, config_contents)
-
         hass.async_add_job(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
