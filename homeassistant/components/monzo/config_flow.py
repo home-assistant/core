@@ -43,7 +43,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
     async def async_step_init(self, user_input=None):
         """Handle the start of the config flow."""
         errors = {}
-        print(user_input)
+
         if user_input is not None:
             client_id = user_input.get(CONF_CLIENT_ID, None)
             client_secret = user_input.get(CONF_CLIENT_SECRET, None)
@@ -74,7 +74,6 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason='already_setup')
 
         errors = {}
-        print(MONZO_AUTH_START)
         monzo_auth_start_redirect = '{}{}'.format(
             self.hass.config.api.base_url,
             MONZO_AUTH_START)
@@ -92,9 +91,6 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
 
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
-
-        print('user_input')
-        print(user_input)
 
         if user_input is not None:
             client_id = user_input.get(CONF_CLIENT_ID, None)

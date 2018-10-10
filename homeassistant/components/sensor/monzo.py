@@ -36,9 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     monzo = hass.data[DOMAIN][DATA_MONZO_CLIENT][entry.entry_id]
 
     sensors = []
-    print("starting to make sensors")
     for sensor_type in monzo.sensor_conditions:
-        print("In loop")
         name, icon, unit = SENSORS[sensor_type]
         sensors.append(
             MonzoSensor(
