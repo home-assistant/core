@@ -1,8 +1,7 @@
 """Config flow to configure the OpenUV component."""
 
-import os
-
 from collections import OrderedDict
+import os
 
 import voluptuous as vol
 
@@ -10,8 +9,8 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.util.json import load_json
 
-from .local_auth import MonzoAuthCallbackView
 from .const import DOMAIN
+from .local_auth import MonzoAuthCallbackView
 
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'

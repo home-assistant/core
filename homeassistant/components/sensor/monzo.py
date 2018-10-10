@@ -4,22 +4,16 @@ Support for the Monzo API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.monzo/
 """
-#import os
 import logging
-#import datetime
-#import time
 
-
-from homeassistant.core import callback
+from homeassistant.components.monzo import (
+    DATA_BALANCE, DATA_MONZO_CLIENT, DATA_POTS, DEFAULT_ATTRIBUTION, DOMAIN,
+    SENSORS, TOPIC_UPDATE, TYPE_BALANCE, TYPE_DAILY_SPEND, TYPE_POTS,
+    MonzoEntity)
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.components.monzo import (
-    DATA_MONZO_CLIENT, DOMAIN, SENSORS, TOPIC_UPDATE,
-    TYPE_BALANCE, TYPE_DAILY_SPEND, TYPE_POTS, DEFAULT_ATTRIBUTION, MonzoEntity)
-from homeassistant.components.monzo import (
-    DATA_BALANCE, DATA_POTS)
 from homeassistant.helpers.entity import Entity
-
 
 DEPENDENCIES = ['monzo']
 _LOGGER = logging.getLogger(__name__)
