@@ -89,7 +89,7 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
 
     def __init__(self, element, elk, elk_data):
         """Initialize Area as Alarm Control Panel."""
-        super().__init__('alarm_control_panel', element, elk, elk_data)
+        super().__init__(element, elk, elk_data)
         self._changed_by_entity_id = ''
         self._state = None
 
