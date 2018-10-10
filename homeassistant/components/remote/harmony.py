@@ -12,14 +12,15 @@ import voluptuous as vol
 from homeassistant.components import remote
 from homeassistant.components.remote import (
     ATTR_ACTIVITY, ATTR_DELAY_SECS, ATTR_DEVICE, ATTR_NUM_REPEATS,
-    DEFAULT_DELAY_SECS, DOMAIN, PLATFORM_SCHEMA)
+    DEFAULT_DELAY_SECS, ATTR_HOLD_SECS, DEFAULT_HOLD_SECS,
+    DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyharmony==1.0.20']
+REQUIREMENTS = ['pyharmony==1.0.21']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +34,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(ATTR_ACTIVITY): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS):
+        vol.Coerce(float),
+    vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS):
         vol.Coerce(float),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -213,12 +216,16 @@ class HarmonyRemote(remote.RemoteDevice):
             _LOGGER.error("Missing required argument: device")
             return
 
+        _LOGGER.debug("Sending commands to device %s", device)
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)
         delay_secs = kwargs.get(ATTR_DELAY_SECS, self._delay_secs)
+        hold_secs = kwargs.get(ATTR_HOLD_SECS)
+        _LOGGER.debug("Sending command to device %s, device)
 
         for _ in range(num_repeats):
             for command in commands:
-                self._client.send_command(device, command)
+                _LOGGER.debug("Sending command %s", command)
+                self._client.send_command(device, command, hold_secs)
                 time.sleep(delay_secs)
 
     def sync(self):
