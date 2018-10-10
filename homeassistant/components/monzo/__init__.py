@@ -20,7 +20,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import config_flow
-from .const import DOMAIN
+from .const import (
+    DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ACCESS_TOKEN,
+    CONF_REFRESH_TOKEN, CONF_LAST_SAVED_AT)
 
 REQUIREMENTS = ['monzotomtest==0.6.1']
 
@@ -38,9 +40,6 @@ DATA_POTS = 'pots'
 
 DEFAULT_ATTRIBUTION = 'Data provided by Monzo'
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
-
-CONF_CLIENT_ID = 'client_id'
-CONF_CLIENT_SECRET = 'client_secret'
 
 TOPIC_UPDATE = '{0}_data_update'.format(DOMAIN)
 
@@ -78,8 +77,8 @@ async def async_setup(hass, config):
         return True
 
     conf = config[DOMAIN]
-    client_id = conf.get(CONF_CLIENT_ID, None)
-    client_secret = conf.get(CONF_CLIENT_SECRET, None)
+    client_id = conf.get(CONF_CLIENT_ID)
+    client_secret = conf.get(CONF_CLIENT_SECRET)
 
     filename = config.get(CONF_FILENAME, MONZO_CONFIG_FILE)
     access_token_cache_file = hass.config.path(filename)
@@ -87,8 +86,8 @@ async def async_setup(hass, config):
     hass.async_add_job(hass.config_entries.flow.async_init(
         DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
         data={
-            'client_id': client_id,
-            'client_secret': client_secret,
+            CONF_CLIENT_ID: client_id,
+            CONF_CLIENT_SECRET: client_secret,
             'monzo_conf_path': access_token_cache_file
         }
     ))
@@ -108,11 +107,10 @@ async def async_setup_entry(hass, config_entry):
 
     client_id = config_entry.data['tokens'][CONF_CLIENT_ID]
     client_secret = config_entry.data['tokens'][CONF_CLIENT_SECRET]
-    access_token = config_entry.data['tokens']['access_token']
-    refresh_token = config_entry.data['tokens']['refresh_token']
-    last_saved_at = config_entry.data['tokens']['last_saved_at']
+    access_token = config_entry.data['tokens'][CONF_ACCESS_TOKEN]
+    refresh_token = config_entry.data['tokens'][CONF_REFRESH_TOKEN]
+    last_saved_at = config_entry.data['tokens'][CONF_LAST_SAVED_AT]
 
-    print("Making a Monzo OAuth")
     oauth_client = MonzoOAuth2Client(client_id=client_id,
                                      client_secret=client_secret,
                                      access_token=access_token,
@@ -124,8 +122,8 @@ async def async_setup_entry(hass, config_entry):
         oauth_client.refresh_token()
 
     monzo = MonzoObject(Monzo.from_oauth_session(oauth_client), sensors)
-
     await monzo.async_update()
+
     # Make Monzo client available
     hass.data[DOMAIN][DATA_MONZO_CLIENT][config_entry.entry_id] = monzo
 

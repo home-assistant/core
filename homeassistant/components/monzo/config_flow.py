@@ -9,11 +9,9 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.util.json import load_json
 
-from .const import DOMAIN
+from .const import (DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET)
 from .local_auth import MonzoAuthCallbackView
 
-CONF_CLIENT_ID = 'client_id'
-CONF_CLIENT_SECRET = 'client_secret'
 
 MONZO_AUTH_START = '/api/monzo'
 MONZO_AUTH_CALLBACK_PATH = '/api/monzo/callback'
@@ -44,8 +42,8 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         errors = {}
 
         if user_input is not None:
-            client_id = user_input.get(CONF_CLIENT_ID, None)
-            client_secret = user_input.get(CONF_CLIENT_SECRET, None)
+            client_id = user_input.get(CONF_CLIENT_ID)
+            client_secret = user_input.get(CONF_CLIENT_SECRET)
             if None not in (client_id, client_secret):
                 if client_id in configured_instances(self.hass):
                     errors['base'] = 'identifier_exists'
@@ -89,8 +87,8 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         from monzo import MonzoOAuth2Client
 
         if user_input is not None:
-            client_id = user_input.get(CONF_CLIENT_ID, None)
-            client_secret = user_input.get(CONF_CLIENT_SECRET, None)
+            client_id = user_input.get(CONF_CLIENT_ID)
+            client_secret = user_input.get(CONF_CLIENT_SECRET)
             redirect_uri = '{}{}'.format(self.hass.config.api.base_url,
                                          MONZO_AUTH_CALLBACK_PATH)
 
@@ -113,13 +111,13 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason='already_setup')
 
         # Create config entry after auth process
-        tokens = info.get('tokens', None)
+        tokens = info.get('tokens')
         if tokens is not None:
             return self._entry_from_tokens('Monzo', tokens)
 
         # Check if component has been initalized without any credentials.
-        client_id = info.get(CONF_CLIENT_ID, None)
-        client_secret = info.get(CONF_CLIENT_SECRET, None)
+        client_id = info.get(CONF_CLIENT_ID)
+        client_secret = info.get(CONF_CLIENT_SECRET)
         if None in (client_id, client_secret):
             return await self.async_step_init(info)
 
