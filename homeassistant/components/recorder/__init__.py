@@ -34,7 +34,7 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.11','pymssql==2.1.4']
+REQUIREMENTS = ['sqlalchemy==1.2.11', 'pymssql==2.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
