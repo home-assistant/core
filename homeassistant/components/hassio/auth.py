@@ -6,17 +6,25 @@ import os
 from aiohttp import web
 from aiohttp.web_exceptions import (
     HTTPForbidden, HTTPNotFound, HTTPUnauthorized)
+import voluptuous as vol
 
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
-
+from homeassistant.components.http.data_validator import RequestDataValidator
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_USERNAME = 'username'
 ATTR_PASSWORD = 'password'
+
+
+SCHEMA_API_AUTH = vol.Schema({
+    vol.Required(ATTR_USERNAME): cv.string,
+    vol.Required(ATTR_PASSWORD): cv.string,
+})
 
 
 @callback
@@ -36,6 +44,7 @@ class HassIOAuth(HomeAssistantView):
         """Initialize WebView."""
         self.hass = hass
 
+    @RequestDataValidator(SCHEMA_API_AUTH)
     async def post(self, request):
         """Handle new discovery requests."""
         hassio_ip = os.environ['HASSIO'].split(':')[0]
