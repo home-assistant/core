@@ -62,8 +62,6 @@ SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
 
-YEELIGHT_MIN_KELVIN = YEELIGHT_MAX_KELVIN = 2700
-
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
 EFFECT_STROBE = "Strobe epilepsy!"
