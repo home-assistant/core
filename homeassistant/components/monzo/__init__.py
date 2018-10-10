@@ -2,7 +2,7 @@
 Support for Monzo accounts.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/nest/
+https://home-assistant.io/components/monzo/
 """
 from datetime import timedelta
 import logging

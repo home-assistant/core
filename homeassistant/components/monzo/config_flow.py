@@ -1,4 +1,4 @@
-"""Config flow to configure the OpenUV component."""
+"""Config flow to configure the Monzo component."""
 
 from collections import OrderedDict
 import os
