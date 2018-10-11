@@ -297,6 +297,9 @@ ATTR_STATE = 'state'
 
 ATTR_OPTION = 'option'
 
+# For entities which have a source they want to specify.
+ATTR_SOURCE = 'source'
+
 # Bitfield of supported component features for the entity
 ATTR_SUPPORTED_FEATURES = 'supported_features'
 

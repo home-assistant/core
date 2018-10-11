@@ -11,7 +11,7 @@ import logging
 from datetime import timedelta
 from typing import Optional
 
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_SOURCE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -44,6 +44,11 @@ class GeoLocationEvent(Entity):
         return None
 
     @property
+    def source(self) -> Optional[str]:
+        """Return source value of this external event."""
+        return None
+
+    @property
     def distance(self) -> Optional[float]:
         """Return distance value of this external event."""
         return None
@@ -66,4 +71,6 @@ class GeoLocationEvent(Entity):
             data[ATTR_LATITUDE] = round(self.latitude, 5)
         if self.longitude is not None:
             data[ATTR_LONGITUDE] = round(self.longitude, 5)
+        if self.source is not None:
+            data[ATTR_SOURCE] = self.source
         return data
