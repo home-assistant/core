@@ -58,6 +58,6 @@ async def async_setup(hass, config):
         await discovery.async_load_platform(
             hass, 'binary_sensor', DOMAIN, event, conf)
 
-    hass.async_add_job(plum.discover(hass.loop, new_load, new_lightpad))
+    hass.async_create_task(plum.discover(hass.loop, new_load, new_lightpad))
 
     return True
