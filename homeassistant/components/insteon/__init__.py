@@ -563,8 +563,6 @@ class DescriptorMapper:
 class InsteonEntity(Entity):
     """INSTEON abstract base entity."""
 
-    descriptor_mapper = DescriptorMapper()
-
     def __init__(self, device, state_key):
         """Initialize the INSTEON binary sensor."""
         self._insteon_device_state = device.states[state_key]
@@ -659,13 +657,15 @@ class InsteonEntity(Entity):
     def _get_label(self):
         """ Get the device label for grouped devices"""
 
+        descriptor_mapper = DescriptorMapper()
+        
         def def_group_label(device):
             return 'Group {:d}'.format(device.group)
 
         def empty_label(device):
             return ''
 
-        label_func = InsteonEntity.descriptor_mapper[
+        label_func = descriptor_mapper[
             [self._insteon_device, self._insteon_device_state,
              self._insteon_device_state.group]]
         if label_func is None:
