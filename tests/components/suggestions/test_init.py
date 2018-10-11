@@ -10,6 +10,12 @@ NIGHT = dt_util.now().replace(hour=2)
 MORNING = dt_util.now().replace(hour=8)
 AFTERNOON = dt_util.now().replace(hour=14)
 EVENING = dt_util.now().replace(hour=20)
+EMPTY = {
+    'morning': [],
+    'afternoon': [],
+    'evening': [],
+    'night': [],
+}
 
 
 def _mock_service(entity_id, time_fired, context_id=None):
@@ -62,3 +68,25 @@ def test_popular_first(hass, mock_recorder_results):
     ])
     suggestions = _generate_suggestion(hass)
     assert suggestions['morning'] == ['light.kitchen', 'cover.kitchen']
+
+
+def test_bad_services(hass, mock_recorder_results):
+    """Test service with bad data."""
+    mock_recorder_results.append(
+        MockEvent(
+            event_type=EVENT_CALL_SERVICE,
+            event_data_raw='invalid json',
+        )
+    )
+    # Should not raise
+    assert _generate_suggestion(hass) == EMPTY
+
+    mock_recorder_results.clear()
+    mock_recorder_results.append(
+        MockEvent(
+            event_type=EVENT_CALL_SERVICE,
+            event_data={},
+        )
+    )
+    # Should not raise
+    assert _generate_suggestion(hass) == EMPTY

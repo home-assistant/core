@@ -68,18 +68,33 @@ def _generate_suggestion(hass):
                 continue
 
             if event.event_type == EVENT_CALL_SERVICE:
-                data = json.loads(event.event_data).get(ATTR_SERVICE_DATA, {})
-                entity_ids = data.get(ATTR_ENTITY_ID)
+                try:
+                    event_data = json.loads(event.event_data)
+                except ValueError:
+                    continue
+
+                if not event_data:
+                    continue
+
+                service_data = event_data.get(ATTR_SERVICE_DATA)
+
+                if not service_data:
+                    continue
+
+                entity_ids = service_data.get(ATTR_ENTITY_ID)
+
                 if entity_ids is not None and not isinstance(entity_ids, list):
                     entity_ids = [entity_ids]
 
                 context_seen.add(event.context_id)
 
-            if entity_ids is not None:
-                period = _period_from_datetime(
-                    dt_util.as_local(event.time_fired))
-                for entity_id in entity_ids:
-                    results[period][entity_id] += 1
+            if entity_ids is None:
+                continue
+
+            period = _period_from_datetime(
+                dt_util.as_local(event.time_fired))
+            for entity_id in entity_ids:
+                results[period][entity_id] += 1
 
     _LOGGER.info('Generated suggestions in %.3f seconds', monotonic() - start)
 
