@@ -10,15 +10,11 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.components.http import HomeAssistantView
 
 from .handler import HassioAPIError
+from .const import (
+    ATTR_DISCOVERY, ATTR_ADDON, ATTR_NAME, ATTR_SERVICE, ATTR_CONFIG,
+    ATTR_UUID)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_DISCOVERY = 'discovery'
-ATTR_ADDON = 'addon'
-ATTR_NAME = 'name'
-ATTR_SERVICE = 'service'
-ATTR_CONFIG = 'config'
-ATTR_UUID = 'uuid'
 
 
 @callback
