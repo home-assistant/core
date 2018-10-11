@@ -17,6 +17,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.unifi.const import (
     CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN)
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 DEPENDENCIES = [DOMAIN]
@@ -77,6 +78,13 @@ async def async_update_items(controller, async_add_entities,
     """Update POE port state from the controller."""
     import aiounifi
 
+    @callback
+    def update_switch_state():
+        """Tell switches to reload state."""
+        for client_id, client in switches.items():
+            if client_id not in progress_waiting:
+                client.async_schedule_update_ha_state()
+
     try:
         with async_timeout.timeout(4):
             await controller.api.clients.update()
@@ -87,24 +95,21 @@ async def async_update_items(controller, async_add_entities,
             with async_timeout.timeout(5):
                 await controller.api.login()
         except (asyncio.TimeoutError, aiounifi.AiounifiException):
-            controller.available = False
+            if controller.available:
+                controller.available = False
+                update_switch_state()
             return
 
     except (asyncio.TimeoutError, aiounifi.AiounifiException):
         if controller.available:
             LOGGER.error('Unable to reach controller %s', controller.host)
             controller.available = False
+            update_switch_state()
         return
 
     if not controller.available:
         LOGGER.info('Reconnected to controller %s', controller.host)
         controller.available = True
-
-    if not controller.available:
-        for client_id, client in switches.items():
-            if client_id not in progress_waiting:
-                client.async_schedule_update_ha_state()
-        return
 
     new_switches = []
     devices = controller.api.devices
@@ -149,8 +154,6 @@ class UniFiSwitch(SwitchDevice):
 
     async def async_update(self):
         """Synchronize state with controller."""
-        if self.poe_mode is None and self.port.poe_mode != 'off':
-            self.poe_mode = self.port.poe_mode
         await self.async_request_controller_update(self.client.mac)
 
     @property
