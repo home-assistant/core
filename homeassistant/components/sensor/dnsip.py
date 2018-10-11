@@ -67,11 +67,10 @@ class WanIpSensor(Entity):
     def __init__(self, hass, name, hostname, resolver, ipv6):
         """Initialize the sensor."""
         import aiodns
-        self.aiodns = aiodns
         self.hass = hass
         self._name = name
         self.hostname = hostname
-        self.resolver = self.aiodns.DNSResolver(loop=self.hass.loop)
+        self.resolver = aiodns.DNSResolver(loop=self.hass.loop)
         self.resolver.nameservers = [resolver]
         self.querytype = 'AAAA' if ipv6 else 'A'
         self._state = STATE_UNKNOWN
@@ -88,6 +87,7 @@ class WanIpSensor(Entity):
 
     async def async_update(self):
         """Get the current DNS IP address for hostname."""
+        from aiodns.error import DNSError
         try:
             response = await self.resolver.query(self.hostname,
                                                  self.querytype)
