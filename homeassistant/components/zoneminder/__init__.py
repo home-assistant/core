@@ -10,12 +10,12 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PATH, CONF_SSL, CONF_USERNAME,
-    CONF_VERIFY_SSL)
+    CONF_VERIFY_SSL, ATTR_NAME)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['zm-py==0.0.5']
+REQUIREMENTS = ['zm-py==0.1.0']
 
 CONF_PATH_ZMS = 'path_zms'
 
@@ -38,6 +38,11 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_SET_RUN_STATE = 'set_run_state'
+SET_RUN_STATE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NAME): cv.string
+})
+
 
 def setup(hass, config):
     """Set up the ZoneMinder component."""
@@ -56,5 +61,14 @@ def setup(hass, config):
                                    conf.get(CONF_PATH),
                                    conf.get(CONF_PATH_ZMS),
                                    conf.get(CONF_VERIFY_SSL))
+
+    def set_active_state(call):
+        """Set the ZoneMinder run state to the given state name."""
+        return hass.data[DOMAIN].set_active_state(call.data[ATTR_NAME])
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_RUN_STATE, set_active_state,
+        schema=SET_RUN_STATE_SCHEMA
+    )
 
     return hass.data[DOMAIN].login()
