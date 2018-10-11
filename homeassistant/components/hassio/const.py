@@ -8,3 +8,5 @@ ATTR_CONFIG = 'config'
 ATTR_UUID = 'uuid'
 ATTR_USERNAME = 'username'
 ATTR_PASSWORD = 'password'
+
+X_HASSIO = 'X-HASSIO-KEY'
