@@ -450,7 +450,7 @@ class DescriptorMapper:
     """Maps the Device, State, and Group to a descriptive label function."""
 
     def __init__(self):
-        """Load up device map db"""
+        """Load up device map db."""
         from insteonplm.devices.dimmableLightingControl import \
             DimmableLightingControl_2475F, \
             DimmableLightingControl_2334_222_6, \
@@ -654,7 +654,7 @@ class InsteonEntity(Entity):
         self.print_aldb()
 
     def _get_label(self):
-        """ Get the device label for grouped devices."""
+        """Get the device label for grouped devices."""
         descriptor_mapper = DescriptorMapper()
 
         def def_group_label(device):
