@@ -91,7 +91,7 @@ class WanIpSensor(Entity):
         try:
             response = await self.resolver.query(self.hostname,
                                                  self.querytype)
-        except self.aiodns.error.DNSError as err:
+        except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
             response = None
         if response:
