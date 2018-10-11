@@ -15,11 +15,14 @@ class MockEvent(models.Events):
 
     def __init__(self, event_type, event_data={}, origin='LOCAL',
                  time_fired=None, created=None, context_id=None,
-                 context_user_id=None, event_id=None):
+                 context_user_id=None, event_id=None, event_data_raw=None):
         """Initialize the mock event."""
         global event_id_gen
 
-        event_data = json.dumps(event_data)
+        if event_data_raw is not None:
+            event_data = event_data_raw
+        else:
+            event_data = json.dumps(event_data)
 
         if event_id is None:
             event_id_gen += 1
