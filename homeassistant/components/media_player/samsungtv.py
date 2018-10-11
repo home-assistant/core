@@ -20,7 +20,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF,
-    STATE_ON, STATE_UNKNOWN)
+    STATE_UNKNOWN, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
@@ -124,25 +124,26 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
-        if sys.platform == 'win32':
-            timeout_arg = '-w {}000'.format(self._config['timeout'])
-            _ping_cmd = [
-                'ping', '-n 3', timeout_arg, self._config['host']]
-        else:
-            timeout_arg = '-W{}'.format(self._config['timeout'])
-            _ping_cmd = [
-                'ping', '-n', '-q',
-                '-c3', timeout_arg, self._config['host']]
-
-        ping = subprocess.Popen(
-            _ping_cmd,
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        try:
-            ping.communicate()
-            self._state = STATE_ON if ping.returncode == 0 else STATE_OFF
-        except subprocess.CalledProcessError:
-            self._state = STATE_OFF
-
+        self.send_key()
+        # if sys.platform == 'win32':
+        #     timeout_arg = '-w {}000'.format(self._config['timeout'])
+        #     _ping_cmd = [
+        #         'ping', '-n 1', timeout_arg, self._config['host']]
+        # else:
+        #     timeout_arg = '-W{}'.format(self._config['timeout'])
+        #     _ping_cmd = [
+        #         'ping', '-n', '-q',
+        #         '-c1', timeout_arg, self._config['host']]
+#
+        # ping = subprocess.Popen(
+        #     _ping_cmd,
+        #     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        # try:
+        #     ping.communicate()
+        #     self._state = STATE_UNKNOWN if ping.returncode == 0 else STATE_OFF
+        # except subprocess.CalledProcessError:
+        #     self._state = STATE_OFF
+#
     def get_remote(self):
         """Create or return a remote control instance."""
         if self._remote is None:
