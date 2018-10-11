@@ -91,7 +91,11 @@ class DeconzCover(CoverDevice):
     @property
     def device_class(self):
         """Return the class of the cover."""
-        return 'damper'
+        if self._cover.type == "Level controllable output":
+            return 'damper'
+        if self._cover.type == "Window covering device":
+            return 'window'
+        return None
 
     @property
     def supported_features(self):

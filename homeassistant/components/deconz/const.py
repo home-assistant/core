@@ -16,7 +16,8 @@ CONF_ALLOW_DECONZ_GROUPS = 'allow_deconz_groups'
 ATTR_DARK = 'dark'
 ATTR_ON = 'on'
 
-COVER_TYPES = ["Level controllable output"]
+
+COVER_TYPES = ["Level controllable output", "Window covering device"]
 
 POWER_PLUGS = ["On/Off plug-in unit", "Smart plug"]
 SIRENS = ["Warning device"]
