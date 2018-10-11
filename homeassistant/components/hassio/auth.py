@@ -22,7 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 SCHEMA_API_AUTH = vol.Schema({
     vol.Required(ATTR_USERNAME): cv.string,
     vol.Required(ATTR_PASSWORD): cv.string,
-})
+    vol.Required(ATTR_ADDON): cv.slug,
+}, extra=vol.ALLOW_EXTRA)
 
 
 @callback
