@@ -10,12 +10,12 @@ from typing import Dict
 
 import voluptuous as vol
 
-from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP,
                                  CONF_PLATFORM,
                                  CONF_ENTITY_ID,
                                  CONF_HOST)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
@@ -447,10 +447,10 @@ Descriptor = collections.namedtuple('Descriptor',
 
 
 class DescriptorMapper:
-    """Maps the Device, State, and Group to a descriptive label function
-     for a grouped devices instance."""
+    """Maps the Device, State, and Group to a descriptive label function."""
 
     def __init__(self):
+        """Load up device map db"""
         from insteonplm.devices.dimmableLightingControl import \
             DimmableLightingControl_2475F, \
             DimmableLightingControl_2334_222_6, \
@@ -597,7 +597,6 @@ class InsteonEntity(Entity):
     @property
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
-
         # Set a base description
         description = self._insteon_device.description
         if self._insteon_device.description is None:
@@ -655,7 +654,7 @@ class InsteonEntity(Entity):
         self.print_aldb()
 
     def _get_label(self):
-        """ Get the device label for grouped devices"""
+        """ Get the device label for grouped devices."""
         descriptor_mapper = DescriptorMapper()
 
         def def_group_label(device):
