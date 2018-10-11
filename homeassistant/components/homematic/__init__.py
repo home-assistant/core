@@ -797,11 +797,8 @@ class HMDevice(Entity):
                 has_changed = True
 
         # Availability has changed
-        if attribute == 'UNREACH':
-            self._available = not bool(value)
-            has_changed = True
-        elif not self.available:
-            self._available = False
+        if self.available != (not self._hmdevice._unreach):
+            self._available = not self._hmdevice._unreach
             has_changed = True
 
         # If it has changed data point, update HASS
