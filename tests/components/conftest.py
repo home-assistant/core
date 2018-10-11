@@ -1,5 +1,7 @@
 """Fixtures for component testing."""
-from unittest.mock import patch
+from itertools import islice
+from unittest.mock import Mock, patch
+from contextlib import contextmanager
 
 import pytest
 
@@ -77,3 +79,29 @@ def hass_access_token(hass):
     refresh_token = hass.loop.run_until_complete(
         hass.auth.async_create_refresh_token(user, CLIENT_ID))
     yield hass.auth.async_create_access_token(refresh_token)
+
+
+class QueryResult(list):
+    """Mock query result implementation."""
+
+    def return_self(self, *args):
+        """Stub to return self."""
+        return self
+
+    yield_per = return_self
+    order_by = return_self
+    filter = return_self
+
+
+@pytest.fixture
+def mock_recorder_results():
+    """Mock the results from a recorder query."""
+    results = QueryResult()
+
+    @contextmanager
+    def mock_session(hass):
+        yield Mock(query=Mock(return_value=results))
+
+    with patch('homeassistant.components.suggestions.session_scope',
+               side_effect=mock_session):
+        yield results
