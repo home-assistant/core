@@ -98,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                            doorbell)
             )
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class AugustDoorBinarySensor(BinarySensorDevice):
