@@ -14,10 +14,9 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.http.data_validator import RequestDataValidator
 
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_USERNAME, ATTR_PASSWORD, ATTR_ADDON
 
-ATTR_USERNAME = 'username'
-ATTR_PASSWORD = 'password'
+_LOGGER = logging.getLogger(__name__)
 
 
 SCHEMA_API_AUTH = vol.Schema({
