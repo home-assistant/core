@@ -44,15 +44,8 @@ async def async_get_service(hass, config, discovery_info=None):
 class XmppNotificationService(BaseNotificationService):
     """Implement the notification service for Jabber (XMPP)."""
 
-    def __init__(self,
-                 sender,
-                 resource,
-                 password,
-                 recipient,
-                 tls,
-                 verify,
-                 room,
-                 loop):
+    def __init__(self, sender, resource, password,
+                 recipient, tls, verify, room, loop):
         """Initialize the service."""
         self._loop = loop
         self._sender = sender
