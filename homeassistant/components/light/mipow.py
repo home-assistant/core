@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, Light,
     FLASH_LONG, ATTR_WHITE_VALUE,
-    FLASH_SHORT, ATTR_EFFECT, SUPPORT_EFFECT, EFFECT_COLORLOOP,
+    FLASH_SHORT, ATTR_EFFECT, SUPPORT_EFFECT,
     SUPPORT_FLASH, ATTR_FLASH, PLATFORM_SCHEMA, SUPPORT_WHITE_VALUE)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
