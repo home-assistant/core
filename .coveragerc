@@ -437,6 +437,7 @@ omit =
     homeassistant/components/climate/homematic.py
     homeassistant/components/climate/honeywell.py
     homeassistant/components/climate/knx.py
+    homeassistant/components/climate/melcloud.py
     homeassistant/components/climate/oem.py
     homeassistant/components/climate/opentherm_gw.py
     homeassistant/components/climate/proliphix.py
