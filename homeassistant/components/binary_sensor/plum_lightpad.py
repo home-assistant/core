@@ -23,6 +23,7 @@ async def async_setup_platform(hass, config, add_devices,
             PlumMotionSensor(lightpad=lightpad, hass=hass)
         ])
 
+
 class PlumMotionSensor(BinarySensorDevice):
     """Representation of a Lightpad's motion detection."""
 

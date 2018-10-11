@@ -49,12 +49,14 @@ async def async_setup(hass, config):
     async def new_load(event):
         """Called when a new LogicalLoad is detected."""
         await discovery.async_load_platform(hass, 'light', DOMAIN, event, conf)
-        await discovery.async_load_platform(hass, 'sensor', DOMAIN, event, conf)
+        await discovery.async_load_platform(
+            hass, 'sensor', DOMAIN, event, conf)
 
     async def new_lightpad(event):
         """Called when a new Lightpad is detected."""
         await discovery.async_load_platform(hass, 'light', DOMAIN, event, conf)
-        await discovery.async_load_platform(hass, 'binary_sensor', DOMAIN, event, conf)
+        await discovery.async_load_platform(
+            hass, 'binary_sensor', DOMAIN, event, conf)
 
     hass.async_add_job(plum.discover(hass.loop, new_load, new_lightpad))
 

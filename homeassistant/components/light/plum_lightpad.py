@@ -119,12 +119,12 @@ class GlowRing(Light):
     @property
     def rgb_color(self):
         """RGB Property."""
-        return self.red, self.green, self.blue
+        return self._red, self._green, self._blue
 
     @property
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
-        return color_util.color_RGB_to_hs(self.red, self.green, self.blue)
+        return color_util.color_RGB_to_hs(self._red, self._green, self._blue)
 
     @property
     def should_poll(self):
@@ -168,9 +168,10 @@ class GlowRing(Light):
             self._lightpad.set_config({"glowIntensity": self.glow_intensity})
         elif ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
-            red, green, blue = color_util.color_hs_to_RGB(*hs_color)
-            self._red, self._green, self._blue = red, green, blue
-            self._lightpad.set_glow_color(red, green, blue, 0)
+            self._red, self._green, self._blue = \
+                color_util.color_hs_to_RGB(*hs_color)
+            self._lightpad.set_glow_color(
+                self._red, self._green, self._blue, 0)
         else:
             self._lightpad.set_config({"glowEnabled": True})
 
