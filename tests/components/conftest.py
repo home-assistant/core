@@ -1,5 +1,4 @@
 """Fixtures for component testing."""
-from itertools import islice
 from unittest.mock import Mock, patch
 from contextlib import contextmanager
 
