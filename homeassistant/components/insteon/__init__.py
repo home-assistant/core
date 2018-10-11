@@ -441,120 +441,6 @@ class IPDB:
         return None
 
 
-class InsteonEntity(Entity):
-    """INSTEON abstract base entity."""
-
-    def __init__(self, device, state_key):
-        """Initialize the INSTEON binary sensor."""
-        self._insteon_device_state = device.states[state_key]
-        self._insteon_device = device
-        self._insteon_device.aldb.add_loaded_callback(self._aldb_loaded)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def address(self):
-        """Return the address of the node."""
-        return self._insteon_device.address.human
-
-    @property
-    def group(self):
-        """Return the INSTEON group that the entity responds to."""
-        return self._insteon_device_state.group
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        if self._insteon_device_state.group == 0x01:
-            uid = self._insteon_device.id
-        else:
-            uid = '{:s}_{:d}'.format(self._insteon_device.id,
-                                     self._insteon_device_state.group)
-        return uid
-
-    @property
-    def name(self):
-        """Return the name of the node (used for Entity_ID)."""
-
-        # Set a base description
-        description = self._insteon_device.description
-        if self._insteon_device.description is None:
-            description = 'Unknown Device'
-
-        # Get an extension label if there is one
-        extension = self._get_label()
-        if extension:
-            extension = ' ' + extension
-        name = '{:s} {:s}{:s}'.format(
-            description,
-            self._insteon_device.address.human,
-            extension
-        )
-        return name
-
-    @property
-    def device_state_attributes(self):
-        """Provide attributes for display on device card."""
-        attributes = {
-            'INSTEON Address': self.address,
-            'INSTEON Group': self.group
-        }
-        return attributes
-
-    @callback
-    def async_entity_update(self, deviceid, group, val):
-        """Receive notification from transport that new data exists."""
-        _LOGGER.debug('Received update for device %s group %d value %s',
-                      deviceid.human, group, val)
-        self.async_schedule_update_ha_state()
-
-    async def async_added_to_hass(self):
-        """Register INSTEON update events."""
-        _LOGGER.debug('Tracking updates for device %s group %d statename %s',
-                      self.address, self.group,
-                      self._insteon_device_state.name)
-        self._insteon_device_state.register_updates(
-            self.async_entity_update)
-        self.hass.data[DOMAIN]['entities'][self.entity_id] = self
-
-    def load_aldb(self, reload=False):
-        """Load the device All-Link Database."""
-        if reload:
-            self._insteon_device.aldb.clear()
-        self._insteon_device.read_aldb()
-
-    def print_aldb(self):
-        """Print the device ALDB to the log file."""
-        print_aldb_to_log(self._insteon_device.aldb)
-
-    @callback
-    def _aldb_loaded(self):
-        """All-Link Database loaded for the device."""
-        self.print_aldb()
-
-    def _get_label(self):
-        """ Get the device label for grouped devices"""
-
-        def def_group_label(device):
-            return 'Group {:d}'.format(device.group)
-
-        def empty_label(device):
-            return ''
-
-        label_func = DESCRIPTOR_MAPPER[
-            [self._insteon_device, self._insteon_device_state,
-             self._insteon_device_state.group]]
-        if label_func is None:
-            if len(self._insteon_device.states) > 1:
-                label_func = def_group_label
-            else:
-                label_func = empty_label
-        return format(label_func(self))
-
-
 # Descriptor Label Tuple
 Descriptor = collections.namedtuple('Descriptor',
                                     'device state group descriptor')
@@ -674,7 +560,120 @@ class DescriptorMapper:
         return descriptor
 
 
-DESCRIPTOR_MAPPER = DescriptorMapper()
+class InsteonEntity(Entity):
+    """INSTEON abstract base entity."""
+
+    descriptor_mapper = DescriptorMapper()
+
+    def __init__(self, device, state_key):
+        """Initialize the INSTEON binary sensor."""
+        self._insteon_device_state = device.states[state_key]
+        self._insteon_device = device
+        self._insteon_device.aldb.add_loaded_callback(self._aldb_loaded)
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def address(self):
+        """Return the address of the node."""
+        return self._insteon_device.address.human
+
+    @property
+    def group(self):
+        """Return the INSTEON group that the entity responds to."""
+        return self._insteon_device_state.group
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self._insteon_device_state.group == 0x01:
+            uid = self._insteon_device.id
+        else:
+            uid = '{:s}_{:d}'.format(self._insteon_device.id,
+                                     self._insteon_device_state.group)
+        return uid
+
+    @property
+    def name(self):
+        """Return the name of the node (used for Entity_ID)."""
+
+        # Set a base description
+        description = self._insteon_device.description
+        if self._insteon_device.description is None:
+            description = 'Unknown Device'
+
+        # Get an extension label if there is one
+        extension = self._get_label()
+        if extension:
+            extension = ' ' + extension
+        name = '{:s} {:s}{:s}'.format(
+            description,
+            self._insteon_device.address.human,
+            extension
+        )
+        return name
+
+    @property
+    def device_state_attributes(self):
+        """Provide attributes for display on device card."""
+        attributes = {
+            'INSTEON Address': self.address,
+            'INSTEON Group': self.group
+        }
+        return attributes
+
+    @callback
+    def async_entity_update(self, deviceid, group, val):
+        """Receive notification from transport that new data exists."""
+        _LOGGER.debug('Received update for device %s group %d value %s',
+                      deviceid.human, group, val)
+        self.async_schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Register INSTEON update events."""
+        _LOGGER.debug('Tracking updates for device %s group %d statename %s',
+                      self.address, self.group,
+                      self._insteon_device_state.name)
+        self._insteon_device_state.register_updates(
+            self.async_entity_update)
+        self.hass.data[DOMAIN]['entities'][self.entity_id] = self
+
+    def load_aldb(self, reload=False):
+        """Load the device All-Link Database."""
+        if reload:
+            self._insteon_device.aldb.clear()
+        self._insteon_device.read_aldb()
+
+    def print_aldb(self):
+        """Print the device ALDB to the log file."""
+        print_aldb_to_log(self._insteon_device.aldb)
+
+    @callback
+    def _aldb_loaded(self):
+        """All-Link Database loaded for the device."""
+        self.print_aldb()
+
+    def _get_label(self):
+        """ Get the device label for grouped devices"""
+
+        def def_group_label(device):
+            return 'Group {:d}'.format(device.group)
+
+        def empty_label(device):
+            return ''
+
+        label_func = InsteonEntity.descriptor_mapper[
+            [self._insteon_device, self._insteon_device_state,
+             self._insteon_device_state.group]]
+        if label_func is None:
+            if len(self._insteon_device.states) > 1:
+                label_func = def_group_label
+            else:
+                label_func = empty_label
+        return format(label_func(self))
 
 
 def print_aldb_to_log(aldb):
