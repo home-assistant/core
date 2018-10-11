@@ -17,7 +17,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Setup the Plum Lightpad Light."""
     plum = hass.data[PLUM_DATA]
 
-    if discovery_info is not None:
+    if discovery_info:
         if 'lpid' in discovery_info:
             lightpad = plum.get_lightpad(discovery_info['lpid'])
             async_add_entities([

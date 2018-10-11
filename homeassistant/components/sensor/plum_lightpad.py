@@ -16,7 +16,7 @@ async def async_setup_platform(hass, config, add_devices,
     """Setup the Power Sensor support within Plum Lightpads."""
     plum = hass.data[PLUM_DATA]
 
-    if discovery_info is not None:
+    if discovery_info:
         if 'llid' in discovery_info:
             logical_load = plum.get_load(discovery_info['llid'])
             add_devices([

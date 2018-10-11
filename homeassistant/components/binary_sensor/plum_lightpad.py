@@ -17,7 +17,7 @@ async def async_setup_platform(hass, config, add_devices,
     """Set up the motion sensors for the Plum Lightpad  platform."""
     plum = hass.data[PLUM_DATA]
 
-    if discovery_info is not None:
+    if discovery_info:
         lightpad = plum.get_lightpad(discovery_info['lpid'])
         add_devices([
             PlumMotionSensor(lightpad=lightpad, hass=hass)
