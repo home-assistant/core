@@ -233,9 +233,8 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
         self._white_value = None
         self._supported_features = 0
         self._supported_features |= (
-            topic[CONF_RGB_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
-        self._supported_features |= (
-            topic[CONF_RGB_COMMAND_TOPIC] is not None and SUPPORT_BRIGHTNESS)
+            topic[CONF_RGB_COMMAND_TOPIC] is not None and
+            (SUPPORT_COLOR | SUPPORT_BRIGHTNESS))
         self._supported_features |= (
             topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None and
             SUPPORT_BRIGHTNESS)
@@ -622,7 +621,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
             if self._optimistic_brightness:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
                 should_update = True
-        elif ATTR_BRIGHTNESS in kwargs and \
+        elif ATTR_BRIGHTNESS in kwargs and ATTR_HS_COLOR not in kwargs and\
                 self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
             rgb = color_util.color_hsv_to_RGB(
                 self._hs[0], self._hs[1], kwargs[ATTR_BRIGHTNESS] / 255 * 100)
