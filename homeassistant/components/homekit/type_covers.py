@@ -143,7 +143,7 @@ class WindowCoveringBasic(HomeAccessory):
                 service, position = (SERVICE_CLOSE_COVER, 0)
 
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.call_service(DOMAIN, service, params, position)
+        self.call_service(DOMAIN, service, params)
 
         # Snap the current/target position to the expected final position.
         self.char_current_position.set_value(position)

@@ -7,7 +7,7 @@ HOMEKIT_NOTIFY_ID = 4663548
 
 # #### Attributes ####
 ATTR_DISPLAY_NAME = 'display_name'
-ATTR_VALUE = 'attribute'
+ATTR_VALUE = 'value'
 
 # #### Config ####
 CONF_AUTO_START = 'auto_start'
