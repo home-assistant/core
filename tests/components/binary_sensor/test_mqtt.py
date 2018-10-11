@@ -1,6 +1,7 @@
 """The tests for the  MQTT binary sensor platform."""
 import json
 import unittest
+from unittest.mock import Mock
 from datetime import timedelta
 
 import homeassistant.core as ha
@@ -25,6 +26,7 @@ class TestSensorMQTT(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config_entries._async_schedule_save = Mock()
         mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name

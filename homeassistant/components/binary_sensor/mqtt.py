@@ -14,8 +14,8 @@ from homeassistant.components import mqtt, binary_sensor
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OFF_DELAY,
-    CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS, CONF_DEVICE)
+    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON,
+    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS, CONF_DEVICE)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
@@ -29,6 +29,7 @@ from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MQTT Binary sensor'
+CONF_OFF_DELAY = 'off_delay'
 CONF_UNIQUE_ID = 'unique_id'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
