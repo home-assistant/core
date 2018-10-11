@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['abodepy==0.13.1']
+REQUIREMENTS = ['abodepy==0.14.0']
 
 _LOGGER = logging.getLogger(__name__)
 
