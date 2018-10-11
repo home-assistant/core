@@ -8,6 +8,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
+from homeassistant.const import LENGTH_KILOMETERS
 
 DEPENDENCIES = ['bmw_connected_drive']
 
@@ -117,7 +118,8 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['lights_parking'] = vehicle_state.parking_lights.value
         elif self._attribute == 'condition_based_services':
             for report in vehicle_state.condition_based_services:
-                result.update(self._format_cbs_report(report))
+                result.update(
+                    self._format_cbs_report(report))
         elif self._attribute == 'check_control_messages':
             check_control_messages = vehicle_state.check_control_messages
             if not check_control_messages:
@@ -175,8 +177,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             self._state = (vehicle_state._attributes['connectionStatus'] ==
                            'CONNECTED')
 
-    @staticmethod
-    def _format_cbs_report(report):
+    def _format_cbs_report(self, report):
         result = {}
         service_type = report.service_type.lower().replace('_', ' ')
         result['{} status'.format(service_type)] = report.state.value
@@ -184,8 +185,10 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['{} date'.format(service_type)] = \
                 report.due_date.strftime('%Y-%m-%d')
         if report.due_distance is not None:
-            result['{} distance'.format(service_type)] = \
-                '{} km'.format(report.due_distance)
+            distance = round(self.hass.config.units.length(
+                report.due_distance, LENGTH_KILOMETERS))
+            result['{} distance'.format(service_type)] = '{} {}'.format(
+                distance, self.hass.config.units.length_unit)
         return result
 
     def update_callback(self):
