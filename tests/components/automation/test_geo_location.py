@@ -41,9 +41,10 @@ class TestAutomationGeoLocation(unittest.TestCase):
     def test_if_fires_on_zone_enter(self):
         """Test for firing on zone enter."""
         context = Context()
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.881011,
-            'longitude': -117.234758
+            'longitude': -117.234758,
+            'source': 'test_source'
         })
         self.hass.block_till_done()
 
@@ -51,7 +52,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'geo_location',
-                    'entity_id': 'test.ent*',
+                    'source': 'test_source',
                     'zone': 'zone.test',
                     'event': 'enter',
                 },
@@ -68,7 +69,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
             }
         })
 
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.880586,
             'longitude': -117.237564
         }, context=context)
@@ -77,11 +78,11 @@ class TestAutomationGeoLocation(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
         assert self.calls[0].context is context
         self.assertEqual(
-            'geo_location - test.entity - hello - hello - test',
+            'geo_location - geo_location.entity - hello - hello - test',
             self.calls[0].data['some'])
 
         # Set out of zone again so we can trigger call
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.881011,
             'longitude': -117.234758
         })
@@ -90,7 +91,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
         common.turn_off(self.hass)
         self.hass.block_till_done()
 
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.880586,
             'longitude': -117.237564
         })
@@ -100,9 +101,10 @@ class TestAutomationGeoLocation(unittest.TestCase):
 
     def test_if_not_fires_for_enter_on_zone_leave(self):
         """Test for not firing on zone leave."""
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.880586,
-            'longitude': -117.237564
+            'longitude': -117.237564,
+            'source': 'test_source'
         })
         self.hass.block_till_done()
 
@@ -110,7 +112,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'geo_location',
-                    'entity_id': 'test.ent*',
+                    'source': 'test_source',
                     'zone': 'zone.test',
                     'event': 'enter',
                 },
@@ -120,7 +122,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
             }
         })
 
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.881011,
             'longitude': -117.234758
         })
@@ -130,9 +132,10 @@ class TestAutomationGeoLocation(unittest.TestCase):
 
     def test_if_fires_on_zone_leave(self):
         """Test for firing on zone leave."""
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.880586,
-            'longitude': -117.237564
+            'longitude': -117.237564,
+            'source': 'test_source'
         })
         self.hass.block_till_done()
 
@@ -140,7 +143,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'geo_location',
-                    'entity_id': 'test.ent*',
+                    'source': 'test_source',
                     'zone': 'zone.test',
                     'event': 'leave',
                 },
@@ -150,9 +153,10 @@ class TestAutomationGeoLocation(unittest.TestCase):
             }
         })
 
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.881011,
-            'longitude': -117.234758
+            'longitude': -117.234758,
+            'source': 'test_source'
         })
         self.hass.block_till_done()
 
@@ -160,9 +164,10 @@ class TestAutomationGeoLocation(unittest.TestCase):
 
     def test_if_not_fires_for_leave_on_zone_enter(self):
         """Test for not firing on zone enter."""
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.881011,
-            'longitude': -117.234758
+            'longitude': -117.234758,
+            'source': 'test_source'
         })
         self.hass.block_till_done()
 
@@ -170,7 +175,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'geo_location',
-                    'entity_id': 'test.ent*',
+                    'source': 'test_source',
                     'zone': 'zone.test',
                     'event': 'leave',
                 },
@@ -180,7 +185,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
             }
         })
 
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.880586,
             'longitude': -117.237564
         })
@@ -194,7 +199,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'geo_location',
-                    'entity_id': 'test.ent*',
+                    'source': 'test_source',
                     'zone': 'zone.test',
                     'event': 'enter',
                 },
@@ -213,23 +218,25 @@ class TestAutomationGeoLocation(unittest.TestCase):
 
         # Entity appears in zone without previously existing outside the zone.
         context = Context()
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.880586,
-            'longitude': -117.237564
+            'longitude': -117.237564,
+            'source': 'test_source'
         }, context=context)
         self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
         assert self.calls[0].context is context
         self.assertEqual(
-            'geo_location - test.entity -  - hello - test',
+            'geo_location - geo_location.entity -  - hello - test',
             self.calls[0].data['some'])
 
     def test_if_fires_on_zone_disappear(self):
         """Test for firing if entity disappears from zone."""
-        self.hass.states.set('test.entity', 'hello', {
+        self.hass.states.set('geo_location.entity', 'hello', {
             'latitude': 32.880586,
-            'longitude': -117.237564
+            'longitude': -117.237564,
+            'source': 'test_source'
         })
         self.hass.block_till_done()
 
@@ -237,7 +244,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'geo_location',
-                    'entity_id': 'test.ent*',
+                    'source': 'test_source',
                     'zone': 'zone.test',
                     'event': 'leave',
                 },
@@ -255,10 +262,10 @@ class TestAutomationGeoLocation(unittest.TestCase):
         })
 
         # Entity disappears from zone without new coordinates outside the zone.
-        self.hass.states.async_remove('test.entity')
+        self.hass.states.async_remove('geo_location.entity')
         self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
         self.assertEqual(
-            'geo_location - test.entity - hello -  - test',
+            'geo_location - geo_location.entity - hello -  - test',
             self.calls[0].data['some'])
