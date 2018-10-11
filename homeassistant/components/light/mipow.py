@@ -104,10 +104,12 @@ class MipowLight(Light):
     def brightness(self):
         """Return the bright property."""
         return self._brightness
+
     @property
     def effect_list(self):
         """Return effect"""
         return ["Rainbow", "Rainbow Jump", "Pulse"]
+
     @property
     def supported_features(self):
         """Flag supported features."""
@@ -123,7 +125,7 @@ class MipowLight(Light):
         """We can report the actual state."""
         return False
 
-    def set_effect(self, red, green, blue, white, mode,speed):
+    def set_effect(self, red, green, blue, white, mode, speed):
         """Set the rgb state."""
         return self._bulb.set_effect(red, green, blue, white, mode, speed)
 
