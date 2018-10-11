@@ -15,20 +15,22 @@ DEPENDENCIES = ['plum_lightpad']
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Setup the Plum Lightpad Light."""
+    if discovery_info is None:
+        return
+
     plum = hass.data[PLUM_DATA]
 
-    if discovery_info:
-        if 'lpid' in discovery_info:
-            lightpad = plum.get_lightpad(discovery_info['lpid'])
-            async_add_entities([
-                GlowRing(lightpad=lightpad)
-            ])
+    if 'lpid' in discovery_info:
+        lightpad = plum.get_lightpad(discovery_info['lpid'])
+        async_add_entities([
+            GlowRing(lightpad=lightpad)
+        ])
 
-        if 'llid' in discovery_info:
-            logical_load = plum.get_load(discovery_info['llid'])
-            async_add_entities([
-                PlumLight(load=logical_load)
-            ])
+    if 'llid' in discovery_info:
+        logical_load = plum.get_load(discovery_info['llid'])
+        async_add_entities([
+            PlumLight(load=logical_load)
+        ])
 
 
 class PlumLight(Light):
@@ -115,11 +117,6 @@ class GlowRing(Light):
         self._white = config['glowColor']['white']
         self._brightness = config['glowIntensity'] * 255.0
         self.schedule_update_ha_state()
-
-    @property
-    def rgb_color(self):
-        """RGB Property."""
-        return self._red, self._green, self._blue
 
     @property
     def hs_color(self):

@@ -14,14 +14,16 @@ WATTS = 'Watts'
 async def async_setup_platform(hass, config, add_devices,
                                discovery_info=None):
     """Setup the Power Sensor support within Plum Lightpads."""
+    if discovery_info is None:
+        return
+
     plum = hass.data[PLUM_DATA]
 
-    if discovery_info:
-        if 'llid' in discovery_info:
-            logical_load = plum.get_load(discovery_info['llid'])
-            add_devices([
-                PowerSensor(load=logical_load)
-            ])
+    if 'llid' in discovery_info:
+        logical_load = plum.get_load(discovery_info['llid'])
+        add_devices([
+            PowerSensor(load=logical_load)
+        ])
 
 
 class PowerSensor(Entity):

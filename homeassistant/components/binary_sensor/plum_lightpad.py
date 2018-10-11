@@ -15,9 +15,12 @@ DEPENDENCIES = ['plum_lightpad']
 async def async_setup_platform(hass, config, add_devices,
                                discovery_info=None):
     """Set up the motion sensors for the Plum Lightpad  platform."""
+    if discovery_info is None:
+        return
+
     plum = hass.data[PLUM_DATA]
 
-    if discovery_info:
+    if 'lpid' in discovery_info:
         lightpad = plum.get_lightpad(discovery_info['lpid'])
         add_devices([
             PlumMotionSensor(lightpad=lightpad, hass=hass)
