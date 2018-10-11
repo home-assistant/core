@@ -572,6 +572,7 @@ async def test_logbook_view_period_entity(hass, aiohttp_client):
     hass.states.async_set(entity_id_second, STATE_OFF)
     hass.states.async_set(entity_id_second, STATE_ON)
     await hass.async_block_till_done()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await aiohttp_client(hass.http.app)
 
