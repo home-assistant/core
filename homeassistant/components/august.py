@@ -164,8 +164,8 @@ class AugustData:
 
         self._doorbell_detail_by_id = {}
         self._lock_status_by_id = {}
-        self._lock_door_status_by_id = {}
         self._lock_detail_by_id = {}
+        self._door_state_by_id = {}
         self._activities_by_id = {}
 
     @property
@@ -223,11 +223,12 @@ class AugustData:
 
         _LOGGER.debug("Start retrieving doorbell details")
         for doorbell in self._doorbells:
+            _LOGGER.debug("Updating status for %s",
+                          doorbell.device_name)
             detail_by_id[doorbell.device_id] = self._api.get_doorbell_detail(
                 self._access_token, doorbell.device_id)
 
         _LOGGER.debug("Completed retrieving doorbell details")
-
         self._doorbell_detail_by_id = detail_by_id
 
     def get_lock_status(self, lock_id):
@@ -238,40 +239,49 @@ class AugustData:
         self._update_locks()
         return self._lock_status_by_id.get(lock_id)
 
-    def get_lock_door_status(self, lock_id):
-        """Return status if the door is open or closed.
-
-        This is the status from the door sensor.
-        """
-        self._update_locks()
-        return self._lock_door_status_by_id.get(lock_id)
-
     def get_lock_detail(self, lock_id):
         """Return lock detail."""
         self._update_locks()
         return self._lock_detail_by_id.get(lock_id)
 
+    def get_door_state(self, lock_id):
+        """Return status if the door is open or closed.
+
+        This is the status from the door sensor.
+        """
+        self._update_doors()
+        return self._door_state_by_id.get(lock_id)
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def _update_doors(self):
+        state_by_id = {}
+
+        _LOGGER.debug("Start retrieving door status")
+        for lock in self._locks:
+            _LOGGER.debug("Updating status for %s",
+                          lock.device_name)
+            state_by_id[lock.device_id] = self._api.get_lock_door_status(
+                self._access_token, lock.device_id)
+
+        _LOGGER.debug("Completed retrieving door status")
+        self._door_state_by_id = state_by_id
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update_locks(self):
         status_by_id = {}
-        door_status_by_id = {}
         detail_by_id = {}
 
         _LOGGER.debug("Start retrieving locks status")
         for lock in self._locks:
             _LOGGER.debug("Updating status for %s",
                           lock.device_name)
-            door_status_by_id[lock.device_id] = self._api.get_lock_door_status(
+            status_by_id[lock.device_id] = self._api.get_lock_status(
                 self._access_token, lock.device_id)
             detail_by_id[lock.device_id] = self._api.get_lock_detail(
                 self._access_token, lock.device_id)
-            status_by_id[lock.device_id] = self._api.get_lock_status(
-                self._access_token, lock.device_id)
 
         _LOGGER.debug("Completed retrieving locks status")
-
         self._lock_status_by_id = status_by_id
-        self._lock_door_status_by_id = door_status_by_id
         self._lock_detail_by_id = detail_by_id
 
     def lock(self, device_id):
