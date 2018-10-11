@@ -137,10 +137,6 @@ class SensorTemplate(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        # We don't render on every update
-        if self._entities == MATCH_ALL:
-            return
-
         @callback
         def template_sensor_state_listener(entity, old_state, new_state):
             """Handle device state changes."""
@@ -149,8 +145,10 @@ class SensorTemplate(Entity):
         @callback
         def template_sensor_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_sensor_state_listener)
+            if self._entities != MATCH_ALL:
+                # Track state change only for valid templates
+                async_track_state_change(
+                    self.hass, self._entities, template_sensor_state_listener)
 
             self.async_schedule_update_ha_state(True)
 
