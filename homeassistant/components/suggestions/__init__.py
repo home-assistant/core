@@ -29,6 +29,11 @@ async def async_setup(hass, config):
     """Initialize the suggestion component."""
     await hass.components.recorder.wait_connection_ready()
     results = await hass.async_add_executor_job(_generate_suggestion, hass)
+
+    hass.components.persistent_notification.async_create(
+        '\n'.join('- {}:\n{}'.format(key, '\n'.join('  - {}'.format(value)
+                                     for value in values))
+                  for key, values in results.items()))
     pprint(results)
     return True
 
