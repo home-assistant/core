@@ -10,10 +10,12 @@ import logging
 from homeassistant.components.rflink import (
     CONF_ALIASES, CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES,
     DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_ID,
-    EVENT_KEY_SENSOR, EVENT_KEY_UNIT, RflinkDevice, cv, remove_deprecated, vol)
+    EVENT_KEY_SENSOR, EVENT_KEY_UNIT, RflinkDevice, cv, remove_deprecated, vol,
+    SIGNAL_AVAILABILITY, SIGNAL_HANDLE_EVENT)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT)
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect)
 
 DEPENDENCIES = ['rflink']
 
@@ -67,14 +69,6 @@ def devices_from_config(domain_config, hass=None):
         device = RflinkSensor(device_id, hass, **config)
         devices.append(device)
 
-        # Register entity (and aliases) to listen to incoming rflink events
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_SENSOR][device_id].append(device)
-        aliases = config.get(CONF_ALIASES)
-        if aliases:
-            for _id in aliases:
-                hass.data[DATA_ENTITY_LOOKUP][
-                    EVENT_KEY_SENSOR][_id].append(device)
     return devices
 
 
@@ -92,12 +86,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         # Add device entity
         async_add_entities([device])
 
-        # Register entity to listen to incoming rflink events
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_SENSOR][device_id].append(device)
-
         # Schedule task to process event after entity is created
-        hass.async_add_job(device.handle_event, event)
+        hass.async_add_job(device.handle_event_callback,
+                           device.entity_id, event)
 
     if config[CONF_AUTOMATIC_ADD]:
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
@@ -116,6 +107,19 @@ class RflinkSensor(RflinkDevice):
     def _handle_event(self, event):
         """Domain specific event handler."""
         self._state = event['value']
+
+    async def async_added_to_hass(self):
+        """Register update callback."""
+        self.hass.data[DATA_ENTITY_LOOKUP][
+            EVENT_KEY_SENSOR][self._device_id].append(self.entity_id)
+        if self._aliases:
+            for _id in self._aliases:
+                self.hass.data[DATA_ENTITY_LOOKUP][
+                    EVENT_KEY_SENSOR][self._device_id].append(self.entity_id)
+        async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
+                                 self._availability_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_HANDLE_EVENT,
+                                 self.handle_event_callback)
 
     @property
     def unit_of_measurement(self):

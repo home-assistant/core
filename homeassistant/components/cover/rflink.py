@@ -9,8 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.rflink import (
-    DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP,
-    DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND, RflinkCommand)
+    DEVICE_DEFAULTS_SCHEMA, RflinkCommand)
 from homeassistant.components.cover import (
     CoverDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
@@ -63,18 +62,6 @@ def devices_from_config(domain_config, hass=None):
         device = RflinkCover(device_id, hass, **device_config)
         devices.append(device)
 
-        # Register entity (and aliases) to listen to incoming rflink events
-        # Device id and normal aliases respond to normal and group command
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
-        if config[CONF_GROUP]:
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][device_id].append(device)
-        for _id in config[CONF_ALIASES]:
-            hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
     return devices
 
 

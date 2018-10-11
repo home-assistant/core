@@ -13,12 +13,11 @@ from homeassistant.components.rflink import (
     CONF_DEVICES, CONF_FIRE_EVENT, CONF_GROUP, CONF_GROUP_ALIASES,
     CONF_GROUP_ALIASSES, CONF_IGNORE_DEVICES, CONF_NOGROUP_ALIASES,
     CONF_NOGROUP_ALIASSES, CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER,
-    DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA,
+    DEVICE_DEFAULTS_SCHEMA,
     DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv,
     remove_deprecated, vol)
 from homeassistant.const import (
     CONF_NAME, CONF_PLATFORM, CONF_TYPE, STATE_UNKNOWN)
-from homeassistant.helpers.deprecation import get_deprecated
 
 DEPENDENCIES = ['rflink']
 
@@ -127,30 +126,6 @@ def devices_from_config(domain_config, hass=None):
         device = entity_class(device_id, hass, **device_config)
         devices.append(device)
 
-        # Register entity (and aliases) to listen to incoming rflink events
-
-        # Device id and normal aliases respond to normal and group command
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
-        if config[CONF_GROUP]:
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][device_id].append(device)
-        for _id in get_deprecated(config, CONF_ALIASES, CONF_ALIASSES):
-            hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-        # group_aliases only respond to group commands
-        for _id in get_deprecated(
-                config, CONF_GROUP_ALIASES, CONF_GROUP_ALIASSES):
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-        # nogroup_aliases only respond to normal commands
-        for _id in get_deprecated(
-                config, CONF_NOGROUP_ALIASES, CONF_NOGROUP_ALIASSES):
-            hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-
     return devices
 
 
@@ -170,12 +145,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         device = entity_class(device_id, hass, **device_config)
         async_add_entities([device])
 
-        # Register entity to listen to incoming Rflink events
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
-
         # Schedule task to process event after entity is created
-        hass.async_add_job(device.handle_event, event)
+        hass.async_add_job(device.handle_event_callback,
+                           device.entity_id, event)
 
     if config[CONF_AUTOMATIC_ADD]:
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device

@@ -68,6 +68,7 @@ DOMAIN = 'rflink'
 SERVICE_SEND_COMMAND = 'send_command'
 
 SIGNAL_AVAILABILITY = 'rflink_device_available'
+SIGNAL_HANDLE_EVENT = 'rflink_handle_event'
 
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -166,15 +167,17 @@ async def async_setup(hass, config):
         if entities:
             # Propagate event to every entity matching the device id
             for entity in entities:
-                _LOGGER.debug('passing event to %s', entities)
-                entity.handle_event(event)
+                _LOGGER.debug('passing event to %s', entity)
+                async_dispatcher_send(hass, SIGNAL_HANDLE_EVENT, entity, event)
         else:
-            _LOGGER.debug('device_id not known, adding new device')
-
             # If device is not yet known, register with platform (if loaded)
             if event_type in hass.data[DATA_DEVICE_REGISTER]:
+                _LOGGER.debug('device_id not known, adding new device')
+                # TODO: Is there a race condition here if we get another event before async_run_job is done?
                 hass.async_run_job(
                     hass.data[DATA_DEVICE_REGISTER][event_type], event)
+            else:
+                _LOGGER.debug('device_id not known and automatic add disabled')
 
     # When connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN].get(CONF_HOST)
@@ -269,11 +272,21 @@ class RflinkDevice(Entity):
         else:
             self._name = device_id
 
+        self._aliases = aliases
+        self._group = group
+        self._group_aliases = group_aliases
+        self._nogroup_aliases = nogroup_aliases
         self._should_fire_event = fire_event
         self._signal_repetitions = signal_repetitions
 
-    def handle_event(self, event):
+    @callback
+    def handle_event_callback(self, entity_id, event):
         """Handle incoming event for device type."""
+        # Make sure event is for this entity
+        # TODO: Can this be avoided, e.g. with device-unique signal?
+        if entity_id != self.entity_id:
+            return
+
         # Call platform specific event handler
         self._handle_event(event)
 
@@ -322,15 +335,44 @@ class RflinkDevice(Entity):
         return self._available
 
     @callback
-    def set_availability(self, availability):
+    def _availability_callback(self, availability):
         """Update availability state."""
         self._available = availability
         self.async_schedule_update_ha_state()
 
+    @callback
+    def _update_callback(self, dev_id):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
+
     async def async_added_to_hass(self):
         """Register update callback."""
+        self.hass.data[DATA_ENTITY_LOOKUP][
+            EVENT_KEY_COMMAND][self._device_id].append(self.entity_id)
+        if self._group:
+            self.hass.data[DATA_ENTITY_GROUP_LOOKUP][
+                EVENT_KEY_COMMAND][self._device_id].append(self.entity_id)
+        # aliases respond to both normal and group commands (allon/alloff)
+        if self._aliases:
+            for _id in self._aliases:
+                self.hass.data[DATA_ENTITY_LOOKUP][
+                    EVENT_KEY_COMMAND][_id].append(self.entity_id)
+                self.hass.data[DATA_ENTITY_GROUP_LOOKUP][
+                    EVENT_KEY_COMMAND][_id].append(self.entity_id)
+        # group_aliases only respond to group commands (allon/alloff)
+        if self._group_aliases:
+            for _id in self._group_aliases:
+                self.hass.data[DATA_ENTITY_GROUP_LOOKUP][
+                    EVENT_KEY_COMMAND][_id].append(self.entity_id)
+        # nogroup_aliases only respond to normal commands
+        if self._nogroup_aliases:
+            for _id in self._nogroup_aliases:
+                self.hass.data[DATA_ENTITY_LOOKUP][
+                    EVENT_KEY_COMMAND][_id].append(self.entity_id)
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
-                                 self.set_availability)
+                                 self._availability_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_HANDLE_EVENT,
+                                 self.handle_event_callback)
 
 
 class RflinkCommand(RflinkDevice):
