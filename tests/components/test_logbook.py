@@ -565,9 +565,12 @@ async def test_logbook_view_period_entity(hass, aiohttp_client):
     await hass.components.recorder.wait_connection_ready()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
-    entity_id = 'switch.test'
-    hass.states.async_set(entity_id, STATE_OFF)
-    hass.states.async_set(entity_id, STATE_ON)
+    entity_id_test = 'switch.test'
+    hass.states.async_set(entity_id_test, STATE_OFF)
+    hass.states.async_set(entity_id_test, STATE_ON)
+    entity_id_second = 'switch.second'
+    hass.states.async_set(entity_id_second, STATE_OFF)
+    hass.states.async_set(entity_id_second, STATE_ON)
     await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
@@ -581,16 +584,18 @@ async def test_logbook_view_period_entity(hass, aiohttp_client):
         '/api/logbook/{}'.format(start_date.isoformat()))
     assert response.status == 200
     json = await response.json()
-    assert len(json) == 1
-    assert json[0]['entity_id'] == entity_id
+    assert len(json) == 2
+    assert json[0]['entity_id'] == entity_id_test
+    assert json[1]['entity_id'] == entity_id_second
 
     # Test today entries with filter by period
     response = await client.get(
         '/api/logbook/{}?period=1'.format(start_date.isoformat()))
     assert response.status == 200
     json = await response.json()
-    assert len(json) == 1
-    assert json[0]['entity_id'] == entity_id
+    assert len(json) == 2
+    assert json[0]['entity_id'] == entity_id_test
+    assert json[1]['entity_id'] == entity_id_second
 
     # Test today entries with filter by entity_id
     response = await client.get(
@@ -599,7 +604,7 @@ async def test_logbook_view_period_entity(hass, aiohttp_client):
     assert response.status == 200
     json = await response.json()
     assert len(json) == 1
-    assert json[0]['entity_id'] == entity_id
+    assert json[0]['entity_id'] == entity_id_test
 
     # Test entries for 3 days with filter by entity_id
     response = await client.get(
@@ -608,7 +613,7 @@ async def test_logbook_view_period_entity(hass, aiohttp_client):
     assert response.status == 200
     json = await response.json()
     assert len(json) == 1
-    assert json[0]['entity_id'] == entity_id
+    assert json[0]['entity_id'] == entity_id_test
 
     # Tomorrow time 00:00:00
     start = (dt_util.utcnow() + timedelta(days=1)).date()
@@ -636,7 +641,7 @@ async def test_logbook_view_period_entity(hass, aiohttp_client):
     assert response.status == 200
     json = await response.json()
     assert len(json) == 1
-    assert json[0]['entity_id'] == entity_id
+    assert json[0]['entity_id'] == entity_id_test
 
 
 async def test_humanify_alexa_event(hass):
