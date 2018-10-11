@@ -67,7 +67,7 @@ SENSOR_TYPES_DOORBELL = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the August binary sensors."""
     data = hass.data[DATA_AUGUST]
     devices = []
