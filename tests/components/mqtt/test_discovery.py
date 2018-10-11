@@ -221,7 +221,7 @@ def test_discovery_expansion(hass, mqtt_mock, caplog):
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
-        '  "stat_t": "test_topic1/~/test_topic2",'
+        '  "stat_t": "test_topic/~",'
         '  "cmd_t": "~/test_topic" }'
     )
 
@@ -235,7 +235,7 @@ def test_discovery_expansion(hass, mqtt_mock, caplog):
     assert ('switch', 'bla') in hass.data[ALREADY_DISCOVERED]
     assert state.state == STATE_OFF
 
-    async_fire_mqtt_message(hass, 'test_topic1/some/base/topic/test_topic2',
+    async_fire_mqtt_message(hass, 'test_topic/some/base/topic',
                             'ON')
     yield from hass.async_block_till_done()
     yield from hass.async_block_till_done()

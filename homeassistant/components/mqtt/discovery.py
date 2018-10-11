@@ -198,10 +198,10 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         if TOPIC_BASE in payload:
             base = payload[TOPIC_BASE]
             for key, value in payload.items():
-                if key.endswith('_topic'):
-                    value = value.split('/')
-                    value = [x if x != TOPIC_BASE else base for x in value]
-                    payload[key] = '/'.join(value)
+                if value[0] == TOPIC_BASE and key.endswith('_topic'):
+                    payload[key] = "{}{}".format(base, value[1:])
+                if value[-1] == TOPIC_BASE and key.endswith('_topic'):
+                    payload[key] = "{}{}".format(value[:-1], base)
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = '_'.join((node_id, object_id)) if node_id else object_id
