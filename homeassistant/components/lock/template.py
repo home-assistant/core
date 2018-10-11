@@ -4,7 +4,6 @@ Support for locks which integrates with other components.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.template/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -37,8 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the Template lock."""
     name = config.get(CONF_NAME)
@@ -79,8 +77,7 @@ class TemplateLock(LockDevice):
         self._command_unlock = Script(hass, command_unlock)
         self._optimistic = optimistic
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def template_lock_state_listener(entity, old_state, new_state):
@@ -120,8 +117,7 @@ class TemplateLock(LockDevice):
         """Return true if lock is locked."""
         return self._state
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update the state from the template."""
         try:
             self._state = self._state_template.async_render().lower() in (
@@ -130,18 +126,16 @@ class TemplateLock(LockDevice):
             self._state = None
             _LOGGER.error('Could not render template %s: %s', self._name, ex)
 
-    @asyncio.coroutine
-    def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock the device."""
         if self._optimistic:
             self._state = True
             self.async_schedule_update_ha_state()
-        yield from self._command_lock.async_run()
+        await self._command_lock.async_run()
 
-    @asyncio.coroutine
-    def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock the device."""
         if self._optimistic:
             self._state = False
             self.async_schedule_update_ha_state()
-        yield from self._command_unlock.async_run()
+        await self._command_unlock.async_run()
