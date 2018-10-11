@@ -8,7 +8,7 @@ from homeassistant.components.geo_location.geo_json_events import \
     SCAN_INTERVAL, ATTR_EXTERNAL_ID
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_START, \
     CONF_RADIUS, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME, \
-    ATTR_UNIT_OF_MEASUREMENT
+    ATTR_UNIT_OF_MEASUREMENT, ATTR_SOURCE
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, assert_setup_component, \
     fire_time_changed
@@ -84,7 +84,8 @@ class TestGeoJsonPlatform(unittest.TestCase):
                 assert state.attributes == {
                     ATTR_EXTERNAL_ID: "1234", ATTR_LATITUDE: -31.0,
                     ATTR_LONGITUDE: 150.0, ATTR_FRIENDLY_NAME: "Title 1",
-                    ATTR_UNIT_OF_MEASUREMENT: "km"}
+                    ATTR_UNIT_OF_MEASUREMENT: "km",
+                    ATTR_SOURCE: 'geo_json_events'}
                 self.assertAlmostEqual(float(state.state), 15.5)
 
                 state = self.hass.states.get("geo_location.title_2")
@@ -93,7 +94,8 @@ class TestGeoJsonPlatform(unittest.TestCase):
                 assert state.attributes == {
                     ATTR_EXTERNAL_ID: "2345", ATTR_LATITUDE: -31.1,
                     ATTR_LONGITUDE: 150.1, ATTR_FRIENDLY_NAME: "Title 2",
-                    ATTR_UNIT_OF_MEASUREMENT: "km"}
+                    ATTR_UNIT_OF_MEASUREMENT: "km",
+                    ATTR_SOURCE: 'geo_json_events'}
                 self.assertAlmostEqual(float(state.state), 20.5)
 
                 state = self.hass.states.get("geo_location.title_3")
@@ -102,7 +104,8 @@ class TestGeoJsonPlatform(unittest.TestCase):
                 assert state.attributes == {
                     ATTR_EXTERNAL_ID: "3456", ATTR_LATITUDE: -31.2,
                     ATTR_LONGITUDE: 150.2, ATTR_FRIENDLY_NAME: "Title 3",
-                    ATTR_UNIT_OF_MEASUREMENT: "km"}
+                    ATTR_UNIT_OF_MEASUREMENT: "km",
+                    ATTR_SOURCE: 'geo_json_events'}
                 self.assertAlmostEqual(float(state.state), 25.5)
 
                 # Simulate an update - one existing, one new entry,
