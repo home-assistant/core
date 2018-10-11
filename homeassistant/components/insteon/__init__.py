@@ -91,7 +91,7 @@ CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
         vol.Optional(CONF_FIRMWARE): cv.byte,
         vol.Optional(CONF_PRODUCT_KEY): cv.byte,
         vol.Optional(CONF_PLATFORM): cv.string,
-        }))
+    }))
 
 CONF_X10_SCHEMA = vol.All(
     vol.Schema({
@@ -146,6 +146,45 @@ PRINT_ALDB_SCHEMA = vol.Schema({
 X10_HOUSECODE_SCHEMA = vol.Schema({
     vol.Required(SRV_HOUSECODE): vol.In(HOUSECODES),
     })
+
+STATE_NAME_LABEL_MAP = {
+    'keypadButtonA': 'Button A',
+    'keypadButtonB': 'Button B',
+    'keypadButtonC': 'Button C',
+    'keypadButtonD': 'Button D',
+    'keypadButtonE': 'Button E',
+    'keypadButtonF': 'Button F',
+    'keypadButtonG': 'Button G',
+    'keypadButtonH': 'Button H',
+    'keypadButtonMain': 'Main',
+    'onOffButtonA': 'Button A',
+    'onOffButtonB': 'Button B',
+    'onOffButtonC': 'Button C',
+    'onOffButtonD': 'Button D',
+    'onOffButtonE': 'Button E',
+    'onOffButtonF': 'Button F',
+    'onOffButtonG': 'Button G',
+    'onOffButtonH': 'Button H',
+    'onOffButtonMain': 'Main',
+    'fanOnLevel': 'Fan',
+    'lightOnLevel': 'Light',
+    'coolSetPoint': 'Cool Set',
+    'heatSetPoint': 'HeatSet',
+    'statusReport': 'Status',
+    'generalSensor': 'Sensor',
+    'motionSensor': 'Motion',
+    'lightSensor': 'Light',
+    'batterySensor': 'Battery',
+    'dryLeakSensor': 'Dry',
+    'wetLeakSensor': 'Wet',
+    'heartbeatLeakSensor': 'Heartbeat',
+    'openClosedRelay': 'Relay',
+    'openClosedSensor': 'Sensor',
+    'lightOnOff': 'Light',
+    'outletTopOnOff': 'Top',
+    'outletBottomOnOff': 'Bottom',
+    'coverOpenLevel': 'Cover',
+}
 
 
 async def async_setup(hass, config):
@@ -441,125 +480,6 @@ class IPDB:
         return None
 
 
-# Descriptor Label Tuple
-Descriptor = collections.namedtuple('Descriptor',
-                                    'device state group descriptor')
-
-
-class DescriptorMapper:
-    """Maps the Device, State, and Group to a descriptive label function."""
-
-    def __init__(self):
-        """Load up device map db."""
-        from insteonplm.devices.dimmableLightingControl import \
-            DimmableLightingControl_2475F, \
-            DimmableLightingControl_2334_222_6, \
-            DimmableLightingControl_2334_222_8
-        from insteonplm.states.dimmable import DimmableSwitch_Fan, \
-            DimmableSwitch, DimmableKeypadA
-        from insteonplm.devices.sensorsActuators import SensorsActuators_2450
-        from insteonplm.devices.securityHealthSafety import \
-            SecurityHealthSafety_2842_222, SecurityHealthSafety_2852_222
-        from insteonplm.devices.switchedLightingControl import \
-            SwitchedLightingControl_2663_222
-        from insteonplm.states.sensor import IoLincSensor, OnOffSensor, \
-            LeakSensorDryWet, LeakSensorHeartbeat
-        from insteonplm.states.onOff import OpenClosedRelay, OnOffKeypad, \
-            OnOffSwitch_OutletTop, OnOffSwitch_OutletBottom
-
-        def button_6_label(device):
-            return {
-                1: 'Main',
-                3: 'Button A',
-                4: 'Button B',
-                5: 'Button C',
-                6: 'Button D',
-                7: 'Button E'
-            }[device.group]
-
-        def button_8_label(device):
-            return {
-                1: 'Main',
-                2: 'Button B',
-                3: 'Button C',
-                4: 'Button D',
-                5: 'Button E',
-                6: 'Button F',
-                7: 'Button G',
-                8: 'Button H'
-            }[device.group]
-
-        self.name_maps = [
-            # FanLinc
-            Descriptor(DimmableLightingControl_2475F, DimmableSwitch, 0x01,
-                       lambda d: 'Light'),
-            Descriptor(DimmableLightingControl_2475F, DimmableSwitch_Fan, 0x02,
-                       lambda d: 'Fan'),
-            # I/O Linc
-            Descriptor(SensorsActuators_2450, OpenClosedRelay, 0x01,
-                       lambda d: 'Relay'),
-            Descriptor(SensorsActuators_2450, IoLincSensor, 0x02,
-                       lambda d: 'Sensor'),
-
-            # Keypads
-            Descriptor(DimmableLightingControl_2334_222_6, OnOffKeypad,
-                       None, button_6_label),
-            Descriptor(DimmableLightingControl_2334_222_6, DimmableKeypadA,
-                       None, button_6_label),
-            Descriptor(DimmableLightingControl_2334_222_8, OnOffKeypad,
-                       None, button_8_label),
-            Descriptor(DimmableLightingControl_2334_222_8, DimmableKeypadA,
-                       None, button_8_label),
-
-            # Moton Sensor model 2842-222.
-            Descriptor(SecurityHealthSafety_2842_222, OnOffSensor,
-                       0x01, lambda d: 'Motion'),
-            Descriptor(SecurityHealthSafety_2842_222, OnOffSensor,
-                       0x02, lambda d: 'Light'),
-            Descriptor(SecurityHealthSafety_2842_222, OnOffSensor,
-                       0x03, lambda d: 'Battery'),
-
-            # Water Leak Sensor model 2852-222.
-            Descriptor(SecurityHealthSafety_2852_222, LeakSensorDryWet,
-                       0x01, lambda d: 'Dry'),
-            Descriptor(SecurityHealthSafety_2852_222, LeakSensorDryWet,
-                       0x02, lambda d: 'Wet'),
-            Descriptor(SecurityHealthSafety_2852_222, LeakSensorHeartbeat,
-                       0x04, lambda d: 'Heartbeat'),
-
-            # On/Off outlet model 2663-222 Switched Lighting Control
-            Descriptor(SwitchedLightingControl_2663_222, OnOffSwitch_OutletTop,
-                       0x01, lambda d: 'Top'),
-            Descriptor(SwitchedLightingControl_2663_222,
-                       OnOffSwitch_OutletBottom, 0x02, lambda d: 'Bottom'),
-        ]
-
-    def __len__(self):
-        """Return the number of Entity Descriptors mapped."""
-        return len(self.name_maps)
-
-    def __iter__(self):
-        """Itterate through the Entity Descriptors."""
-        for namemap in self.name_maps:
-            yield namemap
-
-    def __getitem__(self, key):
-        """Return a Entity Descriptors."""
-        device, state, group = key
-        descriptor = None
-        for name_map in self.name_maps:
-            if isinstance(device, name_map.device) \
-                    and isinstance(state, name_map.state) \
-                    and group == name_map.group:
-                descriptor = name_map.descriptor
-        if not descriptor:
-            for name_map in self.name_maps:
-                if isinstance(device, name_map.device) \
-                        and isinstance(state, name_map.state):
-                    descriptor = name_map.descriptor
-        return descriptor
-
-
 class InsteonEntity(Entity):
     """INSTEON abstract base entity."""
 
@@ -655,23 +575,13 @@ class InsteonEntity(Entity):
 
     def _get_label(self):
         """Get the device label for grouped devices."""
-        descriptor_mapper = DescriptorMapper()
-
-        def def_group_label(device):
-            return 'Group {:d}'.format(device.group)
-
-        def empty_label(device):
-            return ''
-
-        label_func = descriptor_mapper[
-            [self._insteon_device, self._insteon_device_state,
-             self._insteon_device_state.group]]
-        if label_func is None:
-            if len(self._insteon_device.states) > 1:
-                label_func = def_group_label
+        label = ''
+        if len(self._insteon_device.states) > 1:
+            if self._insteon_device_state.name in STATE_NAME_LABEL_MAP:
+                label = STATE_NAME_LABEL_MAP[self._insteon_device_state.name]
             else:
-                label_func = empty_label
-        return format(label_func(self))
+                label = 'Group {:d}'.format(self.group)
+        return label
 
 
 def print_aldb_to_log(aldb):
