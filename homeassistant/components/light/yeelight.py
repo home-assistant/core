@@ -57,6 +57,9 @@ SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_TRANSITION |
                     SUPPORT_FLASH)
 
+SUPPORT_YEELIGHT_WHITE_TEMP = (SUPPORT_YEELIGHT |
+                               SUPPORT_COLOR_TEMP)
+
 SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_COLOR |
                         SUPPORT_EFFECT |
@@ -307,6 +310,8 @@ class YeelightLight(Light):
 
             if self._bulb_device.bulb_type == yeelight.BulbType.Color:
                 self._supported_features = SUPPORT_YEELIGHT_RGB
+            elif self._bulb_device.bulb_type == yeelight.BulbType.WhiteTemp:
+                self._supported_features = SUPPORT_YEELIGHT_WHITE_TEMP
 
             if self._min_mireds is None:
                 model_specs = self._bulb.get_model_specs()
