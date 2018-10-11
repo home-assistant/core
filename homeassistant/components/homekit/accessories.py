@@ -141,6 +141,15 @@ class HomeAccessory(Accessory):
 
     def call_service(self, domain, service, service_data, value=None):
         """Fire event and call service for changes from HomeKit."""
+        self.hass.add_job(
+            self.async_call_service, domain, service, service_data, value)
+
+    async def async_call_service(self, domain, service, service_data,
+                                 value=None):
+        """Fire event and call service for changes from HomeKit.
+
+        This method must be run in the event loop.
+        """
         event_data = {
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_DISPLAY_NAME: self.display_name,
@@ -148,8 +157,8 @@ class HomeAccessory(Accessory):
             ATTR_VALUE: value
         }
 
-        self.hass.bus.fire(EVENT_HOMEKIT_CHANGED, event_data)
-        self.hass.services.call(domain, service, service_data)
+        self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data)
+        await self.hass.services.async_call(domain, service, service_data)
 
 
 class HomeBridge(Bridge):
