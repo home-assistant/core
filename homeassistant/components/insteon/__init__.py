@@ -656,9 +656,8 @@ class InsteonEntity(Entity):
 
     def _get_label(self):
         """ Get the device label for grouped devices"""
-
         descriptor_mapper = DescriptorMapper()
-        
+
         def def_group_label(device):
             return 'Group {:d}'.format(device.group)
 
