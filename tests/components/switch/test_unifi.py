@@ -1,20 +1,18 @@
 """UniFi POE control platform tests."""
-import asyncio
 from collections import deque
-import logging
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
+import pytest
 
 import aiounifi
 from aiounifi.clients import Clients
 from aiounifi.devices import Devices
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
 from homeassistant.setup import async_setup_component
 
 import homeassistant.components.switch as switch
-import homeassistant.components.switch.unifi as unifi_switch
 
 from tests.common import mock_coro
 
@@ -146,6 +144,7 @@ ENTRY_CONFIG = {
 
 CONTROLLER_ID = unifi.CONTROLLER_ID.format(host='mock-host', site='mock-site')
 
+
 @pytest.fixture
 def mock_controller(hass):
     """Mock a UniFi Controller."""
@@ -195,6 +194,7 @@ async def test_platform_manually_configured(hass):
         }
     }) is True
     assert unifi.DOMAIN not in hass.data
+
 
 async def test_no_clients(hass, mock_controller):
     """Test the update_clients function when no clients are found."""

@@ -55,7 +55,8 @@ async def async_setup_entry(hass, config_entry):
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
         manufacturer='Ubiquiti',
-        # name=config.name,
+        model="UniFi Controller",
+        name="UniFi Controller",
         # sw_version=config.raw['swversion'],
     )
 
