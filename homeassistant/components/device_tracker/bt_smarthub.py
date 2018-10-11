@@ -39,6 +39,7 @@ class BTSmartHubScanner(DeviceScanner):
         _LOGGER.info("Initialising BT Smart Hub")
         self.host = config[CONF_HOST]
         self.last_results = {}
+        self.success_init = False
 
         # Test the router is accessible
         data = self.get_bt_smarthub_data()
