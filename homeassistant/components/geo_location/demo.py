@@ -26,6 +26,8 @@ EVENT_NAMES = ["Bushfire", "Hazard Reduction", "Grass Fire", "Burn off",
                "Cyclone", "Waterspout", "Dust Storm", "Blizzard", "Ice Storm",
                "Earthquake", "Tsunami"]
 
+SOURCE = 'demo'
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo geo locations."""
@@ -99,6 +101,11 @@ class DemoGeoLocationEvent(GeoLocationEvent):
         self._latitude = latitude
         self._longitude = longitude
         self._unit_of_measurement = unit_of_measurement
+
+    @property
+    def source(self) -> str:
+        """Return source value of this external event."""
+        return SOURCE
 
     @property
     def name(self) -> Optional[str]:
