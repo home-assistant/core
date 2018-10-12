@@ -101,7 +101,7 @@ async def async_send_message(sender, password, recipient, use_tls,
             self.get_roster()
             self.send_presence()
             if room:
-                _LOGGER.debug("Joining room %s.", room)
+                _LOGGER.debug("Joining room %s", room)
                 self.plugin['xep_0045'].join_muc(room, sender, wait=True)
                 self.send_message(mto=room, mbody=message, mtype='groupchat')
             else:
@@ -110,12 +110,12 @@ async def async_send_message(sender, password, recipient, use_tls,
 
         def disconnect_on_login_fail(self, event):
             """Disconnect from the server if credentials are invalid."""
-            _LOGGER.warning('Login failed.')
+            _LOGGER.warning('Login failed')
             self.disconnect()
 
         @staticmethod
         def discard_ssl_invalid_cert(event):
             """Do nothing if ssl certificate is invalid."""
-            _LOGGER.info('Ignoring invalid ssl certificate as requested.')
+            _LOGGER.info('Ignoring invalid ssl certificate as requested')
 
     SendNotificationBot()
