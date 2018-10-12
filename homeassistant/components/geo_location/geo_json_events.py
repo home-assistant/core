@@ -31,6 +31,7 @@ DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
+SOURCE = 'geo_json_events'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
@@ -161,6 +162,11 @@ class GeoJsonLocationEvent(GeoLocationEvent):
         self._latitude = feed_entry.coordinates[0]
         self._longitude = feed_entry.coordinates[1]
         self.external_id = feed_entry.external_id
+
+    @property
+    def source(self) -> str:
+        """Return source value of this external event."""
+        return SOURCE
 
     @property
     def name(self) -> Optional[str]:
