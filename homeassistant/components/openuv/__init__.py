@@ -154,7 +154,7 @@ async def async_setup_entry(hass, config_entry):
         await openuv.async_update()
         hass.data[DOMAIN][DATA_OPENUV_CLIENT][config_entry.entry_id] = openuv
     except OpenUvError as err:
-        raise ConfigEntryNotReady(err)
+        raise ConfigEntryNotReady
 
     for component in ('binary_sensor', 'sensor'):
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
