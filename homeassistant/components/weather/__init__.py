@@ -4,7 +4,6 @@ Weather component that handles meteorological data for your location.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/weather/
 """
-import asyncio
 import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
@@ -27,6 +26,8 @@ ATTR_FORECAST_PRECIPITATION = 'precipitation'
 ATTR_FORECAST_TEMP = 'temperature'
 ATTR_FORECAST_TEMP_LOW = 'templow'
 ATTR_FORECAST_TIME = 'datetime'
+ATTR_FORECAST_WIND_SPEED = 'wind_speed'
+ATTR_FORECAST_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_ATTRIBUTION = 'attribution'
 ATTR_WEATHER_HUMIDITY = 'humidity'
 ATTR_WEATHER_OZONE = 'ozone'
@@ -37,12 +38,11 @@ ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the weather component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
     return True
 
 

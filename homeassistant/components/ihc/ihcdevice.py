@@ -1,5 +1,4 @@
 """Implementation of a base class for all IHC devices."""
-import asyncio
 
 from homeassistant.helpers.entity import Entity
 
@@ -28,8 +27,7 @@ class IHCDevice(Entity):
             self.ihc_note = ''
             self.ihc_position = ''
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Add callback for IHC changes."""
         self.ihc_controller.add_notify_event(
             self.ihc_id, self.on_ihc_change, True)

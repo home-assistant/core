@@ -105,7 +105,6 @@ Home Assistant. User need to record the token in secure place.
     "id": 11,
     "type": "auth/long_lived_access_token",
     "client_name": "GPS Logger",
-    "client_icon": null,
     "lifespan": 365
 }
 
@@ -433,7 +432,7 @@ def websocket_current_user(
         """Get current user."""
         enabled_modules = await hass.auth.async_get_enabled_mfa(user)
 
-        connection.send_message_outside(
+        connection.send_message(
             websocket_api.result_message(msg['id'], {
                 'id': user.id,
                 'name': user.name,
@@ -468,7 +467,7 @@ def websocket_create_long_lived_access_token(
         access_token = hass.auth.async_create_access_token(
             refresh_token)
 
-        connection.send_message_outside(
+        connection.send_message(
             websocket_api.result_message(msg['id'], access_token))
 
     hass.async_create_task(
@@ -480,8 +479,8 @@ def websocket_create_long_lived_access_token(
 def websocket_refresh_tokens(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return metadata of users refresh tokens."""
-    current_id = connection.request.get('refresh_token_id')
-    connection.to_write.put_nowait(websocket_api.result_message(msg['id'], [{
+    current_id = connection.refresh_token_id
+    connection.send_message(websocket_api.result_message(msg['id'], [{
         'id': refresh.id,
         'client_id': refresh.client_id,
         'client_name': refresh.client_name,
@@ -509,7 +508,7 @@ def websocket_delete_refresh_token(
 
         await hass.auth.async_remove_refresh_token(refresh_token)
 
-        connection.send_message_outside(
+        connection.send_message(
             websocket_api.result_message(msg['id'], {}))
 
     hass.async_create_task(
