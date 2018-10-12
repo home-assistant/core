@@ -290,6 +290,9 @@ omit =
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
 
+    homeassistant/components/simplisafe/__init__.py
+    homeassistant/components/*/simplisafe.py
+
     homeassistant/components/sisyphus.py
     homeassistant/components/*/sisyphus.py
 
@@ -401,7 +404,6 @@ omit =
     homeassistant/components/alarm_control_panel/ifttt.py
     homeassistant/components/alarm_control_panel/manual_mqtt.py
     homeassistant/components/alarm_control_panel/nx584.py
-    homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/alarm_control_panel/totalconnect.py
     homeassistant/components/alarm_control_panel/yale_smart_alarm.py
     homeassistant/components/apiai.py
