@@ -76,7 +76,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
             user_input[CONF_API_KEY], websession)
 
         if not api_key_validation:
-            return await self._show_form({'base': 'invalid_api_key'})
+            return await self._show_form({CONF_API_KEY: 'invalid_api_key'})
 
         scan_interval = user_input.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
