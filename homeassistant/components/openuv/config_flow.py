@@ -1,7 +1,5 @@
 """Config flow to configure the OpenUV component."""
 
-from collections import OrderedDict
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,17 +30,23 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize the config flow."""
-        self.data_schema = OrderedDict()
-        self.data_schema[vol.Required(CONF_API_KEY)] = str
-        self.data_schema[vol.Optional(CONF_LATITUDE)] = cv.latitude
-        self.data_schema[vol.Optional(CONF_LONGITUDE)] = cv.longitude
-        self.data_schema[vol.Optional(CONF_ELEVATION)] = vol.Coerce(float)
+        pass
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
+        data_schema = vol.Schema({
+            vol.Required(CONF_API_KEY): str,
+            vol.Optional(CONF_LATITUDE, default=self.hass.config.latitude):
+                cv.latitude,
+            vol.Optional(CONF_LONGITUDE, default=self.hass.config.longitude):
+                cv.longitude,
+            vol.Optional(CONF_ELEVATION, default=self.hass.config.elevation):
+                vol.Coerce(float),
+        })
+
         return self.async_show_form(
             step_id='user',
-            data_schema=vol.Schema(self.data_schema),
+            data_schema=data_schema,
             errors=errors if errors else {},
         )
 
