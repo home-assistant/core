@@ -14,7 +14,8 @@ from homeassistant import util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
+    ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,24 +84,36 @@ class MoldIndicator(Entity):
         outdoor_temp = hass.states.get(outdoor_temp_sensor)
         indoor_hum = hass.states.get(indoor_humidity_sensor)
 
-        if indoor_temp:
+        if indoor_temp and indoor_temp.state != STATE_UNKNOWN:
+            _LOGGER.debug("Have indoor temp sensor with state %s",
+                          indoor_temp.state)
             self._indoor_temp = MoldIndicator._update_temp_sensor(indoor_temp)
 
-        if outdoor_temp:
+        if outdoor_temp and outdoor_temp.state != STATE_UNKNOWN:
+            _LOGGER.debug("Have outdoor temp sensor with state %s",
+                          outdoor_temp.state)
             self._outdoor_temp = MoldIndicator._update_temp_sensor(
                 outdoor_temp)
 
-        if indoor_hum:
+        if indoor_hum and indoor_hum.state != STATE_UNKNOWN:
+            _LOGGER.debug("Have humidity sensor with state %s",
+                          indoor_hum.state)
             self._indoor_hum = MoldIndicator._update_hum_sensor(indoor_hum)
 
     @staticmethod
     def _update_temp_sensor(state):
         """Parse temperature sensor value."""
+        _LOGGER.debug("Updating temp sensor with value %s", state.state)
+        if state.state == STATE_UNKNOWN:
+            _LOGGER.error("Unable ERIK to parse sensor temperature: %s",
+                          state.state)
+            return None
+
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         temp = util.convert(state.state, float)
 
         if temp is None:
-            _LOGGER.error('Unable to parse sensor temperature: %s',
+            _LOGGER.error("Unable to parse sensor temperature: %s",
                           state.state)
             return None
 
@@ -117,21 +130,29 @@ class MoldIndicator(Entity):
     @staticmethod
     def _update_hum_sensor(state):
         """Parse humidity sensor value."""
+        _LOGGER.debug("Updating humidity sensor with value %s", state.state)
+        if state.state == STATE_UNKNOWN:
+            _LOGGER.error('Unable to ERIK parse sensor humidity: %s',
+                          state.state)
+            return None
+
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         hum = util.convert(state.state, float)
 
         if hum is None:
-            _LOGGER.error('Unable to parse sensor humidity: %s',
+            _LOGGER.error("Unable to parse sensor humidity: %s",
                           state.state)
             return None
 
         if unit != '%':
             _LOGGER.error("Humidity sensor has unsupported unit: %s %s",
                           unit, " (allowed: %)")
+            return None
 
         if hum > 100 or hum < 0:
             _LOGGER.error("Humidity sensor out of range: %s %s", hum,
                           " (allowed: 0-100%)")
+            return None
 
         return hum
 
@@ -147,7 +168,12 @@ class MoldIndicator(Entity):
 
     def _sensor_changed(self, entity_id, old_state, new_state):
         """Handle sensor state changes."""
+        _LOGGER.debug("Sensor state change for %s that had old state %s"
+                       " and new state %s", entity_id, old_state, new_state)
         if new_state is None:
+            return
+
+        if old_state is None and new_state.state == STATE_UNKNOWN:
             return
 
         if entity_id == self._indoor_temp_sensor:
@@ -240,9 +266,16 @@ class MoldIndicator(Entity):
                 ATTR_DEWPOINT: self._dewpoint,
                 ATTR_CRITICAL_TEMP: self._crit_temp,
             }
+
+        dewpoint = util.temperature.celsius_to_fahrenheit(self._dewpoint) \
+                   if self._dewpoint is not None else None
+
+        crit_temp = util.temperature.celsius_to_fahrenheit(self._crit_temp) \
+                    if self._crit_temp is not None else None
+
         return {
             ATTR_DEWPOINT:
-                util.temperature.celsius_to_fahrenheit(self._dewpoint),
+                dewpoint,
             ATTR_CRITICAL_TEMP:
-                util.temperature.celsius_to_fahrenheit(self._crit_temp),
+                crit_temp,
         }
