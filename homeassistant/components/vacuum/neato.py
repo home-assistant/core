@@ -66,8 +66,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self.clean_suspension_time = None
         self._available = False
         self._battery_level = None
-        self._robot_serial = '{}-{}'.format(
-            self.robot.serial, self._name)
+        self._robot_serial = self.robot.serial
 
     def update(self):
         """Update the states of Neato Vacuums."""
