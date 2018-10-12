@@ -183,7 +183,7 @@ async def async_unload_entry(hass, config_entry):
     remove_listener = hass.data[DOMAIN][DATA_OPENUV_LISTENER].pop(
         config_entry.entry_id)
     remove_listener()
-    
+
     for component in ('binary_sensor', 'sensor'):
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
