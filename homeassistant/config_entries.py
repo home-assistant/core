@@ -146,6 +146,7 @@ FLOWS = [
     'mqtt',
     'nest',
     'openuv',
+    'simplisafe',
     'smhi',
     'sonos',
     'tradfri',
