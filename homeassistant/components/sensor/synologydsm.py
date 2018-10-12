@@ -68,6 +68,9 @@ _STORAGE_DSK_MON_COND = {
                                    'mdi:test-tube'],
     'disk_temp': ['Temperature', None, 'mdi:thermometer'],
 }
+TEMP_SENSORS = ['volume_disk_temp_avg', 'volume_disk_temp_max',
+                'disk_temp']
+
 
 _MONITORED_CONDITIONS = list(_UTILISATION_MON_COND.keys()) + \
     list(_STORAGE_VOL_MON_COND.keys()) + \
@@ -106,22 +109,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         sensors = [SynoNasUtilSensor(
             api, variable, _UTILISATION_MON_COND[variable])
-                   for variable in monitored_conditions
-                   if variable in _UTILISATION_MON_COND]
+            for variable in monitored_conditions
+            if variable in _UTILISATION_MON_COND]
 
         # Handle all volumes
         for volume in config.get(CONF_VOLUMES, api.storage.volumes):
             sensors += [SynoNasStorageSensor(
                 api, variable, _STORAGE_VOL_MON_COND[variable], volume)
-                        for variable in monitored_conditions
-                        if variable in _STORAGE_VOL_MON_COND]
+                for variable in monitored_conditions
+                if variable in _STORAGE_VOL_MON_COND]
 
         # Handle all disks
         for disk in config.get(CONF_DISKS, api.storage.disks):
             sensors += [SynoNasStorageSensor(
                 api, variable, _STORAGE_DSK_MON_COND[variable], disk)
-                        for variable in monitored_conditions
-                        if variable in _STORAGE_DSK_MON_COND]
+                for variable in monitored_conditions
+                if variable in _STORAGE_DSK_MON_COND]
 
         add_entities(sensors, True)
 
@@ -226,17 +229,14 @@ class SynoNasStorageSensor(SynoNasSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        temp_sensors = ['volume_disk_temp_avg', 'volume_disk_temp_max',
-                        'disk_temp']
 
         if self.monitor_device is not None:
-            if self.var_id in temp_sensors:
-                attr = getattr(
-                    self._api.storage, self.var_id)(self.monitor_device)
+            attr = getattr(self._api.storage, self.var_id)(self.monitor_device)
 
+            if attr is not None and self.var_id in TEMP_SENSORS:
                 if self._api.temp_unit == TEMP_CELSIUS:
                     return attr
 
                 return round(attr * 1.8 + 32.0, 1)
 
-            return getattr(self._api.storage, self.var_id)(self.monitor_device)
+            return attr
