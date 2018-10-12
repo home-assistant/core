@@ -4,6 +4,7 @@ Notification support for Homematic.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.homematic/
 """
+import copy
 import logging
 
 import voluptuous as vol
@@ -52,7 +53,8 @@ class HomematicNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a notification to the device."""
-        data = {self.data, kwargs.get(ATTR_DATA, {})}
+        data = copy.deepcopy(self.data)
+        data.update(kwargs.get(ATTR_DATA, {})
 
         if data.get(ATTR_VALUE) is not None:
             templ = template_helper.Template(self.data[ATTR_VALUE], self.hass)
