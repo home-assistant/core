@@ -5,11 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/simplisafe/
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.alarm_control_panel import (
-    SCAN_INTERVAL as DEFAULT_SCAN_INTERVAL)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_CODE, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_USERNAME)
@@ -22,15 +21,15 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers import config_validation as cv
 
 from .config_flow import configured_instances
-from .const import DATA_CLIENT, DOMAIN, TOPIC_UPDATE
+from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
 
 REQUIREMENTS = ['simplisafe-python==3.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_LISTENER = 'listener'
-
 CONF_ACCOUNTS = 'accounts'
+
+DATA_LISTENER = 'listener'
 
 ACCOUNT_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
@@ -50,12 +49,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 @callback
 def _async_save_refresh_token(hass, config_entry, token):
+    config_entry.data[CONF_TOKEN] = token
     hass.config_entries.async_update_entry(
-        config_entry,
-        data={
-            CONF_USERNAME: config_entry.data[CONF_USERNAME],
-            CONF_TOKEN: token
-        })
+        config_entry, data=config_entry.data)
 
 
 async def async_setup(hass, config):
@@ -81,6 +77,7 @@ async def async_setup(hass, config):
                     CONF_USERNAME: account[CONF_USERNAME],
                     CONF_PASSWORD: account[CONF_PASSWORD],
                     CONF_CODE: account.get(CONF_CODE),
+                    CONF_SCAN_INTERVAL: account[CONF_SCAN_INTERVAL],
                 }))
 
     return True
@@ -124,8 +121,9 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][DATA_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
-            hass, refresh,
-            config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+            hass,
+            refresh,
+            timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
     return True
 
