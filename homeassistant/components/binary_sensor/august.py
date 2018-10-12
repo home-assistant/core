@@ -140,8 +140,7 @@ class AugustDoorBinarySensor(BinarySensorDevice):
         self._state = state_provider(self._data, self._door)
 
         from august.lock import LockDoorStatus
-        self._available = False if self._state == LockDoorStatus.UNKNOWN\
-            else True
+        self._available = self._state != LockDoorStatus.UNKNOWN
 
 
 class AugustDoorbellBinarySensor(BinarySensorDevice):
