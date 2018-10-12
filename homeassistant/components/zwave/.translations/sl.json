@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave je \u017ee konfiguriran",
+            "one_instance_only": "Komponente podpirajo le eno Z-Wave instanco"
+        },
+        "error": {
+            "option_error": "Potrjevanje Z-Wave ni uspelo. Ali je pot do USB klju\u010da pravilna?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Omre\u017eni klju\u010d (pustite prazno za samodejno generiranje)",
+                    "usb_path": "USB Pot"
+                },
+                "description": "Za informacije o konfiguracijskih spremenljivka si oglejte https://www.home-assistant.io/docs/z-wave/installation/",
+                "title": "Nastavite Z-Wave"
+            }
+        },
+        "title": "Z-Wave"
+    }
+}

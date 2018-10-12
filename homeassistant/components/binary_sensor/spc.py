@@ -9,8 +9,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
-from homeassistant.components.spc import (
-    ATTR_DISCOVER_DEVICES, SIGNAL_UPDATE_SENSOR)
+from homeassistant.components.spc import (DATA_API, SIGNAL_UPDATE_SENSOR)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,13 +26,12 @@ def _get_device_class(zone_type):
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the SPC binary sensor."""
-    if (discovery_info is None or
-            discovery_info[ATTR_DISCOVER_DEVICES] is None):
+    if discovery_info is None:
         return
-
-    async_add_entities(SpcBinarySensor(zone)
-                       for zone in discovery_info[ATTR_DISCOVER_DEVICES]
-                       if _get_device_class(zone.type))
+    api = hass.data[DATA_API]
+    async_add_entities([SpcBinarySensor(zone)
+                        for zone in api.zones.values()
+                        if _get_device_class(zone.type)])
 
 
 class SpcBinarySensor(BinarySensorDevice):

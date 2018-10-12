@@ -1,5 +1,4 @@
 """Provides a Hue API to control Home Assistant."""
-import asyncio
 import logging
 
 from aiohttp import web
@@ -21,6 +20,9 @@ from homeassistant.components.fan import (
     SPEED_MEDIUM, SPEED_HIGH
 )
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.const import KEY_REAL_IP
+from homeassistant.util.network import is_local
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,16 +38,19 @@ class HueUsernameView(HomeAssistantView):
     extra_urls = ['/api/']
     requires_auth = False
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle a POST request."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
         if 'devicetype' not in data:
             return self.json_message('devicetype not specified',
+                                     HTTP_BAD_REQUEST)
+
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
                                      HTTP_BAD_REQUEST)
 
         return self.json([{'success': {'username': '12345678901234567890'}}])
@@ -65,6 +70,10 @@ class HueGroupView(HomeAssistantView):
     @core.callback
     def put(self, request, username):
         """Process a request to make the Logitech Pop working."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
         return self.json([{
             'error': {
                 'address': '/groups/0/action/scene',
@@ -88,6 +97,10 @@ class HueAllLightsStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username):
         """Process a request to get the list of available lights."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
         hass = request.app['hass']
         json_response = {}
 
@@ -116,6 +129,10 @@ class HueOneLightStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username, entity_id):
         """Process a request to get the state of an individual light."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
         hass = request.app['hass']
         entity_id = self.config.number_to_entity_id(entity_id)
         entity = hass.states.get(entity_id)
@@ -146,9 +163,12 @@ class HueOneLightChangeView(HomeAssistantView):
         """Initialize the instance of the view."""
         self.config = config
 
-    @asyncio.coroutine
-    def put(self, request, username, entity_number):
+    async def put(self, request, username, entity_number):
         """Process a request to set the state of an individual light."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message('only local IPs allowed',
+                                     HTTP_BAD_REQUEST)
+
         config = self.config
         hass = request.app['hass']
         entity_id = config.number_to_entity_id(entity_number)
@@ -168,7 +188,7 @@ class HueOneLightChangeView(HomeAssistantView):
             return web.Response(text="Entity not exposed", status=404)
 
         try:
-            request_json = yield from request.json()
+            request_json = await request.json()
         except ValueError:
             _LOGGER.error('Received invalid json')
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
@@ -257,11 +277,11 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Separate call to turn on needed
         if turn_on_needed:
-            hass.async_add_job(hass.services.async_call(
+            hass.async_create_task(hass.services.async_call(
                 core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id},
                 blocking=True))
 
-        hass.async_add_job(hass.services.async_call(
+        hass.async_create_task(hass.services.async_call(
             domain, service, data, blocking=True))
 
         json_response = \

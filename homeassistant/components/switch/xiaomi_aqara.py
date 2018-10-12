@@ -99,6 +99,11 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
         attrs.update(super().device_state_attributes)
         return attrs
 
+    @property
+    def should_poll(self):
+        """Return the polling state. Polling needed for zigbee plug only."""
+        return self._supports_power_consumption
+
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         if self._write_to_hub(self._sid, **{self._data_key: 'on'}):
@@ -131,3 +136,8 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             return False
         self._state = state
         return True
+
+    def update(self):
+        """Get data from hub."""
+        _LOGGER.debug("Update data from hub: %s", self._name)
+        self._get_from_hub(self._sid)

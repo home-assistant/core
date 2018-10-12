@@ -4,7 +4,6 @@ Support for Rflink switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.rflink/
 """
-import asyncio
 import logging
 
 from homeassistant.components.rflink import (
@@ -85,9 +84,8 @@ def devices_from_config(domain_config, hass=None):
     return devices
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Rflink platform."""
     async_add_entities(devices_from_config(config, hass))
 

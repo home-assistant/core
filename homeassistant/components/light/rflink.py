@@ -4,7 +4,6 @@ Support for Rflink lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.rflink/
 """
-import asyncio
 import logging
 
 from homeassistant.components.light import (
@@ -155,14 +154,12 @@ def devices_from_config(domain_config, hass=None):
     return devices
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Rflink light platform."""
     async_add_entities(devices_from_config(config, hass))
 
-    @asyncio.coroutine
-    def add_new_device(event):
+    async def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
         device_id = event[EVENT_KEY_ID]
 
@@ -195,15 +192,14 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
 
     _brightness = 255
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
             # rflink only support 16 brightness levels
             self._brightness = int(kwargs[ATTR_BRIGHTNESS] / 17) * 17
 
         # Turn on light at the requested dim level
-        yield from self._async_handle_command('dim', self._brightness)
+        await self._async_handle_command('dim', self._brightness)
 
     @property
     def brightness(self):
@@ -233,8 +229,7 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
 
     _brightness = 255
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on and set dim level."""
         if ATTR_BRIGHTNESS in kwargs:
             # rflink only support 16 brightness levels
@@ -242,12 +237,12 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
 
         # if receiver supports dimming this will turn on the light
         # at the requested dim level
-        yield from self._async_handle_command('dim', self._brightness)
+        await self._async_handle_command('dim', self._brightness)
 
         # if the receiving device does not support dimlevel this
         # will ensure it is turned on when full brightness is set
         if self._brightness == 255:
-            yield from self._async_handle_command('turn_on')
+            await self._async_handle_command('turn_on')
 
     @property
     def brightness(self):
@@ -284,12 +279,10 @@ class ToggleRflinkLight(SwitchableRflinkDevice, Light):
             # if the state is true, it gets set as false
             self._state = self._state in [STATE_UNKNOWN, False]
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        yield from self._async_handle_command('toggle')
+        await self._async_handle_command('toggle')
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        yield from self._async_handle_command('toggle')
+        await self._async_handle_command('toggle')

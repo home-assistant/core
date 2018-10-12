@@ -28,6 +28,9 @@ omit =
     homeassistant/components/apple_tv.py
     homeassistant/components/*/apple_tv.py
 
+    homeassistant/components/aqualogic.py
+    homeassistant/components/*/aqualogic.py
+
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
@@ -53,7 +56,7 @@ omit =
     homeassistant/components/bbb_gpio.py
     homeassistant/components/*/bbb_gpio.py
 
-    homeassistant/components/blink.py
+    homeassistant/components/blink/*
     homeassistant/components/*/blink.py
 
     homeassistant/components/bloomsky.py
@@ -105,8 +108,11 @@ omit =
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
+    homeassistant/components/evohome.py
+    homeassistant/components/*/evohome.py
+
     homeassistant/components/fritzbox.py
-    homeassistant/components/switch/fritzbox.py
+    homeassistant/components/*/fritzbox.py
 
     homeassistant/components/ecovacs.py
     homeassistant/components/*/ecovacs.py
@@ -310,6 +316,9 @@ omit =
 
     homeassistant/components/*/thinkingcleaner.py
 
+    homeassistant/components/tibber/*
+    homeassistant/components/*/tibber.py
+
     homeassistant/components/toon.py
     homeassistant/components/*/toon.py
 
@@ -510,6 +519,7 @@ omit =
     homeassistant/components/light/lw12wifi.py
     homeassistant/components/light/mystrom.py
     homeassistant/components/light/nanoleaf_aurora.py
+    homeassistant/components/light/opple.py
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/piglow.py
     homeassistant/components/light/rpi_gpio_pwm.py
@@ -620,7 +630,6 @@ omit =
     homeassistant/components/notify/telstra.py
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
-    homeassistant/components/notify/yessssms.py
     homeassistant/components/nuimo_controller.py
     homeassistant/components/prometheus.py
     homeassistant/components/rainbird.py
@@ -679,6 +688,7 @@ omit =
     homeassistant/components/sensor/fritzbox_netmonitor.py
     homeassistant/components/sensor/gearbest.py
     homeassistant/components/sensor/geizhals.py
+    homeassistant/components/sensor/gitlab_ci.py
     homeassistant/components/sensor/gitter.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
@@ -687,6 +697,7 @@ omit =
     homeassistant/components/sensor/haveibeenpwned.py
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/htu21d.py
+    homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/influxdb.py
@@ -709,6 +720,7 @@ omit =
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/mvglive.py
     homeassistant/components/sensor/nederlandse_spoorwegen.py
+    homeassistant/components/sensor/netatmo_public.py
     homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/netdata_public.py
     homeassistant/components/sensor/neurio_energy.py
@@ -764,7 +776,6 @@ omit =
     homeassistant/components/sensor/tank_utility.py
     homeassistant/components/sensor/ted5000.py
     homeassistant/components/sensor/temper.py
-    homeassistant/components/sensor/tibber.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/trafikverket_weatherstation.py
@@ -772,7 +783,6 @@ omit =
     homeassistant/components/sensor/travisci.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
-    homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
     homeassistant/components/sensor/uscis.py
     homeassistant/components/sensor/vasttrafik.py

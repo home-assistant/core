@@ -11,6 +11,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import (
     get_test_home_assistant, mock_component, fire_time_changed,
     assert_setup_component)
+from tests.components.automation import common
 
 
 # pylint: disable=invalid-name
@@ -57,7 +58,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
         # Set above 12 so the automation will fire again
         self.hass.states.set('test.entity', 12)
-        automation.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
         self.hass.states.set('test.entity', 9)
         self.hass.block_till_done()
@@ -775,7 +776,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity_1', 9)
         self.hass.states.set('test.entity_2', 9)
         self.hass.block_till_done()
-        automation.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
 
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))

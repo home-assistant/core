@@ -4,7 +4,6 @@ Sensor to indicate whether the current day is a workday.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.workday/
 """
-import asyncio
 import logging
 from datetime import datetime, timedelta
 
@@ -162,8 +161,7 @@ class IsWorkdaySensor(BinarySensorDevice):
             CONF_OFFSET: self._days_offset
         }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get date and look whether it is a holiday."""
         # Default is no workday
         self._state = False

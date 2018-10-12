@@ -9,7 +9,8 @@ import homeassistant.components.climate as climate
 import homeassistant.components.media_player as media_player
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.components.homekit.const import (
-    CONF_FEATURE_LIST, FEATURE_ON_OFF, TYPE_OUTLET, TYPE_SWITCH)
+    CONF_FEATURE_LIST, FEATURE_ON_OFF, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER,
+    TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_TYPE, TEMP_CELSIUS,
@@ -140,6 +141,10 @@ def test_type_sensors(type_name, entity_id, state, attrs):
     ('Switch', 'script.test', 'on', {}, {}),
     ('Switch', 'switch.test', 'on', {}, {}),
     ('Switch', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_SWITCH}),
+    ('Valve', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_FAUCET}),
+    ('Valve', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_VALVE}),
+    ('Valve', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_SHOWER}),
+    ('Valve', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_SPRINKLER}),
 ])
 def test_type_switches(type_name, entity_id, state, attrs, config):
     """Test if switch types are associated correctly."""
