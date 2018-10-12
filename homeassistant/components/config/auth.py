@@ -1,7 +1,6 @@
 """Offer API to configure Home Assistant auth."""
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components import websocket_api
 
 
@@ -40,61 +39,49 @@ async def async_setup(hass):
     return True
 
 
-@callback
 @websocket_api.require_owner
-def websocket_list(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_list(hass, connection, msg):
     """Return a list of users."""
-    async def send_users():
-        """Send users."""
-        result = [_user_info(u) for u in await hass.auth.async_get_users()]
+    result = [_user_info(u) for u in await hass.auth.async_get_users()]
 
-        connection.send_message_outside(
-            websocket_api.result_message(msg['id'], result))
-
-    hass.async_add_job(send_users())
+    connection.send_message(
+        websocket_api.result_message(msg['id'], result))
 
 
-@callback
 @websocket_api.require_owner
-def websocket_delete(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_delete(hass, connection, msg):
     """Delete a user."""
-    async def delete_user():
-        """Delete user."""
-        if msg['user_id'] == connection.request.get('hass_user').id:
-            connection.send_message_outside(websocket_api.error_message(
-                msg['id'], 'no_delete_self',
-                'Unable to delete your own account'))
-            return
+    if msg['user_id'] == connection.user.id:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'no_delete_self',
+            'Unable to delete your own account'))
+        return
 
-        user = await hass.auth.async_get_user(msg['user_id'])
+    user = await hass.auth.async_get_user(msg['user_id'])
 
-        if not user:
-            connection.send_message_outside(websocket_api.error_message(
-                msg['id'], 'not_found', 'User not found'))
-            return
+    if not user:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'not_found', 'User not found'))
+        return
 
-        await hass.auth.async_remove_user(user)
+    await hass.auth.async_remove_user(user)
 
-        connection.send_message_outside(
-            websocket_api.result_message(msg['id']))
-
-    hass.async_add_job(delete_user())
+    connection.send_message(
+        websocket_api.result_message(msg['id']))
 
 
-@callback
 @websocket_api.require_owner
-def websocket_create(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_create(hass, connection, msg):
     """Create a user."""
-    async def create_user():
-        """Create a user."""
-        user = await hass.auth.async_create_user(msg['name'])
+    user = await hass.auth.async_create_user(msg['name'])
 
-        connection.send_message_outside(
-            websocket_api.result_message(msg['id'], {
-                'user': _user_info(user)
-            }))
-
-    hass.async_add_job(create_user())
+    connection.send_message(
+        websocket_api.result_message(msg['id'], {
+            'user': _user_info(user)
+        }))
 
 
 def _user_info(user):

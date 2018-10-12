@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['pyenvisalink==2.3']
+REQUIREMENTS = ['pyenvisalink==3.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,8 +81,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up for Envisalink devices."""
     from pyenvisalink import EnvisalinkAlarmPanel
 
@@ -165,7 +164,7 @@ def async_setup(hass, config):
     _LOGGER.info("Start envisalink.")
     controller.start()
 
-    result = yield from sync_connect
+    result = await sync_connect
     if not result:
         return False
 

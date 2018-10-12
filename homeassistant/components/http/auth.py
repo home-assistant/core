@@ -112,6 +112,7 @@ async def async_validate_auth_header(request, api_password=None):
         if refresh_token is None:
             return False
 
+        request['hass_refresh_token'] = refresh_token
         request['hass_user'] = refresh_token.user
         return True
 

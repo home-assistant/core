@@ -41,6 +41,7 @@ homeassistant/components/hassio.py @home-assistant/hassio
 # Individual components
 homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
 homeassistant/components/alarm_control_panel/manual_mqtt.py @colinodell
+homeassistant/components/alarm_control_panel/simplisafe.py @bachya
 homeassistant/components/binary_sensor/hikvision.py @mezz64
 homeassistant/components/bmw_connected_drive.py @ChristianKuehnel
 homeassistant/components/camera/yi.py @bachya
@@ -50,6 +51,7 @@ homeassistant/components/climate/sensibo.py @andrey-git
 homeassistant/components/cover/group.py @cdce8p
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
+homeassistant/components/device_tracker/huawei_router.py @abmantis
 homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/history_graph.py @andrey-git
 homeassistant/components/light/lifx.py @amelchio
@@ -80,19 +82,21 @@ homeassistant/components/sensor/qnap.py @colinodell
 homeassistant/components/sensor/sma.py @kellerza
 homeassistant/components/sensor/sql.py @dgomes
 homeassistant/components/sensor/sytadin.py @gautric
-homeassistant/components/sensor/tibber.py @danielhiversen
-homeassistant/components/sensor/upnp.py @dgomes
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/vacuum/roomba.py @pschmitt
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 homeassistant/components/*/axis.py @kane610
+homeassistant/components/blink/* @fronzbot
+homeassistant/components/*/blink.py @fronzbot
 homeassistant/components/*/bmw_connected_drive.py @ChristianKuehnel
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/*/deconz.py @kane610
 homeassistant/components/ecovacs.py @OverloadUT
 homeassistant/components/*/ecovacs.py @OverloadUT
+homeassistant/components/edp_redy.py @abmantis
+homeassistant/components/*/edp_redy.py @abmantis
 homeassistant/components/eight_sleep.py @mezz64
 homeassistant/components/*/eight_sleep.py @mezz64
 homeassistant/components/hive.py @Rendili @KJonline
@@ -106,7 +110,7 @@ homeassistant/components/konnected.py @heythisisnate
 homeassistant/components/*/konnected.py @heythisisnate
 homeassistant/components/matrix.py @tinloaf
 homeassistant/components/*/matrix.py @tinloaf
-homeassistant/components/openuv.py @bachya
+homeassistant/components/openuv/* @bachya
 homeassistant/components/*/openuv.py @bachya
 homeassistant/components/qwikswitch.py @kellerza
 homeassistant/components/*/qwikswitch.py @kellerza
@@ -119,6 +123,8 @@ homeassistant/components/tesla.py @zabuldon
 homeassistant/components/*/tesla.py @zabuldon
 homeassistant/components/tellduslive.py @molobrakos @fredrike
 homeassistant/components/*/tellduslive.py @molobrakos @fredrike
+homeassistant/components/tibber/* @danielhiversen
+homeassistant/components/*/tibber.py @danielhiversen
 homeassistant/components/*/tradfri.py @ggravlingen
 homeassistant/components/upcloud.py @scop
 homeassistant/components/*/upcloud.py @scop
