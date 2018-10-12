@@ -111,6 +111,12 @@ class AugustDoorBinarySensor(BinarySensorDevice):
         self._sensor_type = sensor_type
         self._door = door
         self._state = None
+        self._available = False
+
+    @property
+    def available(self):
+        """Return the availability of this sensor."""
+        return self._available
 
     @property
     def is_on(self):
@@ -132,6 +138,10 @@ class AugustDoorBinarySensor(BinarySensorDevice):
         """Get the latest state of the sensor."""
         state_provider = SENSOR_TYPES_DOOR[self._sensor_type][2]
         self._state = state_provider(self._data, self._door)
+
+        from august.lock import LockDoorStatus
+        self._available = False if self._state == LockDoorStatus.UNKNOWN\
+            else True
 
 
 class AugustDoorbellBinarySensor(BinarySensorDevice):
