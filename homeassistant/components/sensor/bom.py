@@ -86,7 +86,7 @@ FORECAST_SENSOR_TYPES = {
                           'mdi:water'],
     'summary': ['precis', 'Summary', None, 'mdi:text'],
     'detailed_summary': ['forecast', 'Detailed Summary', None, 'mdi:text'],
-    'icon': ['forecast_icon_code', 'Icon', None, None]
+    'icon': ['forecast_icon_code', 'Icon', None, 'mdi:text']
 }
 
 PRODUCT_ID_LAT_LON = {
