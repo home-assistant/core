@@ -25,7 +25,7 @@ async def test_duplicate_error(hass):
     flow.hass = hass
 
     result = await flow.async_step_user(user_input=conf)
-    assert result['errors'] == {'base': 'identifier_exists'}
+    assert result['errors'] == {CONF_LATITUDE: 'identifier_exists'}
 
 
 async def test_invalid_api_key(hass):
@@ -43,7 +43,7 @@ async def test_invalid_api_key(hass):
     with patch('pyopenuv.util.validate_api_key',
                return_value=mock_coro(False)):
         result = await flow.async_step_user(user_input=conf)
-        assert result['errors'] == {'base': 'invalid_api_key'}
+        assert result['errors'] == {CONF_API_KEY: 'invalid_api_key'}
 
 
 async def test_show_form(hass):

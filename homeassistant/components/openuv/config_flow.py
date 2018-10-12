@@ -69,7 +69,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
 
         identifier = '{0}, {1}'.format(latitude, longitude)
         if identifier in configured_instances(self.hass):
-            return await self._show_form({'base': 'identifier_exists'})
+            return await self._show_form({CONF_LATITUDE: 'identifier_exists'})
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
         api_key_validation = await validate_api_key(

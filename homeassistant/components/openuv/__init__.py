@@ -116,7 +116,7 @@ async def async_setup(hass, config):
     if identifier in configured_instances(hass):
         return True
 
-    hass.async_add_job(
+    hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={'source': SOURCE_IMPORT},
@@ -154,6 +154,7 @@ async def async_setup_entry(hass, config_entry):
         await openuv.async_update()
         hass.data[DOMAIN][DATA_OPENUV_CLIENT][config_entry.entry_id] = openuv
     except OpenUvError as err:
+        _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
 
     for component in ('binary_sensor', 'sensor'):
@@ -177,15 +178,15 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
-    for component in ('binary_sensor', 'sensor'):
-        await hass.config_entries.async_forward_entry_unload(
-            config_entry, component)
-
     hass.data[DOMAIN][DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
 
     remove_listener = hass.data[DOMAIN][DATA_OPENUV_LISTENER].pop(
         config_entry.entry_id)
     remove_listener()
+    
+    for component in ('binary_sensor', 'sensor'):
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, component)
 
     return True
 

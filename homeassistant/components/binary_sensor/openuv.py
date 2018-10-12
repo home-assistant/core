@@ -83,7 +83,7 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
     async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
-        def update(self):
+        def update():
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
