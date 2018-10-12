@@ -808,7 +808,6 @@ class HMDevice(Entity):
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""
         channels_to_sub = set()
-        channels_to_sub.add(0)  # Add channel 0 for UNREACH
 
         # Push data to channels_to_sub from hmdevice metadata
         for metadata in (self._hmdevice.SENSORNODE, self._hmdevice.BINARYNODE,
