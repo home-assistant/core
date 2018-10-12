@@ -50,11 +50,8 @@ CONFIG_SCHEMA = vol.Schema({
 @callback
 def _async_save_refresh_token(hass, config_entry, token):
     hass.config_entries.async_update_entry(
-        config_entry,
-        data={
-            CONF_USERNAME: config_entry.data[CONF_USERNAME],
-            CONF_TOKEN: token,
-            CONF_SCAN_INTERVAL: config_entry.data[CONF_SCAN_INTERVAL],
+        config_entry, data={
+            **config_entry.data, CONF_TOKEN: token
         })
 
 
@@ -101,7 +98,7 @@ async def async_setup_entry(hass, config_entry):
         if 403 in str(err):
             _LOGGER.error('Invalid credentials provided')
             return False
-        
+
         _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
 
