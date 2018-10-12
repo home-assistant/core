@@ -110,7 +110,7 @@ class OppleLight(Light):
             self._device.brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP in kwargs and \
-                self.brightness != kwargs[ATTR_COLOR_TEMP]:
+                self.color_temp != kwargs[ATTR_COLOR_TEMP]:
             color_temp = mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
             self._device.color_temperature = color_temp
 
