@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_BINARY_SENSORS, CONF_ELEVATION,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL, CONF_SENSORS)
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -153,14 +154,7 @@ async def async_setup_entry(hass, config_entry):
         await openuv.async_update()
         hass.data[DOMAIN][DATA_OPENUV_CLIENT][config_entry.entry_id] = openuv
     except OpenUvError as err:
-        _LOGGER.error('An error occurred: %s', str(err))
-        hass.components.persistent_notification.create(
-            'Error: {0}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(err),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
-        return False
+        raise ConfigEntryNotReady(err)
 
     for component in ('binary_sensor', 'sensor'):
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
