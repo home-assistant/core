@@ -31,21 +31,21 @@ DEFAULT_NAME = 'Yweather'
 SCAN_INTERVAL = timedelta(minutes=10)
 
 CONDITION_CLASSES = {
-    'clear-night': [31],
-    'cloudy': [26, 27, 28, 29, 30],
-    'fog': [19, 20, 21, 22, 23],
-    'hail': [17, 18, 35],
-    'lightning': [37],
-    'lightning-rainy': [3, 4, 38, 39, 47],
-    'partlycloudy': [44],
-    'pouring': [40, 45],
-    'rainy': [9, 11, 12],
-    'snowy': [8, 13, 14, 15, 16, 41, 42, 43],
-    'snowy-rainy': [5, 6, 7, 10, 46],
-    'sunny': [32, 33, 34, 25, 36],
-    'windy': [24],
+    'clear-night': [31, 33],
+    'cloudy': [26, 27, 28],
+    'fog': [20, 21],
+    'hail': [17, 35],
+    'lightning': [],
+    'lightning-rainy': [3, 4, 37, 38, 39, 45, 47],
+    'partlycloudy': [29, 30, 44],
+    'pouring': [],
+    'rainy': [9, 10, 11, 12, 40],
+    'snowy': [8, 13, 14, 15, 16, 41, 42, 43, 46],
+    'snowy-rainy': [5, 6, 7, 18],
+    'sunny': [25, 32, 34, 36],
+    'windy': [23, 24],
     'windy-variant': [],
-    'exceptional': [0, 1, 2],
+    'exceptional': [0, 1, 2, 19, 22],
 }
 
 
