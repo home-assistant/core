@@ -44,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-REQUIREMENTS = ['pyotgw==0.1b0']
+REQUIREMENTS = ['pyotgw==0.2b1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,11 +117,11 @@ async def setup_monitored_vars(hass, monitored_vars):
             gw_vars.DATA_DHW_SETPOINT,
             gw_vars.DATA_MAX_CH_SETPOINT,
             gw_vars.DATA_OEM_DIAG,
-            gw_vars.DATA_CH_BURNER_STARTS,
+            gw_vars.DATA_TOTAL_BURNER_STARTS,
             gw_vars.DATA_CH_PUMP_STARTS,
             gw_vars.DATA_DHW_PUMP_STARTS,
             gw_vars.DATA_DHW_BURNER_STARTS,
-            gw_vars.DATA_CH_BURNER_HOURS,
+            gw_vars.DATA_TOTAL_BURNER_HOURS,
             gw_vars.DATA_CH_PUMP_HOURS,
             gw_vars.DATA_DHW_PUMP_HOURS,
             gw_vars.DATA_DHW_BURNER_HOURS,

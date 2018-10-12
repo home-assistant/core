@@ -99,15 +99,15 @@ async def async_setup_platform(hass, config, async_add_entities,
             DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS,
             "Maximum Central Heating Setpoint"],
         gw_vars.DATA_OEM_DIAG: [None, None, "OEM Diagnostic Code"],
-        gw_vars.DATA_CH_BURNER_STARTS: [
-            None, None, "Central Heating Burner Starts"],
+        gw_vars.DATA_TOTAL_BURNER_STARTS: [
+            None, None, "Total Burner Starts"],
         gw_vars.DATA_CH_PUMP_STARTS: [
             None, None, "Central Heating Pump Starts"],
         gw_vars.DATA_DHW_PUMP_STARTS: [None, None, "Hot Water Pump Starts"],
         gw_vars.DATA_DHW_BURNER_STARTS: [
             None, None, "Hot Water Burner Starts"],
-        gw_vars.DATA_CH_BURNER_HOURS: [
-            None, UNIT_HOUR, "Central Heating Burner Hours"],
+        gw_vars.DATA_TOTAL_BURNER_HOURS: [
+            None, UNIT_HOUR, "Total Burner Hours"],
         gw_vars.DATA_CH_PUMP_HOURS: [
             None, UNIT_HOUR, "Central Heating Pump Hours"],
         gw_vars.DATA_DHW_PUMP_HOURS: [None, UNIT_HOUR, "Hot Water Pump Hours"],
