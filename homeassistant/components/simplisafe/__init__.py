@@ -49,9 +49,13 @@ CONFIG_SCHEMA = vol.Schema({
 
 @callback
 def _async_save_refresh_token(hass, config_entry, token):
-    config_entry.data[CONF_TOKEN] = token
     hass.config_entries.async_update_entry(
-        config_entry, data=config_entry.data)
+        config_entry,
+        data={
+            CONF_USERNAME: config_entry.data[CONF_USERNAME],
+            CONF_TOKEN: token,
+            CONF_SCAN_INTERVAL: config_entry.data[CONF_SCAN_INTERVAL],
+        })
 
 
 async def async_setup(hass, config):
