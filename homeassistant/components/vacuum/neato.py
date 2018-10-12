@@ -66,6 +66,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self.clean_suspension_time = None
         self._available = False
         self._battery_level = None
+        self._robot_serial = self.robot.serial
 
     def update(self):
         """Update the states of Neato Vacuums."""
@@ -155,6 +156,11 @@ class NeatoConnectedVacuum(StateVacuumDevice):
     def state(self):
         """Return the status of the vacuum cleaner."""
         return self._clean_state
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._robot_serial
 
     @property
     def device_state_attributes(self):
