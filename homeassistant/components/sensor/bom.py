@@ -274,6 +274,7 @@ def validate_days(days):
         raise vol.error.Invalid("Forecast Days is out of Range")
     return days
 
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_ZONE_ID, 'Deprecated partial station ID'): cv.string,
     vol.Inclusive(CONF_WMO_ID, 'Deprecated partial station ID'): cv.string,
