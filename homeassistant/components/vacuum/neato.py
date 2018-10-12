@@ -146,7 +146,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
     @property
     def available(self):
-        """Return if the botvac is available"""
+        """Return if the robot is available."""
         return self._available
 
     @property
