@@ -248,6 +248,7 @@ SENSOR_TYPES = {
     'wind_spd_kt': ['Wind Speed kt', 'kt']
 }
 
+
 def validate_product_id(product_id):
     """Check that the Product ID is well-formed."""
     if product_id is None or not product_id:
@@ -255,6 +256,7 @@ def validate_product_id(product_id):
     if not re.fullmatch(r'ID[A-Z]\d\d\d\d\d', product_id):
         raise vol.error.Invalid("Malformed Product ID")
     return product_id
+
 
 def validate_station(station):
     """Check that the station ID is well-formed."""
@@ -265,12 +267,13 @@ def validate_station(station):
         raise vol.error.Invalid('Malformed station ID')
     return station
 
+
 def validate_days(days):
     """Check that days is within bounds."""
-    if days not in range(0,7):
+    if days not in range(0, 7):
         raise vol.error.Invalid("Forecast Days is out of Range")
     return days
-    
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_ZONE_ID, 'Deprecated partial station ID'): cv.string,
     vol.Inclusive(CONF_WMO_ID, 'Deprecated partial station ID'): cv.string,
@@ -327,7 +330,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if forecast_product_id is None:
                 _LOGGER.error("Could not get BOM Product ID from lat/lon")
                 return
-                
+
         bom_forecast_data = BOMForecastData(forecast_product_id)
         bom_forecast_data.update()
 
@@ -337,9 +340,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             start = 1
 
         for index in range(start, forecast_days+1):
-            for condition in forecast_conditions:    
+            for condition in forecast_conditions:
                 add_entities([BOMForecastSensor(bom_forecast_data, condition,
-                index, config.get(CONF_NAME), forecast_product_id)])
+                    index, config.get(CONF_NAME), forecast_product_id)])
+
 
 class BOMCurrentSensor(Entity):
     """Implementation of a BOM current sensor."""
@@ -447,7 +451,7 @@ class BOMForecastSensor(Entity):
         self._name = name
         self._product_id = product_id
         self.update()
-        
+
     @property
     def name(self):
         """Return the name of the sensor."""
