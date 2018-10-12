@@ -343,7 +343,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for index in range(start, forecast_days+1):
             for condition in forecast_conditions:
                 add_entities([BOMForecastSensor(bom_forecast_data, condition,
-                    index, config.get(CONF_NAME), forecast_product_id)])
+                                                index, config.get(CONF_NAME),
+                                                forecast_product_id)])
 
 
 class BOMCurrentSensor(Entity):
@@ -460,7 +461,8 @@ class BOMForecastSensor(Entity):
             return 'BOM {} {}'.format(
                 FORECAST_SENSOR_TYPES[self._condition][1], self._index)
         return 'BOM {} {} {}'.format(self._name,
-            FORECAST_SENSOR_TYPES[self._condition][1], self._index)
+                                     FORECAST_SENSOR_TYPES[self._condition][1],
+                                     self._index)
 
     @property
     def state(self):
