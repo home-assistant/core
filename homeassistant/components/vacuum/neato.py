@@ -64,6 +64,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self.clean_battery_end = None
         self.clean_suspension_charge_count = None
         self.clean_suspension_time = None
+        self._available = False
+        self._battery_level = None
 
     def update(self):
         """Update the states of Neato Vacuums."""
@@ -71,12 +73,12 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self.neato.update_robots()
         try:
             self._state = self.robot.state
+            self._available = True
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.HTTPError) as ex:
             _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
-            self._clean_state = STATE_ERROR
-            self._status_state = 'Robot Offline'
+            self._available = False
             return
         _LOGGER.debug('self._state=%s', self._state)
         if self._state['state'] == 1:
@@ -127,6 +129,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self.clean_battery_end = (
             self._mapdata[self.robot.serial]['maps'][0]['run_charge_at_end'])
 
+        self._battery_level = self._state['details']['charge']
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -140,7 +144,12 @@ class NeatoConnectedVacuum(StateVacuumDevice):
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
-        return self._state['details']['charge']
+        return self._battery_level
+
+    @property
+    def available(self):
+        """Return if the robot is available."""
+        return self._available
 
     @property
     def state(self):
