@@ -20,7 +20,7 @@ from homeassistant.components.light import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['yeelight==0.4.0']
+REQUIREMENTS = ['yeelight==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ LEGACY_DEVICE_TYPE_MAP = {
 DEFAULT_NAME = 'Yeelight'
 DEFAULT_TRANSITION = 350
 
+CONF_MODEL = 'model'
 CONF_TRANSITION = 'transition'
 CONF_SAVE_ON_CHANGE = 'save_on_change'
 CONF_MODE_MUSIC = 'use_music_mode'
@@ -46,6 +47,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
     vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
     vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
+    vol.Optional(CONF_MODEL): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -55,14 +57,13 @@ SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_TRANSITION |
                     SUPPORT_FLASH)
 
+SUPPORT_YEELIGHT_WHITE_TEMP = (SUPPORT_YEELIGHT |
+                               SUPPORT_COLOR_TEMP)
+
 SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_COLOR |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
-
-YEELIGHT_MIN_KELVIN = YEELIGHT_MAX_KELVIN = 2700
-YEELIGHT_RGB_MIN_KELVIN = 1700
-YEELIGHT_RGB_MAX_KELVIN = 6500
 
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
@@ -132,23 +133,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
 
         device_type = discovery_info['device_type']
-        device_type = LEGACY_DEVICE_TYPE_MAP.get(device_type, device_type)
+        legacy_device_type = LEGACY_DEVICE_TYPE_MAP.get(device_type,
+                                                        device_type)
 
         # Not using hostname, as it seems to vary.
-        name = "yeelight_%s_%s" % (device_type,
+        name = "yeelight_%s_%s" % (legacy_device_type,
                                    discovery_info['properties']['mac'])
-        host = discovery_info['host']
-        device = {'name': name, 'ipaddr': host}
+        device = {'name': name, 'ipaddr': discovery_info['host']}
 
-        light = YeelightLight(device, DEVICE_SCHEMA({}))
+        light = YeelightLight(device, DEVICE_SCHEMA({CONF_MODEL: device_type}))
         lights.append(light)
-        hass.data[DATA_KEY][host] = light
+        hass.data[DATA_KEY][name] = light
     else:
-        for host, device_config in config[CONF_DEVICES].items():
-            device = {'name': device_config[CONF_NAME], 'ipaddr': host}
+        for ipaddr, device_config in config[CONF_DEVICES].items():
+            name = device_config[CONF_NAME]
+            _LOGGER.debug("Adding configured %s", name)
+
+            device = {'name': name, 'ipaddr': ipaddr}
             light = YeelightLight(device, device_config)
             lights.append(light)
-            hass.data[DATA_KEY][host] = light
+            hass.data[DATA_KEY][name] = light
 
     add_entities(lights, True)
 
@@ -194,6 +198,10 @@ class YeelightLight(Light):
         self._is_on = None
         self._hs = None
 
+        self._model = config.get('model')
+        self._min_mireds = None
+        self._max_mireds = None
+
     @property
     def available(self) -> bool:
         """Return if bulb is available."""
@@ -232,16 +240,12 @@ class YeelightLight(Light):
     @property
     def min_mireds(self):
         """Return minimum supported color temperature."""
-        if self.supported_features & SUPPORT_COLOR_TEMP:
-            return kelvin_to_mired(YEELIGHT_RGB_MAX_KELVIN)
-        return kelvin_to_mired(YEELIGHT_MAX_KELVIN)
+        return self._min_mireds
 
     @property
     def max_mireds(self):
         """Return maximum supported color temperature."""
-        if self.supported_features & SUPPORT_COLOR_TEMP:
-            return kelvin_to_mired(YEELIGHT_RGB_MIN_KELVIN)
-        return kelvin_to_mired(YEELIGHT_MIN_KELVIN)
+        return self._max_mireds
 
     def _get_hs_from_properties(self):
         rgb = self._properties.get('rgb', None)
@@ -279,7 +283,8 @@ class YeelightLight(Light):
         import yeelight
         if self._bulb_device is None:
             try:
-                self._bulb_device = yeelight.Bulb(self._ipaddr)
+                self._bulb_device = yeelight.Bulb(self._ipaddr,
+                                                  model=self._model)
                 self._bulb_device.get_properties()  # force init for type
 
                 self._available = True
@@ -305,6 +310,15 @@ class YeelightLight(Light):
 
             if self._bulb_device.bulb_type == yeelight.BulbType.Color:
                 self._supported_features = SUPPORT_YEELIGHT_RGB
+            elif self._bulb_device.bulb_type == yeelight.BulbType.WhiteTemp:
+                self._supported_features = SUPPORT_YEELIGHT_WHITE_TEMP
+
+            if self._min_mireds is None:
+                model_specs = self._bulb.get_model_specs()
+                self._min_mireds = \
+                    kelvin_to_mired(model_specs['color_temp']['max'])
+                self._max_mireds = \
+                    kelvin_to_mired(model_specs['color_temp']['min'])
 
             self._is_on = self._properties.get('power') == 'on'
 
@@ -500,5 +514,6 @@ class YeelightLight(Light):
         import yeelight
         try:
             self._bulb.set_power_mode(yeelight.enums.PowerMode[mode.upper()])
+            self.async_schedule_update_ha_state(True)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to set the power mode: %s", ex)
