@@ -57,9 +57,15 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
         if not user_input:
             return await self._show_form()
 
-        latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
-        longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
-        elevation = user_input.get(CONF_ELEVATION, self.hass.config.elevation)
+        latitude = user_input.get(CONF_LATITUDE)
+        if not latitude:
+            latitude = self.hass.config.latitude
+        longitude = user_input.get(CONF_LONGITUDE)
+        if not longitude:
+            longitude = self.hass.config.longitude
+        elevation = user_input.get(CONF_ELEVATION)
+        if not elevation:
+            elevation = self.hass.config.elevation
 
         identifier = '{0}, {1}'.format(latitude, longitude)
         if identifier in configured_instances(self.hass):

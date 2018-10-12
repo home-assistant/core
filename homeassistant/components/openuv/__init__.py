@@ -108,9 +108,8 @@ async def async_setup(hass, config):
         return True
 
     conf = config[DOMAIN]
-    latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    elevation = conf.get(CONF_ELEVATION, hass.config.elevation)
+    latitude = conf.get(CONF_LATITUDE)
+    longitude = conf.get(CONF_LONGITUDE)
 
     identifier = '{0}, {1}'.format(latitude, longitude)
     if identifier in configured_instances(hass):
@@ -124,7 +123,7 @@ async def async_setup(hass, config):
                 CONF_API_KEY: conf[CONF_API_KEY],
                 CONF_LATITUDE: latitude,
                 CONF_LONGITUDE: longitude,
-                CONF_ELEVATION: elevation,
+                CONF_ELEVATION: conf.get(CONF_ELEVATION),
                 CONF_BINARY_SENSORS: conf[CONF_BINARY_SENSORS],
                 CONF_SENSORS: conf[CONF_SENSORS],
                 CONF_SCAN_INTERVAL: conf[CONF_SCAN_INTERVAL],
