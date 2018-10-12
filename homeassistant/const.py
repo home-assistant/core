@@ -167,6 +167,7 @@ EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
+EVENT_TIMER_OUT_OF_SYNC = 'timer_out_of_sync'
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = 'battery'
@@ -215,6 +216,7 @@ ATTR_CREDENTIALS = 'credentials'
 ATTR_NOW = 'now'
 ATTR_DATE = 'date'
 ATTR_TIME = 'time'
+ATTR_SECONDS = 'seconds'
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = 'domain'
