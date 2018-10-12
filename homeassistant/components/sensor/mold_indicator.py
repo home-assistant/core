@@ -84,6 +84,7 @@ class MoldIndicator(Entity):
         outdoor_temp = hass.states.get(outdoor_temp_sensor)
         indoor_hum = hass.states.get(indoor_humidity_sensor)
 
+        # Get the current values if the sensors already have this data.
         if indoor_temp and indoor_temp.state != STATE_UNKNOWN:
             _LOGGER.debug("Have indoor temp sensor with state %s",
                           indoor_temp.state)
@@ -104,8 +105,10 @@ class MoldIndicator(Entity):
     def _update_temp_sensor(state):
         """Parse temperature sensor value."""
         _LOGGER.debug("Updating temp sensor with value %s", state.state)
+
+        # Return an error if the sensor change its state to Unknown.
         if state.state == STATE_UNKNOWN:
-            _LOGGER.error("Unable ERIK to parse sensor temperature: %s",
+            _LOGGER.error("Unable to parse sensor temperature: %s",
                           state.state)
             return None
 
@@ -131,8 +134,10 @@ class MoldIndicator(Entity):
     def _update_hum_sensor(state):
         """Parse humidity sensor value."""
         _LOGGER.debug("Updating humidity sensor with value %s", state.state)
+
+        # Return an error if the sensor change its state to Unknown.
         if state.state == STATE_UNKNOWN:
-            _LOGGER.error('Unable to ERIK parse sensor humidity: %s',
+            _LOGGER.error('Unable to parse sensor humidity: %s',
                           state.state)
             return None
 
@@ -168,11 +173,14 @@ class MoldIndicator(Entity):
 
     def _sensor_changed(self, entity_id, old_state, new_state):
         """Handle sensor state changes."""
-        _LOGGER.debug("Sensor state change for %s that had old state %s"
-                       " and new state %s", entity_id, old_state, new_state)
+        _LOGGER.debug("Sensor state change for %s that had old state %s "
+                      "and new state %s", entity_id, old_state, new_state)
+
         if new_state is None:
             return
 
+        # If old_state is not set and new state is unknown then it means that
+        # the sensor just started up and has not yet updated it's data yet.
         if old_state is None and new_state.state == STATE_UNKNOWN:
             return
 
@@ -268,10 +276,10 @@ class MoldIndicator(Entity):
             }
 
         dewpoint = util.temperature.celsius_to_fahrenheit(self._dewpoint) \
-                   if self._dewpoint is not None else None
+            if self._dewpoint is not None else None
 
         crit_temp = util.temperature.celsius_to_fahrenheit(self._crit_temp) \
-                    if self._crit_temp is not None else None
+            if self._crit_temp is not None else None
 
         return {
             ATTR_DEWPOINT:
