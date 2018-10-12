@@ -1,6 +1,7 @@
 """
-Support for control of ElkM1 sensors. On the ElkM1 there are 6 types
-of sensors:
+Support for control of ElkM1 sensors.
+
+On the ElkM1 there are 6 types of sensors:
 - Counters that are integers that can be read
 - Keypads that have temperature (not all models, but no way to know)
 - Panel that monitors the state of the connection, versions, etc.
@@ -35,7 +36,7 @@ SIGNAL_SPEAK_PHRASE = 'elkm1_speak_phrase'
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Setup the Elk sensor platform."""
+    """Create the Elk-M1 sensor platform."""
     if discovery_info is None:
         return
 
