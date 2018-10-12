@@ -32,20 +32,47 @@ MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
 
 CONF_STEP_VOLUME = 'step_volume'
+CONF_INPUT_SCAN = 'input_scan'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
     vol.Optional(CONF_STEP_VOLUME, default=False): cv.boolean,
+    vol.Optional(CONF_INPUT_SCAN, default=True): cv.boolean,
 })
+
+DEFAULT_INPUT_LIST = {
+    '00': "PHONO",
+    '01': "CD",
+    '02': "TUNER",
+    '03': "CD-R/TAPE",
+    '04': "DVD",
+    '05': "TV/SAT",
+    '10': "VIDEO 1",
+    '12': "MULTI CH IN",
+    '14': "VIDEO 2",
+    '15': "DVR/BDR",
+    '17': "iPod/USB",
+    '18': "XM RADIO",
+    '19': "HDMI 1",
+    '20': "HDMI 2",
+    '21': "HDMI 3",
+    '22': "HDMI 4",
+    '23': "HDMI 5",
+    '25': "BD",
+    '26': "Internet Radio",
+    '27': "SIRIUS",
+    '33': "ADAPTER PORT",
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pioneer platform."""
     pioneer = PioneerDevice(
         config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(CONF_TIMEOUT), config.get(CONF_STEP_VOLUME))
+        config.get(CONF_TIMEOUT), config.get(CONF_STEP_VOLUME),
+        config.get(CONF_INPUT_SCAN))
 
     if pioneer.update():
         add_entities([pioneer])
@@ -54,19 +81,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PioneerDevice(MediaPlayerDevice):
     """Representation of a Pioneer device."""
 
-    def __init__(self, name, host, port, timeout, step_volume):
+    def __init__(self, name, host, port, timeout, step_volume, input_scan):
         """Initialize the Pioneer device."""
         self._name = name
         self._host = host
         self._port = port
         self._timeout = timeout
         self._step_volume = step_volume
+        self._input_scan = input_scan
         self._pwstate = 'PWR1'
         self._volume = 0
         self._muted = False
         self._selected_source = ''
         self._source_name_to_number = {}
         self._source_number_to_name = {}
+
+        if not self._input_scan:
+            self._source_number_to_name = DEFAULT_INPUT_LIST
+            self._source_name_to_number = {
+                name: number
+                for number, name in self._source_number_to_name.items()
+            }
 
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
@@ -122,7 +157,7 @@ class PioneerDevice(MediaPlayerDevice):
         self._muted = (muted_value == "MUT0") if muted_value else None
 
         # Build the source name dictionaries if necessary
-        if not self._source_name_to_number:
+        if self._input_scan and not self._source_name_to_number:
             for i in range(MAX_SOURCE_NUMBERS):
                 result = self.telnet_request(
                     telnet, "?RGB" + str(i).zfill(2), "RGB")
@@ -139,8 +174,11 @@ class PioneerDevice(MediaPlayerDevice):
         source_number = self.telnet_request(telnet, "?F", "FN")
 
         if source_number:
+            parsed_source = source_number[2:]
+            if parsed_source not in self._source_number_to_name:
+                self._source_number_to_name[parsed_source] = parsed_source
             self._selected_source = self._source_number_to_name \
-                .get(source_number[2:])
+                .get(parsed_source)
         else:
             self._selected_source = None
 
