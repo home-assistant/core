@@ -1,10 +1,12 @@
 """Define tests for the OpenUV config flow."""
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openuv import DOMAIN, config_flow
 from homeassistant.const import (
-    CONF_API_KEY, CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_API_KEY, CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_SCAN_INTERVAL)
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -71,7 +73,13 @@ async def test_step_import(hass):
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result['title'] == '{0}, {1}'.format(
             hass.config.latitude, hass.config.longitude)
-        assert result['data'] == conf
+        assert result['data'] == {
+            CONF_API_KEY: '12345abcde',
+            CONF_LATITUDE: hass.config.latitude,
+            CONF_LONGITUDE: hass.config.longitude,
+            CONF_ELEVATION: hass.config.elevation,
+            CONF_SCAN_INTERVAL: 1800,
+        }
 
 
 async def test_step_user(hass):
@@ -81,6 +89,7 @@ async def test_step_user(hass):
         CONF_ELEVATION: 59.1234,
         CONF_LATITUDE: 39.128712,
         CONF_LONGITUDE: -104.9812612,
+        CONF_SCAN_INTERVAL: timedelta(minutes=5)
     }
 
     flow = config_flow.OpenUvFlowHandler()
@@ -93,4 +102,10 @@ async def test_step_user(hass):
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result['title'] == '{0}, {1}'.format(
             conf[CONF_LATITUDE], conf[CONF_LONGITUDE])
-        assert result['data'] == conf
+        assert result['data'] == {
+            CONF_API_KEY: '12345abcde',
+            CONF_ELEVATION: 59.1234,
+            CONF_LATITUDE: 39.128712,
+            CONF_LONGITUDE: -104.9812612,
+            CONF_SCAN_INTERVAL: 300,
+        }

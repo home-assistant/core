@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 REQUIREMENTS = ['pyopenuv==1.0.4']
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,6 @@ DATA_PROTECTION_WINDOW = 'protection_window'
 DATA_UV = 'uv'
 
 DEFAULT_ATTRIBUTION = 'Data provided by OpenUV'
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 NOTIFICATION_ID = 'openuv_notification'
 NOTIFICATION_TITLE = 'OpenUV Component Setup'
@@ -85,18 +84,17 @@ SENSOR_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_ELEVATION): float,
-            vol.Optional(CONF_LATITUDE): cv.latitude,
-            vol.Optional(CONF_LONGITUDE): cv.longitude,
-            vol.Optional(CONF_BINARY_SENSORS, default={}):
-                BINARY_SENSOR_SCHEMA,
-            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-                cv.time_period,
-        })
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_ELEVATION): float,
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_BINARY_SENSORS, default={}):
+            BINARY_SENSOR_SCHEMA,
+        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+            cv.time_period,
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -115,22 +113,22 @@ async def async_setup(hass, config):
     elevation = conf.get(CONF_ELEVATION, hass.config.elevation)
 
     identifier = '{0}, {1}'.format(latitude, longitude)
+    if identifier in configured_instances(hass):
+        return True
 
-    if identifier not in configured_instances(hass):
-        hass.async_add_job(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={'source': SOURCE_IMPORT},
-                data={
-                    CONF_API_KEY: conf[CONF_API_KEY],
-                    CONF_LATITUDE: latitude,
-                    CONF_LONGITUDE: longitude,
-                    CONF_ELEVATION: elevation,
-                    CONF_BINARY_SENSORS: conf[CONF_BINARY_SENSORS],
-                    CONF_SENSORS: conf[CONF_SENSORS],
-                }))
-
-    hass.data[DOMAIN][CONF_SCAN_INTERVAL] = conf[CONF_SCAN_INTERVAL]
+    hass.async_add_job(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={'source': SOURCE_IMPORT},
+            data={
+                CONF_API_KEY: conf[CONF_API_KEY],
+                CONF_LATITUDE: latitude,
+                CONF_LONGITUDE: longitude,
+                CONF_ELEVATION: elevation,
+                CONF_BINARY_SENSORS: conf[CONF_BINARY_SENSORS],
+                CONF_SENSORS: conf[CONF_SENSORS],
+                CONF_SCAN_INTERVAL: conf[CONF_SCAN_INTERVAL],
+            }))
 
     return True
 
@@ -145,11 +143,10 @@ async def async_setup_entry(hass, config_entry):
         openuv = OpenUV(
             Client(
                 config_entry.data[CONF_API_KEY],
-                config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
-                config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+                config_entry.data[CONF_LATITUDE],
+                config_entry.data[CONF_LONGITUDE],
                 websession,
-                altitude=config_entry.data.get(
-                    CONF_ELEVATION, hass.config.elevation)),
+                altitude=config_entry.data[CONF_ELEVATION]),
             config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
                 CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
             config_entry.data.get(CONF_SENSORS, {}).get(
@@ -170,7 +167,7 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
 
-    async def refresh_sensors(event_time):
+    async def refresh(event_time):
         """Refresh OpenUV data."""
         _LOGGER.debug('Refreshing OpenUV data')
         await openuv.async_update()
@@ -178,8 +175,9 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][DATA_OPENUV_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
-            hass, refresh_sensors,
-            hass.data[DOMAIN].get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+            hass,
+            refresh,
+            timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
     return True
 

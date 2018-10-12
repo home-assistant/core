@@ -7,10 +7,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_API_KEY, CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_API_KEY, CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_SCAN_INTERVAL)
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 
 @callback
@@ -31,7 +32,19 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize the config flow."""
-        pass
+        self.data_schema = OrderedDict()
+        self.data_schema[vol.Required(CONF_API_KEY)] = str
+        self.data_schema[vol.Optional(CONF_LATITUDE)] = cv.latitude
+        self.data_schema[vol.Optional(CONF_LONGITUDE)] = cv.longitude
+        self.data_schema[vol.Optional(CONF_ELEVATION)] = vol.Coerce(float)
+
+    async def _show_form(self, errors=None):
+        """Show the form to the user."""
+        return self.async_show_form(
+            step_id='user',
+            data_schema=vol.Schema(self.data_schema),
+            errors=errors if errors else {},
+        )
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
@@ -41,34 +54,31 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
         """Handle the start of the config flow."""
         from pyopenuv.util import validate_api_key
 
-        errors = {}
+        if not user_input:
+            return await self._show_form()
 
-        if user_input is not None:
-            identifier = '{0}, {1}'.format(
-                user_input.get(CONF_LATITUDE, self.hass.config.latitude),
-                user_input.get(CONF_LONGITUDE, self.hass.config.longitude))
+        latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
+        longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
+        elevation = user_input.get(CONF_ELEVATION, self.hass.config.elevation)
 
-            if identifier in configured_instances(self.hass):
-                errors['base'] = 'identifier_exists'
-            else:
-                websession = aiohttp_client.async_get_clientsession(self.hass)
-                api_key_validation = await validate_api_key(
-                    user_input[CONF_API_KEY], websession)
-                if api_key_validation:
-                    return self.async_create_entry(
-                        title=identifier,
-                        data=user_input,
-                    )
-                errors['base'] = 'invalid_api_key'
+        identifier = '{0}, {1}'.format(latitude, longitude)
+        if identifier in configured_instances(self.hass):
+            return await self._show_form({'base': 'identifier_exists'})
 
-        data_schema = OrderedDict()
-        data_schema[vol.Required(CONF_API_KEY)] = str
-        data_schema[vol.Optional(CONF_LATITUDE)] = cv.latitude
-        data_schema[vol.Optional(CONF_LONGITUDE)] = cv.longitude
-        data_schema[vol.Optional(CONF_ELEVATION)] = vol.Coerce(float)
+        websession = aiohttp_client.async_get_clientsession(self.hass)
+        api_key_validation = await validate_api_key(
+            user_input[CONF_API_KEY], websession)
 
-        return self.async_show_form(
-            step_id='user',
-            data_schema=vol.Schema(data_schema),
-            errors=errors,
-        )
+        if not api_key_validation:
+            return await self._show_form({'base': 'invalid_api_key'})
+
+        scan_interval = user_input.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        user_input.update({
+            CONF_LATITUDE: latitude,
+            CONF_LONGITUDE: longitude,
+            CONF_ELEVATION: elevation,
+            CONF_SCAN_INTERVAL: scan_interval.seconds,
+        })
+
+        return self.async_create_entry(title=identifier, data=user_input)
