@@ -52,6 +52,8 @@ class NeatoConnectedSwitch(ToggleEntity):
             self._state = None
         self._schedule_state = None
         self._clean_state = None
+        self._unique_id = '{}-{}'.format(
+            self.robot.serial, self._robot_name)
 
     def update(self):
         """Update the states of Neato switches."""
@@ -82,6 +84,11 @@ class NeatoConnectedSwitch(ToggleEntity):
     def available(self):
         """Return True if entity is available."""
         return self._state
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def is_on(self):

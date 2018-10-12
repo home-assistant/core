@@ -40,6 +40,8 @@ class NeatoCleaningMap(Camera):
         self.neato = hass.data[NEATO_LOGIN]
         self._image_url = None
         self._image = None
+        self._unique_id = '{}-{}'.format(
+            self._robot_serial, self._robot_name)
 
     def camera_image(self):
         """Return image response."""
@@ -63,3 +65,8 @@ class NeatoCleaningMap(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._robot_name
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._unique_id
