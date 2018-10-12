@@ -19,9 +19,9 @@ async def test_flow_works(hass):
 
     hap = hmipc.HomematicipAuth(hass, config)
     with patch.object(hap, 'get_auth', return_value=mock_coro()), \
-            patch.object(hmipc.HomematicipAuth, 'async_checkbutton', \
+            patch.object(hmipc.HomematicipAuth, 'async_checkbutton',
                          return_value=mock_coro(True)), \
-            patch.object(hmipc.HomematicipAuth, 'async_setup', \
+            patch.object(hmipc.HomematicipAuth, 'async_setup',
                          return_value=mock_coro(True)), \
             patch.object(hmipc.HomematicipAuth, 'async_register',
                          return_value=mock_coro(True)):
