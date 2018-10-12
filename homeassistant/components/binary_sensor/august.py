@@ -81,12 +81,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     "Not adding sensor class %s for lock %s ",
                     SENSOR_TYPES_DOOR[sensor_type][1], door.device_name
                 )
-            else:
-                _LOGGER.debug(
-                    "Adding sensor class %s for %s",
-                    SENSOR_TYPES_DOOR[sensor_type][1], door.device_name
-                )
-                devices.append(AugustDoorBinarySensor(data, sensor_type, door))
+                continue
+
+            _LOGGER.debug(
+                "Adding sensor class %s for %s",
+                SENSOR_TYPES_DOOR[sensor_type][1], door.device_name
+            )
+            devices.append(AugustDoorBinarySensor(data, sensor_type, door))
 
     for doorbell in data.doorbells:
         for sensor_type in SENSOR_TYPES_DOORBELL:
