@@ -233,7 +233,8 @@ class SynoNasStorageSensor(SynoNasSensor):
             attr = getattr(self._api.storage, self.var_id)(self.monitor_device)
 
             if attr is not None:
-                if self.var_id in TEMP_SENSORS and self._api.temp_unit == TEMP_FAHRENHEIT:
+                if (self.var_id in TEMP_SENSORS and
+                        self._api.temp_unit == TEMP_FAHRENHEIT):
                     return round(attr * 1.8 + 32.0, 1)
 
             return attr
