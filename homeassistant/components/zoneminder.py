@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['zm-py==0.0.4']
+REQUIREMENTS = ['zm-py==0.0.5']
 
 CONF_PATH_ZMS = 'path_zms'
 
