@@ -77,7 +77,7 @@ async def async_send_message(sender, password, recipient, use_tls,
 
         def __init__(self):
             """Initialize the Jabber Bot."""
-            super(SendNotificationBot, self).__init__(sender, password)
+            super().__init__(sender, password)
 
             # need hass.loop!!
             self.loop = loop
