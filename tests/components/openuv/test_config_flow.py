@@ -61,6 +61,9 @@ async def test_step_import(hass):
     """Test that the import step works."""
     conf = {
         CONF_API_KEY: '12345abcde',
+        CONF_ELEVATION: 59.1234,
+        CONF_LATITUDE: 39.128712,
+        CONF_LONGITUDE: -104.9812612,
     }
 
     flow = config_flow.OpenUvFlowHandler()
@@ -71,13 +74,12 @@ async def test_step_import(hass):
         result = await flow.async_step_import(import_config=conf)
 
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result['title'] == '{0}, {1}'.format(
-            hass.config.latitude, hass.config.longitude)
+        assert result['title'] == '39.128712, -104.9812612'
         assert result['data'] == {
             CONF_API_KEY: '12345abcde',
-            CONF_LATITUDE: hass.config.latitude,
-            CONF_LONGITUDE: hass.config.longitude,
-            CONF_ELEVATION: hass.config.elevation,
+            CONF_ELEVATION: 59.1234,
+            CONF_LATITUDE: 39.128712,
+            CONF_LONGITUDE: -104.9812612,
             CONF_SCAN_INTERVAL: 1800,
         }
 
@@ -100,8 +102,7 @@ async def test_step_user(hass):
         result = await flow.async_step_user(user_input=conf)
 
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result['title'] == '{0}, {1}'.format(
-            conf[CONF_LATITUDE], conf[CONF_LONGITUDE])
+        assert result['title'] == '39.128712, -104.9812612'
         assert result['data'] == {
             CONF_API_KEY: '12345abcde',
             CONF_ELEVATION: 59.1234,
