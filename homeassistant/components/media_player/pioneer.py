@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF, STATE_ON,
     STATE_UNKNOWN)
@@ -24,18 +24,20 @@ DEFAULT_NAME = 'Pioneer AVR'
 DEFAULT_PORT = 23   # telnet default. Some Pioneer AVRs use 8102
 DEFAULT_TIMEOUT = None
 
-SUPPORT_PIONEER = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+SUPPORT_PIONEER = SUPPORT_PAUSE | SUPPORT_VOLUME_MUTE | \
                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
                   SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
 
+CONF_STEP_VOLUME = 'step_volume'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
+    vol.Optional(CONF_STEP_VOLUME, default=False): cv.boolean,
 })
 
 
@@ -43,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pioneer platform."""
     pioneer = PioneerDevice(
         config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(CONF_TIMEOUT))
+        config.get(CONF_TIMEOUT), config.get(CONF_STEP_VOLUME))
 
     if pioneer.update():
         add_entities([pioneer])
@@ -52,12 +54,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PioneerDevice(MediaPlayerDevice):
     """Representation of a Pioneer device."""
 
-    def __init__(self, name, host, port, timeout):
+    def __init__(self, name, host, port, timeout, step_volume):
         """Initialize the Pioneer device."""
         self._name = name
         self._host = host
         self._port = port
         self._timeout = timeout
+        self._step_volume = step_volume
         self._pwstate = 'PWR1'
         self._volume = 0
         self._muted = False
@@ -172,7 +175,9 @@ class PioneerDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_PIONEER
+        if self._step_volume:
+            return SUPPORT_PIONEER | SUPPORT_VOLUME_STEP
+        return SUPPORT_PIONEER | SUPPORT_VOLUME_SET
 
     @property
     def source(self):
