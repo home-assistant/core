@@ -25,7 +25,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'melcloud'
-REQUIREMENTS = ['requests']
+REQUIREMENTS = []
 DEPENDENCIES = []
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
