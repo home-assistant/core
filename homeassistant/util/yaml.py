@@ -140,14 +140,16 @@ def _is_file_valid(name: str) -> bool:
     return not name.startswith('.')
 
 
-def _find_files(directory: str, pattern: str) -> Iterator[str]:
+def _find_files(directory: str, patterns: list) -> Iterator[str]:
     """Recursively load files in a directory."""
     for root, dirs, files in os.walk(directory, topdown=True):
         dirs[:] = [d for d in dirs if _is_file_valid(d)]
         for basename in files:
-            if _is_file_valid(basename) and fnmatch.fnmatch(basename, pattern):
-                filename = os.path.join(root, basename)
-                yield filename
+            if _is_file_valid(basename):
+                for extensions in patterns:
+                    if fnmatch.fnmatch(basename, extensions):
+                        filename = os.path.join(root, basename)
+                        yield filename
 
 
 def _include_dir_named_yaml(loader: SafeLineLoader,
@@ -155,7 +157,7 @@ def _include_dir_named_yaml(loader: SafeLineLoader,
     """Load multiple files from directory as a dictionary."""
     mapping = OrderedDict()  # type: OrderedDict
     loc = os.path.join(os.path.dirname(loader.name), node.value)
-    for fname in _find_files(loc, '*.yaml'):
+    for fname in _find_files(loc, ['*.yaml', '*.yml']):
         filename = os.path.splitext(os.path.basename(fname))[0]
         mapping[filename] = load_yaml(fname)
     return _add_reference(mapping, loader, node)
@@ -166,7 +168,7 @@ def _include_dir_merge_named_yaml(loader: SafeLineLoader,
     """Load multiple files from directory as a merged dictionary."""
     mapping = OrderedDict()  # type: OrderedDict
     loc = os.path.join(os.path.dirname(loader.name), node.value)
-    for fname in _find_files(loc, '*.yaml'):
+    for fname in _find_files(loc, ['*.yaml', '*.yml']):
         if os.path.basename(fname) == SECRET_YAML:
             continue
         loaded_yaml = load_yaml(fname)
@@ -179,7 +181,7 @@ def _include_dir_list_yaml(loader: SafeLineLoader,
                            node: yaml.nodes.Node) -> List[JSON_TYPE]:
     """Load multiple files from directory as a list."""
     loc = os.path.join(os.path.dirname(loader.name), node.value)
-    return [load_yaml(f) for f in _find_files(loc, '*.yaml')
+    return [load_yaml(f) for f in _find_files(loc, ['*.yaml', '*.yml'])
             if os.path.basename(f) != SECRET_YAML]
 
 
@@ -189,7 +191,7 @@ def _include_dir_merge_list_yaml(loader: SafeLineLoader,
     loc = os.path.join(os.path.dirname(loader.name),
                        node.value)  # type: str
     merged_list = []  # type: List[JSON_TYPE]
-    for fname in _find_files(loc, '*.yaml'):
+    for fname in _find_files(loc, ['*.yaml', '*.yml']):
         if os.path.basename(fname) == SECRET_YAML:
             continue
         loaded_yaml = load_yaml(fname)
