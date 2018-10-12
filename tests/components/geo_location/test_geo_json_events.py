@@ -4,11 +4,12 @@ from unittest import mock
 from unittest.mock import patch, MagicMock
 
 from homeassistant.components import geo_location
+from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.geo_location.geo_json_events import \
     SCAN_INTERVAL, ATTR_EXTERNAL_ID
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_START, \
     CONF_RADIUS, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME, \
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_SOURCE
+    ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, assert_setup_component, \
     fire_time_changed

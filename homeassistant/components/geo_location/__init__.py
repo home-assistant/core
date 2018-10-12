@@ -11,7 +11,7 @@ import logging
 from datetime import timedelta
 from typing import Optional
 
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_SOURCE
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -19,6 +19,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DISTANCE = 'distance'
+ATTR_SOURCE = 'source'
 DOMAIN = 'geo_location'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 GROUP_NAME_ALL_EVENTS = 'All Geo Location Events'
@@ -44,9 +45,9 @@ class GeoLocationEvent(Entity):
         return None
 
     @property
-    def source(self) -> Optional[str]:
+    def source(self) -> str:
         """Return source value of this external event."""
-        return None
+        raise NotImplementedError
 
     @property
     def distance(self) -> Optional[float]:
