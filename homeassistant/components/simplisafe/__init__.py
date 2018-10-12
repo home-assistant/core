@@ -101,6 +101,8 @@ async def async_setup_entry(hass, config_entry):
         if 403 in str(err):
             _LOGGER.error('Invalid credentials provided')
             return False
+        
+        _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
 
     _async_save_refresh_token(hass, config_entry, simplisafe.refresh_token)
