@@ -453,20 +453,20 @@ class BOMForecastSensor(Entity):
         """Return the name of the sensor."""
         if not self._name:
             return 'BOM {} {}'.format(
-            FORECAST_SENSOR_TYPES[self._condition][1], self._index)
+                FORECAST_SENSOR_TYPES[self._condition][1], self._index)
         return 'BOM {} {} {}'.format(self._name,
-        FORECAST_SENSOR_TYPES[self._condition][1], self._index)
+            FORECAST_SENSOR_TYPES[self._condition][1], self._index)
 
     @property
     def state(self):
         """Return the state of the sensor."""
         reading = self._bom_forecast_data.get_reading(
             self._condition, self._index)
-            
+
         if  self._condition == 'chance_of_rain':
-        	return reading.replace('%', '')
+            return reading.replace('%', '')
         if  self._condition == 'possible_rainfall':
-        	return reading.replace(' mm', '')        	
+            return reading.replace(' mm', '')
         return reading
 
     @property
@@ -478,7 +478,8 @@ class BOMForecastSensor(Entity):
             ATTR_ISSUE_TIME: self._bom_forecast_data.get_issue_time(),
             ATTR_PRODUCT_ID: self._product_id,
             ATTR_PRODUCT_LOCATION: PRODUCT_ID_LAT_LON[self._product_id][2],
-            ATTR_START_TIME: self._bom_forecast_data.get_start_time(self._index),
+            ATTR_START_TIME: self._bom_forecast_data.get_start_time(
+                self._index),
             ATTR_ICON: FORECAST_SENSOR_TYPES[self._condition][3]
         }
         if self._name:
@@ -494,7 +495,8 @@ class BOMForecastSensor(Entity):
     def update(self):
         """Fetch new state data for the sensor."""
         self._bom_forecast_data.update()
-        
+
+
 class BOMForecastData:
     """Get data from BOM."""
 
@@ -508,9 +510,11 @@ class BOMForecastData:
             if PRODUCT_ID_LAT_LON[self._product_id][3] == 'City':
                 return self._data.find(_FIND_QUERY_2.format(index)).text
             else:
-                return self._data.find(_FIND_QUERY.format(index, 'forecast')).text
-        
-        find_query = (_FIND_QUERY.format(index, FORECAST_SENSOR_TYPES[condition][0]))
+                return self._data.find(_FIND_QUERY.format(index,
+                                                          'forecast')).text
+
+        find_query = (_FIND_QUERY.format(index,
+                                         FORECAST_SENSOR_TYPES[condition][0]))
         state = self._data.find(find_query)
         if condition == 'icon':
             return FORECAST_ICON_MAPPING[state.text]
@@ -541,7 +545,8 @@ class BOMForecastData:
             with ftplib.FTP('ftp.bom.gov.au') as ftp:
                 ftp.login()
                 ftp.cwd('anon/gen/fwo/')
-                ftp.retrbinary('RETR ' + self._product_id + '.xml', file_obj.write)
+                ftp.retrbinary('RETR ' + self._product_id + '.xml',
+                               file_obj.write)
             file_obj.seek(0)
             tree = xml.etree.ElementTree.parse(file_obj)
             self._data = tree.getroot()
@@ -611,7 +616,8 @@ def closest_station(lat, lon, cache_dir):
         return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
 
     return min(stations, key=comparable_dist)
-    
+
+
 def closest_forecast_product_id(lat, lon):
     """Return the closest product ID to our lat/lon."""
 
