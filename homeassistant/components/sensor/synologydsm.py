@@ -109,8 +109,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         sensors = [SynoNasUtilSensor(
             api, variable, _UTILISATION_MON_COND[variable])
-                    for variable in monitored_conditions
-                    if variable in _UTILISATION_MON_COND]
+                   for variable in monitored_conditions
+                   if variable in _UTILISATION_MON_COND]
 
         # Handle all volumes
         for volume in config.get(CONF_VOLUMES, api.storage.volumes):
@@ -123,8 +123,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for disk in config.get(CONF_DISKS, api.storage.disks):
             sensors += [SynoNasStorageSensor(
                 api, variable, _STORAGE_DSK_MON_COND[variable], disk)
-                for variable in monitored_conditions
-                if variable in _STORAGE_DSK_MON_COND]
+                        for variable in monitored_conditions
+                        if variable in _STORAGE_DSK_MON_COND]
 
         add_entities(sensors, True)
 
