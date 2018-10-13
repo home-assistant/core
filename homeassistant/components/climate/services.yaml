@@ -123,26 +123,6 @@ nuheat_resume_program:
       description: Name(s) of entities to change.
       example: 'climate.kitchen'
 
-econet_add_vacation:
-  description: Add a vacation to your water heater.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.water_heater'
-    start_date:
-      description: The timestamp of when the vacation should start. (Optional, defaults to now)
-      example: 1513186320
-    end_date:
-      description: The timestamp of when the vacation should end.
-      example: 1513445520
-
-econet_delete_vacation:
-  description: Delete your existing vacation from your water heater.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.water_heater'
-
 sensibo_assume_state:
   description: Set Sensibo device to external state.
   fields:
