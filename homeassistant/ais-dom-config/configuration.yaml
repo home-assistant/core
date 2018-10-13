@@ -29,6 +29,9 @@ ais_updater:
 ais_drives_service:
 conversation:
 
+# Show links to resources in log and frontend
+introduction:
+
 
 # for restore_state on input_select (radio stations etc.)
 recorder:
@@ -98,7 +101,7 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-#  development_repo: /home/andrzej/Projects/home-assistant-polymer
+#development_repo: /home/andrzej/Projects/home-assistant-polymer
   javascript_version: latest
   extra_html_url:
     - /static/ais_dom/custom_ui/state-card-ais-microphone.html

@@ -593,7 +593,8 @@ def select_entity(hass, long_press):
         "input_boolean.",
         "switch.",
         "input_number.",
-        "script."
+        "script.",
+        "light."
     )):
         # these items can be controlled from remote
         # if we are here it means that the enter on the same item was
@@ -631,8 +632,22 @@ def select_entity(hass, long_press):
                 _say_it(hass, "ok, wyłączam", None)
             if (curr_state == 'off'):
                 _say_it(hass,  "ok, włączam", None)
+            if (curr_state == 'unavailable'):
+                _say_it(hass,  "przełącznik jest niedostępny", None)
             hass.services.call(
                 'switch',
+                'toggle', {
+                    "entity_id": CURR_ENTITIE})
+        elif (CURR_ENTITIE.startswith('light.')):
+            curr_state = hass.states.get(CURR_ENTITIE).state
+            if (curr_state == 'on'):
+                _say_it(hass, "ok, wyłączam", None)
+            elif (curr_state == 'off'):
+                _say_it(hass,  "ok, włączam", None)
+            elif (curr_state == 'unavailable'):
+                _say_it(hass,  "oświetlnie jest niedostępne", None)
+            hass.services.call(
+                'light',
                 'toggle', {
                     "entity_id": CURR_ENTITIE})
         elif (CURR_ENTITIE.startswith('input_text.')):
@@ -844,7 +859,7 @@ def go_up_in_menu(hass):
     say_curr_group_view(hass)
 
 
-def go_to_player(hass):
+def go_to_player(hass, say):
     # selecting the player to control via remote
     if len(GROUP_ENTITIES) == 0:
         get_groups(hass)
@@ -852,8 +867,18 @@ def go_to_player(hass):
         if group['entity_id'] == 'group.audio_player':
             set_curr_group(hass, group)
             set_curr_entity(hass, 'media_player.wbudowany_glosnik')
-            _say_it(hass, "Sterowanie odtwarzaczem", None)
+            if say:
+                _say_it(hass, "Sterowanie odtwarzaczem", None)
 
+
+def go_home(hass):
+    if len(GROUP_ENTITIES) == 0:
+        get_groups(hass)
+    global CURR_GROUP_VIEW
+    CURR_GROUP_VIEW = 'Twój Dom'
+    # to reset
+    set_curr_group_view()
+    say_curr_group_view(hass)
 
 def get_groups(hass):
     global GROUP_ENTITIES
@@ -1370,6 +1395,8 @@ def _process_command_from_frame(hass, service):
         if state == 'on':
             _say_it(hass, info, callback)
         return
+    elif service.data["topic"] == 'ais/go_to_player':
+        go_to_player(hass, False)
     else:
         # TODO process this without mqtt
         # player_status and speech_status
@@ -1579,9 +1606,11 @@ def _process_code(hass, data, callback):
         # Volume up -> KEYCODE_VOLUME_UP
         pass
     elif code == 190:
-        # go to built-in player -> KEYCODE_HOME
-        go_to_player(hass)
-        #hass.services.call('media_player', 'media_play_pause')
+        # go home -> KEYCODE_HOME
+        if CURR_BUTTON_LONG_PRESS:
+            go_to_player(hass, True)
+        else:
+            go_home(hass)
 
 
 @asyncio.coroutine

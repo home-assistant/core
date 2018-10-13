@@ -12,6 +12,8 @@ if [ $# != 0 ]; then
     show_usage
 fi
 
+# to fix the problems with permissions to rclone config
+su -c "chmod -R 777 /sdcard/rclone"
 
 if [ ! -e "/sdcard/dom" ] ; then
     mkdir -p /sdcard/dom

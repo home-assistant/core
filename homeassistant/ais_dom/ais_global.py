@@ -44,6 +44,10 @@ G_MODEL_SONOFF_T12 = "sonoff_t12"
 G_MODEL_SONOFF_T13 = "sonoff_t13"
 #
 
+G_BOOKMARK_MEDIA_POSITION = 0
+G_BOOKMARK_MEDIA_CONTENT_ID = ""
+
+
 G_Y_WEATHER_CODES = {0: 'tornado', 1: 'tropikalna burza', 2: 'huragany', 3: 'silne burze z piorunami',
                      4: 'burze z piorunami', 5: 'mieszane opady deszczu i śniegu',
                      6: 'mieszane opady deszczu i deszczu ze śniegiem', 7: 'mieszany śnieg i deszcz ze śniegiem',
@@ -58,6 +62,23 @@ G_Y_WEATHER_CODES = {0: 'tornado', 1: 'tropikalna burza', 2: 'huragany', 3: 'sil
                      39: 'rozproszone burze z piorunami', 40: 'rozproszonych przelotne opady', 41: 'ciężki śnieg',
                      42: 'przelotne opady śniegu', 43: 'ciężki śnieg', 44: 'pochmurno', 45: 'przelotne opady deszczu',
                      46: 'przelotne opady śniegu', 47: 'odizolowane przelotne opady deszczu', 3200: ''}
+
+
+def set_media_bookmark(media_content_id, position):
+    global G_BOOKMARK_MEDIA_POSITION
+    global G_BOOKMARK_MEDIA_CONTENT_ID
+    G_BOOKMARK_MEDIA_POSITION = position
+    G_BOOKMARK_MEDIA_CONTENT_ID = media_content_id
+
+
+def get_bookmark_position(media_content_id):
+    global G_BOOKMARK_MEDIA_POSITION
+    global G_BOOKMARK_MEDIA_CONTENT_ID
+    if G_BOOKMARK_MEDIA_CONTENT_ID != media_content_id:
+        # reset the bookmark
+        G_BOOKMARK_MEDIA_CONTENT_ID = ""
+        G_BOOKMARK_MEDIA_POSITION = 0
+    return G_BOOKMARK_MEDIA_POSITION
 
 
 def set_my_ssid(ssid):

@@ -8,9 +8,11 @@ https://ai-speaker.com
 import asyncio
 import logging
 import os
+import signal
 import json
 import mimetypes
 import subprocess
+import time
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
@@ -19,6 +21,8 @@ DOMAIN = 'ais_drives_service'
 G_LOCAL_FILES_ROOT = '/data/data/pl.sviete.dom/files/home/dom'
 G_CLOUD_PREFIX = '/dyski-zdalne/'
 G_RCLONE_CONF = '--config=/sdcard/rclone/rclone.conf'
+G_RCLONE_URL_TO_STREAM = 'http://127.0.0.1:8080/'
+G_LAST_BROWSE_CALL = None
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -32,7 +36,18 @@ def async_setup(hass, config):
 
     # register services
     def browse_path(call):
-        _LOGGER.info("browse_path")
+        global G_LAST_BROWSE_CALL
+        time_now = time.time()
+        secs = 2
+        if G_LAST_BROWSE_CALL is None:
+            G_LAST_BROWSE_CALL = time_now
+        else:
+            secs = time_now - G_LAST_BROWSE_CALL
+            G_LAST_BROWSE_CALL = time_now
+
+        if secs < 1:
+            _LOGGER.info("This call is blocked, secs: " + str(secs))
+            return
         data.browse_path(call)
 
     def refresh_files(call):
@@ -64,7 +79,7 @@ class LocalData:
         self.config = config
         self.current_path = ""
         self.text_to_say = None
-        self.rclone_serving_process = None
+        self.rclone_url_to_stream = None
 
     @staticmethod
     def list_dir(path):
@@ -192,7 +207,8 @@ class LocalData:
                 # TODO search the image cover in the folder
                 # "IMAGE_URL": "file://sdcard/dom/.dom/dom.jpeg",
                 _audio_info = {"NAME": os.path.basename(self.current_path),
-                               "MEDIA_SOURCE": ais_global.G_AN_LOCAL}
+                               "MEDIA_SOURCE": ais_global.G_AN_LOCAL,
+                               "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path))}
                 _audio_info = json.dumps(_audio_info)
 
                 if _url is not None:
@@ -214,6 +230,15 @@ class LocalData:
                                 "entity_id": player["entity_id"],
                                 "media_content_type": "ais_info",
                                 "media_content_id": _audio_info
+                            })
+                    # skipTo
+                    position = ais_global.get_bookmark_position(_url)
+                    if position != 0:
+                        self.hass.services.call(
+                            'media_player',
+                            'media_seek', {
+                                "entity_id": player["entity_id"],
+                                "seek_position": position
                             })
             else:
                 _LOGGER.info("Tego typu plików jeszcze nie obsługuję." + str(self.current_path))
@@ -273,7 +298,13 @@ class LocalData:
         remote = remote[:k+1]
         return remote
 
+    def rclone_fix_permissions(self):
+        command = 'su -c "chmod -R 777 /sdcard/rclone"'
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+        process.wait()
+
     def rclone_append_listremotes(self, say):
+        self.rclone_fix_permissions()
         self.folders = [ais_global.G_EMPTY_OPTION]
         self.folders.append('..')
         rclone_cmd = ["rclone", "listremotes", G_RCLONE_CONF]
@@ -311,7 +342,7 @@ class LocalData:
                         "val": 97
                     })
 
-    def rclone_browse_folder(self, path):
+    def rclone_browse_folder(self, path, silent):
         rclone_cmd = ["rclone", "lsjson", path, G_RCLONE_CONF, '--drive-formats=txt']
         proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -331,26 +362,26 @@ class LocalData:
                     self.folders.append(self.current_path + item["Path"])
                 else:
                     self.folders.append(self.current_path + "/" + item["Path"])
-
-            self.hass.services.call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.folder_name",
-                    "options": sorted(self.folders)})
-            if self.text_to_say is not None:
+            if silent is False:
                 self.hass.services.call(
-                    'ais_ai_service',
-                    'say_it', {
-                        "text": self.text_to_say
-                    })
-            else:
-                # beep
-                self.hass.services.call(
-                    'ais_ai_service',
-                    'publish_command_to_frame', {
-                        "key": 'tone',
-                        "val": 97
-                    })
+                    'input_select',
+                    'set_options', {
+                        "entity_id": "input_select.folder_name",
+                        "options": sorted(self.folders)})
+                if self.text_to_say is not None:
+                    self.hass.services.call(
+                        'ais_ai_service',
+                        'say_it', {
+                            "text": self.text_to_say
+                        })
+                else:
+                    # beep
+                    self.hass.services.call(
+                        'ais_ai_service',
+                        'publish_command_to_frame', {
+                            "key": 'tone',
+                            "val": 97
+                        })
 
     def rclone_copy_and_read(self, path, item_path):
         # TODO clear .temp files...
@@ -378,19 +409,8 @@ class LocalData:
                         "text": "Nie udało się otworzyć pliku "
                     })
 
-    def rclone_play_the_stream(self, path, item_path):
-        rclone_cmd = ["rclone", "serve", 'http', path, G_RCLONE_CONF, '--addr=:8080']
+    def rclone_play_the_stream(self):
 
-        # try to kill previous serve if exists
-        if self.rclone_serving_process is not None:
-            self.rclone_serving_process.kill()
-        #
-        self.rclone_serving_process = subprocess.Popen(
-                rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # import time
-        # time.sleep(3)
-        # start new serve
-        url_to_stream = "http://127.0.0.1:8080/" + str(item_path)
         player_name = self.hass.states.get(
             'input_select.file_player').state
         player = ais_cloud.get_player_data(player_name)
@@ -399,10 +419,11 @@ class LocalData:
             'play_media', {
                 "entity_id": player["entity_id"],
                 "media_content_type": "audio/mp4",
-                "media_content_id": url_to_stream
+                "media_content_id": self.rclone_url_to_stream
             })
-        _audio_info = {"NAME": os.path.basename(url_to_stream),
-                       "MEDIA_SOURCE": ais_global.G_AN_LOCAL}
+        _audio_info = {"NAME": os.path.basename(self.rclone_url_to_stream),
+                       "MEDIA_SOURCE": ais_global.G_AN_LOCAL,
+                       "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path))}
         _audio_info = json.dumps(_audio_info)
         # to set the stream image and title
         if player["device_ip"] is not None:
@@ -413,6 +434,33 @@ class LocalData:
                     "media_content_type": "ais_info",
                     "media_content_id": _audio_info
                 })
+        position = ais_global.get_bookmark_position(self.rclone_url_to_stream)
+        if position != 0:
+            self.hass.services.call(
+                'media_player',
+                'media_seek', {
+                    "entity_id": player["entity_id"],
+                    "seek_position": position
+                })
+
+
+    def check_kill_process(self, pstring):
+        for line in os.popen("ps ax | grep " + pstring + " | grep -v grep"):
+            fields = line.split()
+            pid = fields[0]
+            os.kill(int(pid), signal.SIGKILL)
+
+    def rclone_serve_and_play_the_stream(self, path, item_path):
+        # try to kill previous serve if exists
+        self.check_kill_process('rclone')
+        # serve and play
+        rclone_cmd = ["rclone", "serve", 'http', path, G_RCLONE_CONF, '--addr=:8080']
+        rclone_serving_process = subprocess.Popen(
+                rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.rclone_url_to_stream = G_RCLONE_URL_TO_STREAM + str(item_path)
+        import threading
+        timer = threading.Timer(2, self.rclone_play_the_stream)
+        timer.start()
 
 
     def rclone_browse(self, path, say):
@@ -425,7 +473,7 @@ class LocalData:
         else:
             self.text_to_say = None
 
-        is_dir = True
+        is_dir = None
         mime_type = ""
         item_name = ""
         item_path = ""
@@ -439,10 +487,24 @@ class LocalData:
                 if "MimeType" in item:
                     mime_type = item["MimeType"]
 
+        if is_dir is None:
+            # check if this is file selected from bookmarks
+            bookmark = ais_global.G_BOOKMARK_MEDIA_CONTENT_ID.replace(G_RCLONE_URL_TO_STREAM, "")
+            if bookmark != "" and path.endswith(bookmark):
+                is_dir = False
+                mime_type = 'audio/'
+                item_path = bookmark
+                item_name = bookmark
+                path = path.replace(G_CLOUD_PREFIX, "", 1)
+                path = path.rsplit(bookmark, 1)[0]
+                self.rclone_browse_folder(path, True)
+            else:
+                is_dir = True
+
         if is_dir:
             # browse the cloud drive
-            path = path.replace(G_CLOUD_PREFIX, "")
-            self.rclone_browse_folder(path)
+            path = path.replace(G_CLOUD_PREFIX, "", 1)
+            self.rclone_browse_folder(path, False)
 
         else:
             # file was selected, check the MimeType
@@ -458,7 +520,7 @@ class LocalData:
                     'say_it', {
                         "text": info
                     })
-                self.rclone_play_the_stream(path, item_path)
+                self.rclone_serve_and_play_the_stream(path, item_path)
             elif mime_type.startswith("text/"):
                 info = "Pobieram i czytam: " + str(item_name)
                 self.hass.services.call(

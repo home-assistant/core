@@ -409,3 +409,16 @@
     at: '21:35:00'
   action:
     - service: ais_shell_command.flush_logs
+
+- id: '201809061229123'
+  alias: 'Add a bookmark'
+  hide_entity: true
+  trigger:
+    platform: event
+    event_type: add_a_bookmark
+  action:
+    - delay: '1'
+    - service: mqtt.publish
+      data:
+        payload: 0
+        topic: cmnd/dom/status

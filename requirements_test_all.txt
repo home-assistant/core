@@ -35,7 +35,7 @@ aiohttp_cors==0.7.0
 aiohue==1.3.0
 
 # homeassistant.components.frontend
-ais-dom-frontend==20180920.0
+ais-dom-frontend==20181002.0
 
 # homeassistant.components.notify.apns
 apns2==0.3.0
@@ -90,7 +90,7 @@ hdate==0.6.3
 holidays==0.9.7
 
 # homeassistant.components.frontend
-ais-dom-frontend==20180927.0
+ais-dom-frontend==20181002.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8

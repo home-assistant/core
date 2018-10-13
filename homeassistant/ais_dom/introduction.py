@@ -28,17 +28,14 @@ def async_setup(hass, config=None):
 
         Oto kilka informacji, od których możesz zacząć:
 
-         - Konfiguracja urządzeń :
-           http://ai-speaker.com
-
-         - Ustawiania audio :
-           http://ai-speaker.com
+         - Dokumentacja :
+           https://sviete.github.io/AIS-docs
 
          - Źródła programu:
            https://github.com/sviete
 
-         - Odpowiedzi na najczęściej zadawane pytania:
-           https://github.com/sviete
+         - Strona projektu:
+           https://ai-speaker.com
 
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,9 +47,7 @@ Mamy nadzieję, że spełnimy wszystkie twoje marzenia.
 
 Oto kilka informacji, od których możesz zacząć:
 
- - [Pierwsze kroki](https://github.com/sviete/AIS-WWW/wiki/1.-Pierwsze-kroki)
- - [Komendy głosowe](https://github.com/sviete/AIS-WWW/wiki/3.-Komendy-g%C5%82osowe)
- - [Zdalny dostęp](https://github.com/sviete/AIS-WWW/wiki/7.-Zdalny-dost%C4%99p)
+ - [Dokumentacja](https://sviete.github.io/AIS-docs)
  - [Źródła systemu](https://github.com/sviete)
  - [Strona projektu](https://ai-speaker.com)
 

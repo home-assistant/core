@@ -61,11 +61,11 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._name = name
         self._status = None
         self._playing = False
-        self._currentsong = None
         self._qos = 2
         self._stream_image = None
         self._media_title = None
         self._media_source = None
+        self._album_name = None
         self._playlists = [ais_global.G_AN_RADIO,
                            ais_global.G_AN_PODCAST,
                            ais_global.G_AN_MUSIC,
@@ -88,7 +88,6 @@ class ExoPlayerDevice(MediaPlayerDevice):
             message = json.loads(payload.decode('utf8').replace("'", '"'))
             self._status = message.get("currentStatus", 0)
             self._playing = message.get("playing", False)
-            self._currentsong = message.get("currentMedia", "...")
             self._media_position = message.get("currentPosition", 0)
             self._duration = message.get("duration", 0)
             _LOGGER.debug(str.format("message_received: {0}", message))
@@ -142,16 +141,30 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def media_seek(self, position):
         """Seek the media to a specific location."""
         if position == 0:
-            position = -5000
-        elif position == 1:
-            position = 5000
-        self.hass.services.call(
-            'ais_ai_service',
-            'publish_command_to_frame', {
-                "key": 'seekTo',
-                "val": position
+            self.hass.services.call(
+                'ais_ai_service',
+                'publish_command_to_frame', {
+                    "key": 'seekTo',
+                    "val": -5000
                 }
             )
+        elif position == 1:
+            self.hass.services.call(
+                'ais_ai_service',
+                'publish_command_to_frame', {
+                    "key": 'seekTo',
+                    "val": 5000
+                }
+            )
+        else:
+            self.hass.services.call(
+                'ais_ai_service',
+                'publish_command_to_frame', {
+                    "key": 'skipTo',
+                    "val": position
+                }
+            )
+
 
     def volume_up(self):
         """Service to send the exo the command for volume up."""
@@ -233,6 +246,21 @@ class ExoPlayerDevice(MediaPlayerDevice):
         return self._media_title
 
     @property
+    def media_album_name(self):
+        """Album of current playing media"""
+        return self._album_name
+
+    @property
+    def app_name(self):
+        """Name of the current running app."""
+        app = None
+        if self._media_source is not None:
+            app = self._media_source
+            if self._album_name is not None:
+                app = app + " " + self._album_name
+        return app
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_EXO
@@ -293,8 +321,18 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._playing = True
         self._status = 3
 
+    def add_bookmark(self):
+        self.hass.services.call('ais_bookmarks', 'add_bookmark',
+                                {"attr": {"media_title": self._media_title,
+                                          "source": self._album_name,
+                                          "media_position": self._media_position,
+                                          "media_content_id": self._media_content_id,
+                                          "media_stream_image": self._stream_image}})
+
     def media_pause(self):
         """Service to send the ExoPlayer the command for play/pause."""
+        # to have more accurate media_position
+        self._fetch_status()
         self.hass.services.call(
             'ais_ai_service',
             'publish_command_to_frame', {
@@ -304,16 +342,11 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 }
             )
 
-        #
-        if self._device_ip == 'localhost':
-            self.hass.services.call('ais_bookmarks', 'add_bookmark',
-                                    {"attr": {"media_title": self.media_title,
-                                              "source": self._media_source,
-                                              "media_position": self._media_position,
-                                              "media_content_id": self._media_content_id,
-                                              "media_stream_image": self._stream_image}})
-
         self._playing = False
+        if self._device_ip == 'localhost' and self._media_source == ais_global.G_AN_LOCAL and self._album_name is not None:
+            import threading
+            timer = threading.Timer(1, self.add_bookmark)
+            timer.start()
 
     def media_stop(self):
         """Service to send the ExoPlayer the command for stop."""
@@ -409,6 +442,10 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._media_title = j_info["NAME"]
             self._media_source = j_info["MEDIA_SOURCE"]
             self._currentplaylist = j_info["MEDIA_SOURCE"]
+            if "ALBUM_NAME" in j_info:
+                self._album_name = j_info["ALBUM_NAME"]
+            else:
+                self._album_name = None
         else:
             self._media_content_id = media_content_id
             self._media_position = 0
@@ -421,3 +458,20 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     "ip": self._device_ip
                     }
                 )
+
+        # go to media player on localhost
+        if self._device_ip == 'localhost':
+            # refresh state
+            self._playing = True
+            self._status = 3
+            old_state = self.hass.states.get('media_player.wbudowany_glosnik')
+            self.hass.states.set(
+                'media_player.wbudowany_glosnik', STATE_PLAYING, old_state.attributes, force_update=True)
+
+            self.hass.services.call(
+                'ais_ai_service',
+                'process_command_from_frame', {
+                    "topic": 'ais/go_to_player',
+                    "payload": ""
+                }
+            )
