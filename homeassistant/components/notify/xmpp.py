@@ -78,8 +78,7 @@ async def async_send_message(sender, password, recipient, use_tls,
     """Send a message over XMPP."""
     import slixmpp
     from slixmpp.plugins.xep_0363.http_upload import FileTooBig, \
-                                                     FileUploadError, \
-                                                     UploadServiceNotFound
+        FileUploadError, UploadServiceNotFound
 
     class SendNotificationBot(slixmpp.ClientXMPP):
         """Service for sending Jabber (XMPP) messages."""
@@ -117,37 +116,46 @@ async def async_send_message(sender, password, recipient, use_tls,
             self.get_roster()
             self.send_presence()
 
+            # sending image and message independently from each other
             if data:
                 await self.send_image()
-            else:
-                self.send_message()
-
+            if message:
+                self.send_text_message()
             self.disconnect(wait=True)
 
         async def send_image(self):
-            """ send image via XMPP
-            using OOB (XEP_0066) and HTTP Upload (XEP_0363) """
+            """Send image via XMPP.
+
+            Send XMPP image message using OOB (XEP_0066) and
+            HTTP Upload (XEP_0363)
+            """
             if data.get(ATTR_URL):
                 # send a file from an URL
                 url = data.get(ATTR_URL)
-                #filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) else "upload"
                 _LOGGER.info('getting file from %s', url)
                 result = await loop.run_in_executor(None, requests.get, url)
                 if result.status_code >= 400 or \
                         result.headers['Content-Length'] == 0:
                     _LOGGER.error("could not load file from %s", url)
                 try:
-                    extension = self.get_extension(result.headers['Content-Type'])
+                    # we need a file extension, the upload server needs a
+                    # filename, if none is provided, through the path
+                    # we guess the extension
+                    extension = self.get_extension(
+                        result.headers['Content-Type'])
                     _LOGGER.debug("got %s extension", extension)
-                    filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) else "upload"+extension
+                    filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) \
+                        else "upload"+extension
                     url = await self['xep_0363'].upload_file(
                         filename,
                         size=int(result.headers['Content-Length']),
                         input_file=result.content,
                         content_type=result.headers['Content-Type'])
                     _LOGGER.info('Upload success!')
+                except FileTooBig as ex:
+                    _LOGGER.error("File too big for server, "
+                                  "could not upload file %s %s", url, ex)
                 except (UploadServiceNotFound,
-                        FileTooBig,
                         FileUploadError) as ex:
                     _LOGGER.error("could not upload file %s %s", url, ex)
             elif data.get(ATTR_PATH):
@@ -165,28 +173,34 @@ async def async_send_message(sender, password, recipient, use_tls,
                 _LOGGER.error("no path or URL found for image")
 
             _LOGGER.info('Sending file to %s', recipient)
-            # html = '<body xmlns="http://www.w3.org/1999/xhtml"><a href="%s">%s</a></body>' % (url, url)
-            # self.send_message(mto=recipient, mbody=url, mtype='chat')
+            if room:
+                # self.plugin['xep_0045'].join_muc(room, sender, wait=True)
+                # message = self.Message(sto=room, stype='groupchat')
+                _LOGGER.error("sorry, sending images to rooms is"
+                              " currently not supported")
+
             message = self.Message(sto=recipient, stype='chat')
-            message['subject'] = "upload"
             message['body'] = url
+            # pylint: disable=invalid-sequence-index
             message['oob']['url'] = url
             message.send()
 
-        def send_message(self):
+        def send_text_message(self):
+            """Send a text only message to a room or a recipient."""
             if room:
                 _LOGGER.debug("Joining room %s", room)
                 self.plugin['xep_0045'].join_muc(room, sender, wait=True)
                 self.send_message(mto=room, mbody=message, mtype='groupchat')
             else:
+                _LOGGER.debug("message to %s", recipient)
                 self.send_message(mto=recipient, mbody=message, mtype='chat')
 
+        # pylint: disable=no-self-use
         def get_extension(self, content_type):
-            """ get a file extension based on a content type
-            via: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types """
+            # pylint: disable=line-too-long
+            """Get a file extension based on a content type."""
             types = {'audio/aac': '.aac',
                      'application/x-abiword': '.abw',
-                     'application/octet-stream': '.arc',
                      'video/x-msvideo': '.avi',
                      'application/vnd.amazon.ebook': '.azw',
                      'application/octet-stream': '.bin',
@@ -197,7 +211,8 @@ async def async_send_message(sender, password, recipient, use_tls,
                      'text/css': '.css',
                      'text/csv': '.csv',
                      'application/msword': '.doc',
-                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+                     'application/vnd.openxmlformats-officedocument'
+                     '.wordprocessingml.document': '.docx',
                      'application/vnd.ms-fontobject': '.eot',
                      'application/epub+zip': '.epub',
                      'application/ecmascript': '.es',
@@ -213,7 +228,8 @@ async def async_send_message(sender, password, recipient, use_tls,
                      'audio/x-midi': '.midi',
                      'video/mpeg': '.mpeg',
                      'application/vnd.apple.installer+xml': '.mpkg',
-                     'application/vnd.oasis.opendocument.presentation': '.odp',
+                     'application/'
+                     'vnd.oasis.opendocument.presentation': '.odp',
                      'application/vnd.oasis.opendocument.spreadsheet': '.ods',
                      'application/vnd.oasis.opendocument.text': '.odt',
                      'audio/ogg': '.oga',
@@ -223,7 +239,8 @@ async def async_send_message(sender, password, recipient, use_tls,
                      'image/png': '.png',
                      'application/pdf': '.pdf',
                      'application/vnd.ms-powerpoint': '.ppt',
-                     'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+                     'application/vnd.openxmlformats-officedocument.'
+                     'presentationml.presentation': '.pptx',
                      'application/x-rar-compressed': '.rar',
                      'application/rtf': '.rtf',
                      'application/x-sh': '.sh',
@@ -243,14 +260,15 @@ async def async_send_message(sender, password, recipient, use_tls,
                      'font/woff2': '.woff2',
                      'application/xhtml+xml': '.xhtml',
                      'application/vnd.ms-excel': '.xls',
-                     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+                     'application/vnd.openxmlformats-officedocument.'
+                     'spreadsheetml.sheet': '.xlsx',
                      'application/xml': '.xml',
                      'application/vnd.mozilla.xul+xml': '.xul',
                      'application/zip': '.zip',
                      'video/3gpp': '.3gp',
                      'video/3gpp2': '.3g2',
                      'application/x-7z-compressed': '.7z',
-                    }
+                     }
             try:
                 return types[content_type.lower()]
             except KeyError:
