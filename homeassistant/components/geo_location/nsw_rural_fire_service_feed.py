@@ -195,6 +195,7 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
 
     @property
     def source(self) -> str:
+        """Return source value of this external event."""
         return SOURCE
 
     @property
