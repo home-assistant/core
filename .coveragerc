@@ -434,7 +434,6 @@ omit =
     homeassistant/components/camera/xeoma.py
     homeassistant/components/camera/xiaomi.py
     homeassistant/components/camera/yi.py
-    homeassistant/components/climate/econet.py
     homeassistant/components/climate/ephember.py
     homeassistant/components/climate/eq3btsmart.py
     homeassistant/components/climate/flexit.py
@@ -844,6 +843,7 @@ omit =
     homeassistant/components/tts/picotts.py
     homeassistant/components/vacuum/mqtt.py
     homeassistant/components/vacuum/roomba.py
+    homeassistant/components/water_heater/econet.py
     homeassistant/components/watson_iot.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
