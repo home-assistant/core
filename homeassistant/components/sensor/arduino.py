@@ -59,7 +59,8 @@ class ArduinoSensor(Entity):
         self._value = None
         self._callback = callback
 
-        arduino.BOARD.set_mode(self._pin, self.direction, self.pin_type, callback=callback)
+        arduino.BOARD.set_mode(
+            self._pin, self.direction, self.pin_type, callback=callback)
 
     @property
     def state(self):
