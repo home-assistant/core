@@ -108,7 +108,6 @@ async def async_send_message(sender, password, recipient, use_tls,
                 self.register_plugin('xep_0066')  # Out of Band Data
                 self.register_plugin('xep_0071')  # XHTML IM
                 self.register_plugin('xep_0128')  # Service Discovery
-                # self.register_plugin('xep_0231')  # BOB
                 self.register_plugin('xep_0363')  # HTTP upload
 
             self.connect(force_starttls=self.force_starttls, use_ssl=False)
@@ -119,57 +118,143 @@ async def async_send_message(sender, password, recipient, use_tls,
             self.send_presence()
 
             if data:
-                if data.get(ATTR_URL):
-                    url = data.get(ATTR_URL)
-                    #filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) else "upload"
-                    filename = data.get(ATTR_PATH) or "upload"
-                    _LOGGER.info('getting file from %s', url)
-                    result = await loop.run_in_executor(None, requests.get, url)
-                    if result.status_code >= 400 or \
-                            result.headers['Content-Length'] == 0:
-                        _LOGGER.error("could not load file from %s", url)
-                    try:
-                        url = await self['xep_0363'].upload_file(
-                            filename,
-                            size=int(result.headers['Content-Length']),
-                            input_file=result.content,
-                            content_type=result.headers['Content-Type'])
-                        _LOGGER.info('Upload success!')
-                    except (UploadServiceNotFound,
-                            FileTooBig,
-                            FileUploadError) as ex:
-                        _LOGGER.error("could not upload file %s %s", url, ex)
-                elif data.get(ATTR_PATH):
-                    filename = data.get(ATTR_PATH) if data else None
-                    _LOGGER.info('Uploading file %s ...', filename)
-                    try:
-                        url = await self['xep_0363'].upload_file(filename)
-                        _LOGGER.info('Upload success!')
-                    except (UploadServiceNotFound,
-                            FileTooBig,
-                            FileUploadError) as ex:
-                        _LOGGER.error("could not upload file %s %s", filename, ex)
-                else:
-                    _LOGGER.error("no path or URL found for image")
+                await self.send_image()
+            else:
+                self.send_message()
 
-                _LOGGER.info('Sending file to %s', recipient)
-                # html = '<body xmlns="http://www.w3.org/1999/xhtml"><a href="%s">%s</a></body>' % (url, url)
-                # self.send_message(mto=recipient, mbody=url, mtype='chat')
-                message = self.Message(sto=recipient, stype='chat')
-                message['subject'] = "upload"
-                message['body'] = url
-                message['oob']['url'] = url
-                message.send()
+            self.disconnect(wait=True)
 
-            elif room:
+        async def send_image(self):
+            """ send image via XMPP
+            using OOB (XEP_0066) and HTTP Upload (XEP_0363) """
+            if data.get(ATTR_URL):
+                # send a file from an URL
+                url = data.get(ATTR_URL)
+                #filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) else "upload"
+                _LOGGER.info('getting file from %s', url)
+                result = await loop.run_in_executor(None, requests.get, url)
+                if result.status_code >= 400 or \
+                        result.headers['Content-Length'] == 0:
+                    _LOGGER.error("could not load file from %s", url)
+                try:
+                    extension = self.get_extension(result.headers['Content-Type'])
+                    _LOGGER.debug("got %s extension", extension)
+                    filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) else "upload"+extension
+                    url = await self['xep_0363'].upload_file(
+                        filename,
+                        size=int(result.headers['Content-Length']),
+                        input_file=result.content,
+                        content_type=result.headers['Content-Type'])
+                    _LOGGER.info('Upload success!')
+                except (UploadServiceNotFound,
+                        FileTooBig,
+                        FileUploadError) as ex:
+                    _LOGGER.error("could not upload file %s %s", url, ex)
+            elif data.get(ATTR_PATH):
+                # send message from local path
+                filename = data.get(ATTR_PATH) if data else None
+                _LOGGER.info('Uploading file %s ...', filename)
+                try:
+                    url = await self['xep_0363'].upload_file(filename)
+                    _LOGGER.info('Upload success!')
+                except (UploadServiceNotFound,
+                        FileTooBig,
+                        FileUploadError) as ex:
+                    _LOGGER.error("could not upload file %s %s", filename, ex)
+            else:
+                _LOGGER.error("no path or URL found for image")
+
+            _LOGGER.info('Sending file to %s', recipient)
+            # html = '<body xmlns="http://www.w3.org/1999/xhtml"><a href="%s">%s</a></body>' % (url, url)
+            # self.send_message(mto=recipient, mbody=url, mtype='chat')
+            message = self.Message(sto=recipient, stype='chat')
+            message['subject'] = "upload"
+            message['body'] = url
+            message['oob']['url'] = url
+            message.send()
+
+        def send_message(self):
+            if room:
                 _LOGGER.debug("Joining room %s", room)
                 self.plugin['xep_0045'].join_muc(room, sender, wait=True)
                 self.send_message(mto=room, mbody=message, mtype='groupchat')
             else:
                 self.send_message(mto=recipient, mbody=message, mtype='chat')
 
-            self.disconnect(wait=True)
-
+        def get_extension(self, content_type):
+            """ get a file extension based on a content type
+            via: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types """
+            types = {'audio/aac': '.aac',
+                     'application/x-abiword': '.abw',
+                     'application/octet-stream': '.arc',
+                     'video/x-msvideo': '.avi',
+                     'application/vnd.amazon.ebook': '.azw',
+                     'application/octet-stream': '.bin',
+                     'image/bmp': '.bmp',
+                     'application/x-bzip': '.bz',
+                     'application/x-bzip2': '.bz2',
+                     'application/x-csh': '.csh',
+                     'text/css': '.css',
+                     'text/csv': '.csv',
+                     'application/msword': '.doc',
+                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+                     'application/vnd.ms-fontobject': '.eot',
+                     'application/epub+zip': '.epub',
+                     'application/ecmascript': '.es',
+                     'image/gif': '.gif',
+                     'text/html': '.html',
+                     'image/x-icon': '.ico',
+                     'text/calendar': '.ics',
+                     'application/java-archive': '.jar',
+                     'image/jpeg': '.jpg',
+                     'application/javascript': '.js',
+                     'application/json': '.json',
+                     'audio/midi': '.midi',
+                     'audio/x-midi': '.midi',
+                     'video/mpeg': '.mpeg',
+                     'application/vnd.apple.installer+xml': '.mpkg',
+                     'application/vnd.oasis.opendocument.presentation': '.odp',
+                     'application/vnd.oasis.opendocument.spreadsheet': '.ods',
+                     'application/vnd.oasis.opendocument.text': '.odt',
+                     'audio/ogg': '.oga',
+                     'video/ogg': '.ogv',
+                     'application/ogg': '.ogx',
+                     'font/otf': '.otf',
+                     'image/png': '.png',
+                     'application/pdf': '.pdf',
+                     'application/vnd.ms-powerpoint': '.ppt',
+                     'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+                     'application/x-rar-compressed': '.rar',
+                     'application/rtf': '.rtf',
+                     'application/x-sh': '.sh',
+                     'image/svg+xml': '.svg',
+                     'application/x-shockwave-flash': '.swf',
+                     'application/x-tar': '.tar',
+                     'image/tiff': '.tiff',
+                     'application/typescript': '.ts',
+                     'font/ttf': '.ttf',
+                     'text/plain': '.txt',
+                     'application/vnd.visio': '.vsd',
+                     'audio/wav': '.wav',
+                     'audio/webm': '.weba',
+                     'video/webm': '.webm',
+                     'image/webp': '.webp',
+                     'font/woff': '.woff',
+                     'font/woff2': '.woff2',
+                     'application/xhtml+xml': '.xhtml',
+                     'application/vnd.ms-excel': '.xls',
+                     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+                     'application/xml': '.xml',
+                     'application/vnd.mozilla.xul+xml': '.xul',
+                     'application/zip': '.zip',
+                     'video/3gpp': '.3gp',
+                     'video/3gpp2': '.3g2',
+                     'application/x-7z-compressed': '.7z',
+                    }
+            try:
+                return types[content_type.lower()]
+            except KeyError:
+                _LOGGER.error("can't upload unknown file type")
 
         def disconnect_on_login_fail(self, event):
             """Disconnect from the server if credentials are invalid."""
