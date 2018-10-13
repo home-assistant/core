@@ -42,6 +42,7 @@ DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
+SOURCE = 'nsw_rural_fire_service_feed'
 
 VALID_CATEGORIES = ['Emergency Warning', 'Watch and Act', 'Advice',
                     'Not Applicable']
@@ -191,6 +192,10 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
         self._fire = feed_entry.fire
         self._size = feed_entry.size
         self._responsible_agency = feed_entry.responsible_agency
+
+    @property
+    def source(self) -> str:
+        return SOURCE
 
     @property
     def name(self) -> Optional[str]:

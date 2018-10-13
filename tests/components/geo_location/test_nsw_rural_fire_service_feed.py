@@ -5,6 +5,7 @@ from unittest import mock
 from unittest.mock import patch, MagicMock
 
 from homeassistant.components import geo_location
+from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.geo_location.nsw_rural_fire_service_feed import \
     ATTR_EXTERNAL_ID, SCAN_INTERVAL, ATTR_CATEGORY, ATTR_FIRE, ATTR_LOCATION, \
     ATTR_COUNCIL_AREA, ATTR_STATUS, ATTR_TYPE, ATTR_SIZE, \
@@ -117,7 +118,8 @@ class TestGeoJsonPlatform(unittest.TestCase):
                     ATTR_COUNCIL_AREA: 'Council Area 1',
                     ATTR_STATUS: 'Status 1', ATTR_TYPE: 'Type 1',
                     ATTR_SIZE: 'Size 1', ATTR_RESPONSIBLE_AGENCY: 'Agency 1',
-                    ATTR_UNIT_OF_MEASUREMENT: "km"}
+                    ATTR_UNIT_OF_MEASUREMENT: "km",
+                    ATTR_SOURCE: 'nsw_rural_fire_service_feed'}
                 self.assertAlmostEqual(float(state.state), 15.5)
 
                 state = self.hass.states.get("geo_location.title_2")
@@ -127,7 +129,8 @@ class TestGeoJsonPlatform(unittest.TestCase):
                     ATTR_EXTERNAL_ID: "2345", ATTR_LATITUDE: -31.1,
                     ATTR_LONGITUDE: 150.1, ATTR_FRIENDLY_NAME: "Title 2",
                     ATTR_FIRE: False,
-                    ATTR_UNIT_OF_MEASUREMENT: "km"}
+                    ATTR_UNIT_OF_MEASUREMENT: "km",
+                    ATTR_SOURCE: 'nsw_rural_fire_service_feed'}
                 self.assertAlmostEqual(float(state.state), 20.5)
 
                 state = self.hass.states.get("geo_location.title_3")
@@ -137,7 +140,8 @@ class TestGeoJsonPlatform(unittest.TestCase):
                     ATTR_EXTERNAL_ID: "3456", ATTR_LATITUDE: -31.2,
                     ATTR_LONGITUDE: 150.2, ATTR_FRIENDLY_NAME: "Title 3",
                     ATTR_FIRE: True,
-                    ATTR_UNIT_OF_MEASUREMENT: "km"}
+                    ATTR_UNIT_OF_MEASUREMENT: "km",
+                    ATTR_SOURCE: 'nsw_rural_fire_service_feed'}
                 self.assertAlmostEqual(float(state.state), 25.5)
 
                 # Simulate an update - one existing, one new entry,
