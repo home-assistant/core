@@ -302,9 +302,6 @@ distro==1.3.0
 # homeassistant.components.switch.digitalloggers
 dlipower==0.7.165
 
-# homeassistant.components.notify.xmpp
-dnspython3==1.15.0
-
 # homeassistant.components.sensor.dovado
 dovado==0.4.1
 
@@ -796,12 +793,6 @@ pyalarmdotcom==0.3.2
 
 # homeassistant.components.arlo
 pyarlo==0.2.0
-
-# homeassistant.components.notify.xmpp
-pyasn1-modules==0.1.5
-
-# homeassistant.components.notify.xmpp
-pyasn1==0.3.7
 
 # homeassistant.components.netatmo
 pyatmo==1.2
@@ -1358,11 +1349,11 @@ skybellpy==0.1.2
 # homeassistant.components.notify.slack
 slacker==0.9.65
 
-# homeassistant.components.notify.xmpp
-sleekxmpp==1.3.2
-
 # homeassistant.components.sleepiq
 sleepyq==0.6
+
+# homeassistant.components.notify.xmpp
+slixmpp==1.4.0
 
 # homeassistant.components.smappee
 smappy==0.2.16
