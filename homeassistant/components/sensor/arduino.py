@@ -50,15 +50,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ArduinoSensor(Entity):
     """Representation of an Arduino Sensor."""
 
-    def __init__(self, name, pin, pin_type):
+    def __init__(self, name, pin, pin_type, callback=None):
         """Initialize the sensor."""
         self._pin = pin
         self._name = name
         self.pin_type = pin_type
         self.direction = 'in'
         self._value = None
+        self._callback = callback
 
-        arduino.BOARD.set_mode(self._pin, self.direction, self.pin_type)
+        arduino.BOARD.set_mode(self._pin, self.direction, self.pin_type, callback=callback)
 
     @property
     def state(self):
