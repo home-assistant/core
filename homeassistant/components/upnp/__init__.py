@@ -16,7 +16,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import dispatcher
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.components.discovery import DOMAIN as DISCOVERY_DOMAIN
 
 from .const import (
     CONF_ENABLE_PORT_MAPPING, CONF_ENABLE_SENSORS,
@@ -31,7 +30,7 @@ from .device import Device
 
 
 REQUIREMENTS = ['async-upnp-client==0.12.4']
-DEPENDENCIES = ['http']
+DEPENDENCIES = ['http', 'discovery']
 
 NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'
@@ -74,10 +73,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     # ensure sane config
     if DOMAIN not in config:
         return True
-
-    if DISCOVERY_DOMAIN not in config:
-        _LOGGER.warning('UPNP needs discovery, please enable it')
-        return False
 
     # overridden local ip
     upnp_config = config[DOMAIN]

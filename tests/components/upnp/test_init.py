@@ -9,6 +9,7 @@ from homeassistant.components.upnp.device import Device
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 from tests.common import MockConfigEntry
+from tests.common import MockDependency
 from tests.common import mock_coro
 
 
@@ -49,7 +50,13 @@ class MockDevice(Device):
 async def test_async_setup_no_auto_config(hass):
     """Test async_setup."""
     # setup component, enable auto_config
-    await async_setup_component(hass, 'upnp')
+    config = {
+        'discovery': {},
+        # no upnp
+    }
+    with MockDependency('netdisco.discovery'):
+        await async_setup_component(hass, 'upnp', config)
+        await hass.async_block_till_done()
 
     assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': False,
@@ -62,7 +69,13 @@ async def test_async_setup_no_auto_config(hass):
 async def test_async_setup_auto_config(hass):
     """Test async_setup."""
     # setup component, enable auto_config
-    await async_setup_component(hass, 'upnp', {'upnp': {}, 'discovery': {}})
+    config = {
+        'discovery': {},
+        'upnp': {},
+    }
+    with MockDependency('netdisco.discovery'):
+        await async_setup_component(hass, 'upnp', config)
+        await hass.async_block_till_done()
 
     assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': True,
@@ -75,12 +88,16 @@ async def test_async_setup_auto_config(hass):
 async def test_async_setup_auto_config_port_mapping(hass):
     """Test async_setup."""
     # setup component, enable auto_config
-    await async_setup_component(hass, 'upnp', {
+    config = {
+        'discovery': {},
         'upnp': {
             'port_mapping': True,
             'ports': {'hass': 'hass'},
         },
-        'discovery': {}})
+    }
+    with MockDependency('netdisco.discovery'):
+        await async_setup_component(hass, 'upnp', config)
+        await hass.async_block_till_done()
 
     assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': True,
@@ -93,9 +110,13 @@ async def test_async_setup_auto_config_port_mapping(hass):
 async def test_async_setup_auto_config_no_sensors(hass):
     """Test async_setup."""
     # setup component, enable auto_config
-    await async_setup_component(hass, 'upnp', {
+    config = {
+        'discovery': {},
         'upnp': {'sensors': False},
-        'discovery': {}})
+    }
+    with MockDependency('netdisco.discovery'):
+        await async_setup_component(hass, 'upnp', config)
+        await hass.async_block_till_done()
 
     assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': True,
@@ -116,7 +137,13 @@ async def test_async_setup_entry_default(hass):
     })
 
     # ensure hass.http is available
-    await async_setup_component(hass, 'upnp')
+    config = {
+        'discovery': {},
+        # no upnp
+    }
+    with MockDependency('netdisco.discovery'):
+        await async_setup_component(hass, 'upnp', config)
+        await hass.async_block_till_done()
 
     # mock homeassistant.components.upnp.device.Device
     mock_device = MagicMock()
@@ -155,13 +182,16 @@ async def test_async_setup_entry_port_mapping(hass):
     })
 
     # ensure hass.http is available
-    await async_setup_component(hass, 'upnp', {
+    config = {
+        'discovery': {},
         'upnp': {
             'port_mapping': True,
             'ports': {'hass': 'hass'},
         },
-        'discovery': {},
-    })
+    }
+    with MockDependency('netdisco.discovery'):
+        await async_setup_component(hass, 'upnp', config)
+        await hass.async_block_till_done()
 
     mock_device = MockDevice(udn)
     with patch.object(Device, 'async_create_device') as mock_create_device:
