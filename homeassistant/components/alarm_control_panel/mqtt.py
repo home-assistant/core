@@ -95,9 +95,9 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
     """Representation of a MQTT alarm status."""
 
     def __init__(self, name, state_topic, command_topic, qos, retain,
-                 payload_disarm, payload_arm_home, payload_arm_away, payload_arm_night,
-                 code, availability_topic, payload_available, payload_not_available,
-                 discovery_hash):
+                 payload_disarm, payload_arm_home, payload_arm_away,
+                 payload_arm_night, code, availability_topic,
+                 payload_available, payload_not_available, discovery_hash):
         """Init the MQTT Alarm Control Panel."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
@@ -124,7 +124,8 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         def message_received(topic, payload, qos):
             """Run when new MQTT message has been received."""
             if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-                               STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_NIGHT,
+                               STATE_ALARM_ARMED_AWAY,
+                               STATE_ALARM_ARMED_NIGHT,
                                STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED):
                 _LOGGER.warning("Received unexpected payload: %s", payload)
                 return
