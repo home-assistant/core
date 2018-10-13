@@ -19,6 +19,9 @@ from homeassistant.components.geo_location import GeoLocationEvent, \
     PLATFORM_SCHEMA
 from homeassistant.const import CONF_RADIUS, CONF_SCAN_INTERVAL, \
     EVENT_HOMEASSISTANT_START, ATTR_ATTRIBUTION
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import dispatcher_send, \
+    async_dispatcher_connect
 from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['geojson_client==0.1']
@@ -42,6 +45,10 @@ DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+SIGNAL_DELETE_ENTITY = 'nsw_rural_fire_service_feed_delete'
+SIGNAL_UPDATE_ENTITY = 'nsw_rural_fire_service_feed_update'
+
 SOURCE = 'nsw_rural_fire_service_feed'
 
 VALID_CATEGORIES = ['Emergency Warning', 'Watch and Act', 'Advice',
@@ -86,8 +93,8 @@ class NswRuralFireServiceFeedManager:
                                              filter_categories=categories)
         self._add_entities = add_entities
         self._scan_interval = scan_interval
-        self._feed_entries = []
-        self._managed_entities = []
+        self._feed_entries = {}
+        self._managed_external_ids = set()
 
     def startup(self):
         """Start up this manager."""
@@ -106,9 +113,20 @@ class NswRuralFireServiceFeedManager:
         if status == geojson_client.UPDATE_OK:
             _LOGGER.debug("Data retrieved %s", feed_entries)
             # Keep a copy of all feed entries for future lookups by entities.
-            self._feed_entries = feed_entries.copy()
-            keep_entries = self._update_or_remove_entities(feed_entries)
-            self._generate_new_entities(keep_entries)
+            self._feed_entries = {entry.external_id: entry
+                                  for entry in feed_entries}
+            # For entity management the external ids from the feed are used.
+            feed_external_ids = {entry.external_id
+                                 for entry in feed_entries}
+            remove_external_ids = self._managed_external_ids.difference(
+                feed_external_ids)
+            self._remove_entities(remove_external_ids)
+            update_external_ids = self._managed_external_ids.intersection(
+                feed_external_ids)
+            self._update_entities(update_external_ids)
+            create_external_ids = feed_external_ids.difference(
+                self._managed_external_ids)
+            self._generate_new_entities(create_external_ids)
         elif status == geojson_client.UPDATE_OK_NO_DATA:
             _LOGGER.debug("Update successful, but no data received from %s",
                           self._feed)
@@ -116,53 +134,65 @@ class NswRuralFireServiceFeedManager:
             _LOGGER.warning("Update not successful, no data received from %s",
                             self._feed)
             # Remove all entities.
-            self._update_or_remove_entities([])
+            self._remove_entities(self._managed_external_ids.copy())
 
-    def _update_or_remove_entities(self, feed_entries):
-        """Update existing entries and remove obsolete entities."""
-        _LOGGER.debug("Entries for updating: %s", feed_entries)
-        # Remove obsolete entities for events that have disappeared
-        managed_entities = self._managed_entities.copy()
-        entries_lookup = {entry.external_id: entry for entry in feed_entries}
-        for entity in managed_entities:
-            entry = entries_lookup.pop(entity.external_id, None)
-            if entry is None:
-                # Remove obsolete entity.
-                _LOGGER.debug("Entity not current anymore %s", entity)
-                self._managed_entities.remove(entity)
-                self._hass.add_job(entity.async_remove())
-                continue
-            # Existing entity - update details.
-            _LOGGER.debug("Existing entity found %s", entity)
-            feed_entries.remove(entry)
-            entity.schedule_update_ha_state(True)
-        # Return the remaining entries that new entities must be created for.
-        return feed_entries
-
-    def _generate_new_entities(self, entries):
+    def _generate_new_entities(self, external_ids):
         """Generate new entities for events."""
         new_entities = []
-        for entry in entries:
-            new_entity = NswRuralFireServiceLocationEvent(self, entry)
-            _LOGGER.debug("New entity added %s", new_entity)
+        for external_id in external_ids:
+            new_entity = NswRuralFireServiceLocationEvent(self, external_id)
+            _LOGGER.debug("New entity added %s", external_id)
             new_entities.append(new_entity)
-        # Add new entities to HA and keep track of them in this manager.
+            self._managed_external_ids.add(external_id)
+        # Add new entities to HA.
         self._add_entities(new_entities, True)
-        self._managed_entities.extend(new_entities)
+
+    def _update_entities(self, external_ids):
+        """Update entities."""
+        for external_id in external_ids:
+            _LOGGER.debug("Existing entity found %s", external_id)
+            dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY, external_id)
+
+    def _remove_entities(self, external_ids):
+        """Remove entities."""
+        for external_id in external_ids:
+            _LOGGER.debug("Entity not current anymore %s", external_id)
+            self._managed_external_ids.remove(external_id)
+            dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY, external_id)
 
     def get_feed_entry(self, external_id):
         """Return a feed entry identified by external id."""
-        return next((entry for entry in self._feed_entries
-                     if entry.external_id == external_id), None)
+        return self._feed_entries.get(external_id)
 
 
 class NswRuralFireServiceLocationEvent(GeoLocationEvent):
     """This represents an external event with GeoJSON data."""
 
-    def __init__(self, feed_manager, feed_entry):
+    def __init__(self, feed_manager, external_id):
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
-        self._update_from_feed(feed_entry)
+        self._external_id = external_id
+
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
+
+    @callback
+    def _delete_callback(self, external_id):
+        """Remove this entity."""
+        if external_id == self._external_id:
+            _LOGGER.debug("Scheduling deletion of %s", external_id)
+            self.hass.async_create_task(self.async_remove())
+
+    @callback
+    def _update_callback(self, external_id):
+        """Call update method."""
+        if external_id == self._external_id:
+            _LOGGER.debug("Scheduling update of %s", self._external_id)
+            self.async_schedule_update_ha_state(True)
 
     @property
     def should_poll(self):
@@ -171,7 +201,8 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
 
     async def async_update(self):
         """Update this entity from the data held in the feed manager."""
-        feed_entry = self._feed_manager.get_feed_entry(self.external_id)
+        _LOGGER.debug("Updating %s", self._external_id)
+        feed_entry = self._feed_manager.get_feed_entry(self._external_id)
         if feed_entry:
             self._update_from_feed(feed_entry)
 
@@ -181,7 +212,6 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
         self._distance = feed_entry.distance_to_home
         self._latitude = feed_entry.coordinates[0]
         self._longitude = feed_entry.coordinates[1]
-        self.external_id = feed_entry.external_id
         self._attribution = feed_entry.attribution
         self._category = feed_entry.category
         self._publication_date = feed_entry.publication_date
@@ -228,7 +258,7 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (
-                (ATTR_EXTERNAL_ID, self.external_id),
+                (ATTR_EXTERNAL_ID, self._external_id),
                 (ATTR_CATEGORY, self._category),
                 (ATTR_LOCATION, self._location),
                 (ATTR_ATTRIBUTION, self._attribution),
