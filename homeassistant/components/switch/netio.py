@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pynetio==0.1.6']
+REQUIREMENTS = ['pynetio==0.1.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 
