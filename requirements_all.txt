@@ -199,6 +199,7 @@ blockchain==1.4.4
 # homeassistant.components.sensor.bme680
 # bme680==1.0.4
 
+# homeassistant.components.route53
 # homeassistant.components.notify.aws_lambda
 # homeassistant.components.notify.aws_sns
 # homeassistant.components.notify.aws_sqs
@@ -502,6 +503,9 @@ insteonplm==0.15.0
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
+
+# homeassistant.components.route53
+ipify==1.0.0
 
 # homeassistant.components.verisure
 jsonpath==0.75
