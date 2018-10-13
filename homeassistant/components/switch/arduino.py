@@ -54,12 +54,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ArduinoSwitch(SwitchDevice):
     """Representation of an Arduino switch."""
 
-    def __init__(self, pin, options):
+    def __init__(self, pin, options, callback=None):
         """Initialize the Pin."""
         self._pin = pin
         self._name = options.get(CONF_NAME)
         self.pin_type = CONF_TYPE
         self.direction = 'out'
+        self._callback = callback
 
         self._state = options.get(CONF_INITIAL)
 
@@ -70,7 +71,8 @@ class ArduinoSwitch(SwitchDevice):
             self.turn_on_handler = arduino.BOARD.set_digital_out_high
             self.turn_off_handler = arduino.BOARD.set_digital_out_low
 
-        arduino.BOARD.set_mode(self._pin, self.direction, self.pin_type)
+        arduino.BOARD.set_mode(
+            self._pin, self.direction, self.pin_type, callback=callback)
         (self.turn_on_handler if self._state else self.turn_off_handler)(pin)
 
     @property
