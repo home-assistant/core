@@ -130,10 +130,12 @@ async def async_setup_entry(hass: HomeAssistantType,
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             config_entry, 'sensor'))
 
-    async def unload_entry(event):
-        """Unload entry on quit."""
-        await async_unload_entry(hass, config_entry)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unload_entry)
+    async def delete_port_mapping(event):
+        """Delete port mapping on quit."""
+        if data.get(CONF_ENABLE_PORT_MAPPING):
+            _LOGGER.debug('Deleting port mappings')
+            await device.async_delete_port_mappings()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, delete_port_mapping)
 
     return True
 

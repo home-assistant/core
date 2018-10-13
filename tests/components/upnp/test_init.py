@@ -18,7 +18,7 @@ class MockDevice(Device):
 
     def __init__(self, udn):
         """Initializer."""
-        super().__init__(None)
+        super().__init__(MagicMock())
         self._udn = udn
         self.added_port_mappings = []
         self.removed_port_mappings = []
@@ -146,13 +146,9 @@ async def test_async_setup_entry_default(hass):
         await hass.async_block_till_done()
 
     # mock homeassistant.components.upnp.device.Device
-    mock_device = MagicMock()
-    mock_device.udn = udn
-    mock_device.async_add_port_mappings.return_value = mock_coro()
-    mock_device.async_delete_port_mappings.return_value = mock_coro()
-    with patch.object(Device, 'async_create_device') as mock_create_device:
-        mock_create_device.return_value = mock_coro(
-            return_value=mock_device)
+    mock_device = MockDevice(udn)
+    with patch.object(Device, 'async_create_device') as create_device:
+        create_device.return_value = mock_coro(return_value=mock_device)
         with patch('homeassistant.components.upnp.device.get_local_ip',
                    return_value='192.168.1.10'):
             assert await upnp.async_setup_entry(hass, entry) is True
@@ -163,12 +159,9 @@ async def test_async_setup_entry_default(hass):
             hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
             await hass.async_block_till_done()
 
-    # ensure cleaned up
-    assert udn not in hass.data[upnp.DOMAIN]['devices']
-
-    # ensure no port-mapping-methods called
-    assert len(mock_device.async_add_port_mappings.mock_calls) == 0
-    assert len(mock_device.async_delete_port_mappings.mock_calls) == 0
+    # ensure no port-mappings created or removed
+    assert not mock_device.added_port_mappings
+    assert not mock_device.removed_port_mappings
 
 
 async def test_async_setup_entry_port_mapping(hass):
@@ -194,8 +187,8 @@ async def test_async_setup_entry_port_mapping(hass):
         await hass.async_block_till_done()
 
     mock_device = MockDevice(udn)
-    with patch.object(Device, 'async_create_device') as mock_create_device:
-        mock_create_device.return_value = mock_coro(return_value=mock_device)
+    with patch.object(Device, 'async_create_device') as create_device:
+        create_device.return_value = mock_coro(return_value=mock_device)
         with patch('homeassistant.components.upnp.device.get_local_ip',
                    return_value='192.168.1.10'):
             assert await upnp.async_setup_entry(hass, entry) is True
@@ -210,9 +203,6 @@ async def test_async_setup_entry_port_mapping(hass):
 
             hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
             await hass.async_block_till_done()
-
-    # ensure cleaned up
-    assert udn not in hass.data[upnp.DOMAIN]['devices']
 
     # ensure delete-port-mapping-methods called
     assert mock_device.removed_port_mappings == [8123]
