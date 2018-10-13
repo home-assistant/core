@@ -67,10 +67,11 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         websession = async_get_clientsession(hass)
         try:
             with async_timeout.timeout(5, loop=hass.loop):
+                agent_user_id = call.context.user_id or DEFAULT_AGENT_USER_ID
                 res = await websession.post(
                     REQUEST_SYNC_BASE_URL,
                     params={'key': api_key},
-                    json={'agent_user_id': call.context.user_id})
+                    json={'agent_user_id': agent_user_id})
                 _LOGGER.info("Submitted request_sync request to Google")
                 res.raise_for_status()
         except aiohttp.ClientResponseError:
