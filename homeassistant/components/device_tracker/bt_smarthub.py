@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
-                                                     DeviceScanner)
+from homeassistant.components.device_tracker import (
+  DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
 REQUIREMENTS = ['btsmarthub_devicelist==0.1.1']
@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_scanner(hass, config):
-    """Return a BT SmartHub scanner if successful."""
+    """Return a BT Smart Hub scanner if successful."""
     scanner = BTSmartHubScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -36,7 +36,7 @@ class BTSmartHubScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialise the scanner."""
-        _LOGGER.info("Initialising BT Smart Hub")
+        _LOGGER.debug("Initialising BT Smart Hub")
         self.host = config[CONF_HOST]
         self.last_results = {}
         self.success_init = False
@@ -63,7 +63,7 @@ class BTSmartHubScanner(DeviceScanner):
         return None
 
     def _update_info(self):
-        """Ensure the information from the BT Home Hub 5 is up to date."""
+        """Ensure the information from the BT Smart Hub is up to date."""
         if not self.success_init:
             return
 
@@ -77,7 +77,7 @@ class BTSmartHubScanner(DeviceScanner):
         self.last_results = clients
 
     def get_bt_smarthub_data(self):
-        """Retrieve data from BT Smarthub and return parsed result."""
+        """Retrieve data from BT Smart Hub and return parsed result."""
         import btsmarthub_devicelist
         # Request data from bt smarthub into a list of dicts.
         data = btsmarthub_devicelist.get_devicelist(
