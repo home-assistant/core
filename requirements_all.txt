@@ -1000,7 +1000,7 @@ pynello==1.5.1
 pynetgear==0.4.2
 
 # homeassistant.components.switch.netio
-pynetio==0.1.6
+pynetio==0.1.9.1
 
 # homeassistant.components.lock.nuki
 pynuki==1.3.1
