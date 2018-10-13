@@ -76,7 +76,7 @@ HM_DEVICE_TYPES = {
         'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
         'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
-        'IPWeatherSensorBasic'],
+        'IPWeatherSensorBasic', 'IPBrightnessSensor'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
