@@ -13,8 +13,8 @@ from homeassistant.core import callback
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components import mqtt
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN,
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN,
     CONF_NAME, CONF_CODE)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
@@ -30,7 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PAYLOAD_DISARM = 'payload_disarm'
 CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
 CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
+CONF_PAYLOAD_ARM_NIGHT = 'payload_arm_night'
 
+DEFAULT_ARM_NIGHT = 'ARM_NIGHT'
 DEFAULT_ARM_AWAY = 'ARM_AWAY'
 DEFAULT_ARM_HOME = 'ARM_HOME'
 DEFAULT_DISARM = 'DISARM'
@@ -44,6 +46,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
     vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
+    vol.Optional(CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT): cv.string,
     vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -79,6 +82,7 @@ async def _async_setup_entity(hass, config, async_add_entities,
         config.get(CONF_PAYLOAD_DISARM),
         config.get(CONF_PAYLOAD_ARM_HOME),
         config.get(CONF_PAYLOAD_ARM_AWAY),
+        config.get(CONF_PAYLOAD_ARM_NIGHT),
         config.get(CONF_CODE),
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
@@ -91,8 +95,8 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
     """Representation of a MQTT alarm status."""
 
     def __init__(self, name, state_topic, command_topic, qos, retain,
-                 payload_disarm, payload_arm_home, payload_arm_away, code,
-                 availability_topic, payload_available, payload_not_available,
+                 payload_disarm, payload_arm_home, payload_arm_away, payload_arm_night,
+                 code, availability_topic, payload_available, payload_not_available,
                  discovery_hash):
         """Init the MQTT Alarm Control Panel."""
         MqttAvailability.__init__(self, availability_topic, qos,
@@ -107,6 +111,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         self._payload_disarm = payload_disarm
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
+        self._payload_arm_night = payload_arm_night
         self._code = code
         self._discovery_hash = discovery_hash
 
@@ -119,8 +124,8 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         def message_received(topic, payload, qos):
             """Run when new MQTT message has been received."""
             if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-                               STATE_ALARM_ARMED_AWAY, STATE_ALARM_PENDING,
-                               STATE_ALARM_TRIGGERED):
+                               STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_NIGHT,
+                               STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED):
                 _LOGGER.warning("Received unexpected payload: %s", payload)
                 return
             self._state = payload
@@ -184,6 +189,17 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             return
         mqtt.async_publish(
             self.hass, self._command_topic, self._payload_arm_away, self._qos,
+            self._retain)
+
+    async def async_alarm_arm_night(self, code=None):
+        """Send arm night command.
+
+        This method is a coroutine.
+        """
+        if not self._validate_code(code, 'arming night'):
+            return
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_arm_night, self._qos,
             self._retain)
 
     def _validate_code(self, code, state):
