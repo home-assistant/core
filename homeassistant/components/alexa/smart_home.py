@@ -1,6 +1,7 @@
 """Support for alexa Smart Home Skill API."""
 import logging
 import math
+from collections import OrderedDict
 from datetime import datetime
 from uuid import uuid4
 
@@ -37,14 +38,16 @@ API_TEMP_UNITS = {
     TEMP_CELSIUS: 'CELSIUS',
 }
 
-API_THERMOSTAT_MODES = {
-    'HEAT': [climate.STATE_HEAT],
-    'COOL': [climate.STATE_COOL],
-    'AUTO': [climate.STATE_AUTO],
-    'ECO': [climate.STATE_ECO],
-    'OFF': [climate.STATE_DRY, climate.STATE_FAN_ONLY, climate.STATE_IDLE,
-            climate.STATE_OFF],
-}
+API_THERMOSTAT_MODES = OrderedDict(
+    [(climate.STATE_HEAT, 'HEAT'),
+     (climate.STATE_COOL, 'COOL'),
+     (climate.STATE_AUTO, 'AUTO'),
+     (climate.STATE_ECO, 'ECO'),
+     (climate.STATE_OFF, 'OFF'),
+     (climate.STATE_IDLE, 'OFF'),
+     (climate.STATE_FAN_ONLY, 'OFF'),
+     (climate.STATE_DRY, 'OFF')]
+)
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
 
@@ -493,7 +496,7 @@ class _AlexaThermostatController(_AlexaInterface):
     def get_property(self, name):
         if name == 'thermostatMode':
             ha_mode = self.entity.attributes.get(climate.ATTR_OPERATION_MODE)
-            mode = _convert_ha_mode(ha_mode)
+            mode = API_THERMOSTAT_MODES.get(ha_mode)
             if mode is None:
                 _LOGGER.error("%s (%s) has unsupported %s value '%s'",
                               self.entity.entity_id, type(self.entity),
@@ -1499,14 +1502,6 @@ def temperature_from_object(hass, temp_obj, interval=False):
     return convert_temperature(temp, from_unit, to_unit, interval)
 
 
-def _convert_ha_mode(ha_mode):
-    for alexa_mode, op_candidates in API_THERMOSTAT_MODES.items():
-        if ha_mode in op_candidates:
-            return alexa_mode
-
-    return None
-
-
 def _thermostat_context_from_entity(hass, entity, mode=None, temp=None):
     unit = hass.config.units.temperature_unit
     if mode:
@@ -1530,7 +1525,7 @@ def _thermostat_context_from_entity(hass, entity, mode=None, temp=None):
         }, {
             "namespace": 'Alexa.ThermostatController',
             "name": "thermostatMode",
-            "value": _convert_ha_mode(ha_mode)
+            "value": API_THERMOSTAT_MODES[ha_mode]
         }]
     }
 
@@ -1612,19 +1607,9 @@ async def async_api_set_thermostat_mode(hass, config, request, context,
     mode = request[API_PAYLOAD]['thermostatMode']
     mode = mode if isinstance(mode, str) else mode['value']
 
-    if mode not in API_THERMOSTAT_MODES:
-        msg = 'The requested thermostat mode {} is not supported'.format(mode)
-        return api_error(
-            request,
-            namespace='Alexa.ThermostatController',
-            error_type='UNSUPPORTED_THERMOSTAT_MODE',
-            error_message=msg
-        )
-
     operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST)
-    op_candidates = API_THERMOSTAT_MODES[mode]
-    ha_mode = mode.lower() if mode.lower() in op_candidates else next(
-        (v for v in operation_list if v in op_candidates),
+    ha_mode = next(
+        (k for k, v in API_THERMOSTAT_MODES.items() if v == mode),
         None
     )
 
