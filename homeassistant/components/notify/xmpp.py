@@ -42,16 +42,16 @@ async def async_get_service(hass, config, discovery_info=None):
         config.get(CONF_SENDER), config.get(CONF_RESOURCE),
         config.get(CONF_PASSWORD), config.get(CONF_RECIPIENT),
         config.get(CONF_TLS), config.get(CONF_VERIFY),
-        config.get(CONF_ROOM), hass.loop)
+        config.get(CONF_ROOM), hass)
 
 
 class XmppNotificationService(BaseNotificationService):
     """Implement the notification service for Jabber (XMPP)."""
 
     def __init__(self, sender, resource, password,
-                 recipient, tls, verify, room, loop):
+                 recipient, tls, verify, room, hass):
         """Initialize the service."""
-        self._loop = loop
+        self._hass = hass
         self._sender = sender
         self._resource = resource
         self._password = password
@@ -69,11 +69,11 @@ class XmppNotificationService(BaseNotificationService):
         await async_send_message(
             '{}/{}'.format(self._sender, self._resource),
             self._password, self._recipient, self._tls,
-            self._verify, self._room, self._loop, text, data)
+            self._verify, self._room, self._hass, text, data)
 
 
 async def async_send_message(sender, password, recipient, use_tls,
-                             verify_certificate, room, loop, message,
+                             verify_certificate, room, hass, message,
                              data=None):
     """Send a message over XMPP."""
     import slixmpp
@@ -88,7 +88,7 @@ async def async_send_message(sender, password, recipient, use_tls,
             super().__init__(sender, password)
 
             # need hass.loop!!
-            self.loop = loop
+            self.loop = hass.loop
 
             self.force_starttls = use_tls
             self.use_ipv6 = False
@@ -133,7 +133,8 @@ async def async_send_message(sender, password, recipient, use_tls,
                 # send a file from an URL
                 url = data.get(ATTR_URL)
                 _LOGGER.info('getting file from %s', url)
-                result = await loop.run_in_executor(None, requests.get, url)
+                # result = await loop.run_in_executor(None, requests.get, url)
+                result = await hass.async_add_executor_job(requests.get, url)
                 if result.status_code >= 400 or \
                         result.headers['Content-Length'] == 0:
                     _LOGGER.error("could not load file from %s", url)
@@ -141,9 +142,10 @@ async def async_send_message(sender, password, recipient, use_tls,
                     # we need a file extension, the upload server needs a
                     # filename, if none is provided, through the path
                     # we guess the extension
-                    extension = self.get_extension(
-                        result.headers['Content-Type'])
-                    _LOGGER.debug("got %s extension", extension)
+                    if not data.get(ATTR_PATH):
+                        extension = self.get_extension(
+                            result.headers['Content-Type'])
+                        _LOGGER.debug("got %s extension", extension)
                     filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) \
                         else "upload"+extension
                     url = await self['xep_0363'].upload_file(
@@ -272,7 +274,7 @@ async def async_send_message(sender, password, recipient, use_tls,
             try:
                 return types[content_type.lower()]
             except KeyError:
-                _LOGGER.error("can't upload unknown file type")
+                _LOGGER.warning("unknown, can't upload unknown file type")
 
         def disconnect_on_login_fail(self, event):
             """Disconnect from the server if credentials are invalid."""
