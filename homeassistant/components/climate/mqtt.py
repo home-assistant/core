@@ -101,8 +101,10 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TEMPERATURE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_TEMPERATURE_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_TEMPERATURE_HIGH_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_TEMPERATURE_LOW_STATE_TOPIC):
+                 mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_TEMPERATURE_HIGH_STATE_TOPIC):
+                 mqtt.valid_subscribe_topic,
     vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -247,8 +249,8 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
 
     def __init__(self, hass, name, topic, value_templates, qos, retain,
                  mode_list, fan_mode_list, swing_mode_list,
-                 target_temperature, target_temperature_low, target_temperature_high,
-                 away, hold, current_fan_mode,
+                 target_temperature, target_temperature_low,
+                 target_temperature_high, away, hold, current_fan_mode,
                  current_swing_mode, current_operation, aux, send_if_off,
                  payload_on, payload_off, availability_topic,
                  payload_available, payload_not_available,
@@ -593,19 +595,25 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
            kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             if self._topic[CONF_TEMPERATURE_LOW_STATE_TOPIC] is None:
                 # optimistic mode
-                self._target_low_temperature = kwargs.get(ATTR_TARGET_TEMP_LOW)
+                self._target_low_temperature = \
+                    kwargs.get(ATTR_TARGET_TEMP_LOW)
 
             if self._topic[CONF_TEMPERATURE_HIGH_STATE_TOPIC] is None:
                 # optimistic mode
-                self._target_high_temperature = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+                self._target_high_temperature = \
+                    kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
             if self._send_if_off or self._current_operation != STATE_OFF:
                 mqtt.async_publish(
-                    self.hass, self._topic[CONF_TEMPERATURE_LOW_COMMAND_TOPIC],
-                    kwargs.get(ATTR_TARGET_TEMP_LOW), self._qos, self._retain)
+                    self.hass,
+                    self._topic[CONF_TEMPERATURE_LOW_COMMAND_TOPIC],
+                    kwargs.get(ATTR_TARGET_TEMP_LOW),
+                    self._qos, self._retain)
                 mqtt.async_publish(
-                    self.hass, self._topic[CONF_TEMPERATURE_HIGH_COMMAND_TOPIC],
-                    kwargs.get(ATTR_TARGET_TEMP_HIGH), self._qos, self._retain)
+                    self.hass,
+                    self._topic[CONF_TEMPERATURE_HIGH_COMMAND_TOPIC],
+                    kwargs.get(ATTR_TARGET_TEMP_HIGH),
+                    self._qos, self._retain)
 
         self.async_schedule_update_ha_state()
 
