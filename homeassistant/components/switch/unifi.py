@@ -203,8 +203,7 @@ class UniFiSwitch(SwitchDevice):
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            'connections': {(CONNECTION_NETWORK_MAC, self.client.mac)},
-            'name': self.name,
+            'connections': {(CONNECTION_NETWORK_MAC, self.client.mac)}
         }
 
     @property

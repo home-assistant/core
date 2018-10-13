@@ -48,6 +48,8 @@ async def test_successful_config_entry(hass):
             ('mac', '00:11:22:33:44:55')
         },
         'manufacturer': 'Ubiquiti',
+        'model': "UniFi Controller",
+        'name': "UniFi Controller",
     }
 
 
