@@ -597,12 +597,12 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
            kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             if self._topic[CONF_TEMPERATURE_LOW_STATE_TOPIC] is None:
                 # optimistic mode
-                self._target_low_temperature = \
+                self._target_temperature_low = \
                     kwargs.get(ATTR_TARGET_TEMP_LOW)
 
             if self._topic[CONF_TEMPERATURE_HIGH_STATE_TOPIC] is None:
                 # optimistic mode
-                self._target_high_temperature = \
+                self._target_temperature_high = \
                     kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
             if self._send_if_off or self._current_operation != STATE_OFF:
