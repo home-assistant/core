@@ -28,9 +28,34 @@ POLYCONTROL = 0x10E
 DANALOCK_V2_BTZE = 0x2
 POLYCONTROL_DANALOCK_V2_BTZE_LOCK = (POLYCONTROL, DANALOCK_V2_BTZE)
 WORKAROUND_V2BTZE = 'v2btze'
+WORKAROUND_DEVICE_STATE = 'state'
+# Kwikset 914TRL ZW500
+KWIKSET = 0x0090
+ZW500_914TRL = 0x440
+KWIKSET_914TRL_ZW500 = (KWIKSET, ZW500_914TRL)
+# Yale YRD210
+YALE = 0x0129
+YRD210 = 0x0209
+YRD210_A = 0xAA00
+YRD210_B = 0x0000
+YALE_YRD210 = (YALE, YRD210)
+YALE_YRD210_A = (YALE, YRD210_A)
+YALE_YRD210_B = (YALE, YRD210_B)
+# Schalge BE469 and FE599NX
+SCHLAGE = 0x003B
+BE469 = 0x5044
+SCHLAGE_BE469 = (SCHLAGE, BE469)
+FE599NX = 0x504C
+SCLAGE_FE599NX = (SCHLAGE, FE599NX)
 
 DEVICE_MAPPINGS = {
-    POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE
+    POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE,
+    KWIKSET_914TRL_ZW500: WORKAROUND_DEVICE_STATE,
+    YALE_YRD210: WORKAROUND_DEVICE_STATE,
+    YALE_YRD210_A: WORKAROUND_DEVICE_STATE,
+    YALE_YRD210_B: WORKAROUND_DEVICE_STATE,
+    SCHLAGE_BE469: WORKAROUND_DEVICE_STATE,
+    SCLAGE_FE599NX: WORKAROUND_DEVICE_STATE,
 }
 
 LOCK_NOTIFICATION = {
@@ -204,6 +229,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         self._notification = None
         self._lock_status = None
         self._v2btze = None
+        self._state_workaround = False
 
         # Enable appropriate workaround flags for our device
         # Make sure that we have values for the key before converting to int
@@ -216,6 +242,11 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                     self._v2btze = 1
                     _LOGGER.debug("Polycontrol Danalock v2 BTZE "
                                   "workaround enabled")
+                if DEVICE_MAPPINGS[specific_sensor_key] == \
+                        WORKAROUND_DEVICE_STATE:
+                    self._state_workaround = True
+                    _LOGGER.debug(
+                        "Notification device state workaround enabled")
         self.update_properties()
 
     def update_properties(self):
@@ -225,7 +256,8 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         if self.values.access_control:
             notification_data = self.values.access_control.data
             self._notification = LOCK_NOTIFICATION.get(str(notification_data))
-
+            if self._state_workaround:
+                self._state = LOCK_STATUS.get(str(notification_data))
             if self._v2btze:
                 if self.values.v2btze_advanced and \
                         self.values.v2btze_advanced.data == CONFIG_ADVANCED:
