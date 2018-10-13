@@ -304,7 +304,7 @@ class HangoutsBot:
         """Handle the send_message service."""
         await self._async_send_message(service.data[ATTR_MESSAGE],
                                        service.data[ATTR_TARGET],
-                                       service.data[ATTR_DATA])
+                                       service.data.get(ATTR_DATA, {}))
 
     async def async_handle_update_users_and_conversations(self, _=None):
         """Handle the update_users_and_conversations service."""
