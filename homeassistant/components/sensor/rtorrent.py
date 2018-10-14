@@ -1,6 +1,4 @@
-"""
-Support for monitoring the rtorrent BitTorrent client API.
-"""
+"""Support for monitoring the rtorrent BitTorrent client API."""
 import logging
 import xmlrpc.client
 
