@@ -16,8 +16,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send, async_dispatcher_connect)
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect)
 
 DEPENDENCIES = ['rflink']
 
@@ -127,11 +126,9 @@ class RflinkSensor(RflinkDevice):
                                  SIGNAL_HANDLE_EVENT.format(self.entity_id),
                                  self.handle_event_callback)
 
-        # Send signal to process the initial event after entity is created
+        # Process the initial event now that the entity is created
         if self._initial_event:
-            async_dispatcher_send(self.hass,
-                                  SIGNAL_HANDLE_EVENT.format(self.entity_id),
-                                  self._initial_event)
+            self.handle_event_callback(self._initial_event)
 
     @property
     def unit_of_measurement(self):
