@@ -275,7 +275,6 @@ async def test_counter_min(hass):
 
     state2 = hass.states.get('counter.test')
     assert state2 is not None
-    assert state.state != state2.state
     assert state2.state == '1'
 
 
@@ -300,7 +299,6 @@ async def test_counter_max(hass):
 
     state2 = hass.states.get('counter.test')
     assert state2 is not None
-    assert state.state != state2.state
     assert state2.state == '0'
 
     await hass.services.async_call('counter', 'decrement', {
@@ -309,5 +307,4 @@ async def test_counter_max(hass):
 
     state2 = hass.states.get('counter.test')
     assert state2 is not None
-    assert state.state != state2.state
     assert state2.state == '-1'

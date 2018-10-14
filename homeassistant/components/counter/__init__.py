@@ -64,10 +64,10 @@ async def async_setup(hass, config):
         restore = cfg.get(CONF_RESTORE)
         step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
-        min = cfg.get(CONF_MAXIMUM)
-        max = cfg.get(CONF_MINIMUM)
+        minimum = cfg.get(CONF_MINIMUM)
+        maximum = cfg.get(CONF_MAXIMUM)
 
-        entities.append(Counter(object_id, name, initial, min, max, restore, step, icon))
+        entities.append(Counter(object_id, name, initial, minimum, maximum, restore, step, icon))
 
     if not entities:
         return False
@@ -89,7 +89,7 @@ async def async_setup(hass, config):
 class Counter(RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, object_id, name, initial, min, max,
+    def __init__(self, object_id, name, initial, minimum, maximum,
                  restore, step, icon):
         """Initialize a counter."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
@@ -97,8 +97,8 @@ class Counter(RestoreEntity):
         self._restore = restore
         self._step = step
         self._state = self._initial = initial
-        self._min = int(min) if min is not None else None
-        self._max = int(max) if max is not None else None
+        self._min = int(minimum) if minimum is not None else None
+        self._max = int(maximum) if maximum is not None else None
         self._icon = icon
 
     @property
@@ -137,9 +137,9 @@ class Counter(RestoreEntity):
     def __check_boundaries(self):
         "Check if in range of min/max values"
         if self._min is not None:
-            self._state = max( self._min, self._state)
+            self._state = max(self._min, self._state)
         if self._max is not None:
-            self._state = min( self._max, self._state)
+            self._state = min(self._max, self._state)
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
