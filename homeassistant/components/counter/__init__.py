@@ -3,7 +3,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, CONF_MAXIMUM, CONF_MINIMUM
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -38,6 +39,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
                 cv.positive_int,
             vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_MAXIMUM, default=None): cv.Any(None, int),
+            vol.Optional(CONF_MINIMUM, default=None): cv.Any(None, int),
             vol.Optional(CONF_RESTORE, default=True): cv.boolean,
             vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
         }, None)
@@ -60,8 +63,10 @@ async def async_setup(hass, config):
         restore = cfg.get(CONF_RESTORE)
         step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
+        min = cfg.get(CONF_MAXIMUM)
+        max = cfg.get(CONF_MINIMUM)
 
-        entities.append(Counter(object_id, name, initial, restore, step, icon))
+        entities.append(Counter(object_id, name, initial, min, max, restore, step, icon))
 
     if not entities:
         return False
@@ -83,13 +88,15 @@ async def async_setup(hass, config):
 class Counter(RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, object_id, name, initial, restore, step, icon):
+    def __init__(self, object_id, name, initial, min, max, restore, step, icon):
         """Initialize a counter."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._restore = restore
         self._step = step
         self._state = self._initial = initial
+        self._min = int(min) if min is not None else None
+        self._max = int(max) if max is not None else None
         self._icon = icon
 
     @property
@@ -115,10 +122,22 @@ class Counter(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return {
+        ret = {
             ATTR_INITIAL: self._initial,
             ATTR_STEP: self._step,
         }
+        if self._min is not None:
+            ret[CONF_MINIMUM] = self._min
+        if self._max is not None:
+            ret[CONF_MAXIMUM] = self._max
+        return ret
+
+    def __check_boundaries(self):
+        "Check if in range of min/max values"
+        if self._min is not None:
+            self._state = max( self._min, self._state)
+        if self._max is not None:
+            self._state = min( self._max, self._state)
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
@@ -129,18 +148,22 @@ class Counter(RestoreEntity):
             state = await self.async_get_last_state()
             if state is not None:
                 self._state = int(state.state)
+                self.__check_boundaries()
 
     async def async_decrement(self):
         """Decrement the counter."""
         self._state -= self._step
+        self.__check_boundaries()
         await self.async_update_ha_state()
 
     async def async_increment(self):
         """Increment a counter."""
         self._state += self._step
+        self.__check_boundaries()
         await self.async_update_ha_state()
 
     async def async_reset(self):
         """Reset a counter."""
         self._state = self._initial
+        self.__check_boundaries()
         await self.async_update_ha_state()
