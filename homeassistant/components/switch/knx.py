@@ -41,7 +41,7 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXSwitch(hass, device))
+        entities.append(KNXSwitch(device))
     async_add_entities(entities)
 
 
@@ -55,13 +55,13 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address=config.get(CONF_ADDRESS),
         group_address_state=config.get(CONF_STATE_ADDRESS))
     hass.data[DATA_KNX].xknx.devices.add(switch)
-    async_add_entities([KNXSwitch(hass, switch)])
+    async_add_entities([KNXSwitch(switch)])
 
 
 class KNXSwitch(SwitchDevice):
     """Representation of a KNX switch."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize of KNX switch."""
         self.device = device
 

@@ -64,7 +64,7 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXCover(hass, device))
+        entities.append(KNXCover(device))
     async_add_entities(entities)
 
 
@@ -88,13 +88,13 @@ def async_add_entities_config(hass, config, async_add_entities):
         invert_angle=config.get(CONF_INVERT_ANGLE))
 
     hass.data[DATA_KNX].xknx.devices.add(cover)
-    async_add_entities([KNXCover(hass, cover)])
+    async_add_entities([KNXCover(cover)])
 
 
 class KNXCover(CoverDevice):
     """Representation of a KNX cover."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize the cover."""
         self.device = device
         self._unsubscribe_auto_updater = None

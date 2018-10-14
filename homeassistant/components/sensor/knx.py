@@ -42,7 +42,7 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXSensor(hass, device))
+        entities.append(KNXSensor(device))
     async_add_entities(entities)
 
 
@@ -56,13 +56,13 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address=config.get(CONF_ADDRESS),
         value_type=config.get(CONF_TYPE))
     hass.data[DATA_KNX].xknx.devices.add(sensor)
-    async_add_entities([KNXSensor(hass, sensor)])
+    async_add_entities([KNXSensor(sensor)])
 
 
 class KNXSensor(Entity):
     """Representation of a KNX sensor."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize of a KNX sensor."""
         self.device = device
 
