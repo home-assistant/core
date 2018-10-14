@@ -662,9 +662,9 @@ class CastDevice(MediaPlayerDevice):
     def media_position(self):
         """Position of current playing media in seconds."""
         if self.media_status is None or \
-            not (self.media_status.player_is_playing or
-                 self.media_status.player_is_paused or
-                 self.media_status.player_is_idle):
+            not (self.media_status.player_is_playing
+                 or self.media_status.player_is_paused
+                 or self.media_status.player_is_idle):
             return None
         return self.media_status.current_time
 
