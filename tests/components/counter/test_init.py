@@ -245,29 +245,6 @@ async def test_counter_context(hass, hass_admin_user):
     assert state2.context.user_id == hass_admin_user.id
 
 async def test_counter_min(hass):
-    """Test that max works"""
-    assert await async_setup_component(hass, 'counter', {
-        'counter': {
-            'test': {
-                'min' : '0',
-                'initial' : '0'
-            }
-        }
-    })
-
-    state = hass.states.get('counter.test')
-    assert state is not None
-
-    await hass.services.async_call('counter', 'decrement', {
-        'entity_id': state.entity_id,
-    }, True, Context(user_id='abcd'))
-
-    state2 = hass.states.get('counter.test')
-    assert state2 is not None
-    assert state.state != state2.state
-    assert state2.state == '0'
-
-async def test_counter_min(hass):
     """Test that min works"""
     assert await async_setup_component(hass, 'counter', {
         'counter': {
