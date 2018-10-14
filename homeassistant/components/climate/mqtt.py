@@ -18,8 +18,7 @@ from homeassistant.components.climate import (
     SUPPORT_SWING_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, ATTR_TEMPERATURE,
-    CONF_NAME, CONF_VALUE_TEMPLATE)
+    STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, CONF_VALUE_TEMPLATE)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_QOS, CONF_RETAIN,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
@@ -471,7 +470,7 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
         """Return the current state."""
         if self._topic[CONF_ACTIVITY_STATE_TOPIC] is not None:
             if None in (self._current_operation, self._is_active):
-                return STATE_UNKNOWN
+                return None
             if self._is_active:
                 return self.current_operation
             if self._current_operation != STATE_OFF:

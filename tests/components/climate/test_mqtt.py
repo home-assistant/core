@@ -7,8 +7,7 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.setup import setup_component
 from homeassistant.components import climate, mqtt
-from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)
+from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
@@ -182,13 +181,13 @@ class TestMQTTClimate(unittest.TestCase):
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(None, state.attributes.get('operation_mode'))
-        self.assertEqual(STATE_UNKNOWN, state.state)
+        self.assertEqual('unknown', state.state)
 
         fire_mqtt_message(self.hass, 'mode-state', 'cool')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('cool', state.attributes.get('operation_mode'))
-        self.assertEqual(STATE_UNKNOWN, state.state)
+        self.assertEqual('unknown', state.state)
 
         fire_mqtt_message(self.hass, 'mode-state', 'heat')
         fire_mqtt_message(self.hass, 'activity-state', 'OFF')
@@ -587,7 +586,7 @@ class TestMQTTClimate(unittest.TestCase):
         self.assertEqual("cool", state.attributes.get('operation_mode'))
 
         # Activity
-        self.assertEqual(STATE_UNKNOWN, state.state)
+        self.assertEqual('unknown', state.state)
         fire_mqtt_message(self.hass, 'activity-state', '"ON"')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
