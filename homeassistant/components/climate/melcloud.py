@@ -59,12 +59,11 @@ class Mode:
 class MelCloudAuthentication:
     """Authentication on MelCloud."""
 
-    def __init__(self, email, password, language=Language.English,
-                 lease_time=60):
+    def __init__(self, email, password, lease_time=60):
         """Initialize the Authentication component."""
         self._email = email
         self._password = password
-        self._language = language
+        self._language = Language.English
         self._lease_time = lease_time
         self._contextkey = None
 
@@ -593,9 +592,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MelCloud HVAC platform."""
     _LOGGER.debug("Adding component: melcloud ...")
 
-    email = config.get("email")
-    password = config.get("password")
-    language = config.get("language", Language.English)
+    email = config.get(CONF_EMAIL)
+    password = config.get(CONF_PASSWORD)
     lease_time = config.get("lease_time", 60)
 
     if email is None:
@@ -606,7 +604,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Invalid password !")
         return False
 
-    mcauth = MelCloudAuthentication(email, password, language, lease_time)
+    mcauth = MelCloudAuthentication(email, password, lease_time)
     if not mcauth.login():
         _LOGGER.error("Invalid Login/Password  !")
         return False
