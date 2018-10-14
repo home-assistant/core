@@ -57,7 +57,7 @@ SIGNAL_CAST_DISCOVERED = 'cast_discovered'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_IGNORE_CEC, default=[]):
         vol.All(cv.ensure_list, [cv.string])
 })
@@ -237,7 +237,7 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                               port=discovery_info['port'])
     elif CONF_HOST in config:
         info = ChromecastInfo(host=config[CONF_HOST],
-                              port=config[CONF_PORT])
+                              port=config.get(CONF_PORT, DEFAULT_PORT))
 
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:
