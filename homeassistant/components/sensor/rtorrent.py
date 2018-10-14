@@ -36,9 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the rtorrent sensors."""
-
-    # For arch-rtorrentvpn:
-    # url = 'http://admin:rutorrent@localhost:9080/RPC2/'
     url = config.get(CONF_URL)
     name = config.get(CONF_NAME)
 
@@ -52,6 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         dev.append(RTorrentSensor(variable, rtorrent, name))
 
     add_entities(dev)
+
 
 class RTorrentSensor(Entity):
     """Representation of an rtorrent sensor."""
@@ -100,7 +98,7 @@ class RTorrentSensor(Entity):
             _LOGGER.error("Connection to rtorrent lost")
             self._available = False
             return
-    
+
         upload = self.data[0]
         download = self.data[1]
 
