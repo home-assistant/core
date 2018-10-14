@@ -106,7 +106,6 @@ class KNXBinarySensor(BinarySensorDevice):
     def __init__(self, hass, device):
         """Initialize of KNX binary sensor."""
         self.device = device
-        self.hass = hass
         self.automations = []
 
     @callback

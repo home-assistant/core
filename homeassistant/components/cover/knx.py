@@ -97,8 +97,6 @@ class KNXCover(CoverDevice):
     def __init__(self, hass, device):
         """Initialize the cover."""
         self.device = device
-        self.hass = hass
-
         self._unsubscribe_auto_updater = None
 
     @callback

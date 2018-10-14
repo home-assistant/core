@@ -64,7 +64,6 @@ class KNXSwitch(SwitchDevice):
     def __init__(self, hass, device):
         """Initialize of KNX switch."""
         self.device = device
-        self.hass = hass
 
     @callback
     def async_register_callbacks(self):

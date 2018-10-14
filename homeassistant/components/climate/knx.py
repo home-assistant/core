@@ -119,7 +119,6 @@ class KNXClimate(ClimateDevice):
     def __init__(self, hass, device):
         """Initialize of a KNX climate device."""
         self.device = device
-        self.hass = hass
 
     @property
     def supported_features(self):

@@ -80,7 +80,6 @@ class KNXLight(Light):
     def __init__(self, hass, device):
         """Initialize of KNX light."""
         self.device = device
-        self.hass = hass
 
     @callback
     def async_register_callbacks(self):
