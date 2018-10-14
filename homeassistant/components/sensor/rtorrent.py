@@ -92,7 +92,7 @@ class RTorrentSensor(Entity):
         try:
             self.data = multicall()
             self._available = True
-        except Exception as e:
+        except:
             _LOGGER.error("Connection to rtorrent lost")
             self._available = False
             return
