@@ -184,8 +184,8 @@ async def async_setup(hass, config):
                 # created will thus be ignored.
                 hass.data[DATA_ENTITY_LOOKUP][event_type][
                     event_id].append(TMP_ENTITY.format(event_id))
-                hass.async_run_job(
-                    hass.data[DATA_DEVICE_REGISTER][event_type], event)
+                hass.async_create_task(
+                    hass.data[DATA_DEVICE_REGISTER][event_type](event))
             else:
                 _LOGGER.debug('device_id not known and automatic add disabled')
 
