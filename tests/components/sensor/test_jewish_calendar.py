@@ -168,3 +168,27 @@ class TestJewishCalenderSensor(unittest.TestCase):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
             assert sensor.state == "פרשת לך לך"
+
+    def test_jewish_calendar_sensor_date_before_sunset(self):
+        """Test the sensor showing the correct date before sunset."""
+        test_time = dt(2018, 10, 14, 17, 0, 0)
+        sensor = JewishCalSensor(
+            name='test', language='hebrew', sensor_type='date',
+            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
+            timezone="Asia/Jerusalem", diaspora=False)
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop).result()
+            self.assertEqual(sensor.state, "ה\' חשון תשע\"ט")
+
+    def test_jewish_calendar_sensor_date_after_sunset(self):
+        """Test the sensor showing the correct date after sunset."""
+        test_time = dt(2018, 10, 14, 19, 0, 0)
+        sensor = JewishCalSensor(
+            name='test', language='hebrew', sensor_type='date',
+            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
+            timezone="Asia/Jerusalem", diaspora=False)
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop).result()
+            self.assertEqual(sensor.state, "ו\' חשון תשע\"ט")
