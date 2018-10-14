@@ -64,6 +64,32 @@ CLIENT_4 = {
     'wired-rx_bytes': 1234000000,
     'wired-tx_bytes': 5678000000
 }
+POE_SWITCH_CLIENTS = [
+    {
+        'hostname': 'client_1',
+        'ip': '10.0.0.1',
+        'is_wired': True,
+        'mac': '00:00:00:00:00:01',
+        'name': 'POE Client 1',
+        'oui': 'Producer',
+        'sw_mac': '00:00:00:00:01:01',
+        'sw_port': 1,
+        'wired-rx_bytes': 1234000000,
+        'wired-tx_bytes': 5678000000
+    },
+    {
+        'hostname': 'client_2',
+        'ip': '10.0.0.2',
+        'is_wired': True,
+        'mac': '00:00:00:00:00:02',
+        'name': 'POE Client 2',
+        'oui': 'Producer',
+        'sw_mac': '00:00:00:00:01:01',
+        'sw_port': 1,
+        'wired-rx_bytes': 1234000000,
+        'wired-tx_bytes': 5678000000
+    }
+]
 
 DEVICE_1 = {
     'device_id': 'mock-id',
@@ -298,3 +324,22 @@ async def test_failed_update_unreachable_controller(hass, mock_controller):
     assert len(hass.states.async_all()) == 3
 
     assert mock_controller.available is False
+
+
+async def test_ignore_multiple_poe_clients_on_same_port(hass, mock_controller):
+    """Ignore when there are multiple POE driven clients on same port.
+
+    If there is a non-UniFi switch powered by POE,
+    clients will be transparently marked as having POE as well.
+    """
+    mock_controller.mock_client_responses.append(POE_SWITCH_CLIENTS)
+    mock_controller.mock_device_responses.append([DEVICE_1])
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 2
+    # 1 All Lights group, 2 lights
+    assert len(hass.states.async_all()) == 0
+
+    switch_1 = hass.states.get('switch.client_1')
+    switch_2 = hass.states.get('switch.client_2')
+    assert switch_1 is None
+    assert switch_2 is None

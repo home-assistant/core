@@ -126,9 +126,22 @@ async def async_update_items(controller, async_add_entities,
             continue
 
         client = controller.api.clients[client_id]
+        # Network device with active POE
         if not client.is_wired or client.sw_mac not in devices or \
            not devices[client.sw_mac].ports[client.sw_port].port_poe or \
            not devices[client.sw_mac].ports[client.sw_port].poe_enable:
+            continue
+
+        # Multiple POE-devices on same port means non UniFi POE driven switch
+        multi_clients_on_port = False
+        for client2 in controller.api.clients.values():
+            if client.mac != client2.mac and \
+               client.sw_mac == client2.sw_mac and \
+               client.sw_port == client2.sw_port:
+                multi_clients_on_port = True
+                break
+
+        if multi_clients_on_port:
             continue
 
         switches[client_id] = UniFiSwitch(
