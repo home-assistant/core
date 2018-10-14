@@ -731,6 +731,7 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
             'target_temp': 25,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
+            'min_cycle_duration': datetime.timedelta(minutes=15),
             'keep_alive': datetime.timedelta(minutes=10)
         }})
 
@@ -821,6 +822,7 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
             'target_temp': 25,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
+            'min_cycle_duration': datetime.timedelta(minutes=15),
             'keep_alive': datetime.timedelta(minutes=10)
         }})
 
