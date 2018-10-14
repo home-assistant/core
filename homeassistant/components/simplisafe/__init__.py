@@ -23,7 +23,7 @@ from homeassistant.helpers import config_validation as cv
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
 
-REQUIREMENTS = ['simplisafe-python==3.1.7']
+REQUIREMENTS = ['simplisafe-python==3.1.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,10 +95,6 @@ async def async_setup_entry(hass, config_entry):
         simplisafe = await API.login_via_token(
             config_entry.data[CONF_TOKEN], websession)
     except SimplipyError as err:
-        if 403 in str(err):
-            _LOGGER.error('Invalid credentials provided')
-            return False
-
         _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
 
