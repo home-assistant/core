@@ -112,10 +112,12 @@ class RflinkSensor(RflinkDevice):
         """Register update callback."""
         self.hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_SENSOR][self._device_id].append(self.entity_id)
+        _LOGGER.debug("sensor device %s registered", self._device_id)
         if self._aliases:
             for _id in self._aliases:
                 self.hass.data[DATA_ENTITY_LOOKUP][
-                    EVENT_KEY_SENSOR][self._device_id].append(self.entity_id)
+                    EVENT_KEY_SENSOR][self._id].append(self.entity_id)
+                _LOGGER.debug("sensor alias %s registered", _id)
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
                                  self._availability_callback)
         async_dispatcher_connect(self.hass, SIGNAL_HANDLE_EVENT,
