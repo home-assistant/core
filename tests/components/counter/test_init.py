@@ -311,4 +311,3 @@ async def test_counter_max(hass):
     assert state2 is not None
     assert state.state != state2.state
     assert state2.state == '-1'
-
