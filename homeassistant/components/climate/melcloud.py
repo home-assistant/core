@@ -13,7 +13,8 @@ import requests
 from homeassistant.components.climate import (
     SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE, TEMP_CELSIUS, CONF_PASSWORD, CONF_EMAIL)
 
 _LOGGER = logging.getLogger(__name__)
 
