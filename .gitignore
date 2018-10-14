@@ -79,6 +79,9 @@ venv
 Pipfile*
 share/*
 
+# Windows venv
+Scripts/
+
 # vimmy stuff
 *.swp
 *.swo
