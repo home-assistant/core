@@ -246,7 +246,7 @@ async def test_counter_context(hass, hass_admin_user):
 
 
 async def test_counter_min(hass):
-    """Test that min works"""
+    """Test that min works."""
     assert await async_setup_component(hass, 'counter', {
         'counter': {
             'test': {
@@ -279,7 +279,7 @@ async def test_counter_min(hass):
 
 
 async def test_counter_max(hass):
-    """Test that counter context works."""
+    """Test that max works."""
     assert await async_setup_component(hass, 'counter', {
         'counter': {
             'test': {

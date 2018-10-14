@@ -40,8 +40,10 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
                 cv.positive_int,
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_MAXIMUM, default=None): vol.Any(None, int),
-            vol.Optional(CONF_MINIMUM, default=None): vol.Any(None, int),
+            vol.Optional(CONF_MAXIMUM, default=None):
+                vol.Any(None, vol.Coerce(int)),
+            vol.Optional(CONF_MINIMUM, default=None):
+                vol.Any(None, vol.Coerce(int)),
             vol.Optional(CONF_RESTORE, default=True): cv.boolean,
             vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
         }, None)
@@ -136,7 +138,7 @@ class Counter(RestoreEntity):
         return ret
 
     def __check_boundaries(self):
-        "Check if in range of min/max values"
+        """Check if in range of min/max values."""
         if self._min is not None:
             self._state = max(self._min, self._state)
         if self._max is not None:
