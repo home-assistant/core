@@ -185,7 +185,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._playback_support = self.receiver.get_playback_support()
         self._is_playback_supported = self.receiver.is_playback_supported(
             self._current_source)
-        if self._zone == "Main_Zone":
+        if self.receiver.surround_programs():
             self._sound_mode = self.receiver.surround_program
             self._sound_mode_list = self.receiver.surround_programs()
         else:
