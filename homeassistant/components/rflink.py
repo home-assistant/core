@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -68,7 +68,9 @@ DOMAIN = 'rflink'
 SERVICE_SEND_COMMAND = 'send_command'
 
 SIGNAL_AVAILABILITY = 'rflink_device_available'
-SIGNAL_HANDLE_EVENT = 'rflink_handle_event'
+SIGNAL_HANDLE_EVENT = 'rflink_handle_event_{}'
+
+TMP_ENTITY = 'tmp.{}'
 
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -154,26 +156,34 @@ async def async_setup(hass, config):
             return
 
         # Lookup entities who registered this device id as device id or alias
-        event_id = event.get('id', None)
+        event_id = event.get(EVENT_KEY_ID, None)
 
         is_group_event = (event_type == EVENT_KEY_COMMAND and
                           event[EVENT_KEY_COMMAND] in RFLINK_GROUP_COMMANDS)
         if is_group_event:
-            entities = hass.data[DATA_ENTITY_GROUP_LOOKUP][event_type].get(
+            entity_ids = hass.data[DATA_ENTITY_GROUP_LOOKUP][event_type].get(
                 event_id, [])
         else:
-            entities = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
+            entity_ids = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
 
-        if entities:
+        _LOGGER.debug('entity_ids: %s', entity_ids)
+        if entity_ids:
             # Propagate event to every entity matching the device id
-            for entity in entities:
+            for entity in entity_ids:
                 _LOGGER.debug('passing event to %s', entity)
-                async_dispatcher_send(hass, SIGNAL_HANDLE_EVENT, entity, event)
-        else:
+                async_dispatcher_send(hass,
+                                      SIGNAL_HANDLE_EVENT.format(entity),
+                                      event)
+        elif not is_group_event:
             # If device is not yet known, register with platform (if loaded)
             if event_type in hass.data[DATA_DEVICE_REGISTER]:
                 _LOGGER.debug('device_id not known, adding new device')
-                # TODO: Is there a race condition here if we get another event before async_run_job is done?
+                # Add bogus event_id first to avoid race if we get another
+                # event before the device is created
+                # Any additional events recevied before the device has been
+                # created will thus be ignored.
+                hass.data[DATA_ENTITY_LOOKUP][event_type][
+                    event_id].append(TMP_ENTITY.format(event_id))
                 hass.async_run_job(
                     hass.data[DATA_DEVICE_REGISTER][event_type], event)
             else:
@@ -256,16 +266,16 @@ class RflinkDevice(Entity):
     """
 
     platform = None
-    _state = STATE_UNKNOWN
+    _state = None
     _available = True
 
-    def __init__(self, device_id, hass, name=None, aliases=None, group=True,
-                 group_aliases=None, nogroup_aliases=None, fire_event=False,
+    def __init__(self, initial_event, device_id, name=None, aliases=None,
+                 group=True, group_aliases=None, nogroup_aliases=None,
+                 fire_event=False,
                  signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
         """Initialize the device."""
-        self.hass = hass
-
         # Rflink specific attributes for every component type
+        self._initial_event = initial_event
         self._device_id = device_id
         if name:
             self._name = name
@@ -280,13 +290,8 @@ class RflinkDevice(Entity):
         self._signal_repetitions = signal_repetitions
 
     @callback
-    def handle_event_callback(self, entity_id, event):
+    def handle_event_callback(self, event):
         """Handle incoming event for device type."""
-        # Make sure event is for this entity
-        # TODO: Can this be avoided, e.g. with device-unique signal?
-        if entity_id != self.entity_id:
-            return
-
         # Call platform specific event handler
         self._handle_event(event)
 
@@ -327,7 +332,7 @@ class RflinkDevice(Entity):
     @property
     def assumed_state(self):
         """Assume device state until first device event sets state."""
-        return self._state is STATE_UNKNOWN
+        return self._state is None
 
     @property
     def available(self):
@@ -340,13 +345,16 @@ class RflinkDevice(Entity):
         self._available = availability
         self.async_schedule_update_ha_state()
 
-    @callback
-    def _update_callback(self, dev_id):
-        """Call update method."""
-        self.async_schedule_update_ha_state(True)
-
     async def async_added_to_hass(self):
         """Register update callback."""
+        # Remove temporary bogus entity_id if added
+        tmp_entity = TMP_ENTITY.format(self._device_id)
+        if tmp_entity in self.hass.data[DATA_ENTITY_LOOKUP][
+                EVENT_KEY_SENSOR][self._device_id]:
+            self.hass.data[DATA_ENTITY_LOOKUP][
+                EVENT_KEY_SENSOR][self._device_id].remove(tmp_entity)
+
+        # Register id and aliases
         self.hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][self._device_id].append(self.entity_id)
         if self._group:
@@ -371,8 +379,15 @@ class RflinkDevice(Entity):
                     EVENT_KEY_COMMAND][_id].append(self.entity_id)
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
                                  self._availability_callback)
-        async_dispatcher_connect(self.hass, SIGNAL_HANDLE_EVENT,
+        async_dispatcher_connect(self.hass,
+                                 SIGNAL_HANDLE_EVENT.format(self.entity_id),
                                  self.handle_event_callback)
+
+        # Send signal to process the initial event after entity is created
+        if self._initial_event:
+            async_dispatcher_send(self.hass,
+                                  SIGNAL_HANDLE_EVENT.format(self.entity_id),
+                                  self._initial_event)
 
 
 class RflinkCommand(RflinkDevice):
@@ -430,7 +445,7 @@ class RflinkCommand(RflinkDevice):
             cmd = 'on'
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
-            self._state = self._state in [STATE_UNKNOWN, False]
+            self._state = self._state in [None, False]
 
         # Cover options for RFlink
         elif command == 'close_cover':
