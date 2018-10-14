@@ -250,7 +250,7 @@ async def test_counter_min(hass):
     assert await async_setup_component(hass, 'counter', {
         'counter': {
             'test': {
-                'min': '0',
+                'minimum': '0',
                 'initial': '0'
             }
         }
@@ -284,7 +284,7 @@ async def test_counter_max(hass):
     assert await async_setup_component(hass, 'counter', {
         'counter': {
             'test': {
-                'max': '0',
+                'maximum': '0',
                 'initial': '0'
             }
         }
