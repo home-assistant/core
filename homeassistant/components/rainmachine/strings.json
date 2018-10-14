@@ -1,0 +1,20 @@
+{
+  "config": {
+    "title": "RainMacjine",
+    "step": {
+      "user": {
+        "title": "Fill in your information",
+        "data": {
+          "ip_address": "Hostname or IP Address",
+          "password": "Password",
+          "port": "Port",
+          "ssl": "Use SSL"
+        }
+      }
+    },
+    "error": {
+      "identifier_exists": "Account already registered",
+      "invalid_credentials": "Invalid credentials"
+    }
+  }
+}
