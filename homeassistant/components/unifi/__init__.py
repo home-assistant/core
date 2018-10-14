@@ -82,7 +82,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize the UniFi flow."""
-        pass
+        self.config = None
+        self.desc = None
+        self.sites = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -91,52 +93,25 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
 
             try:
-                for entry in self._async_current_entries():
-                    controller = entry.data[CONF_CONTROLLER]
-                    if controller[CONF_HOST] == user_input[CONF_HOST] and \
-                       controller[CONF_SITE_ID] == user_input[CONF_SITE_ID]:
-                        raise AlreadyConfigured
-
-                controller_data = {
+                self.config = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                     CONF_PORT: user_input.get(CONF_PORT),
-                    CONF_SITE_ID: user_input.get(CONF_SITE_ID),
                     CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
+                    CONF_SITE_ID: DEFAULT_SITE_ID,
                 }
-                controller = await get_controller(self.hass, **controller_data)
+                controller = await get_controller(self.hass, **self.config)
 
-                sites = await controller.sites()
-                name = controller_data[CONF_SITE_ID]
-                for site in sites.values():
-                    if name == site['name']:
-                        if site['role'] != 'admin':
-                            raise UserLevel
-                        name = site['desc']
-                        break
+                self.sites = await controller.sites()
 
-                data = {
-                    CONF_CONTROLLER: controller_data,
-                    CONF_POE_CONTROL: True
-                }
-
-                return self.async_create_entry(
-                    title=name,
-                    data=data
-                )
-
-            except AlreadyConfigured:
-                errors['base'] = 'already_configured'
+                return await self.async_step_site()
 
             except AuthenticationRequired:
                 errors['base'] = 'faulty_credentials'
 
             except CannotConnect:
                 errors['base'] = 'service_unavailable'
-
-            except UserLevel:
-                errors['base'] = 'user_privilege'
 
             except Exception:  # pylint: disable=broad-except
                 LOGGER.error(
@@ -151,9 +126,61 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                vol.Optional(CONF_SITE_ID, default=DEFAULT_SITE_ID): str,
                 vol.Optional(
                     CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+            }),
+            errors=errors,
+        )
+
+    async def async_step_site(self, user_input=None):
+        """Select site to control."""
+        errors = {}
+
+        if user_input is not None:
+
+            try:
+                desc = user_input.get(CONF_SITE_ID, self.desc)
+                for site in self.sites.values():
+                    if desc == site['desc']:
+                        if site['role'] != 'admin':
+                            raise UserLevel
+                        self.config[CONF_SITE_ID] = site['name']
+                        break
+
+                for entry in self._async_current_entries():
+                    controller = entry.data[CONF_CONTROLLER]
+                    if controller[CONF_HOST] == self.config[CONF_HOST] and \
+                       controller[CONF_SITE_ID] == self.config[CONF_SITE_ID]:
+                        raise AlreadyConfigured
+
+                data = {
+                    CONF_CONTROLLER: self.config,
+                    CONF_POE_CONTROL: True
+                }
+
+                return self.async_create_entry(
+                    title=desc,
+                    data=data
+                )
+
+            except AlreadyConfigured:
+                return self.async_abort(reason='already_configured')
+
+            except UserLevel:
+                return self.async_abort(reason='user_privilege')
+
+        if len(self.sites) == 1:
+            self.desc = next(iter(self.sites.values()))['desc']
+            return await self.async_step_site(user_input={})
+
+        sites = []
+        for site in self.sites.values():
+            sites.append(site['desc'])
+
+        return self.async_show_form(
+            step_id='site',
+            data_schema=vol.Schema({
+                vol.Required(CONF_SITE_ID): vol.In(sites)
             }),
             errors=errors,
         )

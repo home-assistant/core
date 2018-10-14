@@ -153,17 +153,18 @@ async def test_flow_works(hass, aioclient_mock):
         mock_controller.side_effect = mock_constructor
         mock_controller.login.return_value = mock_coro()
         mock_controller.sites.return_value = mock_coro({
-            'site1': {'name': 'site', 'role': 'admin', 'desc': 'site name'}
+            'site1': {'name': 'default', 'role': 'admin', 'desc': 'site name'}
         })
 
-        result = await flow.async_step_user(user_input={
+        await flow.async_step_user(user_input={
             unifi.CONF_HOST: '1.2.3.4',
             unifi.CONF_USERNAME: 'username',
             unifi.CONF_PASSWORD: 'password',
             unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
             unifi.CONF_VERIFY_SSL: True
         })
+
+        result = await flow.async_step_site(user_input={})
 
     assert mock_controller.host == '1.2.3.4'
     assert len(mock_controller.login.mock_calls) == 1
@@ -177,14 +178,42 @@ async def test_flow_works(hass, aioclient_mock):
             unifi.CONF_USERNAME: 'username',
             unifi.CONF_PASSWORD: 'password',
             unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
+            unifi.CONF_SITE_ID: 'default',
             unifi.CONF_VERIFY_SSL: True
         },
         unifi.CONF_POE_CONTROL: True
     }
 
 
-async def test_controller_site_already_configured(hass, aioclient_mock):
+async def test_controller_multiple_sites(hass):
+    """Test config flow."""
+    flow = unifi.UnifiFlowHandler()
+    flow.hass = hass
+
+    flow.config = {
+        unifi.CONF_HOST: '1.2.3.4',
+        unifi.CONF_USERNAME: 'username',
+        unifi.CONF_PASSWORD: 'password',
+    }
+    flow.sites = {
+        'site1': {
+            'name': 'default', 'role': 'admin', 'desc': 'site name'
+        },
+        'site2': {
+            'name': 'site2', 'role': 'admin', 'desc': 'site2 name'
+        }
+    }
+
+    result = await flow.async_step_site()
+
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'site'
+
+    assert result['data_schema']({'site': 'site name'})
+    assert result['data_schema']({'site': 'site2 name'})
+
+
+async def test_controller_site_already_configured(hass):
     """Test config flow."""
     flow = unifi.UnifiFlowHandler()
     flow.hass = hass
@@ -197,15 +226,21 @@ async def test_controller_site_already_configured(hass, aioclient_mock):
     })
     entry.add_to_hass(hass)
 
-    result = await flow.async_step_user(user_input={
+    flow.config = {
         unifi.CONF_HOST: '1.2.3.4',
         unifi.CONF_USERNAME: 'username',
         unifi.CONF_PASSWORD: 'password',
-        unifi.CONF_SITE_ID: 'default',
-    })
+    }
+    flow.desc = 'site name'
+    flow.sites = {
+        'site1': {
+            'name': 'default', 'role': 'admin', 'desc': 'site name'
+        }
+    }
 
-    assert result['type'] == 'form'
-    assert result['errors'] == {'base': 'already_configured'}
+    result = await flow.async_step_site()
+
+    assert result['type'] == 'abort'
 
 
 async def test_user_permissions_low(hass, aioclient_mock):
@@ -226,20 +261,21 @@ async def test_user_permissions_low(hass, aioclient_mock):
         mock_controller.side_effect = mock_constructor
         mock_controller.login.return_value = mock_coro()
         mock_controller.sites.return_value = mock_coro({
-            'site1': {'name': 'site', 'role': 'viewer'}
+            'site1': {'name': 'default', 'role': 'viewer', 'desc': 'site name'}
         })
 
-        result = await flow.async_step_user(user_input={
+        await flow.async_step_user(user_input={
             unifi.CONF_HOST: '1.2.3.4',
             unifi.CONF_USERNAME: 'username',
             unifi.CONF_PASSWORD: 'password',
             unifi.CONF_PORT: 1234,
-            unifi.CONF_SITE_ID: 'site',
             unifi.CONF_VERIFY_SSL: True
         })
 
-    assert result['type'] == 'form'
-    assert result['errors'] == {'base': 'user_privilege'}
+        result = await flow.async_step_site(user_input={})
+
+
+    assert result['type'] == 'abort'
 
 
 async def test_user_credentials_faulty(hass, aioclient_mock):
