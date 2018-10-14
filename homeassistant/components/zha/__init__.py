@@ -30,12 +30,18 @@ REQUIREMENTS = [
     'zigpy-xbee==0.1.1',
 ]
 
+DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
+    vol.Optional(ha_const.CONF_TYPE): cv.string,
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_RADIO_TYPE, default='ezsp'): cv.enum(RadioType),
         CONF_USB_PATH: cv.string,
         vol.Optional(CONF_BAUDRATE, default=57600): cv.positive_int,
         CONF_DATABASE: cv.string,
+        vol.Optional(CONF_DEVICE_CONFIG, default={}):
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -241,6 +247,10 @@ class ApplicationListener:
                     profile_clusters = profile.CLUSTERS[endpoint.device_type]
                     profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
                     component = profile_info[endpoint.device_type]
+            
+            if ha_const.CONF_TYPE in node_config:
+                component = node_config[ha_const.CONF_TYPE]
+                profile_clusters = zha_const.COMPONENT_CLUSTERS[component]
 
             if component:
                 in_clusters = [endpoint.in_clusters[c]
