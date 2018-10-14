@@ -606,6 +606,38 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
+    def test_mode_change_ac_trigger_off_not_long_enough(self):
+        """Test if mode change turns ac off despite minimum cycle."""
+        self._setup_switch(True)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        self._setup_sensor(25)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+        climate.set_operation_mode(self.hass, climate.STATE_OFF)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('homeassistant', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_mode_change_ac_trigger_on_not_long_enough(self):
+        """Test if mode change turns ac on despite minimum cycle."""
+        self._setup_switch(False)
+        climate.set_temperature(self.hass, 25)
+        self.hass.block_till_done()
+        self._setup_sensor(30)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+        climate.set_operation_mode(self.hass, climate.STATE_HEAT)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('homeassistant', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
     def _setup_sensor(self, temp):
         """Set up the test sensor."""
         self.hass.states.set(ENT_SENSOR, temp)
@@ -695,6 +727,38 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         call = self.calls[0]
         self.assertEqual('homeassistant', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_mode_change_heater_trigger_off_not_long_enough(self):
+        """Test if mode change turns heater off despite minimum cycle."""
+        self._setup_switch(True)
+        climate.set_temperature(self.hass, 25)
+        self.hass.block_till_done()
+        self._setup_sensor(30)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+        climate.set_operation_mode(self.hass, climate.STATE_OFF)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('homeassistant', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_mode_change_heater_trigger_on_not_long_enough(self):
+        """Test if mode change turns heater on despite minimum cycle."""
+        self._setup_switch(False)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        self._setup_sensor(25)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+        climate.set_operation_mode(self.hass, climate.STATE_HEAT)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('homeassistant', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
     def _setup_sensor(self, temp):
