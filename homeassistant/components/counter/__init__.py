@@ -67,7 +67,8 @@ async def async_setup(hass, config):
         minimum = cfg.get(CONF_MINIMUM)
         maximum = cfg.get(CONF_MAXIMUM)
 
-        entities.append(Counter(object_id, name, initial, minimum, maximum, restore, step, icon))
+        entities.append(Counter(object_id, name, initial, minimum, maximum,
+                                restore, step, icon))
 
     if not entities:
         return False
