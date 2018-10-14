@@ -244,13 +244,14 @@ async def test_counter_context(hass, hass_admin_user):
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
 
+
 async def test_counter_min(hass):
     """Test that min works"""
     assert await async_setup_component(hass, 'counter', {
         'counter': {
             'test': {
-                'min' : '0',
-                'initial' : '0'
+                'min': '0',
+                'initial': '0'
             }
         }
     })
@@ -277,13 +278,14 @@ async def test_counter_min(hass):
     assert state.state != state2.state
     assert state2.state == '1'
 
+
 async def test_counter_max(hass):
     """Test that counter context works."""
     assert await async_setup_component(hass, 'counter', {
         'counter': {
             'test': {
-                'max' : '0',
-                'initial' : '0'
+                'max': '0',
+                'initial': '0'
             }
         }
     })

@@ -3,7 +3,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, CONF_MAXIMUM, CONF_MINIMUM
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME,\
+    CONF_MAXIMUM, CONF_MINIMUM
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -88,7 +89,8 @@ async def async_setup(hass, config):
 class Counter(RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, object_id, name, initial, min, max, restore, step, icon):
+    def __init__(self, object_id, name, initial, min, max,
+                 restore, step, icon):
         """Initialize a counter."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
