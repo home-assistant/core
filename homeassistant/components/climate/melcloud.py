@@ -1,17 +1,10 @@
 """
 Support for MelCloud climates.
 
-Example configuration:
-
-climate:
-  - platform: melcloud
-    email: my@email.com
-    password: MYPASSWORD
-    lease_time: 60
-
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/melcloud/
+https://home-assistant.io/components/climate.melcloud/
 """
+
 
 import logging
 import time
@@ -25,8 +18,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'melcloud'
-REQUIREMENTS = ['requests']
-DEPENDENCIES = []
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_FAN_MODE |
