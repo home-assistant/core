@@ -6,7 +6,6 @@ https://home-assistant.io/components/rflink/
 """
 import asyncio
 from collections import defaultdict
-import functools as ft
 import logging
 import async_timeout
 
@@ -205,7 +204,7 @@ async def async_setup(hass, config):
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
             _LOGGER.warning('disconnected from Rflink, reconnecting')
-            hass.async_add_job(connect)
+            hass.async_create_task(connect())
 
     async def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
@@ -255,7 +254,7 @@ async def async_setup(hass, config):
 
         _LOGGER.info('Connected to Rflink')
 
-    hass.async_add_job(connect)
+    hass.async_create_task(connect())
     return True
 
 
@@ -301,7 +300,7 @@ class RflinkDevice(Entity):
         # Put command onto bus for user to subscribe to
         if self._should_fire_event and identify_event_type(
                 event) == EVENT_KEY_COMMAND:
-            self.hass.bus.fire(EVENT_BUTTON_PRESSED, {
+            self.hass.bus.async_fire(EVENT_BUTTON_PRESSED, {
                 ATTR_ENTITY_ID: self.entity_id,
                 ATTR_STATE: event[EVENT_KEY_COMMAND],
             })
@@ -494,8 +493,8 @@ class RflinkCommand(RflinkDevice):
             # Rflink protocol/transport handles asynchronous writing of buffer
             # to serial/tcp device. Does not wait for command send
             # confirmation.
-            self.hass.async_add_job(ft.partial(
-                self._protocol.send_command, self._device_id, cmd))
+            self.hass.async_create_task(self._protocol.send_command(
+                self._device_id, cmd))
 
         if repetitions > 1:
             self._repetition_task = self.hass.async_create_task(
