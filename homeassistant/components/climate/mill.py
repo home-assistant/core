@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_ON_OFF)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_EMAIL, CONF_PASSWORD,
+    ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME,
     STATE_ON, STATE_OFF, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,7 +27,7 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_FAN_MODE | SUPPORT_ON_OFF)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
 })
 
@@ -36,7 +36,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Mill heater."""
     from mill import Mill
-    mill_data_connection = Mill(config[CONF_EMAIL],
+    mill_data_connection = Mill(config[CONF_USERNAME],
                                 config[CONF_PASSWORD],
                                 websession=async_get_clientsession(hass))
     if not await mill_data_connection.connect():
@@ -47,11 +47,11 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     dev = []
     for heater in mill_data_connection.heaters.values():
-        dev.append(MilHeater(heater, mill_data_connection))
+        dev.append(MillHeater(heater, mill_data_connection))
     async_add_entities(dev)
 
 
-class MilHeater(ClimateDevice):
+class MillHeater(ClimateDevice):
     """Representation of a Mill Thermostat device."""
 
     def __init__(self, heater, mill_data_connection):
@@ -68,11 +68,6 @@ class MilHeater(ClimateDevice):
     def available(self):
         """Return True if entity is available."""
         return self._heater.device_status == 0  # weird api choice
-
-    @property
-    def state(self):
-        """Return the current state."""
-        return STATE_ON if self._heater.power_status == 1 else STATE_OFF
 
     @property
     def unique_id(self):
@@ -117,7 +112,7 @@ class MilHeater(ClimateDevice):
     @property
     def is_on(self):
         """Return true if heater is on."""
-        return True if self._heater.power_status == 1 else False
+        return self._heater.power_status == 1
 
     @property
     def min_temp(self):
