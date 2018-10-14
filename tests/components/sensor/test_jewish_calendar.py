@@ -155,3 +155,15 @@ class TestJewishCalenderSensor(unittest.TestCase):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
             self.assertEqual(sensor.state, time(19, 21))
+
+    def test_jewish_calendar_sensor_torah_reading_weekday(self):
+        """Test the sensor showing torah reading also on weekdays."""
+        test_time = dt(2018, 10, 14)
+        sensor = JewishCalSensor(
+            name='test', language='hebrew', sensor_type='weekly_portion',
+            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
+            timezone="Asia/Jerusalem", diaspora=False)
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop).result()
+            self.assertEqual(sensor.state, "פרשת לך לך")
