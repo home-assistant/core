@@ -84,7 +84,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         )
 
     async def _set_up_redirect(self, user_input=None):
-        from monzo import MonzoOAuth2Client
+        from monzo.auth import MonzoOAuth2Client
 
         if user_input is not None:
             client_id = user_input.get(CONF_CLIENT_ID)
@@ -121,19 +121,8 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         if None in (client_id, client_secret):
             return await self.async_step_init(info)
 
-        # Check if a file to import from exists.
-        # If file is empty or missing, start auth process.
-        config_path = info['monzo_conf_path']
+        return await self._set_up_redirect(info)
 
-        if not await self.hass.async_add_job(os.path.isfile, config_path):
-            return await self._set_up_redirect(info)
-
-        tokens = await self.hass.async_add_job(load_json, config_path)
-        if not tokens:
-            return await self._set_up_redirect(info)
-
-        return self._entry_from_tokens(
-            'Monzo (import from configuration.yaml)', tokens)
 
     @callback
     def _entry_from_tokens(self, title, tokens):
