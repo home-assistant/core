@@ -46,8 +46,8 @@ DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SIGNAL_DELETE_ENTITY = 'nsw_rural_fire_service_feed_delete'
-SIGNAL_UPDATE_ENTITY = 'nsw_rural_fire_service_feed_update'
+SIGNAL_DELETE_ENTITY = 'nsw_rural_fire_service_feed_delete_{}'
+SIGNAL_UPDATE_ENTITY = 'nsw_rural_fire_service_feed_update_{}'
 
 SOURCE = 'nsw_rural_fire_service_feed'
 
@@ -93,7 +93,7 @@ class NswRuralFireServiceFeedManager:
                                              filter_categories=categories)
         self._add_entities = add_entities
         self._scan_interval = scan_interval
-        self._feed_entries = {}
+        self.feed_entries = {}
         self._managed_external_ids = set()
 
     def startup(self):
@@ -113,11 +113,10 @@ class NswRuralFireServiceFeedManager:
         if status == geojson_client.UPDATE_OK:
             _LOGGER.debug("Data retrieved %s", feed_entries)
             # Keep a copy of all feed entries for future lookups by entities.
-            self._feed_entries = {entry.external_id: entry
-                                  for entry in feed_entries}
-            # For entity management the external ids from the feed are used.
-            feed_external_ids = {entry.external_id
+            self.feed_entries = {entry.external_id: entry
                                  for entry in feed_entries}
+            # For entity management the external ids from the feed are used.
+            feed_external_ids = set(self.feed_entries)
             remove_external_ids = self._managed_external_ids.difference(
                 feed_external_ids)
             self._remove_entities(remove_external_ids)
@@ -151,18 +150,16 @@ class NswRuralFireServiceFeedManager:
         """Update entities."""
         for external_id in external_ids:
             _LOGGER.debug("Existing entity found %s", external_id)
-            dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY, external_id)
+            dispatcher_send(self._hass,
+                            SIGNAL_UPDATE_ENTITY.format(external_id))
 
     def _remove_entities(self, external_ids):
         """Remove entities."""
         for external_id in external_ids:
             _LOGGER.debug("Entity not current anymore %s", external_id)
             self._managed_external_ids.remove(external_id)
-            dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY, external_id)
-
-    def get_feed_entry(self, external_id):
-        """Return a feed entry identified by external id."""
-        return self._feed_entries.get(external_id)
+            dispatcher_send(self._hass,
+                            SIGNAL_DELETE_ENTITY.format(external_id))
 
 
 class NswRuralFireServiceLocationEvent(GeoLocationEvent):
@@ -190,23 +187,21 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         async_dispatcher_connect(
-            self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
+            self.hass, SIGNAL_DELETE_ENTITY.format(self._external_id),
+            self._delete_callback)
         async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
+            self.hass, SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            self._update_callback)
 
     @callback
-    def _delete_callback(self, external_id):
+    def _delete_callback(self):
         """Remove this entity."""
-        if external_id == self._external_id:
-            _LOGGER.debug("Scheduling deletion of %s", external_id)
-            self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove())
 
     @callback
-    def _update_callback(self, external_id):
+    def _update_callback(self):
         """Call update method."""
-        if external_id == self._external_id:
-            _LOGGER.debug("Scheduling update of %s", self._external_id)
-            self.async_schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
 
     @property
     def should_poll(self):
@@ -216,7 +211,7 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
     async def async_update(self):
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._external_id)
-        feed_entry = self._feed_manager.get_feed_entry(self._external_id)
+        feed_entry = self._feed_manager.feed_entries.get(self._external_id)
         if feed_entry:
             self._update_from_feed(feed_entry)
 
