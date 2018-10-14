@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         rtorrent = xmlrpc.client.ServerProxy(url)
-    except ConnectionRefusedError:
+    except (xmlrpc.client.ProtocolError, ConnectionRefusedError):
         _LOGGER.error("Connection to rtorrent daemon failed")
         raise PlatformNotReady
     dev = []
@@ -92,7 +92,7 @@ class RTorrentSensor(Entity):
         try:
             self.data = multicall()
             self._available = True
-        except:
+        except (xmlrpc.client.ProtocolError, ConnectionRefusedError):
             _LOGGER.error("Connection to rtorrent lost")
             self._available = False
             return
