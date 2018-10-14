@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sigfox sensor."""
     api_login = config[CONF_API_LOGIN]
     api_password = config[CONF_API_PASSWORD]
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for device in devices:
         sensors.append(SigfoxDevice(device, auth, name))
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 def epoch_to_datetime(epoch_time):
@@ -55,7 +55,7 @@ def epoch_to_datetime(epoch_time):
     return datetime.datetime.fromtimestamp(epoch_time).isoformat()
 
 
-class SigfoxAPI(object):
+class SigfoxAPI:
     """Class for interacting with the SigFox API."""
 
     def __init__(self, api_login, api_password):
@@ -66,7 +66,7 @@ class SigfoxAPI(object):
             self._devices = self.get_devices(device_types)
 
     def check_credentials(self):
-        """"Check API credentials are valid."""
+        """Check API credentials are valid."""
         url = urljoin(API_URL, 'devicetypes')
         response = requests.get(url, auth=self._auth, timeout=10)
         if response.status_code != 200:
@@ -77,7 +77,7 @@ class SigfoxAPI(object):
                 _LOGGER.error(
                     "Unable to login to Sigfox API, error code %s", str(
                         response.status_code))
-            raise ValueError('Sigfox component not setup')
+            raise ValueError('Sigfox component not set up')
         return True
 
     def get_device_types(self):

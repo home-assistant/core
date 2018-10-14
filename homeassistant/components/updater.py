@@ -4,9 +4,9 @@ Support to check for available updates.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/updater/
 """
-# pylint: disable=no-name-in-module, import-error
 import asyncio
 from datetime import timedelta
+# pylint: disable=import-error,no-name-in-module
 from distutils.version import StrictVersion
 import json
 import logging
@@ -25,7 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['distro==1.2.0']
+REQUIREMENTS = ['distro==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ async def async_setup(hass, config):
     """Set up the updater component."""
     if 'dev' in current_version:
         # This component only makes sense in release versions
-        _LOGGER.warning("Running on 'dev', only analytics will be submitted")
+        _LOGGER.info("Running on 'dev', only analytics will be submitted")
 
     config = config.get(DOMAIN, {})
     if config.get(CONF_REPORTING):

@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 alarm control panel platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     url = 'http://{}:{}'.format(host, port)
 
     try:
-        add_devices([Concord232Alarm(hass, url, name)])
+        add_entities([Concord232Alarm(hass, url, name)])
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
         return
@@ -80,7 +80,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return the characters if code is defined."""
-        return '[0-9]{4}([0-9]{2})?'
+        return 'Number'
 
     @property
     def state(self):

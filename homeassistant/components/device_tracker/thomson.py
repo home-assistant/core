@@ -33,7 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return a THOMSON scanner."""
     scanner = ThomsonDeviceScanner(config[DOMAIN])

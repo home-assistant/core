@@ -21,7 +21,7 @@ class TestNX584SensorSetup(unittest.TestCase):
     """Test the NX584 sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self._mock_client = mock.patch.object(nx584_client, 'Client')
         self._mock_client.start()
@@ -45,17 +45,17 @@ class TestNX584SensorSetup(unittest.TestCase):
     @mock.patch('homeassistant.components.binary_sensor.nx584.NX584ZoneSensor')
     def test_setup_defaults(self, mock_nx, mock_watcher):
         """Test the setup with no configuration."""
-        add_devices = mock.MagicMock()
+        add_entities = mock.MagicMock()
         config = {
             'host': nx584.DEFAULT_HOST,
             'port': nx584.DEFAULT_PORT,
             'exclude_zones': [],
             'zone_types': {},
             }
-        self.assertTrue(nx584.setup_platform(self.hass, config, add_devices))
+        self.assertTrue(nx584.setup_platform(self.hass, config, add_entities))
         mock_nx.assert_has_calls(
              [mock.call(zone, 'opening') for zone in self.fake_zones])
-        self.assertTrue(add_devices.called)
+        self.assertTrue(add_entities.called)
         self.assertEqual(nx584_client.Client.call_count, 1)
         self.assertEqual(
             nx584_client.Client.call_args, mock.call('http://localhost:5007')
@@ -71,13 +71,13 @@ class TestNX584SensorSetup(unittest.TestCase):
             'exclude_zones': [2],
             'zone_types': {3: 'motion'},
             }
-        add_devices = mock.MagicMock()
-        self.assertTrue(nx584.setup_platform(self.hass, config, add_devices))
+        add_entities = mock.MagicMock()
+        self.assertTrue(nx584.setup_platform(self.hass, config, add_entities))
         mock_nx.assert_has_calls([
             mock.call(self.fake_zones[0], 'opening'),
             mock.call(self.fake_zones[2], 'motion'),
             ])
-        self.assertTrue(add_devices.called)
+        self.assertTrue(add_entities.called)
         self.assertEqual(nx584_client.Client.call_count, 1)
         self.assertEqual(
             nx584_client.Client.call_args, mock.call('http://foo:123')
@@ -113,16 +113,16 @@ class TestNX584SensorSetup(unittest.TestCase):
         self._test_assert_graceful_fail({})
 
     def test_setup_version_too_old(self):
-        """"Test if version is too old."""
+        """Test if version is too old."""
         nx584_client.Client.return_value.get_version.return_value = '1.0'
         self._test_assert_graceful_fail({})
 
     def test_setup_no_zones(self):
         """Test the setup with no zones."""
         nx584_client.Client.return_value.list_zones.return_value = []
-        add_devices = mock.MagicMock()
-        self.assertTrue(nx584.setup_platform(self.hass, {}, add_devices))
-        self.assertFalse(add_devices.called)
+        add_entities = mock.MagicMock()
+        self.assertTrue(nx584.setup_platform(self.hass, {}, add_entities))
+        self.assertFalse(add_entities.called)
 
 
 class TestNX584ZoneSensor(unittest.TestCase):

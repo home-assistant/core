@@ -29,11 +29,11 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                  SUPPORT_FAN_MODE)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up of Vera thermostats."""
-    add_devices_callback(
-        VeraThermostat(device, hass.data[VERA_CONTROLLER]) for
-        device in hass.data[VERA_DEVICES]['climate'])
+    add_entities_callback(
+        [VeraThermostat(device, hass.data[VERA_CONTROLLER]) for
+         device in hass.data[VERA_DEVICES]['climate']], True)
 
 
 class VeraThermostat(VeraDevice, ClimateDevice):
@@ -55,11 +55,11 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         mode = self.vera_device.get_hvac_mode()
         if mode == 'HeatOn':
             return OPERATION_LIST[0]  # heat
-        elif mode == 'CoolOn':
+        if mode == 'CoolOn':
             return OPERATION_LIST[1]  # cool
-        elif mode == 'AutoChangeOver':
+        if mode == 'AutoChangeOver':
             return OPERATION_LIST[2]  # auto
-        elif mode == 'Off':
+        if mode == 'Off':
             return OPERATION_LIST[3]  # off
         return 'Off'
 
@@ -74,9 +74,9 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         mode = self.vera_device.get_fan_mode()
         if mode == "ContinuousOn":
             return FAN_OPERATION_LIST[0]  # on
-        elif mode == "Auto":
+        if mode == "Auto":
             return FAN_OPERATION_LIST[1]  # auto
-        elif mode == "PeriodicOn":
+        if mode == "PeriodicOn":
             return FAN_OPERATION_LIST[2]  # cycle
         return "Auto"
 
@@ -100,10 +100,6 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         power = self.vera_device.power
         if power:
             return convert(power, float, 0.0)
-
-    def update(self):
-        """Handle state updates."""
-        self._state = self.vera_device.get_hvac_mode()
 
     @property
     def temperature_unit(self):

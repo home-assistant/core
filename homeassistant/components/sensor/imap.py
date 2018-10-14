@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass,
                                config,
-                               async_add_devices,
+                               async_add_entities,
                                discovery_info=None):
     """Set up the IMAP platform."""
     sensor = ImapSensor(config.get(CONF_NAME),
@@ -54,7 +54,7 @@ async def async_setup_platform(hass,
         raise PlatformNotReady
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.shutdown())
-    async_add_devices([sensor], True)
+    async_add_entities([sensor], True)
 
 
 class ImapSensor(Entity):

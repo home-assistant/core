@@ -23,7 +23,7 @@ DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
@@ -39,24 +39,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a Ring device."""
     ring = hass.data[DATA_RING]
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in ring.doorbells:
+    for device in ring.doorbells:  # ring.doorbells is doing I/O
+        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass,
                                                 device,
                                                 sensor_type))
 
-        for device in ring.stickup_cams:
+    for device in ring.stickup_cams:  # ring.stickup_cams is doing I/O
+        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass,
                                                 device,
                                                 sensor_type))
-    add_devices(sensors, True)
+    add_entities(sensors, True)
     return True
 
 

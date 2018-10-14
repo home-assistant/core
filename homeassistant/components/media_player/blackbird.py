@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.blackbird
 """
 import logging
+import socket
 
 import voluptuous as vol
 
@@ -12,15 +13,15 @@ from homeassistant.components.media_player import (
     DOMAIN, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_NAME, CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_OFF,
+    STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyblackbird==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_BLACKBIRD = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-                    SUPPORT_SELECT_SOURCE
+SUPPORT_BLACKBIRD = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -32,7 +33,6 @@ SOURCE_SCHEMA = vol.Schema({
 
 CONF_ZONES = 'zones'
 CONF_SOURCES = 'sources'
-CONF_TYPE = 'type'
 
 DATA_BLACKBIRD = 'blackbird'
 
@@ -50,71 +50,67 @@ ZONE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 # Valid source ids: 1-8
 SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TYPE): vol.In(['serial', 'socket']),
-    vol.Optional(CONF_PORT): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
-    vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
-})
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
+    PLATFORM_SCHEMA.extend({
+        vol.Exclusive(CONF_PORT, CONF_TYPE): cv.string,
+        vol.Exclusive(CONF_HOST, CONF_TYPE): cv.string,
+        vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
+        vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
+    }))
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Monoprice Blackbird 4k 8x8 HDBaseT Matrix platform."""
+    if DATA_BLACKBIRD not in hass.data:
+        hass.data[DATA_BLACKBIRD] = {}
+
     port = config.get(CONF_PORT)
     host = config.get(CONF_HOST)
-    device_type = config.get(CONF_TYPE)
 
-    import socket
     from pyblackbird import get_blackbird
     from serial import SerialException
 
-    if device_type == 'serial':
-        if port is None:
-            _LOGGER.error("No port configured")
-            return
+    connection = None
+    if port is not None:
         try:
             blackbird = get_blackbird(port)
+            connection = port
         except SerialException:
             _LOGGER.error("Error connecting to the Blackbird controller")
             return
 
-    elif device_type == 'socket':
+    if host is not None:
         try:
-            if host is None:
-                _LOGGER.error("No host configured")
-                return
             blackbird = get_blackbird(host, False)
+            connection = host
         except socket.timeout:
             _LOGGER.error("Error connecting to the Blackbird controller")
             return
 
-    else:
-        _LOGGER.error("Incorrect device type specified")
-        return
-
     sources = {source_id: extra[CONF_NAME] for source_id, extra
                in config[CONF_SOURCES].items()}
 
-    hass.data[DATA_BLACKBIRD] = []
+    devices = []
     for zone_id, extra in config[CONF_ZONES].items():
         _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
-        hass.data[DATA_BLACKBIRD].append(BlackbirdZone(
-            blackbird, sources, zone_id, extra[CONF_NAME]))
+        unique_id = "{}-{}".format(connection, zone_id)
+        device = BlackbirdZone(blackbird, sources, zone_id, extra[CONF_NAME])
+        hass.data[DATA_BLACKBIRD][unique_id] = device
+        devices.append(device)
 
-    add_devices(hass.data[DATA_BLACKBIRD], True)
+    add_entities(devices, True)
 
     def service_handle(service):
         """Handle for services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         source = service.data.get(ATTR_SOURCE)
         if entity_ids:
-            devices = [device for device in hass.data[DATA_BLACKBIRD]
+            devices = [device for device in hass.data[DATA_BLACKBIRD].values()
                        if device.entity_id in entity_ids]
 
         else:
-            devices = hass.data[DATA_BLACKBIRD]
+            devices = hass.data[DATA_BLACKBIRD].values()
 
         for device in devices:
             if service.service == SERVICE_SETALLZONES:
@@ -146,14 +142,13 @@ class BlackbirdZone(MediaPlayerDevice):
         """Retrieve latest state."""
         state = self._blackbird.zone_status(self._zone_id)
         if not state:
-            return False
+            return
         self._state = STATE_ON if state.power else STATE_OFF
         idx = state.av
         if idx in self._source_id_name:
             self._source = self._source_id_name[idx]
         else:
             self._source = None
-        return True
 
     @property
     def name(self):
@@ -187,7 +182,6 @@ class BlackbirdZone(MediaPlayerDevice):
 
     def set_all_zones(self, source):
         """Set all zones to one source."""
-        _LOGGER.debug("Setting all zones")
         if source not in self._source_name_id:
             return
         idx = self._source_name_id[source]

@@ -27,8 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Xbox platform."""
     from xboxapi import xbox_api
     api = xbox_api.XboxApi(config.get(CONF_API_KEY))
@@ -49,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devices.append(new_device)
 
     if devices:
-        add_devices(devices, True)
+        add_entities(devices, True)
 
 
 class XboxSensor(Entity):

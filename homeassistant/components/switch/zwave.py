@@ -6,11 +6,9 @@ https://home-assistant.io/components/switch.zwave/
 """
 import logging
 import time
-# Because we do not compile openzwave on CI
-# pylint: disable=import-error
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components import zwave
-from homeassistant.components.zwave import workaround, async_setup_platform  # noqa # pylint: disable=unused-import
+from homeassistant.components.zwave import workaround, async_setup_platform  # noqa pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -5,7 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ecobee/
 """
 from homeassistant.components import ecobee
-from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ecobee']
@@ -18,7 +19,7 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecobee sensors."""
     if discovery_info is None:
         return
@@ -32,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
                 dev.append(EcobeeSensor(sensor['name'], item['type'], index))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class EcobeeSensor(Entity):
@@ -55,7 +56,7 @@ class EcobeeSensor(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        if self.type in ('temperature', 'humidity'):
+        if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE):
             return self.type
         return None
 

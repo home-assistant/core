@@ -16,7 +16,7 @@ class TestRingBinarySensorSetup(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices, action):
+    def add_entities(self, devices, action):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -44,6 +44,8 @@ class TestRingBinarySensorSetup(unittest.TestCase):
     @requests_mock.Mocker()
     def test_binary_sensor(self, mock):
         """Test the Ring sensor class and methods."""
+        mock.post('https://oauth.ring.com/oauth/token',
+                  text=load_fixture('ring_oauth.json'))
         mock.post('https://api.ring.com/clients_api/session',
                   text=load_fixture('ring_session.json'))
         mock.get('https://api.ring.com/clients_api/ring_devices',
@@ -56,7 +58,7 @@ class TestRingBinarySensorSetup(unittest.TestCase):
         base_ring.setup(self.hass, VALID_CONFIG)
         ring.setup_platform(self.hass,
                             self.config,
-                            self.add_devices,
+                            self.add_entities,
                             None)
 
         for device in self.DEVICES:

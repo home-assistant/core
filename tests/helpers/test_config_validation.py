@@ -356,8 +356,14 @@ def test_string():
     """Test string validation."""
     schema = vol.Schema(cv.string)
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(vol.Invalid):
         schema(None)
+
+    with pytest.raises(vol.Invalid):
+        schema([])
+
+    with pytest.raises(vol.Invalid):
+        schema({})
 
     for value in (True, 1, 'hello'):
         schema(value)
@@ -523,21 +529,6 @@ def test_has_at_least_one_key():
         schema(value)
 
 
-def test_has_at_least_one_key_value():
-    """Test has_at_least_one_key_value validator."""
-    schema = vol.Schema(cv.has_at_least_one_key_value(('drink', 'beer'),
-                                                      ('drink', 'soda'),
-                                                      ('food', 'maultaschen')))
-
-    for value in (None, [], {}, {'wine': None}, {'drink': 'water'}):
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
-    for value in ({'drink': 'beer'}, {'food': 'maultaschen'},
-                  {'drink': 'soda', 'food': 'maultaschen'}):
-        schema(value)
-
-
 def test_enum():
     """Test enum validator."""
     class TestEnum(enum.Enum):
@@ -565,3 +556,31 @@ def test_socket_timeout():  # pylint: disable=invalid-name
     assert _GLOBAL_DEFAULT_TIMEOUT == schema(None)
 
     assert schema(1) == 1.0
+
+
+def test_matches_regex():
+    """Test matches_regex validator."""
+    schema = vol.Schema(cv.matches_regex('.*uiae.*'))
+
+    with pytest.raises(vol.Invalid):
+        schema(1.0)
+
+    with pytest.raises(vol.Invalid):
+        schema("  nrtd   ")
+
+    test_str = "This is a test including uiae."
+    assert(schema(test_str) == test_str)
+
+
+def test_is_regex():
+    """Test the is_regex validator."""
+    schema = vol.Schema(cv.is_regex)
+
+    with pytest.raises(vol.Invalid):
+        schema("(")
+
+    with pytest.raises(vol.Invalid):
+        schema({"a dict": "is not a regex"})
+
+    valid_re = ".*"
+    schema(valid_re)

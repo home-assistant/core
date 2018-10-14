@@ -144,6 +144,16 @@ select_source:
       description: Name of the source to switch to. Platform dependent.
       example: 'video1'
 
+select_sound_mode:
+  description: Send the media player the command to change sound mode.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change sound mode on.
+      example: 'media_player.marantz'
+    sound_mode:
+      description: Name of the sound mode to switch to.
+      example: 'Music'
+
 clear_playlist:
   description: Send the media player the command to clear players playlist.
   fields:
@@ -412,3 +422,13 @@ blackbird_set_all_zones:
     source:
       description: Name of source to switch to.
       example: 'Source 1'
+
+epson_select_cmode:
+  description: Select Color mode of Epson projector
+  fields:
+    entity_id:
+      description: Name of projector
+      example: 'media_player.epson_projector'
+    cmode:
+      description: Name of Cmode
+      example: 'cinema'

@@ -17,13 +17,13 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Verisure platform."""
     alarms = []
     if int(hub.config.get(CONF_ALARM, 1)):
         hub.update_overview()
         alarms.append(VerisureAlarm())
-    add_devices(alarms)
+    add_entities(alarms)
 
 
 def set_arm_state(state, code=None):
@@ -60,8 +60,8 @@ class VerisureAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """Return the code format as regex."""
-        return '^\\d{%s}$' % self._digits
+        """Return one or more digits/characters."""
+        return 'Number'
 
     @property
     def changed_by(self):

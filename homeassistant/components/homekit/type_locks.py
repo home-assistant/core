@@ -1,13 +1,15 @@
 """Class to hold all lock accessories."""
 import logging
 
+from pyhap.const import CATEGORY_DOOR_LOCK
+
 from homeassistant.components.lock import (
-    ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, DOMAIN, STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN)
+from homeassistant.const import ATTR_CODE
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service, setup_char
-from .const import (
-    CATEGORY_LOCK, SERV_LOCK, CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE)
+from .accessories import HomeAccessory
+from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,18 +29,19 @@ class Lock(HomeAccessory):
     The lock entity must support: unlock and lock.
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a Lock accessory object."""
-        super().__init__(*args, category=CATEGORY_LOCK)
+        super().__init__(*args, category=CATEGORY_DOOR_LOCK)
+        self._code = self.config.get(ATTR_CODE)
         self.flag_target_state = False
 
-        serv_lock_mechanism = add_preload_service(self, SERV_LOCK)
-        self.char_current_state = setup_char(
-            CHAR_LOCK_CURRENT_STATE, serv_lock_mechanism,
+        serv_lock_mechanism = self.add_preload_service(SERV_LOCK)
+        self.char_current_state = serv_lock_mechanism.configure_char(
+            CHAR_LOCK_CURRENT_STATE,
             value=HASS_TO_HOMEKIT[STATE_UNKNOWN])
-        self.char_target_state = setup_char(
-            CHAR_LOCK_TARGET_STATE, serv_lock_mechanism,
-            value=HASS_TO_HOMEKIT[STATE_LOCKED], callback=self.set_state)
+        self.char_target_state = serv_lock_mechanism.configure_char(
+            CHAR_LOCK_TARGET_STATE, value=HASS_TO_HOMEKIT[STATE_LOCKED],
+            setter_callback=self.set_state)
 
     def set_state(self, value):
         """Set lock state to value if call came from HomeKit."""
@@ -49,7 +52,9 @@ class Lock(HomeAccessory):
         service = STATE_TO_SERVICE[hass_value]
 
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.hass.services.call('lock', service, params)
+        if self._code:
+            params[ATTR_CODE] = self._code
+        self.hass.services.call(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update lock after state changed."""

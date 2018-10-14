@@ -1,17 +1,16 @@
 """The tests for the WSDOT platform."""
+from datetime import datetime, timedelta, timezone
 import re
 import unittest
-from datetime import timedelta, datetime, timezone
 
 import requests_mock
+from tests.common import get_test_home_assistant, load_fixture
 
 from homeassistant.components.sensor import wsdot
 from homeassistant.components.sensor.wsdot import (
-    WashingtonStateTravelTimeSensor, ATTR_DESCRIPTION,
-    ATTR_TIME_UPDATED, CONF_API_KEY, CONF_NAME,
-    CONF_ID, CONF_TRAVEL_TIMES, SCAN_INTERVAL)
+    ATTR_DESCRIPTION, ATTR_TIME_UPDATED, CONF_API_KEY, CONF_ID, CONF_NAME,
+    CONF_TRAVEL_TIMES, RESOURCE, SCAN_INTERVAL)
 from homeassistant.setup import setup_component
-from tests.common import load_fixture, get_test_home_assistant
 
 
 class TestWSDOT(unittest.TestCase):
@@ -50,7 +49,7 @@ class TestWSDOT(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup(self, mock_req):
         """Test for operational WSDOT sensor with proper attributes."""
-        uri = re.compile(WashingtonStateTravelTimeSensor.RESOURCE + '*')
+        uri = re.compile(RESOURCE + '*')
         mock_req.get(uri, text=load_fixture('wsdot.json'))
         wsdot.setup_platform(self.hass, self.config, self.add_entities)
         self.assertEqual(len(self.entities), 1)

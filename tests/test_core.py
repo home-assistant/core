@@ -4,7 +4,7 @@ import asyncio
 import logging
 import os
 import unittest
-from unittest.mock import patch, MagicMock, sentinel
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 from tempfile import TemporaryDirectory
 
@@ -20,9 +20,10 @@ from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED)
+    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED,
+    EVENT_SERVICE_EXECUTED)
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, async_mock_service
 
 PST = pytz.timezone('America/Los_Angeles')
 
@@ -65,6 +66,18 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.loop.run_in_executor.mock_calls) == 1
+
+
+@patch('asyncio.iscoroutine', return_value=True)
+def test_async_create_task_schedule_coroutine(mock_iscoro):
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock()
+    job = MagicMock()
+
+    ha.HomeAssistant.async_create_task(hass, job)
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
 
 
 def test_async_run_job_calls_callback():
@@ -118,7 +131,7 @@ class TestHomeAssistant(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -234,8 +247,9 @@ class TestEvent(unittest.TestCase):
         """Test events."""
         now = dt_util.utcnow()
         data = {'some': 'attr'}
+        context = ha.Context()
         event1, event2 = [
-            ha.Event('some_type', data, time_fired=now)
+            ha.Event('some_type', data, time_fired=now, context=context)
             for _ in range(2)
         ]
 
@@ -265,6 +279,10 @@ class TestEvent(unittest.TestCase):
             'data': data,
             'origin': 'LOCAL',
             'time_fired': now,
+            'context': {
+                'id': event.context.id,
+                'user_id': event.context.user_id,
+            },
         }
         self.assertEqual(expected, event.as_dict())
 
@@ -274,7 +292,7 @@ class TestEventBus(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
 
@@ -375,7 +393,7 @@ class TestEventBus(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
     def test_thread_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test thread event listener."""
         thread_calls = []
 
         def thread_listener(event):
@@ -387,7 +405,7 @@ class TestEventBus(unittest.TestCase):
         assert len(thread_calls) == 1
 
     def test_callback_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test callback event listener."""
         callback_calls = []
 
         @ha.callback
@@ -400,7 +418,7 @@ class TestEventBus(unittest.TestCase):
         assert len(callback_calls) == 1
 
     def test_coroutine_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test coroutine event listener."""
         coroutine_calls = []
 
         @asyncio.coroutine
@@ -478,7 +496,7 @@ class TestStateMachine(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
@@ -586,18 +604,16 @@ class TestStateMachine(unittest.TestCase):
         self.assertEqual(1, len(events))
 
 
-class TestServiceCall(unittest.TestCase):
-    """Test ServiceCall class."""
+def test_service_call_repr():
+    """Test ServiceCall repr."""
+    call = ha.ServiceCall('homeassistant', 'start')
+    assert str(call) == \
+        "<ServiceCall homeassistant.start (c:{})>".format(call.context.id)
 
-    def test_repr(self):
-        """Test repr method."""
-        self.assertEqual(
-            "<ServiceCall homeassistant.start>",
-            str(ha.ServiceCall('homeassistant', 'start')))
-
-        self.assertEqual(
-            "<ServiceCall homeassistant.start: fast=yes>",
-            str(ha.ServiceCall('homeassistant', 'start', {"fast": "yes"})))
+    call2 = ha.ServiceCall('homeassistant', 'start', {'fast': 'yes'})
+    assert str(call2) == \
+        "<ServiceCall homeassistant.start (c:{}): fast=yes>".format(
+            call2.context.id)
 
 
 class TestServiceRegistry(unittest.TestCase):
@@ -605,7 +621,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
 
@@ -760,7 +776,7 @@ class TestConfig(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.config = ha.Config()
         self.assertIsNone(self.config.config_dir)
 
@@ -842,32 +858,42 @@ def test_create_timer(mock_monotonic, loop):
         funcs.append(func)
         return orig_callback(func)
 
-    mock_monotonic.side_effect = 10.2, 10.3
+    mock_monotonic.side_effect = 10.2, 10.8, 11.3
 
     with patch.object(ha, 'callback', mock_callback), \
             patch('homeassistant.core.dt_util.utcnow',
-                  return_value=sentinel.mock_date):
+                  return_value=datetime(2018, 12, 31, 3, 4, 5, 333333)):
         ha._async_create_timer(hass)
 
-        assert len(funcs) == 2
-        fire_time_event, stop_timer = funcs
+    assert len(funcs) == 2
+    fire_time_event, stop_timer = funcs
+
+    assert len(hass.loop.call_later.mock_calls) == 1
+    delay, callback, target = hass.loop.call_later.mock_calls[0][1]
+    assert abs(delay - 0.666667) < 0.001
+    assert callback is fire_time_event
+    assert abs(target - 10.866667) < 0.001
+
+    with patch('homeassistant.core.dt_util.utcnow',
+               return_value=datetime(2018, 12, 31, 3, 4, 6, 100000)):
+        callback(target)
 
     assert len(hass.bus.async_listen_once.mock_calls) == 1
     assert len(hass.bus.async_fire.mock_calls) == 1
-    assert len(hass.loop.call_later.mock_calls) == 1
+    assert len(hass.loop.call_later.mock_calls) == 2
 
     event_type, callback = hass.bus.async_listen_once.mock_calls[0][1]
     assert event_type == EVENT_HOMEASSISTANT_STOP
     assert callback is stop_timer
 
-    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[0][1]
-    assert abs(slp_seconds - 0.9) < 0.001
+    delay, callback, target = hass.loop.call_later.mock_calls[1][1]
+    assert abs(delay - 0.9) < 0.001
     assert callback is fire_time_event
-    assert abs(nxt - 11.2) < 0.001
+    assert abs(target - 12.2) < 0.001
 
     event_type, event_data = hass.bus.async_fire.mock_calls[0][1]
     assert event_type == EVENT_TIME_CHANGED
-    assert event_data[ATTR_NOW] is sentinel.mock_date
+    assert event_data[ATTR_NOW] == datetime(2018, 12, 31, 3, 4, 6, 100000)
 
 
 @patch('homeassistant.core.monotonic')
@@ -881,22 +907,31 @@ def test_timer_out_of_sync(mock_monotonic, loop):
         funcs.append(func)
         return orig_callback(func)
 
-    mock_monotonic.side_effect = 10.2, 11.3, 11.3
+    mock_monotonic.side_effect = 10.2, 13.3, 13.4
 
     with patch.object(ha, 'callback', mock_callback), \
             patch('homeassistant.core.dt_util.utcnow',
-                  return_value=sentinel.mock_date):
+                  return_value=datetime(2018, 12, 31, 3, 4, 5, 333333)):
         ha._async_create_timer(hass)
+
+    delay, callback, target = hass.loop.call_later.mock_calls[0][1]
+
+    with patch.object(ha, '_LOGGER', MagicMock()) as mock_logger, \
+            patch('homeassistant.core.dt_util.utcnow',
+                  return_value=datetime(2018, 12, 31, 3, 4, 8, 200000)):
+        callback(target)
+
+        assert len(mock_logger.error.mock_calls) == 1
 
         assert len(funcs) == 2
         fire_time_event, stop_timer = funcs
 
-    assert len(hass.loop.call_later.mock_calls) == 1
+    assert len(hass.loop.call_later.mock_calls) == 2
 
-    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[0][1]
-    assert slp_seconds == 1
+    delay, callback, target = hass.loop.call_later.mock_calls[1][1]
+    assert abs(delay - 0.8) < 0.001
     assert callback is fire_time_event
-    assert abs(nxt - 12.3) < 0.001
+    assert abs(target - 14.2) < 0.001
 
 
 @asyncio.coroutine
@@ -954,3 +989,27 @@ def test_track_task_functions(loop):
         assert hass._track_task
     finally:
         yield from hass.async_stop()
+
+
+async def test_service_executed_with_subservices(hass):
+    """Test we block correctly till all services done."""
+    calls = async_mock_service(hass, 'test', 'inner')
+
+    async def handle_outer(call):
+        """Handle outer service call."""
+        calls.append(call)
+        call1 = hass.services.async_call('test', 'inner', blocking=True,
+                                         context=call.context)
+        call2 = hass.services.async_call('test', 'inner', blocking=True,
+                                         context=call.context)
+        await asyncio.wait([call1, call2])
+        calls.append(call)
+
+    hass.services.async_register('test', 'outer', handle_outer)
+
+    await hass.services.async_call('test', 'outer', blocking=True)
+
+    assert len(calls) == 4
+    assert [call.service for call in calls] == [
+        'outer', 'inner', 'inner', 'outer']
+    assert len(hass.bus.async_listeners().get(EVENT_SERVICE_EXECUTED, [])) == 0

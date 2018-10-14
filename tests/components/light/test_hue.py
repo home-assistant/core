@@ -182,7 +182,7 @@ def mock_bridge(hass):
 
         if path == 'lights':
             return bridge.mock_light_responses.popleft()
-        elif path == 'groups':
+        if path == 'groups':
             return bridge.mock_group_responses.popleft()
         return None
 
@@ -199,7 +199,7 @@ async def setup_bridge(hass, mock_bridge):
     hass.data[hue.DOMAIN] = {'mock-host': mock_bridge}
     config_entry = config_entries.ConfigEntry(1, hue.DOMAIN, 'Mock Title', {
         'host': 'mock-host'
-    }, 'test')
+    }, 'test', config_entries.CONN_CLASS_LOCAL_POLL)
     await hass.config_entries.async_forward_entry_setup(config_entry, 'light')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
@@ -640,6 +640,19 @@ def test_hs_color():
     light = hue_light.HueLight(
         light=Mock(state={
             'colormode': 'ct',
+            'hue': 1234,
+            'sat': 123,
+        }),
+        request_bridge_update=None,
+        bridge=Mock(),
+        is_group=False,
+    )
+
+    assert light.hs_color is None
+
+    light = hue_light.HueLight(
+        light=Mock(state={
+            'colormode': 'hs',
             'hue': 1234,
             'sat': 123,
         }),

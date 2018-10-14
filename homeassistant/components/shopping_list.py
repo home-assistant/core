@@ -14,6 +14,8 @@ from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
+ATTR_NAME = 'name'
+
 DOMAIN = 'shopping_list'
 DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
@@ -23,19 +25,56 @@ INTENT_ADD_ITEM = 'HassShoppingListAddItem'
 INTENT_LAST_ITEMS = 'HassShoppingListLastItems'
 ITEM_UPDATE_SCHEMA = vol.Schema({
     'complete': bool,
-    'name': str,
+    ATTR_NAME: str,
 })
 PERSISTENCE = '.shopping_list.json'
+
+SERVICE_ADD_ITEM = 'add_item'
+SERVICE_COMPLETE_ITEM = 'complete_item'
+
+SERVICE_ITEM_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NAME): vol.Any(None, cv.string)
+})
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Initialize the shopping list."""
+    @asyncio.coroutine
+    def add_item_service(call):
+        """Add an item with `name`."""
+        data = hass.data[DOMAIN]
+        name = call.data.get(ATTR_NAME)
+        if name is not None:
+            data.async_add(name)
+
+    @asyncio.coroutine
+    def complete_item_service(call):
+        """Mark the item provided via `name` as completed."""
+        data = hass.data[DOMAIN]
+        name = call.data.get(ATTR_NAME)
+        if name is None:
+            return
+        try:
+            item = [item for item in data.items if item['name'] == name][0]
+        except IndexError:
+            _LOGGER.error("Removing of item failed: %s cannot be found", name)
+        else:
+            data.async_update(item['id'], {'name': name, 'complete': True})
+
     data = hass.data[DOMAIN] = ShoppingData(hass)
     yield from data.async_load()
 
     intent.async_register(hass, AddItemIntent())
     intent.async_register(hass, ListTopItemsIntent())
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_ITEM, add_item_service, schema=SERVICE_ITEM_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_COMPLETE_ITEM, complete_item_service,
+        schema=SERVICE_ITEM_SCHEMA
+    )
 
     hass.http.register_view(ShoppingListView)
     hass.http.register_view(CreateShoppingListItemView)

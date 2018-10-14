@@ -10,17 +10,24 @@ matrix:
       env: TOXENV=lint
     - python: "3.5.3"
       env: TOXENV=pylint
-    # - python: "3.5"
-    #   env: TOXENV=typing
     - python: "3.5.3"
-      env: TOXENV=py35
+      env: TOXENV=typing
+    - python: "3.5.3"
+      env: TOXENV=cov
+      after_success: coveralls
     - python: "3.6"
       env: TOXENV=py36
-    # - python: "3.6-dev"
-    #   env: TOXENV=py36
-  # allow_failures:
-  #   - python: "3.5"
-  #     env: TOXENV=typing
+    - python: "3.7"
+      env: TOXENV=py37
+      dist: xenial
+    - python: "3.8-dev"
+      env: TOXENV=py38
+      dist: xenial
+      if: branch = dev AND type = push
+  allow_failures:
+    - python: "3.8-dev"
+      env: TOXENV=py38
+      dist: xenial
 
 cache:
   directories:
@@ -39,4 +46,3 @@ deploy:
   on:
     branch: dev
     condition: $TOXENV = lint
-after_success: coveralls

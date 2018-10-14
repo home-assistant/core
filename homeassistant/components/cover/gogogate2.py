@@ -1,5 +1,5 @@
 """
-Support for Gogogate2 Garage Doors.
+Support for Gogogate2 garage Doors.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.gogogate2/
@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pygogogate2==0.0.7']
+REQUIREMENTS = ['pygogogate2==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,21 +25,22 @@ NOTIFICATION_ID = 'gogogate2_notification'
 NOTIFICATION_TITLE = 'Gogogate2 Cover Setup'
 
 COVER_SCHEMA = vol.Schema({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_IP_ADDRESS): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gogogate2 component."""
     from pygogogate2 import Gogogate2API as pygogogate2
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
     ip_address = config.get(CONF_IP_ADDRESS)
     name = config.get(CONF_NAME)
+    password = config.get(CONF_PASSWORD)
+    username = config.get(CONF_USERNAME)
+
     mygogogate2 = pygogogate2(username, password, ip_address)
 
     try:
@@ -48,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             raise ValueError(
                 "Username or Password is incorrect or no devices found")
 
-        add_devices(MyGogogate2Device(
+        add_entities(MyGogogate2Device(
             mygogogate2, door, name) for door in devices)
 
     except (TypeError, KeyError, NameError, ValueError) as ex:

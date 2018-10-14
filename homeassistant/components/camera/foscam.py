@@ -33,10 +33,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Foscam IP Camera."""
-    add_devices([FoscamCam(config)])
+    add_entities([FoscamCam(config)])
 
 
 class FoscamCam(Camera):

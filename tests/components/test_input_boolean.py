@@ -4,12 +4,14 @@ import asyncio
 import unittest
 import logging
 
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, State, Context
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_boolean import (
-    DOMAIN, is_on, toggle, turn_off, turn_on, CONF_INITIAL)
+    is_on, CONF_INITIAL, DOMAIN)
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, ATTR_ICON, ATTR_FRIENDLY_NAME)
+    STATE_ON, STATE_OFF, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON,
+    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON)
+from homeassistant.loader import bind_hass
 
 from tests.common import (
     get_test_home_assistant, mock_component, mock_restore_cache)
@@ -17,12 +19,39 @@ from tests.common import (
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
+def toggle(hass, entity_id):
+    """Set input_boolean to False.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
+
+
+@bind_hass
+def turn_on(hass, entity_id):
+    """Set input_boolean to True.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
+
+
+@bind_hass
+def turn_off(hass, entity_id):
+    """Set input_boolean to False.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
+
+
 class TestInputBoolean(unittest.TestCase):
     """Test the input boolean module."""
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -158,3 +187,24 @@ def test_initial_state_overrules_restore_state(hass):
     state = hass.states.get('input_boolean.b2')
     assert state
     assert state.state == 'on'
+
+
+async def test_input_boolean_context(hass):
+    """Test that input_boolean context works."""
+    assert await async_setup_component(hass, 'input_boolean', {
+        'input_boolean': {
+            'ac': {CONF_INITIAL: True},
+        }
+    })
+
+    state = hass.states.get('input_boolean.ac')
+    assert state is not None
+
+    await hass.services.async_call('input_boolean', 'turn_off', {
+        'entity_id': state.entity_id,
+    }, True, Context(user_id='abcd'))
+
+    state2 = hass.states.get('input_boolean.ac')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

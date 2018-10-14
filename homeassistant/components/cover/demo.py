@@ -10,9 +10,9 @@ from homeassistant.components.cover import (
 from homeassistant.helpers.event import track_utc_time_change
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo covers."""
-    add_devices([
+    add_entities([
         DemoCover(hass, 'Kitchen Window'),
         DemoCover(hass, 'Hall Window', 10),
         DemoCover(hass, 'Living Room Window', 70, 50),
@@ -24,7 +24,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DemoCover(CoverDevice):
     """Representation of a demo cover."""
 
-    # pylint: disable=no-self-use
     def __init__(self, hass, name, position=None, tilt_position=None,
                  device_class=None, supported_features=None):
         """Initialize the cover."""
@@ -98,7 +97,7 @@ class DemoCover(CoverDevice):
         """Close the cover."""
         if self._position == 0:
             return
-        elif self._position is None:
+        if self._position is None:
             self._closed = True
             self.schedule_update_ha_state()
             return
@@ -120,7 +119,7 @@ class DemoCover(CoverDevice):
         """Open the cover."""
         if self._position == 100:
             return
-        elif self._position is None:
+        if self._position is None:
             self._closed = False
             self.schedule_update_ha_state()
             return

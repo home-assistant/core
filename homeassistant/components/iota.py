@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyota==2.0.4']
+REQUIREMENTS = ['pyota==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class IotaDevice(Entity):
     """Representation of a IOTA device."""
 
     def __init__(self, name, seed, iri, is_testnet=False):
-        """Initialisation of the IOTA device."""
+        """Initialise the IOTA device."""
         self._name = name
         self._seed = seed
         self.iri = iri

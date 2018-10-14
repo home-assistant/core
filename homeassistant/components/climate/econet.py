@@ -18,7 +18,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyeconet==0.0.5']
+REQUIREMENTS = ['pyeconet==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the EcoNet water heaters."""
     from pyeconet.api import PyEcoNet
 
@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     water_heaters = econet.get_water_heaters()
     hass_water_heaters = [
         EcoNetWaterHeater(water_heater) for water_heater in water_heaters]
-    add_devices(hass_water_heaters)
+    add_entities(hass_water_heaters)
     hass.data[ECONET_DATA]['water_heaters'].extend(hass_water_heaters)
 
     def service_handle(service):

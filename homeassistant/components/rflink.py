@@ -20,6 +20,8 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_send, async_dispatcher_connect)
 
 
 REQUIREMENTS = ['rflink==0.0.37']
@@ -65,6 +67,8 @@ DOMAIN = 'rflink'
 
 SERVICE_SEND_COMMAND = 'send_command'
 
+SIGNAL_AVAILABILITY = 'rflink_device_available'
+
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
     vol.Optional(CONF_SIGNAL_REPETITIONS,
@@ -96,13 +100,12 @@ def identify_event_type(event):
     """
     if EVENT_KEY_COMMAND in event:
         return EVENT_KEY_COMMAND
-    elif EVENT_KEY_SENSOR in event:
+    if EVENT_KEY_SENSOR in event:
         return EVENT_KEY_SENSOR
     return 'unknown'
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Rflink component."""
     from rflink.protocol import create_rflink_connection
     import serial
@@ -121,11 +124,10 @@ def async_setup(hass, config):
     # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
 
-    @asyncio.coroutine
-    def async_send_command(call):
+    async def async_send_command(call):
         """Send Rflink command."""
         _LOGGER.debug('Rflink command for %s', str(call.data))
-        if not (yield from RflinkCommand.send_command(
+        if not (await RflinkCommand.send_command(
                 call.data.get(CONF_DEVICE_ID),
                 call.data.get(CONF_COMMAND))):
             _LOGGER.error('Failed Rflink command for %s', str(call.data))
@@ -185,13 +187,14 @@ def async_setup(hass, config):
         # Reset protocol binding before starting reconnect
         RflinkCommand.set_rflink_protocol(None)
 
+        async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
+
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
             _LOGGER.warning('disconnected from Rflink, reconnecting')
             hass.async_add_job(connect)
 
-    @asyncio.coroutine
-    def connect():
+    async def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
         _LOGGER.info('Initiating Rflink connection')
 
@@ -211,7 +214,7 @@ def async_setup(hass, config):
         try:
             with async_timeout.timeout(CONNECTION_TIMEOUT,
                                        loop=hass.loop):
-                transport, protocol = yield from connection
+                transport, protocol = await connection
 
         except (serial.serialutil.SerialException, ConnectionRefusedError,
                 TimeoutError, OSError, asyncio.TimeoutError) as exc:
@@ -219,8 +222,15 @@ def async_setup(hass, config):
             _LOGGER.exception(
                 "Error connecting to Rflink, reconnecting in %s",
                 reconnect_interval)
+            # Connection to Rflink device is lost, make entities unavailable
+            async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
+
             hass.loop.call_later(reconnect_interval, reconnect, exc)
             return
+
+        # There is a valid connection to a Rflink device now so
+        # mark entities as available
+        async_dispatcher_send(hass, SIGNAL_AVAILABILITY, True)
 
         # Bind protocol to command class to allow entities to send commands
         RflinkCommand.set_rflink_protocol(
@@ -244,6 +254,7 @@ class RflinkDevice(Entity):
 
     platform = None
     _state = STATE_UNKNOWN
+    _available = True
 
     def __init__(self, device_id, hass, name=None, aliases=None, group=True,
                  group_aliases=None, nogroup_aliases=None, fire_event=False,
@@ -305,6 +316,22 @@ class RflinkDevice(Entity):
         """Assume device state until first device event sets state."""
         return self._state is STATE_UNKNOWN
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
+    @callback
+    def set_availability(self, availability):
+        """Update availability state."""
+        self._available = availability
+        self.async_schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Register update callback."""
+        async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
+                                 self.set_availability)
+
 
 class RflinkCommand(RflinkDevice):
     """Singleton class to make Rflink command interface available to entities.
@@ -336,13 +363,11 @@ class RflinkCommand(RflinkDevice):
         return bool(cls._protocol)
 
     @classmethod
-    @asyncio.coroutine
-    def send_command(cls, device_id, action):
+    async def send_command(cls, device_id, action):
         """Send device command to Rflink and wait for acknowledgement."""
-        return (yield from cls._protocol.send_command_ack(device_id, action))
+        return await cls._protocol.send_command_ack(device_id, action)
 
-    @asyncio.coroutine
-    def _async_handle_command(self, command, *args):
+    async def _async_handle_command(self, command, *args):
         """Do bookkeeping for command, send it to rflink and update state."""
         self.cancel_queued_send_commands()
 
@@ -381,10 +406,10 @@ class RflinkCommand(RflinkDevice):
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
-        yield from self._async_send_command(cmd, self._signal_repetitions)
+        await self._async_send_command(cmd, self._signal_repetitions)
 
         # Update state of entity
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
     def cancel_queued_send_commands(self):
         """Cancel queued signal repetition commands.
@@ -397,8 +422,7 @@ class RflinkCommand(RflinkDevice):
         if self._repetition_task:
             self._repetition_task.cancel()
 
-    @asyncio.coroutine
-    def _async_send_command(self, cmd, repetitions):
+    async def _async_send_command(self, cmd, repetitions):
         """Send a command for device to Rflink gateway."""
         _LOGGER.debug(
             "Sending command: %s to Rflink device: %s", cmd, self._device_id)
@@ -409,7 +433,7 @@ class RflinkCommand(RflinkDevice):
         if self._wait_ack:
             # Puts command on outgoing buffer then waits for Rflink to confirm
             # the command has been send out in the ether.
-            yield from self._protocol.send_command_ack(self._device_id, cmd)
+            await self._protocol.send_command_ack(self._device_id, cmd)
         else:
             # Puts command on outgoing buffer and returns straight away.
             # Rflink protocol/transport handles asynchronous writing of buffer
@@ -419,7 +443,7 @@ class RflinkCommand(RflinkDevice):
                 self._protocol.send_command, self._device_id, cmd))
 
         if repetitions > 1:
-            self._repetition_task = self.hass.async_add_job(
+            self._repetition_task = self.hass.async_create_task(
                 self._async_send_command(cmd, repetitions - 1))
 
 

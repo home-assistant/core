@@ -16,9 +16,9 @@ from homeassistant.const import TEMP_CELSIUS
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Toon climate device."""
-    add_devices([ThermostatDevice(hass)], True)
+    add_entities([ThermostatDevice(hass)], True)
 
 
 class ThermostatDevice(ClimateDevice):

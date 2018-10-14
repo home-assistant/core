@@ -4,7 +4,6 @@ Support for controlling raspihats boards.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/raspihats/
 """
-# pylint: disable=import-error,no-name-in-module
 import logging
 import threading
 import time
@@ -34,7 +33,6 @@ I2C_HAT_NAMES = [
 I2C_HATS_MANAGER = 'I2CH_MNG'
 
 
-# pylint: disable=unused-argument
 def setup(hass, config):
     """Set up the raspihats component."""
     hass.data[I2C_HATS_MANAGER] = I2CHatsManager()
@@ -64,7 +62,7 @@ class I2CHatsException(Exception):
     """I2C-HATs exception."""
 
 
-class I2CHatsDIScanner(object):
+class I2CHatsDIScanner:
     """Scan Digital Inputs and fire callbacks."""
 
     _DIGITAL_INPUTS = "di"
@@ -126,7 +124,7 @@ class I2CHatsManager(threading.Thread):
         with self._lock:
             i2c_hat = self._i2c_hats.get(address)
             if i2c_hat is None:
-                # pylint: disable=import-error
+                # pylint: disable=import-error,no-name-in-module
                 import raspihats.i2c_hats as module
                 constructor = getattr(module, board)
                 i2c_hat = constructor(address)
@@ -144,6 +142,7 @@ class I2CHatsManager(threading.Thread):
 
     def run(self):
         """Keep alive for I2C-HATs."""
+        # pylint: disable=import-error,no-name-in-module
         from raspihats.i2c_hats import ResponseException
 
         _LOGGER.info(log_message(self, "starting"))
@@ -206,6 +205,7 @@ class I2CHatsManager(threading.Thread):
 
     def read_di(self, address, channel):
         """Read a value from a I2C-HAT digital input."""
+        # pylint: disable=import-error,no-name-in-module
         from raspihats.i2c_hats import ResponseException
 
         with self._lock:
@@ -218,6 +218,7 @@ class I2CHatsManager(threading.Thread):
 
     def write_dq(self, address, channel, value):
         """Write a value to a I2C-HAT digital output."""
+        # pylint: disable=import-error,no-name-in-module
         from raspihats.i2c_hats import ResponseException
 
         with self._lock:
@@ -229,6 +230,7 @@ class I2CHatsManager(threading.Thread):
 
     def read_dq(self, address, channel):
         """Read a value from a I2C-HAT digital output."""
+        # pylint: disable=import-error,no-name-in-module
         from raspihats.i2c_hats import ResponseException
 
         with self._lock:

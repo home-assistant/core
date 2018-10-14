@@ -1,20 +1,21 @@
 """Class to hold all cover accessories."""
 import logging
 
+from pyhap.const import CATEGORY_GARAGE_DOOR_OPENER, CATEGORY_WINDOW_COVERING
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN, SUPPORT_STOP)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_SET_COVER_POSITION, STATE_OPEN, STATE_CLOSED,
-    SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_STOP_COVER,
-    ATTR_SUPPORTED_FEATURES)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER, SERVICE_SET_COVER_POSITION, SERVICE_STOP_COVER,
+    STATE_CLOSED, STATE_OPEN)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service, setup_char
+from .accessories import debounce, HomeAccessory
 from .const import (
-    CATEGORY_WINDOW_COVERING, SERV_WINDOW_COVERING,
-    CHAR_CURRENT_POSITION, CHAR_TARGET_POSITION, CHAR_POSITION_STATE,
-    CATEGORY_GARAGE_DOOR_OPENER, SERV_GARAGE_DOOR_OPENER,
-    CHAR_CURRENT_DOOR_STATE, CHAR_TARGET_DOOR_STATE)
+    CHAR_CURRENT_DOOR_STATE, CHAR_CURRENT_POSITION, CHAR_POSITION_STATE,
+    CHAR_TARGET_DOOR_STATE, CHAR_TARGET_POSITION,
+    SERV_GARAGE_DOOR_OPENER, SERV_WINDOW_COVERING)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,29 +28,29 @@ class GarageDoorOpener(HomeAccessory):
     and support no more than open, close, and stop.
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a GarageDoorOpener accessory object."""
         super().__init__(*args, category=CATEGORY_GARAGE_DOOR_OPENER)
         self.flag_target_state = False
 
-        serv_garage_door = add_preload_service(self, SERV_GARAGE_DOOR_OPENER)
-        self.char_current_state = setup_char(
-            CHAR_CURRENT_DOOR_STATE, serv_garage_door, value=0)
-        self.char_target_state = setup_char(
-            CHAR_TARGET_DOOR_STATE, serv_garage_door, value=0,
-            callback=self.set_state)
+        serv_garage_door = self.add_preload_service(SERV_GARAGE_DOOR_OPENER)
+        self.char_current_state = serv_garage_door.configure_char(
+            CHAR_CURRENT_DOOR_STATE, value=0)
+        self.char_target_state = serv_garage_door.configure_char(
+            CHAR_TARGET_DOOR_STATE, value=0, setter_callback=self.set_state)
 
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
         _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
         self.flag_target_state = True
 
+        params = {ATTR_ENTITY_ID: self.entity_id}
         if value == 0:
             self.char_current_state.set_value(3)
-            self.hass.components.cover.open_cover(self.entity_id)
+            self.hass.services.call(DOMAIN, SERVICE_OPEN_COVER, params)
         elif value == 1:
             self.char_current_state.set_value(2)
-            self.hass.components.cover.close_cover(self.entity_id)
+            self.hass.services.call(DOMAIN, SERVICE_CLOSE_COVER, params)
 
     def update_state(self, new_state):
         """Update cover state after state changed."""
@@ -69,18 +70,18 @@ class WindowCovering(HomeAccessory):
     The cover entity must support: set_cover_position.
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
         self.homekit_target = None
 
-        serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
-        self.char_current_position = setup_char(
-            CHAR_CURRENT_POSITION, serv_cover, value=0)
-        self.char_target_position = setup_char(
-            CHAR_TARGET_POSITION, serv_cover, value=0,
-            callback=self.move_cover)
+        serv_cover = self.add_preload_service(SERV_WINDOW_COVERING)
+        self.char_current_position = serv_cover.configure_char(
+            CHAR_CURRENT_POSITION, value=0)
+        self.char_target_position = serv_cover.configure_char(
+            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover)
 
+    @debounce
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
@@ -108,22 +109,22 @@ class WindowCoveringBasic(HomeAccessory):
     stop_cover (optional).
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
         features = self.hass.states.get(self.entity_id) \
             .attributes.get(ATTR_SUPPORTED_FEATURES)
         self.supports_stop = features & SUPPORT_STOP
 
-        serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
-        self.char_current_position = setup_char(
-            CHAR_CURRENT_POSITION, serv_cover, value=0)
-        self.char_target_position = setup_char(
-            CHAR_TARGET_POSITION, serv_cover, value=0,
-            callback=self.move_cover)
-        self.char_position_state = setup_char(
-            CHAR_POSITION_STATE, serv_cover, value=2)
+        serv_cover = self.add_preload_service(SERV_WINDOW_COVERING)
+        self.char_current_position = serv_cover.configure_char(
+            CHAR_CURRENT_POSITION, value=0)
+        self.char_target_position = serv_cover.configure_char(
+            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover)
+        self.char_position_state = serv_cover.configure_char(
+            CHAR_POSITION_STATE, value=2)
 
+    @debounce
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
@@ -141,8 +142,8 @@ class WindowCoveringBasic(HomeAccessory):
             else:
                 service, position = (SERVICE_CLOSE_COVER, 0)
 
-        self.hass.services.call(DOMAIN, service,
-                                {ATTR_ENTITY_ID: self.entity_id})
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        self.hass.services.call(DOMAIN, service, params)
 
         # Snap the current/target position to the expected final position.
         self.char_current_position.set_value(position)

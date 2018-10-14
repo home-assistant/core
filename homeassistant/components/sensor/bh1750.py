@@ -4,7 +4,6 @@ Support for BH1750 light sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bh1750/
 """
-import asyncio
 from functools import partial
 import logging
 
@@ -12,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['i2csense==0.0.4',
@@ -65,12 +64,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=import-error
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the BH1750 sensor."""
-    import smbus
-    from i2csense.bh1750 import BH1750
+    import smbus  # pylint: disable=import-error
+    from i2csense.bh1750 import BH1750  # pylint: disable=import-error
 
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)
@@ -79,7 +77,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     bus = smbus.SMBus(bus_number)
 
-    sensor = yield from hass.async_add_job(
+    sensor = await hass.async_add_job(
         partial(BH1750, bus, i2c_address,
                 operation_mode=operation_mode,
                 measurement_delay=config.get(CONF_DELAY),
@@ -95,7 +93,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.info("Setup of BH1750 light sensor at %s in mode %s is complete",
                  i2c_address, operation_mode)
 
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class BH1750Sensor(Entity):
@@ -130,12 +128,11 @@ class BH1750Sensor(Entity):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'light'
+        return DEVICE_CLASS_ILLUMINANCE
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from the BH1750 and update the states."""
-        yield from self.hass.async_add_job(self.bh1750_sensor.update)
+        await self.hass.async_add_job(self.bh1750_sensor.update)
         if self.bh1750_sensor.sample_ok \
                 and self.bh1750_sensor.light_level >= 0:
             self._state = int(round(self.bh1750_sensor.light_level

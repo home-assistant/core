@@ -2,8 +2,11 @@
     "config": {
         "abort": {
             "all_configured": "Vsi mostovi Philips Hue so \u017ee konfigurirani",
+            "already_configured": "Most je \u017ee konfiguriran",
+            "cannot_connect": "Ni mogo\u010de vzpostaviti povezave z mostom",
             "discover_timeout": "Ni bilo mogo\u010de odkriti Hue mostov",
-            "no_bridges": "Ni odkritih mostov Philips Hue"
+            "no_bridges": "Ni odkritih mostov Philips Hue",
+            "unknown": "Pri\u0161lo je do neznane napake"
         },
         "error": {
             "linking": "Pri\u0161lo je do neznane napake pri povezavi.",

@@ -15,7 +15,7 @@ DEPENDENCIES = ['august']
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up August locks."""
     data = hass.data[DATA_AUGUST]
     devices = []
@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for lock in data.locks:
         devices.append(AugustLock(data, lock))
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class AugustLock(LockDevice):

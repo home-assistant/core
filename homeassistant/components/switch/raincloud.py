@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a raincloud device."""
     raincloud = hass.data[DATA_RAINCLOUD].data
     default_watering_timer = config.get(CONF_WATERING_TIME)
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                 zone,
                                 sensor_type))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
     return True
 
 
@@ -88,7 +88,6 @@ class RainCloudSwitch(RainCloudEntity, SwitchDevice):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'current_time': self.data.current_time,
             'default_manual_timer': self._default_watering_timer,
             'identifier': self.data.serial
         }

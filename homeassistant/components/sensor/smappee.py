@@ -49,7 +49,7 @@ SENSOR_TYPES = {
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Smappee sensor."""
     smappee = hass.data[DATA_SMAPPEE]
 
@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         dev.append(SmappeeSensor(smappee, None, sensor,
                                                  SENSOR_TYPES[sensor]))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class SmappeeSensor(Entity):
@@ -189,8 +189,10 @@ class SmappeeSensor(Entity):
             data = self._smappee.sensor_consumption[self._location_id]\
                 .get(int(sensor_id))
             if data:
-                consumption = data.get('records')[-1]
-                _LOGGER.debug("%s (%s) %s",
-                              sensor_name, sensor_id, consumption)
-                value = consumption.get(self._smappe_name)
-                self._state = value
+                tempdata = data.get('records')
+                if tempdata:
+                    consumption = tempdata[-1]
+                    _LOGGER.debug("%s (%s) %s",
+                                  sensor_name, sensor_id, consumption)
+                    value = consumption.get(self._smappe_name)
+                    self._state = value

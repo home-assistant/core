@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.helpers.event import async_track_point_in_time
 
-REQUIREMENTS = ['TwitterAPI==2.5.0']
+REQUIREMENTS = ['TwitterAPI==2.5.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,9 +194,9 @@ class TwitterNotificationService(BaseNotificationService):
 
         if media_type.startswith('image/gif'):
             return 'tweet_gif'
-        elif media_type.startswith('video/'):
+        if media_type.startswith('video/'):
             return 'tweet_video'
-        elif media_type.startswith('image/'):
+        if media_type.startswith('image/'):
             return 'tweet_image'
 
         return None

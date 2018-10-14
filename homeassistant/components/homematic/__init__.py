@@ -4,7 +4,6 @@ Support for HomeMatic devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematic/
 """
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -13,16 +12,17 @@ import socket
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM,
-    CONF_HOSTS, CONF_HOST, ATTR_ENTITY_ID, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, ATTR_NAME, CONF_HOST, CONF_HOSTS, CONF_PASSWORD,
+    CONF_PLATFORM, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.loader import bind_hass
+from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyhomematic==0.1.42']
-DOMAIN = 'homematic'
+REQUIREMENTS = ['pyhomematic==0.1.50']
+
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'homematic'
 
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
@@ -38,7 +38,6 @@ DISCOVER_LOCKS = 'homematic.locks'
 ATTR_DISCOVER_DEVICES = 'devices'
 ATTR_PARAM = 'param'
 ATTR_CHANNEL = 'channel'
-ATTR_NAME = 'name'
 ATTR_ADDRESS = 'address'
 ATTR_VALUE = 'value'
 ATTR_INTERFACE = 'interface'
@@ -46,6 +45,9 @@ ATTR_ERRORCODE = 'error'
 ATTR_MESSAGE = 'message'
 ATTR_MODE = 'mode'
 ATTR_TIME = 'time'
+ATTR_UNIQUE_ID = 'unique_id'
+ATTR_PARAMSET_KEY = 'paramset_key'
+ATTR_PARAMSET = 'paramset'
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
@@ -56,11 +58,13 @@ SERVICE_RECONNECT = 'reconnect'
 SERVICE_SET_VARIABLE_VALUE = 'set_variable_value'
 SERVICE_SET_DEVICE_VALUE = 'set_device_value'
 SERVICE_SET_INSTALL_MODE = 'set_install_mode'
+SERVICE_PUT_PARAMSET = 'put_paramset'
 
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch', 'RFSiren',
-        'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic'],
+        'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic',
+        'IPKeySwitchPowermeter'],
     DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
@@ -70,16 +74,19 @@ HM_DEVICE_TYPES = {
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
         'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
         'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
-        'IPWeatherSensor'],
+        'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
+        'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
+        'IPWeatherSensorBasic'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
-        'ThermostatGroup'],
+        'ThermostatGroup', 'IPThermostatWall230V'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
-        'WiredSensor', 'PresenceIP', 'IPWeatherSensor'],
+        'WiredSensor', 'PresenceIP', 'IPWeatherSensor', 'IPPassageSensor',
+        'SmartwareMotion', 'IPWeatherSensorPlus'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
     DISCOVER_LOCKS: ['KeyMatic']
 }
@@ -90,15 +97,20 @@ HM_IGNORE_DISCOVERY_NODE = [
 ]
 
 HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
-    'ACTUAL_TEMPERATURE': ['IPAreaThermostat', 'IPWeatherSensor'],
+    'ACTUAL_TEMPERATURE': [
+        'IPAreaThermostat', 'IPWeatherSensor',
+        'IPWeatherSensorPlus', 'IPWeatherSensorBasic'],
 }
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
+    'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
+    'RSSI_PEER': ['rssi', {}],
     'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
+    'LEVEL': ['level', {}],
     'BATTERY_STATE': ['battery', {}],
     'CONTROL_MODE': ['mode', {
         0: 'Auto',
@@ -112,7 +124,7 @@ HM_ATTRIBUTE_SUPPORT = {
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
     'OPERATING_VOLTAGE': ['voltage', {}],
-    'WORKING': ['working', {0: 'No', 1: 'Yes'}],
+    'WORKING': ['working', {0: 'No', 1: 'Yes'}]
 }
 
 HM_PRESS_EVENTS = [
@@ -146,6 +158,7 @@ CONF_PATH = 'path'
 CONF_CALLBACK_IP = 'callback_ip'
 CONF_CALLBACK_PORT = 'callback_port'
 CONF_RESOLVENAMES = 'resolvenames'
+CONF_JSONPORT = 'jsonport'
 CONF_VARIABLES = 'variables'
 CONF_DEVICES = 'devices'
 CONF_PRIMARY = 'primary'
@@ -153,6 +166,7 @@ CONF_PRIMARY = 'primary'
 DEFAULT_LOCAL_IP = '0.0.0.0'
 DEFAULT_LOCAL_PORT = 0
 DEFAULT_RESOLVENAMES = False
+DEFAULT_JSONPORT = 80
 DEFAULT_PORT = 2001
 DEFAULT_PATH = ''
 DEFAULT_USERNAME = 'Admin'
@@ -166,6 +180,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_INTERFACE): cv.string,
     vol.Optional(ATTR_CHANNEL, default=1): vol.Coerce(int),
     vol.Optional(ATTR_PARAM): cv.string,
+    vol.Optional(ATTR_UNIQUE_ID): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -176,6 +191,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             vol.Optional(CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
                 vol.In(CONF_RESOLVENAMES_OPTIONS),
+            vol.Optional(CONF_JSONPORT, default=DEFAULT_JSONPORT): cv.port,
             vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
             vol.Optional(CONF_CALLBACK_IP): cv.string,
@@ -222,64 +238,12 @@ SCHEMA_SERVICE_SET_INSTALL_MODE = vol.Schema({
     vol.Optional(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
 })
 
-
-@bind_hass
-def virtualkey(hass, address, channel, param, interface=None):
-    """Send virtual keypress to homematic controller."""
-    data = {
-        ATTR_ADDRESS: address,
-        ATTR_CHANNEL: channel,
-        ATTR_PARAM: param,
-        ATTR_INTERFACE: interface,
-    }
-
-    hass.services.call(DOMAIN, SERVICE_VIRTUALKEY, data)
-
-
-@bind_hass
-def set_variable_value(hass, entity_id, value):
-    """Change value of a Homematic system variable."""
-    data = {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_VALUE: value,
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_VARIABLE_VALUE, data)
-
-
-@bind_hass
-def set_device_value(hass, address, channel, param, value, interface=None):
-    """Call setValue XML-RPC method of supplied interface."""
-    data = {
-        ATTR_ADDRESS: address,
-        ATTR_CHANNEL: channel,
-        ATTR_PARAM: param,
-        ATTR_VALUE: value,
-        ATTR_INTERFACE: interface,
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_DEVICE_VALUE, data)
-
-
-@bind_hass
-def set_install_mode(hass, interface, mode=None, time=None, address=None):
-    """Call setInstallMode XML-RPC method of supplied interface."""
-    data = {
-        key: value for key, value in (
-            (ATTR_INTERFACE, interface),
-            (ATTR_MODE, mode),
-            (ATTR_TIME, time),
-            (ATTR_ADDRESS, address)
-        ) if value
-    }
-
-    hass.services.call(DOMAIN, SERVICE_SET_INSTALL_MODE, data)
-
-
-@bind_hass
-def reconnect(hass):
-    """Reconnect to CCU/Homegear."""
-    hass.services.call(DOMAIN, SERVICE_RECONNECT, {})
+SCHEMA_SERVICE_PUT_PARAMSET = vol.Schema({
+    vol.Required(ATTR_INTERFACE): cv.string,
+    vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
+    vol.Required(ATTR_PARAMSET_KEY): vol.All(cv.string, vol.Upper),
+    vol.Required(ATTR_PARAMSET): dict,
+})
 
 
 def setup(hass, config):
@@ -297,6 +261,7 @@ def setup(hass, config):
             'port': rconfig.get(CONF_PORT),
             'path': rconfig.get(CONF_PATH),
             'resolvenames': rconfig.get(CONF_RESOLVENAMES),
+            'jsonport': rconfig.get(CONF_JSONPORT),
             'username': rconfig.get(CONF_USERNAME),
             'password': rconfig.get(CONF_PASSWORD),
             'callbackip': rconfig.get(CONF_CALLBACK_IP),
@@ -428,6 +393,26 @@ def setup(hass, config):
         DOMAIN, SERVICE_SET_INSTALL_MODE, _service_handle_install_mode,
         schema=SCHEMA_SERVICE_SET_INSTALL_MODE)
 
+    def _service_put_paramset(service):
+        """Service to call the putParamset method on a HomeMatic connection."""
+        interface = service.data.get(ATTR_INTERFACE)
+        address = service.data.get(ATTR_ADDRESS)
+        paramset_key = service.data.get(ATTR_PARAMSET_KEY)
+        # When passing in the paramset from a YAML file we get an OrderedDict
+        # here instead of a dict, so add this explicit cast.
+        # The service schema makes sure that this cast works.
+        paramset = dict(service.data.get(ATTR_PARAMSET))
+
+        _LOGGER.debug(
+            "Calling putParamset: %s, %s, %s, %s",
+            interface, address, paramset_key, paramset
+        )
+        homematic.putParamset(interface, address, paramset_key, paramset)
+
+    hass.services.register(
+        DOMAIN, SERVICE_PUT_PARAMSET, _service_put_paramset,
+        schema=SCHEMA_SERVICE_PUT_PARAMSET)
+
     return True
 
 
@@ -521,8 +506,12 @@ def _get_devices(hass, discovery_type, keys, interface):
             _LOGGER.debug("%s: Handling %s: %s: %s",
                           discovery_type, key, param, channels)
             for channel in channels:
-                name = _create_ha_name(
+                name = _create_ha_id(
                     name=device.NAME, channel=channel, param=param,
+                    count=len(channels)
+                )
+                unique_id = _create_ha_id(
+                    name=key, channel=channel, param=param,
                     count=len(channels)
                 )
                 device_dict = {
@@ -530,7 +519,8 @@ def _get_devices(hass, discovery_type, keys, interface):
                     ATTR_ADDRESS: key,
                     ATTR_INTERFACE: interface,
                     ATTR_NAME: name,
-                    ATTR_CHANNEL: channel
+                    ATTR_CHANNEL: channel,
+                    ATTR_UNIQUE_ID: unique_id
                 }
                 if param is not None:
                     device_dict[ATTR_PARAM] = param
@@ -545,7 +535,7 @@ def _get_devices(hass, discovery_type, keys, interface):
     return device_arr
 
 
-def _create_ha_name(name, channel, param, count):
+def _create_ha_id(name, channel, param, count):
     """Generate a unique entity id."""
     # HMDevice is a simple device
     if count == 1 and param is None:
@@ -716,6 +706,7 @@ class HMDevice(Entity):
         self._interface = config.get(ATTR_INTERFACE)
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
+        self._unique_id = config.get(ATTR_UNIQUE_ID)
         self._data = {}
         self._homematic = None
         self._hmdevice = None
@@ -726,10 +717,14 @@ class HMDevice(Entity):
         if self._state:
             self._state = self._state.upper()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Load data init callbacks."""
-        yield from self.hass.async_add_job(self.link_homematic)
+        await self.hass.async_add_job(self.link_homematic)
+
+    @property
+    def unique_id(self):
+        """Return unique ID. HomeMatic entity IDs are unique by default."""
+        return self._unique_id.replace(" ", "_")
 
     @property
     def should_poll(self):
@@ -783,8 +778,7 @@ class HMDevice(Entity):
             # Link events from pyhomematic
             self._subscribe_homematic_events()
             self._available = not self._hmdevice.UNREACH
-        # pylint: disable=broad-except
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             self._connected = False
             _LOGGER.error("Exception while linking %s: %s",
                           self._address, str(err))
@@ -804,7 +798,7 @@ class HMDevice(Entity):
 
         # Availability has changed
         if attribute == 'UNREACH':
-            self._available = bool(value)
+            self._available = not bool(value)
             has_changed = True
         elif not self.available:
             self._available = False

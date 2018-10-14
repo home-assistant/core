@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yahoo Finance sensor."""
     from yahoo_finance import Share
 
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         data = YahooFinanceData(symbol)
         dev.append(YahooFinanceSensor(data, symbol))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class YahooFinanceSensor(Entity):
@@ -104,7 +104,7 @@ class YahooFinanceSensor(Entity):
         self._state = self.data.state
 
 
-class YahooFinanceData(object):
+class YahooFinanceData:
     """Get data from Yahoo Finance."""
 
     def __init__(self, symbol):

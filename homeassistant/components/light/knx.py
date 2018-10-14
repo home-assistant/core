@@ -37,27 +37,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up lights for KNX platform."""
     if discovery_info is not None:
-        async_add_devices_discovery(hass, discovery_info, async_add_devices)
+        async_add_entities_discovery(hass, discovery_info, async_add_entities)
     else:
-        async_add_devices_config(hass, config, async_add_devices)
+        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
-def async_add_devices_discovery(hass, discovery_info, async_add_devices):
+def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     """Set up lights for KNX platform configured via xknx.yaml."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
         entities.append(KNXLight(hass, device))
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 @callback
-def async_add_devices_config(hass, config, async_add_devices):
+def async_add_entities_config(hass, config, async_add_entities):
     """Set up light for KNX platform configured within platform."""
     import xknx
     light = xknx.devices.Light(
@@ -71,7 +71,7 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address_color=config.get(CONF_COLOR_ADDRESS),
         group_address_color_state=config.get(CONF_COLOR_STATE_ADDRESS))
     hass.data[DATA_KNX].xknx.devices.add(light)
-    async_add_devices([KNXLight(hass, light)])
+    async_add_entities([KNXLight(hass, light)])
 
 
 class KNXLight(Light):
@@ -88,7 +88,6 @@ class KNXLight(Light):
         """Register callbacks to update hass after device was changed."""
         async def after_update_callback(device):
             """Call after device was updated."""
-            # pylint: disable=unused-argument
             await self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 

@@ -27,8 +27,10 @@ REQUIREMENTS = ['lightify==1.0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ALLOW_LIGHTIFY_NODES = 'allow_lightify_nodes'
 CONF_ALLOW_LIGHTIFY_GROUPS = 'allow_lightify_groups'
 
+DEFAULT_ALLOW_LIGHTIFY_NODES = True
 DEFAULT_ALLOW_LIGHTIFY_GROUPS = True
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -40,16 +42,19 @@ SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_ALLOW_LIGHTIFY_NODES,
+                 default=DEFAULT_ALLOW_LIGHTIFY_NODES): cv.boolean,
     vol.Optional(CONF_ALLOW_LIGHTIFY_GROUPS,
                  default=DEFAULT_ALLOW_LIGHTIFY_GROUPS): cv.boolean,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Osram Lightify lights."""
     import lightify
 
     host = config.get(CONF_HOST)
+    add_nodes = config.get(CONF_ALLOW_LIGHTIFY_NODES)
     add_groups = config.get(CONF_ALLOW_LIGHTIFY_GROUPS)
 
     try:
@@ -60,10 +65,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception(msg)
         return
 
-    setup_bridge(bridge, add_devices, add_groups)
+    setup_bridge(bridge, add_entities, add_nodes, add_groups)
 
 
-def setup_bridge(bridge, add_devices, add_groups):
+def setup_bridge(bridge, add_entities, add_nodes, add_groups):
     """Set up the Lightify bridge."""
     lights = {}
 
@@ -80,14 +85,15 @@ def setup_bridge(bridge, add_devices, add_groups):
 
         new_lights = []
 
-        for (light_id, light) in bridge.lights().items():
-            if light_id not in lights:
-                osram_light = OsramLightifyLight(
-                    light_id, light, update_lights)
-                lights[light_id] = osram_light
-                new_lights.append(osram_light)
-            else:
-                lights[light_id].light = light
+        if add_nodes:
+            for (light_id, light) in bridge.lights().items():
+                if light_id not in lights:
+                    osram_light = OsramLightifyLight(
+                        light_id, light, update_lights)
+                    lights[light_id] = osram_light
+                    new_lights.append(osram_light)
+                else:
+                    lights[light_id].light = light
 
         if add_groups:
             for (group_name, group) in bridge.groups().items():
@@ -100,7 +106,7 @@ def setup_bridge(bridge, add_devices, add_groups):
                     lights[group_name].group = group
 
         if new_lights:
-            add_devices(new_lights)
+            add_entities(new_lights)
 
     update_lights()
 
@@ -225,6 +231,11 @@ class OsramLightifyLight(Luminary):
                 self._luminary.temp())
         self._brightness = int(self._luminary.lum() * 2.55)
 
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._light_id
+
 
 class OsramLightifyGroup(Luminary):
     """Representation of an Osram Lightify Group."""
@@ -234,6 +245,7 @@ class OsramLightifyGroup(Luminary):
         self._bridge = bridge
         self._light_ids = []
         super().__init__(group, update_lights)
+        self._unique_id = '{}'.format(self._light_ids)
 
     def _get_state(self):
         """Get state of group."""
@@ -254,3 +266,8 @@ class OsramLightifyGroup(Luminary):
         else:
             self._temperature = color_temperature_kelvin_to_mired(o_temp)
         self._state = light.on()
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id

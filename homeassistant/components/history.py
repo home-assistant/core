@@ -274,7 +274,7 @@ async def async_setup(hass, config):
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     await hass.components.frontend.async_register_built_in_panel(
-        'history', 'history', 'mdi:poll-box')
+        'history', 'history', 'hass:poll-box')
 
     return True
 
@@ -353,7 +353,7 @@ class HistoryPeriodView(HomeAssistantView):
         return await hass.async_add_job(self.json, result)
 
 
-class Filters(object):
+class Filters:
     """Container for the configured include and exclude filters."""
 
     def __init__(self):

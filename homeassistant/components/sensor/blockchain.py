@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Blockchain.info sensors."""
     from pyblockchain import validate_address
 
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Bitcoin address is not valid: %s", address)
             return False
 
-    add_devices([BlockchainSensor(name, addresses)], True)
+    add_entities([BlockchainSensor(name, addresses)], True)
 
 
 class BlockchainSensor(Entity):

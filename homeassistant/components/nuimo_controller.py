@@ -15,9 +15,7 @@ from homeassistant.const import (CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = [
     '--only-binary=all '  # avoid compilation of gattlib
-    'https://github.com/getSenic/nuimo-linux-python'
-    '/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip'
-    '#nuimo==1.0.0']
+    'nuimo==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +52,7 @@ def setup(hass, config):
     return True
 
 
-class NuimoLogger(object):
+class NuimoLogger:
     """Handle Nuimo Controller event callbacks."""
 
     def __init__(self, hass, name):
@@ -97,7 +95,6 @@ class NuimoThread(threading.Thread):
             self._nuimo.disconnect()
             self._nuimo = None
 
-    # pylint: disable=unused-argument
     def stop(self, event):
         """Terminate Thread by unsetting flag."""
         _LOGGER.debug('Stopping thread for Nuimo %s', self._mac)
@@ -170,7 +167,7 @@ HOMEASSIST_LOGO = (
     ".........")
 
 
-class DiscoveryLogger(object):
+class DiscoveryLogger:
     """Handle Nuimo Discovery callbacks."""
 
     # pylint: disable=no-self-use

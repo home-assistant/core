@@ -107,3 +107,6 @@ desktop.ini
 
 # Secrets
 .lokalise_token
+
+# monkeytype
+monkeytype.sqlite3

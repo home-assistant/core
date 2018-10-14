@@ -90,7 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = HikvisionData(hass, url, port, name, username, password)
 
     if data.sensors is None:
-        _LOGGER.error("Hikvision event stream has no data, unable to setup")
+        _LOGGER.error("Hikvision event stream has no data, unable to set up")
         return False
 
     entities = []
@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities)
 
 
-class HikvisionData(object):
+class HikvisionData:
     """Hikvision device event stream object."""
 
     def __init__(self, hass, url, port, name, username, password):

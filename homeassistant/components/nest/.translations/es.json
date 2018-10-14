@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "link": {
+                "data": {
+                    "code": "C\u00f3digo PIN"
+                }
+            }
+        },
+        "title": "Nest"
+    }
+}

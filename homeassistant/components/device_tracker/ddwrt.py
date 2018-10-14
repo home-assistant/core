@@ -27,7 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return a DD-WRT scanner."""
     try:
@@ -132,13 +131,12 @@ class DdWrtDeviceScanner(DeviceScanner):
             return
         if response.status_code == 200:
             return _parse_ddwrt_response(response.text)
-        elif response.status_code == 401:
+        if response.status_code == 401:
             # Authentication error
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password")
             return
-        else:
-            _LOGGER.error("Invalid response from DD-WRT: %s", response)
+        _LOGGER.error("Invalid response from DD-WRT: %s", response)
 
 
 def _parse_ddwrt_response(data_str):
