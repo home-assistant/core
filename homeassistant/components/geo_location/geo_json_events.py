@@ -1,24 +1,20 @@
 """
 Generic GeoJSON events platform.
 
-Retrieves current events (typically incidents or alerts) in GeoJSON format, and
-displays information on events filtered by distance to the HA instance's
-location.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/geo_location/geo_json_events/
 """
-import logging
 from datetime import timedelta
+import logging
 from typing import Optional
 
 import voluptuous as vol
 
+from homeassistant.components.geo_location import (
+    PLATFORM_SCHEMA, GeoLocationEvent)
+from homeassistant.const import (
+    CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_URL, EVENT_HOMEASSISTANT_START)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.geo_location import GeoLocationEvent
-from homeassistant.const import CONF_RADIUS, CONF_URL, CONF_SCAN_INTERVAL, \
-    EVENT_HOMEASSISTANT_START
-from homeassistant.components.geo_location import PLATFORM_SCHEMA
 from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['geojson_client==0.1']
@@ -28,15 +24,15 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_EXTERNAL_ID = 'external_id'
 
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
+DEFAULT_UNIT_OF_MEASUREMENT = 'km'
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
 SOURCE = 'geo_json_events'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
-    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM):
-        vol.Coerce(float),
+    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
 })
 
 
@@ -56,8 +52,9 @@ class GeoJsonFeedManager:
         """Initialize the GeoJSON Feed Manager."""
         from geojson_client.generic_feed import GenericFeed
         self._hass = hass
-        self._feed = GenericFeed((hass.config.latitude, hass.config.longitude),
-                                 filter_radius=radius_in_km, url=url)
+        self._feed = GenericFeed(
+            (hass.config.latitude, hass.config.longitude),
+            filter_radius=radius_in_km, url=url)
         self._add_entities = add_entities
         self._scan_interval = scan_interval
         self._feed_entries = []
@@ -68,8 +65,8 @@ class GeoJsonFeedManager:
 
     def _init_regular_updates(self):
         """Schedule regular updates at the specified interval."""
-        track_time_interval(self._hass, lambda now: self._update(),
-                            self._scan_interval)
+        track_time_interval(
+            self._hass, lambda now: self._update(), self._scan_interval)
 
     def _update(self):
         """Update the feed and then update connected entities."""
@@ -82,11 +79,11 @@ class GeoJsonFeedManager:
             keep_entries = self._update_or_remove_entities(feed_entries)
             self._generate_new_entities(keep_entries)
         elif status == geojson_client.UPDATE_OK_NO_DATA:
-            _LOGGER.debug("Update successful, but no data received from %s",
-                          self._feed)
+            _LOGGER.debug(
+                "Update successful, but no data received from %s", self._feed)
         else:
-            _LOGGER.warning("Update not successful, no data received from %s",
-                            self._feed)
+            _LOGGER.warning(
+                "Update not successful, no data received from %s", self._feed)
             # Remove all entities.
             self._update_or_remove_entities([])
 
