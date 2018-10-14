@@ -322,13 +322,13 @@ track_sunset = threaded_listener_factory(async_track_sunset)
 
 @callback
 @bind_hass
-def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
+def async_track_utc_time_change(hass, action,
                                 hour=None, minute=None, second=None,
                                 local=False):
     """Add a listener that will fire if time matches a pattern."""
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
-    if all(val is None for val in (year, month, day, hour, minute, second)):
+    if all(val is None for val in (hour, minute, second)):
         @callback
         def time_change_listener(event):
             """Fire every time event that comes in."""
@@ -336,24 +336,45 @@ def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
 
         return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
 
-    pmp = _process_time_match
-    year, month, day = pmp(year), pmp(month), pmp(day)
-    hour, minute, second = pmp(hour), pmp(minute), pmp(second)
+    matching_seconds = dt_util.parse_time_expression(second, 0, 59)
+    matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
+    matching_hours = dt_util.parse_time_expression(hour, 0, 23)
+
+    next_time = None
+
+    def calculate_next(now):
+        """Calculate and set the next time the trigger should fire."""
+        nonlocal next_time
+
+        localized_now = dt_util.as_local(now) if local else now
+        next_time = dt_util.find_next_time_expression_time(
+            localized_now, matching_seconds, matching_minutes,
+            matching_hours)
+
+    # Make sure rolling back the clock doesn't prevent the timer from
+    # triggering.
+    last_now = None
 
     @callback
     def pattern_time_change_listener(event):
         """Listen for matching time_changed events."""
+        nonlocal next_time, last_now
+
         now = event.data[ATTR_NOW]
 
-        if local:
-            now = dt_util.as_local(now)
+        if last_now is None or now < last_now:
+            # Time rolled back or next time not yet calculated
+            calculate_next(now)
 
-        # pylint: disable=too-many-boolean-expressions
-        if second(now.second) and minute(now.minute) and hour(now.hour) and \
-           day(now.day) and month(now.month) and year(now.year):
+        last_now = now
 
-            hass.async_run_job(action, now)
+        if next_time <= now:
+            hass.async_run_job(action, event.data[ATTR_NOW])
+            calculate_next(now + timedelta(seconds=1))
 
+    # We can't use async_track_point_in_utc_time here because it would
+    # break in the case that the system time abruptly jumps backwards.
+    # Our custom last_now logic takes care of resolving that scenario.
     return hass.bus.async_listen(EVENT_TIME_CHANGED,
                                  pattern_time_change_listener)
 
@@ -363,11 +384,10 @@ track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
 
 @callback
 @bind_hass
-def async_track_time_change(hass, action, year=None, month=None, day=None,
-                            hour=None, minute=None, second=None):
+def async_track_time_change(hass, action, hour=None, minute=None, second=None):
     """Add a listener that will fire if UTC time matches a pattern."""
-    return async_track_utc_time_change(hass, action, year, month, day, hour,
-                                       minute, second, local=True)
+    return async_track_utc_time_change(hass, action, hour, minute, second,
+                                       local=True)
 
 
 track_time_change = threaded_listener_factory(async_track_time_change)
@@ -383,19 +403,3 @@ def _process_state_match(parameter):
 
     parameter = tuple(parameter)
     return lambda state: state in parameter
-
-
-def _process_time_match(parameter):
-    """Wrap parameter in a tuple if it is not one and returns it."""
-    if parameter is None or parameter == MATCH_ALL:
-        return lambda _: True
-
-    if isinstance(parameter, str) and parameter.startswith('/'):
-        parameter = float(parameter[1:])
-        return lambda time: time % parameter == 0
-
-    if isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
-        return lambda time: time == parameter
-
-    parameter = tuple(parameter)
-    return lambda time: time in parameter

@@ -4,8 +4,6 @@ Support for Z-Wave cover components.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.zwave/
 """
-# Because we do not compile openzwave on CI
-# pylint: disable=import-error
 import logging
 from homeassistant.components.cover import (
     DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION)

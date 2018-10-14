@@ -34,6 +34,7 @@ class FlowHandler(config_entries.ConfigFlow):
     def __init__(self):
         """Initialize flow."""
         self._host = None
+        self._import_groups = False
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -52,7 +53,8 @@ class FlowHandler(config_entries.ConfigFlow):
 
                 # We don't ask for import group anymore as group state
                 # is not reliable, don't want to show that to the user.
-                auth[CONF_IMPORT_GROUPS] = False
+                # But we still allow specifying import group via config yaml.
+                auth[CONF_IMPORT_GROUPS] = self._import_groups
 
                 return await self._entry_from_data(auth)
 
@@ -97,6 +99,7 @@ class FlowHandler(config_entries.ConfigFlow):
         # Happens if user has host directly in configuration.yaml
         if 'key' not in user_input:
             self._host = user_input['host']
+            self._import_groups = user_input[CONF_IMPORT_GROUPS]
             return await self.async_step_auth()
 
         try:

@@ -5,20 +5,16 @@ import logging
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
-from homeassistant.core import callback
+from homeassistant.core import callback, CoreState
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.components.http import HomeAssistantView
 
 from .handler import HassioAPIError
+from .const import (
+    ATTR_DISCOVERY, ATTR_ADDON, ATTR_NAME, ATTR_SERVICE, ATTR_CONFIG,
+    ATTR_UUID)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_DISCOVERY = 'discovery'
-ATTR_ADDON = 'addon'
-ATTR_NAME = 'name'
-ATTR_SERVICE = 'service'
-ATTR_CONFIG = 'config'
-ATTR_UUID = 'uuid'
 
 
 @callback
@@ -40,8 +36,11 @@ def async_setup_discovery(hass, hassio, config):
         if jobs:
             await asyncio.wait(jobs)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START, async_discovery_start_handler)
+    if hass.state == CoreState.running:
+        hass.async_create_task(async_discovery_start_handler(None))
+    else:
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, async_discovery_start_handler)
 
     hass.http.register_view(hassio_discovery)
 

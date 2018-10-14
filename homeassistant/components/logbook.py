@@ -133,14 +133,21 @@ class LogbookView(HomeAssistantView):
         else:
             datetime = dt_util.start_of_local_day()
 
-        start_day = dt_util.as_utc(datetime)
-        end_day = start_day + timedelta(days=1)
+        period = request.query.get('period')
+        if period is None:
+            period = 1
+        else:
+            period = int(period)
+
+        entity_id = request.query.get('entity')
+        start_day = dt_util.as_utc(datetime) - timedelta(days=period - 1)
+        end_day = start_day + timedelta(days=period)
         hass = request.app['hass']
 
         def json_events():
             """Fetch events and generate JSON."""
             return self.json(list(
-                _get_events(hass, self.config, start_day, end_day)))
+                _get_events(hass, self.config, start_day, end_day, entity_id)))
 
         return await hass.async_add_job(json_events)
 
@@ -288,7 +295,7 @@ def humanify(hass, events):
                 }
 
 
-def _get_events(hass, config, start_day, end_day):
+def _get_events(hass, config, start_day, end_day, entity_id=None):
     """Get events for a period of time."""
     from homeassistant.components.recorder.models import Events, States
     from homeassistant.components.recorder.util import (
@@ -302,6 +309,10 @@ def _get_events(hass, config, start_day, end_day):
                     & (Events.time_fired < end_day)) \
             .filter((States.last_updated == States.last_changed)
                     | (States.state_id.is_(None)))
+
+        if entity_id is not None:
+            query = query.filter(States.entity_id == entity_id.lower())
+
         events = execute(query)
     return humanify(hass, _exclude_events(events, config))
 

@@ -8,8 +8,6 @@ import asyncio
 from datetime import timedelta
 import logging
 import socket
-import subprocess
-import sys
 
 import voluptuous as vol
 
@@ -30,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Samsung TV Remote'
 DEFAULT_PORT = 55000
-DEFAULT_TIMEOUT = 0
+DEFAULT_TIMEOUT = 1
 
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = 'samsungtv_known_devices'
@@ -124,24 +122,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
-        if sys.platform == 'win32':
-            timeout_arg = '-w {}000'.format(self._config['timeout'])
-            _ping_cmd = [
-                'ping', '-n 3', timeout_arg, self._config['host']]
-        else:
-            timeout_arg = '-W{}'.format(self._config['timeout'])
-            _ping_cmd = [
-                'ping', '-n', '-q',
-                '-c3', timeout_arg, self._config['host']]
-
-        ping = subprocess.Popen(
-            _ping_cmd,
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        try:
-            ping.communicate()
-            self._state = STATE_ON if ping.returncode == 0 else STATE_OFF
-        except subprocess.CalledProcessError:
-            self._state = STATE_OFF
+        self.send_key("KEY")
 
     def get_remote(self):
         """Create or return a remote control instance."""

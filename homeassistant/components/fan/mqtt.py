@@ -13,11 +13,12 @@ from homeassistant.core import callback
 from homeassistant.components import fan, mqtt
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, STATE_ON, STATE_OFF,
-    CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON)
+    CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_DEVICE)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
     CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
-    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate)
+    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
@@ -79,6 +80,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
                           SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -138,21 +140,24 @@ async def _async_setup_entity(hass, config, async_add_entities,
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         config.get(CONF_UNIQUE_ID),
+        config.get(CONF_DEVICE),
         discovery_hash,
     )])
 
 
-class MqttFan(MqttAvailability, MqttDiscoveryUpdate, FanEntity):
+class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
+              FanEntity):
     """A MQTT fan component."""
 
     def __init__(self, name, topic, templates, qos, retain, payload,
                  speed_list, optimistic, availability_topic, payload_available,
                  payload_not_available, unique_id: Optional[str],
-                 discovery_hash):
+                 device_config: Optional[ConfigType], discovery_hash):
         """Initialize the MQTT fan."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash)
+        MqttEntityDeviceInfo.__init__(self, device_config)
         self._name = name
         self._topic = topic
         self._qos = qos

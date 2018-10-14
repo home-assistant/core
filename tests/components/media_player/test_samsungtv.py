@@ -2,7 +2,6 @@
 import asyncio
 import unittest
 from unittest.mock import call, patch, MagicMock
-from subprocess import CalledProcessError
 
 from asynctest import mock
 
@@ -100,50 +99,19 @@ class TestSamsungTv(unittest.TestCase):
             mocked_warn.assert_called_once_with("Cannot determine device")
             add_entities.assert_not_called()
 
-    @mock.patch(
-        'homeassistant.components.media_player.samsungtv.subprocess.Popen'
-    )
-    def test_update_on(self, mocked_popen):
+    def test_update_on(self):
         """Testing update tv on."""
-        ping = mock.Mock()
-        mocked_popen.return_value = ping
-        ping.returncode = 0
         self.device.update()
         self.assertEqual(STATE_ON, self.device._state)
 
-    @mock.patch(
-        'homeassistant.components.media_player.samsungtv.subprocess.Popen'
-    )
-    def test_update_off(self, mocked_popen):
+    def test_update_off(self):
         """Testing update tv off."""
-        ping = mock.Mock()
-        mocked_popen.return_value = ping
-        ping.returncode = 1
+        _remote = mock.Mock()
+        _remote.control = mock.Mock(
+            side_effect=OSError('Boom'))
+        self.device.get_remote = mock.Mock(return_value=_remote)
         self.device.update()
         self.assertEqual(STATE_OFF, self.device._state)
-        ping = mock.Mock()
-        ping.communicate = mock.Mock(
-            side_effect=CalledProcessError("BOOM", None))
-        mocked_popen.return_value = ping
-        self.device.update()
-        self.assertEqual(STATE_OFF, self.device._state)
-
-    @mock.patch(
-        'homeassistant.components.media_player.samsungtv.subprocess.Popen'
-    )
-    def test_timeout(self, mocked_popen):
-        """Test timeout use."""
-        ping = mock.Mock()
-        mocked_popen.return_value = ping
-        ping.returncode = 0
-        self.device.update()
-        expected_timeout = self.device._config['timeout']
-        timeout_arg = '-W{}'.format(expected_timeout)
-        ping_command = [
-            'ping', '-n', '-q', '-c3', timeout_arg, 'fake']
-        expected_call = call(ping_command, stderr=-3, stdout=-1)
-        self.assertEqual(mocked_popen.call_args, expected_call)
-        self.assertEqual(STATE_ON, self.device._state)
 
     def test_send_key(self):
         """Test for send key."""

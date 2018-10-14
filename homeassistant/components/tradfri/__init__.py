@@ -25,11 +25,11 @@ CONFIG_FILE = '.tradfri_psk.conf'
 KEY_GATEWAY = 'tradfri_gateway'
 KEY_API = 'tradfri_api'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
-DEFAULT_ALLOW_TRADFRI_GROUPS = True
+DEFAULT_ALLOW_TRADFRI_GROUPS = False
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Inclusive(CONF_HOST, 'gateway'): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_ALLOW_TRADFRI_GROUPS,
                      default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
     })
@@ -64,13 +64,14 @@ async def async_setup(hass, config):
         ))
 
     host = conf.get(CONF_HOST)
+    import_groups = conf[CONF_ALLOW_TRADFRI_GROUPS]
 
     if host is None or host in configured_hosts or host in legacy_hosts:
         return True
 
     hass.async_create_task(hass.config_entries.flow.async_init(
         DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
-        data={'host': host}
+        data={CONF_HOST: host, CONF_IMPORT_GROUPS: import_groups}
     ))
 
     return True

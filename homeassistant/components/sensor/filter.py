@@ -63,7 +63,6 @@ FILTER_SCHEMA = vol.Schema({
                  default=DEFAULT_PRECISION): vol.Coerce(int),
 })
 
-# pylint: disable=redefined-builtin
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_OUTLIER,
     vol.Optional(CONF_FILTER_WINDOW_SIZE,
@@ -446,7 +445,8 @@ class TimeSMAFilter(Filter):
         variant (enum): type of argorithm used to connect discrete values
     """
 
-    def __init__(self, window_size, precision, entity, type):
+    def __init__(self, window_size, precision, entity,
+                 type):  # pylint: disable=redefined-builtin
         """Initialize Filter."""
         super().__init__(FILTER_NAME_TIME_SMA, window_size, precision, entity)
         self._time_window = window_size
