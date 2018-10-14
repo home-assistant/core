@@ -172,6 +172,20 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
         self._external_id = external_id
+        self._name = None
+        self._distance = None
+        self._latitude = None
+        self._longitude = None
+        self._attribution = None
+        self._category = None
+        self._publication_date = None
+        self._location = None
+        self._council_area = None
+        self._status = None
+        self._type = None
+        self._fire = None
+        self._size = None
+        self._responsible_agency = None
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
