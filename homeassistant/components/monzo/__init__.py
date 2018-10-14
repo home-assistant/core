@@ -22,9 +22,9 @@ from homeassistant.helpers.event import async_track_time_interval
 from . import config_flow
 from .const import (
     DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ACCESS_TOKEN,
-    CONF_REFRESH_TOKEN, CONF_LAST_SAVED_AT)
+    CONF_REFRESH_TOKEN, CONF_LAST_SAVED_AT, CONF_EXPIRES_AT)
 
-REQUIREMENTS = ['monzotomtest==0.6.1']
+REQUIREMENTS = ['monzotomtest==0.6.2']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -87,8 +87,7 @@ async def async_setup(hass, config):
         DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
         data={
             CONF_CLIENT_ID: client_id,
-            CONF_CLIENT_SECRET: client_secret,
-            'monzo_conf_path': access_token_cache_file
+            CONF_CLIENT_SECRET: client_secret
         }
     ))
 
@@ -100,7 +99,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Monzo as a config entry."""
-    from monzo import Monzo, MonzoOAuth2Client
+    from monzo.monzo import Monzo
+    from monzo.auth import MonzoOAuth2Client
 
     sensors = hass.data[DATA_MONZO_CONFIG].get(CONF_SENSORS, {}).get(
         CONF_MONITORED_CONDITIONS, list(SENSORS))
@@ -109,19 +109,22 @@ async def async_setup_entry(hass, config_entry):
     client_secret = config_entry.data['tokens'][CONF_CLIENT_SECRET]
     access_token = config_entry.data['tokens'][CONF_ACCESS_TOKEN]
     refresh_token = config_entry.data['tokens'][CONF_REFRESH_TOKEN]
-    last_saved_at = config_entry.data['tokens'][CONF_LAST_SAVED_AT]
+    last_saved_at = config_entry.data['tokens'].get(CONF_LAST_SAVED_AT)
+    expires_at = config_entry.data['tokens'].get(CONF_EXPIRES_AT, last_saved_at)
 
     oauth_client = MonzoOAuth2Client(client_id=client_id,
                                      client_secret=client_secret,
                                      access_token=access_token,
                                      refresh_token=refresh_token,
-                                     expires_at=last_saved_at,
-                                     refresh_cb=lambda x: None)
+                                     expires_at=expires_at,
+                                     refresh_callback=None)
 
-    if int(time.time()) - last_saved_at > 3600:
-        oauth_client.refresh_token()
+    #if int(time.time()) - last_saved_at > 3600:
+    #    oauth_client.refresh_token()
 
-    monzo = MonzoObject(Monzo.from_oauth_session(oauth_client), sensors)
+    monzo = MonzoObject(Monzo.from_oauth_session(oauth_client),
+                        sensors,
+                        config_entry)
     await monzo.async_update()
 
     # Make Monzo client available
@@ -168,11 +171,18 @@ async def async_unload_entry(hass, config_entry):
 class MonzoObject:
     """Define a generic Monzo object."""
 
-    def __init__(self, client, sensor_conditions):
+    def __init__(self, client, sensor_conditions, config_entry):
         """Initialize."""
-        self.client = client
         self.data = {}
         self.sensor_conditions = sensor_conditions
+        self.config_entry = config_entry
+
+        # We need to inject the callback into the MonzoOAuth2Client
+        # to properly update the config entry as tokens refresh.
+        client.oauth_session.session.token_updater = self.update_config_entry
+        self.client = client
+        self.client.oauth_session.refresh_token()
+
 
     async def async_update(self):
         """Update sensor data."""
@@ -186,6 +196,11 @@ class MonzoObject:
             open_pots = [pot for pot in all_pots if not pot['deleted']]
             self.data[DATA_POTS] = open_pots
 
+    def update_config_entry(self, new_token):
+        """Update config entry with refreshed token"""
+        print(self.config_entry.data['tokens'])
+        self.config_entry.data['tokens'].update(new_token)
+        print(self.config_entry.data['tokens'])
 
 class MonzoEntity(Entity):
     """Define a generic Monzo entity."""
