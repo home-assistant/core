@@ -4,6 +4,7 @@ Support for interacting with Snapcast clients.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.snapcast/
 """
+import asyncio
 import logging
 import socket
 
@@ -154,30 +155,34 @@ class SnapcastGroupDevice(MediaPlayerDevice):
         """Do not poll for state."""
         return False
 
-    async def async_select_source(self, source):
+    @asyncio.coroutine
+    def async_select_source(self, source):
         """Set input source."""
         streams = self._group.streams_by_name()
         if source in streams:
-            await self._group.set_stream(streams[source].identifier)
+            yield from self._group.set_stream(streams[source].identifier)
             self.async_schedule_update_ha_state()
 
-    async def async_mute_volume(self, mute):
+    @asyncio.coroutine
+    def async_mute_volume(self, mute):
         """Send the mute command."""
-        await self._group.set_muted(mute)
+        yield from self._group.set_muted(mute)
         self.async_schedule_update_ha_state()
 
-    async def async_set_volume_level(self, volume):
+    @asyncio.coroutine
+    def async_set_volume_level(self, volume):
         """Set the volume level."""
-        await self._group.set_volume(round(volume * 100))
+        yield from self._group.set_volume(round(volume * 100))
         self.async_schedule_update_ha_state()
 
     def snapshot(self):
         """Snapshot the group state."""
         self._group.snapshot()
 
-    async def async_restore(self):
+    @asyncio.coroutine
+    def async_restore(self):
         """Restore the group state."""
-        await self._group.restore()
+        yield from self._group.restore()
 
 
 class SnapcastClientDevice(MediaPlayerDevice):
@@ -239,20 +244,23 @@ class SnapcastClientDevice(MediaPlayerDevice):
         """Do not poll for state."""
         return False
 
-    async def async_mute_volume(self, mute):
+    @asyncio.coroutine
+    def async_mute_volume(self, mute):
         """Send the mute command."""
-        await self._client.set_muted(mute)
+        yield from self._client.set_muted(mute)
         self.async_schedule_update_ha_state()
 
-    async def async_set_volume_level(self, volume):
+    @asyncio.coroutine
+    def async_set_volume_level(self, volume):
         """Set the volume level."""
-        await self._client.set_volume(round(volume * 100))
+        yield from self._client.set_volume(round(volume * 100))
         self.async_schedule_update_ha_state()
 
     def snapshot(self):
         """Snapshot the client state."""
         self._client.snapshot()
 
-    async def async_restore(self):
+    @asyncio.coroutine
+    def async_restore(self):
         """Restore the client state."""
-        await self._client.restore()
+        yield from self._client.restore()
