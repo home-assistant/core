@@ -258,7 +258,7 @@ async def test_counter_min(hass):
 
     state = hass.states.get('counter.test')
     assert state is not None
-    assert state == '0'
+    assert state.state == '0'
 
     await hass.services.async_call('counter', 'decrement', {
         'entity_id': state.entity_id,

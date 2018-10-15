@@ -100,8 +100,8 @@ class Counter(RestoreEntity):
         self._restore = restore
         self._step = step
         self._state = self._initial = initial
-        self._min = int(minimum) if minimum is not None else None
-        self._max = int(maximum) if maximum is not None else None
+        self._min = minimum
+        self._max = maximum
         self._icon = icon
 
     @property
