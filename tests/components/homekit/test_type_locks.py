@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.homekit.const import (
-    ATTR_VALUE, ATTR_DISPLAY_NAME)
+    ATTR_VALUE)
 from homeassistant.components.homekit.type_locks import Lock
 from homeassistant.components.lock import DOMAIN
 from homeassistant.const import (
@@ -60,7 +60,6 @@ async def test_lock_unlock(hass, hk_driver, events):
     assert acc.char_target_state.value == 1
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
-    assert events[-1].data[ATTR_DISPLAY_NAME] == 'Lock'
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()

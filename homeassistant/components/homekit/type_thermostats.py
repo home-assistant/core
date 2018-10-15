@@ -143,7 +143,8 @@ class Thermostat(HomeAccessory):
             ATTR_TARGET_TEMP_HIGH: temperature,
             ATTR_TARGET_TEMP_LOW: temperature_to_states(low, self._unit)}
         self.call_service(DOMAIN, SERVICE_SET_TEMPERATURE, params,
-                          "cooling threshold {}°C".format(temperature))
+                          "cooling threshold {}{}".format(temperature,
+                                                          self._unit))
 
     @debounce
     def set_heating_threshold(self, value):
@@ -158,7 +159,8 @@ class Thermostat(HomeAccessory):
             ATTR_TARGET_TEMP_HIGH: temperature_to_states(high, self._unit),
             ATTR_TARGET_TEMP_LOW: temperature}
         self.call_service(DOMAIN, SERVICE_SET_TEMPERATURE, params,
-                          "heating threshold {}°C".format(temperature))
+                          "heating threshold {}{}".format(temperature,
+                                                          self._unit))
 
     @debounce
     def set_target_temperature(self, value):
@@ -171,7 +173,8 @@ class Thermostat(HomeAccessory):
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_TEMPERATURE: temperature}
         self.call_service(DOMAIN, SERVICE_SET_TEMPERATURE, params,
-                          "target {}°C".format(temperature))
+                          "target {}{}".format(temperature,
+                                               self._unit))
 
     def update_state(self, new_state):
         """Update security state after state changed."""
