@@ -878,7 +878,7 @@ class ZWaveDeviceEntityValues():
         if entity_id is None:
             value_name = _value_name(self.primary)
             entity_id = generate_entity_id(component + '.{}', value_name, [])
-        node_config = self._device_config.get(entity_id, {})
+        node_config = self._device_config.get(entity_id)
 
         # Configure node
         _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
