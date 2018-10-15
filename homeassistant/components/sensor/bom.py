@@ -233,7 +233,6 @@ class BOMCurrentData:
         update_due_at = self.last_updated + datetime.timedelta(minutes=35)
         return now > update_due_at
 
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from BOM."""
