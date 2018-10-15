@@ -274,7 +274,6 @@ async def test_user_permissions_low(hass, aioclient_mock):
 
         result = await flow.async_step_site(user_input={})
 
-
     assert result['type'] == 'abort'
 
 
