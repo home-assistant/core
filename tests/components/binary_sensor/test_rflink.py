@@ -1,12 +1,11 @@
-"""Test for RFlink sensor components.
+"""
+Test for RFlink sensor components.
 
 Test setup of rflink sensor component/platform. Verify manual and
 automatic sensor creation.
-
 """
-
-import asyncio
 from datetime import timedelta
+from unittest.mock import patch
 
 from ..test_rflink import mock_rflink
 from homeassistant.components.rflink import (
@@ -44,11 +43,10 @@ CONFIG = {
 }
 
 
-@asyncio.coroutine
-def test_default_setup(hass, monkeypatch):
+async def test_default_setup(hass, monkeypatch):
     """Test all basic functionality of the rflink sensor component."""
     # setup mocking rflink module
-    event_callback, create, _, disconnect_callback = yield from mock_rflink(
+    event_callback, create, _, disconnect_callback = await mock_rflink(
         hass, CONFIG, DOMAIN, monkeypatch)
 
     # make sure arguments are passed
@@ -65,7 +63,7 @@ def test_default_setup(hass, monkeypatch):
         'id': 'test',
         'command': 'on',
     })
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert hass.states.get('binary_sensor.test').state == STATE_ON
 
@@ -74,13 +72,12 @@ def test_default_setup(hass, monkeypatch):
         'id': 'test',
         'command': 'off',
     })
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert hass.states.get('binary_sensor.test').state == STATE_OFF
 
 
-@asyncio.coroutine
-def test_entity_availability(hass, monkeypatch):
+async def test_entity_availability(hass, monkeypatch):
     """If Rflink device is disconnected, entities should become unavailable."""
     # Make sure Rflink mock does not 'recover' to quickly from the
     # disconnect or else the unavailability cannot be measured
@@ -89,7 +86,7 @@ def test_entity_availability(hass, monkeypatch):
     config[CONF_RECONNECT_INTERVAL] = 60
 
     # Create platform and entities
-    event_callback, create, _, disconnect_callback = yield from mock_rflink(
+    event_callback, create, _, disconnect_callback = await mock_rflink(
         hass, config, DOMAIN, monkeypatch, failures=failures)
 
     # Entities are available by default
@@ -99,7 +96,7 @@ def test_entity_availability(hass, monkeypatch):
     disconnect_callback()
 
     # Wait for dispatch events to propagate
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Entity should be unavailable
     assert hass.states.get('binary_sensor.test').state == STATE_UNAVAILABLE
@@ -108,23 +105,27 @@ def test_entity_availability(hass, monkeypatch):
     disconnect_callback()
 
     # Wait for dispatch events to propagate
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Entities should be available again
     assert hass.states.get('binary_sensor.test').state == STATE_OFF
 
 
-@asyncio.coroutine
-def test_off_delay(hass, monkeypatch):
+async def test_off_delay(hass, monkeypatch):
     """Test off_delay option."""
     # setup mocking rflink module
-    event_callback, create, _, disconnect_callback = yield from mock_rflink(
+    event_callback, create, _, disconnect_callback = await mock_rflink(
         hass, CONFIG, DOMAIN, monkeypatch)
 
     # make sure arguments are passed
     assert create.call_args_list[0][1]['ignore']
 
     events = []
+
+    on_event = {
+        'id': 'test2',
+        'command': 'on',
+    }
 
     @ha.callback
     def callback(event):
@@ -133,29 +134,45 @@ def test_off_delay(hass, monkeypatch):
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
 
-    # turn on sensor
-    event_callback({
-        'id': 'test2',
-        'command': 'on',
-    })
-    yield from hass.async_block_till_done()
+    now = dt_util.utcnow()
+    # fake time and turn on sensor
+    future = now + timedelta(seconds=0)
+    with patch(('homeassistant.helpers.event.'
+                'dt_util.utcnow'), return_value=future):
+        async_fire_time_changed(hass, future)
+        event_callback(on_event)
+        await hass.async_block_till_done()
     state = hass.states.get('binary_sensor.test2')
     assert state.state == STATE_ON
     assert len(events) == 1
 
-    # turn on sensor again
-    event_callback({
-        'id': 'test2',
-        'command': 'on',
-    })
-    yield from hass.async_block_till_done()
+    # fake time and turn on sensor again
+    future = now + timedelta(seconds=15)
+    with patch(('homeassistant.helpers.event.'
+                'dt_util.utcnow'), return_value=future):
+        async_fire_time_changed(hass, future)
+        event_callback(on_event)
+        await hass.async_block_till_done()
     state = hass.states.get('binary_sensor.test2')
     assert state.state == STATE_ON
     assert len(events) == 2
 
-    # fake time change and verify sensor sent a single off event
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    yield from hass.async_block_till_done()
+    # fake time and verify sensor still on (de-bounce)
+    future = now + timedelta(seconds=35)
+    with patch(('homeassistant.helpers.event.'
+                'dt_util.utcnow'), return_value=future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+    state = hass.states.get('binary_sensor.test2')
+    assert state.state == STATE_ON
+    assert len(events) == 2
+
+    # fake time and verify sensor is off
+    future = now + timedelta(seconds=45)
+    with patch(('homeassistant.helpers.event.'
+                'dt_util.utcnow'), return_value=future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
     state = hass.states.get('binary_sensor.test2')
     assert state.state == STATE_OFF
     assert len(events) == 3
