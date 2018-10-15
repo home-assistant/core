@@ -1057,7 +1057,7 @@ pyrainbird==0.1.6
 pyrecswitch==1.0.2
 
 # homeassistant.components.sabnzbd
-pysabnzbd==1.0.1
+pysabnzbd==1.1.0
 
 # homeassistant.components.climate.sensibo
 pysensibo==1.0.3
