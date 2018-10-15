@@ -797,10 +797,8 @@ class HMDevice(Entity):
                 has_changed = True
 
         # Availability has changed
-        # pylint: disable=protected-access
-        if self.available != (not self._hmdevice._unreach):
-            # pylint: disable=protected-access
-            self._available = not self._hmdevice._unreach
+        if self.available != (not self._hmdevice.UNREACH):
+            self._available = not self._hmdevice.UNREACH
             has_changed = True
 
         # If it has changed data point, update HASS
