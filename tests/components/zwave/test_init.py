@@ -703,7 +703,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
                         const.COMMAND_CLASS_SWITCH_BINARY],
                 }}}
 
-        with patch.object(zwave, 'async_dispatcher_send') as mock_dispatch_send:
+        with patch.object(zwave, 'async_dispatcher_send') as \
+                mock_dispatch_send:
+
             values = zwave.ZWaveDeviceEntityValues(
                 hass=self.hass,
                 schema=self.mock_schema,

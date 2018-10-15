@@ -15,7 +15,6 @@ from homeassistant import config_entries
 from homeassistant.core import callback, CoreState
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
-from homeassistant.helpers.device_registry import CONNECTION_LOCAL_DEVICE
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import async_get_registry
