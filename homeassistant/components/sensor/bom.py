@@ -159,9 +159,7 @@ class BOMCurrentSensor(Entity):
         """Return the state attributes of the device."""
         attr = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_LAST_UPDATE: datetime.datetime.strptime(
-                str(self.bom_data.latest_data['local_date_time_full']),
-                '%Y%m%d%H%M%S'),
+            ATTR_LAST_UPDATE: self.bom_data.last_updated,
             ATTR_SENSOR_ID: self._condition,
             ATTR_STATION_ID: self.bom_data.latest_data['wmo'],
             ATTR_STATION_NAME: self.bom_data.latest_data['name'],
@@ -188,7 +186,7 @@ class BOMCurrentData:
         self._hass = hass
         self._zone_id, self._wmo_id = station_id.split('.')
         self._data = None
-        self._last_updated = None
+        self.last_updated = None
 
     def _build_url(self):
         """Build the URL for the requests."""
@@ -218,12 +216,12 @@ class BOMCurrentData:
         return next((x for x in condition_readings if x != '-'), None)
 
     def should_update(self):
-        if self._last_updated is None:
+        if self.last_updated is None:
             # Never updated before, therefore an update should occur.
             return True
 
         now = datetime.datetime.now()
-        update_due_at = self._last_updated + datetime.timedelta(minutes=35)
+        update_due_at = self.last_updated + datetime.timedelta(minutes=35)
         return now > update_due_at
 
 
@@ -242,8 +240,8 @@ class BOMCurrentData:
             _LOGGER.debug(
                 "BOM was updated %s minutes ago, skipping update as"
                 " < 35 minutes, Now: %s, LastUpdate: %s",
-                (datetime.datetime.now() - self._last_updated),
-                datetime.datetime.now(), self._last_updated)
+                (datetime.datetime.now() - self.last_updated),
+                datetime.datetime.now(), self.last_updated)
             return
 
         try:
@@ -252,7 +250,7 @@ class BOMCurrentData:
 
             # set lastupdate using self._data[0] as the first element in the
             # array is the latest date in the json
-            self._last_updated = datetime.datetime.strptime(
+            self.last_updated = datetime.datetime.strptime(
                 str(self._data[0]['local_date_time_full']), '%Y%m%d%H%M%S')
             return
 
