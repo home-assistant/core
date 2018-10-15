@@ -17,6 +17,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers import service, event
+from homeassistant.components.plant import (ATTR_PROBLEM)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,9 +30,11 @@ CONF_CAN_ACK = 'can_acknowledge'
 CONF_NOTIFIERS = 'notifiers'
 CONF_REPEAT = 'repeat'
 CONF_SKIP_FIRST = 'skip_first'
+CONF_INCLUDE_PROBLEM = 'include_problem'
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
+DEFAULT_INCLUDE_PROBLEM = True
 
 ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -41,6 +44,8 @@ ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
     vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
     vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
+    vol.Required(
+        CONF_INCLUDE_PROBLEM, default=DEFAULT_INCLUDE_PROBLEM): cv.boolean,
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
 
 CONFIG_SCHEMA = vol.Schema({
@@ -85,7 +90,8 @@ async def async_setup(hass, config):
                        alert[CONF_NAME], alert.get(CONF_DONE_MESSAGE),
                        alert[CONF_ENTITY_ID], alert[CONF_STATE],
                        alert[CONF_REPEAT], alert[CONF_SKIP_FIRST],
-                       alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK])
+                       alert[CONF_INCLUDE_PROBLEM], alert[CONF_NOTIFIERS],
+                       alert[CONF_CAN_ACK])
         all_alerts[entity.entity_id] = entity
 
     # Setup service calls
@@ -110,15 +116,18 @@ class Alert(ToggleEntity):
     """Representation of an alert."""
 
     def __init__(self, hass, entity_id, name, done_message, watched_entity_id,
-                 state, repeat, skip_first, notifiers, can_ack):
+                 state, repeat, skip_first, include_problem, notifiers,
+                 can_ack):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
         self._alert_state = state
         self._skip_first = skip_first
+        self._include_problem = include_problem
         self._notifiers = notifiers
         self._can_ack = can_ack
         self._done_message = done_message
+        self._watched_entity_id = watched_entity_id
 
         self._delay = [timedelta(minutes=val) for val in repeat]
         self._next_delay = 0
@@ -204,9 +213,17 @@ class Alert(ToggleEntity):
         if not self._ack:
             _LOGGER.info("Alerting: %s", self._name)
             self._send_done_message = True
+
+            message = '{0}'.format(self._name)
+            if self._include_problem:
+                entity_state = self.hass.states.get(self._watched_entity_id)
+                problem_state = entity_state.attributes.get(ATTR_PROBLEM) or ""
+                if not problem_state == "":
+                    message = '{0} ({1})'.format(message, problem_state)
+
             for target in self._notifiers:
                 await self.hass.services.async_call(
-                    DOMAIN_NOTIFY, target, {ATTR_MESSAGE: self._name})
+                    DOMAIN_NOTIFY, target, {ATTR_MESSAGE: message})
         await self._schedule_notify()
 
     async def _notify_done_message(self, *args):
