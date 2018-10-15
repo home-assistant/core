@@ -4,7 +4,6 @@ Support for the myStrom buttons.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mystrom/
 """
-import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
@@ -16,9 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['http']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up myStrom Binary Sensor."""
     hass.http.register_view(MyStromView(async_add_entities))
 
@@ -37,14 +35,12 @@ class MyStromView(HomeAssistantView):
         self.buttons = {}
         self.add_entities = add_entities
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """Handle the GET request received from a myStrom button."""
-        res = yield from self._handle(request.app['hass'], request.query)
+        res = await self._handle(request.app['hass'], request.query)
         return res
 
-    @asyncio.coroutine
-    def _handle(self, hass, data):
+    async def _handle(self, hass, data):
         """Handle requests to the myStrom endpoint."""
         button_action = next((
             parameter for parameter in data

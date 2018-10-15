@@ -4,7 +4,6 @@ Support to interface with the Emby API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.emby/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -50,9 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Emby platform."""
     from pyemby import EmbyServer
 
@@ -113,10 +111,9 @@ def async_setup_platform(hass, config, async_add_entities,
         """Start Emby connection."""
         emby.start()
 
-    @asyncio.coroutine
-    def stop_emby(event):
+    async def stop_emby(event):
         """Stop Emby connection."""
-        yield from emby.stop()
+        await emby.stop()
 
     emby.add_new_devices_callback(device_update_callback)
     emby.add_stale_devices_callback(device_removal_callback)
@@ -141,8 +138,7 @@ class EmbyDevice(MediaPlayerDevice):
         self.media_status_last_position = None
         self.media_status_received = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callback."""
         self.emby.add_update_callback(
             self.async_update_callback, self.device_id)

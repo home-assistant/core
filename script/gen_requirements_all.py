@@ -51,6 +51,7 @@ TEST_REQUIREMENTS = (
     'foobot_async',
     'gTTS-token',
     'geojson_client',
+    'georss_client',
     'hangups',
     'HAP-python',
     'ha-ffmpeg',
@@ -75,6 +76,7 @@ TEST_REQUIREMENTS = (
     'pyblackbird',
     'pydeconz',
     'pydispatcher',
+    'pyhomematic',
     'pylitejet',
     'pymonoprice',
     'pynx584',
@@ -83,6 +85,7 @@ TEST_REQUIREMENTS = (
     'pysonos',
     'pyqwikswitch',
     'PyRMVtransport',
+    'PyTransportNSW',
     'pyspcwebgw',
     'python-forecastio',
     'python-nest',
@@ -94,7 +97,9 @@ TEST_REQUIREMENTS = (
     'rflink',
     'ring_doorbell',
     'rxv',
+    'simplisafe-python',
     'sleepyq',
+    'smhi-pkg',
     'somecomfort',
     'sqlalchemy',
     'statsd',
@@ -103,7 +108,8 @@ TEST_REQUIREMENTS = (
     'yahoo-finance',
     'pythonwhois',
     'wakeonlan',
-    'vultr'
+    'vultr',
+    'YesssSMS',
 )
 
 IGNORE_PACKAGES = (

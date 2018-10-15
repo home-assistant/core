@@ -9,7 +9,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
     DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
     CONF_EXTRA_HTML_URL_ES5)
-from homeassistant.components import websocket_api as wapi
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 
 from tests.common import mock_coro
 
@@ -213,7 +213,7 @@ async def test_missing_themes(hass, hass_ws_client):
     msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success']
     assert msg['result']['default_theme'] == 'default'
     assert msg['result']['themes'] == {}
@@ -252,7 +252,7 @@ async def test_get_panels(hass, hass_ws_client):
     msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success']
     assert msg['result']['map']['component_name'] == 'map'
     assert msg['result']['map']['url_path'] == 'map'
@@ -275,7 +275,7 @@ async def test_get_translations(hass, hass_ws_client):
         msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success']
     assert msg['result'] == {'resources': {'lang': 'nl'}}
 

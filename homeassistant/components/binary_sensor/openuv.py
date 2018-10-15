@@ -93,7 +93,11 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
 
     async def async_update(self):
         """Update the state."""
-        data = self.openuv.data[DATA_PROTECTION_WINDOW]['result']
+        data = self.openuv.data[DATA_PROTECTION_WINDOW]
+
+        if not data:
+            return
+
         if self._sensor_type == TYPE_PROTECTION_WINDOW:
             self._state = parse_datetime(
                 data['from_time']) <= utcnow() <= parse_datetime(

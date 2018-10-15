@@ -48,4 +48,4 @@ async def websocket_lovelace_config(hass, connection, msg):
     if error is not None:
         message = websocket_api.error_message(msg['id'], *error)
 
-    connection.send_message_outside(message)
+    connection.send_message(message)

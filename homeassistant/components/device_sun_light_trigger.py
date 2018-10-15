@@ -4,7 +4,6 @@ Provides functionality to turn on lights based on the states.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/device_sun_light_trigger/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -12,9 +11,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
+from homeassistant.components.light import (
+    ATTR_PROFILE, ATTR_TRANSITION, DOMAIN as DOMAIN_LIGHT)
 from homeassistant.const import (
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_HOME, STATE_NOT_HOME)
-from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_HOME,
+    STATE_NOT_HOME)
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_state_change)
 from homeassistant.helpers.sun import is_up, get_astral_event_next
@@ -45,8 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the triggers to control lights based on device presence."""
     logger = logging.getLogger(__name__)
     device_tracker = hass.components.device_tracker
@@ -90,10 +90,10 @@ def async_setup(hass, config):
             return
         hass.async_create_task(
             hass.services.async_call(
-                DOMAIN_LIGHT, SERVICE_TURN_ON, dict(
-                    entity_id=light_id,
-                    transition=LIGHT_TRANSITION_TIME.seconds,
-                    profile=light_profile)))
+                DOMAIN_LIGHT, SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: light_id,
+                    ATTR_TRANSITION: LIGHT_TRANSITION_TIME.seconds,
+                    ATTR_PROFILE: light_profile}))
 
     def async_turn_on_factory(light_id):
         """Generate turn on callbacks as factory."""
@@ -146,7 +146,7 @@ def async_setup(hass, config):
             hass.async_create_task(
                 hass.services.async_call(
                     DOMAIN_LIGHT, SERVICE_TURN_ON,
-                    dict(entity_id=light_ids, profile=light_profile)))
+                    {ATTR_ENTITY_ID: light_ids, ATTR_PROFILE: light_profile}))
 
         # Are we in the time span were we would turn on the lights
         # if someone would be home?
@@ -162,7 +162,7 @@ def async_setup(hass, config):
                     hass.async_create_task(
                         hass.services.async_call(
                             DOMAIN_LIGHT, SERVICE_TURN_ON,
-                            dict(entity_id=light_id)))
+                            {ATTR_ENTITY_ID: light_id}))
 
                 else:
                     # If this light didn't happen to be turned on yet so
@@ -186,7 +186,7 @@ def async_setup(hass, config):
             "Everyone has left but there are lights on. Turning them off")
         hass.async_create_task(
             hass.services.async_call(
-                DOMAIN_LIGHT, SERVICE_TURN_OFF, dict(entity_id=light_ids)))
+                DOMAIN_LIGHT, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: light_ids}))
 
     async_track_state_change(
         hass, device_group, turn_off_lights_when_all_leave,

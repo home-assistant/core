@@ -22,6 +22,18 @@ ATTR_VALUE_INSTANCE = "value_instance"
 NETWORK_READY_WAIT_SECS = 300
 NODE_READY_WAIT_SECS = 30
 
+CONF_AUTOHEAL = 'autoheal'
+CONF_DEBUG = 'debug'
+CONF_POLLING_INTERVAL = 'polling_interval'
+CONF_USB_STICK_PATH = 'usb_path'
+CONF_CONFIG_PATH = 'config_path'
+CONF_NETWORK_KEY = 'network_key'
+
+DEFAULT_CONF_AUTOHEAL = True
+DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
+DEFAULT_POLLING_INTERVAL = 60000
+DEFAULT_DEBUG = False
+
 DISCOVERY_DEVICE = 'device'
 
 DATA_DEVICES = 'zwave_devices'
@@ -60,6 +72,7 @@ EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
 EVENT_NETWORK_READY = "zwave.network_ready"
 EVENT_NETWORK_COMPLETE = "zwave.network_complete"
+EVENT_NETWORK_COMPLETE_SOME_DEAD = "zwave.network_complete_some_dead"
 EVENT_NETWORK_START = "zwave.network_start"
 EVENT_NETWORK_STOP = "zwave.network_stop"
 

@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.hue/
 import asyncio
 from datetime import timedelta
 import logging
+from time import monotonic
 import random
 
 import async_timeout
@@ -159,18 +160,23 @@ async def async_update_items(hass, bridge, async_add_entities,
     import aiohue
 
     if is_group:
+        api_type = 'group'
         api = bridge.api.groups
     else:
+        api_type = 'light'
         api = bridge.api.lights
 
     try:
+        start = monotonic()
         with async_timeout.timeout(4):
             await api.update()
-    except (asyncio.TimeoutError, aiohue.AiohueException):
+    except (asyncio.TimeoutError, aiohue.AiohueException) as err:
+        _LOGGER.debug('Failed to fetch %s: %s', api_type, err)
+
         if not bridge.available:
             return
 
-        _LOGGER.error('Unable to reach bridge %s', bridge.host)
+        _LOGGER.error('Unable to reach bridge %s (%s)', bridge.host, err)
         bridge.available = False
 
         for light_id, light in current.items():
@@ -178,6 +184,10 @@ async def async_update_items(hass, bridge, async_add_entities,
                 light.async_schedule_update_ha_state()
 
         return
+
+    finally:
+        _LOGGER.debug('Finished %s request in %.3f seconds',
+                      api_type, monotonic() - start)
 
     if not bridge.available:
         _LOGGER.info('Reconnected to bridge %s', bridge.host)

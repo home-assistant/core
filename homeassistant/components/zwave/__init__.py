@@ -11,6 +11,7 @@ from pprint import pprint
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.core import callback, CoreState
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
@@ -28,24 +29,28 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 
 from . import const
-from .const import DOMAIN, DATA_DEVICES, DATA_NETWORK, DATA_ENTITY_VALUES
+from . import config_flow # noqa  # pylint: disable=unused-import
+from .const import (
+    CONF_AUTOHEAL, CONF_DEBUG, CONF_POLLING_INTERVAL,
+    CONF_USB_STICK_PATH, CONF_CONFIG_PATH, CONF_NETWORK_KEY,
+    DEFAULT_CONF_AUTOHEAL, DEFAULT_CONF_USB_STICK_PATH,
+    DEFAULT_POLLING_INTERVAL, DEFAULT_DEBUG, DOMAIN,
+    DATA_DEVICES, DATA_NETWORK, DATA_ENTITY_VALUES)
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import (check_node_schema, check_value_schema, node_name,
                    check_has_unique_id, is_node_parsed)
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.9']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.10']
 
 _LOGGER = logging.getLogger(__name__)
 
 CLASS_ID = 'class_id'
-CONF_AUTOHEAL = 'autoheal'
-CONF_DEBUG = 'debug'
+
+ATTR_POWER = 'power_consumption'
+
 CONF_POLLING_INTENSITY = 'polling_intensity'
-CONF_POLLING_INTERVAL = 'polling_interval'
-CONF_USB_STICK_PATH = 'usb_path'
-CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
 CONF_INVERT_OPENCLOSE_BUTTONS = 'invert_openclose_buttons'
 CONF_REFRESH_VALUE = 'refresh_value'
@@ -53,14 +58,9 @@ CONF_REFRESH_DELAY = 'delay'
 CONF_DEVICE_CONFIG = 'device_config'
 CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
-CONF_NETWORK_KEY = 'network_key'
 
-ATTR_POWER = 'power_consumption'
+DATA_ZWAVE_CONFIG = 'zwave_config'
 
-DEFAULT_CONF_AUTOHEAL = True
-DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
-DEFAULT_POLLING_INTERVAL = 60000
-DEFAULT_DEBUG = False
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_REFRESH_VALUE = False
@@ -230,7 +230,27 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 async def async_setup(hass, config):
-    """Set up Z-Wave.
+    """Set up Z-Wave components."""
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+    hass.data[DATA_ZWAVE_CONFIG] = conf
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            data={
+                CONF_USB_STICK_PATH: conf[CONF_USB_STICK_PATH],
+                CONF_NETWORK_KEY: conf.get(CONF_NETWORK_KEY),
+            }
+        ))
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up Z-Wave from a config entry.
 
     Will automatically load components to support devices found on the network.
     """
@@ -240,27 +260,31 @@ async def async_setup(hass, config):
     from openzwave.network import ZWaveNetwork
     from openzwave.group import ZWaveGroup
 
+    config = {}
+    if DATA_ZWAVE_CONFIG in hass.data:
+        config = hass.data[DATA_ZWAVE_CONFIG]
+
     # Load configuration
-    use_debug = config[DOMAIN].get(CONF_DEBUG)
-    autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
+    use_debug = config.get(CONF_DEBUG, DEFAULT_DEBUG)
+    autoheal = config.get(CONF_AUTOHEAL,
+                          DEFAULT_CONF_AUTOHEAL)
     device_config = EntityValues(
-        config[DOMAIN][CONF_DEVICE_CONFIG],
-        config[DOMAIN][CONF_DEVICE_CONFIG_DOMAIN],
-        config[DOMAIN][CONF_DEVICE_CONFIG_GLOB])
+        config.get(CONF_DEVICE_CONFIG),
+        config.get(CONF_DEVICE_CONFIG_DOMAIN),
+        config.get(CONF_DEVICE_CONFIG_GLOB))
 
     # Setup options
     options = ZWaveOption(
-        config[DOMAIN].get(CONF_USB_STICK_PATH),
+        config_entry.data[CONF_USB_STICK_PATH],
         user_path=hass.config.config_dir,
-        config_path=config[DOMAIN].get(CONF_CONFIG_PATH))
+        config_path=config.get(CONF_CONFIG_PATH))
 
     options.set_console_output(use_debug)
 
-    if CONF_NETWORK_KEY in config[DOMAIN]:
-        options.addOption("NetworkKey", config[DOMAIN][CONF_NETWORK_KEY])
+    if CONF_NETWORK_KEY in config_entry.data:
+        options.addOption("NetworkKey", config_entry.data[CONF_NETWORK_KEY])
 
-    options.lock()
-
+    await hass.async_add_executor_job(options.lock)
     network = hass.data[DATA_NETWORK] = ZWaveNetwork(options, autostart=False)
     hass.data[DATA_DEVICES] = {}
     hass.data[DATA_ENTITY_VALUES] = []
@@ -275,7 +299,9 @@ async def async_setup(hass, config):
                                     ZWaveNetwork.SIGNAL_SCENE_EVENT,
                                     ZWaveNetwork.SIGNAL_NODE_EVENT,
                                     ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED,
-                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED):
+                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED,
+                                    ZWaveNetwork
+                                    .SIGNAL_ALL_NODES_QUERIED_SOME_DEAD):
                 pprint(_obj_to_dict(value))
 
             print("")
@@ -356,6 +382,12 @@ async def async_setup(hass, config):
                      "have been queried")
         hass.bus.fire(const.EVENT_NETWORK_COMPLETE)
 
+    def network_complete_some_dead():
+        """Handle the querying of all nodes on network."""
+        _LOGGER.info("Z-Wave network is complete. All nodes on the network "
+                     "have been queried, but some node are marked dead")
+        hass.bus.fire(const.EVENT_NETWORK_COMPLETE_SOME_DEAD)
+
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
     dispatcher.connect(
@@ -364,6 +396,9 @@ async def async_setup(hass, config):
         network_ready, ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED, weak=False)
     dispatcher.connect(
         network_complete, ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED, weak=False)
+    dispatcher.connect(
+        network_complete_some_dead,
+        ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD, weak=False)
 
     def add_node(service):
         """Switch into inclusion mode."""
@@ -655,7 +690,7 @@ async def async_setup(hass, config):
     def _finalize_start():
         """Perform final initializations after Z-Wave network is awaked."""
         polling_interval = convert(
-            config[DOMAIN].get(CONF_POLLING_INTERVAL), int)
+            config.get(CONF_POLLING_INTERVAL), int)
         if polling_interval is not None:
             network.set_poll_interval(polling_interval, False)
 
@@ -680,8 +715,6 @@ async def async_setup(hass, config):
                                test_network)
         hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK,
                                stop_network)
-        hass.services.register(DOMAIN, const.SERVICE_START_NETWORK,
-                               start_zwave)
         hass.services.register(DOMAIN, const.SERVICE_RENAME_NODE, rename_node,
                                schema=RENAME_NODE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_RENAME_VALUE,
@@ -740,6 +773,9 @@ async def async_setup(hass, config):
         async_track_time_change(hass, heal_network, hour=0, minute=0, second=0)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
+
+    hass.services.async_register(DOMAIN, const.SERVICE_START_NETWORK,
+                                 start_zwave)
 
     return True
 

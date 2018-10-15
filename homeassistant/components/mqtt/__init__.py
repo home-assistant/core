@@ -21,7 +21,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT, CONF_PROTOCOL, CONF_USERNAME,
-    CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP)
+    CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP, CONF_NAME)
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -72,6 +72,12 @@ CONF_PAYLOAD_AVAILABLE = 'payload_available'
 CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
+
+CONF_IDENTIFIERS = 'identifiers'
+CONF_CONNECTIONS = 'connections'
+CONF_MANUFACTURER = 'manufacturer'
+CONF_MODEL = 'model'
+CONF_SW_VERSION = 'sw_version'
 
 PROTOCOL_31 = '3.1'
 PROTOCOL_311 = '3.1.1'
@@ -144,6 +150,15 @@ def valid_publish_topic(value: Any) -> str:
     return value
 
 
+def validate_device_has_at_least_one_identifier(value: ConfigType) -> \
+        ConfigType:
+    """Validate that a device info entry has at least one identifying value."""
+    if not value.get(CONF_IDENTIFIERS) and not value.get(CONF_CONNECTIONS):
+        raise vol.Invalid("Device must have at least one identifying value in "
+                          "'identifiers' and/or 'connections'")
+    return value
+
+
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
@@ -197,6 +212,17 @@ MQTT_AVAILABILITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE,
                  default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
 })
+
+MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(vol.Schema({
+    vol.Optional(CONF_IDENTIFIERS, default=list):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_CONNECTIONS, default=list):
+        vol.All(cv.ensure_list, [vol.All(vol.Length(2), [cv.string])]),
+    vol.Optional(CONF_MANUFACTURER): cv.string,
+    vol.Optional(CONF_MODEL): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_SW_VERSION): cv.string,
+}), validate_device_has_at_least_one_identifier)
 
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
@@ -254,7 +280,8 @@ def async_publish(hass: HomeAssistantType, topic: Any, payload, qos=None,
     """Publish message to an MQTT topic."""
     data = _build_publish_data(topic, qos, retain)
     data[ATTR_PAYLOAD] = payload
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
 
 
 @bind_hass
@@ -411,7 +438,7 @@ async def async_setup_entry(hass, entry):
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
         conf = CONFIG_SCHEMA({
-            DOMAIN: entry.data
+            DOMAIN: entry.data,
         })[DOMAIN]
     elif any(key in conf for key in entry.data):
         _LOGGER.warning(
@@ -426,24 +453,21 @@ async def async_setup_entry(hass, entry):
     keepalive = conf[CONF_KEEPALIVE]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
+    certificate = conf.get(CONF_CERTIFICATE)
     client_key = conf.get(CONF_CLIENT_KEY)
     client_cert = conf.get(CONF_CLIENT_CERT)
     tls_insecure = conf.get(CONF_TLS_INSECURE)
     protocol = conf[CONF_PROTOCOL]
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
-    if (conf.get(CONF_CERTIFICATE) is None and
-            19999 < conf[CONF_PORT] < 30000 and
-            conf[CONF_BROKER].endswith('.cloudmqtt.com')):
+    if (certificate is None and 19999 < conf[CONF_PORT] < 30000 and
+            broker.endswith('.cloudmqtt.com')):
         certificate = os.path.join(
             os.path.dirname(__file__), 'addtrustexternalcaroot.crt')
 
     # When the certificate is set to auto, use bundled certs from requests
-    elif conf.get(CONF_CERTIFICATE) == 'auto':
+    elif certificate == 'auto':
         certificate = requests.certs.where()
-
-    else:
-        certificate = None
 
     if CONF_WILL_MESSAGE in conf:
         will_message = Message(**conf[CONF_WILL_MESSAGE])
@@ -673,7 +697,7 @@ class MQTT:
             if any(other.topic == topic for other in self.subscriptions):
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
-            self.hass.async_add_job(self._async_unsubscribe(topic))
+            self.hass.async_create_task(self._async_unsubscribe(topic))
 
         return async_remove
 
@@ -868,3 +892,41 @@ class MqttDiscoveryUpdate(Entity):
                 self.hass,
                 MQTT_DISCOVERY_UPDATED.format(self._discovery_hash),
                 discovery_callback)
+
+
+class MqttEntityDeviceInfo(Entity):
+    """Mixin used for mqtt platforms that support the device registry."""
+
+    def __init__(self, device_config: Optional[ConfigType]) -> None:
+        """Initialize the device mixin."""
+        self._device_config = device_config
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if not self._device_config:
+            return None
+
+        info = {
+            'identifiers': {
+                (DOMAIN, id_)
+                for id_ in self._device_config[CONF_IDENTIFIERS]
+            },
+            'connections': {
+                tuple(x) for x in self._device_config[CONF_CONNECTIONS]
+            }
+        }
+
+        if CONF_MANUFACTURER in self._device_config:
+            info['manufacturer'] = self._device_config[CONF_MANUFACTURER]
+
+        if CONF_MODEL in self._device_config:
+            info['model'] = self._device_config[CONF_MODEL]
+
+        if CONF_NAME in self._device_config:
+            info['name'] = self._device_config[CONF_NAME]
+
+        if CONF_SW_VERSION in self._device_config:
+            info['sw_version'] = self._device_config[CONF_SW_VERSION]
+
+        return info

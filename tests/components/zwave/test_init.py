@@ -2,6 +2,7 @@
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
+from pytz import utc
 
 import unittest
 from unittest.mock import patch, MagicMock
@@ -23,13 +24,6 @@ from tests.mock.zwave import MockNetwork, MockNode, MockValue, MockEntityValues
 
 
 @asyncio.coroutine
-def test_missing_openzwave(hass):
-    """Test that missing openzwave lib stops setup."""
-    result = yield from async_setup_component(hass, 'zwave', {'zwave': {}})
-    assert not result
-
-
-@asyncio.coroutine
 def test_valid_device_config(hass, mock_openzwave):
     """Test valid device config."""
     device_config = {
@@ -41,6 +35,7 @@ def test_valid_device_config(hass, mock_openzwave):
         'zwave': {
             'device_config': device_config
         }})
+    yield from hass.async_block_till_done()
 
     assert result
 
@@ -57,6 +52,7 @@ def test_invalid_device_config(hass, mock_openzwave):
         'zwave': {
             'device_config': device_config
         }})
+    yield from hass.async_block_till_done()
 
     assert not result
 
@@ -81,6 +77,7 @@ def test_network_options(hass, mock_openzwave):
             'usb_path': 'mock_usb_path',
             'config_path': 'mock_config_path',
         }})
+    yield from hass.async_block_till_done()
 
     assert result
 
@@ -92,14 +89,16 @@ def test_network_options(hass, mock_openzwave):
 @asyncio.coroutine
 def test_auto_heal_midnight(hass, mock_openzwave):
     """Test network auto-heal at midnight."""
-    assert (yield from async_setup_component(hass, 'zwave', {
+    yield from async_setup_component(hass, 'zwave', {
         'zwave': {
             'autoheal': True,
-        }}))
+        }})
+    yield from hass.async_block_till_done()
+
     network = hass.data[zwave.DATA_NETWORK]
     assert not network.heal.called
 
-    time = datetime(2017, 5, 6, 0, 0, 0)
+    time = utc.localize(datetime(2017, 5, 6, 0, 0, 0))
     async_fire_time_changed(hass, time)
     yield from hass.async_block_till_done()
     assert network.heal.called
@@ -109,14 +108,16 @@ def test_auto_heal_midnight(hass, mock_openzwave):
 @asyncio.coroutine
 def test_auto_heal_disabled(hass, mock_openzwave):
     """Test network auto-heal disabled."""
-    assert (yield from async_setup_component(hass, 'zwave', {
+    yield from async_setup_component(hass, 'zwave', {
         'zwave': {
             'autoheal': False,
-        }}))
+        }})
+    yield from hass.async_block_till_done()
+
     network = hass.data[zwave.DATA_NETWORK]
     assert not network.heal.called
 
-    time = datetime(2017, 5, 6, 0, 0, 0)
+    time = utc.localize(datetime(2017, 5, 6, 0, 0, 0))
     async_fire_time_changed(hass, time)
     yield from hass.async_block_till_done()
     assert not network.heal.called
@@ -215,6 +216,7 @@ def test_node_discovery(hass, mock_openzwave):
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from hass.async_block_till_done()
 
     assert len(mock_receivers) == 1
 
@@ -235,6 +237,7 @@ async def test_unparsed_node_discovery(hass, mock_openzwave):
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
         await async_setup_component(hass, 'zwave', {'zwave': {}})
+        await hass.async_block_till_done()
 
     assert len(mock_receivers) == 1
 
@@ -282,6 +285,7 @@ def test_node_ignored(hass, mock_openzwave):
                 'zwave.mock_node': {
                     'ignored': True,
                     }}}})
+        yield from hass.async_block_till_done()
 
     assert len(mock_receivers) == 1
 
@@ -303,6 +307,7 @@ def test_value_discovery(hass, mock_openzwave):
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from hass.async_block_till_done()
 
     assert len(mock_receivers) == 1
 
@@ -328,6 +333,7 @@ def test_value_discovery_existing_entity(hass, mock_openzwave):
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from hass.async_block_till_done()
 
     assert len(mock_receivers) == 1
 
@@ -373,6 +379,7 @@ def test_power_schemes(hass, mock_openzwave):
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from hass.async_block_till_done()
 
     assert len(mock_receivers) == 1
 
@@ -415,6 +422,7 @@ def test_network_ready(hass, mock_openzwave):
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from hass.async_block_till_done()
 
     assert len(mock_receivers) == 1
 
@@ -442,6 +450,7 @@ def test_network_complete(hass, mock_openzwave):
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from hass.async_block_till_done()
 
     assert len(mock_receivers) == 1
 
@@ -451,6 +460,34 @@ def test_network_complete(hass, mock_openzwave):
         events.append(event)
 
     hass.bus.async_listen(const.EVENT_NETWORK_READY, listener)
+
+    hass.async_add_job(mock_receivers[0])
+    yield from hass.async_block_till_done()
+
+    assert len(events) == 1
+
+
+@asyncio.coroutine
+def test_network_complete_some_dead(hass, mock_openzwave):
+    """Test Node network complete some dead event."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD:
+            mock_receivers.append(receiver)
+
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
+        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from hass.async_block_till_done()
+
+    assert len(mock_receivers) == 1
+
+    events = []
+
+    def listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(const.EVENT_NETWORK_COMPLETE_SOME_DEAD, listener)
 
     hass.async_add_job(mock_receivers[0])
     yield from hass.async_block_till_done()
