@@ -34,10 +34,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up X10 dimmers over a mochad controller."""
     devs = config.get(CONF_DEVICES)
-    add_devices([MochadLight(
+    add_entities([MochadLight(
         hass, mochad.CONTROLLER.ctrl, dev) for dev in devs])
     return True
 
@@ -54,8 +54,8 @@ class MochadLight(Light):
         self._name = dev.get(CONF_NAME,
                              'x10_light_dev_{}'.format(self._address))
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
-        self.device = device.Device(ctrl, self._address,
-                                    comm_type=self._comm_type)
+        self.light = device.Device(ctrl, self._address,
+                                   comm_type=self._comm_type)
         self._brightness = 0
         self._state = self._get_device_status()
         self._brightness_levels = dev.get(CONF_BRIGHTNESS_LEVELS) - 1
@@ -68,7 +68,7 @@ class MochadLight(Light):
     def _get_device_status(self):
         """Get the status of the light from mochad."""
         with mochad.REQ_LOCK:
-            status = self.device.get_status().rstrip()
+            status = self.light.get_status().rstrip()
         return status == 'on'
 
     @property
@@ -98,12 +98,12 @@ class MochadLight(Light):
         if self._brightness > brightness:
             bdelta = self._brightness - brightness
             mochad_brightness = self._calculate_brightness_value(bdelta)
-            self.device.send_cmd("dim {}".format(mochad_brightness))
+            self.light.send_cmd("dim {}".format(mochad_brightness))
             self._controller.read_data()
         elif self._brightness < brightness:
             bdelta = brightness - self._brightness
             mochad_brightness = self._calculate_brightness_value(bdelta)
-            self.device.send_cmd("bright {}".format(mochad_brightness))
+            self.light.send_cmd("bright {}".format(mochad_brightness))
             self._controller.read_data()
 
     def turn_on(self, **kwargs):
@@ -112,10 +112,10 @@ class MochadLight(Light):
         with mochad.REQ_LOCK:
             if self._brightness_levels > 32:
                 out_brightness = self._calculate_brightness_value(brightness)
-                self.device.send_cmd('xdim {}'.format(out_brightness))
+                self.light.send_cmd('xdim {}'.format(out_brightness))
                 self._controller.read_data()
             else:
-                self.device.send_cmd("on")
+                self.light.send_cmd("on")
                 self._controller.read_data()
                 # There is no persistence for X10 modules so a fresh on command
                 # will be full brightness
@@ -128,7 +128,7 @@ class MochadLight(Light):
     def turn_off(self, **kwargs):
         """Send the command to turn the light on."""
         with mochad.REQ_LOCK:
-            self.device.send_cmd('off')
+            self.light.send_cmd('off')
             self._controller.read_data()
             # There is no persistence for X10 modules so we need to prepare
             # to track a fresh on command will full brightness

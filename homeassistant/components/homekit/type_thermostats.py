@@ -124,8 +124,7 @@ class Thermostat(HomeAccessory):
                 if hass_value == STATE_OFF:
                     self.hass.services.call(DOMAIN, SERVICE_TURN_OFF, params)
                     return
-                else:
-                    self.hass.services.call(DOMAIN, SERVICE_TURN_ON, params)
+                self.hass.services.call(DOMAIN, SERVICE_TURN_ON, params)
             params = {ATTR_ENTITY_ID: self.entity_id,
                       ATTR_OPERATION_MODE: hass_value}
             self.hass.services.call(DOMAIN, SERVICE_SET_OPERATION_MODE, params)

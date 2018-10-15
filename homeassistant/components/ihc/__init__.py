@@ -123,7 +123,7 @@ def setup(hass, config):
 
 
 def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller):
-    """Auto setup of IHC products from the ihc project file."""
+    """Auto setup of IHC products from the IHC project file."""
     project_xml = ihc_controller.get_project()
     if not project_xml:
         _LOGGER.error("Unable to read project from ICH controller")
@@ -167,14 +167,17 @@ def get_discovery_info(component_setup, groups):
                     name = '{}_{}'.format(groupname, ihc_id)
                     device = {
                         'ihc_id': ihc_id,
-                        'product': product,
+                        'product': {
+                            'name': product.attrib['name'],
+                            'note': product.attrib['note'],
+                            'position': product.attrib['position']},
                         'product_cfg': product_cfg}
                     discovery_data[name] = device
     return discovery_data
 
 
 def setup_service_functions(hass: HomeAssistantType, ihc_controller):
-    """Setup the IHC service functions."""
+    """Set up the IHC service functions."""
     def set_runtime_value_bool(call):
         """Set a IHC runtime bool value service function."""
         ihc_id = call.data[ATTR_IHC_ID]

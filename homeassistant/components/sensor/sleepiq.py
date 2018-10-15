@@ -10,7 +10,7 @@ DEPENDENCIES = ['sleepiq']
 ICON = 'mdi:hotel'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SleepIQ sensors."""
     if discovery_info is None:
         return
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for bed_id, _ in data.beds.items():
         for side in sleepiq.SIDES:
             dev.append(SleepNumberSensor(data, bed_id, side))
-    add_devices(dev)
+    add_entities(dev)
 
 
 class SleepNumberSensor(sleepiq.SleepIQSensor):

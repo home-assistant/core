@@ -1,7 +1,5 @@
 """Translation string lookup helpers."""
 import logging
-# pylint: disable=unused-import
-from typing import Optional  # NOQA
 from os import path
 
 from homeassistant import config_entries

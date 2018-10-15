@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker.locative import URL
 
 
 def _url(data=None):
-    """Helper method to generate URLs."""
+    """Generate URL."""
     data = data or {}
     data = "&".join(["{}={}".format(name, value) for
                      name, value in data.items()])

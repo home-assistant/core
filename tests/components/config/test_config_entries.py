@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce
 from homeassistant.config_entries import HANDLERS
-from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.setup import async_setup_component
 from homeassistant.components.config import config_entries
 from homeassistant.loader import set_component
@@ -37,13 +36,15 @@ def test_get_entries(hass, client):
     MockConfigEntry(
        domain='comp',
        title='Test 1',
-       source='bla'
+       source='bla',
+       connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
     ).add_to_hass(hass)
     MockConfigEntry(
        domain='comp2',
        title='Test 2',
        source='bla2',
        state=core_ce.ENTRY_STATE_LOADED,
+       connection_class=core_ce.CONN_CLASS_ASSUMED,
     ).add_to_hass(hass)
     resp = yield from client.get('/api/config/config_entries/entry')
     assert resp.status == 200
@@ -55,13 +56,15 @@ def test_get_entries(hass, client):
             'domain': 'comp',
             'title': 'Test 1',
             'source': 'bla',
-            'state': 'not_loaded'
+            'state': 'not_loaded',
+            'connection_class': 'local_poll',
         },
         {
             'domain': 'comp2',
             'title': 'Test 2',
             'source': 'bla2',
             'state': 'loaded',
+            'connection_class': 'assumed',
         },
     ]
 
@@ -69,7 +72,7 @@ def test_get_entries(hass, client):
 @asyncio.coroutine
 def test_remove_entry(hass, client):
     """Test removing an entry via the API."""
-    entry = MockConfigEntry(domain='demo')
+    entry = MockConfigEntry(domain='demo', state=core_ce.ENTRY_STATE_LOADED)
     entry.add_to_hass(hass)
     resp = yield from client.delete(
         '/api/config/config_entries/entry/{}'.format(entry.entry_id))
@@ -100,15 +103,15 @@ def test_available_flows(hass, client):
 @asyncio.coroutine
 def test_initialize_flow(hass, client):
     """Test we can initialize a flow."""
-    class TestFlow(FlowHandler):
+    class TestFlow(core_ce.ConfigFlow):
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             schema = OrderedDict()
             schema[vol.Required('username')] = str
             schema[vol.Required('password')] = str
 
             return self.async_show_form(
-                step_id='init',
+                step_id='user',
                 data_schema=schema,
                 description_placeholders={
                     'url': 'https://example.com',
@@ -130,7 +133,7 @@ def test_initialize_flow(hass, client):
     assert data == {
         'type': 'form',
         'handler': 'test',
-        'step_id': 'init',
+        'step_id': 'user',
         'data_schema': [
             {
                 'name': 'username',
@@ -155,9 +158,9 @@ def test_initialize_flow(hass, client):
 @asyncio.coroutine
 def test_abort(hass, client):
     """Test a flow that aborts."""
-    class TestFlow(FlowHandler):
+    class TestFlow(core_ce.ConfigFlow):
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_abort(reason='bla')
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
@@ -181,11 +184,11 @@ def test_create_account(hass, client):
         hass, 'test',
         MockModule('test', async_setup_entry=mock_coro_func(True)))
 
-    class TestFlow(FlowHandler):
+    class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='Test Entry',
                 data={'secret': 'account_token'}
@@ -202,8 +205,9 @@ def test_create_account(hass, client):
         'handler': 'test',
         'title': 'Test Entry',
         'type': 'create_entry',
-        'source': 'user',
         'version': 1,
+        'description': None,
+        'description_placeholders': None,
     }
 
 
@@ -214,11 +218,11 @@ def test_two_step_flow(hass, client):
         hass, 'test',
         MockModule('test', async_setup_entry=mock_coro_func(True)))
 
-    class TestFlow(FlowHandler):
+    class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_show_form(
                 step_id='account',
                 data_schema=vol.Schema({
@@ -264,14 +268,15 @@ def test_two_step_flow(hass, client):
             'type': 'create_entry',
             'title': 'user-title',
             'version': 1,
-            'source': 'user',
+            'description': None,
+            'description_placeholders': None,
         }
 
 
 @asyncio.coroutine
 def test_get_progress_index(hass, client):
     """Test querying for the flows that are in progress."""
-    class TestFlow(FlowHandler):
+    class TestFlow(core_ce.ConfigFlow):
         VERSION = 5
 
         @asyncio.coroutine
@@ -286,7 +291,7 @@ def test_get_progress_index(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         form = yield from hass.config_entries.flow.async_init(
-            'test', source='hassio')
+            'test', context={'source': 'hassio'})
 
     resp = yield from client.get('/api/config/config_entries/flow')
     assert resp.status == 200
@@ -295,7 +300,7 @@ def test_get_progress_index(hass, client):
         {
             'flow_id': form['flow_id'],
             'handler': 'test',
-            'source': 'hassio'
+            'context': {'source': 'hassio'}
         }
     ]
 
@@ -303,15 +308,15 @@ def test_get_progress_index(hass, client):
 @asyncio.coroutine
 def test_get_progress_flow(hass, client):
     """Test we can query the API for same result as we get from init a flow."""
-    class TestFlow(FlowHandler):
+    class TestFlow(core_ce.ConfigFlow):
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             schema = OrderedDict()
             schema[vol.Required('username')] = str
             schema[vol.Required('password')] = str
 
             return self.async_show_form(
-                step_id='init',
+                step_id='user',
                 data_schema=schema,
                 errors={
                     'username': 'Should be unique.'

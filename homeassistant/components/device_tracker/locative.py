@@ -4,7 +4,6 @@ Support for the Locative platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.locative/
 """
-import asyncio
 from functools import partial
 import logging
 
@@ -38,21 +37,18 @@ class LocativeView(HomeAssistantView):
         """Initialize Locative URL endpoints."""
         self.see = see
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """Locative message received as GET."""
-        res = yield from self._handle(request.app['hass'], request.query)
+        res = await self._handle(request.app['hass'], request.query)
         return res
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Locative message received."""
-        data = yield from request.post()
-        res = yield from self._handle(request.app['hass'], data)
+        data = await request.post()
+        res = await self._handle(request.app['hass'], data)
         return res
 
-    @asyncio.coroutine
-    def _handle(self, hass, data):
+    async def _handle(self, hass, data):
         """Handle locative request."""
         if 'latitude' not in data or 'longitude' not in data:
             return ('Latitude and longitude not specified.',
@@ -79,18 +75,18 @@ class LocativeView(HomeAssistantView):
         gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
         if direction == 'enter':
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 partial(self.see, dev_id=device, location_name=location_name,
                         gps=gps_location))
             return 'Setting location to {}'.format(location_name)
 
-        elif direction == 'exit':
+        if direction == 'exit':
             current_state = hass.states.get(
                 '{}.{}'.format(DOMAIN, device))
 
             if current_state is None or current_state.state == location_name:
                 location_name = STATE_NOT_HOME
-                yield from hass.async_add_job(
+                await hass.async_add_job(
                     partial(self.see, dev_id=device,
                             location_name=location_name, gps=gps_location))
                 return 'Setting location to not home'
@@ -102,7 +98,7 @@ class LocativeView(HomeAssistantView):
             return 'Ignoring exit from {} (already in {})'.format(
                 location_name, current_state)
 
-        elif direction == 'test':
+        if direction == 'test':
             # In the app, a test message can be sent. Just return something to
             # the user to let them know that it works.
             return 'Received test message.'

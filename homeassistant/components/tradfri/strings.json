@@ -1,0 +1,23 @@
+{
+  "config": {
+    "title": "IKEA TRÅDFRI",
+    "step": {
+      "auth": {
+        "title": "Enter security code",
+        "description": "You can find the security code on the back of your gateway.",
+        "data": {
+          "host": "Host",
+          "security_code": "Security Code"
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "Failed to register with provided key. If this keeps happening, try restarting the gateway.",
+      "cannot_connect": "Unable to connect to the gateway.",
+      "timeout": "Timeout validating the code."
+    },
+    "abort": {
+      "already_configured": "Bridge is already configured"
+    }
+  }
+}

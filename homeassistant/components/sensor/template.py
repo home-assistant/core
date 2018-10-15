@@ -4,7 +4,6 @@ Allows the creation of a sensor that breaks out state_attributes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.template/
 """
-import asyncio
 import logging
 from typing import Optional
 
@@ -41,8 +40,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the template sensors."""
     sensors = []
 
@@ -96,7 +95,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No sensors added")
         return False
 
-    async_add_devices(sensors)
+    async_add_entities(sensors)
     return True
 
 
@@ -122,8 +121,7 @@ class SensorTemplate(Entity):
         self._entities = entity_ids
         self._device_class = device_class
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def template_sensor_state_listener(entity, old_state, new_state):
@@ -176,8 +174,7 @@ class SensorTemplate(Entity):
         """No polling needed."""
         return False
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update the state from the template."""
         try:
             self._state = self._template.async_render()

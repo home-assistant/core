@@ -52,7 +52,7 @@ class TestSamsungTv(unittest.TestCase):
     @MockDependency('samsungctl')
     @MockDependency('wakeonlan')
     def setUp(self, samsung_mock, wol_mock):
-        """Setting up test environment."""
+        """Set up test environment."""
         self.hass = tests.common.get_test_home_assistant()
         self.hass.start()
         self.hass.block_till_done()
@@ -72,9 +72,9 @@ class TestSamsungTv(unittest.TestCase):
         """Testing setup of platform."""
         with mock.patch(
                 'homeassistant.components.media_player.samsungtv.socket'):
-            add_devices = mock.Mock()
+            add_entities = mock.Mock()
             setup_platform(
-                self.hass, WORKING_CONFIG, add_devices)
+                self.hass, WORKING_CONFIG, add_entities)
 
     @MockDependency('samsungctl')
     @MockDependency('wakeonlan')
@@ -82,8 +82,8 @@ class TestSamsungTv(unittest.TestCase):
         """Testing setup of platform with discovery."""
         with mock.patch(
                 'homeassistant.components.media_player.samsungtv.socket'):
-            add_devices = mock.Mock()
-            setup_platform(self.hass, {}, add_devices,
+            add_entities = mock.Mock()
+            setup_platform(self.hass, {}, add_entities,
                            discovery_info=DISCOVERY_INFO)
 
     @MockDependency('samsungctl')
@@ -94,11 +94,11 @@ class TestSamsungTv(unittest.TestCase):
         """Testing setup of platform with no data."""
         with mock.patch(
                 'homeassistant.components.media_player.samsungtv.socket'):
-            add_devices = mock.Mock()
-            setup_platform(self.hass, {}, add_devices,
+            add_entities = mock.Mock()
+            setup_platform(self.hass, {}, add_entities,
                            discovery_info=None)
             mocked_warn.assert_called_once_with("Cannot determine device")
-            add_devices.assert_not_called()
+            add_entities.assert_not_called()
 
     @mock.patch(
         'homeassistant.components.media_player.samsungtv.subprocess.Popen'
@@ -127,6 +127,23 @@ class TestSamsungTv(unittest.TestCase):
         mocked_popen.return_value = ping
         self.device.update()
         self.assertEqual(STATE_OFF, self.device._state)
+
+    @mock.patch(
+        'homeassistant.components.media_player.samsungtv.subprocess.Popen'
+    )
+    def test_timeout(self, mocked_popen):
+        """Test timeout use."""
+        ping = mock.Mock()
+        mocked_popen.return_value = ping
+        ping.returncode = 0
+        self.device.update()
+        expected_timeout = self.device._config['timeout']
+        timeout_arg = '-W{}'.format(expected_timeout)
+        ping_command = [
+            'ping', '-n', '-q', '-c3', timeout_arg, 'fake']
+        expected_call = call(ping_command, stderr=-3, stdout=-1)
+        self.assertEqual(mocked_popen.call_args, expected_call)
+        self.assertEqual(STATE_ON, self.device._state)
 
     def test_send_key(self):
         """Test for send key."""

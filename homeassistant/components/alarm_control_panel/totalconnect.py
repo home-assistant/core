@@ -31,14 +31,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a TotalConnect control panel."""
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
     total_connect = TotalConnect(name, username, password)
-    add_devices([total_connect], True)
+    add_entities([total_connect], True)
 
 
 class TotalConnect(alarm.AlarmControlPanel):

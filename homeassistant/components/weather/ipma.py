@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the ipma platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -74,7 +74,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     _LOGGER.debug("Initializing ipma weather: coordinates %s, %s",
                   latitude, longitude)
 
-    async_add_devices([IPMAWeather(station, config)], True)
+    async_add_entities([IPMAWeather(station, config)], True)
 
 
 class IPMAWeather(WeatherEntity):

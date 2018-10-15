@@ -4,19 +4,21 @@ Support for Nest devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/nest/
 """
-from concurrent.futures import ThreadPoolExecutor
 import logging
 import socket
 from datetime import datetime, timedelta
+import threading
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
     CONF_MONITORED_CONDITIONS,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send, \
+from homeassistant.helpers.dispatcher import dispatcher_send, \
     async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -70,30 +72,31 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_nest_update_event_broker(hass, nest):
+def nest_update_event_broker(hass, nest):
     """
     Dispatch SIGNAL_NEST_UPDATE to devices when nest stream API received data.
 
-    nest.update_event.wait will block the thread in most of time,
-    so specific an executor to save default thread pool.
+    Runs in its own thread.
     """
     _LOGGER.debug("listening nest.update_event")
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        while True:
-            await hass.loop.run_in_executor(executor, nest.update_event.wait)
-            if hass.is_running:
-                nest.update_event.clear()
-                _LOGGER.debug("dispatching nest data update")
-                async_dispatcher_send(hass, SIGNAL_NEST_UPDATE)
-            else:
-                _LOGGER.debug("stop listening nest.update_event")
-                return
+
+    while hass.is_running:
+        nest.update_event.wait()
+
+        if not hass.is_running:
+            break
+
+        nest.update_event.clear()
+        _LOGGER.debug("dispatching nest data update")
+        dispatcher_send(hass, SIGNAL_NEST_UPDATE)
+
+    _LOGGER.debug("stop listening nest.update_event")
 
 
 async def async_setup(hass, config):
     """Set up Nest components."""
     if DOMAIN not in config:
-        return
+        return True
 
     conf = config[DOMAIN]
 
@@ -102,8 +105,9 @@ async def async_setup(hass, config):
     filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
     access_token_cache_file = hass.config.path(filename)
 
-    hass.async_add_job(hass.config_entries.flow.async_init(
-        DOMAIN, source='import', data={
+    hass.async_create_task(hass.config_entries.flow.async_init(
+        DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+        data={
             'nest_conf_path': access_token_cache_file,
         }
     ))
@@ -115,7 +119,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, entry):
-    """Setup Nest from a config entry."""
+    """Set up Nest from a config entry."""
     from nest import Nest
 
     nest = Nest(access_token=entry.data['tokens']['access_token'])
@@ -127,7 +131,7 @@ async def async_setup_entry(hass, entry):
         return False
 
     for component in 'climate', 'camera', 'sensor', 'binary_sensor':
-        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             entry, component))
 
     def set_mode(service):
@@ -165,16 +169,21 @@ async def async_setup_entry(hass, entry):
     hass.services.async_register(
         DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
 
+    @callback
     def start_up(event):
         """Start Nest update event listener."""
-        hass.async_add_job(async_nest_update_event_broker, hass, nest)
+        threading.Thread(
+            name='Nest update listener',
+            target=nest_update_event_broker,
+            args=(hass, nest)
+        ).start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_up)
 
+    @callback
     def shut_down(event):
         """Stop Nest update event listener."""
-        if nest:
-            nest.update_event.set()
+        nest.update_event.set()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
 
@@ -183,7 +192,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-class NestDevice(object):
+class NestDevice:
     """Structure Nest functions for hass."""
 
     def __init__(self, hass, conf, nest):
@@ -299,6 +308,37 @@ class NestSensorDevice(Entity):
     def should_poll(self):
         """Do not need poll thanks using Nest streaming API."""
         return False
+
+    @property
+    def unique_id(self):
+        """Return unique id based on device serial and variable."""
+        return "{}-{}".format(self.device.serial, self.variable)
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        if not hasattr(self.device, 'name_long'):
+            name = self.structure.name
+            model = "Structure"
+        else:
+            name = self.device.name_long
+            if self.device.is_thermostat:
+                model = 'Thermostat'
+            elif self.device.is_camera:
+                model = 'Camera'
+            elif self.device.is_smoke_co_alarm:
+                model = 'Nest Protect'
+            else:
+                model = None
+
+        return {
+            'identifiers': {
+                (DOMAIN, self.device.serial)
+            },
+            'name': name,
+            'manufacturer': 'Nest Labs',
+            'model': model,
+        }
 
     def update(self):
         """Do not use NestSensorDevice directly."""

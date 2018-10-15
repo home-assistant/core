@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.systemmonitor/
 """
 import logging
 import os
+import socket
 
 import voluptuous as vol
 
@@ -15,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==5.4.6']
+REQUIREMENTS = ['psutil==5.4.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,13 +62,13 @@ IO_COUNTER = {
     'packets_in': 3,
 }
 
-IF_ADDRS = {
-    'ipv4_address': 0,
-    'ipv6_address': 1,
+IF_ADDRS_FAMILY = {
+    'ipv4_address': socket.AF_INET,
+    'ipv6_address': socket.AF_INET6,
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the system monitor sensors."""
     dev = []
     for resource in config[CONF_RESOURCES]:
@@ -76,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(SystemMonitorSensor(
             resource[CONF_TYPE], resource[CONF_ARG]))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class SystemMonitorSensor(Entity):
@@ -165,7 +166,9 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'ipv4_address' or self.type == 'ipv6_address':
             addresses = psutil.net_if_addrs()
             if self.argument in addresses:
-                self._state = addresses[self.argument][IF_ADDRS[self.type]][1]
+                for addr in addresses[self.argument]:
+                    if addr.family == IF_ADDRS_FAMILY[self.type]:
+                        self._state = addr.address
             else:
                 self._state = None
         elif self.type == 'last_boot':

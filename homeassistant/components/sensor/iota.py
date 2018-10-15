@@ -24,7 +24,7 @@ DEPENDENCIES = ['iota']
 SCAN_INTERVAL = timedelta(minutes=3)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IOTA sensor."""
     # Add sensors for wallet balance
     iota_config = discovery_info
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Add sensor for node information
     sensors.append(IotaNodeSensor(iota_config=iota_config))
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class IotaBalanceSensor(IotaDevice):

@@ -13,7 +13,7 @@ import os
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.5.0']
+REQUIREMENTS = ['netdisco==2.1.0']
 
 DOMAIN = 'discovery'
 
@@ -48,14 +48,15 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
     'google_cast': 'cast',
     SERVICE_HUE: 'hue',
+    SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
+    'igd': 'upnp',
 }
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
-    SERVICE_IKEA_TRADFRI: ('tradfri', None),
     SERVICE_HASSIO: ('hassio', None),
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
@@ -89,6 +90,7 @@ SERVICE_HANDLERS = {
 
 OPTIONAL_SERVICE_HANDLERS = {
     SERVICE_HOMEKIT: ('homekit_controller', None),
+    'dlna_dmr': ('media_player', 'dlna_dmr'),
 }
 
 CONF_IGNORE = 'ignore'
@@ -137,7 +139,7 @@ async def async_setup(hass, config):
         if service in CONFIG_ENTRY_HANDLERS:
             await hass.config_entries.flow.async_init(
                 CONFIG_ENTRY_HANDLERS[service],
-                source=data_entry_flow.SOURCE_DISCOVERY,
+                context={'source': config_entries.SOURCE_DISCOVERY},
                 data=info
             )
             return
@@ -167,7 +169,7 @@ async def async_setup(hass, config):
         results = await hass.async_add_job(_discover, netdisco)
 
         for result in results:
-            hass.async_add_job(new_service_found(*result))
+            hass.async_create_task(new_service_found(*result))
 
         async_track_point_in_utc_time(hass, scan_devices,
                                       dt_util.utcnow() + SCAN_INTERVAL)
@@ -179,7 +181,7 @@ async def async_setup(hass, config):
 
         # discovery local services
         if 'HASSIO' in os.environ:
-            hass.async_add_job(new_service_found(SERVICE_HASSIO, {}))
+            hass.async_create_task(new_service_found(SERVICE_HASSIO, {}))
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
 

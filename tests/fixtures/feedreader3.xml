@@ -21,6 +21,11 @@
             <link>http://www.example.com/link/2</link>
             <guid isPermaLink="false">GUID 2</guid>
         </item>
+        <item>
+            <description>Description 3</description>
+            <link>http://www.example.com/link/3</link>
+            <guid isPermaLink="false">GUID 3</guid>
+        </item>
 
     </channel>
 </rss>

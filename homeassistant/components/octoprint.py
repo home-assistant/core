@@ -50,7 +50,7 @@ def setup(hass, config):
     return True
 
 
-class OctoPrintAPI(object):
+class OctoPrintAPI:
     """Simple JSON wrapper for OctoPrint's API."""
 
     def __init__(self, api_url, key, bed, number_of_tools):
@@ -154,7 +154,7 @@ def get_value_from_json(json_dict, sensor_type, group, tool):
             return 0
         return json_dict[group][sensor_type]
 
-    elif tool is not None:
+    if tool is not None:
         if sensor_type in json_dict[group][tool]:
             return json_dict[group][tool][sensor_type]
 

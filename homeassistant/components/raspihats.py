@@ -63,7 +63,7 @@ class I2CHatsException(Exception):
     """I2C-HATs exception."""
 
 
-class I2CHatsDIScanner(object):
+class I2CHatsDIScanner:
     """Scan Digital Inputs and fire callbacks."""
 
     _DIGITAL_INPUTS = "di"

@@ -33,7 +33,7 @@ LocationInfo = collections.namedtuple(
      'use_metric'])
 
 
-def detect_location_info():
+def detect_location_info() -> Optional[LocationInfo]:
     """Detect location information."""
     data = _get_freegeoip()
 
@@ -49,15 +49,21 @@ def detect_location_info():
     return LocationInfo(**data)
 
 
-def distance(lat1, lon1, lat2, lon2):
+def distance(lat1: Optional[float], lon1: Optional[float],
+             lat2: float, lon2: float) -> Optional[float]:
     """Calculate the distance in meters between two points.
 
     Async friendly.
     """
-    return vincenty((lat1, lon1), (lat2, lon2)) * 1000
+    if lat1 is None or lon1 is None:
+        return None
+    result = vincenty((lat1, lon1), (lat2, lon2))
+    if result is None:
+        return None
+    return result * 1000
 
 
-def elevation(latitude, longitude):
+def elevation(latitude: float, longitude: float) -> int:
     """Return elevation for given latitude and longitude."""
     try:
         req = requests.get(

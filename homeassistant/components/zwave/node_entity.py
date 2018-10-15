@@ -107,7 +107,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     @property
     def unique_id(self):
-        """Unique ID of Z-wave node."""
+        """Return unique ID of Z-wave node."""
         return self._unique_id
 
     def network_node_changed(self, node=None, value=None, args=None):

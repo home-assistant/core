@@ -227,6 +227,10 @@ def async_call_later(hass, delay, action):
         hass, action, dt_util.utcnow() + timedelta(seconds=delay))
 
 
+call_later = threaded_listener_factory(
+    async_call_later)
+
+
 @callback
 @bind_hass
 def async_track_time_interval(hass, action, interval):
@@ -374,7 +378,7 @@ def _process_state_match(parameter):
     if parameter is None or parameter == MATCH_ALL:
         return lambda _: True
 
-    elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
+    if isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return lambda state: state == parameter
 
     parameter = tuple(parameter)
@@ -386,11 +390,11 @@ def _process_time_match(parameter):
     if parameter is None or parameter == MATCH_ALL:
         return lambda _: True
 
-    elif isinstance(parameter, str) and parameter.startswith('/'):
+    if isinstance(parameter, str) and parameter.startswith('/'):
         parameter = float(parameter[1:])
         return lambda time: time % parameter == 0
 
-    elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
+    if isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return lambda time: time == parameter
 
     parameter = tuple(parameter)

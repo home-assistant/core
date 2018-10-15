@@ -12,8 +12,8 @@ from homeassistant.components.climate import (
 from homeassistant.components.homekit.const import (
     PROP_MAX_VALUE, PROP_MIN_VALUE)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_TEMPERATURE_UNIT, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_TEMPERATURE_UNIT, STATE_OFF,
+    TEMP_FAHRENHEIT)
 
 from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
@@ -58,8 +58,7 @@ async def test_default_thermostat(hass, hk_driver, cls):
     hass.states.async_set(entity_id, STATE_HEAT,
                           {ATTR_OPERATION_MODE: STATE_HEAT,
                            ATTR_TEMPERATURE: 22.0,
-                           ATTR_CURRENT_TEMPERATURE: 18.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 18.0})
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 22.0
     assert acc.char_current_heat_cool.value == 1
@@ -70,8 +69,7 @@ async def test_default_thermostat(hass, hk_driver, cls):
     hass.states.async_set(entity_id, STATE_HEAT,
                           {ATTR_OPERATION_MODE: STATE_HEAT,
                            ATTR_TEMPERATURE: 22.0,
-                           ATTR_CURRENT_TEMPERATURE: 23.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 23.0})
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 22.0
     assert acc.char_current_heat_cool.value == 0
@@ -82,8 +80,7 @@ async def test_default_thermostat(hass, hk_driver, cls):
     hass.states.async_set(entity_id, STATE_COOL,
                           {ATTR_OPERATION_MODE: STATE_COOL,
                            ATTR_TEMPERATURE: 20.0,
-                           ATTR_CURRENT_TEMPERATURE: 25.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 25.0})
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 20.0
     assert acc.char_current_heat_cool.value == 2
@@ -94,8 +91,7 @@ async def test_default_thermostat(hass, hk_driver, cls):
     hass.states.async_set(entity_id, STATE_COOL,
                           {ATTR_OPERATION_MODE: STATE_COOL,
                            ATTR_TEMPERATURE: 20.0,
-                           ATTR_CURRENT_TEMPERATURE: 19.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 19.0})
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 20.0
     assert acc.char_current_heat_cool.value == 0
@@ -106,8 +102,7 @@ async def test_default_thermostat(hass, hk_driver, cls):
     hass.states.async_set(entity_id, STATE_OFF,
                           {ATTR_OPERATION_MODE: STATE_OFF,
                            ATTR_TEMPERATURE: 22.0,
-                           ATTR_CURRENT_TEMPERATURE: 18.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 18.0})
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 22.0
     assert acc.char_current_heat_cool.value == 0
@@ -119,8 +114,7 @@ async def test_default_thermostat(hass, hk_driver, cls):
                           {ATTR_OPERATION_MODE: STATE_AUTO,
                            ATTR_OPERATION_LIST: [STATE_HEAT, STATE_COOL],
                            ATTR_TEMPERATURE: 22.0,
-                           ATTR_CURRENT_TEMPERATURE: 18.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 18.0})
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 22.0
     assert acc.char_current_heat_cool.value == 1
@@ -132,8 +126,7 @@ async def test_default_thermostat(hass, hk_driver, cls):
                           {ATTR_OPERATION_MODE: STATE_AUTO,
                            ATTR_OPERATION_LIST: [STATE_HEAT, STATE_COOL],
                            ATTR_TEMPERATURE: 22.0,
-                           ATTR_CURRENT_TEMPERATURE: 25.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 25.0})
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 22.0
     assert acc.char_current_heat_cool.value == 2
@@ -145,8 +138,7 @@ async def test_default_thermostat(hass, hk_driver, cls):
                           {ATTR_OPERATION_MODE: STATE_AUTO,
                            ATTR_OPERATION_LIST: [STATE_HEAT, STATE_COOL],
                            ATTR_TEMPERATURE: 22.0,
-                           ATTR_CURRENT_TEMPERATURE: 22.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 22.0})
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 22.0
     assert acc.char_current_heat_cool.value == 0
@@ -201,8 +193,7 @@ async def test_auto_thermostat(hass, hk_driver, cls):
                           {ATTR_OPERATION_MODE: STATE_AUTO,
                            ATTR_TARGET_TEMP_HIGH: 22.0,
                            ATTR_TARGET_TEMP_LOW: 20.0,
-                           ATTR_CURRENT_TEMPERATURE: 18.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 18.0})
     await hass.async_block_till_done()
     assert acc.char_heating_thresh_temp.value == 20.0
     assert acc.char_cooling_thresh_temp.value == 22.0
@@ -215,8 +206,7 @@ async def test_auto_thermostat(hass, hk_driver, cls):
                           {ATTR_OPERATION_MODE: STATE_AUTO,
                            ATTR_TARGET_TEMP_HIGH: 23.0,
                            ATTR_TARGET_TEMP_LOW: 19.0,
-                           ATTR_CURRENT_TEMPERATURE: 24.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 24.0})
     await hass.async_block_till_done()
     assert acc.char_heating_thresh_temp.value == 19.0
     assert acc.char_cooling_thresh_temp.value == 23.0
@@ -229,8 +219,7 @@ async def test_auto_thermostat(hass, hk_driver, cls):
                           {ATTR_OPERATION_MODE: STATE_AUTO,
                            ATTR_TARGET_TEMP_HIGH: 23.0,
                            ATTR_TARGET_TEMP_LOW: 19.0,
-                           ATTR_CURRENT_TEMPERATURE: 21.0,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                           ATTR_CURRENT_TEMPERATURE: 21.0})
     await hass.async_block_till_done()
     assert acc.char_heating_thresh_temp.value == 19.0
     assert acc.char_cooling_thresh_temp.value == 23.0
@@ -334,8 +323,7 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls):
                            ATTR_TARGET_TEMP_HIGH: 75.2,
                            ATTR_TARGET_TEMP_LOW: 68,
                            ATTR_TEMPERATURE: 71.6,
-                           ATTR_CURRENT_TEMPERATURE: 73.4,
-                           ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
+                           ATTR_CURRENT_TEMPERATURE: 73.4})
     await hass.async_block_till_done()
     assert acc.char_heating_thresh_temp.value == 20.0
     assert acc.char_cooling_thresh_temp.value == 24.0

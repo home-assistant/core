@@ -50,7 +50,7 @@ def setup(hass, config):
     return True
 
 
-class BloomSky(object):
+class BloomSky:
     """Handle all communication with the BloomSky API."""
 
     # API documentation at http://weatherlution.com/bloomsky-api/

@@ -13,11 +13,11 @@ from tests.common import (
 from .test_init import mutagen_mock  # noqa
 
 
-class TestTTSYandexPlatform(object):
+class TestTTSYandexPlatform:
     """Test the speech component."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self._base_url = "https://tts.voicetech.yandex.net/generate?"
 

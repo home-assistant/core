@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Social Blade sensor."""
     social_blade = SocialBladeSensor(
         config[CHANNEL_ID], config[CONF_NAME])
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if social_blade.valid_channel_id is False:
         return
 
-    add_devices([social_blade])
+    add_entities([social_blade])
 
 
 class SocialBladeSensor(Entity):

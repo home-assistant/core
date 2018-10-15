@@ -24,14 +24,14 @@ SWITCH_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato switches."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
             dev.append(NeatoConnectedSwitch(hass, robot, type_name))
     _LOGGER.debug("Adding switches %s", dev)
-    add_devices(dev)
+    add_entities(dev)
 
 
 class NeatoConnectedSwitch(ToggleEntity):

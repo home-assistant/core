@@ -128,24 +128,24 @@ def test_setup_platform(hass, mock_openzwave):
     mock_device = MagicMock()
     hass.data[DATA_NETWORK] = MagicMock()
     hass.data[zwave.DATA_DEVICES] = {456: mock_device}
-    async_add_devices = MagicMock()
+    async_add_entities = MagicMock()
 
     result = yield from zwave.async_setup_platform(
-        hass, None, async_add_devices, None)
+        hass, None, async_add_entities, None)
     assert not result
-    assert not async_add_devices.called
+    assert not async_add_entities.called
 
     result = yield from zwave.async_setup_platform(
-        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 123})
+        hass, None, async_add_entities, {const.DISCOVERY_DEVICE: 123})
     assert not result
-    assert not async_add_devices.called
+    assert not async_add_entities.called
 
     result = yield from zwave.async_setup_platform(
-        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 456})
+        hass, None, async_add_entities, {const.DISCOVERY_DEVICE: 456})
     assert result
-    assert async_add_devices.called
-    assert len(async_add_devices.mock_calls) == 1
-    assert async_add_devices.mock_calls[0][1][0] == [mock_device]
+    assert async_add_entities.called
+    assert len(async_add_entities.mock_calls) == 1
+    assert async_add_entities.mock_calls[0][1][0] == [mock_device]
 
 
 @asyncio.coroutine
@@ -163,10 +163,10 @@ def test_zwave_ready_wait(hass, mock_openzwave):
     asyncio_sleep = asyncio.sleep
 
     @asyncio.coroutine
-    def sleep(duration, loop):
+    def sleep(duration, loop=None):
         if duration > 0:
             sleeps.append(duration)
-        yield from asyncio_sleep(0, loop=loop)
+        yield from asyncio_sleep(0)
 
     with patch('homeassistant.components.zwave.dt_util.utcnow', new=utcnow):
         with patch('asyncio.sleep', new=sleep):
@@ -248,10 +248,10 @@ async def test_unparsed_node_discovery(hass, mock_openzwave):
 
     asyncio_sleep = asyncio.sleep
 
-    async def sleep(duration, loop):
+    async def sleep(duration, loop=None):
         if duration > 0:
             sleeps.append(duration)
-        await asyncio_sleep(0, loop=loop)
+        await asyncio_sleep(0)
 
     with patch('homeassistant.components.zwave.dt_util.utcnow', new=utcnow):
         with patch('asyncio.sleep', new=sleep):
@@ -451,6 +451,33 @@ def test_network_complete(hass, mock_openzwave):
         events.append(event)
 
     hass.bus.async_listen(const.EVENT_NETWORK_READY, listener)
+
+    hass.async_add_job(mock_receivers[0])
+    yield from hass.async_block_till_done()
+
+    assert len(events) == 1
+
+
+@asyncio.coroutine
+def test_network_complete_some_dead(hass, mock_openzwave):
+    """Test Node network complete some dead event."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD:
+            mock_receivers.append(receiver)
+
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
+        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+
+    assert len(mock_receivers) == 1
+
+    events = []
+
+    def listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(const.EVENT_NETWORK_COMPLETE_SOME_DEAD, listener)
 
     hass.async_add_job(mock_receivers[0])
     yield from hass.async_block_till_done()
@@ -749,9 +776,11 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.device_config = {'mock_component.registry_id': {
             zwave.CONF_IGNORED: True
         }}
-        self.registry.async_get_or_create(
-            'mock_component', zwave.DOMAIN, '567-1000',
-            suggested_object_id='registry_id')
+        with patch.object(self.registry, 'async_schedule_save'):
+            self.registry.async_get_or_create(
+                'mock_component', zwave.DOMAIN, '567-1000',
+                suggested_object_id='registry_id')
+
         zwave.ZWaveDeviceEntityValues(
             hass=self.hass,
             schema=self.mock_schema,
@@ -1180,7 +1209,7 @@ class TestZWaveServices(unittest.TestCase):
 
         self.zwave_network.nodes = {14: node}
 
-        with self.assertLogs(level='INFO') as mock_logger:
+        with self.assertLogs(level='DEBUG') as mock_logger:
             self.hass.services.call('zwave', 'print_node', {
                 const.ATTR_NODE_ID: 14
             })
@@ -1358,6 +1387,53 @@ class TestZWaveServices(unittest.TestCase):
 
         assert node.refresh_info.called
         assert len(node.refresh_info.mock_calls) == 1
+
+    def test_set_node_value(self):
+        """Test zwave set_node_value service."""
+        value = MockValue(
+            index=12,
+            command_class=const.COMMAND_CLASS_INDICATOR,
+            data=4
+        )
+        node = MockNode(node_id=14,
+                        command_classes=[const.COMMAND_CLASS_INDICATOR])
+        node.values = {12: value}
+        node.get_values.return_value = node.values
+        self.zwave_network.nodes = {14: node}
+
+        self.hass.services.call('zwave', 'set_node_value', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_VALUE_ID: 12,
+            const.ATTR_CONFIG_VALUE: 2,
+        })
+        self.hass.block_till_done()
+
+        assert self.zwave_network.nodes[14].values[12].data == 2
+
+    def test_refresh_node_value(self):
+        """Test zwave refresh_node_value service."""
+        node = MockNode(node_id=14,
+                        command_classes=[const.COMMAND_CLASS_INDICATOR],
+                        network=self.zwave_network)
+        value = MockValue(
+            node=node,
+            index=12,
+            command_class=const.COMMAND_CLASS_INDICATOR,
+            data=2
+        )
+        value.refresh = MagicMock()
+
+        node.values = {12: value}
+        node.get_values.return_value = node.values
+        self.zwave_network.nodes = {14: node}
+
+        self.hass.services.call('zwave', 'refresh_node_value', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_VALUE_ID: 12
+        })
+        self.hass.block_till_done()
+
+        assert value.refresh.called
 
     def test_heal_node(self):
         """Test zwave heal_node service."""

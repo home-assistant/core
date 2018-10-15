@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.8.0']
+REQUIREMENTS = ['pyowm==2.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ SENSOR_TYPES = {
     'clouds': ['Cloud coverage', '%'],
     'rain': ['Rain', 'mm'],
     'snow': ['Snow', 'mm'],
+    'weather_code': ['Weather code', None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -51,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenWeatherMap sensor."""
     from pyowm import OWM
 
@@ -85,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(OpenWeatherMapSensor(
             name, data, 'forecast', SENSOR_TYPES['temperature'][1]))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class OpenWeatherMapSensor(Entity):
@@ -177,9 +178,11 @@ class OpenWeatherMapSensor(Entity):
             if fc_data is None:
                 return
             self._state = fc_data.get_weathers()[0].get_detailed_status()
+        elif self.type == 'weather_code':
+            self._state = data.get_weather_code()
 
 
-class WeatherData(object):
+class WeatherData:
     """Get the latest data from OpenWeatherMap."""
 
     def __init__(self, owm, forecast, latitude, longitude):

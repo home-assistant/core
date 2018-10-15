@@ -6,7 +6,6 @@ https://home-assistant.io/components/doorbird/
 """
 import logging
 
-import asyncio
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -139,17 +138,17 @@ class ConfiguredDoorbird():
 
     @property
     def name(self):
-        """Custom device name."""
+        """Get custom device name."""
         return self._name
 
     @property
     def device(self):
-        """The configured device."""
+        """Get the configured device."""
         return self._device
 
     @property
     def custom_url(self):
-        """Custom url for device."""
+        """Get custom url for device."""
         return self._custom_url
 
     @property
@@ -170,8 +169,7 @@ class DoorbirdRequestView(HomeAssistantView):
     extra_urls = [API_URL + '/{sensor}']
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def get(self, request, sensor):
+    async def get(self, request, sensor):
         """Respond to requests from the device."""
         hass = request.app['hass']
 

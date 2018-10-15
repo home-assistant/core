@@ -38,10 +38,8 @@ def is_serial_port(value):
         ports = ('COM{}'.format(idx + 1) for idx in range(256))
         if value in ports:
             return value
-        else:
-            raise vol.Invalid('{} is not a serial port'.format(value))
-    else:
-        return cv.isdevice(value)
+        raise vol.Invalid('{} is not a serial port'.format(value))
+    return cv.isdevice(value)
 
 
 def is_socket_address(value):
@@ -80,7 +78,7 @@ async def setup_gateways(hass, config):
 
 async def _get_gateway(hass, config, gateway_conf, persistence_file):
     """Return gateway after setup of the gateway."""
-    import mysensors.mysensors as mysensors
+    from mysensors import mysensors
 
     conf = config[DOMAIN]
     persistence = conf[CONF_PERSISTENCE]
@@ -108,7 +106,7 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
                 """Call callback."""
                 sub_cb(*args)
 
-            hass.async_add_job(
+            hass.async_create_task(
                 mqtt.async_subscribe(topic, internal_callback, qos))
 
         gateway = mysensors.AsyncMQTTGateway(
@@ -180,7 +178,7 @@ async def _discover_persistent_devices(hass, gateway):
 @callback
 def _discover_mysensors_platform(hass, platform, new_devices):
     """Discover a MySensors platform."""
-    task = hass.async_add_job(discovery.async_load_platform(
+    task = hass.async_create_task(discovery.async_load_platform(
         hass, platform, DOMAIN,
         {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN}))
     return task
@@ -188,12 +186,16 @@ def _discover_mysensors_platform(hass, platform, new_devices):
 
 async def _gw_start(hass, gateway):
     """Start the gateway."""
+    # Don't use hass.async_create_task to avoid holding up setup indefinitely.
+    connect_task = hass.loop.create_task(gateway.start())
+
     @callback
     def gw_stop(event):
         """Trigger to stop the gateway."""
-        hass.async_add_job(gateway.stop())
+        hass.async_create_task(gateway.stop())
+        if not connect_task.done():
+            connect_task.cancel()
 
-    await gateway.start()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gw_stop)
     if gateway.device == 'mqtt':
         # Gatways connected via mqtt doesn't send gateway ready message.

@@ -116,7 +116,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Todoist platform."""
     token = config.get(CONF_TOKEN)
 
@@ -178,7 +178,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         )
 
-    add_devices(project_devices)
+    add_entities(project_devices)
 
     def handle_new_task(call):
         """Call when a user creates a new Todoist Task from HASS."""
@@ -280,7 +280,7 @@ class TodoistProjectDevice(CalendarEventDevice):
         return attributes
 
 
-class TodoistProjectData(object):
+class TodoistProjectData:
     """
     Class used by the Task Device service object to hold all Todoist Tasks.
 
@@ -503,7 +503,7 @@ class TodoistProjectData(object):
         time_format = '%a %d %b %Y %H:%M:%S %z'
         for task in project_task_data:
             due_date = datetime.strptime(task['due_date_utc'], time_format)
-            if due_date > start_date and due_date < end_date:
+            if start_date < due_date < end_date:
                 event = {
                     'uid': task['id'],
                     'title': task['content'],

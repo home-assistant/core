@@ -1,5 +1,6 @@
 """Test the helper method for writing tests."""
 import asyncio
+from collections import OrderedDict
 from datetime import timedelta
 import functools as ft
 import json
@@ -11,12 +12,14 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from homeassistant import auth, core as ha, data_entry_flow, config_entries
+from homeassistant import auth, core as ha, config_entries
+from homeassistant.auth import (
+    models as auth_models, auth_store, providers as auth_providers)
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
     intent, entity, restore_state, entity_registry,
-    entity_platform, storage)
+    entity_platform, storage, device_registry)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -31,6 +34,8 @@ from homeassistant.util.async_ import (
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
+CLIENT_ID = 'https://example.com/app'
+CLIENT_REDIRECT_URI = 'https://example.com/app/callback'
 
 
 def threadsafe_callback_factory(func):
@@ -112,20 +117,36 @@ def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant(loop)
     hass.config.async_load = Mock()
-    store = auth.AuthStore(hass)
-    hass.auth = auth.AuthManager(hass, store, {})
+    store = auth_store.AuthStore(hass)
+    hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
+    orig_async_add_executor_job = hass.async_add_executor_job
+    orig_async_create_task = hass.async_create_task
 
     def async_add_job(target, *args):
-        """Add a magic mock."""
+        """Add job."""
         if isinstance(target, Mock):
             return mock_coro(target(*args))
         return orig_async_add_job(target, *args)
 
+    def async_add_executor_job(target, *args):
+        """Add executor job."""
+        if isinstance(target, Mock):
+            return mock_coro(target(*args))
+        return orig_async_add_executor_job(target, *args)
+
+    def async_create_task(coroutine):
+        """Create task."""
+        if isinstance(coroutine, Mock):
+            return mock_coro()
+        return orig_async_create_task(coroutine)
+
     hass.async_add_job = async_add_job
+    hass.async_add_executor_job = async_add_executor_job
+    hass.async_create_task = async_create_task
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
@@ -182,7 +203,7 @@ def async_mock_service(hass, domain, service, schema=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
-    @asyncio.coroutine
+    @ha.callback
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
@@ -261,7 +282,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
     if old_state:
         event_data['old_state'] = old_state
 
-    hass.bus.fire(EVENT_STATE_CHANGED, event_data)
+    hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
 @asyncio.coroutine
@@ -301,18 +322,44 @@ def mock_component(hass, component):
 def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
-    registry.entities = mock_entries or {}
-    hass.data[entity_registry.DATA_REGISTRY] = registry
+    registry.entities = mock_entries or OrderedDict()
+
+    async def _get_reg():
+        return registry
+
+    hass.data[entity_registry.DATA_REGISTRY] = \
+        hass.loop.create_task(_get_reg())
     return registry
 
 
-class MockUser(auth.User):
+def mock_device_registry(hass, mock_entries=None):
+    """Mock the Device Registry."""
+    registry = device_registry.DeviceRegistry(hass)
+    registry.devices = mock_entries or OrderedDict()
+
+    async def _get_reg():
+        return registry
+
+    hass.data[device_registry.DATA_REGISTRY] = \
+        hass.loop.create_task(_get_reg())
+    return registry
+
+
+class MockUser(auth_models.User):
     """Mock a user in Home Assistant."""
 
-    def __init__(self, id='mock-id', is_owner=True, is_active=True,
-                 name='Mock User'):
+    def __init__(self, id=None, is_owner=False, is_active=True,
+                 name='Mock User', system_generated=False):
         """Initialize mock user."""
-        super().__init__(id, is_owner, is_active, name)
+        kwargs = {
+            'is_owner': is_owner,
+            'is_active': is_active,
+            'name': name,
+            'system_generated': system_generated,
+        }
+        if id is not None:
+            kwargs['id'] = id
+        super().__init__(**kwargs)
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
@@ -325,17 +372,30 @@ class MockUser(auth.User):
         return self
 
 
+async def register_auth_provider(hass, config):
+    """Register an auth provider."""
+    provider = await auth_providers.auth_provider_from_config(
+        hass, hass.auth._store, config)
+    assert provider is not None, 'Invalid config specified'
+    key = (provider.type, provider.id)
+    providers = hass.auth._providers
+
+    if key in providers:
+        raise ValueError('Provider already registered')
+
+    providers[key] = provider
+    return provider
+
+
 @ha.callback
 def ensure_auth_manager_loaded(auth_mgr):
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
-    if store._clients is None:
-        store._clients = {}
     if store._users is None:
-        store._users = {}
+        store._set_defaults()
 
 
-class MockModule(object):
+class MockModule:
     """Representation of a fake module."""
 
     # pylint: disable=invalid-name
@@ -371,7 +431,7 @@ class MockModule(object):
             self.async_unload_entry = async_unload_entry
 
 
-class MockPlatform(object):
+class MockPlatform:
     """Provide a fake platform."""
 
     # pylint: disable=invalid-name
@@ -476,29 +536,30 @@ class MockToggleDevice(entity.ToggleEntity):
         """Return the last call."""
         if not self.calls:
             return None
-        elif method is None:
+        if method is None:
             return self.calls[-1]
-        else:
-            try:
-                return next(call for call in reversed(self.calls)
-                            if call[0] == method)
-            except StopIteration:
-                return None
+        try:
+            return next(call for call in reversed(self.calls)
+                        if call[0] == method)
+        except StopIteration:
+            return None
 
 
 class MockConfigEntry(config_entries.ConfigEntry):
     """Helper for creating config entries that adds some defaults."""
 
     def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
-                 source=data_entry_flow.SOURCE_USER, title='Mock Title',
-                 state=None):
+                 source=config_entries.SOURCE_USER, title='Mock Title',
+                 state=None,
+                 connection_class=config_entries.CONN_CLASS_UNKNOWN):
         """Initialize a mock config entry."""
         kwargs = {
             'entry_id': entry_id or 'mock-id',
             'domain': domain,
             'data': data or {},
             'version': version,
-            'title': title
+            'title': title,
+            'connection_class': connection_class,
         }
         if source is not None:
             kwargs['source'] = source
@@ -548,16 +609,18 @@ def patch_yaml_files(files_dict, endswith=True):
     return patch.object(yaml, 'open', mock_open_f, create=True)
 
 
-def mock_coro(return_value=None):
-    """Return a coro that returns a value."""
-    return mock_coro_func(return_value)()
+def mock_coro(return_value=None, exception=None):
+    """Return a coro that returns a value or raise an exception."""
+    return mock_coro_func(return_value, exception)()
 
 
-def mock_coro_func(return_value=None):
+def mock_coro_func(return_value=None, exception=None):
     """Return a method to create a coro function that returns a value."""
     @asyncio.coroutine
     def coro(*args, **kwargs):
         """Fake coroutine."""
+        if exception:
+            raise exception
         return return_value
 
     return coro
@@ -702,8 +765,13 @@ class MockEntity(entity.Entity):
         """Return True if entity is available."""
         return self._handle('available')
 
+    @property
+    def device_info(self):
+        """Info how it links to a device."""
+        return self._handle('device_info')
+
     def _handle(self, attr):
-        """Helper for the attributes."""
+        """Return attribute value."""
         if attr in self._values:
             return self._values[attr]
         return getattr(super(), attr)
@@ -729,7 +797,13 @@ def mock_storage(data=None):
             if store.key not in data:
                 return None
 
-            store._data = data.get(store.key)
+            mock_data = data.get(store.key)
+
+            if 'data' not in mock_data or 'version' not in mock_data:
+                _LOGGER.error('Mock data needs "version" and "data"')
+                raise ValueError('Mock data needs "version" and "data"')
+
+            store._data = mock_data
 
         # Route through original load so that we trigger migration
         loaded = await orig_load(store)

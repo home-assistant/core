@@ -11,7 +11,7 @@ class TestDateUtil(unittest.TestCase):
     """Test util date methods."""
 
     def setUp(self):
-        """Setup the tests."""
+        """Set up the tests."""
         self.orig_default_time_zone = dt_util.DEFAULT_TIME_ZONE
 
     def tearDown(self):

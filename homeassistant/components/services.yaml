@@ -506,9 +506,9 @@ homeassistant:
   reload_core_config:
     description: Reload the core configuration.
   restart:
-    description: Restart the Home Assistant service. It is normal to get a "Failed to call service homeassistant/restart" message.
+    description: Restart the Home Assistant service.
   stop:
-    description: Stop the Home Assistant service. It is normal to get a "Failed to call service homeassistant/stop" message.
+    description: Stop the Home Assistant service.
   toggle:
     description: Generic service to toggle devices on/off under any domain. Same usage as the light.turn_on, switch.turn_on, etc. services.
     fields:

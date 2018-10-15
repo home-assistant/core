@@ -4,7 +4,6 @@ Entity to track connections to stream API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.api_stream/
 """
-import asyncio
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -38,9 +37,9 @@ class StreamHandler(logging.Handler):
         else:
             if not record.msg.startswith('WS'):
                 return
-            elif len(record.args) < 2:
+            if len(record.args) < 2:
                 return
-            elif record.args[1] == 'Connected':
+            if record.args[1] == 'Connected':
                 self.entity.count += 1
             elif record.args[1] == 'Closed connection':
                 self.entity.count -= 1
@@ -48,8 +47,8 @@ class StreamHandler(logging.Handler):
         self.entity.schedule_update_ha_state()
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the API stream platform."""
     entity = APICount()
     handler = StreamHandler(entity)
@@ -65,7 +64,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, remove_logger)
 
-    async_add_devices([entity])
+    async_add_entities([entity])
 
 
 class APICount(Entity):

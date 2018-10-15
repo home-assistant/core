@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Deluge switch."""
     from deluge_client import DelugeRPCClient
 
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Connection to Deluge Daemon failed")
         raise PlatformNotReady
 
-    add_devices([DelugeSwitch(deluge_api, name)])
+    add_entities([DelugeSwitch(deluge_api, name)])
 
 
 class DelugeSwitch(ToggleEntity):

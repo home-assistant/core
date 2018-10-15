@@ -53,7 +53,7 @@ def setup(hass, base_config):
     return True
 
 
-class GC100Device(object):
+class GC100Device:
     """The GC100 component."""
 
     def __init__(self, hass, gc_device):

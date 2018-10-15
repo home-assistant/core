@@ -31,10 +31,9 @@ class CachingStaticResource(StaticResource):
 
         if filepath.is_dir():
             return await super()._handle(request)
-        elif filepath.is_file():
+        if filepath.is_file():
             return CachingFileResponse(filepath, chunk_size=self._chunk_size)
-        else:
-            raise HTTPNotFound
+        raise HTTPNotFound
 
 
 # pylint: disable=too-many-ancestors

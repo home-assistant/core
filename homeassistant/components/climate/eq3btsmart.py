@@ -42,7 +42,7 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                  SUPPORT_AWAY_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the eQ-3 BLE thermostats."""
     devices = []
 
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         mac = device_cfg[CONF_MAC]
         devices.append(EQ3BTSmartThermostat(mac, name))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 # pylint: disable=import-error

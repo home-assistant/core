@@ -4,7 +4,6 @@ Reads vehicle status from BMW connected drive portal.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bmw_connected_drive/
 """
-import asyncio
 import logging
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
@@ -27,7 +26,7 @@ ATTR_TO_HA = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BMW sensors."""
     accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
@@ -41,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 devices.append(device)
             device = BMWConnectedDriveSensor(account, vehicle, 'mileage')
             devices.append(device)
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class BMWConnectedDriveSensor(Entity):
@@ -58,7 +57,10 @@ class BMWConnectedDriveSensor(Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Data update is triggered from BMWConnectedDriveEntity."""
+        """Return False.
+
+        Data update is triggered from BMWConnectedDriveEntity.
+        """
         return False
 
     @property
@@ -121,8 +123,7 @@ class BMWConnectedDriveSensor(Entity):
         """Schedule a state update."""
         self.schedule_update_ha_state(True)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Add callback after being added to hass.
 
         Show latest data after startup.

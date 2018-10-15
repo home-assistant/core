@@ -46,7 +46,7 @@ def test_new_version_shows_entity_after_hour(
 
     res = yield from async_setup_component(
         hass, updater.DOMAIN, {updater.DOMAIN: {}})
-    assert res, 'Updater failed to setup'
+    assert res, 'Updater failed to set up'
 
     with patch('homeassistant.components.updater.current_version',
                MOCK_VERSION):
@@ -65,7 +65,7 @@ def test_same_version_not_show_entity(
 
     res = yield from async_setup_component(
         hass, updater.DOMAIN, {updater.DOMAIN: {}})
-    assert res, 'Updater failed to setup'
+    assert res, 'Updater failed to set up'
 
     with patch('homeassistant.components.updater.current_version',
                MOCK_VERSION):
@@ -85,7 +85,7 @@ def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
         hass, updater.DOMAIN, {updater.DOMAIN: {
             'reporting': False
         }})
-    assert res, 'Updater failed to setup'
+    assert res, 'Updater failed to set up'
 
     with patch('homeassistant.components.updater.current_version',
                MOCK_VERSION):
@@ -187,7 +187,7 @@ def test_new_version_shows_entity_after_hour_hassio(
 
     res = yield from async_setup_component(
         hass, updater.DOMAIN, {updater.DOMAIN: {}})
-    assert res, 'Updater failed to setup'
+    assert res, 'Updater failed to set up'
 
     with patch('homeassistant.components.updater.current_version',
                MOCK_VERSION):

@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yahoo! weather sensor."""
     from yahooweather import get_woeid, UNIT_C, UNIT_F
 
@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(YahooWeatherSensor(yahoo_api, name, forecast, variable))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class YahooWeatherSensor(Entity):
@@ -174,7 +174,7 @@ class YahooWeatherSensor(Entity):
                 float(self._data.yahoo.Atmosphere['visibility'])/1.61, 2)
 
 
-class YahooWeatherData(object):
+class YahooWeatherData:
     """Handle Yahoo! API object and limit updates."""
 
     def __init__(self, woeid, temp_unit):
