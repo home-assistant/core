@@ -8,6 +8,7 @@ import base64
 import json
 import logging
 
+import requests
 import voluptuous as vol
 
 from homeassistant.core import split_entity_id
@@ -15,6 +16,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingEntity, CONF_SOURCE, CONF_ENTITY_ID,
     CONF_NAME)
+from homeassistant.const import STATE_UNKNOWN
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,20 +94,30 @@ class ClarifaiClassifier(ImageProcessingEntity):
         self._concepts = concepts
         self._camera_entity = camera_entity
         self._classifications = {}  # The dict of classifications.
-        self._state = None  # The most likely classification.
+        self._state = STATE_UNKNOWN  # The most likely classification.
+
+    def model_prediction(self, image):
+        """Make a prediction based on an image."""
+        try:
+            response = self.model.predict_by_base64(encode_image(image))
+            if response['status']['description'] == 'Ok':
+                return response
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("ConnectionError: Is %s accessible?", CLASSIFIER)
+            return None
 
     def process_image(self, image):
-        """Perform classification of a single image."""
-        response = self.model.predict_by_base64(encode_image(image))
+        """Process an image."""
+        prediction = self.model_prediction(image)
 
-        if response['status']['description'] == 'Ok':
-            api_concepts = response['outputs'][0]['data']['concepts']
+        if prediction:
+            api_concepts = prediction['outputs'][0]['data']['concepts']
             self._classifications = parse_concepts(api_concepts)
             self._state = next(iter(self._classifications))
             self.fire_concept_events()
         else:
-            self._state = "Request_failed"
             self._classifications = {}
+            self._state = STATE_UNKNOWN
 
     def fire_concept_events(self):
         """Fire an event for each concept identified."""

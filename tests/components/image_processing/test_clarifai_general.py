@@ -83,7 +83,7 @@ def mock_image():
 def mock_response():
     """Return a mock response from Clarifai."""
     with patch('homeassistant.components.image_processing.clarifai_general.'
-               'ClarifaiClassifier.model.predict_by_base64',
+               'ClarifaiClassifier.model_prediction',
                return_value=MOCK_RESPONSE) as _mock_response:
         yield _mock_response
 
@@ -137,7 +137,7 @@ async def test_process_image(hass, mock_app, mock_image, mock_response):
     await hass.async_block_till_done()
 
     state = hass.states.get(VALID_ENTITY_ID)
-    assert state.state == 'Request_failed'  # Should be 'dog'.
+    assert state.state == 'dog'
 
 
 async def test_setup_platform_with_name(hass, mock_app):
