@@ -5,10 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.deconz/
 """
 from homeassistant.components.deconz.const import (
-    COVER_TYPES, DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB,
-    DECONZ_DOMAIN)
+    COVER_TYPES, DAMPERS, DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB,
+    DECONZ_DOMAIN, WINDOW_COVERS)
 from homeassistant.components.cover import (
-    ATTR_POSITION, CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN,
+    ATTR_POSITION, CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP,
     SUPPORT_SET_POSITION)
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -49,7 +49,13 @@ class DeconzCover(CoverDevice):
     def __init__(self, cover):
         """Set up cover and add update callback to get data from websocket."""
         self._cover = cover
-        self._features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+        self._features = SUPPORT_OPEN
+        self._features |= SUPPORT_CLOSE
+        self._features |= SUPPORT_STOP
+        self._features |= SUPPORT_SET_POSITION
+        self.reverse = False
+        if self._cover.modelid in "lumi.curtain":
+            self.reverse = True
 
     async def async_added_to_hass(self):
         """Subscribe to covers events."""
@@ -69,6 +75,8 @@ class DeconzCover(CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
+        if self.reverse:
+            return 100 - int(self._cover.brightness / 255 * 100)
         if self.is_closed:
             return 0
         return int(self._cover.brightness / 255 * 100)
@@ -76,6 +84,8 @@ class DeconzCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
+        if self.reverse:
+            return self._cover.state
         return not self._cover.state
 
     @property
@@ -116,7 +126,10 @@ class DeconzCover(CoverDevice):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         data = {'on': False}
-        if position > 0:
+        if self.reverse and position < 100:
+            data['on'] = True
+            data['bri'] = 100 - int(position / 100 * 255)
+        elif not self.reverse and position > 0:
             data['on'] = True
             data['bri'] = int(position / 100 * 255)
         await self._cover.async_set_state(data)
@@ -130,6 +143,11 @@ class DeconzCover(CoverDevice):
         """Close cover."""
         data = {ATTR_POSITION: 0}
         await self.async_set_cover_position(**data)
+
+    async def async_stop_cover(self, **kwargs):
+        """Stop cover."""
+        data = {'bri_inc': 0}
+        await self._cover.async_set_state(data)
 
     @property
     def device_info(self):
