@@ -187,3 +187,5 @@ class WebSocketHandler:
                 self._logger.debug("Disconnected")
             else:
                 self._logger.warning("Disconnected: %s", disconnect_warn)
+
+        return wsock
