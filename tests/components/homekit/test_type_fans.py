@@ -6,8 +6,7 @@ import pytest
 from homeassistant.components.fan import (
     ATTR_DIRECTION, ATTR_OSCILLATING, DIRECTION_FORWARD, DIRECTION_REVERSE,
     DOMAIN, SUPPORT_DIRECTION, SUPPORT_OSCILLATE)
-from homeassistant.components.homekit.const import (
-    ATTR_VALUE)
+from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF,
     STATE_UNKNOWN)

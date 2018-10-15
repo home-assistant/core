@@ -3,8 +3,7 @@ from collections import namedtuple
 
 import pytest
 
-from homeassistant.components.homekit.const import (
-    ATTR_VALUE)
+from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
     DOMAIN, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)

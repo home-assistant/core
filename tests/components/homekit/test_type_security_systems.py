@@ -2,8 +2,7 @@
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN
-from homeassistant.components.homekit.const import (
-    ATTR_VALUE)
+from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_security_systems import \
     SecuritySystem
 from homeassistant.const import (
