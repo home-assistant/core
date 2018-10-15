@@ -27,6 +27,7 @@ from homeassistant.components.lifx import (
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.util.color as color_util
@@ -396,6 +397,26 @@ class LIFXLight(Light):
         self.registered = True
         self.postponed_update = None
         self.lock = asyncio.Lock()
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        info = {
+            'identifiers': {
+                (LIFX_DOMAIN, self.unique_id)
+            },
+            'name': self.name,
+            'connections': {
+                (dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)
+            },
+            'manufacturer': 'LIFX',
+        }
+
+        model = aiolifx().products.product_map.get(self.bulb.product)
+        if model is not None:
+            info['model'] = model
+
+        return info
 
     @property
     def available(self):
