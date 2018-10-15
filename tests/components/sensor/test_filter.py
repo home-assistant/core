@@ -149,6 +149,23 @@ class TestFilterSensor(unittest.TestCase):
             else:
                 self.assertEqual(unf, filtered.state)
 
+    def test_range_zero(self):
+        """Test if range filter works with zeroes as bounds."""
+        lower = 0
+        upper = 0
+        filt = RangeFilter(entity=None,
+                           lower_bound=lower,
+                           upper_bound=upper)
+        for unf_state in self.values:
+            unf = float(unf_state.state)
+            filtered = filt.filter_state(unf_state)
+            if unf < lower:
+                self.assertEqual(lower, filtered.state)
+            elif unf > upper:
+                self.assertEqual(upper, filtered.state)
+            else:
+                self.assertEqual(unf, filtered.state)
+
     def test_throttle(self):
         """Test if lowpass filter works."""
         filt = ThrottleFilter(window_size=3,
