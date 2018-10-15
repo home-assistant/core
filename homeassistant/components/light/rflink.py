@@ -121,7 +121,7 @@ def devices_from_config(domain_config):
                 "repetitions. Please set 'dimmable' or 'switchable' "
                 "type explicitly in configuration", device_id)
 
-        device = entity_class(None, device_id, **device_config)
+        device = entity_class(device_id, **device_config)
         devices.append(device)
 
     return devices
@@ -140,7 +140,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         entity_class = entity_class_for_type(entity_type)
 
         device_config = config[CONF_DEVICE_DEFAULTS]
-        device = entity_class(event, device_id, **device_config)
+        device = entity_class(device_id, initial_event=event, **device_config)
         async_add_entities([device])
 
     if config[CONF_AUTOMATIC_ADD]:

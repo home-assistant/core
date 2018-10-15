@@ -48,7 +48,7 @@ def devices_from_config(domain_config):
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
-        device = RflinkCover(None, device_id, **device_config)
+        device = RflinkCover(device_id, **device_config)
         devices.append(device)
 
     return devices

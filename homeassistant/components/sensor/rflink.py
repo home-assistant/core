@@ -4,7 +4,6 @@ Support for Rflink sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.rflink/
 """
-from functools import partial
 import logging
 
 from homeassistant.components.rflink import (
@@ -66,7 +65,7 @@ def devices_from_config(domain_config):
             config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
                 config[CONF_SENSOR_TYPE])
         remove_deprecated(config)
-        device = RflinkSensor(None, device_id, **config)
+        device = RflinkSensor(device_id, **config)
         devices.append(device)
 
     return devices
@@ -81,8 +80,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         """Check if device is known, otherwise create device entity."""
         device_id = event[EVENT_KEY_ID]
 
-        rflinksensor = partial(RflinkSensor, event, device_id)
-        device = rflinksensor(event[EVENT_KEY_SENSOR], event[EVENT_KEY_UNIT])
+        device = RflinkSensor(device_id, event[EVENT_KEY_SENSOR],
+                              event[EVENT_KEY_UNIT], initial_event=event)
         # Add device entity
         async_add_entities([device])
 
@@ -93,12 +92,12 @@ async def async_setup_platform(hass, config, async_add_entities,
 class RflinkSensor(RflinkDevice):
     """Representation of a Rflink sensor."""
 
-    def __init__(self, initial_event, device_id, sensor_type,
-                 unit_of_measurement, **kwargs):
+    def __init__(self, device_id, sensor_type, unit_of_measurement,
+                 initial_event=None, **kwargs):
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
         self._unit_of_measurement = unit_of_measurement
-        super().__init__(initial_event, device_id, **kwargs)
+        super().__init__(device_id, initial_event=initial_event, **kwargs)
 
     def _handle_event(self, event):
         """Domain specific event handler."""

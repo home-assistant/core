@@ -268,7 +268,7 @@ class RflinkDevice(Entity):
     _state = None
     _available = True
 
-    def __init__(self, initial_event, device_id, name=None, aliases=None,
+    def __init__(self, device_id, initial_event=None, name=None, aliases=None,
                  group=True, group_aliases=None, nogroup_aliases=None,
                  fire_event=False,
                  signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
