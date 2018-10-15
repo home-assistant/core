@@ -15,6 +15,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback, CoreState
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
+from homeassistant.helpers.device_registry import CONNECTION_LOCAL_DEVICE
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import async_get_registry
@@ -878,7 +879,7 @@ class ZWaveDeviceEntityValues():
         if entity_id is None:
             value_name = _value_name(self.primary)
             entity_id = generate_entity_id(component + '.{}', value_name, [])
-        node_config = self._device_config.get(entity_id)
+        node_config = self._device_config.get(entity_id, {})
 
         # Configure node
         _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
@@ -1029,7 +1030,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             },
             'manufacturer': self.node.manufacturer_name,
             'model': self.node.product_name,
-            'name': node_name(self.node)
+            'name': node_name(self.node),
         }
 
     @property
