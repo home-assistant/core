@@ -4,10 +4,11 @@ Support for Konnected devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/konnected/
 """
-import logging
+import asyncio
 import hmac
 import json
-import asyncio
+import logging
+
 import voluptuous as vol
 
 from aiohttp.hdrs import AUTHORIZATION
@@ -21,7 +22,8 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED, CONF_DEVICES, CONF_BINARY_SENSORS, CONF_SWITCHES,
     CONF_HOST, CONF_PORT, CONF_ID, CONF_NAME, CONF_TYPE, CONF_PIN, CONF_ZONE,
     CONF_ACCESS_TOKEN, ATTR_ENTITY_ID, ATTR_STATE, STATE_ON)
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_send, dispatcher_send)
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 
@@ -52,7 +54,7 @@ _BINARY_SENSOR_SCHEMA = vol.All(
         vol.Exclusive(CONF_ZONE, 's_pin'): vol.Any(*ZONE_TO_PIN),
         vol.Required(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_INVERSE): cv.boolean,
+        vol.Optional(CONF_INVERSE, default=False): cv.boolean,
     }), cv.has_at_least_one_key(CONF_PIN, CONF_ZONE)
 )
 
@@ -86,8 +88,8 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [_SWITCH_SCHEMA]),
                 vol.Optional(CONF_HOST): cv.string,
                 vol.Optional(CONF_PORT): cv.port,
-                vol.Optional(CONF_BLINK): cv.boolean,
-                vol.Optional(CONF_DISCOVERY): cv.boolean,
+                vol.Optional(CONF_BLINK, default=True): cv.boolean,
+                vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
             }],
         }),
     },
@@ -144,9 +146,9 @@ async def async_setup(hass, config):
                               dev.get(CONF_HOST),
                               dev.get(CONF_PORT))
                 try:
-                    await hass.async_add_job(setup_device,
-                                             dev.get(CONF_HOST),
-                                             dev.get(CONF_PORT))
+                    await hass.async_add_executor_job(setup_device,
+                                                      dev.get(CONF_HOST),
+                                                      dev.get(CONF_PORT))
                     specified.remove(dev)
                 except konnected.Client.ClientError as err:
                     _LOGGER.error(err)
@@ -308,7 +310,7 @@ class DiscoveredDevice:
             if sensor_config.get(CONF_INVERSE):
                 state = not state
 
-            async_dispatcher_send(
+            dispatcher_send(
                 self.hass,
                 SIGNAL_SENSOR_UPDATE.format(entity_id),
                 state)
