@@ -28,7 +28,7 @@ async def _handle_webhook(action, hass, webhook_id, request):
     """Handle incoming webhook."""
     result = {
         'platform': 'webhook',
-        CONF_WEBHOOK_ID: webhook_id,
+        'webhook_id': webhook_id,
     }
 
     if 'json' in request.headers.get(hdrs.CONTENT_TYPE, ''):
