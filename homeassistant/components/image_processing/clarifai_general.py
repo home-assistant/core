@@ -106,7 +106,9 @@ class ClarifaiClassifier(ImageProcessingEntity):
         if prediction:
             api_concepts = prediction['outputs'][0]['data']['concepts']
             self._classifications = parse_concepts(api_concepts)
-            self._state = next(iter(self._classifications))
+            self._state = max(self._classifications,
+                              key=self._classifications.get)
+
         else:
             self._classifications = {}
             self._state = STATE_UNKNOWN
