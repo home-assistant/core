@@ -49,7 +49,8 @@ def get_scanner(hass, config):
 
     """
     for cls in [
-            TplinkDeviceScanner, Tplink5DeviceScanner, Tplink4DeviceScanner,
+            TplinkDeviceScanner,
+            Tplink6DeviceScanner, Tplink5DeviceScanner, Tplink4DeviceScanner,
             Tplink3DeviceScanner, Tplink2DeviceScanner, Tplink1DeviceScanner
     ]:
         scanner = cls(config[DOMAIN])
@@ -475,3 +476,102 @@ class Tplink5DeviceScanner(Tplink1DeviceScanner):
             return True
 
         return False
+
+
+class Tplink6DeviceScanner(Tplink1DeviceScanner):
+    """This class queries a TP-Link Archer C2 router."""
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found MAC IDs."""
+        self._update_info()
+        return self.last_results
+
+    def get_device_name(self, device):
+        """Get firmware doesn't save the name of the wireless device."""
+        return None
+
+    def _request(self, session, url_path, data):
+        """Format and send requests to router."""
+        result = ""
+        success = False
+        auth = ('{}:{}'.format(self.username, self.password)).encode('ascii')
+        cookie = 'Authorization=Basic '+base64.b64encode(auth).decode('ascii')
+        url = 'http://' + self.host + url_path
+        referer = 'http://' + self.host
+
+        _LOGGER.debug("URL: %s", str(url))
+        reply = session.post(url, headers={REFERER: referer, COOKIE: cookie},
+                             data=data, timeout=4)
+        try:
+            result = reply.text
+            success = result.find("[error]0") != -1
+        except ValueError:
+            _LOGGER.error("Couldn't parse response")
+
+        _LOGGER.debug("Response: %s", str(result))
+        return success, result
+
+    def _update_info(self):
+        """Ensure the information from the TP-Link AP is up to date.
+
+        Return boolean if scanning successful.
+        """
+        _LOGGER.info("Loading wireless clients...")
+
+        self.last_results = []
+
+        keyword = "associatedDeviceMACAddress="
+
+        session = requests.session()
+
+        # Retrieve 2.4GHZ device list
+        success, reply = self._request(session, "/cgi?7",
+                                       "[ACT_WLAN_UPDATE_ASSOC"
+                                       "#1,1,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+        if success:
+            success, reply = self._request(session, "/cgi?6",
+                                           "[LAN_WLAN_ASSOC_DEV"
+                                           "#0,0,0,0,0,0#1,1,0,0,0,0]0,4\r\n"
+                                           "AssociatedDeviceMACAddress\r\n"
+                                           "X_TP_TotalPacketsSent\r\n"
+                                           "X_TP_TotalPacketsReceived\r\n"
+                                           "X_TP_HostName\r\n")
+
+        if not success:
+            _LOGGER.error("Failed to load client list 2.4GHZ. "
+                          "Check if credentials are correct")
+            return False
+
+        for line in reply.split("\n"):
+            if line.find(keyword) != -1:
+                self.last_results.append(line[len(keyword):])
+
+        # Retrieve 5GHZ device list
+        success, reply = self._request(session, "/cgi?7",
+                                       "[ACT_WLAN_UPDATE_ASSOC"
+                                       "#1,2,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+        if success:
+            success, reply = self._request(session, "/cgi?6",
+                                           "[LAN_WLAN_ASSOC_DEV"
+                                           "#0,0,0,0,0,0#1,2,0,0,0,0]0,4\r\n"
+                                           "AssociatedDeviceMACAddress\r\n"
+                                           "X_TP_TotalPacketsSent\r\n"
+                                           "X_TP_TotalPacketsReceived\r\n"
+                                           "X_TP_HostName\r\n")
+
+            if success:
+                for line in reply.split("\n"):
+                    if line.find(keyword) != -1:
+                        self.last_results.append(line[len(keyword):])
+
+        if not success:
+            _LOGGER.warning("Failed to load client list 5GHZ - not critical")
+
+        # Logout in order to let user access to the router
+        # (Otherwise router will avoid to have 2 admin at the same time)
+        self._request(session, "/cgi?8",
+                      "[/cgi/logout#0,0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+        session.close()
+
+        _LOGGER.debug("Client list: %s", str(self.last_results))
+        return True
