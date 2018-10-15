@@ -45,7 +45,16 @@ DEFAULT_MODE = MODE_XY
 DEPENDENCIES = ['light']
 
 
-PLATFORM_SCHEMA = vol.Schema({
+def is_valid_transition(config):
+    """Validate transition compared to interval."""
+    transition = config[ATTR_TRANSITION]
+    interval = config[CONF_INTERVAL]
+    if transition > interval:
+        config[ATTR_TRANSITION] = interval
+    return config
+
+
+PLATFORM_SCHEMA = vol.Schema(vol.All({
     vol.Required(CONF_PLATFORM): 'flux',
     vol.Required(CONF_LIGHTS): cv.entity_ids,
     vol.Optional(CONF_NAME, default="Flux"): cv.string,
@@ -64,7 +73,7 @@ PLATFORM_SCHEMA = vol.Schema({
         vol.Any(MODE_XY, MODE_MIRED, MODE_RGB),
     vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
     vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION
-})
+}, is_valid_transition))
 
 
 def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
