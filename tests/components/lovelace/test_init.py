@@ -11,7 +11,7 @@ async def test_deprecated_lovelace_ui(hass, hass_ws_client):
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.components.lovelace.load_config',
                return_value={'hello': 'world'}):
         await client.send_json({
             'id': 5,
@@ -30,7 +30,7 @@ async def test_deprecated_lovelace_ui_not_found(hass, hass_ws_client):
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.components.lovelace.load_config',
                side_effect=FileNotFoundError):
         await client.send_json({
             'id': 5,
@@ -49,7 +49,7 @@ async def test_deprecated_lovelace_ui_load_err(hass, hass_ws_client):
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.components.lovelace.load_config',
                side_effect=HomeAssistantError):
         await client.send_json({
             'id': 5,
@@ -68,7 +68,7 @@ async def test_lovelace_ui(hass, hass_ws_client):
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.components.lovelace.load_config',
                return_value={'hello': 'world'}):
         await client.send_json({
             'id': 5,
@@ -87,7 +87,7 @@ async def test_lovelace_ui_not_found(hass, hass_ws_client):
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.components.lovelace.load_config',
                side_effect=FileNotFoundError):
         await client.send_json({
             'id': 5,
@@ -106,7 +106,7 @@ async def test_lovelace_ui_load_err(hass, hass_ws_client):
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.components.lovelace.load_config',
                side_effect=HomeAssistantError):
         await client.send_json({
             'id': 5,
