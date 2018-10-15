@@ -183,8 +183,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -231,8 +230,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -326,8 +324,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -378,8 +375,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -431,8 +427,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -533,8 +528,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -585,8 +579,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -634,8 +627,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -685,8 +677,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -749,8 +740,7 @@ class TestSwitchFlux(unittest.TestCase):
             print('sunset {}'.format(sunset_time))
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -803,8 +793,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -849,8 +838,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time), \
-            patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_now',
                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
