@@ -84,7 +84,7 @@ async def handle_webhook(hass, webhook_id, request):
         return None
 
     if isinstance(data, dict):
-        data[CONF_WEBHOOK_ID] = webhook_id
+        data['webhook_id'] = webhook_id
     hass.bus.async_fire(EVENT_RECEIVED, data)
 
 
