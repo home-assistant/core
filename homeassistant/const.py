@@ -146,6 +146,7 @@ CONF_URL = 'url'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
+CONF_WEBHOOK_ID = 'webhook_id'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
 CONF_WHITELIST_EXTERNAL_DIRS = 'whitelist_external_dirs'
@@ -167,6 +168,7 @@ EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
+EVENT_TIMER_OUT_OF_SYNC = 'timer_out_of_sync'
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = 'battery'
@@ -215,6 +217,7 @@ ATTR_CREDENTIALS = 'credentials'
 ATTR_NOW = 'now'
 ATTR_DATE = 'date'
 ATTR_TIME = 'time'
+ATTR_SECONDS = 'seconds'
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = 'domain'

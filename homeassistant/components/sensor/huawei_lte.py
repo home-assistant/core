@@ -28,7 +28,10 @@ DEFAULT_NAME_TEMPLATE = 'Huawei {}: {}'
 
 DEFAULT_SENSORS = [
     "device_information.WanIPAddress",
+    "device_signal.rsrq",
+    "device_signal.rsrp",
     "device_signal.rssi",
+    "device_signal.sinr",
 ]
 
 SENSOR_META = {

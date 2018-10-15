@@ -240,7 +240,7 @@ class KNXModule:
 
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
-        self.hass.bus.fire('knx_event', {
+        self.hass.bus.async_fire('knx_event', {
             'address': str(telegram.group_address),
             'data': telegram.payload.value
         })

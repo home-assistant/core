@@ -72,6 +72,7 @@ foobot_async==0.3.1
 gTTS-token==1.1.2
 
 # homeassistant.components.geo_location.geo_json_events
+# homeassistant.components.geo_location.nsw_rural_fire_service_feed
 geojson_client==0.1
 
 # homeassistant.components.sensor.geo_rss_events
@@ -93,7 +94,7 @@ hdate==0.6.3
 holidays==0.9.7
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181007.0
+home-assistant-frontend==20181014.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -114,7 +115,7 @@ mficlient==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.15.1
+numpy==1.15.2
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -152,6 +153,9 @@ pydeconz==47
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
+
+# homeassistant.components.homematic
+pyhomematic==0.1.50
 
 # homeassistant.components.litejet
 pylitejet==0.1
@@ -210,6 +214,9 @@ ring_doorbell==0.2.1
 
 # homeassistant.components.media_player.yamaha
 rxv==0.5.1
+
+# homeassistant.components.simplisafe
+simplisafe-python==3.1.11
 
 # homeassistant.components.sleepiq
 sleepyq==0.6

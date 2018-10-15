@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
+from .permissions import DEFAULT_POLICY
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'
@@ -245,12 +246,16 @@ class AuthStore:
             groups[group_dict['id']] = models.Group(
                 name=group_dict['name'],
                 id=group_dict['id'],
+                policy=group_dict.get('policy', DEFAULT_POLICY),
             )
 
         migrate_group = None
 
         if not groups:
-            migrate_group = models.Group(name=INITIAL_GROUP_NAME)
+            migrate_group = models.Group(
+                name=INITIAL_GROUP_NAME,
+                policy=DEFAULT_POLICY
+            )
             groups[migrate_group.id] = migrate_group
 
         for user_dict in data['users']:
@@ -348,13 +353,17 @@ class AuthStore:
             for user in self._users.values()
         ]
 
-        groups = [
-            {
+        groups = []
+        for group in self._groups.values():
+            g_dict = {
                 'name': group.name,
                 'id': group.id,
-            }
-            for group in self._groups.values()
-        ]
+            }  # type: Dict[str, Any]
+
+            if group.policy is not DEFAULT_POLICY:
+                g_dict['policy'] = group.policy
+
+            groups.append(g_dict)
 
         credentials = [
             {
@@ -402,7 +411,10 @@ class AuthStore:
         self._users = OrderedDict()  # type: Dict[str, models.User]
 
         # Add default group
-        all_access_group = models.Group(name=INITIAL_GROUP_NAME)
+        all_access_group = models.Group(
+            name=INITIAL_GROUP_NAME,
+            policy=DEFAULT_POLICY,
+        )
 
         groups = OrderedDict()  # type: Dict[str, models.Group]
         groups[all_access_group.id] = all_access_group

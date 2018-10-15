@@ -85,7 +85,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
             self.assertEqual(sensor.state, "כ\"ג באלול ה\' תשע\"ח")
 
     def test_jewish_calendar_sensor_holiday_name(self):
-        """Test Jewish calendar sensor date output in hebrew."""
+        """Test Jewish calendar sensor holiday name output in hebrew."""
         test_time = dt(2018, 9, 10)
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='holiday_name',
@@ -97,7 +97,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
             self.assertEqual(sensor.state, "א\' ראש השנה")
 
     def test_jewish_calendar_sensor_holiday_name_english(self):
-        """Test Jewish calendar sensor date output in hebrew."""
+        """Test Jewish calendar sensor holiday name output in english."""
         test_time = dt(2018, 9, 10)
         sensor = JewishCalSensor(
             name='test', language='english', sensor_type='holiday_name',
@@ -109,7 +109,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
             self.assertEqual(sensor.state, "Rosh Hashana I")
 
     def test_jewish_calendar_sensor_holyness(self):
-        """Test Jewish calendar sensor date output in hebrew."""
+        """Test Jewish calendar sensor holyness value."""
         test_time = dt(2018, 9, 10)
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='holyness',
@@ -121,7 +121,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
             self.assertEqual(sensor.state, 1)
 
     def test_jewish_calendar_sensor_torah_reading(self):
-        """Test Jewish calendar sensor date output in hebrew."""
+        """Test Jewish calendar sensor torah reading in hebrew."""
         test_time = dt(2018, 9, 8)
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='weekly_portion',
@@ -133,7 +133,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
             self.assertEqual(sensor.state, "פרשת נצבים")
 
     def test_jewish_calendar_sensor_first_stars_ny(self):
-        """Test Jewish calendar sensor date output in hebrew."""
+        """Test Jewish calendar sensor first stars time in NY, US."""
         test_time = dt(2018, 9, 8)
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='first_stars',
@@ -145,7 +145,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
             self.assertEqual(sensor.state, time(19, 48))
 
     def test_jewish_calendar_sensor_first_stars_jerusalem(self):
-        """Test Jewish calendar sensor date output in hebrew."""
+        """Test Jewish calendar sensor first stars time in Jerusalem, IL."""
         test_time = dt(2018, 9, 8)
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='first_stars',
@@ -155,3 +155,15 @@ class TestJewishCalenderSensor(unittest.TestCase):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
             self.assertEqual(sensor.state, time(19, 21))
+
+    def test_jewish_calendar_sensor_torah_reading_weekday(self):
+        """Test the sensor showing torah reading also on weekdays."""
+        test_time = dt(2018, 10, 14)
+        sensor = JewishCalSensor(
+            name='test', language='hebrew', sensor_type='weekly_portion',
+            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
+            timezone="Asia/Jerusalem", diaspora=False)
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop).result()
+            self.assertEqual(sensor.state, "פרשת לך לך")
