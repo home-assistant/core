@@ -54,7 +54,7 @@ class DeconzCover(CoverDevice):
         self._features |= SUPPORT_STOP
         self._features |= SUPPORT_SET_POSITION
         self.reverse = False
-        if self._cover.modelid in "lumi.curtain":
+        if self._cover.modelid == "lumi.curtain":
             self.reverse = True
 
     async def async_added_to_hass(self):
@@ -128,7 +128,7 @@ class DeconzCover(CoverDevice):
         data = {'on': False}
         if self.reverse and position < 100:
             data['on'] = True
-            data['bri'] = 100 - int(position / 100 * 255)
+            data['bri'] = int((100 - position) / 100 * 255)
         elif not self.reverse and position > 0:
             data['on'] = True
             data['bri'] = int(position / 100 * 255)
