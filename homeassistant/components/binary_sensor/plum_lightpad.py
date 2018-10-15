@@ -11,6 +11,8 @@ from homeassistant.util import dt as dt_util
 
 DEPENDENCIES = ['plum_lightpad']
 
+MOTION_DEVICE_CLASS = 'motion'
+
 
 async def async_setup_platform(hass, config, add_devices,
                                discovery_info=None):
@@ -71,3 +73,8 @@ class PlumMotionSensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._signal is not None
+
+    @property
+    def device_class(self):
+        """Return the Motion device class."""
+        return MOTION_DEVICE_CLASS
