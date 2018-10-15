@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['plumlightpad==0.0.10']
@@ -34,7 +35,8 @@ async def async_setup(hass, config):
     from plumlightpad import Plum
 
     conf = config[DOMAIN]
-    plum = Plum(conf[CONF_USERNAME], conf[CONF_PASSWORD])
+    session = async_create_clientsession(hass, verify_ssl=False)
+    plum = Plum(conf[CONF_USERNAME], conf[CONF_PASSWORD], session)
 
     hass.data[PLUM_DATA] = plum
 
@@ -44,7 +46,8 @@ async def async_setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
-    await plum.loadCloudData()
+    cloud_web_sesison = async_create_clientsession(hass, verify_ssl=True)
+    await plum.loadCloudData(cloud_web_sesison)
 
     async def new_load(event):
         """Called when a new LogicalLoad is detected."""
@@ -58,6 +61,8 @@ async def async_setup(hass, config):
         await discovery.async_load_platform(
             hass, 'binary_sensor', DOMAIN, event, conf)
 
-    hass.async_create_task(plum.discover(hass.loop, new_load, new_lightpad))
+    device_web_session = async_create_clientsession(hass, verify_ssl=False)
+    hass.async_create_task(
+        plum.discover(hass.loop, new_load, new_lightpad, device_web_session))
 
     return True

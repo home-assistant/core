@@ -97,11 +97,14 @@ class GlowRing(Light):
         """Initialize the light."""
         self._lightpad = lightpad
         self._name = lightpad.friendly_name + " Glow Ring"
+
+        self._state = lightpad.glow_enabled
+        self._brightness = lightpad.glow_intensity * 255.0
+
         self._red = lightpad.glow_color['red']
         self._green = lightpad.glow_color['green']
         self._blue = lightpad.glow_color['blue']
         self._white = lightpad.glow_color['white']
-        self._brightness = lightpad.glow_intensity * 255.0
 
     async def async_added_to_hass(self):
         """Subscribe to configchange events."""
@@ -111,11 +114,15 @@ class GlowRing(Light):
     def configchange_event(self, event):
         """Configuration change event handling."""
         config = event['changes']
+
+        self._state = config['glowEnabled']
+        self._brightness = config['glowIntensity'] * 255.0
+
         self._red = config['glowColor']['red']
         self._green = config['glowColor']['green']
         self._blue = config['glowColor']['blue']
         self._white = config['glowColor']['white']
-        self._brightness = config['glowIntensity'] * 255.0
+
         self.schedule_update_ha_state()
 
     @property
@@ -146,7 +153,7 @@ class GlowRing(Light):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._lightpad.glow_enabled
+        return self._state
 
     @property
     def icon(self):
@@ -158,26 +165,27 @@ class GlowRing(Light):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            self._lightpad.set_config({"glowIntensity": self.glow_intensity})
+            await self._lightpad.async_set_config(
+                {"glowIntensity": self.glow_intensity})
         elif ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
             self._red, self._green, self._blue = \
                 color_util.color_hs_to_RGB(*hs_color)
-            self._lightpad.set_glow_color(
+            await self._lightpad.async_set_glow_color(
                 self._red, self._green, self._blue, 0)
         else:
-            self._lightpad.set_config({"glowEnabled": True})
+            await self._lightpad.async_set_config({"glowEnabled": True})
 
-        self.schedule_update_ha_state()
-
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            self._lightpad.set_config({"glowIntensity": self._brightness})
+            await self._lightpad.async_set_config(
+                {"glowIntensity": self._brightness})
         else:
-            self._lightpad.set_config({"glowEnabled": False})
+            await self._lightpad.async_set_config(
+                {"glowEnabled": False})
