@@ -716,7 +716,7 @@ pizzapi==0.0.3
 plexapi==3.0.6
 
 # homeassistant.components.plum_lightpad
-plumlightpad==0.0.10
+plumlightpad==0.0.11
 
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
