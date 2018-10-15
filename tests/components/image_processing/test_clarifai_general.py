@@ -5,7 +5,6 @@ from unittest.mock import patch
 from clarifai.rest import ApiError
 import pytest
 
-from homeassistant.core import callback
 from homeassistant.const import (ATTR_ENTITY_ID, CONF_FRIENDLY_NAME,
                                  STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
