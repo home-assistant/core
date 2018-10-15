@@ -29,11 +29,12 @@ PACKAGES=(
   ffmpeg
   # homeassistant.components.sensor.iperf3
   iperf3
+  # homeassistant.components.image_processing.dlib_face_detect
+  cmake
 )
 
 # Required debian packages for building dependencies
 PACKAGES_DEV=(
-  cmake
   git
   swig
 )
