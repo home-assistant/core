@@ -216,6 +216,15 @@ class BOMCurrentData:
         return next((x for x in condition_readings if x != '-'), None)
 
     def should_update(self):
+        """Determine whether an update should occur.
+
+        BOM provides updated data every 30 minutes. We manually define
+        refreshing logic here rather than a throttle to keep updates
+        in lock-step with BOM.
+
+        If 35 minutes has passed since the last BOM data update, then
+        an update should be done.
+        """
         if self.last_updated is None:
             # Never updated before, therefore an update should occur.
             return True
@@ -227,15 +236,7 @@ class BOMCurrentData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from BOM.
-
-        BOM provides updated data every 30 minutes. We manually define
-        refreshing logic here rather than a throttle to keep updates
-        in lock-step with BOM.
-
-        If 35 minutes has passed since the last BOM data update, then
-        an update should be done.
-        """
+        """Get the latest data from BOM."""
         if not self.should_update():
             _LOGGER.debug(
                 "BOM was updated %s minutes ago, skipping update as"
