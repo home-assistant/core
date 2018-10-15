@@ -184,7 +184,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -231,7 +231,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -325,7 +325,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -376,7 +376,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -428,7 +428,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -529,7 +529,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -580,7 +580,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -628,7 +628,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -678,7 +678,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -741,7 +741,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -794,7 +794,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
@@ -839,7 +839,7 @@ class TestSwitchFlux(unittest.TestCase):
             return sunset_time
 
         with patch('homeassistant.components.switch.flux.dt_now',
-                  return_value=test_time), \
+                   return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
             assert setup_component(self.hass, switch.DOMAIN, {
