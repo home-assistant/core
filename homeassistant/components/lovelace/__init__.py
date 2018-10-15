@@ -1,13 +1,14 @@
 """Lovelace UI."""
-import sys
+import logging
 import uuid
 import voluptuous as vol
 from collections import OrderedDict
-from typing import Union, List, Dict, Iterator, overload, TypeVar
+from typing import Union, List, Dict
 
 from homeassistant.components import websocket_api
 from homeassistant.exceptions import HomeAssistantError
 
+_LOGGER = logging.getLogger(__name__)
 DOMAIN = 'lovelace'
 REQUIREMENTS = ['ruamel.yaml==0.15.72']
 
@@ -21,6 +22,7 @@ SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 
+
 def save_yaml(fname, data):
     from ruamel.yaml import YAML
     """Save a YAML file."""
@@ -30,9 +32,10 @@ def save_yaml(fname, data):
     try:
         with open(fname, "w", encoding='utf-8') as conf_file:
             yaml.dump(data, conf_file)
-    except YAMLError as exc:
+    except yaml.YAMLError as exc:
         _LOGGER.error(str(exc))
         raise HomeAssistantError(exc)
+
 
 def load_yaml(fname: str) -> JSON_TYPE:
     from ruamel.yaml import YAML
@@ -43,12 +46,13 @@ def load_yaml(fname: str) -> JSON_TYPE:
             # If configuration file is empty YAML returns None
             # We convert that to an empty dict
             return yaml.load(conf_file) or OrderedDict()
-    except YAMLError as exc:
+    except yaml.YAMLError as exc:
         _LOGGER.error(str(exc))
         raise HomeAssistantError(exc)
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
         raise HomeAssistantError(exc)
+
 
 def load_config(fname: str) -> JSON_TYPE:
     config = load_yaml(fname)
@@ -64,8 +68,9 @@ def load_config(fname: str) -> JSON_TYPE:
                         card['id'] = uuid.uuid4().hex
                         card.move_to_end('id', last=False)
     if updated:
-        save_yaml(fname, config);
-    return config;
+        save_yaml(fname, config)
+    return config
+
 
 async def async_setup(hass, config):
     """Set up the Lovelace commands."""
