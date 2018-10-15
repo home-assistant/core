@@ -661,6 +661,7 @@ omit =
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/buienradar.py
+    homeassistant/components/sensor/bunq.py
     homeassistant/components/sensor/cert_expiry.py
     homeassistant/components/sensor/citybikes.py
     homeassistant/components/sensor/comed_hourly_pricing.py
