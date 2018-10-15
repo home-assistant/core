@@ -77,17 +77,17 @@ class PlumLight(Light):
             return SUPPORT_BRIGHTNESS
         return None
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            self._load.turn_on(self._brightness)
+            await self._load.turn_on(self._brightness)
         else:
-            self._load.turn_on()
+            await self._load.turn_on()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        self._load.turn_off()
+        await self._load.turn_off()
 
 
 class GlowRing(Light):
@@ -169,23 +169,23 @@ class GlowRing(Light):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            await self._lightpad.async_set_config(
+            await self._lightpad.set_config(
                 {"glowIntensity": self.glow_intensity})
         elif ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
             self._red, self._green, self._blue = \
                 color_util.color_hs_to_RGB(*hs_color)
-            await self._lightpad.async_set_glow_color(
+            await self._lightpad.set_glow_color(
                 self._red, self._green, self._blue, 0)
         else:
-            await self._lightpad.async_set_config({"glowEnabled": True})
+            await self._lightpad.set_config({"glowEnabled": True})
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            await self._lightpad.async_set_config(
+            await self._lightpad.set_config(
                 {"glowIntensity": self._brightness})
         else:
-            await self._lightpad.async_set_config(
+            await self._lightpad.set_config(
                 {"glowEnabled": False})
