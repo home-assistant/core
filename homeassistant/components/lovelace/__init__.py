@@ -58,15 +58,12 @@ def load_config(fname: str) -> JSON_TYPE:
     config = load_yaml(fname)
     # Check if all cards have an ID or else add one
     updated = False
-    views = config.get('views')
-    if views:
-        for view in views:
-            if 'cards' in view:
-                for card in view.get('cards'):
-                    if 'id' not in card:
-                        updated = True
-                        card['id'] = uuid.uuid4().hex
-                        card.move_to_end('id', last=False)
+    for view in config.get('views', []):
+        for card in view.get('cards', []):
+            if 'id' not in card:
+                updated = True
+                card['id'] = uuid.uuid4().hex
+                card.move_to_end('id', last=False)
     if updated:
         save_yaml(fname, config)
     return config
