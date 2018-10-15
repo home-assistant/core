@@ -23,16 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CLASSIFIER = 'Clarifai'
 CONF_API_KEY = 'api_key'
-CONF_CONCEPTS = 'concepts'
-DEFAULT_CONCEPTS = 'None'
-EVENT_MODEL_PREDICTION = 'image_processing.model_prediction'
 
 REQUIREMENTS = ['clarifai==2.3.2']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_CONCEPTS, default=[DEFAULT_CONCEPTS]):
-        vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -72,7 +67,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for camera in config[CONF_SOURCE]:
         entities.append(ClarifaiClassifier(
             app,
-            config[CONF_CONCEPTS],
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME),
         ))
@@ -82,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ClarifaiClassifier(ImageProcessingEntity):
     """Perform a classification via Clarifai."""
 
-    def __init__(self, app, concepts, camera_entity, name=None):
+    def __init__(self, app, camera_entity, name=None):
         """Init with the API key."""
         model = 'general-v1.3'
         self.model = app.models.get(model)
@@ -91,7 +85,6 @@ class ClarifaiClassifier(ImageProcessingEntity):
         else:
             entity_name = split_entity_id(camera_entity)[1]
             self._name = "{} {}".format(CLASSIFIER, entity_name)
-        self._concepts = concepts
         self._camera_entity = camera_entity
         self._classifications = {}  # The dict of classifications.
         self._state = STATE_UNKNOWN  # The most likely classification.
@@ -114,20 +107,9 @@ class ClarifaiClassifier(ImageProcessingEntity):
             api_concepts = prediction['outputs'][0]['data']['concepts']
             self._classifications = parse_concepts(api_concepts)
             self._state = next(iter(self._classifications))
-            self.fire_concept_events()
         else:
             self._classifications = {}
             self._state = STATE_UNKNOWN
-
-    def fire_concept_events(self):
-        """Fire an event for each concept identified."""
-        identified_concepts = self._classifications.keys() & self._concepts
-        for concept in identified_concepts:
-            self.hass.bus.fire(
-                EVENT_MODEL_PREDICTION, {
-                    CONF_ENTITY_ID: self._camera_entity,
-                    'concept': concept,
-                    })
 
     @property
     def device_class(self):

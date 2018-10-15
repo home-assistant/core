@@ -6,7 +6,8 @@ from clarifai.rest import ApiError
 import pytest
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME
+from homeassistant.const import (ATTR_ENTITY_ID, CONF_FRIENDLY_NAME,
+                                 STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.image_processing.clarifai_general as cg
@@ -29,7 +30,6 @@ VALID_CONFIG = {
         cg.CONF_API_KEY: MOCK_API_KEY,
         ip.CONF_SOURCE: {
             ip.CONF_ENTITY_ID: 'camera.demo_camera'},
-        cg.CONF_CONCEPTS: ['dog'],
     },
     'camera': {
         'platform': 'demo'
@@ -80,11 +80,20 @@ def mock_image():
 
 
 @pytest.fixture
-def mock_response():
-    """Return a mock response from Clarifai."""
+def mock_response_with_data():
+    """Return a mock response from Clarifai with MOCK_RESPONSE data."""
     with patch('homeassistant.components.image_processing.clarifai_general.'
                'ClarifaiClassifier.model_prediction',
                return_value=MOCK_RESPONSE) as _mock_response:
+        yield _mock_response
+
+
+@pytest.fixture
+def mock_response_no_data():
+    """Return a mock response from Clarifai with MOCK_RESPONSE data."""
+    with patch('homeassistant.components.image_processing.clarifai_general.'
+               'ClarifaiClassifier.model_prediction',
+               return_value=None) as _mock_response:
         yield _mock_response
 
 
@@ -117,19 +126,12 @@ async def test_setup_platform(hass, mock_app, mock_image):
     assert hass.states.get(VALID_ENTITY_ID)
 
 
-async def test_process_image(hass, mock_app, mock_image, mock_response):
+async def test_process_image(hass, mock_app,
+                             mock_image, mock_response_with_data):
     """Test successful processing of an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
 
-    events = []
-
-    @callback
-    def mock_event(event):
-        """Mock event."""
-        events.append(event)
-
-    hass.bus.async_listen('image_processing.model_prediction', mock_event)
     data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
     await hass.services.async_call(ip.DOMAIN,
                                    ip.SERVICE_SCAN,
@@ -138,6 +140,22 @@ async def test_process_image(hass, mock_app, mock_image, mock_response):
 
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == 'dog'
+    assert state.attributes.get('dog') == PARSED_CONCEPTS['dog']
+
+
+async def test_process_no_data(hass, mock_app,
+                               mock_image, mock_response_no_data):
+    """Test processing with no response from API."""
+    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    assert hass.states.get(VALID_ENTITY_ID)
+    data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
+    await hass.services.async_call(ip.DOMAIN,
+                                   ip.SERVICE_SCAN,
+                                   service_data=data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(VALID_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_setup_platform_with_name(hass, mock_app):
