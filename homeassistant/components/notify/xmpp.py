@@ -6,6 +6,7 @@ https://home-assistant.io/components/notify.xmpp/
 """
 import logging
 import requests
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -13,6 +14,8 @@ from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM, CONF_RESOURCE)
+# pylint: disable=redefined-builtin
+from requests.exceptions import ConnectionError, SSLError
 
 REQUIREMENTS = ['slixmpp==1.4.0']
 
@@ -24,6 +27,7 @@ CONF_VERIFY = 'verify'
 ATTR_DATA = 'data'
 ATTR_PATH = 'path'
 ATTR_URL = 'url'
+ATTR_VERIFY = 'verify'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENDER): cv.string,
@@ -129,63 +133,87 @@ async def async_send_message(sender, password, recipient, use_tls,
             Send XMPP image message using OOB (XEP_0066) and
             HTTP Upload (XEP_0363)
             """
-            if data.get(ATTR_URL):
-                # send a file from an URL
-                url = data.get(ATTR_URL)
-                _LOGGER.info('getting file from %s', url)
-                # result = await loop.run_in_executor(None, requests.get, url)
-                result = await hass.async_add_executor_job(requests.get, url)
-                if result.status_code >= 400 or \
-                        result.headers['Content-Length'] == 0:
-                    _LOGGER.error("could not load file from %s", url)
-                try:
-                    # we need a file extension, the upload server needs a
-                    # filename, if none is provided, through the path
-                    # we guess the extension
-                    if not data.get(ATTR_PATH):
-                        extension = self.get_extension(
-                            result.headers['Content-Type'])
-                        _LOGGER.debug("got %s extension", extension)
-                    filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) \
-                        else "upload"+extension
-                    url = await self['xep_0363'].upload_file(
-                        filename,
-                        size=int(result.headers['Content-Length']),
-                        input_file=result.content,
-                        content_type=result.headers['Content-Type'])
-                    _LOGGER.info('Upload success!')
-                except FileTooBig as ex:
-                    _LOGGER.error("File too big for server, "
-                                  "could not upload file %s %s", url, ex)
-                except (UploadServiceNotFound,
-                        FileUploadError) as ex:
-                    _LOGGER.error("could not upload file %s %s", url, ex)
-            elif data.get(ATTR_PATH):
-                # send message from local path
-                filename = data.get(ATTR_PATH) if data else None
-                _LOGGER.info('Uploading file %s ...', filename)
-                try:
-                    url = await self['xep_0363'].upload_file(filename)
-                    _LOGGER.info('Upload success!')
-                except (UploadServiceNotFound,
-                        FileTooBig,
-                        FileUploadError) as ex:
-                    _LOGGER.error("could not upload file %s %s", filename, ex)
-            else:
-                _LOGGER.error("no path or URL found for image")
-
-            _LOGGER.info('Sending file to %s', recipient)
             if room:
                 # self.plugin['xep_0045'].join_muc(room, sender, wait=True)
                 # message = self.Message(sto=room, stype='groupchat')
                 _LOGGER.error("sorry, sending images to rooms is"
                               " currently not supported")
+                return
 
-            message = self.Message(sto=recipient, stype='chat')
-            message['body'] = url
-            # pylint: disable=invalid-sequence-index
-            message['oob']['url'] = url
-            message.send()
+            try:
+                url = await self.upload_file()  # uploading with XEP_0363
+            except FileTooBig as ex:
+                _LOGGER.error("File too big for server, "
+                              "could not upload file %s", ex)
+            except (UploadServiceNotFound,
+                    FileUploadError) as ex:
+                _LOGGER.error("could not upload file %s", ex)
+            except SSLError as ex:
+                _LOGGER.error("cannot establish SSL connection %s", ex)
+            except ConnectionError as ex:
+                _LOGGER.error("cannot connect to server %s", ex)
+            else:
+                _LOGGER.info("Upload success")
+
+                _LOGGER.info('Sending file to %s', recipient)
+                message = self.Message(sto=recipient, stype='chat')
+                message['body'] = url
+                # pylint: disable=invalid-sequence-index
+                message['oob']['url'] = url
+                message.send()
+
+        async def upload_file(self):
+            """Upload file to Jabber server and return new URL.
+
+            upload a file with Jabber XEP_0363 from a remote URL or a local
+            file path and return a URL of that file.
+            """
+            if data.get(ATTR_URL):
+                # send a file from an URL
+                url = data.get(ATTR_URL)
+                _LOGGER.info('getting file from %s', url)
+
+                # result = await loop.run_in_executor(None, requests.get, url)
+                if data.get(ATTR_VERIFY, True):
+                    # if True or not set
+                    result = await hass.async_add_executor_job(requests.get,
+                                                               url)
+                else:
+                    def get_insecure_url(url):
+                        return requests.get(url, verify=False)
+                    result = await hass.async_add_executor_job(
+                        get_insecure_url, url)
+
+                if result.status_code >= 400:
+                    _LOGGER.error("could not load file from %s", url)
+                    return
+
+                length = len(result.content)
+                # we need a file extension, the upload server needs a
+                # filename, if none is provided, through the path
+                # we guess the extension
+                if not data.get(ATTR_PATH):
+                    extension = self.get_extension(
+                        result.headers['Content-Type'])
+                    _LOGGER.debug("got %s extension", extension)
+                filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) \
+                    else "upload"+extension
+                url = await self['xep_0363'].upload_file(
+                    filename,
+                    # size=int(result.headers['Content-Length']),
+                    size=length,
+                    input_file=result.content,
+                    content_type=result.headers['Content-Type'])
+            elif data.get(ATTR_PATH):
+                # send message from local path
+                filename = data.get(ATTR_PATH) if data else None
+                _LOGGER.info('Uploading file %s ...', filename)
+                url = await self['xep_0363'].upload_file(filename)
+            else:
+                _LOGGER.error("no path or URL found for image")
+
+            _LOGGER.info('Upload success!')
+            return url
 
         def send_text_message(self):
             """Send a text only message to a room or a recipient."""
