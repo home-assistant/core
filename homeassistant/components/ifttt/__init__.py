@@ -14,6 +14,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.util.network import is_local
 
 REQUIREMENTS = ['pyfttt==0.3']
@@ -29,7 +30,6 @@ ATTR_VALUE2 = 'value2'
 ATTR_VALUE3 = 'value3'
 
 CONF_KEY = 'key'
-CONF_WEBHOOK_ID = 'webhook_id'
 
 DOMAIN = 'ifttt'
 
@@ -91,13 +91,13 @@ async def handle_webhook(hass, webhook_id, request):
 async def async_setup_entry(hass, entry):
     """Configure based on config entry."""
     hass.components.webhook.async_register(
-        entry.data['webhook_id'], handle_webhook)
+        entry.data[CONF_WEBHOOK_ID], handle_webhook)
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    hass.components.webhook.async_unregister(entry.data['webhook_id'])
+    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     return True
 
 
