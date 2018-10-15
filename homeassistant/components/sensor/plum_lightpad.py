@@ -13,7 +13,7 @@ WATTS = 'Watts'
 
 async def async_setup_platform(hass, config, add_devices,
                                discovery_info=None):
-    """Setup the Power Sensor support within Plum Lightpads."""
+    """Initiailize the Power Sensor support within Plum Lightpads."""
     if discovery_info is None:
         return
 
@@ -40,7 +40,7 @@ class PowerSensor(Entity):
         self._logical_load.add_event_listener('power', self.power_event)
 
     def power_event(self, event):
-        """Handler for power event updates."""
+        """Handle power event updates."""
         self._power = event['watts']
         self.schedule_update_ha_state()
 

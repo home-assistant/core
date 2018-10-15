@@ -14,7 +14,7 @@ DEPENDENCIES = ['plum_lightpad']
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Setup the Plum Lightpad Light."""
+    """Initialize the Plum Lightpad Light and GlowRing."""
     if discovery_info is None:
         return
 
@@ -112,7 +112,7 @@ class GlowRing(Light):
                                           self.configchange_event)
 
     def configchange_event(self, event):
-        """Configuration change event handling."""
+        """Handle Configuration change event."""
         config = event['changes']
 
         self._state = config['glowEnabled']
@@ -157,7 +157,7 @@ class GlowRing(Light):
 
     @property
     def icon(self):
-        """The crop-portait icon works like the glow ring."""
+        """Return the crop-portait icon representing the glow ring."""
         return 'mdi:crop-portrait'
 
     @property

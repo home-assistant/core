@@ -32,7 +32,7 @@ PLUM_DATA = 'plum'
 
 
 async def async_setup(hass, config):
-    """Setup the Plum Lightpad component."""
+    """Plum Lightpad Platform initialization."""
     from plumlightpad import Plum
 
     conf = config[DOMAIN]
@@ -50,20 +50,24 @@ async def async_setup(hass, config):
     cloud_web_sesison = async_create_clientsession(hass, verify_ssl=True)
     await plum.loadCloudData(cloud_web_sesison)
 
-    async def new_load(event):
-        """Called when a new LogicalLoad is detected."""
-        await discovery.async_load_platform(hass, 'light', DOMAIN, event, conf)
+    async def new_load(device):
+        """Loading light and sensor platforms when LogicalLoad is detected."""
         await discovery.async_load_platform(
-            hass, 'sensor', DOMAIN, event, conf)
+            hass, 'light', DOMAIN, discovered=device, hass_config=conf)
+        await discovery.async_load_platform(
+            hass, 'sensor', DOMAIN, discovered=device, hass_config=conf)
 
-    async def new_lightpad(event):
-        """Called when a new Lightpad is detected."""
-        await discovery.async_load_platform(hass, 'light', DOMAIN, event, conf)
+    async def new_lightpad(device):
+        """Load light and binary sensor platforms when Lightpad detected."""
         await discovery.async_load_platform(
-            hass, 'binary_sensor', DOMAIN, event, conf)
+            hass, 'light', DOMAIN, discovered=device, hass_config=conf)
+        await discovery.async_load_platform(
+            hass, 'binary_sensor', DOMAIN, discovered=device, hass_config=conf)
 
     device_web_session = async_create_clientsession(hass, verify_ssl=False)
     hass.async_create_task(
-        plum.discover(hass.loop, new_load, new_lightpad, device_web_session))
+        plum.discover(hass.loop,
+                      loadListener=new_load, lightpadListener=new_lightpad,
+                      websession=device_web_session))
 
     return True
