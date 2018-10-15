@@ -17,13 +17,13 @@ import zipfile
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, CONF_NAME, ATTR_ATTRIBUTION,
     CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _RESOURCE = 'http://www.bom.gov.au/fwo/{}/{}.{}.json'
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,6 @@ CONF_ZONE_ID = 'zone_id'
 CONF_WMO_ID = 'wmo_id'
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=60)
-LAST_UPDATE = 0
 
 SENSOR_TYPES = {
     'wmo': ['wmo', None],
@@ -189,7 +188,7 @@ class BOMCurrentData:
         self._hass = hass
         self._zone_id, self._wmo_id = station_id.split('.')
         self._data = None
-        self._lastupdate = LAST_UPDATE
+        self._last_updated = None
 
     def _build_url(self):
         """Build the URL for the requests."""
@@ -218,25 +217,34 @@ class BOMCurrentData:
         condition_readings = (entry[condition] for entry in self._data)
         return next((x for x in condition_readings if x != '-'), None)
 
+    def should_update(self):
+        if self._last_updated is None:
+            # Never updated before, therefore an update should occur.
+            return True
+
+        now = datetime.datetime.now()
+        update_due_at = self._last_updated + datetime.timedelta(minutes=35)
+        return now > update_due_at
+
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from BOM.
 
-        Check if it is > 35 minutes since the last reading came in.
-        The readings are timestamped on the hour/half hour and the
-        data generally refreshes 35 minutes after that.
-        You don't want to just throttle for 35 mins as that doesn't take
-        into account how far you currently are from the last reading time.
+        BOM provides updated data every 30 minutes. We manually define
+        refreshing logic here rather than a throttle to keep updates
+        in lock-step with BOM.
+
+        If 35 minutes has passed since the last BOM data update, then
+        an update should be done.
         """
-        if self._lastupdate != 0 and \
-            ((datetime.datetime.now() - self._lastupdate) <
-             datetime.timedelta(minutes=35)):
+        if not self.should_update():
             _LOGGER.debug(
                 "BOM was updated %s minutes ago, skipping update as"
                 " < 35 minutes, Now: %s, LastUpdate: %s",
-                (datetime.datetime.now() - self._lastupdate),
-                datetime.datetime.now(), self._lastupdate)
-            return self._lastupdate
+                (datetime.datetime.now() - self._last_updated),
+                datetime.datetime.now(), self._last_updated)
+            return
 
         try:
             result = requests.get(self._build_url(), timeout=10).json()
@@ -244,9 +252,9 @@ class BOMCurrentData:
 
             # set lastupdate using self._data[0] as the first element in the
             # array is the latest date in the json
-            self._lastupdate = datetime.datetime.strptime(
+            self._last_updated = datetime.datetime.strptime(
                 str(self._data[0]['local_date_time_full']), '%Y%m%d%H%M%S')
-            return self._lastupdate
+            return
 
         except ValueError as err:
             _LOGGER.error("Check BOM %s", err.args)
