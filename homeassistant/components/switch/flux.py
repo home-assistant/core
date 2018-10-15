@@ -125,8 +125,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mode = config.get(CONF_MODE)
     interval = config.get(CONF_INTERVAL)
     transition = config.get(ATTR_TRANSITION)
-    if transition > interval:
-        transition = interval
     flux = FluxSwitch(name, hass, lights, start_time, stop_time,
                       start_colortemp, sunset_colortemp, stop_colortemp,
                       brightness, disable_brightness_adjust, mode, interval,
