@@ -6,16 +6,14 @@ https://home-assistant.io/components/notify.xmpp/
 """
 import logging
 import requests
-
+# pylint: disable=redefined-builtin
+from requests.exceptions import ConnectionError, SSLError
 import voluptuous as vol
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM, CONF_RESOURCE)
-# pylint: disable=redefined-builtin
-from requests.exceptions import ConnectionError, SSLError
 
 REQUIREMENTS = ['slixmpp==1.4.0']
 
