@@ -113,7 +113,9 @@ class Volumio(MediaPlayerDevice):
                 return False
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
-            _LOGGER.error("Failed communicating with Volumio: %s", type(error))
+            _LOGGER.error(
+                "Failed communicating with Volumio '%s': %s",
+                self._name, type(error))
             return False
 
         try:
