@@ -9,11 +9,9 @@ import logging
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.components.rflink import (
-    CONF_ALIASES, CONF_DEVICES, DATA_ENTITY_LOOKUP,
-    EVENT_KEY_COMMAND, RflinkDevice, cv, vol)
+    CONF_ALIASES, CONF_DEVICES, RflinkDevice, cv, vol)
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_NAME, CONF_DEVICE_CLASS, CONF_PLATFORM, STATE_OFF,
-    STATE_ON)
+    CONF_FORCE_UPDATE, CONF_NAME, CONF_DEVICE_CLASS)
 import homeassistant.helpers.event as evt
 
 CONF_OFF_DELAY = 'off_delay'
@@ -39,34 +37,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def devices_from_config(hass, domain_config):
+def devices_from_config(domain_config):
     """Parse configuration and add Rflink sensor devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
-        device = RflinkBinarySensor(hass, device_id, **config)
+        device = RflinkBinarySensor(device_id, **config)
         devices.append(device)
 
-        # Register entity (and aliases) to listen to incoming rflink events
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
-        aliases = config.get(CONF_ALIASES)
-        if aliases:
-            for _id in aliases:
-                hass.data[DATA_ENTITY_LOOKUP][
-                    EVENT_KEY_COMMAND][_id].append(device)
     return devices
 
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Rflink platform."""
-    async_add_entities(devices_from_config(hass, config))
+    async_add_entities(devices_from_config(config))
 
 
 class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
     """Representation of an Rflink binary sensor."""
 
-    def __init__(self, hass, device_id, device_class=None,
+    def __init__(self, device_id, device_class=None,
                  force_update=None, off_delay=None,
                  **kwargs):
         """Handle sensor specific args and super init."""
@@ -75,7 +65,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
         self._force_update = force_update
         self._off_delay = off_delay
         self._delay_listener = None
-        super().__init__(device_id, hass, **kwargs)
+        super().__init__(device_id, **kwargs)
 
     def _handle_event(self, event):
         """Domain specific event handler."""
@@ -96,7 +86,6 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
                 self._delay_listener()
             self._delay_listener = evt.async_call_later(
                 self.hass, self._off_delay, off_delay_listener)
-        self.async_schedule_update_ha_state()
 
     @property
     def is_on(self):
