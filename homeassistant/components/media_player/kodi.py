@@ -231,7 +231,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             await getattr(player, method['method'])(**params)
 
         for player in target_players:
-            if player.should_poll:
+            if not player.is_connected:
                 update_coro = player.async_update_ha_state(True)
                 update_tasks.append(update_coro)
 
@@ -486,7 +486,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def server(self):
         """Active server for json-rpc requests."""
-        if self._enable_websocket and self._ws_server.connected:
+        if self.is_connected:
             return self._ws_server
 
         return self._http_server
@@ -497,9 +497,16 @@ class KodiDevice(MediaPlayerDevice):
         return self._name
 
     @property
+    def is_connected(self):
+        """Return True if the entity requires manual updating."""
+        if not self._enable_websocket:
+            return False
+        return self._ws_server.connected
+
+    @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
-        return not (self._enable_websocket and self._ws_server.connected)
+        return True
 
     @property
     def volume_level(self):
