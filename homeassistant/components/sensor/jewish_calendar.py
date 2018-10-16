@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['hdate==0.6.3']
+REQUIREMENTS = ['hdate==0.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 
