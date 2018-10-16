@@ -40,6 +40,7 @@ COVER_SCHEMA = vol.Schema({
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MyQ component."""
     from pymyq import MyQAPI as pymyq
