@@ -562,6 +562,36 @@ class TestHelpersTemplate(unittest.TestCase):
                 """, self.hass)
         self.assertEqual('LHR', tpl.render())
 
+    def test_bitwise_and(self):
+        """Test bitwise_and method."""
+        tpl = template.Template("""
+{{ 8 | bitwise_and(8) }}
+                """, self.hass)
+        self.assertEqual(str(8 & 8), tpl.render())
+        tpl = template.Template("""
+{{ 10 | bitwise_and(2) }}
+                """, self.hass)
+        self.assertEqual(str(10 & 2), tpl.render())
+        tpl = template.Template("""
+{{ 8 | bitwise_and(2) }}
+                """, self.hass)
+        self.assertEqual(str(8 & 2), tpl.render())
+
+    def test_bitwise_or(self):
+        """Test bitwise_or method."""
+        tpl = template.Template("""
+{{ 8 | bitwise_or(8) }}
+                """, self.hass)
+        self.assertEqual(str(8 | 8), tpl.render())
+        tpl = template.Template("""
+{{ 10 | bitwise_or(2) }}
+                """, self.hass)
+        self.assertEqual(str(10 | 2), tpl.render())
+        tpl = template.Template("""
+{{ 8 | bitwise_or(2) }}
+                """, self.hass)
+        self.assertEqual(str(8 | 2), tpl.render())
+
     def test_distance_function_with_1_state(self):
         """Test distance function with 1 state."""
         self.hass.states.set('test.object', 'happy', {

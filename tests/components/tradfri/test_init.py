@@ -58,7 +58,7 @@ async def test_config_json_host_not_imported(hass):
     assert len(mock_init.mock_calls) == 0
 
 
-async def test_config_json_host_imported(hass):
+async def test_config_json_host_imported(hass, mock_gateway_info):
     """Test that we import a configured host."""
     with patch('homeassistant.components.tradfri.load_json',
                return_value={'mock-host': {'key': 'some-info'}}):

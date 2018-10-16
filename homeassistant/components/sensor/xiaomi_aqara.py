@@ -5,7 +5,7 @@ from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS)
+    TEMP_CELSIUS, DEVICE_CLASS_PRESSURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ SENSOR_TYPES = {
     'humidity': ['%', None, DEVICE_CLASS_HUMIDITY],
     'illumination': ['lm', None, DEVICE_CLASS_ILLUMINANCE],
     'lux': ['lx', None, DEVICE_CLASS_ILLUMINANCE],
-    'pressure': ['hPa', 'mdi:gauge', None]
+    'pressure': ['hPa', None, DEVICE_CLASS_PRESSURE]
 }
 
 

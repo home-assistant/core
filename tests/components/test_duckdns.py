@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import pytest
 
+from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 from homeassistant.components import duckdns
 from homeassistant.util.dt import utcnow
@@ -12,6 +13,19 @@ from tests.common import async_fire_time_changed
 
 DOMAIN = 'bla'
 TOKEN = 'abcdefgh'
+
+
+@bind_hass
+@asyncio.coroutine
+def async_set_txt(hass, txt):
+    """Set the txt record. Pass in None to remove it.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    yield from hass.services.async_call(
+        duckdns.DOMAIN, duckdns.SERVICE_SET_TXT, {
+            duckdns.ATTR_TXT: txt
+        }, blocking=True)
 
 
 @pytest.fixture
@@ -84,7 +98,7 @@ def test_service_set_txt(hass, aioclient_mock, setup_duckdns):
     }, text='OK')
 
     assert aioclient_mock.call_count == 0
-    yield from hass.components.duckdns.async_set_txt('some-txt')
+    yield from async_set_txt(hass, 'some-txt')
     assert aioclient_mock.call_count == 1
 
 
@@ -102,5 +116,5 @@ def test_service_clear_txt(hass, aioclient_mock, setup_duckdns):
     }, text='OK')
 
     assert aioclient_mock.call_count == 0
-    yield from hass.components.duckdns.async_set_txt(None)
+    yield from async_set_txt(hass, None)
     assert aioclient_mock.call_count == 1

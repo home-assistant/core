@@ -50,6 +50,7 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_HUE: 'hue',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
+    'igd': 'upnp',
 }
 
 SERVICE_HANDLERS = {
@@ -168,7 +169,7 @@ async def async_setup(hass, config):
         results = await hass.async_add_job(_discover, netdisco)
 
         for result in results:
-            hass.async_add_job(new_service_found(*result))
+            hass.async_create_task(new_service_found(*result))
 
         async_track_point_in_utc_time(hass, scan_devices,
                                       dt_util.utcnow() + SCAN_INTERVAL)
@@ -180,7 +181,7 @@ async def async_setup(hass, config):
 
         # discovery local services
         if 'HASSIO' in os.environ:
-            hass.async_add_job(new_service_found(SERVICE_HASSIO, {}))
+            hass.async_create_task(new_service_found(SERVICE_HASSIO, {}))
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
 

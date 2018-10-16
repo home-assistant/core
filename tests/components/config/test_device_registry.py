@@ -27,7 +27,6 @@ async def test_list_devices(hass, client, registry):
         manufacturer='manufacturer', model='model')
     registry.async_get_or_create(
         config_entry_id='1234',
-        connections={},
         identifiers={('bridgeid', '1234')},
         manufacturer='manufacturer', model='model',
         via_hub=('bridgeid', '0123'))

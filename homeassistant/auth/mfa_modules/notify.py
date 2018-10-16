@@ -85,7 +85,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         super().__init__(hass, config)
         self._user_settings = None  # type: Optional[_UsersDict]
         self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY)
+            STORAGE_VERSION, STORAGE_KEY, private=True)
         self._include = config.get(CONF_INCLUDE, [])
         self._exclude = config.get(CONF_EXCLUDE, [])
         self._message_template = config[CONF_MESSAGE]

@@ -14,7 +14,7 @@ pytest-aiohttp==0.3.0
 pytest-cov==2.5.1
 pytest-sugar==0.9.1
 pytest-timeout==1.3.2
-pytest==3.8.0
+pytest==3.8.2
 requests_mock==1.5.2
 
 
@@ -23,6 +23,9 @@ HAP-python==2.1.0
 
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.1
+
+# homeassistant.components.notify.yessssms
+YesssSMS==0.2.3
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
@@ -55,11 +58,11 @@ dsmr_parser==0.11
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
 
+# homeassistant.components.evohome
 # homeassistant.components.climate.honeywell
-evohomeclient==0.2.5
+evohomeclient==0.2.7
 
 # homeassistant.components.feedreader
-# homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
 # homeassistant.components.sensor.foobot
@@ -71,14 +74,14 @@ gTTS-token==1.1.2
 # homeassistant.components.geo_location.geo_json_events
 geojson_client==0.1
 
+# homeassistant.components.sensor.geo_rss_events
+georss_client==0.3
+
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.9
 
 # homeassistant.components.hangouts
 hangups==0.4.5
-
-# homeassistant.components.sensor.geo_rss_events
-haversine==0.4.5
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -90,7 +93,7 @@ hdate==0.6.3
 holidays==0.9.7
 
 # homeassistant.components.frontend
-ais-dom-frontend==20181002.0
+ais-dom-frontend==20181014.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -172,7 +175,7 @@ pyotp==2.2.6
 pyqwikswitch==0.8
 
 # homeassistant.components.sonos
-pysonos==0.0.2
+pysonos==0.0.3
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -188,13 +191,10 @@ python-nest==4.0.3
 pythonwhois==2.4.3
 
 # homeassistant.components.tradfri
-pytradfri[async]==5.5.1
+pytradfri[async]==6.0.1
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
-
-# homeassistant.components.upnp
-pyupnp-async==0.1.1.1
 
 # homeassistant.components.notify.html5
 pywebpush==1.6.0

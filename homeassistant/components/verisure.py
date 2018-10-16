@@ -10,8 +10,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_PASSWORD, CONF_SCAN_INTERVAL,
+                                 CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -35,6 +35,9 @@ CONF_SMARTCAM = 'smartcam'
 
 DOMAIN = 'verisure'
 
+MIN_SCAN_INTERVAL = timedelta(minutes=1)
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
+
 SERVICE_CAPTURE_SMARTCAM = 'capture_smartcam'
 
 HUB = None
@@ -53,6 +56,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
         vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
         vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): (
+            vol.All(cv.time_period, vol.Clamp(min=MIN_SCAN_INTERVAL))),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -66,6 +71,8 @@ def setup(hass, config):
     import verisure
     global HUB
     HUB = VerisureHub(config[DOMAIN], verisure)
+    HUB.update_overview = Throttle(
+        config[DOMAIN][CONF_SCAN_INTERVAL])(HUB.update_overview)
     if not HUB.login():
         return False
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
@@ -140,7 +147,6 @@ class VerisureHub:
             return False
         return True
 
-    @Throttle(timedelta(seconds=60))
     def update_overview(self):
         """Update the overview."""
         try:

@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant import setup
-import homeassistant.components as components
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.fan import (
     ATTR_SPEED, ATTR_OSCILLATING, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
@@ -11,6 +10,8 @@ from homeassistant.components.fan import (
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component)
+from tests.components.fan import common
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -288,7 +289,7 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # verify
@@ -296,7 +297,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, None, None, None)
 
         # Turn off fan
-        components.fan.turn_off(self.hass, _TEST_FAN)
+        common.turn_off(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # verify
@@ -308,7 +309,7 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan with high speed
-        components.fan.turn_on(self.hass, _TEST_FAN, SPEED_HIGH)
+        common.turn_on(self.hass, _TEST_FAN, SPEED_HIGH)
         self.hass.block_till_done()
 
         # verify
@@ -321,11 +322,11 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # Set fan's speed to high
-        components.fan.set_speed(self.hass, _TEST_FAN, SPEED_HIGH)
+        common.set_speed(self.hass, _TEST_FAN, SPEED_HIGH)
         self.hass.block_till_done()
 
         # verify
@@ -333,7 +334,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, SPEED_HIGH, None, None)
 
         # Set fan's speed to medium
-        components.fan.set_speed(self.hass, _TEST_FAN, SPEED_MEDIUM)
+        common.set_speed(self.hass, _TEST_FAN, SPEED_MEDIUM)
         self.hass.block_till_done()
 
         # verify
@@ -345,11 +346,11 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # Set fan's speed to 'invalid'
-        components.fan.set_speed(self.hass, _TEST_FAN, 'invalid')
+        common.set_speed(self.hass, _TEST_FAN, 'invalid')
         self.hass.block_till_done()
 
         # verify speed is unchanged
@@ -361,11 +362,11 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # Set fan's speed to high
-        components.fan.set_speed(self.hass, _TEST_FAN, SPEED_HIGH)
+        common.set_speed(self.hass, _TEST_FAN, SPEED_HIGH)
         self.hass.block_till_done()
 
         # verify
@@ -373,7 +374,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, SPEED_HIGH, None, None)
 
         # Set fan's speed to 'invalid'
-        components.fan.set_speed(self.hass, _TEST_FAN, 'invalid')
+        common.set_speed(self.hass, _TEST_FAN, 'invalid')
         self.hass.block_till_done()
 
         # verify speed is unchanged
@@ -385,11 +386,11 @@ class TestTemplateFan:
         self._register_components(['1', '2', '3'])
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # Set fan's speed to '1'
-        components.fan.set_speed(self.hass, _TEST_FAN, '1')
+        common.set_speed(self.hass, _TEST_FAN, '1')
         self.hass.block_till_done()
 
         # verify
@@ -397,7 +398,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, '1', None, None)
 
         # Set fan's speed to 'medium' which is invalid
-        components.fan.set_speed(self.hass, _TEST_FAN, SPEED_MEDIUM)
+        common.set_speed(self.hass, _TEST_FAN, SPEED_MEDIUM)
         self.hass.block_till_done()
 
         # verify that speed is unchanged
@@ -409,11 +410,11 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # Set fan's osc to True
-        components.fan.oscillate(self.hass, _TEST_FAN, True)
+        common.oscillate(self.hass, _TEST_FAN, True)
         self.hass.block_till_done()
 
         # verify
@@ -421,7 +422,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, None, True, None)
 
         # Set fan's osc to False
-        components.fan.oscillate(self.hass, _TEST_FAN, False)
+        common.oscillate(self.hass, _TEST_FAN, False)
         self.hass.block_till_done()
 
         # verify
@@ -433,11 +434,11 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # Set fan's osc to 'invalid'
-        components.fan.oscillate(self.hass, _TEST_FAN, 'invalid')
+        common.oscillate(self.hass, _TEST_FAN, 'invalid')
         self.hass.block_till_done()
 
         # verify
@@ -449,11 +450,11 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # Set fan's osc to True
-        components.fan.oscillate(self.hass, _TEST_FAN, True)
+        common.oscillate(self.hass, _TEST_FAN, True)
         self.hass.block_till_done()
 
         # verify
@@ -461,7 +462,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, None, True, None)
 
         # Set fan's osc to False
-        components.fan.oscillate(self.hass, _TEST_FAN, None)
+        common.oscillate(self.hass, _TEST_FAN, None)
         self.hass.block_till_done()
 
         # verify osc is unchanged
@@ -473,11 +474,11 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # Set fan's direction to forward
-        components.fan.set_direction(self.hass, _TEST_FAN, DIRECTION_FORWARD)
+        common.set_direction(self.hass, _TEST_FAN, DIRECTION_FORWARD)
         self.hass.block_till_done()
 
         # verify
@@ -486,7 +487,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, None, None, DIRECTION_FORWARD)
 
         # Set fan's direction to reverse
-        components.fan.set_direction(self.hass, _TEST_FAN, DIRECTION_REVERSE)
+        common.set_direction(self.hass, _TEST_FAN, DIRECTION_REVERSE)
         self.hass.block_till_done()
 
         # verify
@@ -499,11 +500,11 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # Set fan's direction to 'invalid'
-        components.fan.set_direction(self.hass, _TEST_FAN, 'invalid')
+        common.set_direction(self.hass, _TEST_FAN, 'invalid')
         self.hass.block_till_done()
 
         # verify direction is unchanged
@@ -515,11 +516,11 @@ class TestTemplateFan:
         self._register_components()
 
         # Turn on fan
-        components.fan.turn_on(self.hass, _TEST_FAN)
+        common.turn_on(self.hass, _TEST_FAN)
         self.hass.block_till_done()
 
         # Set fan's direction to forward
-        components.fan.set_direction(self.hass, _TEST_FAN, DIRECTION_FORWARD)
+        common.set_direction(self.hass, _TEST_FAN, DIRECTION_FORWARD)
         self.hass.block_till_done()
 
         # verify
@@ -528,7 +529,7 @@ class TestTemplateFan:
         self._verify(STATE_ON, None, None, DIRECTION_FORWARD)
 
         # Set fan's direction to 'invalid'
-        components.fan.set_direction(self.hass, _TEST_FAN, 'invalid')
+        common.set_direction(self.hass, _TEST_FAN, 'invalid')
         self.hass.block_till_done()
 
         # verify direction is unchanged

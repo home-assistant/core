@@ -2,26 +2,38 @@
 import unittest
 from unittest import mock
 import sys
+from unittest.mock import MagicMock, patch
 
-import feedparser
 import pytest
 
+from homeassistant.components import sensor
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME, \
+    EVENT_HOMEASSISTANT_START, ATTR_ICON
 from homeassistant.setup import setup_component
-from tests.common import load_fixture, get_test_home_assistant
+from tests.common import get_test_home_assistant, \
+    assert_setup_component, fire_time_changed
 import homeassistant.components.sensor.geo_rss_events as geo_rss_events
+import homeassistant.util.dt as dt_util
 
 URL = 'http://geo.rss.local/geo_rss_events.xml'
 VALID_CONFIG_WITH_CATEGORIES = {
-    'platform': 'geo_rss_events',
-    geo_rss_events.CONF_URL: URL,
-    geo_rss_events.CONF_CATEGORIES: [
-        'Category 1',
-        'Category 2'
+    sensor.DOMAIN: [
+        {
+            'platform': 'geo_rss_events',
+            geo_rss_events.CONF_URL: URL,
+            geo_rss_events.CONF_CATEGORIES: [
+                'Category 1'
+            ]
+        }
     ]
 }
-VALID_CONFIG_WITHOUT_CATEGORIES = {
-    'platform': 'geo_rss_events',
-    geo_rss_events.CONF_URL: URL
+VALID_CONFIG = {
+    sensor.DOMAIN: [
+        {
+            'platform': 'geo_rss_events',
+            geo_rss_events.CONF_URL: URL
+        }
+    ]
 }
 
 
@@ -34,119 +46,114 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG_WITHOUT_CATEGORIES
+        # self.config = VALID_CONFIG_WITHOUT_CATEGORIES
 
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @mock.patch('feedparser.parse', return_value=feedparser.parse(""))
-    def test_setup_with_categories(self, mock_parse):
-        """Test the general setup of this sensor."""
-        self.config = VALID_CONFIG_WITH_CATEGORIES
-        self.assertTrue(
-            setup_component(self.hass, 'sensor', {'sensor': self.config}))
-        self.assertIsNotNone(
-            self.hass.states.get('sensor.event_service_category_1'))
-        self.assertIsNotNone(
-            self.hass.states.get('sensor.event_service_category_2'))
+    @staticmethod
+    def _generate_mock_feed_entry(external_id, title, distance_to_home,
+                                  coordinates, category):
+        """Construct a mock feed entry for testing purposes."""
+        feed_entry = MagicMock()
+        feed_entry.external_id = external_id
+        feed_entry.title = title
+        feed_entry.distance_to_home = distance_to_home
+        feed_entry.coordinates = coordinates
+        feed_entry.category = category
+        return feed_entry
 
-    @mock.patch('feedparser.parse', return_value=feedparser.parse(""))
-    def test_setup_without_categories(self, mock_parse):
-        """Test the general setup of this sensor."""
-        self.assertTrue(
-            setup_component(self.hass, 'sensor', {'sensor': self.config}))
-        self.assertIsNotNone(self.hass.states.get('sensor.event_service_any'))
+    @mock.patch('georss_client.generic_feed.GenericFeed')
+    def test_setup(self, mock_feed):
+        """Test the general setup of the platform."""
+        # Set up some mock feed entries for this test.
+        mock_entry_1 = self._generate_mock_feed_entry('1234', 'Title 1', 15.5,
+                                                      (-31.0, 150.0),
+                                                      'Category 1')
+        mock_entry_2 = self._generate_mock_feed_entry('2345', 'Title 2', 20.5,
+                                                      (-31.1, 150.1),
+                                                      'Category 1')
+        mock_feed.return_value.update.return_value = 'OK', [mock_entry_1,
+                                                            mock_entry_2]
 
-    def setup_data(self, url='url'):
-        """Set up data object for use by sensors."""
-        home_latitude = -33.865
-        home_longitude = 151.209444
-        radius_in_km = 500
-        data = geo_rss_events.GeoRssServiceData(home_latitude,
-                                                home_longitude, url,
-                                                radius_in_km)
-        return data
+        utcnow = dt_util.utcnow()
+        # Patching 'utcnow' to gain more control over the timed update.
+        with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
+            with assert_setup_component(1, sensor.DOMAIN):
+                self.assertTrue(setup_component(self.hass, sensor.DOMAIN,
+                                                VALID_CONFIG))
+                # Artificially trigger update.
+                self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
+                # Collect events.
+                self.hass.block_till_done()
 
-    def test_update_sensor_with_category(self):
-        """Test updating sensor object."""
-        raw_data = load_fixture('geo_rss_events.xml')
-        # Loading raw data from fixture and plug in to data object as URL
-        # works since the third-party feedparser library accepts a URL
-        # as well as the actual data.
-        data = self.setup_data(raw_data)
-        category = "Category 1"
-        name = "Name 1"
-        unit_of_measurement = "Unit 1"
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
-                                                    data, name,
-                                                    unit_of_measurement)
+                all_states = self.hass.states.all()
+                assert len(all_states) == 1
 
-        sensor.update()
-        assert sensor.name == "Name 1 Category 1"
-        assert sensor.unit_of_measurement == "Unit 1"
-        assert sensor.icon == "mdi:alert"
-        assert len(sensor._data.events) == 4
-        assert sensor.state == 1
-        assert sensor.device_state_attributes == {'Title 1': "117km"}
-        # Check entries of first hit
-        assert sensor._data.events[0][geo_rss_events.ATTR_TITLE] == "Title 1"
-        assert sensor._data.events[0][
-                   geo_rss_events.ATTR_CATEGORY] == "Category 1"
-        self.assertAlmostEqual(sensor._data.events[0][
-                                   geo_rss_events.ATTR_DISTANCE], 116.586, 0)
+                state = self.hass.states.get("sensor.event_service_any")
+                self.assertIsNotNone(state)
+                assert state.name == "Event Service Any"
+                assert int(state.state) == 2
+                assert state.attributes == {
+                    ATTR_FRIENDLY_NAME: "Event Service Any",
+                    ATTR_UNIT_OF_MEASUREMENT: "Events",
+                    ATTR_ICON: "mdi:alert",
+                    "Title 1": "16km", "Title 2": "20km"}
 
-    def test_update_sensor_without_category(self):
-        """Test updating sensor object."""
-        raw_data = load_fixture('geo_rss_events.xml')
-        data = self.setup_data(raw_data)
-        category = None
-        name = "Name 2"
-        unit_of_measurement = "Unit 2"
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
-                                                    data, name,
-                                                    unit_of_measurement)
+                # Simulate an update - empty data, but successful update,
+                # so no changes to entities.
+                mock_feed.return_value.update.return_value = 'OK_NO_DATA', None
+                fire_time_changed(self.hass, utcnow +
+                                  geo_rss_events.SCAN_INTERVAL)
+                self.hass.block_till_done()
 
-        sensor.update()
-        assert sensor.name == "Name 2 Any"
-        assert sensor.unit_of_measurement == "Unit 2"
-        assert sensor.icon == "mdi:alert"
-        assert len(sensor._data.events) == 4
-        assert sensor.state == 4
-        assert sensor.device_state_attributes == {'Title 1': "117km",
-                                                  'Title 2': "302km",
-                                                  'Title 3': "204km",
-                                                  'Title 6': "48km"}
+                all_states = self.hass.states.all()
+                assert len(all_states) == 1
+                state = self.hass.states.get("sensor.event_service_any")
+                assert int(state.state) == 2
 
-    def test_update_sensor_without_data(self):
-        """Test updating sensor object."""
-        data = self.setup_data()
-        category = None
-        name = "Name 3"
-        unit_of_measurement = "Unit 3"
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
-                                                    data, name,
-                                                    unit_of_measurement)
+                # Simulate an update - empty data, removes all entities
+                mock_feed.return_value.update.return_value = 'ERROR', None
+                fire_time_changed(self.hass, utcnow +
+                                  2 * geo_rss_events.SCAN_INTERVAL)
+                self.hass.block_till_done()
 
-        sensor.update()
-        assert sensor.name == "Name 3 Any"
-        assert sensor.unit_of_measurement == "Unit 3"
-        assert sensor.icon == "mdi:alert"
-        assert len(sensor._data.events) == 0
-        assert sensor.state == 0
+                all_states = self.hass.states.all()
+                assert len(all_states) == 1
+                state = self.hass.states.get("sensor.event_service_any")
+                assert int(state.state) == 0
 
-    @mock.patch('feedparser.parse', return_value=None)
-    def test_update_sensor_with_none_result(self, parse_function):
-        """Test updating sensor object."""
-        data = self.setup_data("http://invalid.url/")
-        category = None
-        name = "Name 4"
-        unit_of_measurement = "Unit 4"
-        sensor = geo_rss_events.GeoRssServiceSensor(category,
-                                                    data, name,
-                                                    unit_of_measurement)
+    @mock.patch('georss_client.generic_feed.GenericFeed')
+    def test_setup_with_categories(self, mock_feed):
+        """Test the general setup of the platform."""
+        # Set up some mock feed entries for this test.
+        mock_entry_1 = self._generate_mock_feed_entry('1234', 'Title 1', 15.5,
+                                                      (-31.0, 150.0),
+                                                      'Category 1')
+        mock_entry_2 = self._generate_mock_feed_entry('2345', 'Title 2', 20.5,
+                                                      (-31.1, 150.1),
+                                                      'Category 1')
+        mock_feed.return_value.update.return_value = 'OK', [mock_entry_1,
+                                                            mock_entry_2]
 
-        sensor.update()
-        assert sensor.name == "Name 4 Any"
-        assert sensor.unit_of_measurement == "Unit 4"
-        assert sensor.state == 0
+        with assert_setup_component(1, sensor.DOMAIN):
+            self.assertTrue(setup_component(self.hass, sensor.DOMAIN,
+                                            VALID_CONFIG_WITH_CATEGORIES))
+            # Artificially trigger update.
+            self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
+            # Collect events.
+            self.hass.block_till_done()
+
+            all_states = self.hass.states.all()
+            assert len(all_states) == 1
+
+            state = self.hass.states.get("sensor.event_service_category_1")
+            self.assertIsNotNone(state)
+            assert state.name == "Event Service Category 1"
+            assert int(state.state) == 2
+            assert state.attributes == {
+                ATTR_FRIENDLY_NAME: "Event Service Category 1",
+                ATTR_UNIT_OF_MEASUREMENT: "Events",
+                ATTR_ICON: "mdi:alert",
+                "Title 1": "16km", "Title 2": "20km"}

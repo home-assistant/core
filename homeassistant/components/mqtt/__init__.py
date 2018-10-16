@@ -254,7 +254,8 @@ def async_publish(hass: HomeAssistantType, topic: Any, payload, qos=None,
     """Publish message to an MQTT topic."""
     data = _build_publish_data(topic, qos, retain)
     data[ATTR_PAYLOAD] = payload
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
 
 
 @bind_hass
@@ -321,7 +322,8 @@ async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
 
 
 async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
-                                 hass_config: ConfigType) -> bool:
+                                 hass_config: ConfigType,
+                                 config_entry) -> bool:
     """Try to start the discovery of MQTT devices.
 
     This method is a coroutine.
@@ -334,7 +336,8 @@ async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
         return False
 
     success = await discovery.async_start(
-        hass, conf[CONF_DISCOVERY_PREFIX], hass_config)  # type: bool
+        hass, conf[CONF_DISCOVERY_PREFIX], hass_config,
+        config_entry)  # type: bool
 
     return success
 
@@ -409,7 +412,7 @@ async def async_setup_entry(hass, entry):
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
         conf = CONFIG_SCHEMA({
-            DOMAIN: entry.data
+            DOMAIN: entry.data,
         })[DOMAIN]
     elif any(key in conf for key in entry.data):
         _LOGGER.warning(
@@ -522,7 +525,7 @@ async def async_setup_entry(hass, entry):
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(
-            hass, conf, hass.data[DATA_MQTT_HASS_CONFIG])
+            hass, conf, hass.data[DATA_MQTT_HASS_CONFIG], entry)
 
     return True
 
@@ -668,7 +671,7 @@ class MQTT:
             if any(other.topic == topic for other in self.subscriptions):
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
-            self.hass.async_add_job(self._async_unsubscribe(topic))
+            self.hass.async_create_task(self._async_unsubscribe(topic))
 
         return async_remove
 

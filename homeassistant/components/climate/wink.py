@@ -4,7 +4,6 @@ Support for Wink thermostats, Air Conditioners, and Water Heaters.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.wink/
 """
-import asyncio
 import logging
 
 from homeassistant.components.climate import (
@@ -92,8 +91,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS_THERMOSTAT
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['climate'].append(self)
 

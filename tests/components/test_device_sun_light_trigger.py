@@ -12,6 +12,7 @@ from homeassistant.components import (
 from homeassistant.util import dt as dt_util
 
 from tests.common import get_test_home_assistant, fire_time_changed
+from tests.components.light import common as common_light
 
 
 class TestDeviceSunLightTrigger(unittest.TestCase):
@@ -68,7 +69,7 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
                 self.hass, device_sun_light_trigger.DOMAIN, {
                     device_sun_light_trigger.DOMAIN: {}}))
 
-        light.turn_off(self.hass)
+        common_light.turn_off(self.hass)
 
         self.hass.block_till_done()
 
@@ -81,7 +82,7 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
     def test_lights_turn_off_when_everyone_leaves(self):
         """Test lights turn off when everyone leaves the house."""
-        light.turn_on(self.hass)
+        common_light.turn_on(self.hass)
 
         self.hass.block_till_done()
 
@@ -100,7 +101,7 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         """Test lights turn on when coming home after sun set."""
         test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.utcnow', return_value=test_time):
-            light.turn_off(self.hass)
+            common_light.turn_off(self.hass)
             self.hass.block_till_done()
 
             self.assertTrue(setup_component(

@@ -15,6 +15,7 @@ from tests.common import async_fire_time_changed, mock_coro
 MOCK_VERSION = 1
 MOCK_KEY = 'storage-test'
 MOCK_DATA = {'hello': 'world'}
+MOCK_DATA2 = {'goodbye': 'cruel world'}
 
 
 @pytest.fixture
