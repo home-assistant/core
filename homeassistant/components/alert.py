@@ -62,8 +62,27 @@ def is_on(hass, entity_id):
 
 async def async_setup(hass, config):
     """Set up the Alert component."""
-    alerts = config.get(DOMAIN)
-    all_alerts = {}
+    entities = []
+
+    for object_id, cfg in config[DOMAIN].items():
+        if not cfg:
+            cfg = {}
+
+        name = cfg.get(CONF_NAME)
+        done_message = cfg.get(CONF_DONE_MESSAGE)
+        watched_entity_id = cfg.get(CONF_ENTITY_ID)
+        alert_state = cfg.get(CONF_STATE)
+        repeat = cfg.get(CONF_REPEAT)
+        skip_first = cfg.get(CONF_SKIP_FIRST)
+        notifiers = cfg.get(CONF_NOTIFIERS)
+        can_ack = cfg.get(CONF_CAN_ACK)
+
+        entities.append(Alert(hass, object_id, name, done_message,
+                        watched_entity_id, alert_state, repeat,
+                        skip_first, notifiers, can_ack))
+
+    if not entities:
+        return False
 
     async def async_handle_alert_service(service_call):
         """Handle calls to alert services."""
@@ -79,15 +98,6 @@ async def async_setup(hass, config):
             else:
                 await alert.async_turn_off()
 
-    # Setup alerts
-    for entity_id, alert in alerts.items():
-        entity = Alert(hass, entity_id,
-                       alert[CONF_NAME], alert.get(CONF_DONE_MESSAGE),
-                       alert[CONF_ENTITY_ID], alert[CONF_STATE],
-                       alert[CONF_REPEAT], alert[CONF_SKIP_FIRST],
-                       alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK])
-        all_alerts[entity.entity_id] = entity
-
     # Setup service calls
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_alert_service,
@@ -99,7 +109,7 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, async_handle_alert_service,
         schema=ALERT_SERVICE_SCHEMA)
 
-    tasks = [alert.async_update_ha_state() for alert in all_alerts.values()]
+    tasks = [alert.async_update_ha_state() for alert in entities]
     if tasks:
         await asyncio.wait(tasks, loop=hass.loop)
 
