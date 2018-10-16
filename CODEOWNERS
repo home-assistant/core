@@ -224,6 +224,8 @@ homeassistant/components/tradfri/* @ggravlingen
 homeassistant/components/*/tradfri.py @ggravlingen
 
 # U
+homeassistant/components/unifi.py @kane610
+homeassistant/components/switch/unifi.py @kane610
 homeassistant/components/upcloud.py @scop
 homeassistant/components/*/upcloud.py @scop
 

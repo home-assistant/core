@@ -118,6 +118,9 @@ aiolifx_effects==0.2.1
 # homeassistant.components.scene.hunterdouglas_powerview
 aiopvapi==1.5.4
 
+# homeassistant.components.unifi
+aiounifi==3
+
 # homeassistant.components.cover.aladdin_connect
 aladdin_connect==0.3
 

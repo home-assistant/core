@@ -40,6 +40,9 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==1.5.0
 
+# homeassistant.components.unifi
+aiounifi==3
+
 # homeassistant.components.notify.apns
 apns2==0.3.0
 
