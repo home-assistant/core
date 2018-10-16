@@ -5,7 +5,8 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.myq/
 """
 import logging
-
+from datetime import timedelta
+from time import sleep
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -15,7 +16,7 @@ from homeassistant.const import (
     STATE_OPEN, STATE_OPENING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymyq==0.0.15']
+REQUIREMENTS = ['pymyq==0.0.16']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_PASSWORD): cv.string
 })
 
+SCAN_INTERVAL = timedelta(seconds=120)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MyQ component."""
@@ -76,7 +78,11 @@ class MyQDevice(CoverDevice):
         self.myq = myq
         self.device_id = device['deviceid']
         self._name = device['name']
-        self._status = None
+
+        if (self.myq.get_status(self.device_id)):
+            self._status = self.myq.get_status(self.device_id)
+        else:
+            self._status = None
 
     @property
     def device_class(self):
@@ -112,11 +118,71 @@ class MyQDevice(CoverDevice):
 
     def close_cover(self, **kwargs):
         """Issue close command to cover."""
-        self.myq.close_device(self.device_id)
+        iterations = 0
+        while True:
+            if self.myq.close_device(self.device_id):
+                break
+            if iterations > 5:
+                _LOGGER.error(
+                    "Failed to close %s "
+                    "after 6 attempts", self._name)
+                break
+            iterations += 1
+            sleep(10)
+
+        if (iterations <= 5):
+            closed_confired_interations = 0
+            while True:
+                self._status = self.myq.get_status(self.device_id)
+                if self._status == STATE_CLOSED:
+                    break
+                if closed_confired_interations > 5:
+                    _LOGGER.error(
+                        "Failed to confirm closed status for %s "
+                        "after 60 seconds", self._name)
+                    self._status = None
+                    break
+                closed_confired_interations += 1
+                sleep(10)
+
+        if (iterations <= 5 and closed_confired_interations <= 5):
+            return True
+        else:
+            return False
 
     def open_cover(self, **kwargs):
         """Issue open command to cover."""
-        self.myq.open_device(self.device_id)
+        iterations = 0
+        while True:
+            if self.myq.open_device(self.device_id):
+                break
+            if iterations > 5:
+                _LOGGER.error(
+                    "Failed to open %s "
+                    "after 6 attempts", self._name)
+                break
+            iterations += 1
+            sleep(10)
+
+        if (iterations <= 5):
+            open_confirmed_interations = 0
+            while True:
+                self._status = self.myq.get_status(self.device_id)
+                if self._status == STATE_OPEN:
+                    break
+                if open_confirmed_interations > 5:
+                    _LOGGER.error(
+                        "Failed to confirm open status for %s "
+                        "after 60 seconds", self._name)
+                    self._status = None
+                    break
+                open_confirmed_interations += 1
+                sleep(10)
+
+        if (iterations <= 5 and open_confirmed_interations <= 5):
+            return True
+        else:
+            return False
 
     @property
     def supported_features(self):
@@ -130,4 +196,8 @@ class MyQDevice(CoverDevice):
 
     def update(self):
         """Update status of cover."""
-        self._status = self.myq.get_status(self.device_id)
+        current = self.myq.get_status(self.device_id)
+        if current is not False:
+            self._status = current
+        else:
+            self._status = None
