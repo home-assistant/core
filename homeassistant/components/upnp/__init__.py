@@ -16,6 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import dispatcher
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import get_local_ip
 
 from .const import (
     CONF_ENABLE_PORT_MAPPING, CONF_ENABLE_SENSORS,
@@ -73,11 +74,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     # ensure sane config
     if DOMAIN not in config:
         return True
+    upnp_config = config[DOMAIN]
 
     # overridden local ip
-    upnp_config = config[DOMAIN]
     if CONF_LOCAL_IP in upnp_config:
         hass.data[DOMAIN]['local_ip'] = upnp_config[CONF_LOCAL_IP]
+    else:
+        hass.data[DOMAIN]['local_ip'] = \
+            await hass.async_add_executor_job(get_local_ip)
 
     # determine ports
     ports = {CONF_HASS: CONF_HASS}  # default, port_mapping disabled by default
@@ -114,13 +118,13 @@ async def async_setup_entry(hass: HomeAssistantType,
 
     # port mapping
     if data.get(CONF_ENABLE_PORT_MAPPING):
-        local_ip = hass.data[DOMAIN].get('local_ip')
+        local_ip = hass.data[DOMAIN]['local_ip']
         ports = hass.data[DOMAIN]['auto_config']['ports']
         _LOGGER.debug('Enabling port mappings: %s', ports)
 
         hass_port = hass.http.server_port
         ports = _substitute_hass_ports(ports, hass_port)
-        await device.async_add_port_mappings(ports, local_ip=local_ip)
+        await device.async_add_port_mappings(ports, local_ip)
 
     # sensors
     if data.get(CONF_ENABLE_SENSORS):

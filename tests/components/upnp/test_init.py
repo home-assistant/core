@@ -54,7 +54,9 @@ async def test_async_setup_no_auto_config(hass):
         'discovery': {},
         # no upnp
     }
-    with MockDependency('netdisco.discovery'):
+    with MockDependency('netdisco.discovery'), \
+        patch('homeassistant.components.upnp.get_local_ip',
+              return_value='192.168.1.10'):
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
 
@@ -73,7 +75,9 @@ async def test_async_setup_auto_config(hass):
         'discovery': {},
         'upnp': {},
     }
-    with MockDependency('netdisco.discovery'):
+    with MockDependency('netdisco.discovery'), \
+        patch('homeassistant.components.upnp.get_local_ip',
+              return_value='192.168.1.10'):
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
 
@@ -95,7 +99,9 @@ async def test_async_setup_auto_config_port_mapping(hass):
             'ports': {'hass': 'hass'},
         },
     }
-    with MockDependency('netdisco.discovery'):
+    with MockDependency('netdisco.discovery'), \
+        patch('homeassistant.components.upnp.get_local_ip',
+              return_value='192.168.1.10'):
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
 
@@ -114,7 +120,9 @@ async def test_async_setup_auto_config_no_sensors(hass):
         'discovery': {},
         'upnp': {'sensors': False},
     }
-    with MockDependency('netdisco.discovery'):
+    with MockDependency('netdisco.discovery'), \
+        patch('homeassistant.components.upnp.get_local_ip',
+              return_value='192.168.1.10'):
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
 
@@ -141,7 +149,9 @@ async def test_async_setup_entry_default(hass):
         'discovery': {},
         # no upnp
     }
-    with MockDependency('netdisco.discovery'):
+    with MockDependency('netdisco.discovery'), \
+        patch('homeassistant.components.upnp.get_local_ip',
+              return_value='192.168.1.10'):
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
 
@@ -149,7 +159,7 @@ async def test_async_setup_entry_default(hass):
     mock_device = MockDevice(udn)
     with patch.object(Device, 'async_create_device') as create_device:
         create_device.return_value = mock_coro(return_value=mock_device)
-        with patch('homeassistant.components.upnp.device.get_local_ip',
+        with patch('homeassistant.components.upnp.get_local_ip',
                    return_value='192.168.1.10'):
             assert await upnp.async_setup_entry(hass, entry) is True
 
@@ -182,27 +192,28 @@ async def test_async_setup_entry_port_mapping(hass):
             'ports': {'hass': 'hass'},
         },
     }
-    with MockDependency('netdisco.discovery'):
+    with MockDependency('netdisco.discovery'), \
+        patch('homeassistant.components.upnp.get_local_ip',
+              return_value='192.168.1.10'):
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
 
     mock_device = MockDevice(udn)
     with patch.object(Device, 'async_create_device') as create_device:
         create_device.return_value = mock_coro(return_value=mock_device)
-        with patch('homeassistant.components.upnp.device.get_local_ip',
-                   return_value='192.168.1.10'):
-            assert await upnp.async_setup_entry(hass, entry) is True
 
-            # ensure device is stored/used
-            assert hass.data[upnp.DOMAIN]['devices'][udn] == mock_device
+        assert await upnp.async_setup_entry(hass, entry) is True
 
-            # ensure add-port-mapping-methods called
-            assert mock_device.added_port_mappings == [
-                [8123, ip_address('192.168.1.10'), 8123]
-            ]
+        # ensure device is stored/used
+        assert hass.data[upnp.DOMAIN]['devices'][udn] == mock_device
 
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-            await hass.async_block_till_done()
+        # ensure add-port-mapping-methods called
+        assert mock_device.added_port_mappings == [
+            [8123, ip_address('192.168.1.10'), 8123]
+        ]
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
 
     # ensure delete-port-mapping-methods called
     assert mock_device.removed_port_mappings == [8123]
