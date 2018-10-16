@@ -27,7 +27,7 @@ from .const import (
 # We need an import from .config_flow, without it .config_flow is never loaded.
 from .config_flow import HangoutsFlowHandler  # noqa: F401
 
-REQUIREMENTS = ['hangups==0.4.5']
+REQUIREMENTS = ['hangups==0.4.6']
 
 _LOGGER = logging.getLogger(__name__)
 
