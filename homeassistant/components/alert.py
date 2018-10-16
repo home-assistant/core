@@ -81,9 +81,9 @@ async def async_setup(hass, config):
         can_ack = cfg.get(CONF_CAN_ACK)
 
         entities.append(Alert(hass, object_id, name, done_message,
-                        watched_entity_id, alert_state, repeat,
-                        skip_first, message_template, notifiers,
-                        can_ack))
+                              watched_entity_id, alert_state, repeat,
+                              skip_first, message_template, notifiers,
+                              can_ack))
 
     if not entities:
         return False
@@ -93,14 +93,17 @@ async def async_setup(hass, config):
         alert_ids = service.extract_entity_ids(hass, service_call)
 
         for alert_id in alert_ids:
-            alert = all_alerts[alert_id]
-            alert.async_set_context(service_call.context)
-            if service_call.service == SERVICE_TURN_ON:
-                await alert.async_turn_on()
-            elif service_call.service == SERVICE_TOGGLE:
-                await alert.async_toggle()
-            else:
-                await alert.async_turn_off()
+            for alert in entities:
+                if alert.entity_id != alert_id:
+                    continue
+
+                alert.async_set_context(service_call.context)
+                if service_call.service == SERVICE_TURN_ON:
+                    await alert.async_turn_on()
+                elif service_call.service == SERVICE_TOGGLE:
+                    await alert.async_toggle()
+                else:
+                    await alert.async_turn_off()
 
     # Setup service calls
     hass.services.async_register(
