@@ -66,6 +66,9 @@ DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
+SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'fan',
+                       'light', 'sensor', 'switch']
+
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_NAME): cv.string,
@@ -224,7 +227,6 @@ async def async_setup_platform(hass, config, async_add_entities,
         discovery_info[const.DISCOVERY_DEVICE], None)
     if device is None:
         return False
-
     async_add_entities([device])
     return True
 
@@ -777,6 +779,10 @@ async def async_setup_entry(hass, config_entry):
     hass.services.async_register(DOMAIN, const.SERVICE_START_NETWORK,
                                  start_zwave)
 
+    for entry_component in SUPPORTED_PLATFORMS:
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            config_entry, entry_component))
+
     return True
 
 
@@ -928,9 +934,13 @@ class ZWaveDeviceEntityValues():
         async def discover_device(component, device, dict_id):
             """Put device in a dictionary and call discovery on it."""
             self._hass.data[DATA_DEVICES][dict_id] = device
-            await discovery.async_load_platform(
-                self._hass, component, DOMAIN,
-                {const.DISCOVERY_DEVICE: dict_id}, self._zwave_config)
+            if component in SUPPORTED_PLATFORMS:
+                async_dispatcher_send(
+                    self._hass, 'zwave_new_{}'.format(component), device)
+            else:
+                await discovery.async_load_platform(
+                    self._hass, component, DOMAIN,
+                    {const.DISCOVERY_DEVICE: dict_id}, self._zwave_config)
 
         if device.unique_id:
             self._hass.add_job(discover_device, component, device, dict_id)
@@ -1009,6 +1019,18 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            'identifiers': {
+                (DOMAIN, self.node_id)
+            },
+            'manufacturer': self.node.manufacturer_name,
+            'model': self.node.product_name,
+            'name': node_name(self.node),
+        }
 
     @property
     def name(self):
