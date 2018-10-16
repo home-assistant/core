@@ -51,7 +51,7 @@ async def async_setup(hass, config):
     await plum.loadCloudData(cloud_web_sesison)
 
     async def new_load(device):
-        """Loading light and sensor platforms when LogicalLoad is detected."""
+        """Load light and sensor platforms when LogicalLoad is detected."""
         await discovery.async_load_platform(
             hass, 'light', DOMAIN, discovered=device, hass_config=conf)
         await discovery.async_load_platform(
