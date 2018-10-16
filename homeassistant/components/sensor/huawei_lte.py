@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['huawei_lte']
 
-DEFAULT_NAME_TEMPLATE = 'Huawei {}: {}'
+DEFAULT_NAME_TEMPLATE = 'Huawei {} {}'
 
 DEFAULT_SENSORS = [
     "device_information.WanIPAddress",
