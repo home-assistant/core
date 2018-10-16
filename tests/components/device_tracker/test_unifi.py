@@ -77,7 +77,7 @@ def test_config_minimal(hass, mock_scanner, mock_ctrl):
     assert mock_scanner.call_count == 1
     assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
                                                DEFAULT_DETECTION_TIME,
-                                               None, None)
+                                               None, False, None)
 
 
 def test_config_full(hass, mock_scanner, mock_ctrl):
@@ -89,6 +89,7 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
             CONF_PASSWORD: 'password',
             CONF_HOST: 'myhost',
             CONF_VERIFY_SSL: False,
+            'monitor_all': False,
             CONF_MONITORED_CONDITIONS: ['essid', 'signal'],
             'port': 123,
             'site_id': 'abcdef01',
@@ -106,7 +107,7 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
     assert mock_scanner.call_args == mock.call(
         mock_ctrl.return_value,
         DEFAULT_DETECTION_TIME,
-        None,
+        None, False,
         config[DOMAIN][CONF_MONITORED_CONDITIONS])
 
 
@@ -184,7 +185,7 @@ def test_scan_devices():
          'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, None)
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False, None)
     assert set(scanner.scan_devices()) == set(['123', '234'])
 
 
@@ -205,7 +206,7 @@ def test_scan_devices_filtered():
     ssid_filter = ['foonet', 'barnet']
     ctrl.get_clients.return_value = fake_clients
     scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, ssid_filter,
-                                 None)
+                                 False, None)
     assert set(scanner.scan_devices()) == set(['123', '234', '890'])
 
 
@@ -226,7 +227,7 @@ def test_get_device_name():
          'last_seen': '1504786810'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, None)
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False, None)
     assert scanner.get_device_name('123') == 'foobar'
     assert scanner.get_device_name('234') == 'Nice Name'
     assert scanner.get_device_name('456') is None
@@ -253,7 +254,7 @@ def test_monitored_conditions():
          'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None,
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False,
                                  ['essid', 'signal'])
     assert scanner.get_extra_attributes('123') == {'essid': 'barnet',
                                                    'signal': -60}
