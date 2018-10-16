@@ -98,6 +98,11 @@ class RingCam(Camera):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._camera.id
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
