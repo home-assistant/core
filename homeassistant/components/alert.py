@@ -29,6 +29,7 @@ CONF_CAN_ACK = 'can_acknowledge'
 CONF_NOTIFIERS = 'notifiers'
 CONF_REPEAT = 'repeat'
 CONF_SKIP_FIRST = 'skip_first'
+CONF_MESSAGE_TEMPLATE = 'message_template'
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
@@ -41,6 +42,7 @@ ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
     vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
     vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
+    vol.Optional(CONF_MESSAGE_TEMPLATE): cv.template,
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
 
 CONFIG_SCHEMA = vol.Schema({
@@ -74,12 +76,14 @@ async def async_setup(hass, config):
         alert_state = cfg.get(CONF_STATE)
         repeat = cfg.get(CONF_REPEAT)
         skip_first = cfg.get(CONF_SKIP_FIRST)
+        message_template = cfg.get(CONF_MESSAGE_TEMPLATE)
         notifiers = cfg.get(CONF_NOTIFIERS)
         can_ack = cfg.get(CONF_CAN_ACK)
 
         entities.append(Alert(hass, object_id, name, done_message,
                         watched_entity_id, alert_state, repeat,
-                        skip_first, notifiers, can_ack))
+                        skip_first, message_template, notifiers,
+                        can_ack))
 
     if not entities:
         return False
@@ -120,12 +124,18 @@ class Alert(ToggleEntity):
     """Representation of an alert."""
 
     def __init__(self, hass, entity_id, name, done_message, watched_entity_id,
-                 state, repeat, skip_first, notifiers, can_ack):
+                 state, repeat, skip_first, message_template, notifiers,
+                 can_ack):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
         self._alert_state = state
         self._skip_first = skip_first
+
+        self._message_template = message_template
+        if self._message_template is not None:
+            self._message_template.hass = hass
+
         self._notifiers = notifiers
         self._can_ack = can_ack
         self._done_message = done_message
@@ -214,9 +224,15 @@ class Alert(ToggleEntity):
         if not self._ack:
             _LOGGER.info("Alerting: %s", self._name)
             self._send_done_message = True
+
+            if self._message_template is not None:
+                message = self._message_template.async_render()
+            else:
+                message = '{0}'.format(self._name)
+
             for target in self._notifiers:
                 await self.hass.services.async_call(
-                    DOMAIN_NOTIFY, target, {ATTR_MESSAGE: self._name})
+                    DOMAIN_NOTIFY, target, {ATTR_MESSAGE: message})
         await self._schedule_notify()
 
     async def _notify_done_message(self, *args):

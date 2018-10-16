@@ -29,7 +29,7 @@ TEST_CONFIG = \
             alert.CONF_NOTIFIERS: [NOTIFIER]}
         }}
 TEST_NOACK = [NAME, NAME, DONE_MESSAGE, "sensor.test",
-              STATE_ON, [30], False, NOTIFIER, False]
+              STATE_ON, [30], False, None, NOTIFIER, False]
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
 
 
