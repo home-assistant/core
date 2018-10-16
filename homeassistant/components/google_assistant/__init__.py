@@ -32,8 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
 
-DEFAULT_AGENT_USER_ID = 'home-assistant'
-
 ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_EXPOSE): cv.boolean,
@@ -67,7 +65,8 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         websession = async_get_clientsession(hass)
         try:
             with async_timeout.timeout(5, loop=hass.loop):
-                agent_user_id = call.context.user_id or DEFAULT_AGENT_USER_ID
+                agent_user_id = call.data.get('agent_user_id') or \
+                                call.context.user_id
                 res = await websession.post(
                     REQUEST_SYNC_BASE_URL,
                     params={'key': api_key},

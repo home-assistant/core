@@ -1,2 +1,5 @@
 request_sync:
   description: Send a request_sync command to Google.
+  fields:
+    agent_user_id:
+      description: [Optional] specific Home Assistant user id to sync with Google Assistant. Do no need when you call this services through Home Assistant front end or API. Used in automation script or other place where context.user_id is missing.
