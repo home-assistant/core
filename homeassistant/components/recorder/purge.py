@@ -27,6 +27,12 @@ def purge_old_data(instance, purge_days, repack):
         protected_states = session.query(func.max(States.state_id)) \
             .group_by(States.entity_id)
 
+        # the following statement is a workaround of an issue of MySQL
+        # that doesn't like subqueries with the same table name as in the
+        # outer query when using delete, even not with aliases,
+        # see https://github.com/home-assistant/home-assistant/pull/17084
+        protected_states = session.query(protected_states.subquery())
+
         delete_states = delete_states \
             .filter(States.state_id.notin_(protected_states))
 
