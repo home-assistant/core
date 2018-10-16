@@ -5,6 +5,7 @@ from datetime import datetime as dt
 from unittest.mock import patch
 
 from homeassistant.util.async_ import run_coroutine_threadsafe
+from homeassistant.util.dt import get_time_zone
 from homeassistant.setup import setup_component
 from homeassistant.components.sensor.jewish_calendar import JewishCalSensor
 from tests.common import get_test_home_assistant
@@ -138,7 +139,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='first_stars',
             latitude=40.7128, longitude=-74.0060,
-            timezone="America/New_York", diaspora=False)
+            timezone=get_time_zone("America/New_York"), diaspora=False)
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
