@@ -88,7 +88,7 @@ hangups==0.4.5
 hbmqtt==0.9.4
 
 # homeassistant.components.sensor.jewish_calendar
-hdate==0.6.4
+hdate==0.6.5
 
 # homeassistant.components.binary_sensor.workday
 holidays==0.9.7
