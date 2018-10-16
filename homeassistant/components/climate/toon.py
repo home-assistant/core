@@ -34,7 +34,7 @@ class ThermostatDevice(ClimateDevice):
         self._temperature = None
         self._setpoint = None
         self._operation_list = [
-            STATE_PERFORMANCE,
+            STATE_AUTO,
             STATE_HEAT,
             STATE_ECO,
             STATE_COOL,
