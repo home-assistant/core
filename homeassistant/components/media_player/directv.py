@@ -23,10 +23,17 @@ REQUIREMENTS = ['directpy==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+<<<<<<< HEAD
 ATTR_MEDIA_CURRENTLY_RECORDING = 'media_currently_recording'
 ATTR_MEDIA_RATING = 'media_rating'
 ATTR_MEDIA_RECORDED = 'media_recorded'
 ATTR_MEDIA_START_TIME = 'media_start_time'
+=======
+ATTR_MEDIA_CURRENTLYRECORDING = 'media_currently_recording'
+ATTR_MEDIA_RATING = 'media_rating'
+ATTR_MEDIA_RECORDED = 'media_recorded'
+ATTR_MEDIA_STARTTIME = 'media_starttime'
+>>>>>>> Enhancements for DirecTV media player
 
 DEFAULT_DEVICE = '0'
 DEFAULT_NAME = "DirecTV Receiver"
@@ -250,7 +257,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return self._last_position
+       return self._last_position
 
     @property
     def media_position_updated_at(self):
@@ -278,6 +285,23 @@ class DirecTvDevice(MediaPlayerDevice):
             return None
 
         return self._current.get('episodeTitle')
+
+    @property
+    def media_channel(self):
+        """Return the channel current playing media."""
+        if self._is_standby:
+            return None
+
+        return "{} ({})".format(
+            self._current['callsign'], self._current['major'])
+
+    @property
+    def source(self):
+        """Name of the current input source."""
+        if self._is_standby:
+            return None
+
+        return self._current['major']
 
     @property
     def media_channel(self):
