@@ -41,6 +41,15 @@ class GarageDoorOpener(HomeAccessory):
 
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
+
+        # Check to make sure the target state is different than current state
+        current_value = self.char_current_state.get_value()
+
+        if (current_value == value):
+            # We are already in target state so ignore.
+            _LOGGER.debug('%s: Skip set state to %d.', self.entity_id, value)
+            return
+
         _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
         self.flag_target_state = True
 
