@@ -1,9 +1,11 @@
 """Lovelace UI."""
 import logging
+import os
 import uuid
-import voluptuous as vol
+from os import O_WRONLY, O_CREAT, O_TRUNC
 from collections import OrderedDict
 from typing import Union, List, Dict
+import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.exceptions import HomeAssistantError
@@ -23,31 +25,50 @@ SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 
 
-def save_yaml(fname, data):
-    from ruamel.yaml import YAML
+class WriteError(HomeAssistantError):
+    """Error writing the data."""
+
+
+def save_yaml(fname: str, data: Union[List, Dict, str]):
     """Save a YAML file."""
+    from ruamel.yaml import YAML
+    from ruamel.yaml.error import YAMLError
     yaml = YAML()
-    yaml.explicit_start = True
     yaml.indent(sequence=4, offset=2)
+    tmp_fname = fname + "__TEMP__"
     try:
-        with open(fname, "w", encoding='utf-8') as conf_file:
-            yaml.dump(data, conf_file)
-    except yaml.YAMLError as exc:
+        with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC, 0o600),
+                  'w', encoding='utf-8') as temp_file:
+            yaml.dump(data, temp_file)
+        os.replace(tmp_fname, fname)
+    except YAMLError as exc:
         _LOGGER.error(str(exc))
         raise HomeAssistantError(exc)
+    except OSError as exc:
+        _LOGGER.exception('Saving YAML file failed: %s', fname)
+        raise WriteError(exc)
+    finally:
+        if os.path.exists(tmp_fname):
+            try:
+                os.remove(tmp_fname)
+            except OSError as exc:
+                # If we are cleaning up then something else went wrong, so
+                # we should suppress likely follow-on errors in the cleanup
+                _LOGGER.error("YAML replacement cleanup failed: %s", exc)
 
 
 def load_yaml(fname: str) -> JSON_TYPE:
-    from ruamel.yaml import YAML
     """Load a YAML file."""
+    from ruamel.yaml import YAML
+    from ruamel.yaml.error import YAMLError
     yaml = YAML()
     try:
         with open(fname, encoding='utf-8') as conf_file:
             # If configuration file is empty YAML returns None
             # We convert that to an empty dict
             return yaml.load(conf_file) or OrderedDict()
-    except yaml.YAMLError as exc:
-        _LOGGER.error(str(exc))
+    except YAMLError as exc:
+        _LOGGER.error("YAML error: %s", exc)
         raise HomeAssistantError(exc)
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
@@ -55,6 +76,7 @@ def load_yaml(fname: str) -> JSON_TYPE:
 
 
 def load_config(fname: str) -> JSON_TYPE:
+    """Load a YAML file and adds id to card if not present."""
     config = load_yaml(fname)
     # Check if all cards have an ID or else add one
     updated = False
