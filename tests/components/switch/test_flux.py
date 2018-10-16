@@ -71,25 +71,6 @@ class TestSwitchFlux(unittest.TestCase):
                 }
             })
 
-    # pylint: disable=invalid-name
-    def test_flux_config_with_big_transition(self):
-        """Test the flux with transition larger than interval."""
-        with patch('homeassistant.components.switch.flux.FluxSwitch') as flux:
-            assert setup_component(self.hass, switch.DOMAIN, {
-                switch.DOMAIN: {
-                    'platform': 'flux',
-                    'name': 'flux',
-                    'lights': ['light.office'],
-                    'mode': 'rgb',
-                    'interval': 10,
-                    'transition': 60,
-                }
-            })
-            self.hass.block_till_done()
-            flux.assert_called_once_with(
-                'flux', self.hass, ['light.office'], None, None,
-                4000, 3000, 1900, None, None, 'rgb', 10, 10)
-
     def test_flux_when_switch_is_off(self):
         """Test the flux switch when it is off."""
         platform = loader.get_component(self.hass, 'light.test')
