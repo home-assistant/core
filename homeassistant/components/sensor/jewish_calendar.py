@@ -108,7 +108,7 @@ class JewishCalSensor(Entity):
         """Update the state of the sensor."""
         import hdate
 
-        now = dt_util.now()
+        now = dt_util.as_local(dt_util.now())
         today = now.date()
         upcoming_saturday = today + timedelta((12 - today.weekday()) % 7)
         sunset = get_astral_event_date(self.hass, 'sunset', today)
