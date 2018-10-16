@@ -22,11 +22,13 @@ CONF_PORT = 'port'
 CONF_SITE_ID = 'site_id'
 CONF_DETECTION_TIME = 'detection_time'
 CONF_SSID_FILTER = 'ssid_filter'
+CONF_MONITOR_ALL = 'monitor_all'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8443
 DEFAULT_VERIFY_SSL = True
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
+DEFAULT_MONITOR_ALL = False
 
 NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
@@ -53,6 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean, cv.isfile),
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
         cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_MONITOR_ALL, default=DEFAULT_MONITOR_ALL): cv.boolean,
     vol.Optional(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(AVAILABLE_ATTRS)]),
     vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
@@ -70,6 +73,7 @@ def get_scanner(hass, config):
     port = config[DOMAIN].get(CONF_PORT)
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
     detection_time = config[DOMAIN].get(CONF_DETECTION_TIME)
+    monitor_all = config[DOMAIN].get(CONF_MONITOR_ALL)
     monitored_conditions = config[DOMAIN].get(CONF_MONITORED_CONDITIONS)
     ssid_filter = config[DOMAIN].get(CONF_SSID_FILTER)
 
@@ -87,7 +91,7 @@ def get_scanner(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    return UnifiScanner(ctrl, detection_time, ssid_filter,
+    return UnifiScanner(ctrl, detection_time, ssid_filter, monitor_all,
                         monitored_conditions)
 
 
@@ -95,11 +99,12 @@ class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
     def __init__(self, controller, detection_time: timedelta,
-                 ssid_filter, monitored_conditions) -> None:
+                 ssid_filter, monitor_all, monitored_conditions) -> None:
         """Initialize the scanner."""
         self._detection_time = detection_time
         self._controller = controller
         self._ssid_filter = ssid_filter
+        self._monitor_all = monitor_all
         self._monitored_conditions = monitored_conditions
         self._update()
 
@@ -142,13 +147,13 @@ class UnifiScanner(DeviceScanner):
 
     def get_extra_attributes(self, device):
         """Return the extra attributes of the device."""
-        if not self._monitored_conditions:
+        if not self._monitor_all and not self._monitored_conditions:
             return {}
 
         client = self._clients.get(device, {})
         attributes = {}
-        for variable in self._monitored_conditions:
-            if variable in client:
+        for variable in client:
+            if self._monitor_all or variable in self._monitored_conditions:
                 attributes[variable] = client[variable]
 
         _LOGGER.debug("Device mac %s attributes %s", device, attributes)
