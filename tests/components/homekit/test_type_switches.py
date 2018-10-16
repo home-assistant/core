@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.homekit.const import (
-    TYPE_FAUCET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_VALVE)
+    ATTR_VALUE, TYPE_FAUCET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_VALVE)
 from homeassistant.components.homekit.type_switches import (
     Outlet, Switch, Valve)
 from homeassistant.const import ATTR_ENTITY_ID, CONF_TYPE, STATE_OFF, STATE_ON
@@ -11,7 +11,7 @@ from homeassistant.core import split_entity_id
 from tests.common import async_mock_service
 
 
-async def test_outlet_set_state(hass, hk_driver):
+async def test_outlet_set_state(hass, hk_driver, events):
     """Test if Outlet accessory and HA are updated accordingly."""
     entity_id = 'switch.outlet_test'
 
@@ -43,11 +43,15 @@ async def test_outlet_set_state(hass, hk_driver):
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_on.client_update_value, False)
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
 
 
 @pytest.mark.parametrize('entity_id', [
@@ -57,7 +61,7 @@ async def test_outlet_set_state(hass, hk_driver):
     'script.test',
     'switch.test',
 ])
-async def test_switch_set_state(hass, hk_driver, entity_id):
+async def test_switch_set_state(hass, hk_driver, entity_id, events):
     """Test if accessory and HA are updated accordingly."""
     domain = split_entity_id(entity_id)[0]
 
@@ -88,14 +92,18 @@ async def test_switch_set_state(hass, hk_driver, entity_id):
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_on.client_update_value, False)
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_valve_set_state(hass, hk_driver):
+async def test_valve_set_state(hass, hk_driver, events):
     """Test if Valve accessory and HA are updated accordingly."""
     entity_id = 'switch.valve_test'
 
@@ -154,9 +162,13 @@ async def test_valve_set_state(hass, hk_driver):
     assert acc.char_in_use.value is True
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_active.client_update_value, False)
     await hass.async_block_till_done()
     assert acc.char_in_use.value is False
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None

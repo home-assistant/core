@@ -47,10 +47,10 @@ class GarageDoorOpener(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if value == 0:
             self.char_current_state.set_value(3)
-            self.hass.services.call(DOMAIN, SERVICE_OPEN_COVER, params)
+            self.call_service(DOMAIN, SERVICE_OPEN_COVER, params)
         elif value == 1:
             self.char_current_state.set_value(2)
-            self.hass.services.call(DOMAIN, SERVICE_CLOSE_COVER, params)
+            self.call_service(DOMAIN, SERVICE_CLOSE_COVER, params)
 
     def update_state(self, new_state):
         """Update cover state after state changed."""
@@ -88,7 +88,7 @@ class WindowCovering(HomeAccessory):
         self.homekit_target = value
 
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
-        self.hass.services.call(DOMAIN, SERVICE_SET_COVER_POSITION, params)
+        self.call_service(DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
 
     def update_state(self, new_state):
         """Update cover position after state changed."""
@@ -143,7 +143,7 @@ class WindowCoveringBasic(HomeAccessory):
                 service, position = (SERVICE_CLOSE_COVER, 0)
 
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
         # Snap the current/target position to the expected final position.
         self.char_current_position.set_value(position)
