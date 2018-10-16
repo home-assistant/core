@@ -6,8 +6,6 @@ https://home-assistant.io/components/notify.xmpp/
 """
 import logging
 import requests
-# pylint: disable=redefined-builtin
-from requests.exceptions import ConnectionError, SSLError
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
@@ -26,6 +24,8 @@ ATTR_DATA = 'data'
 ATTR_PATH = 'path'
 ATTR_URL = 'url'
 ATTR_VERIFY = 'verify'
+ATTR_TIMEOUT = 'timeout'
+XEP_0363_TIMEOUT = 30
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENDER): cv.string,
@@ -67,18 +67,21 @@ class XmppNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         text = '{}: {}'.format(title, message) if title else message
         data = None or kwargs.get(ATTR_DATA)
+        timeout = data.get(ATTR_TIMEOUT, XEP_0363_TIMEOUT) if data else None
 
         await async_send_message(
             '{}/{}'.format(self._sender, self._resource),
             self._password, self._recipient, self._tls,
-            self._verify, self._room, self._hass, text, data)
+            self._verify, self._room, self._hass, text,
+            timeout, data)
 
 
 async def async_send_message(sender, password, recipient, use_tls,
                              verify_certificate, room, hass, message,
-                             data=None):
+                             timeout=None, data=None):
     """Send a message over XMPP."""
     import slixmpp
+    from slixmpp.exceptions import IqError, IqTimeout, XMPPError
     from slixmpp.plugins.xep_0363.http_upload import FileTooBig, \
         FileUploadError, UploadServiceNotFound
 
@@ -115,17 +118,15 @@ async def async_send_message(sender, password, recipient, use_tls,
 
         async def start(self, event):
             """Start the communication and sends the message."""
-            self.get_roster()
-            self.send_presence()
-
             # sending image and message independently from each other
             if data:
-                await self.send_image()
+                await self.send_image(timeout=timeout)
             if message:
                 self.send_text_message()
+
             self.disconnect(wait=True)
 
-        async def send_image(self):
+        async def send_image(self, timeout=None):
             """Send image via XMPP.
 
             Send XMPP image message using OOB (XEP_0066) and
@@ -134,33 +135,46 @@ async def async_send_message(sender, password, recipient, use_tls,
             if room:
                 # self.plugin['xep_0045'].join_muc(room, sender, wait=True)
                 # message = self.Message(sto=room, stype='groupchat')
-                _LOGGER.error("sorry, sending images to rooms is"
-                              " currently not supported")
+                _LOGGER.warning("sorry, sending images to rooms is"
+                                " currently not supported")
                 return
 
             try:
-                url = await self.upload_file()  # uploading with XEP_0363
+                # uploading with XEP_0363
+                url = await self.upload_file(timeout=timeout)
             except FileTooBig as ex:
                 _LOGGER.error("File too big for server, "
                               "could not upload file %s", ex)
-            except (UploadServiceNotFound,
-                    FileUploadError) as ex:
-                _LOGGER.error("could not upload file %s", ex)
-            except SSLError as ex:
+            except UploadServiceNotFound as ex:
+                _LOGGER.error("UploadServiceNotFound: "
+                              " could not upload file %s", ex)
+            except FileUploadError as ex:
+                _LOGGER.error("FileUploadError, could not upload file %s", ex)
+            except (IqError, IqTimeout, XMPPError) as ex:
+                _LOGGER.error("could not send message %s", ex)
+            except requests.exceptions.SSLError as ex:
                 _LOGGER.error("cannot establish SSL connection %s", ex)
-            except ConnectionError as ex:
+            except requests.exceptions.ConnectionError as ex:
                 _LOGGER.error("cannot connect to server %s", ex)
+            except (FileNotFoundError,
+                    PermissionError,
+                    IsADirectoryError,
+                    TimeoutError) as ex:
+                _LOGGER.error("Error reading file %s", ex)
             else:
                 _LOGGER.info("Upload success")
-
                 _LOGGER.info('Sending file to %s', recipient)
                 message = self.Message(sto=recipient, stype='chat')
                 message['body'] = url
                 # pylint: disable=invalid-sequence-index
                 message['oob']['url'] = url
-                message.send()
+                _LOGGER.debug("sending image message to %s", recipient)
+                try:
+                    message.send()
+                except (IqError, IqTimeout, XMPPError) as ex:
+                    _LOGGER.error("could not send message %s", ex)
 
-        async def upload_file(self):
+        async def upload_file(self, timeout=None):
             """Upload file to Jabber server and return new URL.
 
             upload a file with Jabber XEP_0363 from a remote URL or a local
@@ -171,16 +185,12 @@ async def async_send_message(sender, password, recipient, use_tls,
                 url = data.get(ATTR_URL)
                 _LOGGER.info('getting file from %s', url)
 
-                # result = await loop.run_in_executor(None, requests.get, url)
-                if data.get(ATTR_VERIFY, True):
-                    # if True or not set
-                    result = await hass.async_add_executor_job(requests.get,
-                                                               url)
-                else:
-                    def get_insecure_url(url):
-                        return requests.get(url, verify=False)
-                    result = await hass.async_add_executor_job(
-                        get_insecure_url, url)
+                def get_url(url):
+                    return requests.get(url,
+                                        verify=data.get(ATTR_VERIFY, True),
+                                        timeout=timeout,
+                                        )
+                result = await hass.async_add_executor_job(get_url, url)
 
                 if result.status_code >= 400:
                     _LOGGER.error("could not load file from %s", url)
@@ -192,16 +202,19 @@ async def async_send_message(sender, password, recipient, use_tls,
                 # we guess the extension
                 if not data.get(ATTR_PATH):
                     extension = self.get_extension(
-                        result.headers['Content-Type'])
+                        result.headers['Content-Type']) or ".unknown"
                     _LOGGER.debug("got %s extension", extension)
                 filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) \
                     else "upload"+extension
+                _LOGGER.info('Uploading file %s ...', filename)
                 url = await self['xep_0363'].upload_file(
                     filename,
                     # size=int(result.headers['Content-Length']),
                     size=length,
                     input_file=result.content,
-                    content_type=result.headers['Content-Type'])
+                    content_type=result.headers['Content-Type'],
+                    timeout=timeout,
+                    )
             elif data.get(ATTR_PATH):
                 # send message from local path
                 filename = data.get(ATTR_PATH) if data else None
@@ -215,18 +228,31 @@ async def async_send_message(sender, password, recipient, use_tls,
 
         def send_text_message(self):
             """Send a text only message to a room or a recipient."""
-            if room:
-                _LOGGER.debug("Joining room %s", room)
-                self.plugin['xep_0045'].join_muc(room, sender, wait=True)
-                self.send_message(mto=room, mbody=message, mtype='groupchat')
-            else:
-                _LOGGER.debug("message to %s", recipient)
-                self.send_message(mto=recipient, mbody=message, mtype='chat')
+            try:
+                if room:
+                    _LOGGER.debug("Joining room %s", room)
+                    self.plugin['xep_0045'].join_muc(room, sender, wait=True)
+                    self.send_message(mto=room,
+                                      mbody=message,
+                                      mtype='groupchat',
+                                      )
+                else:
+                    _LOGGER.debug("sending message to %s", recipient)
+                    self.send_message(mto=recipient,
+                                      mbody=message,
+                                      mtype='chat',
+                                      )
+            except (IqError, IqTimeout, XMPPError) as ex:
+                _LOGGER.error("could not send message %s", ex)
 
         # pylint: disable=no-self-use
         def get_extension(self, content_type):
-            # pylint: disable=line-too-long
-            """Get a file extension based on a content type."""
+            """Get a file extension based on a content type.
+
+            Used when downloaded file does not provide an extension.
+            Mainly useful for mobile recipients as they suggest an app to open
+            the file with.
+            """
             types = {'audio/aac': '.aac',
                      'application/x-abiword': '.abw',
                      'video/x-msvideo': '.avi',
@@ -300,7 +326,9 @@ async def async_send_message(sender, password, recipient, use_tls,
             try:
                 return types[content_type.lower()]
             except KeyError:
-                _LOGGER.warning("unknown, can't upload unknown file type")
+                _LOGGER.warning("can't provide file extension. "
+                                "Use path parameter to force filename.")
+                return None
 
         def disconnect_on_login_fail(self, event):
             """Disconnect from the server if credentials are invalid."""
