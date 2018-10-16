@@ -15,8 +15,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['bunq-sdk==1.1.0']
 
@@ -164,22 +163,23 @@ class BunqData:
 
     async def update_devices(self):
         """Update all devices/sensors."""
-        if self._bunq_accounts:
-            tasks = []
-            # Update all devices
-            for acc in self._bunq_accounts:
-                # if the old and new balances where the same
-                # there is no need to call the state update method
-                if acc.load_data(self.data):
-                    tasks.append(acc.async_update_ha_state())
-            if tasks:
-                await asyncio.wait(tasks, loop=self.hass.loop)
+        if not self._bunq_accounts:
+            return
+        tasks = []
+        # Update all devices
+        for acc in self._bunq_accounts:
+            # if the old and new balances where the same
+            # there is no need to call the state update method
+            if acc.load_data(self.data):
+                tasks.append(acc.async_update_ha_state())
+        if tasks:
+            await asyncio.wait(tasks, loop=self.hass.loop)
 
     async def schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""
         _LOGGER.debug("Scheduling next update in {} minutes.".format(minute))
-        nxt = dt_util.utcnow() + timedelta(minutes=minute)
-        async_track_point_in_utc_time(self.hass, self.async_update, nxt)
+        async_track_time_interval(
+            self.hass, self.async_update, timedelta(minutes=minute))
 
     async def async_update(self, *_):
         """Update the data from bunq."""
@@ -189,8 +189,8 @@ class BunqData:
 
         try:
             # get the account list which includes the balance
-            accounts = converter.serialize(
-                endpoint.MonetaryAccount.list().value)
+            accounts = await self.hass.async_add_executor_job(
+                converter.serialize, endpoint.MonetaryAccount.list().value)
             # create a dict with the id and the balance value
             self.data = {
                 a['MonetaryAccountBank']['id']:
@@ -202,7 +202,7 @@ class BunqData:
             # if the key (the account id) is not found warn
             # can happen when a account is deleted in Bunq
             # but still present in HA
-            _LOGGER.warning('Count not find key in API results.')
+            _LOGGER.warning('Count not find account in API results.')
         except (BunqException, ApiException) as err:
             # if the Bunq sdk errors out there is
             # something wrong with the user setup
