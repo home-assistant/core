@@ -93,8 +93,9 @@ class HorizonDevice(MediaPlayerDevice):
     def update(self):
         """Update State using the media server running on the Horizon."""
         try:
-            if self._client.is_powered_on():
-                self._state = STATE_PLAYING
+            self._state = (STATE_PLAYING
+                           if self._client.is_powered_on()
+                           else STATE_OFF)
         except OSError:
             self._state = STATE_OFF
 
