@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -40,7 +39,6 @@ async def async_setup(hass, config):
 
     hass.data[PLUM_DATA] = plum
 
-    @callback
     def cleanup(event):
         """Clean up resources."""
         plum.cleanup()
