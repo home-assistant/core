@@ -527,7 +527,6 @@ def setup(hass, config):
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-
     sirens = []
     has_dome_or_wink_siren = False
     for siren in pywink.get_sirens():
