@@ -445,7 +445,7 @@ hangups==0.4.5
 hbmqtt==0.9.4
 
 # homeassistant.components.sensor.jewish_calendar
-hdate==0.6.3
+hdate==0.6.4
 
 # homeassistant.components.climate.heatmiser
 heatmiserV3==0.9.1
