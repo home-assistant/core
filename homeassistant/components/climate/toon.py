@@ -8,7 +8,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.toon/
 """
 from homeassistant.components.climate import (
-    ATTR_TEMPERATURE, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_PERFORMANCE,
+    ATTR_TEMPERATURE, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_AUTO,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 import homeassistant.components.toon as toon_main
 from homeassistant.const import TEMP_CELSIUS
@@ -84,7 +84,7 @@ class ThermostatDevice(ClimateDevice):
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
         toonlib_values = {
-            STATE_PERFORMANCE: 'Comfort',
+            STATE_AUTO: 'Comfort',
             STATE_HEAT: 'Home',
             STATE_ECO: 'Away',
             STATE_COOL: 'Sleep',
