@@ -7,11 +7,15 @@ import unittest
 from homeassistant.components import sun
 import homeassistant.core as ha
 from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_SERVICE,
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     ATTR_HIDDEN, STATE_NOT_HOME, STATE_ON, STATE_OFF)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook, recorder
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
+from homeassistant.components.homekit.const import (
+    ATTR_DISPLAY_NAME, ATTR_VALUE, DOMAIN as DOMAIN_HOMEKIT,
+    EVENT_HOMEKIT_CHANGED)
 from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import (
@@ -684,3 +688,31 @@ async def test_humanify_alexa_event(hass):
     assert event3['message'] == \
         'send command Alexa.PowerController/TurnOn for light.non_existing'
     assert event3['entity_id'] == 'light.non_existing'
+
+
+async def test_humanify_homekit_changed_event(hass):
+    """Test humanifying HomeKit changed event."""
+    event1, event2 = list(logbook.humanify(hass, [
+        ha.Event(EVENT_HOMEKIT_CHANGED, {
+            ATTR_ENTITY_ID: 'lock.front_door',
+            ATTR_DISPLAY_NAME: 'Front Door',
+            ATTR_SERVICE: 'lock',
+        }),
+        ha.Event(EVENT_HOMEKIT_CHANGED, {
+            ATTR_ENTITY_ID: 'cover.window',
+            ATTR_DISPLAY_NAME: 'Window',
+            ATTR_SERVICE: 'set_cover_position',
+            ATTR_VALUE: 75,
+        }),
+    ]))
+
+    assert event1['name'] == 'HomeKit'
+    assert event1['domain'] == DOMAIN_HOMEKIT
+    assert event1['message'] == 'send command lock for Front Door'
+    assert event1['entity_id'] == 'lock.front_door'
+
+    assert event2['name'] == 'HomeKit'
+    assert event1['domain'] == DOMAIN_HOMEKIT
+    assert event2['message'] == \
+        'send command set_cover_position to 75 for Window'
+    assert event2['entity_id'] == 'cover.window'
