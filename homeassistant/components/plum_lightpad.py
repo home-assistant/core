@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['plumlightpad==0.0.11']
@@ -47,7 +47,7 @@ async def async_setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
-    cloud_web_sesison = async_create_clientsession(hass, verify_ssl=True)
+    cloud_web_sesison = async_get_clientsession(hass, verify_ssl=True)
     await plum.loadCloudData(cloud_web_sesison)
 
     async def new_load(device):
@@ -64,7 +64,7 @@ async def async_setup(hass, config):
         await discovery.async_load_platform(
             hass, 'binary_sensor', DOMAIN, discovered=device, hass_config=conf)
 
-    device_web_session = async_create_clientsession(hass, verify_ssl=False)
+    device_web_session = async_get_clientsession(hass, verify_ssl=False)
     hass.async_create_task(
         plum.discover(hass.loop,
                       loadListener=new_load, lightpadListener=new_lightpad,
