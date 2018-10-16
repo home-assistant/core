@@ -1,17 +1,15 @@
 """Test the Lovelace initialization."""
 import os
 import unittest
-import sys
 from tempfile import mkdtemp
 from unittest.mock import patch
 from ruamel.yaml import YAML
-from ruamel.yaml.compat import StringIO
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.components.lovelace import (WriteError, load_yaml,
-                                     save_yaml, load_config)
+from homeassistant.components.lovelace import (load_yaml,
+                                               save_yaml, load_config)
 
 TEST_YAML_A = """\
 title: My Awesome Home
@@ -22,8 +20,6 @@ resources:
   - url: /local/my-webfont.css
     type: css
 
-# Optional background for all views. Check https://developer.mozilla.org/en-US/docs/Web/CSS/background for more examples.
-background: center / cover no-repeat url("/background.png") fixed
 # Exclude entities from "Unused entities" view
 excluded_entities:
   - weblink.router
@@ -34,7 +30,7 @@ views:
     id: example
     # Optional background (overwrites the global background).
     background: radial-gradient(crimson, skyblue)
-    # Each view can have a different theme applied. Theme should be defined in the frontend.
+    # Each view can have a different theme applied.
     theme: dark-mode
     # The cards to show on this view.
     cards:
