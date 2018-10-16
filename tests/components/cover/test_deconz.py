@@ -13,13 +13,15 @@ SUPPORTED_COVERS = {
         "id": "Cover 1 id",
         "name": "Cover 1 name",
         "type": "Level controllable output",
-        "state": {}
+        "state": {},
+        "modelid": "Not zigbee spec"
     },
     "2": {
         "id": "Cover 2 id",
         "name": "Cover 2 name",
         "type": "Window covering device",
-        "state": {}
+        "state": {},
+        "modelid": "lumi.curtain"
     }
 }
 
