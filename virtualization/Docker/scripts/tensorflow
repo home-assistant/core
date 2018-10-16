@@ -1,0 +1,41 @@
+#!/bin/bash
+# Sets up tensorflow.
+
+# Stop on errors
+set -e
+
+TENSORFLOW_GPU="${TENSORFLOW_GPU:-no}"
+
+PACKAGES=(
+  # homeassistant.components.image_processing.tensorflow
+  unzip
+)
+
+apt-get install -y --no-install-recommends ${PACKAGES[@]}
+
+if [ "$TENSORFLOW_GPU" == "yes" ]; then
+  pip3 install --no-cache-dir tensorflow-gpu
+else
+  pip3 install --no-cache-dir tensorflow
+fi
+
+cd /tmp
+
+# Clone the latest code from GitHub
+git clone --depth 1 https://github.com/tensorflow/models.git tensorflow-models
+
+# download protobuf 3.4
+curl -OL https://github.com/google/protobuf/releases/download/v3.4.0/protoc-3.4.0-linux-x86_64.zip
+unzip -a protoc-3.4.0-linux-x86_64.zip -d protobuf
+mv protobuf/bin /tmp/tensorflow-models/research
+
+# Build the protobuf models
+cd /tmp/tensorflow-models/research/
+./bin/protoc object_detection/protos/*.proto --python_out=.
+
+# Copy only necessary files
+mkdir -p /usr/src/app/tensorflow/object_detection
+touch /usr/src/app/tensorflow/object_detection/__init__.py
+mv object_detection/data /usr/src/app/tensorflow/object_detection
+mv object_detection/utils /usr/src/app/tensorflow/object_detection
+mv object_detection/protos /usr/src/app/tensorflow/object_detection

@@ -13,6 +13,9 @@ LABEL maintainer="Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>"
 #ENV INSTALL_SSOCR no
 #ENV INSTALL_DLIB no
 #ENV INSTALL_IPERF3 no
+#ENV INSTALL_TENSORFLOW no
+
+#ENV TENSORFLOW_GPU yes
 
 VOLUME /config
 
@@ -25,10 +28,11 @@ RUN virtualization/Docker/setup_docker_prereqs
 
 # Install hass component dependencies
 COPY requirements_all.txt requirements_all.txt
+
 # Uninstall enum34 because some dependencies install it but breaks Python 3.4+.
 # See PR #8103 for more info.
 RUN pip3 install --no-cache-dir -r requirements_all.txt && \
-    pip3 install --no-cache-dir mysqlclient psycopg2 uvloop cchardet cython
+    pip3 install --no-cache-dir mysqlclient psycopg2 uvloop cchardet cython opencv-python-headless
 
 # Copy source
 COPY . .

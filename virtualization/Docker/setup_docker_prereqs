@@ -9,6 +9,7 @@ INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
 INSTALL_DLIB="${INSTALL_DLIB:-yes}"
+INSTALL_TENSORFLOW="${INSTALL_TENSORFLOW:-yes}"
 
 # Required debian packages for running hass or components
 PACKAGES=(
@@ -63,8 +64,13 @@ if [ "$INSTALL_SSOCR" == "yes" ]; then
   virtualization/Docker/scripts/ssocr
 fi
 
+<<<<<<< HEAD
 if [ "$INSTALL_DLIB" == "yes" ]; then
   pip3 install --no-cache-dir "dlib>=19.5"
+=======
+if [ "$INSTALL_TENSORFLOW" == "yes" ]; then
+  virtualization/Docker/scripts/tensorflow
+>>>>>>> c2050bbf7... initial tensorflow image_processing component
 fi
 
 # Remove packages
