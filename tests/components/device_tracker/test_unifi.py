@@ -185,7 +185,8 @@ def test_scan_devices():
          'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False, None)
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, 
+                                 False, None)
     assert set(scanner.scan_devices()) == set(['123', '234'])
 
 
@@ -227,7 +228,8 @@ def test_get_device_name():
          'last_seen': '1504786810'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False, None)
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, 
+                                 False, None)
     assert scanner.get_device_name('123') == 'foobar'
     assert scanner.get_device_name('234') == 'Nice Name'
     assert scanner.get_device_name('456') is None
