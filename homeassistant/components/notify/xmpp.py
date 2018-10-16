@@ -219,7 +219,8 @@ async def async_send_message(sender, password, recipient, use_tls,
                 # send message from local path
                 filename = data.get(ATTR_PATH) if data else None
                 _LOGGER.info('Uploading file %s ...', filename)
-                url = await self['xep_0363'].upload_file(filename)
+                url = await self['xep_0363'].upload_file(filename,
+                                                         timeout=timeout)
             else:
                 _LOGGER.error("no path or URL found for image")
 
