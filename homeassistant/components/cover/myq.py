@@ -80,7 +80,7 @@ class MyQDevice(CoverDevice):
         self.device_id = device['deviceid']
         self._name = device['name']
 
-        if (self.myq.get_status(self.device_id)):
+        if self.myq.get_status(self.device_id):
             self._status = self.myq.get_status(self.device_id)
         else:
             self._status = None
@@ -131,7 +131,7 @@ class MyQDevice(CoverDevice):
             iterations += 1
             sleep(10)
 
-        if (iterations <= 5):
+        if iterations <= 5:
             closed_confired_interations = 0
             while True:
                 self._status = self.myq.get_status(self.device_id)
@@ -146,10 +146,7 @@ class MyQDevice(CoverDevice):
                 closed_confired_interations += 1
                 sleep(10)
 
-        if (iterations <= 5 and closed_confired_interations <= 5):
-            return True
-        else:
-            return False
+        return iterations <= 5 and closed_confired_interations <= 5
 
     def open_cover(self, **kwargs):
         """Issue open command to cover."""
@@ -165,7 +162,7 @@ class MyQDevice(CoverDevice):
             iterations += 1
             sleep(10)
 
-        if (iterations <= 5):
+        if iterations <= 5:
             open_confirmed_interations = 0
             while True:
                 self._status = self.myq.get_status(self.device_id)
@@ -180,10 +177,7 @@ class MyQDevice(CoverDevice):
                 open_confirmed_interations += 1
                 sleep(10)
 
-        if (iterations <= 5 and open_confirmed_interations <= 5):
-            return True
-        else:
-            return False
+        return iterations <= 5 and open_confirmed_interations <= 5
 
     @property
     def supported_features(self):
