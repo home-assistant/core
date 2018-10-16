@@ -122,12 +122,13 @@ class Thermostat(HomeAccessory):
             if self.support_power_state is True:
                 params = {ATTR_ENTITY_ID: self.entity_id}
                 if hass_value == STATE_OFF:
-                    self.hass.services.call(DOMAIN, SERVICE_TURN_OFF, params)
+                    self.call_service(DOMAIN, SERVICE_TURN_OFF, params)
                     return
                 self.hass.services.call(DOMAIN, SERVICE_TURN_ON, params)
             params = {ATTR_ENTITY_ID: self.entity_id,
                       ATTR_OPERATION_MODE: hass_value}
-            self.hass.services.call(DOMAIN, SERVICE_SET_OPERATION_MODE, params)
+            self.call_service(
+                DOMAIN, SERVICE_SET_OPERATION_MODE, params, hass_value)
 
     @debounce
     def set_cooling_threshold(self, value):
@@ -136,11 +137,14 @@ class Thermostat(HomeAccessory):
                       self.entity_id, value)
         self.coolingthresh_flag_target_state = True
         low = self.char_heating_thresh_temp.value
+        temperature = temperature_to_states(value, self._unit)
         params = {
             ATTR_ENTITY_ID: self.entity_id,
-            ATTR_TARGET_TEMP_HIGH: temperature_to_states(value, self._unit),
+            ATTR_TARGET_TEMP_HIGH: temperature,
             ATTR_TARGET_TEMP_LOW: temperature_to_states(low, self._unit)}
-        self.hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, params)
+        self.call_service(DOMAIN, SERVICE_SET_TEMPERATURE, params,
+                          "cooling threshold {}{}".format(temperature,
+                                                          self._unit))
 
     @debounce
     def set_heating_threshold(self, value):
@@ -149,11 +153,14 @@ class Thermostat(HomeAccessory):
                       self.entity_id, value)
         self.heatingthresh_flag_target_state = True
         high = self.char_cooling_thresh_temp.value
+        temperature = temperature_to_states(value, self._unit)
         params = {
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_TARGET_TEMP_HIGH: temperature_to_states(high, self._unit),
-            ATTR_TARGET_TEMP_LOW: temperature_to_states(value, self._unit)}
-        self.hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, params)
+            ATTR_TARGET_TEMP_LOW: temperature}
+        self.call_service(DOMAIN, SERVICE_SET_TEMPERATURE, params,
+                          "heating threshold {}{}".format(temperature,
+                                                          self._unit))
 
     @debounce
     def set_target_temperature(self, value):
@@ -161,10 +168,13 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug('%s: Set target temperature to %.2f°C',
                       self.entity_id, value)
         self.temperature_flag_target_state = True
+        temperature = temperature_to_states(value, self._unit)
         params = {
             ATTR_ENTITY_ID: self.entity_id,
-            ATTR_TEMPERATURE: temperature_to_states(value, self._unit)}
-        self.hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, params)
+            ATTR_TEMPERATURE: temperature}
+        self.call_service(DOMAIN, SERVICE_SET_TEMPERATURE, params,
+                          "target {}{}".format(temperature,
+                                               self._unit))
 
     def update_state(self, new_state):
         """Update security state after state changed."""

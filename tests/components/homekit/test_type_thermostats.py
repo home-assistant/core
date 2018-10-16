@@ -10,7 +10,7 @@ from homeassistant.components.climate import (
     ATTR_OPERATION_LIST, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN,
     STATE_AUTO, STATE_COOL, STATE_HEAT)
 from homeassistant.components.homekit.const import (
-    PROP_MAX_VALUE, PROP_MIN_VALUE)
+    ATTR_VALUE, PROP_MAX_VALUE, PROP_MIN_VALUE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_TEMPERATURE_UNIT, STATE_OFF,
     TEMP_FAHRENHEIT)
@@ -31,7 +31,7 @@ def cls():
     patcher.stop()
 
 
-async def test_default_thermostat(hass, hk_driver, cls):
+async def test_default_thermostat(hass, hk_driver, cls, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'climate.test'
 
@@ -157,6 +157,9 @@ async def test_default_thermostat(hass, hk_driver, cls):
     assert call_set_temperature[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_temperature[0].data[ATTR_TEMPERATURE] == 19.0
     assert acc.char_target_temp.value == 19.0
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == "target {}°C".format(
+        acc.char_target_temp.value)
 
     await hass.async_add_job(acc.char_target_heat_cool.client_update_value, 1)
     await hass.async_block_till_done()
@@ -164,9 +167,11 @@ async def test_default_thermostat(hass, hk_driver, cls):
     assert call_set_operation_mode[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_operation_mode[0].data[ATTR_OPERATION_MODE] == STATE_HEAT
     assert acc.char_target_heat_cool.value == 1
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] == STATE_HEAT
 
 
-async def test_auto_thermostat(hass, hk_driver, cls):
+async def test_auto_thermostat(hass, hk_driver, cls, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'climate.test'
 
@@ -238,6 +243,9 @@ async def test_auto_thermostat(hass, hk_driver, cls):
     assert call_set_temperature[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_temperature[0].data[ATTR_TARGET_TEMP_LOW] == 20.0
     assert acc.char_heating_thresh_temp.value == 20.0
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == "heating threshold {}°C".format(
+        acc.char_heating_thresh_temp.value)
 
     await hass.async_add_job(
         acc.char_cooling_thresh_temp.client_update_value, 25.0)
@@ -246,9 +254,12 @@ async def test_auto_thermostat(hass, hk_driver, cls):
     assert call_set_temperature[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_temperature[1].data[ATTR_TARGET_TEMP_HIGH] == 25.0
     assert acc.char_cooling_thresh_temp.value == 25.0
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] == "cooling threshold {}°C".format(
+        acc.char_cooling_thresh_temp.value)
 
 
-async def test_power_state(hass, hk_driver, cls):
+async def test_power_state(hass, hk_driver, cls, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'climate.test'
 
@@ -297,15 +308,19 @@ async def test_power_state(hass, hk_driver, cls):
     assert call_set_operation_mode[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_operation_mode[0].data[ATTR_OPERATION_MODE] == STATE_HEAT
     assert acc.char_target_heat_cool.value == 1
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == STATE_HEAT
 
     await hass.async_add_job(acc.char_target_heat_cool.client_update_value, 0)
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert acc.char_target_heat_cool.value == 0
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_thermostat_fahrenheit(hass, hk_driver, cls):
+async def test_thermostat_fahrenheit(hass, hk_driver, cls, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'climate.test'
 
@@ -341,6 +356,8 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls):
     assert call_set_temperature[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_temperature[0].data[ATTR_TARGET_TEMP_HIGH] == 73.4
     assert call_set_temperature[0].data[ATTR_TARGET_TEMP_LOW] == 68
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == "cooling threshold 73.4°F"
 
     await hass.async_add_job(
         acc.char_heating_thresh_temp.client_update_value, 22)
@@ -349,12 +366,16 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls):
     assert call_set_temperature[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_temperature[1].data[ATTR_TARGET_TEMP_HIGH] == 73.4
     assert call_set_temperature[1].data[ATTR_TARGET_TEMP_LOW] == 71.6
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] == "heating threshold 71.6°F"
 
     await hass.async_add_job(acc.char_target_temp.client_update_value, 24.0)
     await hass.async_block_till_done()
     assert call_set_temperature[2]
     assert call_set_temperature[2].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_temperature[2].data[ATTR_TEMPERATURE] == 75.2
+    assert len(events) == 3
+    assert events[-1].data[ATTR_VALUE] == "target 75.2°F"
 
 
 async def test_get_temperature_range(hass, hk_driver, cls):

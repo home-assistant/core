@@ -54,7 +54,7 @@ class Lock(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
             params[ATTR_CODE] = self._code
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update lock after state changed."""
