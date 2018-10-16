@@ -80,8 +80,7 @@ class PlumLight(Light):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-            await self._load.turn_on(self._brightness)
+            await self._load.turn_on(kwargs[ATTR_BRIGHTNESS])
         else:
             await self._load.turn_on()
 
@@ -168,9 +167,8 @@ class GlowRing(Light):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
             await self._lightpad.set_config(
-                {"glowIntensity": self.glow_intensity})
+                {"glowIntensity": kwargs[ATTR_BRIGHTNESS]})
         elif ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
             self._red, self._green, self._blue = \
@@ -183,9 +181,8 @@ class GlowRing(Light):
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
             await self._lightpad.set_config(
-                {"glowIntensity": self._brightness})
+                {"glowIntensity": kwargs[ATTR_BRIGHTNESS]})
         else:
             await self._lightpad.set_config(
                 {"glowEnabled": False})
