@@ -703,21 +703,24 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
                         const.COMMAND_CLASS_SWITCH_BINARY],
                 }}}
 
-        values = zwave.ZWaveDeviceEntityValues(
-            hass=self.hass,
-            schema=self.mock_schema,
-            primary_value=self.primary,
-            zwave_config=self.zwave_config,
-            device_config=self.device_config,
-            registry=self.registry
-        )
-        values._check_entity_ready()
-        self.hass.block_till_done()
+        with patch.object(zwave, 'async_dispatcher_send') as \
+                mock_dispatch_send:
 
-        assert discovery.async_load_platform.called
-        assert len(discovery.async_load_platform.mock_calls) == 1
-        args = discovery.async_load_platform.mock_calls[0][1]
-        assert args[1] == 'binary_sensor'
+            values = zwave.ZWaveDeviceEntityValues(
+                hass=self.hass,
+                schema=self.mock_schema,
+                primary_value=self.primary,
+                zwave_config=self.zwave_config,
+                device_config=self.device_config,
+                registry=self.registry
+            )
+            values._check_entity_ready()
+            self.hass.block_till_done()
+
+            assert mock_dispatch_send.called
+            assert len(mock_dispatch_send.mock_calls) == 1
+            args = mock_dispatch_send.mock_calls[0][1]
+            assert args[1] == 'zwave_new_binary_sensor'
 
     @patch.object(zwave, 'get_platform')
     @patch.object(zwave, 'discovery')
