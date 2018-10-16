@@ -55,7 +55,7 @@ def test_config_valid_verify_ssl(hass, mock_scanner, mock_ctrl):
     assert mock_scanner.call_count == 1
     assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
                                                DEFAULT_DETECTION_TIME,
-                                               None, None)
+                                               None, False, None)
 
 
 def test_config_minimal(hass, mock_scanner, mock_ctrl):
@@ -162,7 +162,7 @@ def test_scanner_update():
          'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, None)
+    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False, None)
     assert ctrl.get_clients.call_count == 1
     assert ctrl.get_clients.call_args == mock.call()
 
@@ -172,7 +172,7 @@ def test_scanner_update_error():
     ctrl = mock.MagicMock()
     ctrl.get_clients.side_effect = APIError(
         '/', 500, 'foo', {}, None)
-    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, None)
+    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False, None)
 
 
 def test_scan_devices():
@@ -185,7 +185,7 @@ def test_scan_devices():
          'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, 
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None,
                                  False, None)
     assert set(scanner.scan_devices()) == set(['123', '234'])
 
@@ -228,7 +228,7 @@ def test_get_device_name():
          'last_seen': '1504786810'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, 
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None,
                                  False, None)
     assert scanner.get_device_name('123') == 'foobar'
     assert scanner.get_device_name('234') == 'Nice Name'
