@@ -177,7 +177,7 @@ DIAL_STATE_SCHEMA = vol.Schema({
 
 WINK_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
-    'fan', 'alarm_control_panel', 'scene'
+    'fan', 'alarm_control_panel', 'scene', 'water_heater'
 ]
 
 WINK_HUBS = []
