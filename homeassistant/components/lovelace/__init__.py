@@ -1,7 +1,7 @@
 """Lovelace UI."""
 import logging
-import os
 import uuid
+import os
 from os import O_WRONLY, O_CREAT, O_TRUNC
 from collections import OrderedDict
 from typing import Union, List, Dict
@@ -29,11 +29,11 @@ class WriteError(HomeAssistantError):
     """Error writing the data."""
 
 
-def save_yaml(fname: str, data: Union[List, Dict, str]):
+def save_yaml(fname: str, data: JSON_TYPE):
     """Save a YAML file."""
     from ruamel.yaml import YAML
     from ruamel.yaml.error import YAMLError
-    yaml = YAML()
+    yaml = YAML(typ='rt')
     yaml.indent(sequence=4, offset=2)
     tmp_fname = fname + "__TEMP__"
     try:
@@ -61,7 +61,7 @@ def load_yaml(fname: str) -> JSON_TYPE:
     """Load a YAML file."""
     from ruamel.yaml import YAML
     from ruamel.yaml.error import YAMLError
-    yaml = YAML()
+    yaml = YAML(typ='rt')
     try:
         with open(fname, encoding='utf-8') as conf_file:
             # If configuration file is empty YAML returns None

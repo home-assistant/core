@@ -212,6 +212,9 @@ rflink==0.0.37
 # homeassistant.components.ring
 ring_doorbell==0.2.1
 
+# homeassistant.components.lovelace
+ruamel.yaml==0.15.72
+
 # homeassistant.components.media_player.yamaha
 rxv==0.5.1
 

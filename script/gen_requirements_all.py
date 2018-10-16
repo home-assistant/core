@@ -110,6 +110,7 @@ TEST_REQUIREMENTS = (
     'wakeonlan',
     'vultr',
     'YesssSMS',
+    'ruamel.yaml',
 )
 
 IGNORE_PACKAGES = (
