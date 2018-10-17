@@ -26,21 +26,31 @@ from homeassistant.components import modbus
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['pymodbus==1.3.1', 'https://github.com/fucm/python-stiebel-eltron.git@82fff63386d6bfa2ee5ed127f835f3f8e5e5a6ae#egg=python-stiebel-eltron']
-# DEPENDENCIES = ['modbus']
+REQUIREMENTS = ['pymodbus==1.3.1', 
+                'https://github.com/fucm/python-stiebel-eltron/archive/v0.0.1.dev1.zip#python-stiebel-eltron==0.0.1.dev1']
+DEPENDENCIES = ['modbus']
 
 STATE_DAYMODE = 'Tagbetrieb'
 STATE_SETBACK = 'Absenkbetrieb'
 STATE_DHW = 'Warmwasserbetrieb'
 STATE_EMERGENCY = 'Notbetrieb'
-STE_TO_HASS_STATE = {'AUTOMATIC': STATE_AUTO, 'MANUAL MODE': STATE_MANUAL,
-                     'STANDBY': STATE_IDLE, 'DAY MODE': STATE_DAYMODE,
-                     'SETBACK MODE': STATE_SETBACK, 'DHW': STATE_DHW,
+
+"""Mapping Stiebel Eltron states to homeassistant states."""
+STE_TO_HASS_STATE = {'AUTOMATIC': STATE_AUTO,
+                     'MANUAL MODE': STATE_MANUAL,
+                     'STANDBY': STATE_IDLE,
+                     'DAY MODE': STATE_DAYMODE,
+                     'SETBACK MODE': STATE_SETBACK,
+                     'DHW': STATE_DHW,
                      'EMERGENCY OPERATION': STATE_EMERGENCY}
 
-HASS_TO_STE_STATE = {STATE_AUTO: 'AUTOMATIC', STATE_MANUAL: 'MANUAL MODE',
-                     STATE_IDLE: 'STANDBY', STATE_DAYMODE: 'DAY MODE',
-                     STATE_SETBACK: 'SETBACK MODE', STATE_DHW: 'DHW',
+"""Mapping homeassistant states to Stiebel Eltron states."""
+HASS_TO_STE_STATE = {STATE_AUTO: 'AUTOMATIC',
+                     STATE_MANUAL: 'MANUAL MODE',
+                     STATE_IDLE: 'STANDBY',
+                     STATE_DAYMODE: 'DAY MODE',
+                     STATE_SETBACK: 'SETBACK MODE',
+                     STATE_DHW: 'DHW',
                      STATE_EMERGENCY: 'EMERGENCY OPERATION'}
 
 DEVICE_DEFAULT_NAME = "Stiebel Eltron Heatpump"
@@ -48,7 +58,7 @@ DEFAULT_PORT = 502
 DEFAULT_UNIT = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
+    #vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SLAVE, default=DEFAULT_UNIT):
         vol.All(int, vol.Range(min=0, max=32)),
@@ -68,9 +78,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     modbus_slave = config.get(CONF_SLAVE, None)
     name = config.get(CONF_NAME, None)
 
-    from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-    client = ModbusClient(host=host, port=port)
-    client.connect()
+    #from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+    #client = ModbusClient(host=host, port=port)
+    #client.connect()
+    client = None
     add_devices([StiebelEltron(client, modbus_slave, name)], True)
 
     return True
@@ -101,7 +112,8 @@ class StiebelEltron(ClimateDevice):
         # self._heating = None
         # self._cooling = None
         # self._alarm = False
-        self.unit = pystiebeleltron.StiebelEltronAPI(self._client, self._slave)
+        #self.unit = pystiebeleltron.StiebelEltronAPI(self._client, self._slave)
+        self.unit = pystiebeleltron.StiebelEltronAPI(modbus.HUB, self._slave)
         _LOGGER.debug("Initialized stiebel_eltron.")
 
     @property
