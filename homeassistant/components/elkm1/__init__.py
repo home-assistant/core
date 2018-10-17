@@ -39,7 +39,8 @@ SUPPORTED_DOMAINS = ['alarm_control_panel', 'light', 'scene', 'sensor',
                      'switch']
 
 SPEAK_SERVICE_SCHEMA = vol.Schema({
-    vol.Required('number'): vol.Range(min=0, max=999),
+    vol.Required('number'):
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=999))
 })
 
 
