@@ -40,6 +40,7 @@ TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
     'aiohue',
+    'aiounifi',
     'apns2',
     'caldav',
     'coinmarketcap',
@@ -110,6 +111,7 @@ TEST_REQUIREMENTS = (
     'wakeonlan',
     'vultr',
     'YesssSMS',
+    'ruamel.yaml',
 )
 
 IGNORE_PACKAGES = (

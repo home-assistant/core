@@ -51,7 +51,7 @@ class Outlet(HomeAccessory):
         self.flag_target_state = True
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
@@ -84,7 +84,7 @@ class Switch(HomeAccessory):
         self.flag_target_state = True
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(self._domain, service, params)
+        self.call_service(self._domain, service, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
@@ -123,7 +123,7 @@ class Valve(HomeAccessory):
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
