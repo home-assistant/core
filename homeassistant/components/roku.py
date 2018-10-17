@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_ROKU
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -24,8 +24,6 @@ SERVICE_SCAN = 'roku_scan'
 
 ATTR_ROKU = 'roku'
 
-DEFAULT_NAME = 'Roku'
-
 DATA_ROKU = 'data_roku'
 DATA_ENTITIES = 'data_roku_entities'
 
@@ -38,7 +36,6 @@ NOTIFICATION_SCAN_TITLE = 'Roku Scan'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -84,7 +81,6 @@ async def async_setup(hass, config):
     async def roku_discovered(service, info):
         """Set up an Roku that was auto discovered."""
         await _setup_roku(hass, {
-            CONF_NAME: info['name'],
             CONF_HOST: info['host']
         })
 
@@ -104,7 +100,6 @@ async def async_setup(hass, config):
 async def _setup_roku(hass, roku_config):
     """Set up a Roku."""
     from roku import Roku
-    name = roku_config.get(CONF_NAME)
     host = roku_config.get(CONF_HOST)
 
     if host in hass.data[DATA_ROKU]:

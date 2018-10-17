@@ -12,7 +12,7 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
+    CONF_HOST, STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
 
 REQUIREMENTS = ['python-roku==3.1.5']
 
@@ -37,9 +37,8 @@ async def async_setup_platform(
     if DATA_ENTITIES not in hass.data:
         hass.data[DATA_ENTITIES] = []
 
-    name = discovery_info[CONF_NAME]
     host = discovery_info[CONF_HOST]
-    entity = RokuDevice(host, name)
+    entity = RokuDevice(host)
 
     if entity not in hass.data[DATA_ENTITIES]:
         hass.data[DATA_ENTITIES].append(entity)
@@ -50,7 +49,7 @@ async def async_setup_platform(
 class RokuDevice(MediaPlayerDevice):
     """Representation of a Roku device on the network."""
 
-    def __init__(self, host, name):
+    def __init__(self, host):
         """Initialize the Roku device."""
         from roku import Roku
 
@@ -59,7 +58,6 @@ class RokuDevice(MediaPlayerDevice):
         self.channels = []
         self.current_app = None
         self._device_info = {}
-        self.device_name = name
 
         """fetch device info right away"""
         self.update()
@@ -94,7 +92,9 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.device_name
+        if self._device_info.userdevicename:
+            return self._device_info.userdevicename
+        return "Roku {}".format(self._device_info.sernum)
 
     @property
     def state(self):
