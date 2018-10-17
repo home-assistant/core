@@ -4,6 +4,7 @@ Support for Plum Lightpad switches.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/plum_lightpad
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -50,17 +51,22 @@ async def async_setup(hass, config):
 
     async def new_load(device):
         """Load light and sensor platforms when LogicalLoad is detected."""
-        await discovery.async_load_platform(
-            hass, 'light', DOMAIN, discovered=device, hass_config=conf)
-        await discovery.async_load_platform(
-            hass, 'sensor', DOMAIN, discovered=device, hass_config=conf)
+        await asyncio.wait([
+            discovery.async_load_platform(
+                hass, 'light', DOMAIN, discovered=device, hass_config=conf),
+            discovery.async_load_platform(
+                hass, 'sensor', DOMAIN, discovered=device, hass_config=conf)
+        ])
 
     async def new_lightpad(device):
         """Load light and binary sensor platforms when Lightpad detected."""
-        await discovery.async_load_platform(
-            hass, 'light', DOMAIN, discovered=device, hass_config=conf)
-        await discovery.async_load_platform(
-            hass, 'binary_sensor', DOMAIN, discovered=device, hass_config=conf)
+        await asyncio.wait([
+            discovery.async_load_platform(
+                hass, 'light', DOMAIN, discovered=device, hass_config=conf),
+            discovery.async_load_platform(
+                hass, 'binary_sensor', DOMAIN,
+                discovered=device, hass_config=conf)
+        ])
 
     device_web_session = async_get_clientsession(hass, verify_ssl=False)
     hass.async_create_task(
