@@ -1,6 +1,7 @@
 """
 Support for the Roku remote.
- For more details about this platform, please refer to the documentation at
+
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.roku/
 """
 
@@ -46,6 +47,7 @@ class RokuRemote(remote.RemoteDevice):
 
     @property
     def is_on(self):
+        """Return true if device is on."""
         return True
 
     @property
