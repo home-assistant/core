@@ -52,20 +52,27 @@ async def async_setup(hass, config):
     async def new_load(device):
         """Load light and sensor platforms when LogicalLoad is detected."""
         await asyncio.wait([
-            discovery.async_load_platform(
-                hass, 'light', DOMAIN, discovered=device, hass_config=conf),
-            discovery.async_load_platform(
-                hass, 'sensor', DOMAIN, discovered=device, hass_config=conf)
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass, 'light', DOMAIN,
+                    discovered=device, hass_config=conf)),
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass, 'sensor', DOMAIN,
+                    discovered=device, hass_config=conf))
         ])
 
     async def new_lightpad(device):
         """Load light and binary sensor platforms when Lightpad detected."""
         await asyncio.wait([
-            discovery.async_load_platform(
-                hass, 'light', DOMAIN, discovered=device, hass_config=conf),
-            discovery.async_load_platform(
-                hass, 'binary_sensor', DOMAIN,
-                discovered=device, hass_config=conf)
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass, 'light', DOMAIN,
+                    discovered=device, hass_config=conf)),
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass, 'binary_sensor', DOMAIN,
+                    discovered=device, hass_config=conf))
         ])
 
     device_web_session = async_get_clientsession(hass, verify_ssl=False)
