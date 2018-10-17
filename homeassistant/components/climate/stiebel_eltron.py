@@ -3,11 +3,14 @@ Platform for Stiebel Eltron heat pumps with ISGWeb Modbus module.
 
 Example configuration:
 
+modbus:
+  type: tcp
+  host: 192.168.1.20
+  port: 502
+
 climate:
   - platform: stiebel_eltron
     name: LWZ504e
-    host: 192.168.1.20
-    port: 502
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.stiebel_eltron/
