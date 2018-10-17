@@ -43,8 +43,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
         vol.Optional(CONF_PORTS):
             vol.Schema({
-                vol.Any(CONF_HASS, cv.positive_int):
-                    vol.Any(CONF_HASS, cv.positive_int)
+                vol.Any(CONF_HASS, cv.port):
+                    vol.Any(CONF_HASS, cv.port)
             })
     }),
 }, extra=vol.ALLOW_EXTRA)
