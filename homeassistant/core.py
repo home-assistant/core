@@ -248,7 +248,7 @@ class HomeAssistant:
     def async_add_job(
             self,
             target: Callable[..., Any],
-            *args: Any) -> Optional[asyncio.Future]:
+            *args: Any) -> asyncio.Future:
         """Add a job from within the event loop.
 
         This method must be run in the event loop.
@@ -256,14 +256,25 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
-        task = None
-
         if asyncio.iscoroutine(target):
+            if args:
+                raise RuntimeError("You can't pass arguments this way")
             task = self.loop.create_task(target)  # type: ignore
+
         elif is_callback(target):
-            self.loop.call_soon(target, *args)
+            task = asyncio.Future()
+
+            def _run(fut: asyncio.Future, target: Callable[..., Any], *args: Any) -> Any:
+                try:
+                    fut.set_result(target(*args))
+                except Exception as exc:
+                    fut.set_exception(exc)
+
+            self.loop.call_soon(_run, task, target, *args)
+
         elif asyncio.iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
+
         else:
             task = self.loop.run_in_executor(  # type: ignore
                 None, target, *args)
