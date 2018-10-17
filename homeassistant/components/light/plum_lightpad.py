@@ -130,8 +130,8 @@ class GlowRing(Light):
 
     @hs_color.setter
     def hs_color(self, value):
-        self._red, self._green, self._blue = color_util.color_hs_to_RGB(value)
-
+        """Set the color and keep RGB in sync."""
+        self._red, self._green, self._blue = color_util.color_hs_to_RGB(*value)
 
     @property
     def should_poll(self):
