@@ -9,13 +9,15 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant import util
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_state_change
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.core import callback
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_NAME)
+    ATTR_UNIT_OF_MEASUREMENT, EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_state_change
+
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up MoldIndicator sensor."""
     name = config.get(CONF_NAME, DEFAULT_NAME)
     indoor_temp_sensor = config.get(CONF_INDOOR_TEMP)
@@ -50,17 +53,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     indoor_humidity_sensor = config.get(CONF_INDOOR_HUMIDITY)
     calib_factor = config.get(CONF_CALIBRATION_FACTOR)
 
-    add_entities([MoldIndicator(
+    async_add_entities([MoldIndicator(
         hass, name, indoor_temp_sensor, outdoor_temp_sensor,
-        indoor_humidity_sensor, calib_factor)], True)
+        indoor_humidity_sensor, calib_factor)], False)
+
+    return True
 
 
 class MoldIndicator(Entity):
     """Represents a MoldIndication sensor."""
 
-    def __init__(self, hass, name, indoor_temp_sensor, outdoor_temp_sensor,
-                 indoor_humidity_sensor, calib_factor):
+    def __init__(self, hass, name, indoor_temp_sensor,
+                 outdoor_temp_sensor, indoor_humidity_sensor, calib_factor):
         """Initialize the sensor."""
+        self.hass = hass
         self._state = None
         self._name = name
         self._indoor_temp_sensor = indoor_temp_sensor
@@ -68,6 +74,10 @@ class MoldIndicator(Entity):
         self._outdoor_temp_sensor = outdoor_temp_sensor
         self._calib_factor = calib_factor
         self._is_metric = hass.config.units.is_metric
+        self._available = False
+        self._entities = set([self._indoor_temp_sensor,
+                              self._indoor_humidity_sensor,
+                              self._outdoor_temp_sensor])
 
         self._dewpoint = None
         self._indoor_temp = None
@@ -75,31 +85,67 @@ class MoldIndicator(Entity):
         self._indoor_hum = None
         self._crit_temp = None
 
-        track_state_change(hass, indoor_temp_sensor, self._sensor_changed)
-        track_state_change(hass, outdoor_temp_sensor, self._sensor_changed)
-        track_state_change(hass, indoor_humidity_sensor, self._sensor_changed)
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        @callback
+        def mold_indicator_sensors_state_listener(entity, old_state,
+                                                  new_state):
+            """Handle for state changes for dependent sensors."""
+            _LOGGER.debug("Sensor state change for %s that had old state %s "
+                          "and new state %s", entity, old_state, new_state)
 
-        # Read initial state
-        indoor_temp = hass.states.get(indoor_temp_sensor)
-        outdoor_temp = hass.states.get(outdoor_temp_sensor)
-        indoor_hum = hass.states.get(indoor_humidity_sensor)
+            if self._update_sensor(entity, old_state, new_state):
+                self.async_schedule_update_ha_state(True)
 
-        # Get the current values if the sensors already have this data.
-        if indoor_temp and indoor_temp.state != STATE_UNKNOWN:
-            _LOGGER.debug("Have indoor temp sensor with state %s",
-                          indoor_temp.state)
-            self._indoor_temp = MoldIndicator._update_temp_sensor(indoor_temp)
+        @callback
+        def mold_indicator_startup(event):
+            """Add listeners and get 1st state."""
+            _LOGGER.debug("Startup for %s", self.entity_id)
 
-        if outdoor_temp and outdoor_temp.state != STATE_UNKNOWN:
-            _LOGGER.debug("Have outdoor temp sensor with state %s",
-                          outdoor_temp.state)
-            self._outdoor_temp = MoldIndicator._update_temp_sensor(
-                outdoor_temp)
+            async_track_state_change(self.hass, self._entities,
+                                     mold_indicator_sensors_state_listener)
 
-        if indoor_hum and indoor_hum.state != STATE_UNKNOWN:
-            _LOGGER.debug("Have humidity sensor with state %s",
-                          indoor_hum.state)
-            self._indoor_hum = MoldIndicator._update_hum_sensor(indoor_hum)
+            # Read initial state
+            indoor_temp = self.hass.states.get(self._indoor_temp_sensor)
+            outdoor_temp = self.hass.states.get(self._outdoor_temp_sensor)
+            indoor_hum = self.hass.states.get(self._indoor_humidity_sensor)
+
+            schedule_update = True if self._update_sensor(
+                self._indoor_temp_sensor, None, indoor_temp) else False
+
+            schedule_update = False if not self._update_sensor(
+                self._outdoor_temp_sensor, None, outdoor_temp) else\
+                schedule_update
+
+            schedule_update = False if not self._update_sensor(
+                self._indoor_humidity_sensor, None, indoor_hum) else\
+                schedule_update
+
+            if schedule_update:
+                self.async_schedule_update_ha_state(True)
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, mold_indicator_startup)
+
+    def _update_sensor(self, entity, old_state, new_state):
+        """Update information based on new sensor states."""
+        _LOGGER.debug("Sensor update for %s", entity)
+        if new_state is None:
+            return False
+
+        # If old_state is not set and new state is unknown then it means
+        # that the sensor just started up
+        if old_state is None and new_state.state == STATE_UNKNOWN:
+            return False
+
+        if entity == self._indoor_temp_sensor:
+            self._indoor_temp = MoldIndicator._update_temp_sensor(new_state)
+        elif entity == self._outdoor_temp_sensor:
+            self._outdoor_temp = MoldIndicator._update_temp_sensor(new_state)
+        elif entity == self._indoor_humidity_sensor:
+            self._indoor_hum = MoldIndicator._update_hum_sensor(new_state)
+
+        return True
 
     @staticmethod
     def _update_temp_sensor(state):
@@ -161,38 +207,21 @@ class MoldIndicator(Entity):
 
         return hum
 
-    def update(self):
+    async def async_update(self):
         """Calculate latest state."""
+        _LOGGER.debug("Update state for %s", self.entity_id)
         # check all sensors
         if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
+            self._available = False
             return
 
         # re-calculate dewpoint and mold indicator
         self._calc_dewpoint()
         self._calc_moldindicator()
-
-    def _sensor_changed(self, entity_id, old_state, new_state):
-        """Handle sensor state changes."""
-        _LOGGER.debug("Sensor state change for %s that had old state %s "
-                      "and new state %s", entity_id, old_state, new_state)
-
-        if new_state is None:
-            return
-
-        # If old_state is not set and new state is unknown then it means that
-        # the sensor just started up and has not yet updated it's data yet.
-        if old_state is None and new_state.state == STATE_UNKNOWN:
-            return
-
-        if entity_id == self._indoor_temp_sensor:
-            self._indoor_temp = MoldIndicator._update_temp_sensor(new_state)
-        elif entity_id == self._outdoor_temp_sensor:
-            self._outdoor_temp = MoldIndicator._update_temp_sensor(new_state)
-        elif entity_id == self._indoor_humidity_sensor:
-            self._indoor_hum = MoldIndicator._update_hum_sensor(new_state)
-
-        self.update()
-        self.schedule_update_ha_state()
+        if self._state is None:
+            self._available = False
+        else:
+            self._available = True
 
     def _calc_dewpoint(self):
         """Calculate the dewpoint for the indoor air."""
@@ -217,6 +246,7 @@ class MoldIndicator(Entity):
                           " calibration-factor: %s",
                           self._dewpoint, self._calib_factor)
             self._state = None
+            self._available = False
             return
 
         # first calculate the approximate temperature at the calibration point
@@ -265,6 +295,11 @@ class MoldIndicator(Entity):
     def state(self):
         """Return the state of the entity."""
         return self._state
+
+    @property
+    def available(self):
+        """Return the availability of this sensor."""
+        return self._available
 
     @property
     def device_state_attributes(self):
