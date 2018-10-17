@@ -1,37 +1,14 @@
 """
 Support for control of ElkM1 sensors.
 
-On the ElkM1 there are 6 types of sensors:
-- Counters that are integers that can be read
-- Keypads that have temperature (not all models, but no way to know)
-- Panel that monitors the state of the connection, versions, etc.
-- Settings that are used to trigger Elk-M1 automations
-- Thermostats that have temperature
-- Zones that are multi-state, voltage, or temperature.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.elkm1/
 """
 
-import voluptuous as vol
-
 from homeassistant.components.elkm1 import (
     DOMAIN as ELK_DOMAIN, create_elk_entities, ElkEntity)
-from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
 
 DEPENDENCIES = [ELK_DOMAIN]
-
-SPEAK_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required('number'): vol.Range(min=0, max=999),
-})
-
-SIGNAL_SPEAK_WORD = 'elkm1_speak_word'
-SIGNAL_SPEAK_PHRASE = 'elkm1_speak_phrase'
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -50,30 +27,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     entities = create_elk_entities(
         hass, elk.settings, 'setting', ElkSetting, entities)
     entities = create_elk_entities(
-        hass, elk.thermostats, 'thermostat', ElkThermostat, entities)
-    entities = create_elk_entities(
         hass, elk.zones, 'zone', ElkZone, entities)
     async_add_entities(entities, True)
-
-    def _dispatch(signal, entity_ids, *args):
-        for entity_id in entity_ids:
-            async_dispatcher_send(
-                hass, '{}_{}'.format(signal, entity_id), *args)
-
-    def _speak_word_service(service):
-        entity_ids = service.data.get(ATTR_ENTITY_ID, [])
-        args = (service.data.get('number'))
-        _dispatch(SIGNAL_SPEAK_WORD, entity_ids, *args)
-
-    def _speak_phrase_service(service):
-        entity_ids = service.data.get(ATTR_ENTITY_ID, [])
-        args = (service.data.get('number'))
-        _dispatch(SIGNAL_SPEAK_PHRASE, entity_ids, *args)
-
-    hass.services.async_register(DOMAIN, 'elkm1_sensor_speak_word',
-                                 _speak_word_service, SPEAK_SERVICE_SCHEMA)
-    hass.services.async_register(DOMAIN, 'elkm1_sensor_speak_phrase',
-                                 _speak_phrase_service, SPEAK_SERVICE_SCHEMA)
 
 
 def temperature_to_state(temperature, undefined_temperature):
@@ -152,16 +107,6 @@ class ElkKeypad(ElkSensor):
 class ElkPanel(ElkSensor):
     """Representation of an Elk-M1 Panel."""
 
-    async def async_added_to_hass(self):
-        """Register callback for ElkM1 changes."""
-        await super().async_added_to_hass()
-        async_dispatcher_connect(
-            self.hass, '{}_{}'.format(SIGNAL_SPEAK_WORD, self.entity_id),
-            self._speak_word)
-        async_dispatcher_connect(
-            self.hass, '{}_{}'.format(SIGNAL_SPEAK_PHRASE, self.entity_id),
-            self._speak_phrase)
-
     @property
     def icon(self):
         """Icon to use in the frontend."""
@@ -171,9 +116,7 @@ class ElkPanel(ElkSensor):
     def device_state_attributes(self):
         """Attributes of the sensor."""
         attrs = self.initial_attrs()
-        attrs['elkm1_version'] = self._element.elkm1_version
         attrs['system_trouble_status'] = self._element.system_trouble_status
-        attrs['xep_version'] = self._element.xep_version
         return attrs
 
     def _element_changed(self, element, changeset):
@@ -182,14 +125,6 @@ class ElkPanel(ElkSensor):
                 else 'Connected'
         else:
             self._state = 'Disconnected'
-
-    async def _speak_word(self, number):
-        """Speak a word on the panel."""
-        self._element.speak_word(number)
-
-    async def _speak_phrase(self, number):
-        """Speak a phrase on the panel."""
-        self._element.speak_phrase(number)
 
 
 class ElkSetting(ElkSensor):
@@ -211,28 +146,6 @@ class ElkSetting(ElkSensor):
         attrs['value_format'] = SettingFormat(
             self._element.value_format).name.lower()
         return attrs
-
-
-class ElkThermostat(ElkSensor):
-    """Representation of an Elk-M1 Thermostat."""
-
-    @property
-    def temperature_unit(self):
-        """Return the temperature unit."""
-        return self._temperature_unit
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._temperature_unit
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return 'mdi:thermometer-lines'
-
-    def _element_changed(self, element, changeset):
-        self._state = temperature_to_state(self._element.current_temp, 0)
 
 
 class ElkZone(ElkSensor):
