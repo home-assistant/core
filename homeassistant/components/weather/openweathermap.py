@@ -155,8 +155,7 @@ class OpenWeatherMapWeather(WeatherEntity):
             snow_value = 0 if snow is None else snow
             if round(rain_value + snow_value, 1) == 0:
                 return None
-            else:
-                return round(rain_value + snow_value, 1)
+            return round(rain_value + snow_value, 1)
 
         for entry in self.forecast_data.get_weathers():
             if self._mode == 'daily':
