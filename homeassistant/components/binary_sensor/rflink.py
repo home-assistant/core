@@ -5,13 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rflink/
 """
 import logging
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.components.rflink import (
-    CONF_ALIASES, CONF_DEVICES, RflinkDevice, cv, vol)
+    CONF_ALIASES, CONF_DEVICES, RflinkDevice)
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_DEVICE_CLASS)
+import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.event as evt
 
 CONF_OFF_DELAY = 'off_delay'
