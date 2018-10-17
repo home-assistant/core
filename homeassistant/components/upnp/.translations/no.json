@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "UPnP / IGD er allerede konfigurert",
-            "no_devices_discovered": "Ingen UPnP / IGDs oppdaget"
+            "no_devices_discovered": "Ingen UPnP / IGDs oppdaget",
+            "no_sensors_or_port_mapping": "Aktiver minst sensorer eller port mapping"
         },
         "error": {
             "few": "f\u00e5",
@@ -18,12 +19,13 @@
             },
             "user": {
                 "data": {
+                    "enable_port_mapping": "Aktiver port mapping for Home Assistant",
                     "enable_sensors": "Legg til trafikk sensorer",
                     "igd": "UPnP / IGD"
                 },
                 "title": "Konfigurasjonsalternativer for UPnP / IGD"
             }
         },
-        "title": "UPnP / IGD"
+        "title": "UPnP/IGD"
     }
 }
