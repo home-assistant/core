@@ -105,9 +105,9 @@ class RokuDevice(MediaPlayerDevice):
         if (self.current_app.name == "Power Saver" or
                 self.current_app.is_screensaver):
             return STATE_IDLE
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return STATE_HOME
-        elif self.current_app.name is not None:
+        if self.current_app.name is not None:
             return STATE_PLAYING
 
         return STATE_UNKNOWN
@@ -127,9 +127,9 @@ class RokuDevice(MediaPlayerDevice):
         """Content type of current playing media."""
         if self.current_app is None:
             return None
-        elif self.current_app.name == "Power Saver":
+        if self.current_app.name == "Power Saver":
             return None
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return None
         return MEDIA_TYPE_MOVIE
 

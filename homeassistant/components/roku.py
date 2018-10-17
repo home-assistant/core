@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_ROKU
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -47,7 +47,7 @@ async def scan_for_rokus(hass):
     """Scan for devices and present a notification of the ones found."""
     from roku import Roku, RokuException
     rokus = await Roku.discover()
-    
+
     devices = []
     for roku in rokus:
         try:
