@@ -2,7 +2,6 @@
 import os
 import unittest
 from tempfile import mkdtemp
-from io import StringIO
 from unittest.mock import patch
 from ruamel.yaml import YAML
 
@@ -11,8 +10,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.components.lovelace import (load_yaml,
                                                save_yaml, load_config)
-
-from tests.common import patch_yaml_files
 
 TEST_YAML_A = """\
 title: My Awesome Home
