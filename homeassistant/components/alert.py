@@ -231,7 +231,7 @@ class Alert(ToggleEntity):
             if self._message_template is not None:
                 message = self._message_template.async_render()
             else:
-                message = '{0}'.format(self._name)
+                message = self._name
 
             for target in self._notifiers:
                 await self.hass.services.async_call(
