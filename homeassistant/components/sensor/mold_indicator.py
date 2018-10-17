@@ -213,6 +213,8 @@ class MoldIndicator(Entity):
         # check all sensors
         if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
             self._available = False
+            self._dewpoint = None
+            self._crit_temp = None
             return
 
         # re-calculate dewpoint and mold indicator
@@ -220,6 +222,8 @@ class MoldIndicator(Entity):
         self._calc_moldindicator()
         if self._state is None:
             self._available = False
+            self._dewpoint = None
+            self._crit_temp = None
         else:
             self._available = True
 
@@ -247,6 +251,7 @@ class MoldIndicator(Entity):
                           self._dewpoint, self._calib_factor)
             self._state = None
             self._available = False
+            self._crit_temp = None
             return
 
         # first calculate the approximate temperature at the calibration point
