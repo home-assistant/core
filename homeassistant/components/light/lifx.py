@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lifx/
 """
 import asyncio
-import socket
 from datetime import timedelta
 from functools import partial
 import logging
@@ -145,23 +144,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.warning("The lifx platform is known to not work on Windows. "
                         "Consider using the lifx_legacy platform instead")
 
-    config = hass.data[LIFX_DOMAIN].get(DOMAIN, {})
+    # Priority 1: manual config
+    interfaces = hass.data[LIFX_DOMAIN].get(DOMAIN)
+    if not interfaces:
+        # Priority 2: scanned interfaces
+        lifx_ip_addresses = await aiolifx().LifxScan(hass.loop).scan()
+        interfaces = [{CONF_SERVER: ip} for ip in lifx_ip_addresses]
+        if not interfaces:
+            # Priority 3: default interface
+            interfaces = [{}]
 
     lifx_manager = LIFXManager(hass, async_add_entities)
 
-    broadcast_ip = config.get(CONF_BROADCAST)
-    kwargs = {'discovery_interval': DISCOVERY_INTERVAL}
-    if broadcast_ip:
-        kwargs['broadcast_ip'] = broadcast_ip
-    lifx_discovery = aiolifx().LifxDiscovery(hass.loop, lifx_manager, **kwargs)
+    for interface in interfaces:
+        kwargs = {'discovery_interval': DISCOVERY_INTERVAL}
+        broadcast_ip = interface.get(CONF_BROADCAST)
+        if broadcast_ip:
+            kwargs['broadcast_ip'] = broadcast_ip
+        lifx_discovery = aiolifx().LifxDiscovery(
+            hass.loop, lifx_manager, **kwargs)
 
-    kwargs = {'family': socket.AF_INET}
-    local_addr = config.get(CONF_SERVER)
-    if local_addr is not None:
-        kwargs['local_addr'] = (local_addr, 0)
-    coro = hass.loop.create_datagram_endpoint(lambda: lifx_discovery, **kwargs)
-
-    hass.async_create_task(coro)
+        kwargs = {}
+        listen_ip = interface.get(CONF_SERVER)
+        if listen_ip:
+            kwargs['listen_ip'] = listen_ip
+        lifx_discovery.start(**kwargs)
 
     @callback
     def cleanup(event):
