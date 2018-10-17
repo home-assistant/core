@@ -54,26 +54,23 @@ async def async_setup_platform(hass, config, async_add_entities,
     calib_factor = config.get(CONF_CALIBRATION_FACTOR)
 
     async_add_entities([MoldIndicator(
-        hass, name, indoor_temp_sensor, outdoor_temp_sensor,
-        indoor_humidity_sensor, calib_factor)], False)
-
-    return True
+        name, hass.config.units.is_metric, indoor_temp_sensor,
+        outdoor_temp_sensor, indoor_humidity_sensor, calib_factor)], False)
 
 
 class MoldIndicator(Entity):
     """Represents a MoldIndication sensor."""
 
-    def __init__(self, hass, name, indoor_temp_sensor,
+    def __init__(self, name, is_metric, indoor_temp_sensor,
                  outdoor_temp_sensor, indoor_humidity_sensor, calib_factor):
         """Initialize the sensor."""
-        self.hass = hass
         self._state = None
         self._name = name
         self._indoor_temp_sensor = indoor_temp_sensor
         self._indoor_humidity_sensor = indoor_humidity_sensor
         self._outdoor_temp_sensor = outdoor_temp_sensor
         self._calib_factor = calib_factor
-        self._is_metric = hass.config.units.is_metric
+        self._is_metric = is_metric
         self._available = False
         self._entities = set([self._indoor_temp_sensor,
                               self._indoor_humidity_sensor,
@@ -110,8 +107,8 @@ class MoldIndicator(Entity):
             outdoor_temp = self.hass.states.get(self._outdoor_temp_sensor)
             indoor_hum = self.hass.states.get(self._indoor_humidity_sensor)
 
-            schedule_update = True if self._update_sensor(
-                self._indoor_temp_sensor, None, indoor_temp) else False
+            schedule_update = self._update_sensor(self._indoor_temp_sensor,
+                                                  None, indoor_temp)
 
             schedule_update = False if not self._update_sensor(
                 self._outdoor_temp_sensor, None, outdoor_temp) else\
