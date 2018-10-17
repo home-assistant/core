@@ -179,7 +179,7 @@ bellows==0.7.0
 bimmer_connected==0.5.3
 
 # homeassistant.components.blink
-blinkpy==0.9.0
+blinkpy==0.10.0
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
@@ -458,7 +458,7 @@ hole==0.3.0
 holidays==0.9.7
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181014.0
+home-assistant-frontend==20181017.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
