@@ -228,6 +228,32 @@ class TestAlert(unittest.TestCase):
         self.hass.block_till_done()
         assert 2 == len(events)
 
+    def test_sending_non_templated_notification(self):
+        """Test notifications."""
+        self._setup_notify()
+
+        config = deepcopy(TEST_CONFIG)
+        del(config[alert.DOMAIN][NAME][alert.CONF_MESSAGE_TEMPLATE])
+        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
+
+        self.hass.states.set("sensor.test", STATE_ON)
+        self.hass.block_till_done()
+        last_event = self.events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], NAME)
+
+    def test_sending_templated_notification(self):
+        """Test templated notification."""
+        self._setup_notify()
+
+        config = deepcopy(TEST_CONFIG)
+        config[alert.DOMAIN][NAME][alert.CONF_MESSAGE_TEMPLATE] = "{{ states.sensor.test.entity_id }}"
+        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
+
+        self.hass.states.set("sensor.test", STATE_ON)
+        self.hass.block_till_done()
+        last_event = self.events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], CONF_ENTITY_ID)
+
     def test_skipfirst(self):
         """Test skipping first notification."""
         config = deepcopy(TEST_CONFIG)
