@@ -115,11 +115,6 @@ class ClarifaiClassifier(ImageProcessingEntity):
             self._state = STATE_UNKNOWN
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'class'
-
-    @property
     def camera_entity(self):
         """Return camera entity id from process pictures."""
         return self._camera_entity

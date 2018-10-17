@@ -79,7 +79,7 @@ def mock_image():
 
 
 @pytest.fixture
-def mock_response_with_data():
+def mock_model_prediction_with_data():
     """Return a mock response from Clarifai with MOCK_RESPONSE data."""
     with patch('homeassistant.components.image_processing.clarifai_general.'
                'ClarifaiClassifier.model_prediction',
@@ -88,11 +88,24 @@ def mock_response_with_data():
 
 
 @pytest.fixture
-def mock_response_no_data():
+def mock_model_prediction_no_data():
     """Return a mock response from Clarifai with MOCK_RESPONSE data."""
     with patch('homeassistant.components.image_processing.clarifai_general.'
                'ClarifaiClassifier.model_prediction',
                return_value=None) as _mock_response:
+        yield _mock_response
+
+
+@pytest.fixture
+def mock_predict_by_base64_with_error():
+    """Mock a predict_by_base64 error."""
+    resource = 'https://www.mock.com/url'
+    params = {}
+    method = 'GET'
+    response = None
+    error = ApiError(resource, params, method, response)
+    with patch('clarifai.rest.ClarifaiApp.model.predict_by_base64',
+               side_effect=error) as _mock_response:
         yield _mock_response
 
 
@@ -126,7 +139,7 @@ async def test_setup_platform(hass, mock_app, mock_image):
 
 
 async def test_process_image(hass, mock_app,
-                             mock_image, mock_response_with_data):
+                             mock_image, mock_model_prediction_with_data):
     """Test successful processing of an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
@@ -143,7 +156,7 @@ async def test_process_image(hass, mock_app,
 
 
 async def test_process_no_data(hass, mock_app,
-                               mock_image, mock_response_no_data):
+                               mock_image, mock_model_prediction_no_data):
     """Test processing with no response from API."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
@@ -155,6 +168,22 @@ async def test_process_no_data(hass, mock_app,
 
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == STATE_UNKNOWN
+
+
+async def test_process_with_error(hass, mock_app, mock_image, caplog,
+                                  mock_predict_by_base64_with_error):
+    """Test processing with error from predict_by_base64."""
+    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    assert hass.states.get(VALID_ENTITY_ID)
+    data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
+    await hass.services.async_call(ip.DOMAIN,
+                                   ip.SERVICE_SCAN,
+                                   service_data=data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(VALID_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+    assert "Clarifai error: check your internet connection" in caplog.text
 
 
 async def test_setup_platform_with_name(hass, mock_app):
