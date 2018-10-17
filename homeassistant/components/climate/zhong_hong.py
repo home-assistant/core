@@ -33,7 +33,8 @@ SIGNAL_ZHONG_HONG_HUB_START = 'zhong_hong_hub_start'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS): cv.positive_int,
+    vol.Optional(CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS):
+        cv.positive_int,
 })
 
 
