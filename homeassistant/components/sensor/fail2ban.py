@@ -62,7 +62,8 @@ class BanSensor(Entity):
         """Initialize the sensor."""
         self._name = '{} {}'.format(name, jail)
         self.jail = jail
-        self.ban_dict = {STATE_LAST_BAN: None, STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
+        self.ban_dict = {STATE_LAST_BAN: None, STATE_CURRENT_BANS: [],
+                         STATE_ALL_BANS: []}
         self.number = 0
         self.log_parser = log_parser
         self.log_parser.ip_regex[self.jail] = re.compile(
@@ -140,7 +141,9 @@ class BanLogParser:
         try:
             with open(self.log_file, 'r', encoding='utf-8') as file_data:
                 self.data[jail] = self.ip_regex[jail].findall(file_data.read())
-                _LOGGER.debug("Parsed log file for jail : %s, %d results.", jail, len(self.data[jail]) if self.data and jail in self.data else 0)
+                _LOGGER.debug("Parsed log file for jail : %s, %d results.", 
+                              jail, len(self.data[jail]) 
+                                    if self.data and jail in self.data else 0)
 
         except (IndexError, FileNotFoundError, IsADirectoryError,
                 UnboundLocalError):
