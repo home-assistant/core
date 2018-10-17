@@ -45,6 +45,8 @@ FAN_SPEEDS = {
     'Turbo': 77,
     'Max': 90}
 
+ATTR_CLEAN_START = 'clean_start'
+ATTR_CLEAN_STOP = 'clean_stop'
 ATTR_CLEANING_TIME = 'cleaning_time'
 ATTR_DO_NOT_DISTURB = 'do_not_disturb'
 ATTR_DO_NOT_DISTURB_START = 'do_not_disturb_start'
@@ -248,6 +250,10 @@ class MiroboVacuum(StateVacuumDevice):
                 ATTR_STATUS: str(self.vacuum_state.state)
                 })
 
+            if self.last_clean:
+                attrs[ATTR_CLEAN_START] = self.last_clean.start
+                attrs[ATTR_CLEAN_STOP] = self.last_clean.end
+
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
         return attrs
@@ -368,6 +374,7 @@ class MiroboVacuum(StateVacuumDevice):
 
             self.consumable_state = self._vacuum.consumable_status()
             self.clean_history = self._vacuum.clean_history()
+            self.last_clean = self._vacuum.last_clean_details()
             self.dnd_state = self._vacuum.dnd_status()
 
             self._available = True
