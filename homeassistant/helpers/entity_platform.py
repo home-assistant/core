@@ -337,6 +337,8 @@ class EntityPlatform:
         if not valid_entity_id(entity.entity_id):
             raise HomeAssistantError(
                 'Invalid entity id: {}'.format(entity.entity_id))
+        elif 'hdmi' in entity.entity_id:
+            msg = 'Entity id is CEC: {}'.format(entity.entity_id)
         elif entity.entity_id in component_entities:
             msg = 'Entity id already exists: {}'.format(entity.entity_id)
             if entity.unique_id is not None:
