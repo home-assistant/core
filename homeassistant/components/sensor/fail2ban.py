@@ -142,8 +142,9 @@ class BanLogParser:
             with open(self.log_file, 'r', encoding='utf-8') as file_data:
                 self.data[jail] = self.ip_regex[jail].findall(file_data.read())
                 _LOGGER.debug("Parsed log file for jail : %s, %d results.",
-                              jail, len(self.data[jail]
-                                        if self.data and jail in self.data else 0)
+                              jail, len(self.data[jail])
+                                        if self.data and jail in self.data 
+                                        else 0)
 
         except (IndexError, FileNotFoundError, IsADirectoryError,
                 UnboundLocalError):
