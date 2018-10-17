@@ -5,19 +5,19 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alert/
 """
 import asyncio
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_MESSAGE, DOMAIN as DOMAIN_NOTIFY)
+    ATTR_MESSAGE, ATTR_TITLE, DOMAIN as DOMAIN_NOTIFY)
 from homeassistant.const import (
     CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers import service, event
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +29,9 @@ CONF_CAN_ACK = 'can_acknowledge'
 CONF_NOTIFIERS = 'notifiers'
 CONF_REPEAT = 'repeat'
 CONF_SKIP_FIRST = 'skip_first'
+CONF_TITLE = 'title'
+CONF_DATA = 'data'
+CONF_DATA_TEMPLATE = 'data_template'
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
@@ -36,6 +39,9 @@ DEFAULT_SKIP_FIRST = False
 ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_DONE_MESSAGE): cv.string,
+    vol.Optional(CONF_TITLE): cv.string,
+    vol.Optional(CONF_DATA): dict,
+    vol.Optional(CONF_DATA_TEMPLATE): {cv.match_all: cv.template_complex},
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
     vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
@@ -48,7 +54,6 @@ CONFIG_SCHEMA = vol.Schema({
         cv.slug: ALERT_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
-
 
 ALERT_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -82,7 +87,9 @@ async def async_setup(hass, config):
     # Setup alerts
     for entity_id, alert in alerts.items():
         entity = Alert(hass, entity_id,
-                       alert[CONF_NAME], alert.get(CONF_DONE_MESSAGE),
+                       alert[CONF_NAME], alert.get(CONF_TITLE),
+                       alert.get(CONF_DATA), alert.get(CONF_DATA_TEMPLATE),
+                       alert.get(CONF_DONE_MESSAGE),
                        alert[CONF_ENTITY_ID], alert[CONF_STATE],
                        alert[CONF_REPEAT], alert[CONF_SKIP_FIRST],
                        alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK])
@@ -109,11 +116,14 @@ async def async_setup(hass, config):
 class Alert(ToggleEntity):
     """Representation of an alert."""
 
-    def __init__(self, hass, entity_id, name, done_message, watched_entity_id,
+    def __init__(self, hass, entity_id, name, title, data, data_template, done_message, watched_entity_id,
                  state, repeat, skip_first, notifiers, can_ack):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
+        self._title = title
+        self._data = data
+        self._data_template = data_template
         self._alert_state = state
         self._skip_first = skip_first
         self._notifiers = notifiers
@@ -204,18 +214,61 @@ class Alert(ToggleEntity):
         if not self._ack:
             _LOGGER.info("Alerting: %s", self._name)
             self._send_done_message = True
+
+            msg_payload = {ATTR_MESSAGE: self._name}
+
+            if self._title:
+                msg_payload.update({ATTR_TITLE: self._title})
+
+            if self._data:
+                msg_payload.update(self._data)
+            elif self._data_template:
+                def _data_template_creator(value):
+                    """Recursive template creator helper function."""
+                    if isinstance(value, list):
+                        return [_data_template_creator(item) for item in value]
+                    if isinstance(value, dict):
+                        return {key: _data_template_creator(item)
+                                for key, item in value.items()}
+                    value.hass = self.hass
+                    return value.async_render(self._data_template)
+
+                msg_payload.update(_data_template_creator(self._data_template))
+
             for target in self._notifiers:
                 await self.hass.services.async_call(
-                    DOMAIN_NOTIFY, target, {ATTR_MESSAGE: self._name})
+                    DOMAIN_NOTIFY, target, msg_payload)
         await self._schedule_notify()
 
     async def _notify_done_message(self, *args):
         """Send notification of complete alert."""
         _LOGGER.info("Alerting: %s", self._done_message)
         self._send_done_message = False
+
+        msg_payload = {ATTR_MESSAGE: self._done_message}
+
+        if self._title:
+            msg_payload.update({ATTR_TITLE: self._title})
+
+        if self._data:
+            msg_payload.update(self._data)
+        elif self._data_template:
+            def _data_template_creator(value):
+
+                """Recursive template creator helper function."""
+                if isinstance(value, list):
+                    return [_data_template_creator(item) for item in value]
+                if isinstance(value, dict):
+                    return {key: _data_template_creator(item)
+                            for key, item in value.items()}
+                value.hass = self.hass
+                return value.async_render(self._data_template)
+
+            msg_payload.update(_data_template_creator(self._data_template))
+
         for target in self._notifiers:
             await self.hass.services.async_call(
-                DOMAIN_NOTIFY, target, {ATTR_MESSAGE: self._done_message})
+                DOMAIN_NOTIFY, target, msg_payload)
 
     async def async_turn_on(self, **kwargs):
         """Async Unacknowledge alert."""
