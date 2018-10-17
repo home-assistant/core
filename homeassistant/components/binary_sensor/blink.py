@@ -36,6 +36,7 @@ class BlinkBinarySensor(BinarySensorDevice):
         self._icon = icon
         self._camera = data.sync.cameras[camera]
         self._state = None
+        self._unique_id = "{}-{}".format(self._camera.serial, self._type)
 
     @property
     def name(self):
