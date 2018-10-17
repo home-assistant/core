@@ -159,6 +159,7 @@ class TestYAML(unittest.TestCase):
             data = load_config(fname)
         self.assertEqual(data, self.yaml.load(TEST_YAML_B))
 
+
 async def test_deprecated_lovelace_ui(hass, hass_ws_client):
     """Test lovelace_ui command."""
     await async_setup_component(hass, 'lovelace')
