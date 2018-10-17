@@ -145,7 +145,8 @@ def _parse_see_args(message, subscribe_topic):
         kwargs['attributes']['course'] = message['cog']
     if 'tst' in message:
         kwargs['attributes']['timestamp'] = datetime.utcfromtimestamp(
-            float(message['tst'])).replace(tzinfo=timezone.utc).astimezone().isoformat()
+            float(message['tst'])).replace(
+            tzinfo=timezone.utc).astimezone().isoformat()
     if 't' in message:
         if message['t'] == 'c':
             kwargs['attributes'][ATTR_SOURCE_TYPE] = SOURCE_TYPE_GPS
