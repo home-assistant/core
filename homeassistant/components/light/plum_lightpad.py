@@ -104,7 +104,6 @@ class GlowRing(Light):
         self._red = lightpad.glow_color['red']
         self._green = lightpad.glow_color['green']
         self._blue = lightpad.glow_color['blue']
-        self._white = lightpad.glow_color['white']
 
     async def async_added_to_hass(self):
         """Subscribe to configchange events."""
@@ -121,7 +120,6 @@ class GlowRing(Light):
         self._red = config['glowColor']['red']
         self._green = config['glowColor']['green']
         self._blue = config['glowColor']['blue']
-        self._white = config['glowColor']['white']
 
         self.schedule_update_ha_state()
 
