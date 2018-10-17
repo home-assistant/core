@@ -1,8 +1,8 @@
 """Test the Lovelace initialization."""
 import os
 import unittest
-from tempfile import mkdtemp
 from unittest.mock import patch
+from tempfile import mkdtemp
 from ruamel.yaml import YAML
 
 from homeassistant.exceptions import HomeAssistantError
@@ -145,16 +145,18 @@ class TestYAML(unittest.TestCase):
 
     def test_add_id(self):
         """Test if id is added."""
+        fname = self._path_for("test6")
         with patch('homeassistant.components.lovelace.load_yaml',
                    return_value=self.yaml.load(TEST_YAML_A)):
-            data = load_config('test.yaml')
+            data = load_config(fname)
         assert 'id' in data['views'][0]['cards'][0]
 
     def test_id_not_changed(self):
         """Test if id is not changed if already exists."""
+        fname = self._path_for("test7")
         with patch('homeassistant.components.lovelace.load_yaml',
                    return_value=self.yaml.load(TEST_YAML_B)):
-            data = load_config('test.yaml')
+            data = load_config(fname)
         self.assertEqual(data, self.yaml.load(TEST_YAML_B))
 
 async def test_deprecated_lovelace_ui(hass, hass_ws_client):
