@@ -43,11 +43,17 @@ class BlinkSensor(Entity):
         self._state = None
         self._unit_of_measurement = units
         self._icon = icon
+        self._unique_id = "{}-{}".format(self._camera.serial, self._type)
 
     @property
     def name(self):
         """Return the name of the camera."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id for the camera sensor."""
+        return self._unique_id
 
     @property
     def icon(self):

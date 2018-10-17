@@ -185,7 +185,7 @@ bellows==0.7.0
 bimmer_connected==0.5.3
 
 # homeassistant.components.blink
-blinkpy==0.9.0
+blinkpy==0.10.0
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
