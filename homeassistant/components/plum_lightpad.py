@@ -55,10 +55,6 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass, 'light', DOMAIN,
-                    discovered=device, hass_config=conf)),
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass, 'sensor', DOMAIN,
                     discovered=device, hass_config=conf))
         ])
 
@@ -68,10 +64,6 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass, 'light', DOMAIN,
-                    discovered=device, hass_config=conf)),
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass, 'binary_sensor', DOMAIN,
                     discovered=device, hass_config=conf))
         ])
 
