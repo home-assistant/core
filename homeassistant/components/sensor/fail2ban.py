@@ -26,8 +26,9 @@ CONF_JAILS = 'jails'
 
 DEFAULT_NAME = 'fail2ban'
 DEFAULT_LOG = '/var/log/fail2ban.log'
-SCAN_INTERVAL = timedelta(seconds=120)
+DEFAULT_SCAN_INTERVAL = 120
 
+STATE_LAST_BAN = 'last_ban'
 STATE_CURRENT_BANS = 'current_bans'
 STATE_ALL_BANS = 'total_bans'
 
@@ -43,7 +44,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the fail2ban sensor."""
     name = config.get(CONF_NAME)
     jails = config.get(CONF_JAILS)
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     log_file = config.get(CONF_FILE_PATH, DEFAULT_LOG)
 
     device_list = []
@@ -61,13 +62,15 @@ class BanSensor(Entity):
         """Initialize the sensor."""
         self._name = '{} {}'.format(name, jail)
         self.jail = jail
-        self.ban_dict = {STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
-        self.last_ban = None
+        self.ban_dict = {STATE_LAST_BAN: None, STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
+        self.number = 0
         self.log_parser = log_parser
         self.log_parser.ip_regex[self.jail] = re.compile(
-            r"\[{}\].(Ban|Unban) ([\w+\.]{{3,}})".format(re.escape(self.jail))
+            r"\[{}\]\s*(Ban|Unban) (.*)".format(re.escape(self.jail))
         )
-        _LOGGER.debug("Setting up jail %s", self.jail)
+        _LOGGER.info("Setting up jail %s", self.jail)
+        _LOGGER.debug("Regex: %s", str(self.log_parser.ip_regex[self.jail]))
+        self.log_parser.read_log(self.jail)
 
     @property
     def name(self):
@@ -81,24 +84,25 @@ class BanSensor(Entity):
 
     @property
     def state(self):
-        """Return the most recently banned IP Address."""
-        return self.last_ban
+        """Return the number of currently banned IP Address."""
+        return self.number
 
     def update(self):
         """Update the list of banned ips."""
         if self.log_parser.timer():
             self.log_parser.read_log(self.jail)
 
-        if self.log_parser.data:
-            for entry in self.log_parser.data:
+        if self.log_parser.data and self.jail in self.log_parser.data:
+            for entry in self.log_parser.data[self.jail]:
                 _LOGGER.debug(entry)
                 current_ip = entry[1]
                 if entry[0] == 'Ban':
                     if current_ip not in self.ban_dict[STATE_CURRENT_BANS]:
                         self.ban_dict[STATE_CURRENT_BANS].append(current_ip)
+                        self.ban_dict[STATE_LAST_BAN] = current_ip
                     if current_ip not in self.ban_dict[STATE_ALL_BANS]:
                         self.ban_dict[STATE_ALL_BANS].append(current_ip)
-                    if len(self.ban_dict[STATE_ALL_BANS]) > 10:
+                    if len(self.ban_dict[STATE_ALL_BANS]) > 1000:
                         self.ban_dict[STATE_ALL_BANS].pop(0)
 
                 elif entry[0] == 'Unban':
@@ -106,9 +110,9 @@ class BanSensor(Entity):
                         self.ban_dict[STATE_CURRENT_BANS].remove(current_ip)
 
         if self.ban_dict[STATE_CURRENT_BANS]:
-            self.last_ban = self.ban_dict[STATE_CURRENT_BANS][-1]
+            self.number = len(self.ban_dict[STATE_CURRENT_BANS])
         else:
-            self.last_ban = 'None'
+            self.number = 0
 
 
 class BanLogParser:
@@ -116,9 +120,9 @@ class BanLogParser:
 
     def __init__(self, interval, log_file):
         """Initialize the parser."""
-        self.interval = interval
+        self.interval = timedelta(seconds=interval)
         self.log_file = log_file
-        self.data = list()
+        self.data = dict()
         self.last_update = dt_util.now()
         self.ip_regex = dict()
 
@@ -132,10 +136,11 @@ class BanLogParser:
 
     def read_log(self, jail):
         """Read the fail2ban log and find entries for jail."""
-        self.data = list()
+        self.data[jail] = list()
         try:
             with open(self.log_file, 'r', encoding='utf-8') as file_data:
-                self.data = self.ip_regex[jail].findall(file_data.read())
+                self.data[jail] = self.ip_regex[jail].findall(file_data.read())
+                _LOGGER.debug("Parsed log file for jail : %s, %d results.", jail, len(self.data[jail]) if self.data and jail in self.data else 0)
 
         except (IndexError, FileNotFoundError, IsADirectoryError,
                 UnboundLocalError):
