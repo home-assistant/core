@@ -18,7 +18,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['axis==14']
+REQUIREMENTS = ['axis==15']
 
 _LOGGER = logging.getLogger(__name__)
 
