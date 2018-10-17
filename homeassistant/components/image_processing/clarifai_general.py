@@ -8,7 +8,6 @@ import base64
 import json
 import logging
 
-import requests
 import voluptuous as vol
 
 from homeassistant.core import split_entity_id
@@ -24,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 CLASSIFIER = 'Clarifai'
 CONF_API_KEY = 'api_key'
 
-REQUIREMENTS = ['clarifai==2.3.2']
+REQUIREMENTS = ['clarifai==2.4.0']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -92,11 +91,13 @@ class ClarifaiClassifier(ImageProcessingEntity):
     def model_prediction(self, image):
         """Make a prediction based on an image."""
         try:
+            from clarifai.rest import ApiError
             response = self.model.predict_by_base64(encode_image(image))
             if response['status']['description'] == 'Ok':
                 return response
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("ConnectionError: Is %s accessible?", CLASSIFIER)
+        except ApiError:
+            _LOGGER.error("%s error: check your internet connection",
+                          CLASSIFIER)
             return None
 
     def process_image(self, image):
