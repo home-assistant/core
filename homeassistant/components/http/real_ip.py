@@ -1,6 +1,7 @@
 """Middleware to fetch real IP."""
 
 from ipaddress import ip_address
+from socket import AF_UNIX
 
 from aiohttp.web import middleware
 from aiohttp.hdrs import X_FORWARDED_FOR
@@ -16,8 +17,11 @@ def setup_real_ip(app, use_x_forwarded_for, trusted_proxies):
     @middleware
     async def real_ip_middleware(request, handler):
         """Real IP middleware."""
-        connected_ip = ip_address(
-            request.transport.get_extra_info('peername')[0])
+        if request.transport.get_extra_info('socket').family is AF_UNIX:
+            connected_ip = ip_address("127.0.0.1")
+        else:
+            connected_ip = ip_address(
+                request.transport.get_extra_info('peername')[0])
         request[KEY_REAL_IP] = connected_ip
 
         # Only use the XFF header if enabled, present, and from a trusted proxy

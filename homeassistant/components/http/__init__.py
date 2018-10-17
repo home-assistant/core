@@ -49,6 +49,7 @@ CONF_TRUSTED_PROXIES = 'trusted_proxies'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
+CONF_UNIX_SOCKET = 'unix_socket'
 CONF_SSL_PROFILE = 'ssl_profile'
 
 SSL_MODERN = 'modern'
@@ -79,6 +80,7 @@ HTTP_SCHEMA = vol.Schema({
                  default=NO_LOGIN_ATTEMPT_THRESHOLD):
         vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
     vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+    vol.Optional(CONF_UNIX_SOCKET): cv.string,
     vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN):
         vol.In([SSL_INTERMEDIATE, SSL_MODERN]),
 })
@@ -129,6 +131,7 @@ async def async_setup(hass, config):
     trusted_networks = conf[CONF_TRUSTED_NETWORKS]
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
+    unix_socket = conf.get(CONF_UNIX_SOCKET)
     ssl_profile = conf[CONF_SSL_PROFILE]
 
     if api_password is not None:
@@ -149,6 +152,7 @@ async def async_setup(hass, config):
         trusted_networks=trusted_networks,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
+        unix_socket=unix_socket,
         ssl_profile=ssl_profile,
     )
 
@@ -189,7 +193,8 @@ class HomeAssistantHTTP:
                  ssl_certificate, ssl_peer_certificate,
                  ssl_key, server_host, server_port, cors_origins,
                  use_x_forwarded_for, trusted_proxies, trusted_networks,
-                 login_threshold, is_ban_enabled, ssl_profile):
+                 login_threshold, is_ban_enabled, ssl_profile,
+                 unix_socket=None):
         """Initialize the HTTP Home Assistant server."""
         app = self.app = web.Application(
             middlewares=[staticresource_middleware])
@@ -222,10 +227,12 @@ class HomeAssistantHTTP:
         self.server_port = server_port
         self.trusted_networks = trusted_networks
         self.is_ban_enabled = is_ban_enabled
+        self.socket = unix_socket
         self.ssl_profile = ssl_profile
         self._handler = None
         self.runner = None
         self.site = None
+        self.site_socket = None
 
     def register_view(self, view):
         """Register a view with the WSGI server.
@@ -347,7 +354,22 @@ class HomeAssistantHTTP:
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
                           self.server_port, error)
 
+        if self.socket:
+            try:
+                if os.path.isfile(self.socket):
+                    os.remove(self.socket)
+
+                self.site_socket = web.UnixSite(self.runner, self.socket,
+                                                ssl_context=None)
+                await self.site_socket.start()
+            except OSError as error:
+                _LOGGER.error("Failed to create UNIX socket %s: %s",
+                              self.socket, error)
+
     async def stop(self):
         """Stop the aiohttp server."""
         await self.site.stop()
+        if self.site_socket:
+            await self.site_socket.stop()
+            os.remove(self.socket)
         await self.runner.cleanup()
