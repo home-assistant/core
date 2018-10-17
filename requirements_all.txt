@@ -1173,6 +1173,7 @@ python-pushover==0.3
 # homeassistant.components.sensor.ripple
 python-ripple-api==0.0.3
 
+# homeassistant.components.roku
 # homeassistant.components.media_player.roku
 python-roku==3.1.5
 

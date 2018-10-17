@@ -1,28 +1,24 @@
 """
-Support for the roku media player.
+Support for the Roku media player.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.roku/
 """
 import logging
 
-import voluptuous as vol
-
+from homeassistant.components.roku import (DATA_ENTITIES)
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MOVIE, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
+    MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
-import homeassistant.helpers.config_validation as cv
+    CONF_NAME, CONF_HOST, STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
 
 REQUIREMENTS = ['python-roku==3.1.5']
 
-KNOWN_HOSTS = []
-DEFAULT_PORT = 8060
+DEPENDENCIES = ['roku']
 
-NOTIFICATION_ID = 'roku_notification'
-NOTIFICATION_TITLE = 'Roku Media Player Setup'
+DEFAULT_PORT = 8060
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,56 +26,31 @@ SUPPORT_ROKU = SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-})
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Roku platform."""
-    hosts = []
+    if not discovery_info:
+        return
 
-    if discovery_info:
-        host = discovery_info.get('host')
+    # Manage entity cache for service handler
+    if DATA_ENTITIES not in hass.data:
+        hass.data[DATA_ENTITIES] = []
 
-        if host in KNOWN_HOSTS:
-            return
+    name = discovery_info[CONF_NAME]
+    host = discovery_info[CONF_HOST]
+    entity = RokuDevice(host, name)
 
-        _LOGGER.debug("Discovered Roku: %s", host)
-        hosts.append(discovery_info.get('host'))
+    if entity not in hass.data[DATA_ENTITIES]:
+        hass.data[DATA_ENTITIES].append(entity)
 
-    elif CONF_HOST in config:
-        hosts.append(config.get(CONF_HOST))
-
-    rokus = []
-    for host in hosts:
-        new_roku = RokuDevice(host)
-
-        try:
-            if new_roku.name is not None:
-                rokus.append(RokuDevice(host))
-                KNOWN_HOSTS.append(host)
-            else:
-                _LOGGER.error("Unable to initialize roku at %s", host)
-
-        except AttributeError:
-            _LOGGER.error("Unable to initialize roku at %s", host)
-            hass.components.persistent_notification.create(
-                'Error: Unable to initialize roku at {}<br />'
-                'Check its network connection or consider '
-                'using auto discovery.<br />'
-                'You will need to restart hass after fixing.'
-                ''.format(config.get(CONF_HOST)),
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
-
-    add_entities(rokus)
+    async_add_entities([entity])
 
 
 class RokuDevice(MediaPlayerDevice):
     """Representation of a Roku device on the network."""
 
-    def __init__(self, host):
+    def __init__(self, host, name):
         """Initialize the Roku device."""
         from roku import Roku
 
@@ -88,7 +59,9 @@ class RokuDevice(MediaPlayerDevice):
         self.channels = []
         self.current_app = None
         self._device_info = {}
+        self.device_name = name
 
+        """fetch device info right away"""
         self.update()
 
     def update(self):
@@ -121,9 +94,7 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        if self._device_info.userdevicename:
-            return self._device_info.userdevicename
-        return "Roku {}".format(self._device_info.sernum)
+        return self.device_name
 
     @property
     def state(self):
@@ -134,9 +105,9 @@ class RokuDevice(MediaPlayerDevice):
         if (self.current_app.name == "Power Saver" or
                 self.current_app.is_screensaver):
             return STATE_IDLE
-        if self.current_app.name == "Roku":
+        elif self.current_app.name == "Roku":
             return STATE_HOME
-        if self.current_app.name is not None:
+        elif self.current_app.name is not None:
             return STATE_PLAYING
 
         return STATE_UNKNOWN
@@ -156,9 +127,9 @@ class RokuDevice(MediaPlayerDevice):
         """Content type of current playing media."""
         if self.current_app is None:
             return None
-        if self.current_app.name == "Power Saver":
+        elif self.current_app.name == "Power Saver":
             return None
-        if self.current_app.name == "Roku":
+        elif self.current_app.name == "Roku":
             return None
         return MEDIA_TYPE_MOVIE
 
