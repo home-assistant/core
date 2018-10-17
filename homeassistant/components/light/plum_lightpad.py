@@ -20,17 +20,18 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     plum = hass.data[PLUM_DATA]
 
+    entities = []
+
     if 'lpid' in discovery_info:
         lightpad = plum.get_lightpad(discovery_info['lpid'])
-        async_add_entities([
-            GlowRing(lightpad=lightpad)
-        ])
+        entities.append(GlowRing(lightpad=lightpad))
 
     if 'llid' in discovery_info:
         logical_load = plum.get_load(discovery_info['llid'])
-        async_add_entities([
-            PlumLight(load=logical_load)
-        ])
+        entities.append(PlumLight(load=logical_load))
+
+    if entities:
+        async_add_entities(entities)
 
 
 class PlumLight(Light):
