@@ -37,7 +37,7 @@ def save_yaml(fname: str, data: JSON_TYPE):
     yaml.indent(sequence=4, offset=2)
     tmp_fname = fname + "__TEMP__"
     try:
-        with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC, 0o600),
+        with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC, 0o644),
                   'w', encoding='utf-8') as temp_file:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
