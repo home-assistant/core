@@ -68,13 +68,14 @@ async def async_setup_platform(hass, config, async_add_entities,
         accounts = converter.serialize(
             endpoint.MonetaryAccount.list().value)
         # create and add the devices to the list
-        for acc in accounts:
-            accs.append(BunqAccountSensor(
+        accs = [
+            BunqAccountSensor(
                 acc['MonetaryAccountBank']['description'],
                 acc['MonetaryAccountBank']['id'],
                 acc['MonetaryAccountBank']['currency'],
-                float(acc['MonetaryAccountBank']['balance']['value'])
-                ))
+                float(acc['MonetaryAccountBank']['balance']['value']))
+            for acc in accounts
+            ]
         async_add_entities(accs)
         # create the refresh object
         data = BunqData(hass, bunq_context, accs)
@@ -173,7 +174,7 @@ class BunqData:
             if acc.load_data(self.data):
                 tasks.append(acc.async_update_ha_state())
         if tasks:
-            await asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks)
 
     async def schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""
@@ -189,8 +190,9 @@ class BunqData:
 
         try:
             # get the account list which includes the balance
-            accounts = await self.hass.async_add_executor_job(
-                converter.serialize, endpoint.MonetaryAccount.list().value)
+            acc_resp = await self.hass.async_add_executor_job(
+                endpoint.MonetaryAccount.list)
+            accounts = converter.serialize(acc_resp.value)
             # create a dict with the id and the balance value
             self.data = {
                 a['MonetaryAccountBank']['id']:
@@ -209,6 +211,3 @@ class BunqData:
             # or the api call
             # log the error and raise HA error
             _LOGGER.error(err)
-        finally:
-            # schedule the next refresh (default 2 hours)
-            await self.schedule_update(INTERVAL_TO_NEXT_REFRESH)
