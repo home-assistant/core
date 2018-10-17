@@ -142,14 +142,28 @@ def test_write_user_info():
 
 @asyncio.coroutine
 def test_subscription_expired(hass):
-    """Test subscription being expired."""
+    """Test subscription being expired after 3 days of expiration."""
     cl = cloud.Cloud(hass, cloud.MODE_DEV, None, None)
     token_val = {
         'custom:sub-exp': '2017-11-13'
     }
     with patch.object(cl, '_decode_claims', return_value=token_val), \
             patch('homeassistant.util.dt.utcnow',
-                  return_value=utcnow().replace(year=2018)):
+                  return_value=utcnow().replace(year=2017, month=11, day=13)):
+        assert not cl.subscription_expired
+
+    with patch.object(cl, '_decode_claims', return_value=token_val), \
+            patch('homeassistant.util.dt.utcnow',
+                  return_value=utcnow().replace(
+                      year=2017, month=11, day=15, hour=23, minute=59,
+                      second=59)):
+        assert not cl.subscription_expired
+
+    with patch.object(cl, '_decode_claims', return_value=token_val), \
+            patch('homeassistant.util.dt.utcnow',
+                  return_value=utcnow().replace(
+                      year=2017, month=11, day=16, hour=0, minute=0,
+                      second=0)):
         assert cl.subscription_expired
 
 
