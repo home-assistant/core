@@ -11,7 +11,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.components import alarm_control_panel
 import homeassistant.util.dt as dt_util
-from tests.common import (fire_time_changed, get_test_home_assistant, 
+from tests.common import (fire_time_changed, get_test_home_assistant,
         mock_component, mock_restore_cache)
 from tests.components.alarm_control_panel import common
 from homeassistant.core import State, CoreState
@@ -1320,6 +1320,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(STATE_ALARM_TRIGGERED, state.state)
 
+
 @asyncio.coroutine
 def test_restore_armed_state(hass):
     """Ensure armed state is restored on startup."""
@@ -1331,17 +1332,18 @@ def test_restore_armed_state(hass):
     mock_component(hass, 'recorder')
 
     yield from async_setup_component(hass, alarm_control_panel.DOMAIN,
-        {'alarm_control_panel': {
-            'platform': 'manual',
-            'name': 'test',
-            'pending_time': 0,
-            'trigger_time': 0,
-            'disarm_after_trigger': False
-        }})
-    
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'pending_time': 0,
+                'trigger_time': 0,
+                'disarm_after_trigger': False
+            }})
+
     state = hass.states.get('alarm_control_panel.test')
     assert state
     assert state.state == STATE_ALARM_ARMED_AWAY
+
 
 @asyncio.coroutine
 def test_restore_disarmed_state(hass):
@@ -1354,15 +1356,14 @@ def test_restore_disarmed_state(hass):
     mock_component(hass, 'recorder')
 
     yield from async_setup_component(hass, alarm_control_panel.DOMAIN,
-        {'alarm_control_panel': {
-            'platform': 'manual',
-            'name': 'test',
-            'pending_time': 0,
-            'trigger_time': 0,
-            'disarm_after_trigger': False
-        }})
-    
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'pending_time': 0,
+                'trigger_time': 0,
+                'disarm_after_trigger': False
+            }})
+
     state = hass.states.get('alarm_control_panel.test')
     assert state
     assert state.state == STATE_ALARM_DISARMED
-
