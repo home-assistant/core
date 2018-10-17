@@ -18,12 +18,13 @@ NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
 NOTIFIER = 'test'
 TEMPLATE = "{{ states.sensor.test.entity_id }}"
+TEST_ENTITY = "sensor.test"
 TEST_CONFIG = \
     {alert.DOMAIN: {
         NAME: {
             CONF_NAME: NAME,
             alert.CONF_DONE_MESSAGE: DONE_MESSAGE,
-            CONF_ENTITY_ID: "sensor.test",
+            CONF_ENTITY_ID: TEST_ENTITY,
             CONF_STATE: STATE_ON,
             alert.CONF_REPEAT: 30,
             alert.CONF_SKIP_FIRST: False,
@@ -102,6 +103,19 @@ class TestAlert(unittest.TestCase):
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
+
+    def _setup_notify(self):
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.services.register(
+            notify.DOMAIN, NOTIFIER, record_event)
+
+        return events
 
     def test_is_on(self):
         """Test is_on method."""
@@ -231,29 +245,29 @@ class TestAlert(unittest.TestCase):
 
     def test_sending_non_templated_notification(self):
         """Test notifications."""
-        self._setup_notify()
+        events = self._setup_notify()
 
-        config = deepcopy(TEST_CONFIG)
-        del(config[alert.DOMAIN][NAME][alert.CONF_MESSAGE_TEMPLATE])
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
 
-        self.hass.states.set("sensor.test", STATE_ON)
+        self.hass.states.set(TEST_ENTITY, STATE_ON)
         self.hass.block_till_done()
-        last_event = self.events[-1]
+        self.assertEqual(1, len(events))
+        last_event = events[-1]
         self.assertEqual(last_event.data[notify.ATTR_MESSAGE], NAME)
 
     def test_sending_templated_notification(self):
         """Test templated notification."""
-        self._setup_notify()
+        events = self._setup_notify()
 
         config = deepcopy(TEST_CONFIG)
         config[alert.DOMAIN][NAME][alert.CONF_MESSAGE_TEMPLATE] = TEMPLATE
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
+        assert setup_component(self.hass, alert.DOMAIN, config)
 
-        self.hass.states.set("sensor.test", STATE_ON)
+        self.hass.states.set(TEST_ENTITY, STATE_ON)
         self.hass.block_till_done()
-        last_event = self.events[-1]
-        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], CONF_ENTITY_ID)
+        self.assertEqual(1, len(events))
+        last_event = events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], TEST_ENTITY)
 
     def test_skipfirst(self):
         """Test skipping first notification."""
