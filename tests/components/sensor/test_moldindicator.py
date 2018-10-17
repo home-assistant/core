@@ -5,8 +5,7 @@ from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.components.sensor.mold_indicator import (ATTR_DEWPOINT,
                                                             ATTR_CRITICAL_TEMP)
-from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT,
-                                 TEMP_CELSIUS)
+from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 
 from tests.common import get_test_home_assistant
 
@@ -67,8 +66,8 @@ class TestSensorMoldIndicator(unittest.TestCase):
         moldind = self.hass.states.get('sensor.mold_indicator')
         assert moldind
         assert moldind.state == 'unavailable'
-        assert moldind.attributes.get(ATTR_DEWPOINT) == None
-        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) == None
+        assert moldind.attributes.get(ATTR_DEWPOINT) is None
+        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
     def test_invalidhum(self):
         """Test invalid sensor values."""
@@ -94,8 +93,8 @@ class TestSensorMoldIndicator(unittest.TestCase):
         moldind = self.hass.states.get('sensor.mold_indicator')
         assert moldind
         assert moldind.state == 'unavailable'
-        assert moldind.attributes.get(ATTR_DEWPOINT) == None
-        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) == None
+        assert moldind.attributes.get(ATTR_DEWPOINT) is None
+        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
         self.hass.states.set('test.indoorhumidity', 'A',
                              {ATTR_UNIT_OF_MEASUREMENT: '%'})
@@ -103,9 +102,8 @@ class TestSensorMoldIndicator(unittest.TestCase):
         moldind = self.hass.states.get('sensor.mold_indicator')
         assert moldind
         assert moldind.state == 'unavailable'
-        assert moldind.attributes.get(ATTR_DEWPOINT) == None
-        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) == None
-
+        assert moldind.attributes.get(ATTR_DEWPOINT) is None
+        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
         self.hass.states.set('test.indoorhumidity', '10',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
@@ -113,8 +111,8 @@ class TestSensorMoldIndicator(unittest.TestCase):
         moldind = self.hass.states.get('sensor.mold_indicator')
         assert moldind
         assert moldind.state == 'unavailable'
-        assert moldind.attributes.get(ATTR_DEWPOINT) == None
-        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) == None
+        assert moldind.attributes.get(ATTR_DEWPOINT) is None
+        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
     def test_calculation(self):
         """Test the mold indicator internal calculations."""
@@ -168,8 +166,8 @@ class TestSensorMoldIndicator(unittest.TestCase):
         moldind = self.hass.states.get('sensor.mold_indicator')
         assert moldind
         assert moldind.state == 'unavailable'
-        assert moldind.attributes.get(ATTR_DEWPOINT) == None
-        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) == None
+        assert moldind.attributes.get(ATTR_DEWPOINT) is None
+        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
         self.hass.states.set('test.indoortemp', '30',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
@@ -179,8 +177,8 @@ class TestSensorMoldIndicator(unittest.TestCase):
         moldind = self.hass.states.get('sensor.mold_indicator')
         assert moldind
         assert moldind.state == 'unavailable'
-        assert moldind.attributes.get(ATTR_DEWPOINT) == None
-        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) == None
+        assert moldind.attributes.get(ATTR_DEWPOINT) is None
+        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
         self.hass.states.set('test.outdoortemp', '25',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
@@ -190,8 +188,8 @@ class TestSensorMoldIndicator(unittest.TestCase):
         moldind = self.hass.states.get('sensor.mold_indicator')
         assert moldind
         assert moldind.state == 'unavailable'
-        assert moldind.attributes.get(ATTR_DEWPOINT) == None
-        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) == None
+        assert moldind.attributes.get(ATTR_DEWPOINT) is None
+        assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
         self.hass.states.set('test.indoorhumidity', '20',
                              {ATTR_UNIT_OF_MEASUREMENT: '%'})
