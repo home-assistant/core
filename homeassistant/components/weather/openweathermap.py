@@ -149,13 +149,15 @@ class OpenWeatherMapWeather(WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         data = []
+
         def calc_precipitation(rain, snow):
             rain_value = 0 if rain is None else rain
             snow_value = 0 if snow is None else snow
-            if round(rain_value+snow_value, 1)==0:
+            if round(rain_value + snow_value, 1) == 0:
                 return None
             else:
-                return round(rain_value+snow_value, 1)
+                return round(rain_value + snow_value, 1)
+
         for entry in self.forecast_data.get_weathers():
             if self._mode == 'daily':
                 data.append({
