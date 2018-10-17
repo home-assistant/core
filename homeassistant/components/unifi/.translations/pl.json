@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Witryna kontrolera jest ju\u017c skonfigurowana",
+            "user_privilege": "U\u017cytkownik musi by\u0107 administratorem"
+        },
+        "error": {
+            "faulty_credentials": "B\u0142\u0119dne dane uwierzytelniaj\u0105ce",
+            "service_unavailable": "Brak dost\u0119pnych us\u0142ug"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "site": "Identyfikator witryny",
+                    "username": "Nazwa u\u017cytkownika",
+                    "verify_ssl": "Kontroler u\u017cywa prawid\u0142owego certyfikatu"
+                },
+                "title": "Skonfiguruj kontroler UniFi"
+            }
+        },
+        "title": "Kontroler UniFi"
+    }
+}
