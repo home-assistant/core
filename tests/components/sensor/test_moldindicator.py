@@ -5,7 +5,8 @@ from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.components.sensor.mold_indicator import (ATTR_DEWPOINT,
                                                             ATTR_CRITICAL_TEMP)
-from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS)
 
 from tests.common import get_test_home_assistant
 
@@ -160,7 +161,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         }))
         self.hass.start()
 
-        self.hass.states.set('test.indoortemp', 'UNKNOWN',
+        self.hass.states.set('test.indoortemp', STATE_UNKNOWN,
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
         moldind = self.hass.states.get('sensor.mold_indicator')
@@ -171,7 +172,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
 
         self.hass.states.set('test.indoortemp', '30',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.states.set('test.outdoortemp', 'UNKNOWN',
+        self.hass.states.set('test.outdoortemp', STATE_UNKNOWN,
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
         moldind = self.hass.states.get('sensor.mold_indicator')
@@ -182,7 +183,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
 
         self.hass.states.set('test.outdoortemp', '25',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.states.set('test.indoorhumidity', 'UNKNOWN',
+        self.hass.states.set('test.indoorhumidity', STATE_UNKNOWN,
                              {ATTR_UNIT_OF_MEASUREMENT: '%'})
         self.hass.block_till_done()
         moldind = self.hass.states.get('sensor.mold_indicator')

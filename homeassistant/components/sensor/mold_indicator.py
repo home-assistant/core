@@ -151,16 +151,16 @@ class MoldIndicator(Entity):
 
         # Return an error if the sensor change its state to Unknown.
         if state.state == STATE_UNKNOWN:
-            _LOGGER.error("Unable to parse sensor temperature: %s",
-                          state.state)
+            _LOGGER.error("Unable to parse temperature sensor %s with state:"
+                          " %s", state.entity_id, state.state)
             return None
 
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         temp = util.convert(state.state, float)
 
         if temp is None:
-            _LOGGER.error("Unable to parse sensor temperature: %s",
-                          state.state)
+            _LOGGER.error("Unable to parse temperature sensor %s with state:"
+                          " %s", state.entity_id, state.state)
             return None
 
         # convert to celsius if necessary
@@ -168,8 +168,9 @@ class MoldIndicator(Entity):
             return util.temperature.fahrenheit_to_celsius(temp)
         if unit == TEMP_CELSIUS:
             return temp
-        _LOGGER.error("Temp sensor has unsupported unit: %s (allowed: %s, "
-                      "%s)", unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+        _LOGGER.error("Temp sensor %s has unsupported unit: %s (allowed: %s, "
+                      "%s)", state.entity_id, unit, TEMP_CELSIUS,
+                      TEMP_FAHRENHEIT)
 
         return None
 
@@ -180,26 +181,26 @@ class MoldIndicator(Entity):
 
         # Return an error if the sensor change its state to Unknown.
         if state.state == STATE_UNKNOWN:
-            _LOGGER.error('Unable to parse sensor humidity: %s',
-                          state.state)
+            _LOGGER.error('Unable to parse humidity sensor %s, state: %s',
+                          state.entity_id, state.state)
             return None
 
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         hum = util.convert(state.state, float)
 
         if hum is None:
-            _LOGGER.error("Unable to parse sensor humidity: %s",
-                          state.state)
+            _LOGGER.error("Unable to parse humidity sensor %s, state: %s",
+                          state.entity_id, state.state)
             return None
 
         if unit != '%':
-            _LOGGER.error("Humidity sensor has unsupported unit: %s %s",
-                          unit, " (allowed: %)")
+            _LOGGER.error("Humidity sensor %s has unsupported unit: %s %s",
+                          state.entity_id, unit, " (allowed: %)")
             return None
 
         if hum > 100 or hum < 0:
-            _LOGGER.error("Humidity sensor out of range: %s %s", hum,
-                          " (allowed: 0-100%)")
+            _LOGGER.error("Humidity sensor %s is out of range: %s %s",
+                          state.entity_id, hum, "(allowed: 0-100%)")
             return None
 
         return hum
