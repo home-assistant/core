@@ -17,6 +17,7 @@ from tests.common import get_test_home_assistant
 NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
 NOTIFIER = 'test'
+TEMPLATE = "{{ states.sensor.test.entity_id }}"
 TEST_CONFIG = \
     {alert.DOMAIN: {
         NAME: {
@@ -246,7 +247,7 @@ class TestAlert(unittest.TestCase):
         self._setup_notify()
 
         config = deepcopy(TEST_CONFIG)
-        config[alert.DOMAIN][NAME][alert.CONF_MESSAGE_TEMPLATE] = "{{ states.sensor.test.entity_id }}"
+        config[alert.DOMAIN][NAME][alert.CONF_MESSAGE_TEMPLATE] = TEMPLATE
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
 
         self.hass.states.set("sensor.test", STATE_ON)
