@@ -2,6 +2,7 @@
 import os
 import unittest
 from tempfile import mkdtemp
+from io import StringIO
 from unittest.mock import patch
 from ruamel.yaml import YAML
 
@@ -10,6 +11,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.components.lovelace import (load_yaml,
                                                save_yaml, load_config)
+
+from tests.common import patch_yaml_files
 
 TEST_YAML_A = """\
 title: My Awesome Home
@@ -145,18 +148,17 @@ class TestYAML(unittest.TestCase):
 
     def test_add_id(self):
         """Test if id is added."""
-        fname = self._path_for("test6")
-        save_yaml(fname, self.yaml.load(TEST_YAML_A))
-        data = load_config(fname)
+        with patch('homeassistant.components.lovelace.load_yaml',
+                   return_value=self.yaml.load(TEST_YAML_A)):
+            data = load_config('test.yaml')
         assert 'id' in data['views'][0]['cards'][0]
 
     def test_id_not_changed(self):
         """Test if id is not changed if already exists."""
-        fname = self._path_for("test7")
-        save_yaml(fname, self.yaml.load(TEST_YAML_B))
-        data = load_config(fname)
+        with patch('homeassistant.components.lovelace.load_yaml',
+                   return_value=self.yaml.load(TEST_YAML_B)):
+            data = load_config('test.yaml')
         self.assertEqual(data, self.yaml.load(TEST_YAML_B))
-
 
 async def test_deprecated_lovelace_ui(hass, hass_ws_client):
     """Test lovelace_ui command."""
