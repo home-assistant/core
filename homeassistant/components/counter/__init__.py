@@ -184,7 +184,7 @@ class Counter(RestoreEntity):
         await self.async_update_ha_state()
 
     async def async_setup(self, **kwargs):
-        """Setup the counter with a service"""
+        """Setup the counter with a service."""
         if CONF_MINIMUM in kwargs:
             self._min = kwargs[CONF_MINIMUM]
         if CONF_MAXIMUM in kwargs:
