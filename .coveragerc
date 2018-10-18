@@ -105,9 +105,6 @@ omit =
     homeassistant/components/elkm1/*
     homeassistant/components/*/elkm1.py
 
-    homeassistant/components/emulated_roku/*
-    homeassistant/components/*/emulated_roku.py
-
     homeassistant/components/enocean.py
     homeassistant/components/*/enocean.py
 

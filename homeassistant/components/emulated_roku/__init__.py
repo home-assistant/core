@@ -42,6 +42,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def create_emulated_roku(hass, config):
     """Set up an emulated roku server from a config entry."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
     name = config.get(CONF_NAME)
     listen_port = config.get(CONF_LISTEN_PORT)
     host_ip = config.get(CONF_HOST_IP) or util.get_local_ip()
@@ -68,8 +71,6 @@ async def create_emulated_roku(hass, config):
 
 async def async_setup(hass, config):
     """Set up the emulated roku component."""
-    hass.data[DOMAIN] = {}
-
     conf = config.get(DOMAIN)
 
     server_entries = configured_servers(hass)

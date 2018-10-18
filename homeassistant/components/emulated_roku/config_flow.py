@@ -33,23 +33,21 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(self, user_input=None):
-        """Handle an emulated_roku config flow start."""
         errors = {}
 
         if user_input is not None:
             name = slugify(user_input[CONF_NAME])
 
-            if name not in configured_servers(self.hass):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data=user_input
-                )
+            if name in configured_servers(self.hass):
+                return self.async_abort(reason='name_exists')
+
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data=user_input
+            )
 
         return self.async_show_form(
-            step_id='init',
+            step_id='user',
             data_schema=vol.Schema({
                 vol.Required(CONF_NAME): str,
                 vol.Required(CONF_LISTEN_PORT): vol.Coerce(int),
