@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up the Météo-France sensor."""
     location_id = config.get(CONF_LOCATION_ID)
     if len(location_id) == 5:  # convert insee code to needed meteofrance code
         location_id = str(location_id)+'0'
@@ -76,7 +76,6 @@ class MeteoFranceSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-
         if self.current_data and self.current_data.rain_forecast:
             self._time_to_rain = 0
             for interval in self.current_data.intervals:
@@ -86,7 +85,6 @@ class MeteoFranceSensor(Entity):
                 self._time_to_rain += 5
             self._unit = ""
             return "No rain"
-
         return STATE_UNKNOWN
 
     @property
