@@ -48,11 +48,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Received error from Meteo France: %s", err)
         return False
 
-    add_devices([ExampleSensor(meteofrance_data,location_name)])
+    add_devices([MeteoFranceSensor(meteofrance_data,location_name)])
 
 
 
-class ExampleSensor(Entity):
+class MeteoFranceSensor(Entity):
     """Representation of a Sensor."""
 
     def __init__(self, meteofrance_data, location_name):
