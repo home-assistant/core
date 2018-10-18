@@ -2,9 +2,10 @@
 import logging
 import uuid
 import os
-from os import O_WRONLY, O_CREAT, O_TRUNC
+from os import O_CREAT, O_TRUNC, O_WRONLY
 from collections import OrderedDict
-from typing import Union, List, Dict
+from typing import Dict, List, Union
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -117,7 +118,7 @@ def load_config(fname: str) -> JSON_TYPE:
 
 
 def object_to_yaml(data: JSON_TYPE) -> str:
-    """create yaml string from object."""
+    """Create yaml string from object."""
     from ruamel.yaml import YAML
     from ruamel.yaml.error import YAMLError
     from ruamel.yaml.compat import StringIO
@@ -133,11 +134,10 @@ def object_to_yaml(data: JSON_TYPE) -> str:
 
 
 def yaml_to_object(data: str) -> JSON_TYPE:
-    """create object from yaml string."""
+    """Create object from yaml string."""
     from ruamel.yaml import YAML
     from ruamel.yaml.error import YAMLError
     yaml = YAML(typ='rt')
-    yaml.preserve_quotes = True
     try:
         return yaml.load(data)
     except YAMLError as exc:
@@ -153,7 +153,8 @@ def get_card(fname: str, card_id: str) -> JSON_TYPE:
             if card.get('id') == card_id:
                 return object_to_yaml(card)
 
-    raise CardNotFoundError("Card with ID: {} was not found in {}.".format(card_id, fname))
+    raise CardNotFoundError(
+        "Card with ID: {} was not found in {}.".format(card_id, fname))
 
 
 def set_card(fname: str, card_id: str, card_config: str) -> bool:
@@ -167,7 +168,8 @@ def set_card(fname: str, card_id: str, card_config: str) -> bool:
                 # Do we want to return config on save?
                 return True
 
-    raise CardNotFoundError("Card with ID: {} was not found in {}.".format(card_id, fname))
+    raise CardNotFoundError(
+        "Card with ID: {} was not found in {}.".format(card_id, fname))
 
 
 async def async_setup(hass, config):
@@ -245,7 +247,7 @@ async def websocket_lovelace_set_card(hass, connection, msg):
     error = None
     try:
         result = await hass.async_add_executor_job(
-            set_card, hass.config.path(LOVELACE_CONFIG_FILE), 
+            set_card, hass.config.path(LOVELACE_CONFIG_FILE),
             msg['card_id'], msg['card_config'])
         message = websocket_api.result_message(
             msg['id'], result

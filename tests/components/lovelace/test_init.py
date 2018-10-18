@@ -55,6 +55,8 @@ views:
     # Title of the view. Will be used as the tooltip for tab icon
     title: Second view
     cards:
+      - id: test
+        type: entities
         # Entities card will take a list of entities and show their state.
       - type: entities
         # Title of the entities card
@@ -79,6 +81,7 @@ TEST_YAML_B = """\
 title: Home
 views:
   - title: Dashboard
+    id: dashboard
     icon: mdi:home
     cards:
       - id: testid
@@ -148,8 +151,11 @@ class TestYAML(unittest.TestCase):
         fname = self._path_for("test6")
         with patch('homeassistant.components.lovelace.load_yaml',
                    return_value=self.yaml.load(TEST_YAML_A)):
-            data = load_config(fname)
+            with patch('homeassistant.components.lovelace.save_yaml',
+                       return_value=None):
+                data = load_config(fname)
         assert 'id' in data['views'][0]['cards'][0]
+        assert 'id' in data['views'][1]
 
     def test_id_not_changed(self):
         """Test if id is not changed if already exists."""
@@ -272,3 +278,24 @@ async def test_lovelace_ui_load_err(hass, hass_ws_client):
     assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
     assert msg['error']['code'] == 'load_error'
+
+
+async def test_lovelace_get_card(hass, hass_ws_client):
+    """Test lovelace_ui command cannot find file."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.components.lovelace.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)):
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/card/get',
+            'card_id': 'test',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+    assert msg['result'] == 'id: test\ntype: entities\n'
