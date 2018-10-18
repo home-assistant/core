@@ -346,7 +346,7 @@ class Entity:
             if hasattr(self, 'async_update'):
                 await self.async_update()
             elif hasattr(self, 'update'):
-                await self.hass.async_add_job(self.update)
+                await self.hass.async_add_executor_job(self.update)
         finally:
             self._update_staged = False
             if warning:

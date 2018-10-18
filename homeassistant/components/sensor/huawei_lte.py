@@ -24,11 +24,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['huawei_lte']
 
-DEFAULT_NAME_TEMPLATE = 'Huawei {}: {}'
+DEFAULT_NAME_TEMPLATE = 'Huawei {} {}'
 
 DEFAULT_SENSORS = [
     "device_information.WanIPAddress",
+    "device_signal.rsrq",
+    "device_signal.rsrp",
     "device_signal.rssi",
+    "device_signal.sinr",
 ]
 
 SENSOR_META = {
@@ -42,6 +45,26 @@ SENSOR_META = {
     "device_information.WanIPv6Address": dict(
         name="WAN IPv6 address",
         icon="mdi:ip",
+    ),
+    "device_signal.band": dict(
+        name="Band",
+    ),
+    "device_signal.cell_id": dict(
+        name="Cell ID",
+    ),
+    "device_signal.lac": dict(
+        name="LAC",
+    ),
+    "device_signal.mode": dict(
+        name="Mode",
+        formatter=lambda x: ({
+            '0': '2G',
+            '2': '3G',
+            '7': '4G',
+        }.get(x, 'Unknown'), None),
+    ),
+    "device_signal.pci": dict(
+        name="PCI",
     ),
     "device_signal.rsrq": dict(
         name="RSRQ",
@@ -99,6 +122,22 @@ def setup_platform(
     add_entities(sensors, True)
 
 
+def format_default(value):
+    """Format value."""
+    unit = None
+    if value is not None:
+        # Clean up value and infer unit, e.g. -71dBm, 15 dB
+        match = re.match(
+            r"(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value))
+        if match:
+            try:
+                value = float(match.group("value"))
+                unit = match.group("unit")
+            except ValueError:
+                pass
+    return value, unit
+
+
 @attr.s
 class HuaweiLteSensor(Entity):
     """Huawei LTE sensor entity."""
@@ -114,8 +153,8 @@ class HuaweiLteSensor(Entity):
     def unique_id(self) -> str:
         """Return unique ID for sensor."""
         return "{}_{}".format(
-            self.path,
             self.data["device_information.SerialNumber"],
+            ".".join(self.path),
         )
 
     @property
@@ -147,23 +186,14 @@ class HuaweiLteSensor(Entity):
         """Update state."""
         self.data.update()
 
-        unit = None
         try:
             value = self.data[self.path]
         except KeyError:
             _LOGGER.warning("%s not in data", self.path)
             value = None
 
-        if value is not None:
-            # Clean up value and infer unit, e.g. -71dBm, 15 dB
-            match = re.match(
-                r"(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value))
-            if match:
-                try:
-                    value = float(match.group("value"))
-                    unit = match.group("unit")
-                except ValueError:
-                    pass
+        formatter = self.meta.get("formatter")
+        if not callable(formatter):
+            formatter = format_default
 
-        self._state = value
-        self._unit = unit
+        self._state, self._unit = formatter(value)

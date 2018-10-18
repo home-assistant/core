@@ -14,13 +14,16 @@ from homeassistant.loader import bind_hass
 from homeassistant.components import sun
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_HIDDEN, ATTR_NAME, CONF_EXCLUDE,
-    CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED, HTTP_BAD_REQUEST, STATE_NOT_HOME,
-    STATE_OFF, STATE_ON)
+    ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_HIDDEN, ATTR_NAME, ATTR_SERVICE,
+    CONF_EXCLUDE, CONF_INCLUDE, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED,
+    HTTP_BAD_REQUEST, STATE_NOT_HOME, STATE_OFF, STATE_ON)
 from homeassistant.core import (
     DOMAIN as HA_DOMAIN, State, callback, split_entity_id)
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
+from homeassistant.components.homekit.const import (
+    ATTR_DISPLAY_NAME, ATTR_VALUE, DOMAIN as DOMAIN_HOMEKIT,
+    EVENT_HOMEKIT_CHANGED)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -56,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema({
 ALL_EVENT_TYPES = [
     EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_ALEXA_SMART_HOME
+    EVENT_ALEXA_SMART_HOME, EVENT_HOMEKIT_CHANGED
 ]
 
 LOG_MESSAGE_SCHEMA = vol.Schema({
@@ -289,6 +292,25 @@ def humanify(hass, events):
                     'name': 'Amazon Alexa',
                     'message': message,
                     'domain': 'alexa',
+                    'entity_id': entity_id,
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
+
+            elif event.event_type == EVENT_HOMEKIT_CHANGED:
+                data = event.data
+                entity_id = data.get(ATTR_ENTITY_ID)
+                value = data.get(ATTR_VALUE)
+
+                value_msg = " to {}".format(value) if value else ''
+                message = "send command {}{} for {}".format(
+                    data[ATTR_SERVICE], value_msg, data[ATTR_DISPLAY_NAME])
+
+                yield {
+                    'when': event.time_fired,
+                    'name': 'HomeKit',
+                    'message': message,
+                    'domain': DOMAIN_HOMEKIT,
                     'entity_id': entity_id,
                     'context_id': event.context.id,
                     'context_user_id': event.context.user_id

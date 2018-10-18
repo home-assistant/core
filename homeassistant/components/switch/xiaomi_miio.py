@@ -10,12 +10,14 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA,
-                                             DOMAIN, )
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
-                                 ATTR_ENTITY_ID, )
+from homeassistant.components.switch import (
+    DOMAIN, PLATFORM_SCHEMA, SwitchDevice)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN)
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'chuangmi.plug.v2',
          'chuangmi.plug.v3']),
 })
-
-REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
