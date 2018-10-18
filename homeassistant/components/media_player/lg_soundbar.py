@@ -22,7 +22,6 @@ SUPPORT_LG = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE \
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG platform."""
-
     if discovery_info is not None:
         add_entities([LGDevice(discovery_info)], True)
 
@@ -46,7 +45,7 @@ class LGDevice(MediaPlayerDevice):
         self._equaliser = -1
         self._equalisers = []
         self._mute = 0
-        self._rare_volume = 0
+        self._rear_volume = 0
         self._rear_volume_min = 0
         self._rear_volume_max = 0
         self._woofer_volume = 0
