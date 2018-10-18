@@ -4,17 +4,17 @@ Support for Meteo France raining forecast.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.meteofrance/
 """
-import voluptuous as vol
+
 import logging
 import datetime
-import json
 import requests
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 
 from homeassistant.const import (
-    STATE_UNKNOWN, TEMP_CELSIUS, ATTR_ATTRIBUTION)
+    STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     location_id = config.get(CONF_LOCATION_ID)
-    if len(location_id) == 5: #convert insee code to needed meteofrance code
+    if len(location_id) == 5:  #convert insee code to needed meteofrance code
         location_id = str(location_id)+'0'
     location_name = config.get(CONF_NAME)
     meteofrance_data = MeteoFranceCurrentData(hass, location_id)
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Received error from Meteo France: %s", err)
         return False
 
-    add_devices([MeteoFranceSensor(meteofrance_data,location_name)])
+    add_devices([MeteoFranceSensor(meteofrance_data, location_name)])
 
 
 
@@ -64,6 +64,7 @@ class MeteoFranceSensor(Entity):
         self.meteofrance_data = meteofrance_data
         self.location_name = location_name
         self._unit = "Min"
+        self._time_to_rain = None
 
     @property
     def name(self):
@@ -77,12 +78,12 @@ class MeteoFranceSensor(Entity):
         """Return the state of the sensor."""
 
         if self.meteofrance_data and self.meteofrance_data.rain_forecast:
-            self._timeToRain = 0;
+            self._time_to_rain = 0
             for interval in self.meteofrance_data.rain_forecast_data:
-                if interval["niveauPluie"]>1:
+                if interval["niveauPluie"] > 1:
                     self._unit = "Min"
-                    return self._timeToRain
-                self._timeToRain += 5
+                    return self._time_to_rain
+                self._time_to_rain += 5
             self._unit = ""
             return "No rain"
 
@@ -93,16 +94,18 @@ class MeteoFranceSensor(Entity):
         """Return the state attributes of the sun."""
         if self.meteofrance_data and self.meteofrance_data.rain_forecast:
             return {
-                    **{
+                **{
                     STATE_ATTR_FORECAST: self.meteofrance_data.rain_forecast,
-                    },
-                    **{STATE_ATTR_FORECAST_INTERVAL+str(interval+1): self.meteofrance_data.rain_forecast_data[interval]["niveauPluie"]
-                        for interval in range(0,len(self.meteofrance_data.rain_forecast_data))
-                    },
-                    **{
+                },
+                **{
+                    STATE_ATTR_FORECAST_INTERVAL+str(interval+1):
+                        self.meteofrance_data.rain_forecast_data[interval]["niveauPluie"]
+                    for interval in range(0, len(self.meteofrance_data.rain_forecast_data))
+                },
+                **{
                     ATTR_ATTRIBUTION: CONF_ATTRIBUTION
-                    }
                 }
+            }
 
     @property
     def unit_of_measurement(self):
@@ -114,7 +117,7 @@ class MeteoFranceSensor(Entity):
         self.meteofrance_data.update()
 
 
-class MeteoFranceCurrentData(object):
+class MeteoFranceCurrentData():
     """Get data from Meteo France."""
 
     def __init__(self, hass, location_id):
@@ -122,6 +125,7 @@ class MeteoFranceCurrentData(object):
         self._hass = hass
         self._location_id = location_id
         self.rain_forecast = None
+        self.rain_forecast_data = None
 
     def _build_url(self):
         url = _RESOURCE.format(self._location_id)
