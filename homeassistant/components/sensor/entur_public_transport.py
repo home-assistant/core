@@ -26,7 +26,7 @@ ATTR_NEXT_UP_IN = 'next_due_in'
 
 UNKNOWN = 'Unknown'
 
-API_CLIENT_ID = 'private-development-smarthome'
+API_CLIENT_ID = 'home-assistant'
 
 CONF_ATTRIBUTION = "Data provided by entur.org under NLOD."
 CONF_STOP_IDS = 'stop_ids'
