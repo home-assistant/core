@@ -72,7 +72,7 @@ class ExampleSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
 
-        if self.meteofrance_data and self.meteofrance_data.rain_forecast_data:
+        if self.meteofrance_data and self.meteofrance_data.rain_forecast:
             self._timeToRain = 0;
             for interval in self.meteofrance_data.rain_forecast_data:
                 if interval["niveauPluie"]>1:
@@ -87,17 +87,18 @@ class ExampleSensor(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes of the sun."""
-        return {
-                **{
-                STATE_ATTR_FORECAST: self.meteofrance_data.rain_forecast,
-                },
-                **{STATE_ATTR_FORECAST_INTERVAL+str(interval+1): self.meteofrance_data.rain_forecast_data[interval]["niveauPluie"]
-                    for interval in range(0,len(self.meteofrance_data.rain_forecast_data))
-                },
-                **{
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+        if self.meteofrance_data and self.meteofrance_data.rain_forecast:
+            return {
+                    **{
+                    STATE_ATTR_FORECAST: self.meteofrance_data.rain_forecast,
+                    },
+                    **{STATE_ATTR_FORECAST_INTERVAL+str(interval+1): self.meteofrance_data.rain_forecast_data[interval]["niveauPluie"]
+                        for interval in range(0,len(self.meteofrance_data.rain_forecast_data))
+                    },
+                    **{
+                    ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+                    }
                 }
-            }
 
     @property
     def unit_of_measurement(self):
@@ -132,7 +133,7 @@ class MeteoFranceCurrentData(object):
                 self.rain_forecast = result["niveauPluieText"][0]
                 self.rain_forecast_data = result["dataCadran"]
             else:
-                _LOGGER.error("No forecast for this location")
+                _LOGGER.error("No forecast for this location: %s",self._location_id)
         except ValueError as err:
             _LOGGER.error("Check Meteo France %s", err.args)
             self.data = None
