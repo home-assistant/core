@@ -193,7 +193,7 @@ class TestGeoJsonPlatform(unittest.TestCase):
                     fire_time_changed(self.hass, utcnow + SCAN_INTERVAL)
                     self.hass.block_till_done()
 
-                    mocked_delete_callback.assert_called_once()
+                    assert mocked_delete_callback.call_count == 1
                     all_states = self.hass.states.all()
                     assert len(all_states) == 0
 
@@ -223,6 +223,6 @@ class TestGeoJsonPlatform(unittest.TestCase):
                     fire_time_changed(self.hass, utcnow + 4 * SCAN_INTERVAL)
                     self.hass.block_till_done()
 
-                    mocked_delete_callback.assert_called_once()
+                    assert mocked_delete_callback.call_count == 1
                     all_states = self.hass.states.all()
                     assert len(all_states) == 0
