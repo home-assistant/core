@@ -48,12 +48,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DirecTV platform."""
+    if DATA_DIRECTV not in hass.data:
+        hass.data[DATA_DIRECTV] = []
+
     known_devices = hass.data.get(DATA_DIRECTV)
-    if not known_devices:
-        known_devices = []
     hosts = []
 
     if CONF_HOST in config:
+        _LOGGER.debug("Adding configured device %s with client address %s ",
+                      config.get(CONF_NAME), config.get(CONF_DEVICE))
         hosts.append([
             config.get(CONF_NAME), config.get(CONF_HOST),
             config.get(CONF_PORT), config.get(CONF_DEVICE)
@@ -64,30 +67,59 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         name = 'DirecTV_{}'.format(discovery_info.get('serial', ''))
 
         # Attempt to discover additional RVU units
+        _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
         try:
             resp = requests.get(
                 'http://%s:%d/info/getLocations' % (host, DEFAULT_PORT)).json()
-            if "locations" in resp:
-                for loc in resp["locations"]:
-                    if("locationName" in loc and "clientAddr" in loc
-                       and loc["clientAddr"] not in known_devices):
-                        hosts.append([str.title(loc["locationName"]), host,
-                                      DEFAULT_PORT, loc["clientAddr"]])
+
+            _LOGGER.debug("Known devices: %s", known_devices)
+            for loc in resp.get("locations") or []:
+                if "locationName" not in loc or "clientAddr" not in loc:
+                    continue
+
+                # Make sure that this device is not already configured
+                # Comparing based on host (IP) and clientAddr.
+                device_unknown = True
+                for idx, device in enumerate(known_devices):
+                    if host in device and loc["clientAddr"] in device:
+                        device_unknown = False
+                        break
+
+                if device_unknown:
+                    _LOGGER.debug("Adding discovered device %s with"
+                                  " client address %s",
+                                  str.title(loc["locationName"]),
+                                  loc["clientAddr"])
+                    hosts.append([str.title(loc["locationName"]), host,
+                                  DEFAULT_PORT, loc["clientAddr"]])
+                else:
+                    _LOGGER.debug("Discovered device %s with client "
+                                  "address %s is already configured",
+                                  str.title(loc["locationName"]),
+                                  loc["clientAddr"])
 
         except requests.exceptions.RequestException:
             # Bail out and just go forward with uPnP data
-            if DEFAULT_DEVICE not in known_devices:
+            # Make sure that this device is not already configured
+            # Comparing based on host (IP) and clientAddr.
+            device_unknown = True
+            for device in enumerate(known_devices):
+                if host in device and loc["clientAddr"] in device:
+                    device_unknown = False
+                    break
+
+            if device_unknown:
+                _LOGGER.debug("Request exception, adding default %s with"
+                              " client address %s.", name, DEFAULT_DEVICE)
                 hosts.append([name, host, DEFAULT_PORT, DEFAULT_DEVICE])
 
     dtvs = []
 
     for host in hosts:
         dtvs.append(DirecTvDevice(*host))
-        known_devices.append(host[-1])
+        hass.data[DATA_DIRECTV].append(host)
 
     add_entities(dtvs)
-    hass.data[DATA_DIRECTV] = known_devices
-
 
 class DirecTvDevice(MediaPlayerDevice):
     """Representation of a DirecTV receiver on the network."""
