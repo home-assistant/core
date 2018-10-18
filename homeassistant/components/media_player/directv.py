@@ -23,17 +23,10 @@ REQUIREMENTS = ['directpy==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-<<<<<<< HEAD
 ATTR_MEDIA_CURRENTLY_RECORDING = 'media_currently_recording'
 ATTR_MEDIA_RATING = 'media_rating'
 ATTR_MEDIA_RECORDED = 'media_recorded'
 ATTR_MEDIA_START_TIME = 'media_start_time'
-=======
-ATTR_MEDIA_CURRENTLYRECORDING = 'media_currently_recording'
-ATTR_MEDIA_RATING = 'media_rating'
-ATTR_MEDIA_RECORDED = 'media_recorded'
-ATTR_MEDIA_STARTTIME = 'media_starttime'
->>>>>>> Enhancements for DirecTV media player
 
 DEFAULT_DEVICE = '0'
 DEFAULT_NAME = "DirecTV Receiver"
