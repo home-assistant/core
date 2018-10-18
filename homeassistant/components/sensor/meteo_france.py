@@ -41,6 +41,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     location_id = config.get(CONF_LOCATION_ID)
+    if len(location_id) == 5: #convert insee code to needed meteofrance code
+        location_id = str(location_id)+'0'
     location_name = config.get(CONF_NAME)
     meteofrance_data = MeteoFranceCurrentData(hass, location_id)
 
