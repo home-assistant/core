@@ -40,7 +40,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICE): cv.string,
         vol.Optional(CONF_CLIMATE, default={}): CLIMATE_SCHEMA,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): cv.ensure_list,
+        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(
+            cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -158,5 +159,4 @@ async def setup_monitored_vars(hass, monitored_vars):
         else:
             _LOGGER.error("Monitored variable not supported: %s", var)
     if sensors:
-        hass.async_create_task(
-            async_load_platform(hass, COMP_SENSOR, DOMAIN, sensors))
+        await async_load_platform(hass, COMP_SENSOR, DOMAIN, sensors)

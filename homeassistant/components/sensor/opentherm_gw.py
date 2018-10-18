@@ -27,6 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the OpenTherm Gateway sensors."""
+    if discovery_info is None:
+        return
     gw_vars = hass.data[DATA_OPENTHERM_GW][DATA_GW_VARS]
     sensor_info = {
         # [device_class, unit, friendly_name]
@@ -151,18 +153,18 @@ async def async_setup_platform(hass, config, async_add_entities,
         device_class = sensor_info[var][0]
         unit = sensor_info[var][1]
         friendly_name = sensor_info[var][2]
+        entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, var, hass=hass)
         sensors.append(
-            OpenThermSensor(hass, var, device_class, unit, friendly_name))
+            OpenThermSensor(entity_id, var, device_class, unit, friendly_name))
     async_add_entities(sensors)
 
 
 class OpenThermSensor(Entity):
     """Representation of an OpenTherm Gateway sensor."""
 
-    def __init__(self, hass, var, device_class, unit, friendly_name):
+    def __init__(self, entity_id, var, device_class, unit, friendly_name):
         """Initialize the sensor."""
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, var,
-                                                  hass=hass)
+        self.entity_id = entity_id
         self._var = var
         self._value = None
         self._device_class = device_class
