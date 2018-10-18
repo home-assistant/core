@@ -1364,7 +1364,7 @@ smappy==0.2.16
 # smbus-cffi==0.5.1
 
 # homeassistant.components.media_player.snapcast
-snapcast==2.0.8
+snapcast==2.0.9
 
 # homeassistant.components.sensor.socialblade
 socialbladeclient==0.2
