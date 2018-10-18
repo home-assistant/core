@@ -393,7 +393,6 @@ async def test_setup(hass):
     state = hass.states.get('counter.test')
     assert state is not None
     assert state.state == '5'
-    assert 3 == state.attributes.get('step')
+    assert 5 == state.attributes.get('step')
     assert 0 == state.attributes.get('minimum')
     assert 9 == state.attributes.get('maximum')
-
