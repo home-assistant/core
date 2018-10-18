@@ -9,6 +9,6 @@ The process is straight-forward.
  - Write the code for your device, notification service, sensor, or IoT thing.
  - Ensure tests work.
  - Create a Pull Request against the [**dev**](https://github.com/home-assistant/home-assistant/tree/dev) branch of Home Assistant.
-
+Click here
 Still interested? Then you should take a peek at the [developer documentation](https://developers.home-assistant.io/) to get more details.
 
