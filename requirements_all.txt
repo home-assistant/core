@@ -147,7 +147,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.media_player.dlna_dmr
-async-upnp-client==0.12.4
+async-upnp-client==0.12.6
 
 # homeassistant.components.light.avion
 # avion==0.7
@@ -434,7 +434,7 @@ ha-philipsjs==0.0.5
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.5
+hangups==0.4.6
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -458,7 +458,7 @@ hole==0.3.0
 holidays==0.9.7
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181017.0
+home-assistant-frontend==20181018.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -1364,7 +1364,7 @@ smappy==0.2.16
 # smbus-cffi==0.5.1
 
 # homeassistant.components.media_player.snapcast
-snapcast==2.0.8
+snapcast==2.0.9
 
 # homeassistant.components.sensor.socialblade
 socialbladeclient==0.2
