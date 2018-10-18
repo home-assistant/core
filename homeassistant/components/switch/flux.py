@@ -19,7 +19,7 @@ from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE,
     SERVICE_TURN_ON)
-from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
@@ -180,8 +180,10 @@ class FluxSwitch(SwitchDevice):
         # Make initial update
         self.flux_update()
 
-        self.unsub_tracker = track_time_change(
-            self.hass, self.flux_update, second=[0, self._interval])
+        self.unsub_tracker = track_time_interval(
+            self.hass,
+            self.flux_update,
+            datetime.timedelta(seconds=self._interval))
 
         self.schedule_update_ha_state()
 
