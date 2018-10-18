@@ -117,10 +117,8 @@ class DirecTvDevice(MediaPlayerDevice):
             self._lastupdate = None
         else:
             self._current = self.dtv.get_tuned()
-            self._isrecorded = False if self._current['uniqueId'] is None\
-                else True
-            self._paused = True if\
-                self._lastposition == self._current['offset'] else False
+            self._isrecorded = self._current.get('uniqueId') is not None
+            self._paused = self._lastposition == self._current['offset']
             self._lastposition = self._current['offset']
             self._lastupdate = dt_util.now()
 
@@ -209,9 +207,8 @@ class DirecTvDevice(MediaPlayerDevice):
         """Return the title of current episode of TV show."""
         if self._is_standby:
             return None
-        if 'episodeTitle' in self._current:
-            return self._current['episodeTitle']
-        return None
+
+        return self._current.get('episodeTitle')
 
     @property
     def media_channel(self):
