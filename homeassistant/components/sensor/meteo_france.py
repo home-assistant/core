@@ -61,7 +61,7 @@ class MeteoFranceSensor(Entity):
 
     def __init__(self, meteofrance_data, location_name):
         """Initialize the sensor."""
-        self.meteofrance_data = meteofrance_data
+        self.current_data = meteofrance_data
         self.location_name = location_name
         self._unit = "Min"
         self._time_to_rain = None
@@ -77,9 +77,9 @@ class MeteoFranceSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
 
-        if self.meteofrance_data and self.meteofrance_data.rain_forecast:
+        if self.current_data and self.current_data.rain_forecast:
             self._time_to_rain = 0
-            for interval in self.meteofrance_data.rain_forecast_data:
+            for interval in self.current_data.intervals:
                 if interval["niveauPluie"] > 1:
                     self._unit = "Min"
                     return self._time_to_rain
@@ -92,15 +92,15 @@ class MeteoFranceSensor(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes of the sun."""
-        if self.meteofrance_data and self.meteofrance_data.rain_forecast:
+        if self.current_data and self.current_data.rain_forecast:
             return {
                 **{
-                    STATE_ATTR_FORECAST: self.meteofrance_data.rain_forecast,
+                    STATE_ATTR_FORECAST: self.current_data.rain_forecast,
                 },
                 **{
                     STATE_ATTR_FORECAST_INTERVAL+str(interval+1):
-                        self.meteofrance_data.rain_forecast_data[interval]["niveauPluie"]
-                    for interval in range(0, len(self.meteofrance_data.rain_forecast_data))
+                        self.current_data.intervals[interval]["niveauPluie"]
+                    for interval in range(0, len(self.current_data.intervals))
                 },
                 **{
                     ATTR_ATTRIBUTION: CONF_ATTRIBUTION
@@ -114,7 +114,7 @@ class MeteoFranceSensor(Entity):
 
     def update(self):
         """Fetch new state data for the sensor."""
-        self.meteofrance_data.update()
+        self.current_data.update()
 
 
 class MeteoFranceCurrentData():
@@ -125,7 +125,7 @@ class MeteoFranceCurrentData():
         self._hass = hass
         self._location_id = location_id
         self.rain_forecast = None
-        self.rain_forecast_data = None
+        self.intervals = None
 
     def _build_url(self):
         url = _RESOURCE.format(self._location_id)
@@ -139,9 +139,12 @@ class MeteoFranceCurrentData():
             result = requests.get(self._build_url(), timeout=10).json()
             if result['hasData'] is True:
                 self.rain_forecast = result["niveauPluieText"][0]
-                self.rain_forecast_data = result["dataCadran"]
+                self.intervals = result["dataCadran"]
             else:
-                raise ValueError("No forecast for this location: {}".format(self._location_id))
+                raise ValueError(
+                    "No forecast for this location: {}"
+                    .format(self._location_id)
+                )
         except ValueError as err:
             _LOGGER.error("Meteo-France component: %s", err.args)
             raise
