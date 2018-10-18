@@ -21,7 +21,8 @@
                 "line": {
                   "id": "NSB:Line:45",
                   "name": "Vossabanen",
-                  "transportMode": "rail"
+                  "transportMode": "rail",
+                  "publicCode": "59"
                 }
               }
             }
@@ -42,7 +43,8 @@
                 "line": {
                   "id": "NSB:Line:45",
                   "name": "Vossabanen",
-                  "transportMode": "rail"
+                  "transportMode": "rail",
+                  "publicCode": "58"
                 }
               }
             }
@@ -54,6 +56,9 @@
       {
         "id": "NSR:Quay:48550",
         "name": "Fiskepiren",
+        "publicCode": "2",
+        "latitude": 59.960904,
+        "longitude": 10.882942,
         "estimatedCalls": [
           {
             "realtime": false,
@@ -71,7 +76,8 @@
                 "line": {
                   "id": "KOL:Line:2900_234",
                   "name": "Flybussen",
-                  "transportMode": "bus"
+                  "transportMode": "bus",
+                  "publicCode": "5"
                 }
               }
             }
@@ -92,7 +98,8 @@
                 "line": {
                   "id": "KOL:Line:1000_234",
                   "name": "1",
-                  "transportMode": "bus"
+                  "transportMode": "bus",
+                  "publicCode": "1"
                 }
               }
             }
