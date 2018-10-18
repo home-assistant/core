@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME)
+    ATTR_ATTRIBUTION, CONF_LATITUDE,
+    CONF_LONGITUDE, CONF_NAME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -23,8 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_EXPECTED_IN = 'due_in'
 ATTR_NEXT_UP_IN = 'next_due_in'
-
-UNKNOWN = 'Unknown'
 
 API_CLIENT_ID = 'home-assistant'
 
@@ -47,7 +46,7 @@ def due_in_minutes(timestamp: str) -> str:
     year-month-yearThour:minute:second+timezone
     """
     if timestamp is None:
-        return UNKNOWN
+        return STATE_UNKNOWN
     diff = datetime.strptime(
         timestamp, "%Y-%m-%dT%H:%M:%S%z") - dt_util.now()
 
@@ -102,17 +101,12 @@ class EnturPublicTransportSensor(Entity):
 
     def __init__(self, data: EnturProxy, stop: str):
         """Initialize the sensor."""
-        from enturclient.consts import (
-            ATTR_STOP_ID, ATTR_EXPECTED_AT, ATTR_NEXT_UP_AT)
         self.data = data
         self._stop = stop
-        self._times = {ATTR_STOP_ID: UNKNOWN,
-                       CONF_NAME: stop,
-                       ATTR_EXPECTED_AT: UNKNOWN,
-                       ATTR_NEXT_UP_AT: UNKNOWN}
-        self._state = UNKNOWN
+        self._times = data.get_stop_info(stop)
+        self._state = STATE_UNKNOWN
         try:
-            self._name = "Entur " + data.get_stop_info(stop)[CONF_NAME]
+            self._name = "Entur " + self._times[CONF_NAME]
         except TypeError:
             self._name = "Entur " + stop
 
@@ -129,7 +123,7 @@ class EnturPublicTransportSensor(Entity):
             return due_in_minutes(
                 self._times[ATTR][ATTR_EXPECTED_AT])
         except TypeError:
-            return UNKNOWN
+            return STATE_UNKNOWN
 
     @property
     def device_state_attributes(self) -> dict:
