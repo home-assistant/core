@@ -3,13 +3,13 @@
 import asyncio
 import logging
 
-from homeassistant.core import CoreState, State, Context
+from homeassistant.components.counter import (CONF_ICON, CONF_INITIAL,
+                                              CONF_NAME, CONF_RESTORE,
+                                              CONF_STEP, DOMAIN)
+from homeassistant.const import (ATTR_FRIENDLY_NAME, ATTR_ICON)
+from homeassistant.core import Context, CoreState, State
 from homeassistant.setup import async_setup_component
-from homeassistant.components.counter import (
-    DOMAIN, CONF_INITIAL, CONF_RESTORE, CONF_STEP, CONF_NAME, CONF_ICON)
-from homeassistant.const import (ATTR_ICON, ATTR_FRIENDLY_NAME)
-
-from tests.common import mock_restore_cache
+from tests.common import (mock_restore_cache)
 from tests.components.counter.common import (
     async_decrement, async_increment, async_reset)
 
@@ -307,3 +307,93 @@ async def test_counter_max(hass):
     state2 = hass.states.get('counter.test')
     assert state2 is not None
     assert state2.state == '-1'
+
+
+async def test_setup(hass):
+    """Test that setting values through setup works."""
+    assert await async_setup_component(hass, 'counter', {
+        'counter': {
+            'test': {
+                'maximum': '10',
+                'initial': '10'
+            }
+        }
+    })
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '10'
+    assert 10 == state.attributes.get('maximum')
+
+    # update max
+    await hass.services.async_call('counter', 'setup', {
+        'entity_id': state.entity_id,
+        'maximum': 0,
+    }, True, Context(user_id='abcd'))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '0'
+    assert 0 == state.attributes.get('maximum')
+
+    # disable max
+    await hass.services.async_call('counter', 'setup', {
+        'entity_id': state.entity_id,
+        'maximum': None,
+    }, True, Context(user_id='abcd'))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '0'
+    assert state.attributes.get('maximum') is None
+
+    # update min
+    assert state.attributes.get('minimum') is None
+    await hass.services.async_call('counter', 'setup', {
+        'entity_id': state.entity_id,
+        'minimum': 5,
+    }, True, Context(user_id='abcd'))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '5'
+    assert 5 == state.attributes.get('minimum')
+
+    # disable min
+    await hass.services.async_call('counter', 'setup', {
+        'entity_id': state.entity_id,
+        'minimum': None,
+    }, True, Context(user_id='abcd'))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '5'
+    assert state.attributes.get('minimum') is None
+
+    # update step
+    assert 1 == state.attributes.get('step')
+    await hass.services.async_call('counter', 'setup', {
+        'entity_id': state.entity_id,
+        'step': 3,
+    }, True, Context(user_id='abcd'))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '5'
+    assert 3 == state.attributes.get('step')
+
+    # update all
+    await hass.services.async_call('counter', 'setup', {
+        'entity_id': state.entity_id,
+        'step': 5,
+        'minimum': 0,
+        'maximum': 9,
+    }, True, Context(user_id='abcd'))
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+    assert state.state == '5'
+    assert 3 == state.attributes.get('step')
+    assert 0 == state.attributes.get('minimum')
+    assert 9 == state.attributes.get('maximum')
+

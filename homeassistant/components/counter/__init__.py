@@ -28,9 +28,16 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SERVICE_DECREMENT = 'decrement'
 SERVICE_INCREMENT = 'increment'
 SERVICE_RESET = 'reset'
+SERVICE_SETUP = 'setup'
 
-SERVICE_SCHEMA = vol.Schema({
+SERVICE_SCHEMA_SIMPLE = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+})
+SERVICE_SCHEMA_SETUP = vol.Schema({
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
+    vol.Optional(CONF_MINIMUM): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_MAXIMUM): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_STEP): cv.positive_int,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -76,14 +83,17 @@ async def async_setup(hass, config):
         return False
 
     component.async_register_entity_service(
-        SERVICE_INCREMENT, SERVICE_SCHEMA,
+        SERVICE_INCREMENT, SERVICE_SCHEMA_SIMPLE,
         'async_increment')
     component.async_register_entity_service(
-        SERVICE_DECREMENT, SERVICE_SCHEMA,
+        SERVICE_DECREMENT, SERVICE_SCHEMA_SIMPLE,
         'async_decrement')
     component.async_register_entity_service(
-        SERVICE_RESET, SERVICE_SCHEMA,
+        SERVICE_RESET, SERVICE_SCHEMA_SIMPLE,
         'async_reset')
+    component.async_register_entity_service(
+        SERVICE_SETUP, SERVICE_SCHEMA_SETUP,
+        'async_setup')
 
     await component.async_add_entities(entities)
     return True
@@ -170,5 +180,17 @@ class Counter(RestoreEntity):
     async def async_reset(self):
         """Reset a counter."""
         self._state = self._initial
+        self.__check_boundaries()
+        await self.async_update_ha_state()
+
+    async def async_setup(self, **kwargs):
+        """Setup the counter with a service"""
+        if CONF_MINIMUM in kwargs:
+            self._min = kwargs[CONF_MINIMUM]
+        if CONF_MAXIMUM in kwargs:
+            self._max = kwargs[CONF_MAXIMUM]
+        if CONF_STEP in kwargs:
+            self._step = kwargs[CONF_STEP]
+
         self.__check_boundaries()
         await self.async_update_ha_state()
