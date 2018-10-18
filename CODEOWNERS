@@ -54,6 +54,7 @@ homeassistant/components/binary_sensor/threshold.py @fabaff
 homeassistant/components/camera/yi.py @bachya
 homeassistant/components/climate/ephember.py @ttroy50
 homeassistant/components/climate/eq3btsmart.py @rytilahti
+homeassistant/components/climate/mill.py @danielhiversen
 homeassistant/components/climate/sensibo.py @andrey-git
 homeassistant/components/cover/group.py @cdce8p
 homeassistant/components/cover/template.py @PhracturedBlue
