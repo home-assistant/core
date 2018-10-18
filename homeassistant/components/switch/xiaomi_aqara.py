@@ -137,7 +137,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             self._load_power = round(float(data[LOAD_POWER]), 2)
 
         value = data.get(self._data_key)
-        if value is None:
+        if value not in ['on', 'off']:
             return False
 
         state = value == 'on'
