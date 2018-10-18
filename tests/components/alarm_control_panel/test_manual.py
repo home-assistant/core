@@ -3,7 +3,6 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch, MagicMock
 from homeassistant.components.alarm_control_panel import demo
-import asyncio
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
