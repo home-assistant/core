@@ -225,9 +225,7 @@ class EntityPlatform:
         await asyncio.wait(tasks, loop=self.hass.loop)
         self.async_entities_added_callback()
 
-        if self._async_unsub_polling is not None or \
-           not any(entity.should_poll for entity
-                   in self.entities.values()):
+        if self._async_unsub_polling is not None:
             return
 
         self._async_unsub_polling = async_track_time_interval(
@@ -379,9 +377,7 @@ class EntityPlatform:
         await self._async_remove_entity(entity_id)
 
         # Clean up polling job if no longer needed
-        if (self._async_unsub_polling is not None and
-                not any(entity.should_poll for entity
-                        in self.entities.values())):
+        if self._async_unsub_polling is not None:
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
