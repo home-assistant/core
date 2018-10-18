@@ -120,7 +120,6 @@ async def async_setup(hass, config):
     }
     hass.data[DATA_ENTITY_GROUP_LOOKUP] = {
         EVENT_KEY_COMMAND: defaultdict(list),
-        EVENT_KEY_SENSOR: defaultdict(list),
     }
 
     # Allow platform to specify function to register new unknown devices
