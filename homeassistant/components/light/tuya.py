@@ -40,7 +40,7 @@ class TuyaLight(TuyaDevice, Light):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return self.tuya.brightness()
+        return int(self.tuya.brightness())
 
     @property
     def hs_color(self):
