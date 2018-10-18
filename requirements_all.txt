@@ -430,7 +430,7 @@ gps3==0.33.3
 greenwavereality==0.5.1
 
 # homeassistant.components.media_player.gstreamer
-gstreamer-player==1.1.0
+gstreamer-player==1.1.2
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.9
