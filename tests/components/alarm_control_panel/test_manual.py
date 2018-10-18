@@ -1321,8 +1321,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.assertEqual(STATE_ALARM_TRIGGERED, state.state)
 
 
-@asyncio.coroutine
-def test_restore_armed_state(hass):
+async def test_restore_armed_state(hass):
     """Ensure armed state is restored on startup."""
     mock_restore_cache(hass, (
         State('alarm_control_panel.test', STATE_ALARM_ARMED_AWAY),
@@ -1331,7 +1330,7 @@ def test_restore_armed_state(hass):
     hass.state = CoreState.starting
     mock_component(hass, 'recorder')
 
-    yield from async_setup_component(hass, alarm_control_panel.DOMAIN, {
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, {
         'alarm_control_panel': {
             'platform': 'manual',
             'name': 'test',
@@ -1345,8 +1344,7 @@ def test_restore_armed_state(hass):
     assert state.state == STATE_ALARM_ARMED_AWAY
 
 
-@asyncio.coroutine
-def test_restore_disarmed_state(hass):
+async def test_restore_disarmed_state(hass):
     """Ensure disarmed state is restored on startup."""
     mock_restore_cache(hass, (
         State('alarm_control_panel.test', STATE_ALARM_DISARMED),
@@ -1355,7 +1353,7 @@ def test_restore_disarmed_state(hass):
     hass.state = CoreState.starting
     mock_component(hass, 'recorder')
 
-    yield from async_setup_component(hass, alarm_control_panel.DOMAIN, {
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, {
         'alarm_control_panel': {
             'platform': 'manual',
             'name': 'test',
