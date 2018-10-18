@@ -38,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     location_id = config.get(CONF_LOCATION_ID)
@@ -53,7 +54,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices([MeteoFranceSensor(meteofrance_data, location_name)])
-
 
 
 class MeteoFranceSensor(Entity):
