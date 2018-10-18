@@ -29,7 +29,9 @@ CONF_NAME = 'name'
 STATE_ATTR_FORECAST = 'Forecast'
 STATE_ATTR_FORECAST_INTERVAL = 'Interval_'
 
+SCAN_INTERVAL = datetime.timedelta(minutes=5)
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=5)
+DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LOCATION_ID): cv.string,
@@ -133,8 +135,7 @@ class MeteoFranceCurrentData(object):
                 self.rain_forecast = result["niveauPluieText"][0]
                 self.rain_forecast_data = result["dataCadran"]
             else:
-                _LOGGER.error("No forecast for this location: %s",self._location_id)
+                raise ValueError("No forecast for this location: {}".format(self._location_id))
         except ValueError as err:
-            _LOGGER.error("Check Meteo France %s", err.args)
-            self.data = None
+            _LOGGER.error("Meteo-France component: %s", err.args)
             raise
