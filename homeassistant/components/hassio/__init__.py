@@ -32,10 +32,12 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 CONF_FRONTEND_REPO = 'development_repo'
+CONF_CHECK_TIMEOUT = 'check_timeout'
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN): vol.Schema({
         vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
+        vol.Optional(CONF_CHECK_TIMEOUT, default=300): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -138,9 +140,10 @@ def is_hassio(hass):
 async def async_check_config(hass):
     """Check configuration over Hass.io API."""
     hassio = hass.data[DOMAIN]
+    timeout = hass.data[DOMAIN][CONF_CHECK_TIMEOUT]
 
     try:
-        result = await hassio.check_homeassistant_config()
+        result = await hassio.check_homeassistant_config(timeout)
     except HassioAPIError as err:
         _LOGGER.error("Error on Hass.io API: %s", err)
 

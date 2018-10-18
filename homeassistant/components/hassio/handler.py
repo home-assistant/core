@@ -100,12 +100,12 @@ class HassIO:
         """
         return self.send_command("/homeassistant/stop")
 
-    def check_homeassistant_config(self):
+    def check_homeassistant_config(self, timeout):
         """Check Home-Assistant config with Hass.io API.
 
         This method return a coroutine.
         """
-        return self.send_command("/homeassistant/check", timeout=300)
+        return self.send_command("/homeassistant/check", timeout)
 
     @_api_data
     def retrieve_discovery_messages(self):
