@@ -110,6 +110,7 @@ class TestBanSensor(unittest.TestCase):
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.async_update()
+            self.hass.block_till_done()
 
         self.assertEqual(sensor.state, 1)
         self.assertEqual(
@@ -131,6 +132,7 @@ class TestBanSensor(unittest.TestCase):
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.async_update()
+            self.hass.block_till_done()
 
         self.assertEqual(sensor.state, 1)
         self.assertEqual(
@@ -153,6 +155,7 @@ class TestBanSensor(unittest.TestCase):
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.async_update()
+            self.hass.block_till_done()
 
         self.assertEqual(sensor.state, 2)
         self.assertEqual(
@@ -176,6 +179,7 @@ class TestBanSensor(unittest.TestCase):
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.async_update()
+            self.hass.block_till_done()
 
         self.assertEqual(sensor.state, 0)
         self.assertEqual(sensor.state_attributes[STATE_CURRENT_BANS], [])
@@ -193,6 +197,7 @@ class TestBanSensor(unittest.TestCase):
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.async_update()
+            self.hass.block_till_done()
 
         self.assertEqual(sensor.state, 1)
         self.assertEqual(
@@ -216,6 +221,7 @@ class TestBanSensor(unittest.TestCase):
                    create=True):
             sensor1.async_update()
             sensor2.async_update()
+            self.hass.block_till_done()
 
         self.assertEqual(sensor1.state, 1)
         self.assertEqual(
@@ -247,8 +253,10 @@ class TestBanSensor(unittest.TestCase):
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.async_update()
+            self.hass.block_till_done()
             self.assertEqual(sensor.state, 1)
             sensor.async_update()
+            self.hass.block_till_done()
             self.assertEqual(sensor.state, 1)
         self.assertEqual(
             sensor.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
