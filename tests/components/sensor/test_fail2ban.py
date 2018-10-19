@@ -194,7 +194,7 @@ class TestBanSensor(unittest.TestCase):
                    create=True):
             sensor.async_update()
 
-        self.assertEqual(sensor.state, '222.222.222.222')
+        self.assertEqual(sensor.state, 1)
         self.assertEqual(
             sensor.state_attributes[STATE_CURRENT_BANS],
             ['222.222.222.222']
