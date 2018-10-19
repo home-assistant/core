@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from datetime import timedelta
+#from datetime import timedelta
 from mock_open import MockOpen
 
 from homeassistant.setup import setup_component
