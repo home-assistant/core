@@ -27,6 +27,7 @@ CONF_JAILS = 'jails'
 DEFAULT_NAME = 'fail2ban'
 DEFAULT_LOG = '/var/log/fail2ban.log'
 DEFAULT_SCAN_INTERVAL = 120
+DEFAULT_UNITS = 'ip'
 
 STATE_LAST_BAN = 'last_ban'
 STATE_CURRENT_BANS = 'current_bans'
@@ -88,6 +89,11 @@ class BanSensor(Entity):
     def state(self):
         """Return the number of currently banned IP Address."""
         return self.number
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit_of_measurement of the device."""
+        return DEFAULT_UNITS
 
     def update(self):
         """Update the list of banned ips."""
