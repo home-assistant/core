@@ -78,7 +78,7 @@ async def async_setup(hass, config):
 
     homekit = HomeKit(hass, name, port, ip_address, entity_filter,
                       entity_config)
-    await hass.async_add_job(homekit.setup)
+    await hass.async_add_executor_job(homekit.setup)
 
     if auto_start:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
