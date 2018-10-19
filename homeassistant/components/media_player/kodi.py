@@ -561,8 +561,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_position_updated_at(self):
         """Last valid time of media position."""
-        state = self.state
-        if state in (STATE_PLAYING, STATE_PAUSED):
+        if self.state in (STATE_PLAYING, STATE_PAUSED):
             return dt_util.utcnow()
 
     @property
