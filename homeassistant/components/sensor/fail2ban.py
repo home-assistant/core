@@ -7,16 +7,13 @@ https://home-assistant.io/components/sensor.fail2ban/
 import os
 import logging
 
-from datetime import timedelta
-
 import re
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_SCAN_INTERVAL, CONF_FILE_PATH
+    CONF_NAME, CONF_FILE_PATH
 )
 from homeassistant.helpers.entity import Entity
 
@@ -26,7 +23,6 @@ CONF_JAILS = 'jails'
 
 DEFAULT_NAME = 'fail2ban'
 DEFAULT_LOG = '/var/log/fail2ban.log'
-DEFAULT_SCAN_INTERVAL = 120
 DEFAULT_UNITS = 'ip'
 
 STATE_LAST_BAN = 'last_ban'
@@ -45,11 +41,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the fail2ban sensor."""
     name = config.get(CONF_NAME)
     jails = config.get(CONF_JAILS)
-    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     log_file = config.get(CONF_FILE_PATH, DEFAULT_LOG)
 
     device_list = []
-    log_parser = BanLogParser(scan_interval, log_file)
+    log_parser = BanLogParser(log_file)
     for jail in jails:
         device_list.append(BanSensor(name, jail, log_parser))
 
@@ -95,14 +90,12 @@ class BanSensor(Entity):
         """Return the unit_of_measurement of the device."""
         return DEFAULT_UNITS
 
-    def update(self):
+    async def async_update(self):
         """Update the list of banned ips."""
-        if self.log_parser.timer():
-            self.log_parser.read_log(self.jail)
+        self.log_parser.read_log(self.jail)
 
         if self.log_parser.data and self.jail in self.log_parser.data:
             for entry in self.log_parser.data[self.jail]:
-                _LOGGER.debug(entry)
                 current_ip = entry[1]
                 if entry[0] == 'Ban':
                     if current_ip not in self.ban_dict[STATE_CURRENT_BANS]:
@@ -126,21 +119,11 @@ class BanSensor(Entity):
 class BanLogParser:
     """Class to parse fail2ban logs."""
 
-    def __init__(self, interval, log_file):
+    def __init__(self, log_file):
         """Initialize the parser."""
-        self.interval = timedelta(seconds=interval)
         self.log_file = log_file
         self.data = dict()
-        self.last_update = dt_util.now()
         self.ip_regex = dict()
-
-    def timer(self):
-        """Check if we are allowed to update."""
-        boundary = dt_util.now() - self.interval
-        if boundary > self.last_update:
-            self.last_update = dt_util.now()
-            return True
-        return False
 
     def read_log(self, jail):
         """Read the fail2ban log and find entries for jail."""
