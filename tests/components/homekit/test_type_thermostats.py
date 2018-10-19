@@ -163,7 +163,7 @@ async def test_thermostat(hass, hk_driver, cls, events):
     assert call_set_temperature[0].data[ATTR_TEMPERATURE] == 19.0
     assert acc.char_target_temp.value == 19.0
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == 'target 19.0°C'
+    assert events[-1].data[ATTR_VALUE] == '19.0°C'
 
     await hass.async_add_job(acc.char_target_heat_cool.client_update_value, 1)
     await hass.async_block_till_done()
@@ -379,7 +379,7 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls, events):
     assert call_set_temperature[2].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_temperature[2].data[ATTR_TEMPERATURE] == 75.2
     assert len(events) == 3
-    assert events[-1].data[ATTR_VALUE] == 'target 75.2°F'
+    assert events[-1].data[ATTR_VALUE] == '75.2°F'
 
 
 async def test_thermostat_get_temperature_range(hass, hk_driver, cls):
@@ -453,7 +453,7 @@ async def test_water_heater(hass, hk_driver, cls, events):
     assert call_set_temperature[0].data[ATTR_TEMPERATURE] == 52.0
     assert acc.char_target_temp.value == 52.0
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == 'target 52.0°C'
+    assert events[-1].data[ATTR_VALUE] == '52.0°C'
 
     await hass.async_add_job(acc.char_target_heat_cool.client_update_value, 0)
     await hass.async_block_till_done()
@@ -499,7 +499,7 @@ async def test_water_heater_fahrenheit(hass, hk_driver, cls, events):
     assert call_set_temperature[0].data[ATTR_TEMPERATURE] == 140.0
     assert acc.char_target_temp.value == 60.0
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == 'target 140.0°F'
+    assert events[-1].data[ATTR_VALUE] == '140.0°F'
 
 
 async def test_water_heater_get_temperature_range(hass, hk_driver, cls):
