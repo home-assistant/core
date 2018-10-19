@@ -547,6 +547,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def media_position(self):
+        """Position of current playing media in seconds."""
         time = self._properties.get('time')
 
         if time is None:
