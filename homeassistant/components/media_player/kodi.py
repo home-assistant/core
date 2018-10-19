@@ -33,6 +33,7 @@ from homeassistant.helpers import script
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.template import Template
 from homeassistant.util.yaml import dump
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.6']
 
@@ -313,6 +314,7 @@ class KodiDevice(MediaPlayerDevice):
             self._ws_server.Player.OnAVChange = self.async_on_speed_event
             self._ws_server.Player.OnResume = self.async_on_speed_event
             self._ws_server.Player.OnSpeedChanged = self.async_on_speed_event
+            self._ws_server.Player.OnSeek = self.async_on_speed_event
             self._ws_server.Player.OnStop = self.async_on_stop
             self._ws_server.Application.OnVolumeChanged = \
                 self.async_on_volume_changed
@@ -542,6 +544,25 @@ class KodiDevice(MediaPlayerDevice):
             total_time['hours'] * 3600 +
             total_time['minutes'] * 60 +
             total_time['seconds'])
+
+    @property
+    def media_position(self):
+        time = self._properties.get('time')
+
+        if time is None:
+            return None
+
+        return (
+            time['hours'] * 3600 +
+            time['minutes'] * 60 +
+            time['seconds'])
+
+    @property
+    def media_position_updated_at(self):
+        """Last valid time of media position."""
+        state = self.state
+        if state == STATE_PLAYING or state == STATE_PAUSED:
+            return dt_util.utcnow()
 
     @property
     def media_image_url(self):
