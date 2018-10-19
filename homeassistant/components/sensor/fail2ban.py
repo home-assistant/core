@@ -23,6 +23,7 @@ CONF_JAILS = 'jails'
 
 DEFAULT_NAME = 'fail2ban'
 DEFAULT_LOG = '/var/log/fail2ban.log'
+SCAN_INTERVAL = timedelta(seconds=120)
 DEFAULT_UNITS = 'ip'
 
 STATE_LAST_BAN = 'last_ban'
@@ -68,7 +69,6 @@ class BanSensor(Entity):
         _LOGGER.info("Setting up jail %s", self.jail)
         _LOGGER.debug("Regex: %s",
                       str(self.log_parser.ip_regex[self.jail]))
-        self.log_parser.read_log(self.jail)
 
     @property
     def name(self):
@@ -90,7 +90,7 @@ class BanSensor(Entity):
         """Return the unit_of_measurement of the device."""
         return DEFAULT_UNITS
 
-    async def async_update(self):
+    async def update(self):
         """Update the list of banned ips."""
         self.log_parser.read_log(self.jail)
 
