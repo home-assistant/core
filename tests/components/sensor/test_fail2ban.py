@@ -6,7 +6,7 @@ from mock_open import MockOpen
 
 from homeassistant.setup import setup_component
 from homeassistant.components.sensor.fail2ban import (
-    BanSensor, BanLogParser, STATE_CURRENT_BANS, STATE_ALL_BANS,
+    BanSensor, BanLogParser, STATE_BANNED, STATE_UNBANNED,
     STATE_LAST_BAN
 )
 
@@ -114,10 +114,10 @@ class TestBanSensor(unittest.TestCase):
 
         self.assertEqual(sensor.state, 1)
         self.assertEqual(
-            sensor.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
+            sensor.state_attributes[STATE_BANNED], ['111.111.111.111']
         )
         self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS], ['111.111.111.111']
+            sensor.state_attributes[STATE_UNBANNED], []
         )
         self.assertEqual(
             sensor.state_attributes[STATE_LAST_BAN], '111.111.111.111'
@@ -136,11 +136,11 @@ class TestBanSensor(unittest.TestCase):
 
         self.assertEqual(sensor.state, 1)
         self.assertEqual(
-            sensor.state_attributes[STATE_CURRENT_BANS],
+            sensor.state_attributes[STATE_BANNED],
             ['2607:f0d0:1002:51::4']
         )
         self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS], ['2607:f0d0:1002:51::4']
+            sensor.state_attributes[STATE_UNBANNED], []
         )
         self.assertEqual(
             sensor.state_attributes[STATE_LAST_BAN], '2607:f0d0:1002:51::4'
@@ -159,12 +159,12 @@ class TestBanSensor(unittest.TestCase):
 
         self.assertEqual(sensor.state, 2)
         self.assertEqual(
-            sensor.state_attributes[STATE_CURRENT_BANS],
+            sensor.state_attributes[STATE_BANNED],
             ['111.111.111.111', '222.222.222.222']
         )
         self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS],
-            ['111.111.111.111', '222.222.222.222']
+            sensor.state_attributes[STATE_UNBANNED],
+            []
         )
         self.assertEqual(
             sensor.state_attributes[STATE_LAST_BAN], '222.222.222.222'
@@ -182,9 +182,9 @@ class TestBanSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         self.assertEqual(sensor.state, 0)
-        self.assertEqual(sensor.state_attributes[STATE_CURRENT_BANS], [])
+        self.assertEqual(sensor.state_attributes[STATE_BANNED], [])
         self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS],
+            sensor.state_attributes[STATE_UNBANNED],
             ['111.111.111.111', '222.222.222.222']
         )
 
@@ -201,12 +201,12 @@ class TestBanSensor(unittest.TestCase):
 
         self.assertEqual(sensor.state, 1)
         self.assertEqual(
-            sensor.state_attributes[STATE_CURRENT_BANS],
+            sensor.state_attributes[STATE_BANNED],
             ['222.222.222.222']
         )
         self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS],
-            ['111.111.111.111', '222.222.222.222']
+            sensor.state_attributes[STATE_UNBANNED],
+            ['111.111.111.111']
         )
 
     def test_multi_jail(self):
@@ -225,20 +225,20 @@ class TestBanSensor(unittest.TestCase):
 
         self.assertEqual(sensor1.state, 1)
         self.assertEqual(
-            sensor1.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
+            sensor1.state_attributes[STATE_BANNED], ['111.111.111.111']
         )
         self.assertEqual(
-            sensor1.state_attributes[STATE_ALL_BANS], ['111.111.111.111']
+            sensor1.state_attributes[STATE_UNBANNED], []
         )
         self.assertEqual(
             sensor1.state_attributes[STATE_LAST_BAN], '111.111.111.111'
         )
         self.assertEqual(sensor2.state, 1)
         self.assertEqual(
-            sensor2.state_attributes[STATE_CURRENT_BANS], ['222.222.222.222']
+            sensor2.state_attributes[STATE_BANNED], ['222.222.222.222']
         )
         self.assertEqual(
-            sensor2.state_attributes[STATE_ALL_BANS], ['222.222.222.222']
+            sensor2.state_attributes[STATE_UNBANNED], []
         )
         self.assertEqual(
             sensor2.state_attributes[STATE_LAST_BAN], '222.222.222.222'
@@ -259,10 +259,10 @@ class TestBanSensor(unittest.TestCase):
             self.hass.block_till_done()
             self.assertEqual(sensor.state, 1)
         self.assertEqual(
-            sensor.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
+            sensor.state_attributes[STATE_BANNED], ['111.111.111.111']
         )
         self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS], ['111.111.111.111']
+            sensor.state_attributes[STATE_UNBANNED], []
         )
         self.assertEqual(
             sensor.state_attributes[STATE_LAST_BAN], '111.111.111.111'
