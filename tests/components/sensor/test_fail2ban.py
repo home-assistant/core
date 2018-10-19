@@ -109,7 +109,7 @@ class TestBanSensor(unittest.TestCase):
         mock_fh = MockOpen(read_data=fake_log('single_ban'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
-            sensor.update()
+            sensor.async_update()
 
         self.assertEqual(sensor.state, 1)
         self.assertEqual(
@@ -130,7 +130,7 @@ class TestBanSensor(unittest.TestCase):
         mock_fh = MockOpen(read_data=fake_log('ipv6_ban'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
-            sensor.update()
+            sensor.async_update()
 
         self.assertEqual(sensor.state, 1)
         self.assertEqual(
@@ -152,7 +152,7 @@ class TestBanSensor(unittest.TestCase):
         mock_fh = MockOpen(read_data=fake_log('multi_ban'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
-            sensor.update()
+            sensor.async_update()
 
         self.assertEqual(sensor.state, 2)
         self.assertEqual(
@@ -175,7 +175,7 @@ class TestBanSensor(unittest.TestCase):
         mock_fh = MockOpen(read_data=fake_log('unban_all'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
-            sensor.update()
+            sensor.async_update()
 
         self.assertEqual(sensor.state, 0)
         self.assertEqual(sensor.state_attributes[STATE_CURRENT_BANS], [])
@@ -192,7 +192,7 @@ class TestBanSensor(unittest.TestCase):
         mock_fh = MockOpen(read_data=fake_log('unban_one'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
-            sensor.update()
+            sensor.async_update()
 
         self.assertEqual(sensor.state, '222.222.222.222')
         self.assertEqual(
@@ -214,8 +214,8 @@ class TestBanSensor(unittest.TestCase):
         mock_fh = MockOpen(read_data=fake_log('multi_jail'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
-            sensor1.update()
-            sensor2.update()
+            sensor1.async_update()
+            sensor2.async_update()
 
         self.assertEqual(sensor1.state, 1)
         self.assertEqual(
@@ -246,9 +246,9 @@ class TestBanSensor(unittest.TestCase):
         mock_fh = MockOpen(read_data=fake_log('single_ban'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
-            sensor.update()
+            sensor.async_update()
             self.assertEqual(sensor.state, 1)
-            sensor.update()
+            sensor.async_update()
             self.assertEqual(sensor.state, 1)
         self.assertEqual(
             sensor.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
