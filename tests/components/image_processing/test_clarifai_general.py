@@ -36,12 +36,6 @@ VALID_CONFIG = {
         }
     }
 
-resource = 'https://www.mock.com/url'
-params = {}
-method = 'GET'
-response = None
-error = ApiError(resource, params, method, response)
-
 
 class MockErrorResponse:
     """Mock Clarifai response to bad API key."""
@@ -56,6 +50,13 @@ class MockErrorResponse:
         return {}
 
 
+resource = 'https://www.mock.com/url'
+params = {}
+method = 'GET'
+response = MockErrorResponse()
+error = ApiError(resource, params, method, response)
+
+
 @pytest.fixture
 def mock_app():
     """Return a mock ClarifaiApp object."""
@@ -66,12 +67,6 @@ def mock_app():
 @pytest.fixture
 def mock_app_with_error():
     """Throw an ApiError."""
-    resource = 'https://www.mock.com/url'
-    params = {}
-    method = 'GET'
-    response = MockErrorResponse()
-    error = ApiError(resource, params, method, response)
-
     with patch('clarifai.rest.ClarifaiApp',
                side_effect=error) as _mock_mock_app_with_error:
         yield _mock_mock_app_with_error
