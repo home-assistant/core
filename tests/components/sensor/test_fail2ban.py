@@ -135,7 +135,8 @@ class TestBanSensor(unittest.TestCase):
 
         self.assertEqual(sensor.state, 1)
         self.assertEqual(
-            sensor.state_attributes[STATE_CURRENT_BANS], ['2607:f0d0:1002:51::4']
+            sensor.state_attributes[STATE_CURRENT_BANS],
+            ['2607:f0d0:1002:51::4']
         )
         self.assertEqual(
             sensor.state_attributes[STATE_ALL_BANS], ['2607:f0d0:1002:51::4']
