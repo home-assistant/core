@@ -146,3 +146,7 @@ DEVICE_CLASS_WINDOW = 'window'
 # #### Thresholds ####
 THRESHOLD_CO = 25
 THRESHOLD_CO2 = 1000
+
+# #### Default values ####
+DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C
+DEFAULT_MAX_TEMP_WATER_HEATER = 60  # °C
