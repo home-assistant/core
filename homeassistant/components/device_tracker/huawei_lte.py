@@ -23,10 +23,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_URL): cv.url,
 })
 
+HOSTS_PATH = "wlan_host_list.Hosts"
+
 
 def get_scanner(hass, config):
     """Get a Huawei LTE router scanner."""
     data = hass.data[DATA_KEY].get_data(config)
+    data.subscribe(HOSTS_PATH)
     return HuaweiLteScanner(data)
 
 
@@ -43,7 +46,7 @@ class HuaweiLteScanner(DeviceScanner):
         self.data.update()
         self._hosts = {
             x["MacAddress"]: x
-            for x in self.data["wlan_host_list.Hosts.Host"]
+            for x in self.data[HOSTS_PATH + ".Host"]
             if x.get("MacAddress")
         }
         return list(self._hosts)
