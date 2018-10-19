@@ -116,8 +116,9 @@ async def async_setup(hass, config):
 class Alert(ToggleEntity):
     """Representation of an alert."""
 
-    def __init__(self, hass, entity_id, name, title, data, data_template, done_message, watched_entity_id,
-                 state, repeat, skip_first, notifiers, can_ack):
+    def __init__(self, hass, entity_id, name, title, data, data_template,
+                 done_message, watched_entity_id, state, repeat, skip_first,
+                 notifiers, can_ack):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
