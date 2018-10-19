@@ -450,6 +450,7 @@ omit =
     homeassistant/components/climate/touchline.py
     homeassistant/components/climate/venstar.py
     homeassistant/components/climate/zhong_hong.py
+    homeassistant/components/climate/systemair_savecair.py
     homeassistant/components/cover/aladdin_connect.py
     homeassistant/components/cover/brunt.py
     homeassistant/components/cover/garadget.py
