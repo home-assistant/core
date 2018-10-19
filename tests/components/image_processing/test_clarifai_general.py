@@ -3,6 +3,7 @@ import json
 from unittest.mock import patch
 
 from clarifai.rest import ApiError
+from clarifai.rest.client import Model
 import pytest
 
 from homeassistant.const import (ATTR_ENTITY_ID, CONF_FRIENDLY_NAME,
@@ -34,6 +35,12 @@ VALID_CONFIG = {
         'platform': 'demo'
         }
     }
+
+resource = 'https://www.mock.com/url'
+params = {}
+method = 'GET'
+response = None
+error = ApiError(resource, params, method, response)
 
 
 class MockErrorResponse:
@@ -93,19 +100,6 @@ def mock_model_prediction_no_data():
     with patch('homeassistant.components.image_processing.clarifai_general.'
                'ClarifaiClassifier.model_prediction',
                return_value=None) as _mock_response:
-        yield _mock_response
-
-
-@pytest.fixture
-def mock_predict_by_base64_with_error():
-    """Mock a predict_by_base64 error."""
-    resource = 'https://www.mock.com/url'
-    params = {}
-    method = 'GET'
-    response = None
-    error = ApiError(resource, params, method, response)
-    with patch('clarifai.rest.ClarifaiApp.model.predict_by_base64',
-               side_effect=error) as _mock_response:
         yield _mock_response
 
 
@@ -170,8 +164,9 @@ async def test_process_no_data(hass, mock_app,
     assert state.state == STATE_UNKNOWN
 
 
-async def test_process_with_error(hass, mock_app, mock_image, caplog,
-                                  mock_predict_by_base64_with_error):
+@patch.object(Model, 'predict_by_base64', side_effect=error)
+async def test_process_with_error(hass, mock_app, mock_image,
+                                  caplog):
     """Test processing with error from predict_by_base64."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
