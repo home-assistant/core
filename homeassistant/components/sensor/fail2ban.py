@@ -90,7 +90,7 @@ class BanSensor(Entity):
         """Return the unit_of_measurement of the device."""
         return DEFAULT_UNITS
 
-    async def update(self):
+    def update(self):
         """Update the list of banned ips."""
         self.log_parser.read_log(self.jail)
 
