@@ -173,6 +173,9 @@ def get_accessory(hass, driver, state, aid, config):
     elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
         a_type = 'Switch'
 
+    elif state.domain == 'water_heater':
+        a_type = 'WaterHeater'
+
     if a_type is None:
         return None
 
