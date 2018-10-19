@@ -27,8 +27,8 @@ SCAN_INTERVAL = timedelta(seconds=120)
 DEFAULT_UNITS = 'ip'
 
 STATE_LAST_BAN = 'last_ban'
-STATE_CURRENT_BANS = 'current_bans'
-STATE_ALL_BANS = 'total_bans'
+STATE_BANNED = 'banned_ips'
+STATE_UNBANNED = 'unbanned_ips'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_JAILS): vol.All(cv.ensure_list, vol.Length(min=1)),
@@ -60,7 +60,7 @@ class BanSensor(Entity):
         self._name = '{} {}'.format(name, jail)
         self.jail = jail
         self.ban_dict = {STATE_LAST_BAN: None,
-                         STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
+                         STATE_BANNED: [], STATE_UNBANNED: []}
         self.number = 0
         self.log_parser = log_parser
         self.log_parser.ip_regex[self.jail] = re.compile(
@@ -98,20 +98,22 @@ class BanSensor(Entity):
             for entry in self.log_parser.data[self.jail]:
                 current_ip = entry[1]
                 if entry[0] == 'Ban':
-                    if current_ip not in self.ban_dict[STATE_CURRENT_BANS]:
-                        self.ban_dict[STATE_CURRENT_BANS].append(current_ip)
+                    if current_ip not in self.ban_dict[STATE_BANNED]:
+                        self.ban_dict[STATE_BANNED].append(current_ip)
                         self.ban_dict[STATE_LAST_BAN] = current_ip
-                    if current_ip not in self.ban_dict[STATE_ALL_BANS]:
-                        self.ban_dict[STATE_ALL_BANS].append(current_ip)
-                    if len(self.ban_dict[STATE_ALL_BANS]) > 1000:
-                        self.ban_dict[STATE_ALL_BANS].pop(0)
+                    if current_ip in self.ban_dict[STATE_UNBANNED]:
+                        self.ban_dict[STATE_UNBANNED].remove(current_ip)
 
                 elif entry[0] == 'Unban':
-                    if current_ip in self.ban_dict[STATE_CURRENT_BANS]:
-                        self.ban_dict[STATE_CURRENT_BANS].remove(current_ip)
+                    if current_ip in self.ban_dict[STATE_BANNED]:
+                        self.ban_dict[STATE_BANNED].remove(current_ip)
+                    if current_ip not in self.ban_dict[STATE_UNBANNED]:
+                        self.ban_dict[STATE_UNBANNED].append(current_ip)
+                    if len(self.ban_dict[STATE_UNBANNED]) > 10:
+                        self.ban_dict[STATE_UNBANNED].pop(0)
 
-        if self.ban_dict[STATE_CURRENT_BANS]:
-            self.number = len(self.ban_dict[STATE_CURRENT_BANS])
+        if self.ban_dict[STATE_BANNED]:
+            self.number = len(self.ban_dict[STATE_BANNED])
         else:
             self.number = 0
 
