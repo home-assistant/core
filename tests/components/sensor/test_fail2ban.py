@@ -122,8 +122,8 @@ class TestBanSensor(unittest.TestCase):
         self.assertEqual(
             sensor.state_attributes[STATE_LAST_BAN], '111.111.111.111'
         )
-        
-     def test_ipv6_ban(self):
+
+    def test_ipv6_ban(self):
         """Test that log is parsed correctly for single ban."""
         log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
