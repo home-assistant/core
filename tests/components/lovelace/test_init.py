@@ -299,3 +299,28 @@ async def test_lovelace_get_card(hass, hass_ws_client):
     assert msg['type'] == TYPE_RESULT
     assert msg['success']
     assert msg['result'] == 'id: test\ntype: entities\n'
+
+
+async def test_lovelace_set_card(hass, hass_ws_client):
+    """Test lovelace_ui command cannot find file."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.components.lovelace.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)):
+        with patch('homeassistant.components.lovelace.save_yaml',
+                   return_value=None) as save_yaml_mock:
+            await client.send_json({
+                'id': 5,
+                'type': 'lovelace/config/card/set',
+                'card_id': 'test',
+                'card_config': 'id: test\ntype: glance\n',
+            })
+            msg = await client.receive_json()
+
+    result = save_yaml_mock.call_args_list[0][0]
+    assert result[1]['views'][1]['cards'][0]['type'] == 'glance'
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']

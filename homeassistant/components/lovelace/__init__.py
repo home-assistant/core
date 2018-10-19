@@ -165,7 +165,6 @@ def set_card(fname: str, card_id: str, card_config: str) -> bool:
             if card.get('id') == card_id:
                 card.update(yaml_to_object(card_config))
                 save_yaml(fname, config)
-                # Do we want to return config on save?
                 return True
 
     raise CardNotFoundError(
