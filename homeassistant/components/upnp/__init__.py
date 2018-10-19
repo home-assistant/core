@@ -30,7 +30,7 @@ from .config_flow import ensure_domain_data
 from .device import Device
 
 
-REQUIREMENTS = ['async-upnp-client==0.12.6']
+REQUIREMENTS = ['async-upnp-client==0.12.7']
 DEPENDENCIES = ['http']
 
 NOTIFICATION_ID = 'upnp_notification'
