@@ -7,7 +7,8 @@ from mock_open import MockOpen
 
 from homeassistant.setup import setup_component
 from homeassistant.components.sensor.fail2ban import (
-    BanSensor, BanLogParser, STATE_CURRENT_BANS, STATE_ALL_BANS
+    BanSensor, BanLogParser, STATE_CURRENT_BANS, STATE_ALL_BANS,
+    STATE_LAST_BAN
 )
 
 from tests.common import get_test_home_assistant, assert_setup_component
@@ -19,6 +20,10 @@ def fake_log(log_key):
         'single_ban': (
             '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 111.111.111.111'
+        ),
+        'ipv6_ban': (
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
+            'NOTICE [jail_one] Ban 2607:f0d0:1002:51::4'
         ),
         'multi_ban': (
             '2017-01-01 12:23:35 fail2ban.actions [111]: '
@@ -107,12 +112,36 @@ class TestBanSensor(unittest.TestCase):
                    create=True):
             sensor.update()
 
-        self.assertEqual(sensor.state, '111.111.111.111')
+        self.assertEqual(sensor.state, 1)
         self.assertEqual(
             sensor.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
         )
         self.assertEqual(
             sensor.state_attributes[STATE_ALL_BANS], ['111.111.111.111']
+        )
+        self.assertEqual(
+            sensor.state_attributes[STATE_LAST_BAN], '111.111.111.111'
+        )
+        
+     def test_ipv6_ban(self):
+        """Test that log is parsed correctly for single ban."""
+        log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
+        sensor = BanSensor('fail2ban', 'jail_one', log_parser)
+        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        mock_fh = MockOpen(read_data=fake_log('ipv6_ban'))
+        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+                   create=True):
+            sensor.update()
+
+        self.assertEqual(sensor.state, 1)
+        self.assertEqual(
+            sensor.state_attributes[STATE_CURRENT_BANS], ['2607:f0d0:1002:51::4']
+        )
+        self.assertEqual(
+            sensor.state_attributes[STATE_ALL_BANS], ['2607:f0d0:1002:51::4']
+        )
+        self.assertEqual(
+            sensor.state_attributes[STATE_LAST_BAN], '2607:f0d0:1002:51::4'
         )
 
     def test_multiple_ban(self):
@@ -125,7 +154,7 @@ class TestBanSensor(unittest.TestCase):
                    create=True):
             sensor.update()
 
-        self.assertEqual(sensor.state, '222.222.222.222')
+        self.assertEqual(sensor.state, 2)
         self.assertEqual(
             sensor.state_attributes[STATE_CURRENT_BANS],
             ['111.111.111.111', '222.222.222.222']
@@ -133,6 +162,9 @@ class TestBanSensor(unittest.TestCase):
         self.assertEqual(
             sensor.state_attributes[STATE_ALL_BANS],
             ['111.111.111.111', '222.222.222.222']
+        )
+        self.assertEqual(
+            sensor.state_attributes[STATE_LAST_BAN], '222.222.222.222'
         )
 
     def test_unban_all(self):
@@ -145,7 +177,7 @@ class TestBanSensor(unittest.TestCase):
                    create=True):
             sensor.update()
 
-        self.assertEqual(sensor.state, 'None')
+        self.assertEqual(sensor.state, 0)
         self.assertEqual(sensor.state_attributes[STATE_CURRENT_BANS], [])
         self.assertEqual(
             sensor.state_attributes[STATE_ALL_BANS],
@@ -185,19 +217,25 @@ class TestBanSensor(unittest.TestCase):
             sensor1.update()
             sensor2.update()
 
-        self.assertEqual(sensor1.state, '111.111.111.111')
+        self.assertEqual(sensor1.state, 1)
         self.assertEqual(
             sensor1.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
         )
         self.assertEqual(
             sensor1.state_attributes[STATE_ALL_BANS], ['111.111.111.111']
         )
-        self.assertEqual(sensor2.state, '222.222.222.222')
+        self.assertEqual(
+            sensor1.state_attributes[STATE_LAST_BAN], '111.111.111.111'
+        )
+        self.assertEqual(sensor2.state, 1)
         self.assertEqual(
             sensor2.state_attributes[STATE_CURRENT_BANS], ['222.222.222.222']
         )
         self.assertEqual(
             sensor2.state_attributes[STATE_ALL_BANS], ['222.222.222.222']
+        )
+        self.assertEqual(
+            sensor2.state_attributes[STATE_LAST_BAN], '222.222.222.222'
         )
 
     def test_ban_active_after_update(self):
@@ -209,12 +247,15 @@ class TestBanSensor(unittest.TestCase):
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.update()
-            self.assertEqual(sensor.state, '111.111.111.111')
+            self.assertEqual(sensor.state, 1)
             sensor.update()
-            self.assertEqual(sensor.state, '111.111.111.111')
+            self.assertEqual(sensor.state, 1)
         self.assertEqual(
             sensor.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
         )
         self.assertEqual(
             sensor.state_attributes[STATE_ALL_BANS], ['111.111.111.111']
+        )
+        self.assertEqual(
+            sensor.state_attributes[STATE_LAST_BAN], '111.111.111.111'
         )
