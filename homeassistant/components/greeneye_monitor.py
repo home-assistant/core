@@ -30,11 +30,16 @@ CONF_NUMBER = 'number'
 CONF_PULSE_COUNTERS = 'pulse_counters'
 CONF_SERIAL_NUMBER = 'serial_number'
 CONF_SENSORS = 'sensors'
+CONF_SENSOR_TYPE = 'sensor_type'
 CONF_TEMPERATURE_SENSORS = 'temperature_sensors'
 CONF_TIME_UNIT = 'time_unit'
 
 DATA_GREENEYE_MONITOR = 'greeneye_monitor'
 DOMAIN = 'greeneye_monitor'
+
+SENSOR_TYPE_CURRENT = 'current_sensor'
+SENSOR_TYPE_PULSE_COUNTER = 'pulse_counter'
+SENSOR_TYPE_TEMPERATURE = 'temperature_sensor'
 
 TIME_UNIT_SECOND = 's'
 TIME_UNIT_MINUTE = 'min'
@@ -120,8 +125,9 @@ async def async_setup(hass, config):
             hass.async_add_job(async_load_platform(
                 hass,
                 'sensor',
-                'greeneye_monitor_current',
+                'greeneye_monitor',
                 {
+                    CONF_SENSOR_TYPE: SENSOR_TYPE_CURRENT,
                     **monitor_serial_number,
                     **channel_config,
                 }))
@@ -136,8 +142,9 @@ async def async_setup(hass, config):
                 hass.async_add_job(async_load_platform(
                     hass,
                     'sensor',
-                    'greeneye_monitor_temperature',
+                    'greeneye_monitor',
                     {
+                        CONF_SENSOR_TYPE: SENSOR_TYPE_TEMPERATURE,
                         **monitor_serial_number,
                         **temperature_unit,
                         **sensor_config,
@@ -148,8 +155,9 @@ async def async_setup(hass, config):
             hass.async_add_job(async_load_platform(
                 hass,
                 'sensor',
-                'greeneye_monitor_pulse',
+                'greeneye_monitor',
                 {
+                    CONF_SENSOR_TYPE: SENSOR_TYPE_PULSE_COUNTER,
                     **monitor_serial_number,
                     **counter_config,
                 }))
