@@ -30,12 +30,14 @@ API_CLIENT_ID = 'home-assistant'
 CONF_ATTRIBUTION = "Data provided by entur.org under NLOD."
 CONF_STOP_IDS = 'stop_ids'
 CONF_EXPAND_PLATFORMS = 'expand_platforms'
+CONF_ADD_TO_MAP = 'add_to_map'
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
+    vol.Optional(CONF_ADD_TO_MAP, default=False): cv.boolean,
 })
 
 
@@ -58,6 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from enturclient import EnturPublicTransportData
     stop_ids = config.get(CONF_STOP_IDS)
     expand = config.get(CONF_EXPAND_PLATFORMS)
+    add_to_map = config.get(CONF_ADD_TO_MAP)
 
     stops = [s for s in stop_ids if "StopPlace" in s]
     quays = [s for s in stop_ids if "Quay" in s]
@@ -68,10 +71,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         quays,
         expand)
 
+    proxy = EnturProxy(data)
+
     data.update()
     entities = []
     for item in data.all_stop_places_quays():
-        entities.append(EnturPublicTransportSensor(EnturProxy(data), item))
+        entities.append(EnturPublicTransportSensor(proxy, item, add_to_map))
 
     add_entities(entities, True)
 
@@ -99,10 +104,11 @@ class EnturProxy:
 class EnturPublicTransportSensor(Entity):
     """Implementation of a Entur public transport sensor."""
 
-    def __init__(self, data: EnturProxy, stop: str):
+    def __init__(self, data: EnturProxy, stop: str, add_to_map: bool):
         """Initialize the sensor."""
         self.data = data
         self._stop = stop
+        self._add_to_map = add_to_map
         self._times = data.get_stop_info(stop)
         self._state = STATE_UNKNOWN
         try:
@@ -137,7 +143,7 @@ class EnturPublicTransportSensor(Entity):
             attr[ATTR_EXPECTED_IN] = due_in_minutes(attr[ATTR_EXPECTED_AT])
             attr[ATTR_STOP_ID] = self._times[ATTR_STOP_ID]
             attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-            if CONF_LOCATION in self._times:
+            if CONF_LOCATION in self._times and self._add_to_map:
                 attr[CONF_LATITUDE] = \
                     self._times[CONF_LOCATION][CONF_LATITUDE]
                 attr[CONF_LONGITUDE] = \
