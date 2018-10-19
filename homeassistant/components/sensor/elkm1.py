@@ -4,7 +4,6 @@ Support for control of ElkM1 sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.elkm1/
 """
-
 from homeassistant.components.elkm1 import (
     DOMAIN as ELK_DOMAIN, create_elk_entities, ElkEntity)
 
