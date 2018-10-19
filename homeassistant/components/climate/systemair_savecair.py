@@ -136,8 +136,8 @@ class SystemAIRClimate(ClimateDevice):
 
         if self._client.data["control_regulation_temp_unit"] == "celsius":
             return TEMP_CELSIUS
-        else:
-            return TEMP_FAHRENHEIT
+
+        return TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
@@ -162,29 +162,26 @@ class SystemAIRClimate(ClimateDevice):
         """Return the fan setting."""
         if "main_airflow" not in self._client.data:
             return None
-        else:
-            return self._fan_list[int(self._client.data["main_airflow"]) - 1]
+
+        return self._fan_list[int(self._client.data["main_airflow"]) - 1]
 
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         if "main_user_mode" not in self._client.data:
             return None
-        else:
-            return self._operation_list[
-                int(self._client.data["main_user_mode"])
-            ]
+
+        return self._operation_list[
+            int(self._client.data["main_user_mode"])
+        ]
 
     @property
     def is_on(self):
         """Return true if the device is on."""
         if "main_airflow" not in self._client.data:
             return True
-        else:
-            if int(self._client.data["main_airflow"]) - 1 > 0:
-                return True
-            else:
-                return False
+
+        return int(self._client.data["main_airflow"]) - 1 > 0
 
     @property
     def operation_list(self):
@@ -194,7 +191,7 @@ class SystemAIRClimate(ClimateDevice):
     @property
     def fan_list(self):
         """Return the list of available fan modes."""
-        if self.current_operation is "Manual":
+        if self.current_operation == "Manual":
             return self._fan_list
         return None
 
