@@ -161,31 +161,28 @@ def yaml_to_object(data: str) -> JSON_TYPE:
         raise HomeAssistantError(exc)
 
 
-def get_card(fname: str, card_id: str, format: str) -> JSON_TYPE:
+def get_card(fname: str, card_id: str, data_format: str) -> JSON_TYPE:
     """Load a specific card config for id."""
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
             if card.get('id') == card_id:
-                if format == 'yaml':
+                if data_format == 'yaml':
                     return object_to_yaml(card)
-                elif format == 'json':
-                    return card
-                else:
-                    raise HomeAssistantError(
-                        'Format {} not supported'.format(format))
+                return card
 
     raise CardNotFoundError(
         "Card with ID: {} was not found in {}.".format(card_id, fname))
 
 
-def set_card(fname: str, card_id: str, card_config: str, format: str) -> bool:
+def set_card(fname: str, card_id: str, card_config: str, data_format: str)\
+        -> bool:
     """Save a specific card config for id."""
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
             if card.get('id') == card_id:
-                if format == 'yaml':
+                if data_format == 'yaml':
                     card_config = yaml_to_object(card_config)
                 card.update(card_config)
                 save_yaml(fname, config)
