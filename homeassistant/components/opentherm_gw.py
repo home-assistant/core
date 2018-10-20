@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
 from homeassistant.const import (CONF_DEVICE, CONF_MONITORED_VARIABLES,
                                  CONF_NAME, PRECISION_HALVES, PRECISION_TENTHS,
@@ -55,6 +56,7 @@ async def async_setup(hass, config):
     import pyotgw
     conf = config[DOMAIN]
     gateway = pyotgw.pyotgw()
+    monitored_vars = conf.get(CONF_MONITORED_VARIABLES)
     hass.data[DATA_OPENTHERM_GW] = {
         DATA_DEVICE: gateway,
         DATA_GW_VARS: pyotgw.vars,
@@ -63,8 +65,8 @@ async def async_setup(hass, config):
         hass, conf[CONF_DEVICE], gateway))
     hass.async_create_task(async_load_platform(
         hass, 'climate', DOMAIN, conf.get(CONF_CLIMATE)))
-    hass.async_create_task(setup_monitored_vars(
-        hass, conf.get(CONF_MONITORED_VARIABLES)))
+    if monitored_vars:
+        hass.async_create_task(setup_monitored_vars(hass, monitored_vars))
     return True
 
 
@@ -83,8 +85,43 @@ async def connect_and_subscribe(hass, device_path, gateway):
 async def setup_monitored_vars(hass, monitored_vars):
     """Set up requested sensors."""
     gw_vars = hass.data[DATA_OPENTHERM_GW][DATA_GW_VARS]
-    # Use dict to prepare for binary sensor support.
     sensor_type_map = {
+        COMP_BINARY_SENSOR: [
+            gw_vars.DATA_MASTER_CH_ENABLED,
+            gw_vars.DATA_MASTER_DHW_ENABLED,
+            gw_vars.DATA_MASTER_COOLING_ENABLED,
+            gw_vars.DATA_MASTER_OTC_ENABLED,
+            gw_vars.DATA_MASTER_CH2_ENABLED,
+            gw_vars.DATA_SLAVE_FAULT_IND,
+            gw_vars.DATA_SLAVE_CH_ACTIVE,
+            gw_vars.DATA_SLAVE_DHW_ACTIVE,
+            gw_vars.DATA_SLAVE_FLAME_ON,
+            gw_vars.DATA_SLAVE_COOLING_ACTIVE,
+            gw_vars.DATA_SLAVE_CH2_ACTIVE,
+            gw_vars.DATA_SLAVE_DIAG_IND,
+            gw_vars.DATA_SLAVE_DHW_PRESENT,
+            gw_vars.DATA_SLAVE_CONTROL_TYPE,
+            gw_vars.DATA_SLAVE_COOLING_SUPPORTED,
+            gw_vars.DATA_SLAVE_DHW_CONFIG,
+            gw_vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP,
+            gw_vars.DATA_SLAVE_CH2_PRESENT,
+            gw_vars.DATA_SLAVE_SERVICE_REQ,
+            gw_vars.DATA_SLAVE_REMOTE_RESET,
+            gw_vars.DATA_SLAVE_LOW_WATER_PRESS,
+            gw_vars.DATA_SLAVE_GAS_FAULT,
+            gw_vars.DATA_SLAVE_AIR_PRESS_FAULT,
+            gw_vars.DATA_SLAVE_WATER_OVERTEMP,
+            gw_vars.DATA_REMOTE_TRANSFER_DHW,
+            gw_vars.DATA_REMOTE_TRANSFER_MAX_CH,
+            gw_vars.DATA_REMOTE_RW_DHW,
+            gw_vars.DATA_REMOTE_RW_MAX_CH,
+            gw_vars.DATA_ROVRD_MAN_PRIO,
+            gw_vars.DATA_ROVRD_AUTO_PRIO,
+            gw_vars.OTGW_GPIO_A_STATE,
+            gw_vars.OTGW_GPIO_B_STATE,
+            gw_vars.OTGW_IGNORE_TRANSITIONS,
+            gw_vars.OTGW_OVRD_HB,
+        ],
         COMP_SENSOR: [
             gw_vars.DATA_CONTROL_SETPOINT,
             gw_vars.DATA_MASTER_MEMBERID,
@@ -152,11 +189,17 @@ async def setup_monitored_vars(hass, monitored_vars):
             gw_vars.OTGW_VREF,
         ]
     }
+    binary_sensors = []
     sensors = []
     for var in monitored_vars:
         if var in sensor_type_map[COMP_SENSOR]:
             sensors.append(var)
+        elif var in sensor_type_map[COMP_BINARY_SENSOR]:
+            binary_sensors.append(var)
         else:
             _LOGGER.error("Monitored variable not supported: %s", var)
+    if binary_sensors:
+        hass.async_create_task(async_load_platform(
+            hass, COMP_BINARY_SENSOR, DOMAIN, binary_sensors))
     if sensors:
         await async_load_platform(hass, COMP_SENSOR, DOMAIN, sensors)
