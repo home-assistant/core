@@ -189,7 +189,7 @@ class MonzoObject:
 
     def update_config_entry(self, new_token):
         """Update config entry with refreshed token"""
-        new_data = {'tokens': new_token}
+        new_data = {**self.config_entry.data, 'tokens': new_token}
         self._hass.config_entries.async_update_entry(
             self.config_entry,
             data=new_data)
