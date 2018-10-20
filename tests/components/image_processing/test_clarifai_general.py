@@ -80,24 +80,6 @@ def mock_image():
         yield image
 
 
-@pytest.fixture
-def mock_model_prediction_with_data():
-    """Return a mock response from Clarifai with MOCK_RESPONSE data."""
-    with patch('homeassistant.components.image_processing.clarifai_general.'
-               'ClarifaiClassifier.model_prediction',
-               return_value=MOCK_RESPONSE) as _mock_response:
-        yield _mock_response
-
-
-@pytest.fixture
-def mock_model_prediction_no_data():
-    """Return a mock response from Clarifai with MOCK_RESPONSE data."""
-    with patch('homeassistant.components.image_processing.clarifai_general.'
-               'ClarifaiClassifier.model_prediction',
-               return_value=None) as _mock_response:
-        yield _mock_response
-
-
 def test_encode_image():
     """Test that binary data is encoded correctly."""
     assert cg.encode_image(b'test') == b'dGVzdA=='
@@ -127,8 +109,8 @@ async def test_setup_platform(hass, mock_app, mock_image):
     assert hass.states.get(VALID_ENTITY_ID)
 
 
-async def test_process_image(hass, mock_app,
-                             mock_image, mock_model_prediction_with_data):
+@patch.object(Model, 'predict_by_base64', return_value=MOCK_RESPONSE)
+async def test_process_image(hass, mock_app, mock_image):
     """Test successful processing of an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
@@ -142,21 +124,6 @@ async def test_process_image(hass, mock_app,
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == 'dog'
     assert state.attributes.get('dog') == PARSED_CONCEPTS['dog']
-
-
-async def test_process_no_data(hass, mock_app,
-                               mock_image, mock_model_prediction_no_data):
-    """Test processing with no response from API."""
-    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
-    assert hass.states.get(VALID_ENTITY_ID)
-    data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-    await hass.services.async_call(ip.DOMAIN,
-                                   ip.SERVICE_SCAN,
-                                   service_data=data)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(VALID_ENTITY_ID)
-    assert state.state == STATE_UNKNOWN
 
 
 @patch.object(Model, 'predict_by_base64', side_effect=error)
