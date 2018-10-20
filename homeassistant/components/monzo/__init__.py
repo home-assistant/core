@@ -37,7 +37,7 @@ DATA_BALANCE = 'balance'
 DATA_POTS = 'pots'
 
 DEFAULT_ATTRIBUTION = 'Data provided by Monzo'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 
 TOPIC_UPDATE = '{0}_data_update'.format(DOMAIN)
 
@@ -60,7 +60,9 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_CLIENT_ID): cv.string,
         vol.Optional(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_SENSORS): SENSOR_SCHEMA
+        vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+            cv.time_period,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -94,7 +96,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Monzo as a config entry."""
-
     #Get sensors as defined in configuration.yaml
     sensors = hass.data[DATA_MONZO_CONFIG].get(CONF_SENSORS, {}).get(
         CONF_MONITORED_CONDITIONS, list(SENSORS))
@@ -122,7 +123,8 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][DATA_MONZO_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
             hass, refresh_sensors,
-            hass.data[DOMAIN].get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+            hass.data[DATA_MONZO_CONFIG].get(CONF_SCAN_INTERVAL,
+                                             DEFAULT_SCAN_INTERVAL))
 
     _LOGGER.debug("async_setup_monzo is done")
 
