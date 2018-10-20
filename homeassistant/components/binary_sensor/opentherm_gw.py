@@ -138,3 +138,8 @@ class OpenThermBinarySensor(BinarySensorDevice):
     def device_class(self):
         """Return the class of this device."""
         return self._device_class
+
+    @property
+    def should_poll(self):
+        """Return False because entity pushes its state."""
+        return False
