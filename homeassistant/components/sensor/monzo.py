@@ -34,14 +34,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if sensor_type is TYPE_POTS:
             # Add a sensor for each pot with appropriate name
             pot_names = [pot['name'] for pot in monzo.data[DATA_POTS]]
-            for name in pot_names:
+            pot_ids = [pot['id'] for pot in monzo.data[DATA_POTS]]
+            for name, pot_id in zip(pot_names, pot_ids):
                 sensors.append(
                     MonzoSensor(
-                        monzo, sensor_type, name, icon, unit, entry.entry_id))
+                        monzo, sensor_type, name, icon, unit, pot_id))
         else:
+            account_id = monzo.client.get_first_account()['id']
             sensors.append(
                 MonzoSensor(
-                    monzo, sensor_type, name, icon, unit, entry.entry_id))
+                    monzo, sensor_type, name, icon, unit, account_id))
 
     async_add_entities(sensors, True)
 
@@ -49,13 +51,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MonzoSensor(MonzoEntity):
     """Implementation of a Monzo sensor."""
 
-    def __init__(self, monzo, sensor_type, name, icon, unit, entry_id):
+    def __init__(self, monzo, sensor_type, name, icon, unit, account_id):
         """Initialize the Monzo sensor."""
         super().__init__(monzo)
         self._dispatch_remove = None
-        self._entry_id = entry_id
         self._icon = icon
         self._name = name
+        self._unique_account_id = account_id
         self._sensor_type = sensor_type
         self._state = None
         self._unit = unit
@@ -68,8 +70,8 @@ class MonzoSensor(MonzoEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}'.format(
-            self._name, self._name)
+        return '{0}_{1}_{2}'.format(
+            self._name, self._sensor_type, self._unique_account_id)
 
     @property
     def state(self):
@@ -117,4 +119,5 @@ class MonzoSensor(MonzoEntity):
             self._state = balance['spend_today'] / 100
         elif self._sensor_type == TYPE_POTS:
             pots = self.monzo.data[DATA_POTS]
-            self._state = pots[0]['balance'] / 100
+            pot = next(pot for pot in pots if pot['id'] == self._unique_account_id)
+            self._state = pot['balance'] / 100
