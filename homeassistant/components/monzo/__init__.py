@@ -154,7 +154,7 @@ class MonzoObject:
         from monzo.auth import MonzoOAuth2Client
 
         self.data = {}
-        self.hass = hass
+        self._hass = hass
         self.sensor_conditions = sensor_conditions
         self.config_entry = config_entry
 
@@ -191,7 +191,7 @@ class MonzoObject:
     def update_config_entry(self, new_token):
         """Update config entry with refreshed token"""
         new_data = {'tokens': new_token}
-        self.hass.config_entries.async_update_entry(
+        self._hass.config_entries.async_update_entry(
             self.config_entry,
             data=new_data)
 
