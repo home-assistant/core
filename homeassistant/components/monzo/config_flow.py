@@ -1,13 +1,11 @@
 """Config flow to configure the Monzo component."""
 
 from collections import OrderedDict
-import os
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.util.json import load_json
 
 from .const import (DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET)
 from .local_auth import MonzoAuthCallbackView
@@ -89,7 +87,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             client_id = user_input.get(CONF_CLIENT_ID)
             client_secret = user_input.get(CONF_CLIENT_SECRET)
-            
+
             redirect_uri = '{}{}'.format(self.hass.config.api.base_url,
                                          MONZO_AUTH_CALLBACK_PATH)
 
@@ -107,8 +105,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
 
             return await self.async_step_link(user_input)
         else:
-            return await self.async_step_init(info)
-
+            return await self.async_step_init(user_input)
 
     async def async_step_import(self, info):
         """Import existing auth from Monzo."""
@@ -128,7 +125,6 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
 
         # Send user to Monzo for authentication
         return await self._set_up_redirect(info)
-
 
     @callback
     def _entry_from_tokens(self, title, tokens):
