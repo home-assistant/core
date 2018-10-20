@@ -177,12 +177,13 @@ class MonzoObject:
 
     async def async_update(self):
         """Update sensor data."""
-        if 'balance' in self.sensor_conditions:
+        if any(sensor_type in self.sensor_conditions for
+               sensor_type in (TYPE_BALANCE, TYPE_DAILY_SPEND)):
             account_id = self.client.get_first_account()['id']
             balance = self.client.get_balance(account_id)
             self.data[DATA_BALANCE] = balance
 
-        if 'pots' in self.sensor_conditions:
+        if TYPE_POTS in self.sensor_conditions:
             all_pots = self.client.get_pots()['pots']
             open_pots = [pot for pot in all_pots if not pot['deleted']]
             self.data[DATA_POTS] = open_pots
