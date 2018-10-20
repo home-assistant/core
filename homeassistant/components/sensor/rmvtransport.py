@@ -195,7 +195,7 @@ class RMVDepartureData:
     async def async_update(self):
         """Update the connection data."""
         from RMVtransport.rmvtransport import RMVtransportApiConnectionError
-        
+
         try:
             _data = await self.rmv.get_departures(self._station_id,
                                                   products=self._products,
