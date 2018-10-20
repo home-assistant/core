@@ -174,8 +174,6 @@ class MonzoObject:
                                          refresh_callback=self.update_config_entry)
 
         self.client = Monzo.from_oauth_session(oauth_client)
-        print(self.client.oauth_session.session.token['refresh_token'])
-        self.client.oauth_session.refresh_token()
 
     async def async_update(self):
         """Update sensor data."""
