@@ -30,9 +30,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
     sensors = []
     for sensor_type in monzo.sensor_conditions:
         name, icon, unit = SENSORS[sensor_type]
-        sensors.append(
-            MonzoSensor(
-                monzo, sensor_type, name, icon, unit, entry.entry_id))
+
+        if sensor_type is TYPE_POTS:
+            # Add a sensor for each pot with appropriate name
+            pot_names = [pot['name'] for pot in monzo.data[DATA_POTS]]
+            for name in pot_names:
+                sensors.append(
+                    MonzoSensor(
+                        monzo, sensor_type, name, icon, unit, entry.entry_id))
+        else:
+            sensors.append(
+                MonzoSensor(
+                    monzo, sensor_type, name, icon, unit, entry.entry_id))
 
     async_add_entities(sensors, True)
 
