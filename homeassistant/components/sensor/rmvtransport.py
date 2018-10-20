@@ -98,7 +98,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         if not sensor.data.departures:
             raise PlatformNotReady
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class RMVDepartureSensor(Entity):
