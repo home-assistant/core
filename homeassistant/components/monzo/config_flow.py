@@ -104,7 +104,10 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
             self.hass.http.register_view(MonzoAuthCallbackView(
                 self.async_step_import, oauth))
 
-        return await self.async_step_link(user_input)
+            return await self.async_step_link(user_input)
+        else:
+            return await self.async_step_init(info)
+
 
     async def async_step_import(self, info):
         """Import existing auth from Monzo."""
@@ -122,6 +125,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         if None in (client_id, client_secret):
             return await self.async_step_init(info)
 
+        # Send user to Monzo for authentication
         return await self._set_up_redirect(info)
 
 
