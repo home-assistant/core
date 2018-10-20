@@ -50,18 +50,37 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def _substitute_hass_ports(ports, hass_port):
-    """Substitute 'hass' for the hass_port."""
+def _substitute_hass_ports(ports, hass_port=None):
+    """
+    Substitute 'hass' for the hass_port.
+
+    This triggers a warning when hass_port is None.
+    """
     ports = ports.copy()
 
     # substitute 'hass' for hass_port, both keys and values
     if CONF_HASS in ports:
-        ports[hass_port] = ports[CONF_HASS]
+        if hass_port is None:
+            _LOGGER.warning(
+                'Could not determine Home Assistant http port, '
+                'not setting up port mapping from %s to %s. '
+                'Enable the http-component.',
+                CONF_HASS, ports[CONF_HASS])
+        else:
+            ports[hass_port] = ports[CONF_HASS]
         del ports[CONF_HASS]
 
     for port in ports:
         if ports[port] == CONF_HASS:
-            ports[port] = hass_port
+            if hass_port is None:
+                _LOGGER.warning(
+                    'Could not determine Home Assistant http port, '
+                    'not setting up port mapping from %s to %s. '
+                    'Enable the http-component.',
+                    port, ports[port])
+                del ports[port]
+            else:
+                ports[port] = hass_port
 
     return ports
 
@@ -122,8 +141,10 @@ async def async_setup_entry(hass: HomeAssistantType,
         ports = hass.data[DOMAIN]['auto_config']['ports']
         _LOGGER.debug('Enabling port mappings: %s', ports)
 
-        hass_port = hass.http.server_port
-        ports = _substitute_hass_ports(ports, hass_port)
+        hass_port = None
+        if hasattr(hass, 'http'):
+            hass_port = hass.http.server_port
+        ports = _substitute_hass_ports(ports, hass_port=hass_port)
         await device.async_add_port_mappings(ports, local_ip)
 
     # sensors

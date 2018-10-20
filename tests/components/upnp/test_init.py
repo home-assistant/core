@@ -144,14 +144,15 @@ async def test_async_setup_entry_default(hass):
         'port_mapping': False,
     })
 
-    # ensure hass.http is available
     config = {
+        'http': {},
         'discovery': {},
         # no upnp
     }
     with MockDependency('netdisco.discovery'), \
         patch('homeassistant.components.upnp.get_local_ip',
               return_value='192.168.1.10'):
+        await async_setup_component(hass, 'http', config)
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
 
@@ -184,8 +185,8 @@ async def test_async_setup_entry_port_mapping(hass):
         'port_mapping': True,
     })
 
-    # ensure hass.http is available
     config = {
+        'http': {},
         'discovery': {},
         'upnp': {
             'port_mapping': True,
@@ -195,6 +196,7 @@ async def test_async_setup_entry_port_mapping(hass):
     with MockDependency('netdisco.discovery'), \
         patch('homeassistant.components.upnp.get_local_ip',
               return_value='192.168.1.10'):
+        await async_setup_component(hass, 'http', config)
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
 
