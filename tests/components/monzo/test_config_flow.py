@@ -2,7 +2,7 @@
 
 from homeassistant import data_entry_flow
 from homeassistant.components.monzo import DOMAIN, config_flow
-from homeassistant.const import (
+from homeassistant.components.monzo.const import (
     CONF_CLIENT_ID, CONF_CLIENT_SECRET)
 
 from tests.common import MockConfigEntry
