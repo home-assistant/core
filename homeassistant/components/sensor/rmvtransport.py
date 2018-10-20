@@ -25,7 +25,7 @@ CONF_NEXT_DEPARTURE = 'next_departure'
 
 CONF_STATION = 'station'
 CONF_DESTINATIONS = 'destinations'
-CONF_DIRECTIONS = 'directions'
+CONF_DIRECTION = 'direction'
 CONF_LINES = 'lines'
 CONF_PRODUCTS = 'products'
 CONF_TIME_OFFSET = 'time_offset'
@@ -58,8 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Required(CONF_STATION): cv.string,
         vol.Optional(CONF_DESTINATIONS, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_DIRECTIONS, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DIRECTION): cv.string,
         vol.Optional(CONF_LINES, default=[]):
             vol.All(cv.ensure_list, [cv.positive_int, cv.string]),
         vol.Optional(CONF_PRODUCTS, default=VALID_PRODUCTS):
@@ -85,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 session,
                 next_departure[CONF_STATION],
                 next_departure.get(CONF_DESTINATIONS),
-                next_departure.get(CONF_DIRECTIONS),
+                next_departure.get(CONF_DIRECTION),
                 next_departure.get(CONF_LINES),
                 next_departure.get(CONF_PRODUCTS),
                 next_departure.get(CONF_TIME_OFFSET),
@@ -105,14 +104,14 @@ async def async_setup_platform(hass, config, async_add_entities,
 class RMVDepartureSensor(Entity):
     """Implementation of an RMV departure sensor."""
 
-    def __init__(self, session, station, destinations, directions, lines,
+    def __init__(self, session, station, destinations, direction, lines,
                  products, time_offset, max_journeys, name, timeout):
         """Initialize the sensor."""
         self._station = station
         self._name = name
         self._state = None
         self.data = RMVDepartureData(session, station, destinations,
-                                     directions, lines, products, time_offset,
+                                     direction, lines, products, time_offset,
                                      max_journeys, timeout)
         self._icon = ICONS[None]
 
@@ -175,7 +174,7 @@ class RMVDepartureSensor(Entity):
 class RMVDepartureData:
     """Pull data from the opendata.rmv.de web page."""
 
-    def __init__(self, session, station_id, destinations, directions, lines,
+    def __init__(self, session, station_id, destinations, direction, lines,
                  products, time_offset, max_journeys, timeout):
         """Initialize the sensor."""
         from RMVtransport import RMVtransport
@@ -183,7 +182,7 @@ class RMVDepartureData:
         self.station = None
         self._station_id = station_id
         self._destinations = destinations
-        self._directions = directions
+        self._direction = direction
         self._lines = lines
         self._products = products
         self._time_offset = time_offset
