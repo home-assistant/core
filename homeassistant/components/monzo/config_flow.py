@@ -94,7 +94,8 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
 
             oauth = MonzoOAuth2Client(client_id=client_id,
                                       client_secret=client_secret,
-                                      redirect_uri=redirect_uri)
+                                      redirect_uri=redirect_uri,
+                                      refresh_callback=None)
 
             monzo_auth_start_url, _ = oauth.authorize_token_url()
 

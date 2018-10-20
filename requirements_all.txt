@@ -665,7 +665,7 @@ millheater==0.3.0
 mitemp_bt==0.0.1
 
 # homeassistant.components.monzo
-monzotomtest==0.6.2
+monzotomtest==0.6.3
 
 # homeassistant.components.sensor.mopar
 motorparts==1.0.2
