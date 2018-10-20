@@ -3,15 +3,50 @@
 import asyncio
 import unittest
 
-from tests.common import get_test_home_assistant, mock_restore_cache
-
+from homeassistant.loader import bind_hass
+from homeassistant.components.input_select import (
+    ATTR_OPTION, ATTR_OPTIONS, DOMAIN, SERVICE_SET_OPTIONS,
+    SERVICE_SELECT_NEXT, SERVICE_SELECT_OPTION, SERVICE_SELECT_PREVIOUS)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON)
 from homeassistant.core import State, Context
 from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.components.input_select import (
-    ATTR_OPTIONS, DOMAIN, SERVICE_SET_OPTIONS,
-    select_option, select_next, select_previous)
-from homeassistant.const import (
-    ATTR_ICON, ATTR_FRIENDLY_NAME)
+
+from tests.common import get_test_home_assistant, mock_restore_cache
+
+
+@bind_hass
+def select_option(hass, entity_id, option):
+    """Set value of input_select.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_SELECT_OPTION, {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_OPTION: option,
+    })
+
+
+@bind_hass
+def select_next(hass, entity_id):
+    """Set next value of input_select.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_SELECT_NEXT, {
+        ATTR_ENTITY_ID: entity_id,
+    })
+
+
+@bind_hass
+def select_previous(hass, entity_id):
+    """Set previous value of input_select.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_SELECT_PREVIOUS, {
+        ATTR_ENTITY_ID: entity_id,
+    })
 
 
 class TestInputSelect(unittest.TestCase):

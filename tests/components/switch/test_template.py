@@ -1,11 +1,11 @@
 """The tests for the  Template switch platform."""
 from homeassistant.core import callback
 from homeassistant import setup
-import homeassistant.components as core
 from homeassistant.const import STATE_ON, STATE_OFF
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component)
+from tests.components.switch import common
 
 
 class TestTemplateSwitch:
@@ -406,7 +406,7 @@ class TestTemplateSwitch:
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_OFF
 
-        core.switch.turn_on(self.hass, 'switch.test_template_switch')
+        common.turn_on(self.hass, 'switch.test_template_switch')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -442,7 +442,7 @@ class TestTemplateSwitch:
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_ON
 
-        core.switch.turn_off(self.hass, 'switch.test_template_switch')
+        common.turn_off(self.hass, 'switch.test_template_switch')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1

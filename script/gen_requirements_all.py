@@ -19,7 +19,6 @@ COMMENT_REQUIREMENTS = (
     'bluepy',
     'opencv-python',
     'python-lirc',
-    'gattlib',
     'pyuserinput',
     'evdev',
     'pycups',
@@ -41,6 +40,7 @@ TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
     'aiohue',
+    'aiounifi',
     'apns2',
     'caldav',
     'coinmarketcap',
@@ -51,11 +51,14 @@ TEST_REQUIREMENTS = (
     'feedparser',
     'foobot_async',
     'gTTS-token',
+    'geojson_client',
+    'georss_client',
     'hangups',
     'HAP-python',
     'ha-ffmpeg',
     'haversine',
     'hbmqtt',
+    'hdate',
     'holidays',
     'home-assistant-frontend',
     'homematicip',
@@ -74,14 +77,17 @@ TEST_REQUIREMENTS = (
     'pyblackbird',
     'pydeconz',
     'pydispatcher',
-    'PyJWT',
+    'pyhomematic',
     'pylitejet',
     'pymonoprice',
     'pynx584',
     'pyopenuv',
     'pyotp',
+    'pysonos',
     'pyqwikswitch',
     'PyRMVtransport',
+    'PyTransportNSW',
+    'pyspcwebgw',
     'python-forecastio',
     'python-nest',
     'pytradfri\[async\]',
@@ -92,18 +98,20 @@ TEST_REQUIREMENTS = (
     'rflink',
     'ring_doorbell',
     'rxv',
+    'simplisafe-python',
     'sleepyq',
-    'SoCo',
+    'smhi-pkg',
     'somecomfort',
     'sqlalchemy',
     'statsd',
     'uvcclient',
-    'voluptuous-serialize',
     'warrant',
     'yahoo-finance',
     'pythonwhois',
     'wakeonlan',
-    'vultr'
+    'vultr',
+    'YesssSMS',
+    'ruamel.yaml',
 )
 
 IGNORE_PACKAGES = (
@@ -118,8 +126,8 @@ IGNORE_REQ = (
     'colorama<=1',  # Windows only requirement in check_config
 )
 
-URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
-           '#1-requirements')
+URL_PIN = ('https://developers.home-assistant.io/docs/'
+           'creating_platform_code_review.html#1-requirements')
 
 
 CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),

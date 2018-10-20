@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/rss_feed_template/
 """
 
-import asyncio
 from html import escape
 from aiohttp import web
 
@@ -76,8 +75,7 @@ class RssView(HomeAssistantView):
         self._title = title
         self._items = items
 
-    @asyncio.coroutine
-    def get(self, request, entity_id=None):
+    async def get(self, request, entity_id=None):
         """Generate the RSS view XML."""
         response = '<?xml version="1.0" encoding="utf-8"?>\n\n'
 

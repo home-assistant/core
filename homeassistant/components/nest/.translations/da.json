@@ -16,8 +16,10 @@
             "link": {
                 "data": {
                     "code": "PIN-kode"
-                }
+                },
+                "title": "Link Nest-konto"
             }
-        }
+        },
+        "title": "Nest"
     }
 }

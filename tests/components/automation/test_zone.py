@@ -6,6 +6,7 @@ from homeassistant.setup import setup_component
 from homeassistant.components import automation, zone
 
 from tests.common import get_test_home_assistant, mock_component
+from tests.components.automation import common
 
 
 # pylint: disable=invalid-name
@@ -87,7 +88,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        automation.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
 
         self.hass.states.set('test.entity', 'hello', {

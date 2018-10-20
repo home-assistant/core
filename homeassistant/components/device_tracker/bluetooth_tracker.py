@@ -80,7 +80,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     request_rssi = config.get(CONF_REQUEST_RSSI, False)
 
-    def update_bluetooth():
+    def update_bluetooth(_):
         """Update Bluetooth and set timer for the next update."""
         update_bluetooth_once()
         track_point_in_utc_time(
@@ -111,7 +111,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Update bluetooth devices on demand."""
         update_bluetooth_once()
 
-    update_bluetooth()
+    update_bluetooth(dt_util.utcnow())
 
     hass.services.register(
         DOMAIN, "bluetooth_tracker_update", handle_update_bluetooth)

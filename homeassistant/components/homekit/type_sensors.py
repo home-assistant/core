@@ -13,6 +13,7 @@ from .const import (
     CHAR_AIR_PARTICULATE_DENSITY, CHAR_AIR_QUALITY,
     CHAR_CARBON_DIOXIDE_DETECTED, CHAR_CARBON_DIOXIDE_LEVEL,
     CHAR_CARBON_DIOXIDE_PEAK_LEVEL, CHAR_CARBON_MONOXIDE_DETECTED,
+    CHAR_CARBON_MONOXIDE_LEVEL, CHAR_CARBON_MONOXIDE_PEAK_LEVEL,
     CHAR_CONTACT_SENSOR_STATE, CHAR_CURRENT_AMBIENT_LIGHT_LEVEL,
     CHAR_CURRENT_HUMIDITY, CHAR_CURRENT_TEMPERATURE, CHAR_LEAK_DETECTED,
     CHAR_MOTION_DETECTED, CHAR_OCCUPANCY_DETECTED, CHAR_SMOKE_DETECTED,
@@ -23,7 +24,7 @@ from .const import (
     SERV_CARBON_DIOXIDE_SENSOR, SERV_CARBON_MONOXIDE_SENSOR,
     SERV_CONTACT_SENSOR, SERV_HUMIDITY_SENSOR, SERV_LEAK_SENSOR,
     SERV_LIGHT_SENSOR, SERV_MOTION_SENSOR, SERV_OCCUPANCY_SENSOR,
-    SERV_SMOKE_SENSOR, SERV_TEMPERATURE_SENSOR)
+    SERV_SMOKE_SENSOR, SERV_TEMPERATURE_SENSOR, THRESHOLD_CO, THRESHOLD_CO2)
 from .util import (
     convert_to_float, temperature_to_homekit, density_to_air_quality)
 
@@ -57,7 +58,6 @@ class TemperatureSensor(HomeAccessory):
         serv_temp = self.add_preload_service(SERV_TEMPERATURE_SENSOR)
         self.char_temp = serv_temp.configure_char(
             CHAR_CURRENT_TEMPERATURE, value=0, properties=PROP_CELSIUS)
-        self.unit = None
 
     def update_state(self, new_state):
         """Update temperature after state changed."""
@@ -114,6 +114,34 @@ class AirQualitySensor(HomeAccessory):
             _LOGGER.debug('%s: Set to %d', self.entity_id, density)
 
 
+@TYPES.register('CarbonMonoxideSensor')
+class CarbonMonoxideSensor(HomeAccessory):
+    """Generate a CarbonMonoxidSensor accessory as CO sensor."""
+
+    def __init__(self, *args):
+        """Initialize a CarbonMonoxideSensor accessory object."""
+        super().__init__(*args, category=CATEGORY_SENSOR)
+
+        serv_co = self.add_preload_service(SERV_CARBON_MONOXIDE_SENSOR, [
+            CHAR_CARBON_MONOXIDE_LEVEL, CHAR_CARBON_MONOXIDE_PEAK_LEVEL])
+        self.char_level = serv_co.configure_char(
+            CHAR_CARBON_MONOXIDE_LEVEL, value=0)
+        self.char_peak = serv_co.configure_char(
+            CHAR_CARBON_MONOXIDE_PEAK_LEVEL, value=0)
+        self.char_detected = serv_co.configure_char(
+            CHAR_CARBON_MONOXIDE_DETECTED, value=0)
+
+    def update_state(self, new_state):
+        """Update accessory after state change."""
+        value = convert_to_float(new_state.state)
+        if value:
+            self.char_level.set_value(value)
+            if value > self.char_peak.value:
+                self.char_peak.set_value(value)
+            self.char_detected.set_value(value > THRESHOLD_CO)
+            _LOGGER.debug('%s: Set to %d', self.entity_id, value)
+
+
 @TYPES.register('CarbonDioxideSensor')
 class CarbonDioxideSensor(HomeAccessory):
     """Generate a CarbonDioxideSensor accessory as CO2 sensor."""
@@ -124,7 +152,7 @@ class CarbonDioxideSensor(HomeAccessory):
 
         serv_co2 = self.add_preload_service(SERV_CARBON_DIOXIDE_SENSOR, [
             CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL])
-        self.char_co2 = serv_co2.configure_char(
+        self.char_level = serv_co2.configure_char(
             CHAR_CARBON_DIOXIDE_LEVEL, value=0)
         self.char_peak = serv_co2.configure_char(
             CHAR_CARBON_DIOXIDE_PEAK_LEVEL, value=0)
@@ -133,13 +161,13 @@ class CarbonDioxideSensor(HomeAccessory):
 
     def update_state(self, new_state):
         """Update accessory after state change."""
-        co2 = convert_to_float(new_state.state)
-        if co2:
-            self.char_co2.set_value(co2)
-            if co2 > self.char_peak.value:
-                self.char_peak.set_value(co2)
-            self.char_detected.set_value(co2 > 1000)
-            _LOGGER.debug('%s: Set to %d', self.entity_id, co2)
+        value = convert_to_float(new_state.state)
+        if value:
+            self.char_level.set_value(value)
+            if value > self.char_peak.value:
+                self.char_peak.set_value(value)
+            self.char_detected.set_value(value > THRESHOLD_CO2)
+            _LOGGER.debug('%s: Set to %d', self.entity_id, value)
 
 
 @TYPES.register('LightSensor')

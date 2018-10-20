@@ -1,4 +1,5 @@
 """The tests for the MQTT sensor platform."""
+import json
 import unittest
 
 from datetime import timedelta, datetime
@@ -6,13 +7,15 @@ from unittest.mock import patch
 
 import homeassistant.core as ha
 from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.components import mqtt
+from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.util.dt as dt_util
 
 from tests.common import mock_mqtt_component, fire_mqtt_message, \
     assert_setup_component, async_fire_mqtt_message, \
-    async_mock_mqtt_component
+    async_mock_mqtt_component, MockConfigEntry
 from tests.common import get_test_home_assistant, mock_component
 
 
@@ -387,3 +390,63 @@ async def test_unique_id(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
+
+
+async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
+    """Test removal of discovered sensor."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    state = hass.states.get('sensor.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('sensor.beer')
+    assert state is None
+
+
+async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+    """Test MQTT sensor device registry integration."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps({
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'state_topic': 'test-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    })
+    async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.identifiers == {('mqtt', 'helloworld')}
+    assert device.connections == {('mac', "02:5b:26:a8:dc:12")}
+    assert device.manufacturer == 'Whatever'
+    assert device.name == 'Beer'
+    assert device.model == 'Glass'
+    assert device.sw_version == '0.1-beta'

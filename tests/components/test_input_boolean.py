@@ -7,14 +7,43 @@ import logging
 from homeassistant.core import CoreState, State, Context
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_boolean import (
-    DOMAIN, is_on, toggle, turn_off, turn_on, CONF_INITIAL)
+    is_on, CONF_INITIAL, DOMAIN)
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, ATTR_ICON, ATTR_FRIENDLY_NAME)
+    STATE_ON, STATE_OFF, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON,
+    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON)
+from homeassistant.loader import bind_hass
 
 from tests.common import (
     get_test_home_assistant, mock_component, mock_restore_cache)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@bind_hass
+def toggle(hass, entity_id):
+    """Set input_boolean to False.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
+
+
+@bind_hass
+def turn_on(hass, entity_id):
+    """Set input_boolean to True.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
+
+
+@bind_hass
+def turn_off(hass, entity_id):
+    """Set input_boolean to False.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
 
 
 class TestInputBoolean(unittest.TestCase):

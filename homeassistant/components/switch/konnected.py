@@ -83,7 +83,7 @@ class KonnectedSwitch(ToggleEntity):
 
             if self._momentary and resp.get(ATTR_STATE) != -1:
                 # Immediately set the state back off for momentary switches
-                self._set_state(self._boolean_state(False))
+                self._set_state(False)
 
     def turn_off(self, **kwargs):
         """Send a command to turn off the switch."""

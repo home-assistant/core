@@ -11,12 +11,12 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_VOLUME_MUTE, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_STEP, SUPPORT_PLAY,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, CONF_NAME, CONF_HOST,
-    CONF_PORT)
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

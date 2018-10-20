@@ -5,19 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.soundtouch/
 """
 import logging
-
 import re
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_VOLUME_SET, SUPPORT_TURN_ON, SUPPORT_PLAY, MediaPlayerDevice,
-    DOMAIN, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, CONF_PORT,
-                                 STATE_PAUSED, STATE_PLAYING,
-                                 STATE_UNAVAILABLE)
+    DOMAIN, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
+    STATE_UNAVAILABLE)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['libsoundtouch==0.7.2']
 
@@ -43,17 +43,17 @@ SOUNDTOUCH_PLAY_EVERYWHERE = vol.Schema({
 
 SOUNDTOUCH_CREATE_ZONE_SCHEMA = vol.Schema({
     vol.Required('master'): cv.entity_id,
-    vol.Required('slaves'): cv.entity_ids
+    vol.Required('slaves'): cv.entity_ids,
 })
 
 SOUNDTOUCH_ADD_ZONE_SCHEMA = vol.Schema({
     vol.Required('master'): cv.entity_id,
-    vol.Required('slaves'): cv.entity_ids
+    vol.Required('slaves'): cv.entity_ids,
 })
 
 SOUNDTOUCH_REMOVE_ZONE_SCHEMA = vol.Schema({
     vol.Required('master'): cv.entity_id,
-    vol.Required('slaves'): cv.entity_ids
+    vol.Required('slaves'): cv.entity_ids,
 })
 
 DEFAULT_NAME = 'Bose Soundtouch'
@@ -67,7 +67,7 @@ SUPPORT_SOUNDTOUCH = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
@@ -297,7 +297,7 @@ class SoundTouchDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         _LOGGER.debug("Starting media with media_id: %s", media_id)
-        if re.match(r'http://', str(media_id)):
+        if re.match(r'http?://', str(media_id)):
             # URL
             _LOGGER.debug("Playing URL %s", str(media_id))
             self._device.play_url(str(media_id))

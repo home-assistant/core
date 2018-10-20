@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 import logging
 import inspect
-
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
 import voluptuous as vol
@@ -336,9 +335,12 @@ def slugify(value):
 
 def string(value: Any) -> str:
     """Coerce value to string, except for None."""
-    if value is not None:
-        return str(value)
-    raise vol.Invalid('string value is None')
+    if value is None:
+        raise vol.Invalid('string value is None')
+    if isinstance(value, (list, dict)):
+        raise vol.Invalid('value should be a string')
+
+    return str(value)
 
 
 def temperature_unit(value) -> str:
@@ -591,7 +593,7 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("delay"): vol.Any(
         vol.All(time_period, positive_timedelta),
-        template)
+        template, template_complex)
 })
 
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({

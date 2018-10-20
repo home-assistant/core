@@ -79,7 +79,7 @@ class CloudIoT:
 
             try:
                 # Sleep 2^tries seconds between retries
-                self.retry_task = hass.async_add_job(asyncio.sleep(
+                self.retry_task = hass.async_create_task(asyncio.sleep(
                     2**min(9, self.tries), loop=hass.loop))
                 yield from self.retry_task
                 self.retry_task = None
@@ -106,7 +106,7 @@ class CloudIoT:
                 'cloud_subscription_expired')
 
             # Don't await it because it will cancel this task
-            hass.async_add_job(self.cloud.logout())
+            hass.async_create_task(self.cloud.logout())
             return
         except auth_api.CloudError as err:
             _LOGGER.warning("Unable to refresh token: %s", err)
@@ -227,6 +227,9 @@ def async_handle_message(hass, cloud, handler_name, payload):
 @asyncio.coroutine
 def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
+    if not cloud.alexa_enabled:
+        return alexa.turned_off_response(payload)
+
     result = yield from alexa.async_handle_message(
         hass, cloud.alexa_config, payload)
     return result
@@ -236,6 +239,9 @@ def async_handle_alexa(hass, cloud, payload):
 @asyncio.coroutine
 def async_handle_google_actions(hass, cloud, payload):
     """Handle an incoming IoT message for Google Actions."""
+    if not cloud.google_enabled:
+        return ga.turned_off_response(payload)
+
     result = yield from ga.async_handle_message(
         hass, cloud.gactions_config, payload)
     return result

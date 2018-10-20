@@ -1,15 +1,23 @@
 """The tests for the  MQTT binary sensor platform."""
+import json
 import unittest
+from unittest.mock import Mock
+from datetime import timedelta
 
 import homeassistant.core as ha
-from homeassistant.setup import setup_component
-import homeassistant.components.binary_sensor as binary_sensor
+from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.components import binary_sensor, mqtt
+from homeassistant.components.mqtt.discovery import async_start
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 
-from tests.common import get_test_home_assistant, fire_mqtt_message
-from tests.common import mock_component, mock_mqtt_component
+import homeassistant.util.dt as dt_util
+
+from tests.common import (
+    get_test_home_assistant, fire_mqtt_message, async_fire_mqtt_message,
+    fire_time_changed, mock_component, mock_mqtt_component,
+    async_mock_mqtt_component, MockConfigEntry)
 
 
 class TestSensorMQTT(unittest.TestCase):
@@ -18,6 +26,7 @@ class TestSensorMQTT(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config_entries._async_schedule_save = Mock()
         mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -76,25 +85,6 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.test')
         self.assertIsNone(state)
-
-    def test_unique_id(self):
-        """Test unique id option only creates one sensor per unique_id."""
-        assert setup_component(self.hass, binary_sensor.DOMAIN, {
-            binary_sensor.DOMAIN: [{
-                'platform': 'mqtt',
-                'name': 'Test 1',
-                'state_topic': 'test-topic',
-                'unique_id': 'TOTALLY_UNIQUE'
-            }, {
-                'platform': 'mqtt',
-                'name': 'Test 2',
-                'state_topic': 'test-topic',
-                'unique_id': 'TOTALLY_UNIQUE'
-            }]
-        })
-        fire_mqtt_message(self.hass, 'test-topic', 'payload')
-        self.hass.block_till_done()
-        assert len(self.hass.states.all()) == 1
 
     def test_availability_without_topic(self):
         """Test availability without defined availability topic."""
@@ -223,3 +213,126 @@ class TestSensorMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
         self.hass.block_till_done()
         self.assertEqual(2, len(events))
+
+    def test_off_delay(self):
+        """Test off_delay option."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'payload_on': 'ON',
+                'payload_off': 'OFF',
+                'off_delay': 30,
+                'force_update': True
+            }
+        })
+
+        events = []
+
+        @ha.callback
+        def callback(event):
+            """Verify event got called."""
+            events.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
+
+        fire_mqtt_message(self.hass, 'test-topic', 'ON')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(1, len(events))
+
+        fire_mqtt_message(self.hass, 'test-topic', 'ON')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(2, len(events))
+
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=30))
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertEqual(3, len(events))
+
+
+async def test_unique_id(hass):
+    """Test unique id option only creates one sensor per unique_id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, binary_sensor.DOMAIN, {
+        binary_sensor.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'state_topic': 'test-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'state_topic': 'test-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+
+async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
+    """Test removal of discovered binary_sensor."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    state = hass.states.get('binary_sensor.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('binary_sensor.beer')
+    assert state is None
+
+
+async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+    """Test MQTT binary sensor device registry integration."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps({
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'state_topic': 'test-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    })
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.identifiers == {('mqtt', 'helloworld')}
+    assert device.connections == {('mac', "02:5b:26:a8:dc:12")}
+    assert device.manufacturer == 'Whatever'
+    assert device.name == 'Beer'
+    assert device.model == 'Glass'
+    assert device.sw_version == '0.1-beta'

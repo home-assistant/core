@@ -9,6 +9,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant import util
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
@@ -18,7 +19,6 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON,
     STATE_UNKNOWN)
 from homeassistant.helpers import config_validation as cv
-from homeassistant import util
 
 REQUIREMENTS = ['pyvizio==0.0.3']
 

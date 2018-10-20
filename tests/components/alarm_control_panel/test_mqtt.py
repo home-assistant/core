@@ -6,11 +6,13 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNAVAILABLE,
     STATE_UNKNOWN)
-from homeassistant.components import alarm_control_panel
+from homeassistant.components import alarm_control_panel, mqtt
+from homeassistant.components.mqtt.discovery import async_start
 
 from tests.common import (
-    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant,
-    assert_setup_component)
+    mock_mqtt_component, async_fire_mqtt_message, fire_mqtt_message,
+    get_test_home_assistant, assert_setup_component, MockConfigEntry)
+from tests.components.alarm_control_panel import common
 
 CODE = 'HELLO_CODE'
 
@@ -104,7 +106,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
             }
         })
 
-        alarm_control_panel.alarm_arm_home(self.hass)
+        common.alarm_arm_home(self.hass)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/command', 'ARM_HOME', 0, False)
@@ -122,7 +124,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         })
 
         call_count = self.mock_publish.call_count
-        alarm_control_panel.alarm_arm_home(self.hass, 'abcd')
+        common.alarm_arm_home(self.hass, 'abcd')
         self.hass.block_till_done()
         self.assertEqual(call_count, self.mock_publish.call_count)
 
@@ -137,7 +139,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
             }
         })
 
-        alarm_control_panel.alarm_arm_away(self.hass)
+        common.alarm_arm_away(self.hass)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/command', 'ARM_AWAY', 0, False)
@@ -155,7 +157,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         })
 
         call_count = self.mock_publish.call_count
-        alarm_control_panel.alarm_arm_away(self.hass, 'abcd')
+        common.alarm_arm_away(self.hass, 'abcd')
         self.hass.block_till_done()
         self.assertEqual(call_count, self.mock_publish.call_count)
 
@@ -170,7 +172,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
             }
         })
 
-        alarm_control_panel.alarm_disarm(self.hass)
+        common.alarm_disarm(self.hass)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/command', 'DISARM', 0, False)
@@ -188,7 +190,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         })
 
         call_count = self.mock_publish.call_count
-        alarm_control_panel.alarm_disarm(self.hass, 'abcd')
+        common.alarm_disarm(self.hass, 'abcd')
         self.hass.block_till_done()
         self.assertEqual(call_count, self.mock_publish.call_count)
 
@@ -239,3 +241,33 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNAVAILABLE, state.state)
 
         fire_mqtt_message(self.hass, 'availability-topic', 'good')
+
+
+async def test_discovery_removal_alarm(hass, mqtt_mock, caplog):
+    """Test removal of discovered alarm_control_panel."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass,
+                            'homeassistant/alarm_control_panel/bla/config',
+                            data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass,
+                            'homeassistant/alarm_control_panel/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.beer')
+    assert state is None

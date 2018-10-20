@@ -281,7 +281,7 @@ class AirVisualData:
             _LOGGER.debug("New data retrieved: %s", resp)
 
             self.pollution_info = resp['current']['pollution']
-        except AirVisualError as err:
+        except (KeyError, AirVisualError) as err:
             if self.city and self.state and self.country:
                 location = (self.city, self.state, self.country)
             else:

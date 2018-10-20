@@ -40,6 +40,15 @@ HA_STATE_TO_DAIKIN = {
     STATE_OFF: 'off',
 }
 
+DAIKIN_TO_HA_STATE = {
+    'fan': STATE_FAN_ONLY,
+    'dry': STATE_DRY,
+    'cool': STATE_COOL,
+    'hot': STATE_HEAT,
+    'auto': STATE_AUTO,
+    'off': STATE_OFF,
+}
+
 HA_ATTR_TO_DAIKIN = {
     ATTR_OPERATION_MODE: 'mode',
     ATTR_FAN_MODE: 'f_rate',
@@ -75,9 +84,7 @@ class DaikinClimate(ClimateDevice):
         self._api = api
         self._force_refresh = False
         self._list = {
-            ATTR_OPERATION_MODE: list(
-                map(str.title, set(HA_STATE_TO_DAIKIN.values()))
-            ),
+            ATTR_OPERATION_MODE: list(HA_STATE_TO_DAIKIN),
             ATTR_FAN_MODE: list(
                 map(
                     str.title,
@@ -136,11 +143,11 @@ class DaikinClimate(ClimateDevice):
         elif key == ATTR_OPERATION_MODE:
             # Daikin can return also internal states auto-1 or auto-7
             # and we need to translate them as AUTO
-            value = re.sub(
-                '[^a-z]',
-                '',
-                self._api.device.represent(daikin_attr)[1]
-            ).title()
+            daikin_mode = re.sub(
+                '[^a-z]', '',
+                self._api.device.represent(daikin_attr)[1])
+            ha_mode = DAIKIN_TO_HA_STATE.get(daikin_mode)
+            value = ha_mode
 
         if value is None:
             _LOGGER.error("Invalid value requested for key %s", key)
@@ -167,8 +174,8 @@ class DaikinClimate(ClimateDevice):
 
             daikin_attr = HA_ATTR_TO_DAIKIN.get(attr)
             if daikin_attr is not None:
-                if value.title() in self._list[attr]:
-                    values[daikin_attr] = value.lower()
+                if value in self._list[attr]:
+                    values[daikin_attr] = HA_STATE_TO_DAIKIN[value]
                 else:
                     _LOGGER.error("Invalid value %s for %s", attr, value)
 

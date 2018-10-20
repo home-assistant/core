@@ -7,11 +7,11 @@ import logging
 from homeassistant.core import CoreState, State, Context
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.counter import (
-    DOMAIN, decrement, increment, reset, CONF_INITIAL, CONF_STEP, CONF_NAME,
-    CONF_ICON)
+    DOMAIN, CONF_INITIAL, CONF_RESTORE, CONF_STEP, CONF_NAME, CONF_ICON)
 from homeassistant.const import (ATTR_ICON, ATTR_FRIENDLY_NAME)
 
 from tests.common import (get_test_home_assistant, mock_restore_cache)
+from tests.components.counter.common import decrement, increment, reset
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +55,7 @@ class TestCounter(unittest.TestCase):
                     CONF_NAME: 'Hello World',
                     CONF_ICON: 'mdi:work',
                     CONF_INITIAL: 10,
+                    CONF_RESTORE: False,
                     CONF_STEP: 5,
                 }
             }
@@ -172,9 +173,12 @@ def test_initial_state_overrules_restore_state(hass):
 
     yield from async_setup_component(hass, DOMAIN, {
         DOMAIN: {
-            'test1': {},
+            'test1': {
+                CONF_RESTORE: False,
+            },
             'test2': {
                 CONF_INITIAL: 10,
+                CONF_RESTORE: False,
             },
         }})
 
@@ -185,6 +189,33 @@ def test_initial_state_overrules_restore_state(hass):
     state = hass.states.get('counter.test2')
     assert state
     assert int(state.state) == 10
+
+
+@asyncio.coroutine
+def test_restore_state_overrules_initial_state(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(hass, (
+        State('counter.test1', '11'),
+        State('counter.test2', '-22'),
+    ))
+
+    hass.state = CoreState.starting
+
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'test1': {},
+            'test2': {
+                CONF_INITIAL: 10,
+            },
+        }})
+
+    state = hass.states.get('counter.test1')
+    assert state
+    assert int(state.state) == 11
+
+    state = hass.states.get('counter.test2')
+    assert state
+    assert int(state.state) == -22
 
 
 @asyncio.coroutine

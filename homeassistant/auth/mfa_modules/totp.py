@@ -60,13 +60,14 @@ class TotpAuthModule(MultiFactorAuthModule):
     """Auth module validate time-based one time password."""
 
     DEFAULT_TITLE = 'Time-based One Time Password'
+    MAX_RETRY_TIME = 5
 
     def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._users = None  # type: Optional[Dict[str, str]]
         self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY)
+            STORAGE_VERSION, STORAGE_KEY, private=True)
 
     @property
     def input_schema(self) -> vol.Schema:
@@ -130,7 +131,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
         return user_id in self._users   # type: ignore
 
-    async def async_validation(
+    async def async_validate(
             self, user_id: str, user_input: Dict[str, Any]) -> bool:
         """Return True if validation passed."""
         if self._users is None:
@@ -149,10 +150,10 @@ class TotpAuthModule(MultiFactorAuthModule):
         if ota_secret is None:
             # even we cannot find user, we still do verify
             # to make timing the same as if user was found.
-            pyotp.TOTP(DUMMY_SECRET).verify(code)
+            pyotp.TOTP(DUMMY_SECRET).verify(code, valid_window=1)
             return False
 
-        return bool(pyotp.TOTP(ota_secret).verify(code))
+        return bool(pyotp.TOTP(ota_secret).verify(code, valid_window=1))
 
 
 class TotpSetupFlow(SetupFlow):

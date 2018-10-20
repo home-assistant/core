@@ -9,6 +9,7 @@ import homeassistant.components.microsoft_face as mf
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture, mock_coro)
+from tests.components.image_processing import common
 
 
 class TestMicrosoftFaceDetectSetup:
@@ -146,7 +147,7 @@ class TestMicrosoftFaceDetect:
             params={'returnFaceAttributes': "age,gender"}
         )
 
-        ip.scan(self.hass, entity_id='image_processing.test_local')
+        common.scan(self.hass, entity_id='image_processing.test_local')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.test_local')

@@ -27,9 +27,10 @@ At a minimum, each config flow will have to define a version number and the
 'user' step.
 
     @config_entries.HANDLERS.register(DOMAIN)
-    class ExampleConfigFlow(data_entry_flow.FlowHandler):
+    class ExampleConfigFlow(config_entries.ConfigFlow):
 
         VERSION = 1
+        CONNETION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
         async def async_step_user(self, user_input=None):
             …
@@ -114,14 +115,13 @@ should follow the same return values as a normal step.
 If the result of the step is to show a form, the user will be able to continue
 the flow from the config panel.
 """
-
 import logging
 import uuid
-from typing import Set, Optional, List  # noqa pylint: disable=unused-import
+from typing import Set, Optional, List, Dict  # noqa pylint: disable=unused-import
 
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
 
@@ -136,14 +136,24 @@ HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
     'cast',
-    'hangouts',
     'deconz',
+    'hangouts',
     'homematicip_cloud',
     'hue',
+    'ifttt',
+    'ios',
+    'lifx',
+    'mqtt',
     'nest',
     'openuv',
+    'simplisafe',
+    'smhi',
     'sonos',
+    'tradfri',
+    'unifi',
+    'upnp',
     'zone',
+    'zwave'
 ]
 
 
@@ -155,9 +165,15 @@ PATH_CONFIG = '.config_entries.json'
 
 SAVE_DELAY = 1
 
+# The config entry has been set up successfully
 ENTRY_STATE_LOADED = 'loaded'
+# There was an error while trying to set up this config entry
 ENTRY_STATE_SETUP_ERROR = 'setup_error'
+# The config entry was not ready to be set up yet, but might be later
+ENTRY_STATE_SETUP_RETRY = 'setup_retry'
+# The config entry has not been loaded
 ENTRY_STATE_NOT_LOADED = 'not_loaded'
+# An error occurred when trying to unload the entry
 ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
@@ -168,15 +184,24 @@ DISCOVERY_SOURCES = (
 
 EVENT_FLOW_DISCOVERED = 'config_entry_discovered'
 
+CONN_CLASS_CLOUD_PUSH = 'cloud_push'
+CONN_CLASS_CLOUD_POLL = 'cloud_poll'
+CONN_CLASS_LOCAL_PUSH = 'local_push'
+CONN_CLASS_LOCAL_POLL = 'local_poll'
+CONN_CLASS_ASSUMED = 'assumed'
+CONN_CLASS_UNKNOWN = 'unknown'
+
 
 class ConfigEntry:
     """Hold a configuration entry."""
 
     __slots__ = ('entry_id', 'version', 'domain', 'title', 'data', 'source',
-                 'state')
+                 'connection_class', 'state', '_setup_lock',
+                 '_async_cancel_retry_setup')
 
     def __init__(self, version: str, domain: str, title: str, data: dict,
-                 source: str, entry_id: Optional[str] = None,
+                 source: str, connection_class: str,
+                 entry_id: Optional[str] = None,
                  state: str = ENTRY_STATE_NOT_LOADED) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
@@ -197,11 +222,17 @@ class ConfigEntry:
         # Source of the configuration (user, discovery, cloud)
         self.source = source
 
+        # Connection class
+        self.connection_class = connection_class
+
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
 
+        # Function to cancel a scheduled retry
+        self._async_cancel_retry_setup = None
+
     async def async_setup(
-            self, hass: HomeAssistant, *, component=None) -> None:
+            self, hass: HomeAssistant, *, component=None, tries=0) -> None:
         """Set up an entry."""
         if component is None:
             component = getattr(hass.components, self.domain)
@@ -213,6 +244,22 @@ class ConfigEntry:
                 _LOGGER.error('%s.async_config_entry did not return boolean',
                               component.DOMAIN)
                 result = False
+        except ConfigEntryNotReady:
+            self.state = ENTRY_STATE_SETUP_RETRY
+            wait_time = 2**min(tries, 4) * 5
+            tries += 1
+            _LOGGER.warning(
+                'Config entry for %s not ready yet. Retrying in %d seconds.',
+                self.domain, wait_time)
+
+            async def setup_again(now):
+                """Run setup again."""
+                self._async_cancel_retry_setup = None
+                await self.async_setup(hass, component=component, tries=tries)
+
+            self._async_cancel_retry_setup = \
+                hass.helpers.event.async_call_later(wait_time, setup_again)
+            return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up entry %s for %s',
                               self.title, component.DOMAIN)
@@ -235,6 +282,15 @@ class ConfigEntry:
         if component is None:
             component = getattr(hass.components, self.domain)
 
+        if component.DOMAIN == self.domain:
+            if self._async_cancel_retry_setup is not None:
+                self._async_cancel_retry_setup()
+                self.state = ENTRY_STATE_NOT_LOADED
+                return True
+
+            if self.state != ENTRY_STATE_LOADED:
+                return True
+
         supports_unload = hasattr(component, 'async_unload_entry')
 
         if not supports_unload:
@@ -243,16 +299,18 @@ class ConfigEntry:
         try:
             result = await component.async_unload_entry(hass, self)
 
-            if not isinstance(result, bool):
-                _LOGGER.error('%s.async_unload_entry did not return boolean',
-                              component.DOMAIN)
-                result = False
+            assert isinstance(result, bool)
+
+            # Only adjust state if we unloaded the component
+            if result and component.DOMAIN == self.domain:
+                self.state = ENTRY_STATE_NOT_LOADED
 
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error unloading entry %s for %s',
                               self.title, component.DOMAIN)
-            self.state = ENTRY_STATE_FAILED_UNLOAD
+            if component.DOMAIN == self.domain:
+                self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
 
     def as_dict(self):
@@ -264,6 +322,7 @@ class ConfigEntry:
             'title': self.title,
             'data': self.data,
             'source': self.source,
+            'connection_class': self.connection_class,
         }
 
 
@@ -350,7 +409,24 @@ class ConfigEntries:
             self._entries = []
             return
 
-        self._entries = [ConfigEntry(**entry) for entry in config['entries']]
+        self._entries = [
+            ConfigEntry(
+                version=entry['version'],
+                domain=entry['domain'],
+                entry_id=entry['entry_id'],
+                data=entry['data'],
+                source=entry['source'],
+                title=entry['title'],
+                # New in 0.79
+                connection_class=entry.get('connection_class',
+                                           CONN_CLASS_UNKNOWN))
+            for entry in config['entries']]
+
+    @callback
+    def async_update_entry(self, entry, *, data):
+        """Update a config entry."""
+        entry.data = data
+        self._async_schedule_save()
 
     async def async_forward_entry_setup(self, entry, component):
         """Forward the setup of an entry to a different component.
@@ -400,6 +476,7 @@ class ConfigEntries:
             title=result['title'],
             data=result['data'],
             source=flow.context['source'],
+            connection_class=flow.CONNECTION_CLASS,
         )
         self._entries.append(entry)
         self._async_schedule_save()
@@ -462,3 +539,21 @@ class ConfigEntries:
 async def _old_conf_migrator(old_config):
     """Migrate the pre-0.73 config format to the latest version."""
     return {'entries': old_config}
+
+
+class ConfigFlow(data_entry_flow.FlowHandler):
+    """Base class for config flows with some helpers."""
+
+    CONNECTION_CLASS = CONN_CLASS_UNKNOWN
+
+    @callback
+    def _async_current_entries(self):
+        """Return current entries."""
+        return self.hass.config_entries.async_entries(self.handler)
+
+    @callback
+    def _async_in_progress(self):
+        """Return other in progress flows for current domain."""
+        return [flw for flw in self.hass.config_entries.flow.async_progress()
+                if flw['handler'] == self.handler and
+                flw['flow_id'] != self.flow_id]
