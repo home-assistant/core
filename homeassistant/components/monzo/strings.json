@@ -15,10 +15,6 @@
         "description": "To link your Monzo account, [authorize your account]({url})."
         }
     },
-    "error": {
-      "unknown": "Unknown error validating code",
-      "internal_error": "Internal error validating code"
-    },
     "abort": {
       "already_setup": "You can only configure a single Monzo account."
     }
