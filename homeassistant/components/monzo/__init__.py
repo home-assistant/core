@@ -99,8 +99,7 @@ async def async_setup_entry(hass, config_entry):
     sensors = hass.data[DATA_MONZO_CONFIG].get(CONF_SENSORS, {}).get(
         CONF_MONITORED_CONDITIONS, list(SENSORS))
 
-    monzo = MonzoObject(hass, sensors,config_entry)
-
+    monzo = MonzoObject(hass, sensors, config_entry)
     await monzo.async_update()
 
     # Make Monzo client available
