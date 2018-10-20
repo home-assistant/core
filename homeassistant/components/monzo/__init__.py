@@ -6,6 +6,7 @@ https://home-assistant.io/components/monzo/
 """
 from datetime import timedelta
 import logging
+import time
 
 import voluptuous as vol
 
@@ -191,7 +192,9 @@ class MonzoObject:
 
     def update_config_entry(self, new_token):
         """Update config entry with refreshed token."""
-        new_data = {**self.config_entry.data, 'tokens': new_token}
+        new_data = {**self.config_entry.data,
+                    'tokens': new_token,
+                    CONF_LAST_SAVED_AT: int(time.time())}
         self._hass.config_entries.async_update_entry(
             self.config_entry,
             data=new_data)
