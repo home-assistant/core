@@ -148,6 +148,7 @@ FLOWS = [
     'lifx',
     'mailgun',
     'luftdaten',
+    'monzo',
     'mqtt',
     'nest',
     'openuv',
