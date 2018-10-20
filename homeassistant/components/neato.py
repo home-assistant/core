@@ -31,14 +31,6 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-STATES = {
-    0: 'Invalid',
-    1: 'Idle',
-    2: 'Busy',
-    3: 'Pause',
-    4: 'Error'
-}
-
 MODE = {
     1: 'Eco',
     2: 'Turbo'
