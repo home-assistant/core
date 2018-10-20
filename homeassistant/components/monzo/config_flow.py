@@ -37,7 +37,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
-        return await async_step_user(user_input)
+        return await self.async_step_user(user_input)
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
