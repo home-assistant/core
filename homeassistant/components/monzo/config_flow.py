@@ -35,7 +35,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         """Initialize the config flow."""
         pass
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         errors = {}
 
@@ -53,7 +53,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         data_schema[vol.Required(CONF_CLIENT_SECRET)] = str
 
         return self.async_show_form(
-            step_id='init',
+            step_id='user',
             data_schema=vol.Schema(data_schema),
             errors=errors,
         )

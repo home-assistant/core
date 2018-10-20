@@ -97,7 +97,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up Monzo as a config entry."""
     # Get sensors as defined in configuration.yaml
-    sensors = hass.data[DATA_MONZO_CONFIG].get(CONF_SENSORS, {}).get(
+    sensors = hass.data.get(DATA_MONZO_CONFIG, {}).get(CONF_SENSORS, {}).get(
         CONF_MONITORED_CONDITIONS, list(SENSORS))
 
     monzo = MonzoObject(hass, sensors, config_entry)
@@ -123,8 +123,8 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][DATA_MONZO_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
             hass, refresh_sensors,
-            hass.data[DATA_MONZO_CONFIG].get(CONF_SCAN_INTERVAL,
-                                             DEFAULT_SCAN_INTERVAL))
+            hass.data.get(DATA_MONZO_CONFIG, {}).get(CONF_SCAN_INTERVAL,
+                                                     DEFAULT_SCAN_INTERVAL))
 
     _LOGGER.debug("async_setup_monzo is done")
 
