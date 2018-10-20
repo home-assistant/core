@@ -142,6 +142,7 @@ FLOWS = [
     'homematicip_cloud',
     'hue',
     'ios',
+    'monzo',
     'mqtt',
     'nest',
     'openuv',
