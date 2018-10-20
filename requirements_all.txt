@@ -310,7 +310,7 @@ dlipower==0.7.165
 dovado==0.4.1
 
 # homeassistant.components.sensor.dsmr
-dsmr_parser==0.11
+dsmr_parser==0.12
 
 # homeassistant.components.dweet
 # homeassistant.components.sensor.dweet
