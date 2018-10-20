@@ -198,10 +198,11 @@ class RMVDepartureData:
         try:
             _data = await self.rmv.get_departures(self._station_id,
                                                   products=self._products,
+                                                  directionId=self._direction,
                                                   maxJourneys=50)
         except RMVtransportApiConnectionError:
             self.departures = []
-            _LOGGER.warning("Returned data not understood")
+            _LOGGER.warning("Could not retrive data from rmv.de")
             return
         self.station = _data.get('station')
         _deps = []
