@@ -126,7 +126,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._mapdata[self._robot_serial]['maps'][0]
             ['time_in_suspended_cleaning'])
         self.clean_battery_start = (
-            self._mapdata[self._robot_serial]['maps'][0]['run_charge_at_start'])
+            self._mapdata[self._robot_serial]['maps'][0]['run_charge_at_start']
+            )
         self.clean_battery_end = (
             self._mapdata[self._robot_serial]['maps'][0]['run_charge_at_end'])
 
