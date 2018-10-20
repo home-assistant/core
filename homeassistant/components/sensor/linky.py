@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pylinky==0.1.6']
+REQUIREMENTS = ['pylinky==0.1.8']
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=10)
@@ -41,23 +41,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         client.fetch_data()
     except PyLinkyError as exp:
         _LOGGER.error(exp)
-        return
-    finally:
         client.close_session()
+        return
 
-    devices = [LinkySensor('Linky', username, password, timeout)]
+    devices = [LinkySensor('Linky', client)]
     add_entities(devices, True)
 
 
 class LinkySensor(Entity):
     """Representation of a sensor entity for Linky."""
 
-    def __init__(self, name, username, password, timeout):
+    def __init__(self, name, client):
         """Initialize the sensor."""
         self._name = name
-        self._username = username
-        self._password = password
-        self._timeout = timeout
+        self._client = client
         self._state = None
 
     @property
@@ -79,21 +76,17 @@ class LinkySensor(Entity):
     def update(self):
         """Fetch new state data for the sensor."""
         from pylinky.client import LinkyClient, PyLinkyError
-
-        client = LinkyClient(self._username, self._password, None,
-                             self._timeout)
         try:
-            client.fetch_data()
+            self._client.fetch_data()
         except PyLinkyError as exp:
             _LOGGER.error(exp)
+            self._client.close_session()
             return
-        finally:
-            client.close_session()
 
-        _LOGGER.debug(json.dumps(client.get_data(), indent=2))
+        _LOGGER.debug(json.dumps(self._client.get_data(), indent=2))
 
-        if client.get_data():
+        if self._client.get_data():
             # get the last past day data
-            self._state = client.get_data()['daily'][-2]['conso']
+            self._state = self._client.get_data()['daily'][-2]['conso']
         else:
             self._state = None
