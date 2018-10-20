@@ -211,7 +211,11 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
         self._optimistic_rgb = \
             optimistic or topic[CONF_RGB_STATE_TOPIC] is None
         self._optimistic_brightness = (
-            optimistic or topic[CONF_BRIGHTNESS_STATE_TOPIC] is None)
+            optimistic or
+            (topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None and
+             topic[CONF_BRIGHTNESS_STATE_TOPIC] is None) or
+            (topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is None and
+             topic[CONF_RGB_STATE_TOPIC] is None))
         self._optimistic_color_temp = (
             optimistic or topic[CONF_COLOR_TEMP_STATE_TOPIC] is None)
         self._optimistic_effect = (
