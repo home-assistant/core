@@ -929,6 +929,39 @@ class TestLightMQTT(unittest.TestCase):
             mock.call('test_light/bright', 50, 0, False)
         ], any_order=True)
 
+    def test_on_command_rgb(self):
+        """Test on command in RGB brightness mode."""
+        config = {light.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'command_topic': 'test_light/set',
+            'rgb_command_topic': "test_light/rgb",
+        }}
+
+        with assert_setup_component(1, light.DOMAIN):
+            assert setup_component(self.hass, light.DOMAIN, config)
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+        common.turn_on(self.hass, 'light.test', brightness=127)
+        self.hass.block_till_done()
+
+        # Should get the following MQTT messages.
+        #    test_light/rgb: '127,127,127'
+        #    test_light/set: 'ON'
+        self.mock_publish.async_publish.assert_has_calls([
+            mock.call('test_light/rgb', '127,127,127', 0, False),
+            mock.call('test_light/set', 'ON', 0, False),
+        ], any_order=True)
+        self.mock_publish.async_publish.reset_mock()
+
+        common.turn_off(self.hass, 'light.test')
+        self.hass.block_till_done()
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light/set', 'OFF', 0, False)
+
     def test_default_availability_payload(self):
         """Test availability by default payload with defined topic."""
         self.assertTrue(setup_component(self.hass, light.DOMAIN, {
