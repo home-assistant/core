@@ -113,5 +113,5 @@ class MonzoSensor(MonzoEntity):
         elif self._sensor_type == TYPE_POTS:
             pots = self.monzo.data[DATA_POTS]
             pot = next(pot for pot in pots if
-                pot['id'] == self._unique_account_id)
+                       pot['id'] == self._unique_account_id)
             self._state = pot['balance'] / 100
