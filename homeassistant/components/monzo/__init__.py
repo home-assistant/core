@@ -97,7 +97,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up Monzo as a config entry."""
 
-
     sensors = hass.data[DATA_MONZO_CONFIG].get(CONF_SENSORS, {}).get(
         CONF_MONITORED_CONDITIONS, list(SENSORS))
 
@@ -164,7 +163,8 @@ class MonzoObject:
         access_token = config_entry.data['tokens'][CONF_ACCESS_TOKEN]
         refresh_token = config_entry.data['tokens'][CONF_REFRESH_TOKEN]
         last_saved_at = config_entry.data['tokens'].get(CONF_LAST_SAVED_AT)
-        expires_at = config_entry.data['tokens'].get(CONF_EXPIRES_AT, last_saved_at)
+        expires_at = config_entry.data['tokens'].get(CONF_EXPIRES_AT,
+                                                     last_saved_at)
 
         oauth_client = MonzoOAuth2Client(client_id=client_id,
                                          client_secret=client_secret,

@@ -89,6 +89,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             client_id = user_input.get(CONF_CLIENT_ID)
             client_secret = user_input.get(CONF_CLIENT_SECRET)
+            
             redirect_uri = '{}{}'.format(self.hass.config.api.base_url,
                                          MONZO_AUTH_CALLBACK_PATH)
 
