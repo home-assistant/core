@@ -872,6 +872,9 @@ pyW800rf32==0.1
 # homeassistant.components.sensor.noaa_tides
 # py_noaa==0.3.0
 
+# homeassistant.components.cover.ryobi_gdo
+py_ryobi_gdo==0.0.10
+
 # homeassistant.components.ads
 pyads==2.2.6
 
