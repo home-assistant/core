@@ -32,19 +32,3 @@ async def test_show_form(hass):
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
-
-
-async def test_step_user(hass):
-    """Test that the user step correctly calls link step."""
-    conf = {
-        CONF_CLIENT_ID: 'test_client_id',
-        CONF_CLIENT_SECRET: 'test_client_secret',
-    }
-
-    flow = config_flow.MonzoFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=conf)
-
-    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['step_id'] == 'link'
