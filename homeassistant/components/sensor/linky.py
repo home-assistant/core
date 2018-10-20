@@ -75,7 +75,7 @@ class LinkySensor(Entity):
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Fetch new state data for the sensor."""
-        from pylinky.client import LinkyClient, PyLinkyError
+        from pylinky.client import PyLinkyError
         try:
             self._client.fetch_data()
         except PyLinkyError as exp:
