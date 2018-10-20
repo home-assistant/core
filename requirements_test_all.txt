@@ -126,6 +126,9 @@ luftdaten==0.3.4
 # homeassistant.components.switch.mfi
 mficlient==0.3.0
 
+# homeassistant.components.monzo
+monzotomtest==0.6.3
+
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
 # homeassistant.components.image_processing.tensorflow
