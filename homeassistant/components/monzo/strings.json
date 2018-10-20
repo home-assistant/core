@@ -2,7 +2,7 @@
   "config": {
     "title": "Monzo",
     "step": {
-      "init": {
+      "user": {
         "title": "OAuth Application Setup",
         "description": "Set up a [Monzo OAuth Client](https://developers.monzo.com) and enter the details here.",
         "data": {
