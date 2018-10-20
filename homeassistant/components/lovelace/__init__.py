@@ -31,12 +31,14 @@ SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_GET_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_GET_CARD,
     vol.Required('card_id'): str,
+    vol.Optional('format', default='yaml'): str,
 })
 
 SCHEMA_SET_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_SET_CARD,
     vol.Required('card_id'): str,
-    vol.Required('card_config'): str,
+    vol.Required('card_config'): vol.Any(str, Dict),
+    vol.Optional('format', default='yaml'): str,
 })
 
 
@@ -46,6 +48,10 @@ class WriteError(HomeAssistantError):
 
 class CardNotFoundError(HomeAssistantError):
     """Card not found in data."""
+
+
+class UnsupportedYamlError(HomeAssistantError):
+    """Unsupported YAML."""
 
 
 def save_yaml(fname: str, data: JSON_TYPE):
@@ -76,10 +82,20 @@ def save_yaml(fname: str, data: JSON_TYPE):
                 _LOGGER.error("YAML replacement cleanup failed: %s", exc)
 
 
+def _yaml_unsupported(loader, node):
+    raise UnsupportedYamlError(
+        'Unsupported YAML, you can not use {} in ui-lovelace.yaml'
+        .format(node.tag))
+
+
 def load_yaml(fname: str) -> JSON_TYPE:
     """Load a YAML file."""
     from ruamel.yaml import YAML
+    from ruamel.yaml.constructor import RoundTripConstructor
     from ruamel.yaml.error import YAMLError
+
+    RoundTripConstructor.add_constructor(None, _yaml_unsupported)
+
     yaml = YAML(typ='rt')
 
     try:
@@ -104,13 +120,13 @@ def load_config(fname: str) -> JSON_TYPE:
     for view in config.get('views', []):
         if 'id' not in view:
             updated = True
-            view['id'] = index
-            view.move_to_end('id', last=False)
+            view.insert(0, 'id', index,
+                        comment="Automatically created id")
         for card in view.get('cards', []):
             if 'id' not in card:
                 updated = True
-                card['id'] = uuid.uuid4().hex
-                card.move_to_end('id', last=False)
+                card.insert(0, 'id', uuid.uuid4().hex,
+                            comment="Automatically created id")
         index += 1
     if updated:
         save_yaml(fname, config)
@@ -145,25 +161,33 @@ def yaml_to_object(data: str) -> JSON_TYPE:
         raise HomeAssistantError(exc)
 
 
-def get_card(fname: str, card_id: str) -> JSON_TYPE:
+def get_card(fname: str, card_id: str, format: str) -> JSON_TYPE:
     """Load a specific card config for id."""
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
             if card.get('id') == card_id:
-                return object_to_yaml(card)
+                if format == 'yaml':
+                    return object_to_yaml(card)
+                elif format == 'json':
+                    return card
+                else:
+                    raise HomeAssistantError(
+                        'Format {} not supported'.format(format))
 
     raise CardNotFoundError(
         "Card with ID: {} was not found in {}.".format(card_id, fname))
 
 
-def set_card(fname: str, card_id: str, card_config: str) -> bool:
+def set_card(fname: str, card_id: str, card_config: str, format: str) -> bool:
     """Save a specific card config for id."""
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
             if card.get('id') == card_id:
-                card.update(yaml_to_object(card_config))
+                if format == 'yaml':
+                    card_config = yaml_to_object(card_config)
+                card.update(card_config)
                 save_yaml(fname, config)
                 return True
 
@@ -206,6 +230,8 @@ async def websocket_lovelace_config(hass, connection, msg):
     except FileNotFoundError:
         error = ('file_not_found',
                  'Could not find ui-lovelace.yaml in your config dir.')
+    except UnsupportedYamlError as err:
+        error = 'unsupported_error', str(err)
     except HomeAssistantError as err:
         error = 'load_error', str(err)
 
@@ -221,13 +247,16 @@ async def websocket_lovelace_get_card(hass, connection, msg):
     error = None
     try:
         card = await hass.async_add_executor_job(
-            get_card, hass.config.path(LOVELACE_CONFIG_FILE), msg['card_id'])
+            get_card, hass.config.path(LOVELACE_CONFIG_FILE), msg['card_id'],
+            msg.get('format', 'yaml'))
         message = websocket_api.result_message(
             msg['id'], card
         )
     except FileNotFoundError:
         error = ('file_not_found',
                  'Could not find ui-lovelace.yaml in your config dir.')
+    except UnsupportedYamlError as err:
+        error = 'unsupported_error', str(err)
     except CardNotFoundError:
         error = ('card_not_found',
                  'Could not find card in ui-lovelace.yaml.')
@@ -247,13 +276,15 @@ async def websocket_lovelace_set_card(hass, connection, msg):
     try:
         result = await hass.async_add_executor_job(
             set_card, hass.config.path(LOVELACE_CONFIG_FILE),
-            msg['card_id'], msg['card_config'])
+            msg['card_id'], msg['card_config'], msg.get('format', 'yaml'))
         message = websocket_api.result_message(
             msg['id'], result
         )
     except FileNotFoundError:
         error = ('file_not_found',
                  'Could not find ui-lovelace.yaml in your config dir.')
+    except UnsupportedYamlError as err:
+        error = 'unsupported_error', str(err)
     except CardNotFoundError:
         error = ('card_not_found',
                  'Could not find card in ui-lovelace.yaml.')
