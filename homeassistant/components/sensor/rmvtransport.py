@@ -4,6 +4,7 @@ Support for real-time departure information for Rhein-Main public transport.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rmvtransport/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -92,13 +93,13 @@ async def async_setup_platform(hass, config, async_add_entities,
                 next_departure.get(CONF_NAME),
                 timeout))
 
-    for sensor in sensors:
-        await sensor.async_update()
+    tasks = [sensor.async_update() for sensor in sensors]
+    if tasks:
+        await asyncio.wait(tasks)
+    if not all(sensor.data.departures for sensor in sensors):
+        raise PlatformNotReady
 
-        if not sensor.data.departures:
-            raise PlatformNotReady
-
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class RMVDepartureSensor(Entity):
