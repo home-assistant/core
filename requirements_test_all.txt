@@ -56,7 +56,7 @@ coinmarketcap==5.0.3
 defusedxml==0.5.0
 
 # homeassistant.components.sensor.dsmr
-dsmr_parser==0.11
+dsmr_parser==0.12
 
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
