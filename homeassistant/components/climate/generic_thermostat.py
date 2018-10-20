@@ -386,8 +386,6 @@ class GenericThermostat(ClimateDevice):
             self._target_temp = self._away_temp
             await self._async_control_heating()
             await self.async_update_ha_state()
-        else:
-            _LOGGER.debug("Away mode is already turned on for %s", self.entity_id)
 
     async def async_turn_away_mode_off(self):
         """Turn away off."""
@@ -396,5 +394,3 @@ class GenericThermostat(ClimateDevice):
             self._target_temp = self._saved_target_temp
             await self._async_control_heating()
             await self.async_update_ha_state()
-        else:
-            _LOGGER.debug("Away mode is already turned off for %s", self.entity_id)
