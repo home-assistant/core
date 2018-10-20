@@ -63,8 +63,7 @@ class MonzoSensor(MonzoEntity):
         self._state = None
         self._unit = unit
 
-        self._attrs.update({ATTR_ID:account_id})
-
+        self._attrs.update({ATTR_ID: account_id})
 
     @property
     def unique_id(self) -> str:
@@ -113,5 +112,6 @@ class MonzoSensor(MonzoEntity):
             self._state = balance['spend_today'] / 100
         elif self._sensor_type == TYPE_POTS:
             pots = self.monzo.data[DATA_POTS]
-            pot = next(pot for pot in pots if pot['id'] == self._unique_account_id)
+            pot = next(pot for pot in pots if
+                pot['id'] == self._unique_account_id)
             self._state = pot['balance'] / 100

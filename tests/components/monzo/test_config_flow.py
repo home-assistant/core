@@ -33,6 +33,7 @@ async def test_show_form(hass):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
+
 async def test_step_user(hass):
     """Test that the user step correctly calls link step."""
     conf = {
