@@ -95,6 +95,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up Monzo as a config entry."""
 
+    #Get sensors as defined in configuration.yaml
     sensors = hass.data[DATA_MONZO_CONFIG].get(CONF_SENSORS, {}).get(
         CONF_MONITORED_CONDITIONS, list(SENSORS))
 
@@ -118,7 +119,7 @@ async def async_setup_entry(hass, config_entry):
         await monzo.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    # Automatically poll Monzo on set interval and alert sensors
+    # Automatically poll Monzo on set interval and update stored data
     hass.data[DOMAIN][DATA_MONZO_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
             hass, refresh_sensors,
