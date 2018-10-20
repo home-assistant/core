@@ -240,6 +240,8 @@ omit =
     homeassistant/components/*/modbus.py
 
     homeassistant/components/monzo/__init__.py
+    homeassistant/components/monzo/local_auth.py
+    homeassistant/components/monzo/const.py
     homeassistant/components/*/monzo.py
 
     homeassistant/components/mychevy.py
