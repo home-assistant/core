@@ -5,7 +5,7 @@ from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS)
+    TEMP_CELSIUS, DEVICE_CLASS_PRESSURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ SENSOR_TYPES = {
     'humidity': ['%', None, DEVICE_CLASS_HUMIDITY],
     'illumination': ['lm', None, DEVICE_CLASS_ILLUMINANCE],
     'lux': ['lx', None, DEVICE_CLASS_ILLUMINANCE],
-    'pressure': ['hPa', 'mdi:gauge', None]
+    'pressure': ['hPa', None, DEVICE_CLASS_PRESSURE]
 }
 
 
@@ -41,6 +41,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             elif device['model'] in ['gateway', 'gateway.v3', 'acpartner.v3']:
                 devices.append(XiaomiSensor(device, 'Illumination',
                                             'illumination', gateway))
+            elif device['model'] in ['vibration']:
+                devices.append(XiaomiSensor(device, 'Bed Activity',
+                                            'bed_activity', gateway))
+                devices.append(XiaomiSensor(device, 'Tilt Angle',
+                                            'final_tilt_angle', gateway))
+                devices.append(XiaomiSensor(device, 'Coordination',
+                                            'coordination', gateway))
+            else:
+                _LOGGER.warning("Unmapped Device Model ")
     add_entities(devices)
 
 
@@ -84,6 +93,9 @@ class XiaomiSensor(XiaomiDevice):
         value = data.get(self._data_key)
         if value is None:
             return False
+        if self._data_key in ['coordination', 'status']:
+            self._state = value
+            return True
         value = float(value)
         if self._data_key in ['temperature', 'humidity', 'pressure']:
             value /= 100

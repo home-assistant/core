@@ -130,6 +130,9 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
+        if self.hass.config.units.name == 'imperial':
+            return round(self.data.get_wind().get('speed') * 2.24, 2)
+
         return round(self.data.get_wind().get('speed') * 3.6, 2)
 
     @property

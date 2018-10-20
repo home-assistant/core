@@ -8,10 +8,12 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
-                                                     DeviceScanner)
-from homeassistant.const import (CONF_HOST, CONF_TOKEN)
+
+REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,8 +21,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
 })
-
-REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 
 def get_scanner(hass, config):
@@ -56,7 +56,7 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
         self.device = device
 
     async def async_scan_devices(self):
-        """Scan for devices and return a list containing found device ids."""
+        """Scan for devices and return a list containing found device IDs."""
         from miio import DeviceException
 
         devices = []
@@ -68,7 +68,7 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
                 devices.append(device['mac'])
 
         except DeviceException as ex:
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            _LOGGER.error("Unable to fetch the state: %s", ex)
 
         return devices
 

@@ -19,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_LIGHTS, CONF_EXCLUDE)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.44']
+REQUIREMENTS = ['pyvera==0.2.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -195,3 +195,11 @@ class VeraDevice(Entity):
         attr['Vera Device Id'] = self.vera_device.vera_device_id
 
         return attr
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID.
+
+        The Vera assigns a unique and immutable ID number to each device.
+        """
+        return str(self.vera_device.vera_device_id)

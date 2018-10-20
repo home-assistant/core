@@ -17,7 +17,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID)
-from homeassistant.components import logbook
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
 from homeassistant.helpers.entity import ToggleEntity
@@ -113,21 +112,6 @@ def is_on(hass, entity_id):
     Async friendly.
     """
     return hass.states.is_state(entity_id, STATE_ON)
-
-
-@bind_hass
-def reload(hass):
-    """Reload the automation from config."""
-    hass.services.call(DOMAIN, SERVICE_RELOAD)
-
-
-@bind_hass
-def async_reload(hass):
-    """Reload the automation from config.
-
-    Returns a coroutine object.
-    """
-    return hass.services.async_call(DOMAIN, SERVICE_RELOAD)
 
 
 async def async_setup(hass, config):
@@ -384,8 +368,8 @@ def _async_get_action(hass, config, name):
     async def action(entity_id, variables, context):
         """Execute an action."""
         _LOGGER.info('Executing %s', name)
-        logbook.async_log_entry(
-            hass, name, 'has been triggered', DOMAIN, entity_id)
+        hass.components.logbook.async_log_entry(
+            name, 'has been triggered', DOMAIN, entity_id)
         await script_obj.async_run(variables, context)
 
     return action

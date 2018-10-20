@@ -96,7 +96,7 @@ def _add_player(hass, async_add_entities, host, port=None, name=None):
     @callback
     def _init_player(event=None):
         """Start polling."""
-        hass.async_add_job(player.async_init())
+        hass.async_create_task(player.async_init())
 
     @callback
     def _start_polling(event=None):
@@ -272,7 +272,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     def start_polling(self):
         """Start the polling task."""
-        self._polling_task = self._hass.async_add_job(
+        self._polling_task = self._hass.async_create_task(
             self._start_poll_command())
 
     def stop_polling(self):

@@ -4,7 +4,6 @@ Support for BME280 temperature, humidity and pressure sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bme280/
 """
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -80,20 +79,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=import-error
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the BME280 sensor."""
-    import smbus
-    from i2csense.bme280 import BME280
+    import smbus  # pylint: disable=import-error
+    from i2csense.bme280 import BME280  # pylint: disable=import-error
 
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
     i2c_address = config.get(CONF_I2C_ADDRESS)
 
     bus = smbus.SMBus(config.get(CONF_I2C_BUS))
-    sensor = yield from hass.async_add_job(
+    sensor = await hass.async_add_job(
         partial(BME280, bus, i2c_address,
                 osrs_t=config.get(CONF_OVERSAMPLING_TEMP),
                 osrs_p=config.get(CONF_OVERSAMPLING_PRES),
@@ -108,7 +105,7 @@ def async_setup_platform(hass, config, async_add_entities,
         _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
         return False
 
-    sensor_handler = yield from hass.async_add_job(BME280Handler, sensor)
+    sensor_handler = await hass.async_add_job(BME280Handler, sensor)
 
     dev = []
     try:
@@ -163,10 +160,9 @@ class BME280Sensor(Entity):
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from the BME280 and update the states."""
-        yield from self.hass.async_add_job(self.bme280_client.update)
+        await self.hass.async_add_job(self.bme280_client.update)
         if self.bme280_client.sensor.sample_ok:
             if self.type == SENSOR_TEMP:
                 temperature = round(self.bme280_client.sensor.temperature, 1)
