@@ -120,6 +120,7 @@ async def async_setup_entry(hass, config_entry):
         await monzo.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
+    # Automatically poll Monzo on set interval and alert sensors
     hass.data[DOMAIN][DATA_MONZO_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
             hass, refresh_sensors,
