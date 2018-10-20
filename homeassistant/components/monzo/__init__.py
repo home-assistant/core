@@ -37,7 +37,7 @@ DATA_BALANCE = 'balance'
 DATA_POTS = 'pots'
 
 DEFAULT_ATTRIBUTION = 'Data provided by Monzo'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
 
 TOPIC_UPDATE = '{0}_data_update'.format(DOMAIN)
 
