@@ -62,10 +62,6 @@ class MonzoSensor(MonzoEntity):
         self._state = None
         self._unit = unit
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def unique_id(self) -> str:
