@@ -164,3 +164,128 @@ class TestDateUtil(unittest.TestCase):
 
         diff = dt_util.now() - timedelta(minutes=365*60*24)
         self.assertEqual(dt_util.get_age(diff), "1 year")
+
+    def test_parse_time_expression(self):
+        """Test parse_time_expression."""
+        self.assertEqual(
+            [x for x in range(60)],
+            dt_util.parse_time_expression('*', 0, 59)
+        )
+        self.assertEqual(
+            [x for x in range(60)],
+            dt_util.parse_time_expression(None, 0, 59)
+        )
+
+        self.assertEqual(
+            [x for x in range(0, 60, 5)],
+            dt_util.parse_time_expression('/5', 0, 59)
+        )
+
+        self.assertEqual(
+            [1, 2, 3],
+            dt_util.parse_time_expression([2, 1, 3], 0, 59)
+        )
+
+        self.assertEqual(
+            [x for x in range(24)],
+            dt_util.parse_time_expression('*', 0, 23)
+        )
+
+        self.assertEqual(
+            [42],
+            dt_util.parse_time_expression(42, 0, 59)
+        )
+
+        self.assertRaises(ValueError, dt_util.parse_time_expression, 61, 0, 60)
+
+    def test_find_next_time_expression_time_basic(self):
+        """Test basic stuff for find_next_time_expression_time."""
+        def find(dt, hour, minute, second):
+            """Call test_find_next_time_expression_time."""
+            seconds = dt_util.parse_time_expression(second, 0, 59)
+            minutes = dt_util.parse_time_expression(minute, 0, 59)
+            hours = dt_util.parse_time_expression(hour, 0, 23)
+
+            return dt_util.find_next_time_expression_time(
+                dt, seconds, minutes, hours)
+
+        self.assertEqual(
+            datetime(2018, 10, 7, 10, 30, 0),
+            find(datetime(2018, 10, 7, 10, 20, 0), '*', '/30', 0)
+        )
+
+        self.assertEqual(
+            datetime(2018, 10, 7, 10, 30, 0),
+            find(datetime(2018, 10, 7, 10, 30, 0), '*', '/30', 0)
+        )
+
+        self.assertEqual(
+            datetime(2018, 10, 7, 12, 30, 30),
+            find(datetime(2018, 10, 7, 10, 30, 0), '/3', '/30', [30, 45])
+        )
+
+        self.assertEqual(
+            datetime(2018, 10, 8, 5, 0, 0),
+            find(datetime(2018, 10, 7, 10, 30, 0), 5, 0, 0)
+        )
+
+    def test_find_next_time_expression_time_dst(self):
+        """Test daylight saving time for find_next_time_expression_time."""
+        tz = dt_util.get_time_zone('Europe/Vienna')
+        dt_util.set_default_time_zone(tz)
+
+        def find(dt, hour, minute, second):
+            """Call test_find_next_time_expression_time."""
+            seconds = dt_util.parse_time_expression(second, 0, 59)
+            minutes = dt_util.parse_time_expression(minute, 0, 59)
+            hours = dt_util.parse_time_expression(hour, 0, 23)
+
+            return dt_util.find_next_time_expression_time(
+                dt, seconds, minutes, hours)
+
+        # Entering DST, clocks are rolled forward
+        self.assertEqual(
+            tz.localize(datetime(2018, 3, 26, 2, 30, 0)),
+            find(tz.localize(datetime(2018, 3, 25, 1, 50, 0)), 2, 30, 0)
+        )
+
+        self.assertEqual(
+            tz.localize(datetime(2018, 3, 26, 2, 30, 0)),
+            find(tz.localize(datetime(2018, 3, 25, 3, 50, 0)), 2, 30, 0)
+        )
+
+        self.assertEqual(
+            tz.localize(datetime(2018, 3, 26, 2, 30, 0)),
+            find(tz.localize(datetime(2018, 3, 26, 1, 50, 0)), 2, 30, 0)
+        )
+
+        # Leaving DST, clocks are rolled back
+        self.assertEqual(
+            tz.localize(datetime(2018, 10, 28, 2, 30, 0), is_dst=False),
+            find(tz.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=False),
+                 2, 30, 0)
+        )
+
+        self.assertEqual(
+            tz.localize(datetime(2018, 10, 28, 2, 30, 0), is_dst=False),
+            find(tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True),
+                 2, 30, 0)
+        )
+
+        self.assertEqual(
+            tz.localize(datetime(2018, 10, 28, 4, 30, 0), is_dst=False),
+            find(tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True),
+                 4, 30, 0)
+        )
+
+        self.assertEqual(
+            tz.localize(datetime(2018, 10, 28, 2, 30, 0), is_dst=True),
+            find(tz.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=True),
+                 2, 30, 0)
+        )
+
+        self.assertEqual(
+            tz.localize(datetime(2018, 10, 29, 2, 30, 0)),
+            find(tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=False),
+                 2, 30, 0)
+        )

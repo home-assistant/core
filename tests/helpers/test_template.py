@@ -682,6 +682,32 @@ class TestHelpersTemplate(unittest.TestCase):
             'None',
             tpl.render())
 
+    def test_distance_function_with_2_entity_ids(self):
+        """Test distance function with 2 entity ids."""
+        self.hass.states.set('test.object', 'happy', {
+            'latitude': 32.87336,
+            'longitude': -117.22943,
+        })
+        self.hass.states.set('test.object_2', 'happy', {
+            'latitude': self.hass.config.latitude,
+            'longitude': self.hass.config.longitude,
+        })
+        tpl = template.Template(
+            '{{ distance("test.object", "test.object_2") | round }}',
+            self.hass)
+        self.assertEqual('187', tpl.render())
+
+    def test_distance_function_with_1_entity_1_coord(self):
+        """Test distance function with 1 entity_id and 1 coord."""
+        self.hass.states.set('test.object', 'happy', {
+            'latitude': self.hass.config.latitude,
+            'longitude': self.hass.config.longitude,
+        })
+        tpl = template.Template(
+            '{{ distance("test.object", "32.87336", "-117.22943") | round }}',
+            self.hass)
+        self.assertEqual('187', tpl.render())
+
     def test_closest_function_home_vs_domain(self):
         """Test closest function home vs domain."""
         self.hass.states.set('test_domain.object', 'happy', {

@@ -16,9 +16,9 @@ from homeassistant.components.http import (
     CONF_SSL_CERTIFICATE)
 from homeassistant.const import CONF_TIME_ZONE, SERVER_PORT
 
-_LOGGER = logging.getLogger(__name__)
+from .const import X_HASSIO
 
-X_HASSIO = 'X-HASSIO-KEY'
+_LOGGER = logging.getLogger(__name__)
 
 
 class HassioAPIError(RuntimeError):

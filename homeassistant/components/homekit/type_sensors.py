@@ -58,7 +58,6 @@ class TemperatureSensor(HomeAccessory):
         serv_temp = self.add_preload_service(SERV_TEMPERATURE_SENSOR)
         self.char_temp = serv_temp.configure_char(
             CHAR_CURRENT_TEMPERATURE, value=0, properties=PROP_CELSIUS)
-        self.unit = None
 
     def update_state(self, new_state):
         """Update temperature after state changed."""
