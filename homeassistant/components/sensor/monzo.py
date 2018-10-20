@@ -89,11 +89,6 @@ class MonzoSensor(MonzoEntity):
         """Icon to use in the frontend, if any."""
         return self._icon
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
     @callback
     def _update_data(self):
         """Update the state."""
