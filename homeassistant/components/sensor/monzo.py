@@ -69,7 +69,7 @@ class MonzoSensor(MonzoEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}_{2}'.format(
+        return 'monzo_{0}_{1}_{2}'.format(
             self._name, self._sensor_type, self._unique_account_id)
 
     @property
