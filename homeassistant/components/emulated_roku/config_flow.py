@@ -8,7 +8,8 @@ from homeassistant.core import callback
 from homeassistant.util import slugify
 from .const import (DOMAIN, CONF_LISTEN_PORT, CONF_HOST_IP,
                     CONF_ADVERTISE_IP, CONF_ADVERTISE_PORT,
-                    CONF_UPNP_BIND_MULTICAST)
+                    CONF_UPNP_BIND_MULTICAST,
+                    DEFAULT_UPNP_BIND_MULTICAST)
 
 
 @callback
@@ -54,7 +55,8 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow):
                 vol.Optional(CONF_HOST_IP): str,
                 vol.Optional(CONF_ADVERTISE_IP): str,
                 vol.Optional(CONF_ADVERTISE_PORT): vol.Coerce(int),
-                vol.Optional(CONF_UPNP_BIND_MULTICAST, default=True): bool
+                vol.Optional(CONF_UPNP_BIND_MULTICAST,
+                             default=DEFAULT_UPNP_BIND_MULTICAST): bool
             }),
             errors=errors
         )
