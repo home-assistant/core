@@ -90,7 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data.get_realtime()
 
     devices = []
-    for sensor in config.get(CONF_MONITORED_CONDITIONS,[]):
+    for sensor in config.get(CONF_MONITORED_CONDITIONS, []):
         config_name, prod = sensor.rsplit('_', 1)
         name = SENSOR_TYPES[config_name].name
         sensor_type = SENSOR_TYPES[config_name].sensor_type
@@ -101,8 +101,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             update_call = update_trends
         devices.append(Sense(data, name, sensor_type,
                              is_production, update_call))
-        
-    for device in config.get(CONF_DEVICES,[]):
+
+    for device in config.get(CONF_DEVICES, []):
         devices.append(SenseDevice(data, device, update_active))
 
     add_entities(devices)
@@ -165,6 +165,7 @@ class Sense(Entity):
                                          self._is_production)
             self._state = round(state, 1)
 
+
 class SenseDevice(BinarySensorDevice):
     """Implementation of a Sense energy device binary sensor."""
 
@@ -179,7 +180,7 @@ class SenseDevice(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._state
-        
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -198,5 +199,4 @@ class SenseDevice(BinarySensorDevice):
         except SenseAPITimeoutException:
             _LOGGER.error("Timeout retrieving data")
             return
-        self._state =  self._name in self._data.active_devices
-            
+        self._state = self._name in self._data.active_devices
