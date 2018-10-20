@@ -153,7 +153,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.media_player.dlna_dmr
-async-upnp-client==0.12.6
+async-upnp-client==0.12.7
 
 # homeassistant.components.light.avion
 # avion==0.7
@@ -430,7 +430,7 @@ gps3==0.33.3
 greenwavereality==0.5.1
 
 # homeassistant.components.media_player.gstreamer
-gstreamer-player==1.1.0
+gstreamer-player==1.1.2
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.9
@@ -963,7 +963,7 @@ pylgnetcast-homeassistant==0.2.0.dev0
 pylgtv==0.1.9
 
 # homeassistant.components.sensor.linky
-pylinky==0.1.6
+pylinky==0.1.8
 
 # homeassistant.components.litejet
 pylitejet==0.1
@@ -1460,7 +1460,7 @@ temperusb==1.5.3
 teslajsonpy==0.0.23
 
 # homeassistant.components.sensor.thermoworks_smoke
-thermoworks_smoke==0.1.6
+thermoworks_smoke==0.1.7
 
 # homeassistant.components.thingspeak
 thingspeak==0.4.1

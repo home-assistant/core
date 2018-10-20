@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.homekit.const import EVENT_HOMEKIT_CHANGED
-from homeassistant.core import callback
+from homeassistant.core import callback as ha_callback
 
 from pyhap.accessory_driver import AccessoryDriver
 
@@ -25,5 +25,5 @@ def events(hass):
     events = []
     hass.bus.async_listen(
         EVENT_HOMEKIT_CHANGED,
-        callback(lambda e: events.append(e)))
+        ha_callback(lambda e: events.append(e)))
     yield events

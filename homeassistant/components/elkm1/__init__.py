@@ -35,7 +35,13 @@ CONF_ENABLED = 'enabled'
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ['alarm_control_panel', 'light', 'scene', 'switch']
+SUPPORTED_DOMAINS = ['alarm_control_panel', 'light', 'scene', 'sensor',
+                     'switch']
+
+SPEAK_SERVICE_SCHEMA = vol.Schema({
+    vol.Required('number'):
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=999))
+})
 
 
 def _host_validator(config):
@@ -135,12 +141,27 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                      'password': conf[CONF_PASSWORD]})
     elk.connect()
 
+    _create_elk_services(hass, elk)
+
     hass.data[DOMAIN] = {'elk': elk, 'config': config, 'keypads': {}}
     for component in SUPPORTED_DOMAINS:
         hass.async_create_task(
             discovery.async_load_platform(hass, component, DOMAIN, {}))
 
     return True
+
+
+def _create_elk_services(hass, elk):
+    def _speak_word_service(service):
+        elk.panel.speak_word(service.data.get('number'))
+
+    def _speak_phrase_service(service):
+        elk.panel.speak_phrase(service.data.get('number'))
+
+    hass.services.async_register(
+        DOMAIN, 'speak_word', _speak_word_service, SPEAK_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, 'speak_phrase', _speak_phrase_service, SPEAK_SERVICE_SCHEMA)
 
 
 def create_elk_entities(hass, elk_elements, element_type, class_, entities):
