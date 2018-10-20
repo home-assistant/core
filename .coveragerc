@@ -249,7 +249,7 @@ omit =
     homeassistant/components/*/opencv.py
 
     homeassistant/components/opentherm_gw.py
-    homeassistant/components/climate/opentherm_gw.py
+    homeassistant/components/*/opentherm_gw.py
 
     homeassistant/components/openuv/__init__.py
     homeassistant/components/*/openuv.py
@@ -569,6 +569,7 @@ omit =
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/lg_netcast.py
+    homeassistant/components/media_player/lg_soundbar.py    
     homeassistant/components/media_player/liveboxplaytv.py
     homeassistant/components/media_player/mediaroom.py
     homeassistant/components/media_player/mpchc.py

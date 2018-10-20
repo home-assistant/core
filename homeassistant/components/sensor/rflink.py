@@ -2,7 +2,7 @@
 Support for Rflink sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.rflink/
+https://home-assistant.io/components/sensor.rflink/
 """
 import logging
 

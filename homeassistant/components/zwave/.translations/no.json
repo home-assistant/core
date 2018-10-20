@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave er allerede konfigurert",
+            "one_instance_only": "Komponenten st\u00f8tter kun en enkelt Z-Wave-forekomst"
+        },
+        "error": {
+            "option_error": "Z-Wave-validering mislyktes. Er banen til USB dongel riktig?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Nettverksn\u00f8kkel (la v\u00e6re tom for automatisk generering)",
+                    "usb_path": "USB bane"
+                },
+                "description": "Se [www.home-assistant.io/docs/z-wave/installation/](https://www.home-assistant.io/docs/z-wave/installation/) for informasjon om konfigurasjon variablene",
+                "title": "Sett opp Z-Wave"
+            }
+        },
+        "title": "Z-Wave"
+    }
+}

@@ -183,19 +183,23 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
         self._fire = None
         self._size = None
         self._responsible_agency = None
+        self._remove_signal_delete = None
+        self._remove_signal_update = None
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        async_dispatcher_connect(
+        self._remove_signal_delete = async_dispatcher_connect(
             self.hass, SIGNAL_DELETE_ENTITY.format(self._external_id),
             self._delete_callback)
-        async_dispatcher_connect(
+        self._remove_signal_update = async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_ENTITY.format(self._external_id),
             self._update_callback)
 
     @callback
     def _delete_callback(self):
         """Remove this entity."""
+        self._remove_signal_delete()
+        self._remove_signal_update()
         self.hass.async_create_task(self.async_remove())
 
     @callback
