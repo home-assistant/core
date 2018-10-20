@@ -12,6 +12,7 @@ from homeassistant.components.monzo import (
     MonzoEntity)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.const import ATTR_ID
 
 DEPENDENCIES = ['monzo']
 _LOGGER = logging.getLogger(__name__)
@@ -61,6 +62,8 @@ class MonzoSensor(MonzoEntity):
         self._sensor_type = sensor_type
         self._state = None
         self._unit = unit
+
+        self._attrs.update({ATTR_ID:account_id})
 
 
     @property
