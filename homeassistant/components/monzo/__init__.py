@@ -30,8 +30,6 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 
-MONZO_CONFIG_FILE = 'monzo.conf'
-
 DATA_MONZO_CLIENT = 'data_client'
 DATA_MONZO_LISTENER = 'data_listener'
 DATA_MONZO_CONFIG = 'monzo_config'
