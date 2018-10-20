@@ -10,6 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD,
                                  CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
@@ -20,11 +21,14 @@ REQUIREMENTS = ['sense_energy==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_DEVICES = "devices"
+
 ACTIVE_NAME = "Energy"
 PRODUCTION_NAME = "Production"
 CONSUMPTION_NAME = "Usage"
 
 ACTIVE_TYPE = 'active'
+BIN_SENSOR_CLASS = 'power'
 
 
 class SensorConfig:
@@ -59,8 +63,10 @@ MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=60)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS):
+    vol.Optional(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(VALID_SENSORS)]),
+    vol.Optional(CONF_DEVICES):
+        vol.All(cv.ensure_list, vol.Length(min=1)),
 })
 
 
@@ -84,7 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data.get_realtime()
 
     devices = []
-    for sensor in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor in config.get(CONF_MONITORED_CONDITIONS,[]):
         config_name, prod = sensor.rsplit('_', 1)
         name = SENSOR_TYPES[config_name].name
         sensor_type = SENSOR_TYPES[config_name].sensor_type
@@ -95,6 +101,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             update_call = update_trends
         devices.append(Sense(data, name, sensor_type,
                              is_production, update_call))
+        
+    for device in config.get(CONF_DEVICES,[]):
+        devices.append(SenseDevice(data, device, update_active))
 
     add_entities(devices)
 
@@ -155,3 +164,39 @@ class Sense(Entity):
             state = self._data.get_trend(self._sensor_type,
                                          self._is_production)
             self._state = round(state, 1)
+
+class SenseDevice(BinarySensorDevice):
+    """Implementation of a Sense energy device binary sensor."""
+
+    def __init__(self, data, name, update_call):
+        """Initialize the sensor."""
+        self._name = name
+        self._data = data
+        self.update_sensor = update_call
+        self._state = False
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self._state
+        
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def device_class(self):
+        """Return the device class of the binary sensor."""
+        return BIN_SENSOR_CLASS
+
+    def update(self):
+        """Retrieve latest state."""
+        from sense_energy import SenseAPITimeoutException
+        try:
+            self.update_sensor()
+        except SenseAPITimeoutException:
+            _LOGGER.error("Timeout retrieving data")
+            return
+        self._state =  self._name in self._data.active_devices
+            
