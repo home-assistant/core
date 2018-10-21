@@ -267,7 +267,7 @@ dlipower==0.7.165
 dnspython3==1.15.0
 
 # homeassistant.components.doorbird
-doorbirdpy==2.0.2
+doorbirdpy==2.0.4
 
 # homeassistant.components.sensor.dovado
 dovado==0.4.1
