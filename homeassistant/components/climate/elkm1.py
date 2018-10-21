@@ -39,7 +39,8 @@ class ElkThermostat(ElkEntity, ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         return (SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | SUPPORT_AUX_HEAT
-            SUPPORT_TARGET_TEMPERATURE_HIGH | SUPPORT_TARGET_TEMPERATURE_LOW)
+                SUPPORT_TARGET_TEMPERATURE_HIGH |
+                SUPPORT_TARGET_TEMPERATURE_LOW)
 
     @property
     def temperature_unit(self):
