@@ -47,10 +47,12 @@ def setup(hass, config):
 
     return True
 
+
 class SomfyMyLink:
-    """Wrapper for the Somfy MyLink device."""
+    """API Wrapper for the Somfy MyLink device."""
 
     def __init__(self, host, port, system_id):
+        """Create the object with required parameters."""
         self.host = host
         self.port = port
         self.system_id = system_id

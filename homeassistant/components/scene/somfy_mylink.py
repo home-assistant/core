@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         scene_data = dict(
             scene_name=scene.get('name'),
             scene_id=scene.get('sceneID')
-            )
+        )
         scene_list.append(SomfyScene(somfy_mylink, **scene_data))
     add_entities(scene_list)
 
