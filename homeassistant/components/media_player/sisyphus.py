@@ -7,25 +7,18 @@ https://home-assistant.io/components/media_player.sisyphus/
 import logging
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.components.sisyphus import DATA_SISYPHUS
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_PLAYING, \
-    STATE_PAUSED, STATE_IDLE, STATE_OFF
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['sisyphus']
 
-MEDIA_TYPE_TRACK = "sisyphus_track"
+MEDIA_TYPE_TRACK = 'sisyphus_track'
 
 SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE \
     | SUPPORT_VOLUME_SET \
@@ -44,21 +37,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = discovery_info[CONF_NAME]
     host = discovery_info[CONF_HOST]
     add_entities(
-        [SisyphusPlayer(name, host, hass.data[DATA_SISYPHUS][name])],
-        update_before_add=True)
+        [SisyphusPlayer(name, host, hass.data[DATA_SISYPHUS][name])], True)
 
 
 class SisyphusPlayer(MediaPlayerDevice):
-    """Represents a single Sisyphus table as a media player device."""
+    """Representation of a Sisyphus table as a media player device."""
 
     def __init__(self, name, host, table):
-        """
-        Constructor.
-
-        :param name: name of the table
-        :param host: hostname or ip address
-        :param table: sisyphus-control Table object
-        """
+        """Initialize the Sisyphus media device."""
         self._name = name
         self._host = host
         self._table = table
@@ -99,11 +85,7 @@ class SisyphusPlayer(MediaPlayerDevice):
         return self._table.is_shuffle
 
     async def async_set_shuffle(self, shuffle):
-        """
-        Change the shuffle mode of the current playlist.
-
-        :param shuffle: True to shuffle, False not to
-        """
+        """Change the shuffle mode of the current playlist."""
         await self._table.set_shuffle(shuffle)
 
     @property

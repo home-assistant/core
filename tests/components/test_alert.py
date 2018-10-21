@@ -5,10 +5,12 @@ import unittest
 
 from homeassistant.setup import setup_component
 from homeassistant.core import callback
+from homeassistant.components.alert import DOMAIN
 import homeassistant.components.alert as alert
 import homeassistant.components.notify as notify
-from homeassistant.const import (CONF_ENTITY_ID, STATE_IDLE, CONF_NAME,
-                                 CONF_STATE, STATE_ON, STATE_OFF)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE,
+    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF)
 
 from tests.common import get_test_home_assistant
 
@@ -29,6 +31,63 @@ TEST_CONFIG = \
 TEST_NOACK = [NAME, NAME, DONE_MESSAGE, "sensor.test",
               STATE_ON, [30], False, NOTIFIER, False]
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
+
+
+def turn_on(hass, entity_id):
+    """Reset the alert.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.add_job(async_turn_on, hass, entity_id)
+
+
+@callback
+def async_turn_on(hass, entity_id):
+    """Async reset the alert.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    data = {ATTR_ENTITY_ID: entity_id}
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
+
+
+def turn_off(hass, entity_id):
+    """Acknowledge alert.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.add_job(async_turn_off, hass, entity_id)
+
+
+@callback
+def async_turn_off(hass, entity_id):
+    """Async acknowledge the alert.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    data = {ATTR_ENTITY_ID: entity_id}
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
+
+
+def toggle(hass, entity_id):
+    """Toggle acknowledgment of alert.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.add_job(async_toggle, hass, entity_id)
+
+
+@callback
+def async_toggle(hass, entity_id):
+    """Async toggle acknowledgment of alert.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    data = {ATTR_ENTITY_ID: entity_id}
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data))
 
 
 # pylint: disable=invalid-name
@@ -69,7 +128,7 @@ class TestAlert(unittest.TestCase):
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        alert.turn_off(self.hass, ENTITY_ID)
+        turn_off(self.hass, ENTITY_ID)
         self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.hass.states.get(ENTITY_ID).state)
 
@@ -86,10 +145,10 @@ class TestAlert(unittest.TestCase):
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        alert.turn_off(self.hass, ENTITY_ID)
+        turn_off(self.hass, ENTITY_ID)
         self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.hass.states.get(ENTITY_ID).state)
-        alert.turn_on(self.hass, ENTITY_ID)
+        turn_on(self.hass, ENTITY_ID)
         self.hass.block_till_done()
         self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
 
@@ -99,10 +158,10 @@ class TestAlert(unittest.TestCase):
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
         self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
-        alert.toggle(self.hass, ENTITY_ID)
+        toggle(self.hass, ENTITY_ID)
         self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.hass.states.get(ENTITY_ID).state)
-        alert.toggle(self.hass, ENTITY_ID)
+        toggle(self.hass, ENTITY_ID)
         self.hass.block_till_done()
         self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
 
@@ -117,7 +176,7 @@ class TestAlert(unittest.TestCase):
         hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
         self.assertFalse(hidden)
 
-        alert.turn_off(self.hass, ENTITY_ID)
+        turn_off(self.hass, ENTITY_ID)
         hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
         self.assertFalse(hidden)
 
@@ -199,7 +258,7 @@ class TestAlert(unittest.TestCase):
         self.assertEqual(True, entity.hidden)
 
     def test_done_message_state_tracker_reset_on_cancel(self):
-        """Test that the done message is reset when cancelled."""
+        """Test that the done message is reset when canceled."""
         entity = alert.Alert(self.hass, *TEST_NOACK)
         entity._cancel = lambda *args: None
         assert entity._send_done_message is False

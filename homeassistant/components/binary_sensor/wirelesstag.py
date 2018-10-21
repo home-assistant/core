@@ -14,9 +14,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.wirelesstag import (
     DOMAIN as WIRELESSTAG_DOMAIN,
-    WIRELESSTAG_TYPE_13BIT, WIRELESSTAG_TYPE_WATER,
-    WIRELESSTAG_TYPE_ALSPRO,
-    WIRELESSTAG_TYPE_WEMO_DEVICE,
     SIGNAL_BINARY_EVENT_UPDATE,
     WirelessTagBaseSensor)
 from homeassistant.const import (
@@ -30,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 # On means in range, Off means out of range
 SENSOR_PRESENCE = 'presence'
 
-# On means motion detected, Off means cear
+# On means motion detected, Off means clear
 SENSOR_MOTION = 'motion'
 
 # On means open, Off means closed
@@ -55,49 +52,21 @@ SENSOR_LIGHT = 'light'
 SENSOR_MOISTURE = 'moisture'
 
 # On means tag battery is low, Off means normal
-SENSOR_BATTERY = 'low_battery'
+SENSOR_BATTERY = 'battery'
 
 # Sensor types: Name, device_class, push notification type representing 'on',
 # attr to check
 SENSOR_TYPES = {
-    SENSOR_PRESENCE: ['Presence', 'presence', 'is_in_range', {
-        "on": "oor",
-        "off": "back_in_range"
-        }, 2],
-    SENSOR_MOTION: ['Motion', 'motion', 'is_moved', {
-        "on": "motion_detected",
-        }, 5],
-    SENSOR_DOOR: ['Door', 'door', 'is_door_open', {
-        "on": "door_opened",
-        "off": "door_closed"
-        }, 5],
-    SENSOR_COLD: ['Cold', 'cold', 'is_cold', {
-        "on": "temp_toolow",
-        "off": "temp_normal"
-        }, 4],
-    SENSOR_HEAT: ['Heat', 'heat', 'is_heat', {
-        "on": "temp_toohigh",
-        "off": "temp_normal"
-        }, 4],
-    SENSOR_DRY: ['Too dry', 'dry', 'is_too_dry', {
-        "on": "too_dry",
-        "off": "cap_normal"
-        }, 2],
-    SENSOR_WET: ['Too wet', 'wet', 'is_too_humid', {
-        "on": "too_humid",
-        "off": "cap_normal"
-        }, 2],
-    SENSOR_LIGHT: ['Light', 'light', 'is_light_on', {
-        "on": "too_bright",
-        "off": "light_normal"
-        }, 1],
-    SENSOR_MOISTURE: ['Leak', 'moisture', 'is_leaking', {
-        "on": "water_detected",
-        "off": "water_dried",
-        }, 1],
-    SENSOR_BATTERY: ['Low Battery', 'battery', 'is_battery_low', {
-        "on": "low_battery"
-        }, 3]
+    SENSOR_PRESENCE: 'Presence',
+    SENSOR_MOTION: 'Motion',
+    SENSOR_DOOR: 'Door',
+    SENSOR_COLD: 'Cold',
+    SENSOR_HEAT: 'Heat',
+    SENSOR_DRY: 'Too dry',
+    SENSOR_WET: 'Too wet',
+    SENSOR_LIGHT: 'Light',
+    SENSOR_MOISTURE: 'Leak',
+    SENSOR_BATTERY: 'Low Battery'
 }
 
 
@@ -114,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     tags = platform.tags
     for tag in tags.values():
-        allowed_sensor_types = WirelessTagBinarySensor.allowed_sensors(tag)
+        allowed_sensor_types = tag.supported_binary_events_types
         for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
             if sensor_type in allowed_sensor_types:
                 sensors.append(WirelessTagBinarySensor(platform, tag,
@@ -127,59 +96,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
     """A binary sensor implementation for WirelessTags."""
 
-    @classmethod
-    def allowed_sensors(cls, tag):
-        """Return list of allowed sensor types for specific tag type."""
-        sensors_map = {
-            # 13-bit tag - allows everything but not light and moisture
-            WIRELESSTAG_TYPE_13BIT: [
-                SENSOR_PRESENCE, SENSOR_BATTERY,
-                SENSOR_MOTION, SENSOR_DOOR,
-                SENSOR_COLD, SENSOR_HEAT,
-                SENSOR_DRY, SENSOR_WET],
-
-            # Moister/water sensor - temperature and moisture only
-            WIRELESSTAG_TYPE_WATER: [
-                SENSOR_PRESENCE, SENSOR_BATTERY,
-                SENSOR_COLD, SENSOR_HEAT,
-                SENSOR_MOISTURE],
-
-            # ALS Pro: allows everything, but not moisture
-            WIRELESSTAG_TYPE_ALSPRO: [
-                SENSOR_PRESENCE, SENSOR_BATTERY,
-                SENSOR_MOTION, SENSOR_DOOR,
-                SENSOR_COLD, SENSOR_HEAT,
-                SENSOR_DRY, SENSOR_WET,
-                SENSOR_LIGHT],
-
-            # Wemo are power switches.
-            WIRELESSTAG_TYPE_WEMO_DEVICE: [SENSOR_PRESENCE]
-        }
-
-        # allow everything if tag type is unknown
-        # (i just dont have full catalog of them :))
-        tag_type = tag.tag_type
-        fullset = SENSOR_TYPES.keys()
-        return sensors_map[tag_type] if tag_type in sensors_map else fullset
-
     def __init__(self, api, tag, sensor_type):
         """Initialize a binary sensor for a Wireless Sensor Tags."""
         super().__init__(api, tag)
         self._sensor_type = sensor_type
         self._name = '{0} {1}'.format(self._tag.name,
-                                      SENSOR_TYPES[self._sensor_type][0])
-        self._device_class = SENSOR_TYPES[self._sensor_type][1]
-        self._tag_attr = SENSOR_TYPES[self._sensor_type][2]
-        self.binary_spec = SENSOR_TYPES[self._sensor_type][3]
-        self.tag_id_index_template = SENSOR_TYPES[self._sensor_type][4]
+                                      self.event.human_readable_name)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         tag_id = self.tag_id
         event_type = self.device_class
+        mac = self.tag_manager_mac
         async_dispatcher_connect(
             self.hass,
-            SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type),
+            SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac),
             self._on_binary_event_callback)
 
     @property
@@ -190,7 +121,12 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
-        return self._device_class
+        return self._sensor_type
+
+    @property
+    def event(self):
+        """Binary event of tag."""
+        return self._tag.event[self._sensor_type]
 
     @property
     def principal_value(self):
@@ -198,9 +134,7 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
 
         Subclasses need override based on type of sensor.
         """
-        return (
-            STATE_ON if getattr(self._tag, self._tag_attr, False)
-            else STATE_OFF)
+        return STATE_ON if self.event.is_state_on else STATE_OFF
 
     def updated_state_value(self):
         """Use raw princial value."""
@@ -208,7 +142,7 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
 
     @callback
     def _on_binary_event_callback(self, event):
-        """Update state from arrive push notification."""
+        """Update state from arrived push notification."""
         # state should be 'on' or 'off'
         self._state = event.data.get('state')
         self.async_schedule_update_ha_state()

@@ -1,4 +1,6 @@
 """Implement the Smart Home traits."""
+import logging
+
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components import (
     climate,
@@ -24,6 +26,8 @@ from homeassistant.util import color as color_util, temperature as temp_util
 
 from .const import ERR_VALUE_OUT_OF_RANGE
 from .helpers import SmartHomeError
+
+_LOGGER = logging.getLogger(__name__)
 
 PREFIX_TRAITS = 'action.devices.traits.'
 TRAIT_ONOFF = PREFIX_TRAITS + 'OnOff'
@@ -317,7 +321,11 @@ class ColorTemperatureTrait(_Trait):
         response = {}
 
         temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
-        if temp is not None:
+        # Some faulty integrations might put 0 in here, raising exception.
+        if temp == 0:
+            _LOGGER.warning('Entity %s has incorrect color temperature %s',
+                            self.state.entity_id, temp)
+        elif temp is not None:
             response['color'] = {
                 'temperature':
                     color_util.color_temperature_mired_to_kelvin(temp)

@@ -1,5 +1,4 @@
 """Support for alexa Smart Home Skill API."""
-import asyncio
 import logging
 import math
 from datetime import datetime
@@ -695,8 +694,7 @@ class SmartHomeView(http.HomeAssistantView):
         """Initialize."""
         self.smart_home_config = smart_home_config
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle Alexa Smart Home requests.
 
         The Smart Home API requires the endpoint to be implemented in AWS
@@ -704,11 +702,11 @@ class SmartHomeView(http.HomeAssistantView):
         the response.
         """
         hass = request.app['hass']
-        message = yield from request.json()
+        message = await request.json()
 
         _LOGGER.debug("Received Alexa Smart Home request: %s", message)
 
-        response = yield from async_handle_message(
+        response = await async_handle_message(
             hass, self.smart_home_config, message)
         _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
         return b'' if response is None else self.json(response)
@@ -1529,3 +1527,8 @@ async def async_api_reportstate(hass, config, request, context, entity):
         name='StateReport',
         context={'properties': properties}
     )
+
+
+def turned_off_response(message):
+    """Return a device turned off response."""
+    return api_error(message[API_DIRECTIVE], error_type='BRIDGE_UNREACHABLE')

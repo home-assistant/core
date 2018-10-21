@@ -4,6 +4,8 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
+from homeassistant.core import callback
+from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,21 +38,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             elif model in ['natgas', 'sensor_natgas']:
                 devices.append(XiaomiNatgasSensor(device, gateway))
             elif model in ['switch', 'sensor_switch',
-                           'sensor_switch.aq2', 'sensor_switch.aq3']:
+                           'sensor_switch.aq2', 'sensor_switch.aq3',
+                           'remote.b1acn01']:
                 if 'proto' not in device or int(device['proto'][0:1]) == 1:
                     data_key = 'status'
                 else:
                     data_key = 'button_0'
                 devices.append(XiaomiButton(device, 'Switch', data_key,
                                             hass, gateway))
-            elif model in ['86sw1', 'sensor_86sw1', 'sensor_86sw1.aq1']:
+            elif model in ['86sw1', 'sensor_86sw1', 'sensor_86sw1.aq1',
+                           'remote.b186acn01']:
                 if 'proto' not in device or int(device['proto'][0:1]) == 1:
                     data_key = 'channel_0'
                 else:
                     data_key = 'button_0'
                 devices.append(XiaomiButton(device, 'Wall Switch', data_key,
                                             hass, gateway))
-            elif model in ['86sw2', 'sensor_86sw2', 'sensor_86sw2.aq1']:
+            elif model in ['86sw2', 'sensor_86sw2', 'sensor_86sw2.aq1',
+                           'remote.b286acn01']:
                 if 'proto' not in device or int(device['proto'][0:1]) == 1:
                     data_key_left = 'channel_0'
                     data_key_right = 'channel_1'
@@ -65,6 +70,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                             'dual_channel', hass, gateway))
             elif model in ['cube', 'sensor_cube', 'sensor_cube.aqgl01']:
                 devices.append(XiaomiCube(device, hass, gateway))
+            elif model in ['vibration', 'vibration.aq1']:
+                devices.append(XiaomiVibration(device, 'Vibration',
+                                               'status', gateway))
+            else:
+                _LOGGER.warning('Unmapped Device Model %s', model)
+
     add_entities(devices)
 
 
@@ -144,6 +155,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
         self._no_motion_since = 0
+        self._unsub_set_no_motion = None
         if 'proto' not in device or int(device['proto'][0:1]) == 1:
             data_key = 'status'
         else:
@@ -157,6 +169,13 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         attrs = {ATTR_NO_MOTION_SINCE: self._no_motion_since}
         attrs.update(super().device_state_attributes)
         return attrs
+
+    @callback
+    def _async_set_no_motion(self, now):
+        """Set state to False."""
+        self._unsub_set_no_motion = None
+        self._state = False
+        self.async_schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -179,11 +198,20 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             return False
 
         if value == MOTION:
-            self._should_poll = True
-            if self.entity_id is not None:
-                self._hass.bus.fire('motion', {
-                    'entity_id': self.entity_id
-                })
+            if self._data_key == 'motion_status':
+                if self._unsub_set_no_motion:
+                    self._unsub_set_no_motion()
+                self._unsub_set_no_motion = async_call_later(
+                    self._hass,
+                    180,
+                    self._async_set_no_motion
+                )
+            else:
+                self._should_poll = True
+                if self.entity_id is not None:
+                    self._hass.bus.fire('motion', {
+                        'entity_id': self.entity_id
+                    })
 
             self._no_motion_since = 0
             if self._state:
@@ -309,6 +337,38 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
                 self._state = False
                 return True
             return False
+
+
+class XiaomiVibration(XiaomiBinarySensor):
+    """Representation of a Xiaomi Vibration Sensor."""
+
+    def __init__(self, device, name, data_key, xiaomi_hub):
+        """Initialize the XiaomiVibration."""
+        self._last_action = None
+        super().__init__(device, name, xiaomi_hub, data_key, None)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {ATTR_LAST_ACTION: self._last_action}
+        attrs.update(super().device_state_attributes)
+        return attrs
+
+    def parse_data(self, data, raw_data):
+        """Parse data sent by gateway."""
+        value = data.get(self._data_key)
+        if value not in ('vibrate', 'tilt', 'free_fall'):
+            _LOGGER.warning("Unsupported movement_type detected: %s",
+                            value)
+            return False
+
+        self.hass.bus.fire('xiaomi_aqara.movement', {
+            'entity_id': self.entity_id,
+            'movement_type': value
+        })
+        self._last_action = value
+
+        return True
 
 
 class XiaomiButton(XiaomiBinarySensor):

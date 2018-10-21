@@ -2,7 +2,7 @@
 
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers import aiohttp_client
@@ -23,10 +23,11 @@ def configured_hosts(hass):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class DeconzFlowHandler(data_entry_flow.FlowHandler):
+class DeconzFlowHandler(config_entries.ConfigFlow):
     """Handle a deCONZ config flow."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the deCONZ config flow."""

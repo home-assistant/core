@@ -1,6 +1,5 @@
 """Helper methods for components within Home Assistant."""
 import re
-
 from typing import Any, Iterable, Tuple, Sequence, Dict
 
 from homeassistant.const import CONF_PLATFORM

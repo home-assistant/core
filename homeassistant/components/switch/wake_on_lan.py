@@ -10,26 +10,26 @@ import subprocess as sp
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-from homeassistant.const import (CONF_HOST, CONF_NAME)
 
-REQUIREMENTS = ['wakeonlan==1.0.0']
+REQUIREMENTS = ['wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_BROADCAST_ADDRESS = 'broadcast_address'
 CONF_MAC_ADDRESS = 'mac_address'
 CONF_OFF_ACTION = 'turn_off'
-CONF_BROADCAST_ADDRESS = 'broadcast_address'
 
 DEFAULT_NAME = 'Wake on LAN'
 DEFAULT_PING_TIMEOUT = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC_ADDRESS): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
 })
@@ -37,21 +37,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a wake on lan switch."""
-    name = config.get(CONF_NAME)
+    broadcast_address = config.get(CONF_BROADCAST_ADDRESS)
     host = config.get(CONF_HOST)
     mac_address = config.get(CONF_MAC_ADDRESS)
-    broadcast_address = config.get(CONF_BROADCAST_ADDRESS)
+    name = config.get(CONF_NAME)
     off_action = config.get(CONF_OFF_ACTION)
 
-    add_entities([WOLSwitch(hass, name, host, mac_address,
-                            off_action, broadcast_address)], True)
+    add_entities([WOLSwitch(
+        hass, name, host, mac_address, off_action, broadcast_address)], True)
 
 
 class WOLSwitch(SwitchDevice):
     """Representation of a wake on lan switch."""
 
-    def __init__(self, hass, name, host, mac_address,
-                 off_action, broadcast_address):
+    def __init__(
+            self, hass, name, host, mac_address, off_action,
+            broadcast_address):
         """Initialize the WOL switch."""
         import wakeonlan
         self._hass = hass
@@ -62,11 +63,6 @@ class WOLSwitch(SwitchDevice):
         self._off_script = Script(hass, off_action) if off_action else None
         self._state = False
         self._wol = wakeonlan
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def is_on(self):

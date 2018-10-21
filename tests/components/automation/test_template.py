@@ -7,6 +7,7 @@ import homeassistant.components.automation as automation
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_component)
+from tests.components.automation import common
 
 
 # pylint: disable=invalid-name
@@ -49,7 +50,7 @@ class TestAutomationTemplate(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
-        automation.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
 
         self.hass.states.set('test.entity', 'planet')

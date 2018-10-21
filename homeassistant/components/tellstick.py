@@ -4,7 +4,6 @@ Tellstick Component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tellstick/
 """
-import asyncio
 import logging
 import threading
 
@@ -158,8 +157,7 @@ class TellstickDevice(Entity):
         self._tellcore_device = tellcore_device
         self._name = tellcore_device.name
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             SIGNAL_TELLCORE_CALLBACK,

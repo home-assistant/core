@@ -10,21 +10,21 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, PLATFORM_SCHEMA,
-    SUPPORT_PLAY, MediaPlayerDevice)
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING, CONF_NAME,
-    CONF_HOST, CONF_PORT, CONF_SSL)
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, STATE_IDLE, STATE_OFF, STATE_ON,
+    STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'iTunes'
 DEFAULT_PORT = 8181
-DEFAULT_TIMEOUT = 10
 DEFAULT_SSL = False
+DEFAULT_TIMEOUT = 10
 DOMAIN = 'itunes'
 
 SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -52,7 +52,7 @@ class Itunes:
 
     @property
     def _base_url(self):
-        """Return the base url for endpoints."""
+        """Return the base URL for endpoints."""
         if self.use_ssl:
             uri_scheme = 'https://'
         else:

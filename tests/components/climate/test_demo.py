@@ -8,6 +8,7 @@ from homeassistant.setup import setup_component
 from homeassistant.components import climate
 
 from tests.common import get_test_home_assistant
+from tests.components.climate import common
 
 
 ENTITY_CLIMATE = 'climate.hvac'
@@ -56,7 +57,7 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting the target temperature without required attribute."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(21, state.attributes.get('temperature'))
-        climate.set_temperature(self.hass, None, ENTITY_CLIMATE)
+        common.set_temperature(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.assertEqual(21, state.attributes.get('temperature'))
 
@@ -64,7 +65,7 @@ class TestDemoClimate(unittest.TestCase):
         """Test the setting of the target temperature."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(21, state.attributes.get('temperature'))
-        climate.set_temperature(self.hass, 30, ENTITY_CLIMATE)
+        common.set_temperature(self.hass, 30, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(30.0, state.attributes.get('temperature'))
@@ -73,7 +74,7 @@ class TestDemoClimate(unittest.TestCase):
         """Test the setting of the target temperature."""
         state = self.hass.states.get(ENTITY_HEATPUMP)
         self.assertEqual(20, state.attributes.get('temperature'))
-        climate.set_temperature(self.hass, 21, ENTITY_HEATPUMP)
+        common.set_temperature(self.hass, 21, ENTITY_HEATPUMP)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HEATPUMP)
         self.assertEqual(21.0, state.attributes.get('temperature'))
@@ -84,8 +85,8 @@ class TestDemoClimate(unittest.TestCase):
         self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(21.0, state.attributes.get('target_temp_low'))
         self.assertEqual(24.0, state.attributes.get('target_temp_high'))
-        climate.set_temperature(self.hass, target_temp_high=25,
-                                target_temp_low=20, entity_id=ENTITY_ECOBEE)
+        common.set_temperature(self.hass, target_temp_high=25,
+                               target_temp_low=20, entity_id=ENTITY_ECOBEE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
         self.assertEqual(None, state.attributes.get('temperature'))
@@ -98,9 +99,9 @@ class TestDemoClimate(unittest.TestCase):
         self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(21.0, state.attributes.get('target_temp_low'))
         self.assertEqual(24.0, state.attributes.get('target_temp_high'))
-        climate.set_temperature(self.hass, temperature=None,
-                                entity_id=ENTITY_ECOBEE, target_temp_low=None,
-                                target_temp_high=None)
+        common.set_temperature(self.hass, temperature=None,
+                               entity_id=ENTITY_ECOBEE, target_temp_low=None,
+                               target_temp_high=None)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
         self.assertEqual(None, state.attributes.get('temperature'))
@@ -111,7 +112,7 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting the target humidity without required attribute."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(67, state.attributes.get('humidity'))
-        climate.set_humidity(self.hass, None, ENTITY_CLIMATE)
+        common.set_humidity(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(67, state.attributes.get('humidity'))
@@ -120,7 +121,7 @@ class TestDemoClimate(unittest.TestCase):
         """Test the setting of the target humidity."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(67, state.attributes.get('humidity'))
-        climate.set_humidity(self.hass, 64, ENTITY_CLIMATE)
+        common.set_humidity(self.hass, 64, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(64.0, state.attributes.get('humidity'))
@@ -129,7 +130,7 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting fan mode without required attribute."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("On High", state.attributes.get('fan_mode'))
-        climate.set_fan_mode(self.hass, None, ENTITY_CLIMATE)
+        common.set_fan_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("On High", state.attributes.get('fan_mode'))
@@ -138,7 +139,7 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting of new fan mode."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("On High", state.attributes.get('fan_mode'))
-        climate.set_fan_mode(self.hass, "On Low", ENTITY_CLIMATE)
+        common.set_fan_mode(self.hass, "On Low", ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("On Low", state.attributes.get('fan_mode'))
@@ -147,7 +148,7 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting swing mode without required attribute."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("Off", state.attributes.get('swing_mode'))
-        climate.set_swing_mode(self.hass, None, ENTITY_CLIMATE)
+        common.set_swing_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("Off", state.attributes.get('swing_mode'))
@@ -156,7 +157,7 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting of new swing mode."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("Off", state.attributes.get('swing_mode'))
-        climate.set_swing_mode(self.hass, "Auto", ENTITY_CLIMATE)
+        common.set_swing_mode(self.hass, "Auto", ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("Auto", state.attributes.get('swing_mode'))
@@ -169,7 +170,7 @@ class TestDemoClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("cool", state.attributes.get('operation_mode'))
         self.assertEqual("cool", state.state)
-        climate.set_operation_mode(self.hass, None, ENTITY_CLIMATE)
+        common.set_operation_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("cool", state.attributes.get('operation_mode'))
@@ -180,7 +181,7 @@ class TestDemoClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("cool", state.attributes.get('operation_mode'))
         self.assertEqual("cool", state.state)
-        climate.set_operation_mode(self.hass, "heat", ENTITY_CLIMATE)
+        common.set_operation_mode(self.hass, "heat", ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("heat", state.attributes.get('operation_mode'))
@@ -190,41 +191,41 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting the away mode without required attribute."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('on', state.attributes.get('away_mode'))
-        climate.set_away_mode(self.hass, None, ENTITY_CLIMATE)
+        common.set_away_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.assertEqual('on', state.attributes.get('away_mode'))
 
     def test_set_away_mode_on(self):
         """Test setting the away mode on/true."""
-        climate.set_away_mode(self.hass, True, ENTITY_CLIMATE)
+        common.set_away_mode(self.hass, True, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('on', state.attributes.get('away_mode'))
 
     def test_set_away_mode_off(self):
         """Test setting the away mode off/false."""
-        climate.set_away_mode(self.hass, False, ENTITY_CLIMATE)
+        common.set_away_mode(self.hass, False, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('off', state.attributes.get('away_mode'))
 
     def test_set_hold_mode_home(self):
         """Test setting the hold mode home."""
-        climate.set_hold_mode(self.hass, 'home', ENTITY_ECOBEE)
+        common.set_hold_mode(self.hass, 'home', ENTITY_ECOBEE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
         self.assertEqual('home', state.attributes.get('hold_mode'))
 
     def test_set_hold_mode_away(self):
         """Test setting the hold mode away."""
-        climate.set_hold_mode(self.hass, 'away', ENTITY_ECOBEE)
+        common.set_hold_mode(self.hass, 'away', ENTITY_ECOBEE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
         self.assertEqual('away', state.attributes.get('hold_mode'))
 
     def test_set_hold_mode_none(self):
         """Test setting the hold mode off/false."""
-        climate.set_hold_mode(self.hass, 'off', ENTITY_ECOBEE)
+        common.set_hold_mode(self.hass, 'off', ENTITY_ECOBEE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
         self.assertEqual('off', state.attributes.get('hold_mode'))
@@ -233,20 +234,20 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting the auxiliary heater without required attribute."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('off', state.attributes.get('aux_heat'))
-        climate.set_aux_heat(self.hass, None, ENTITY_CLIMATE)
+        common.set_aux_heat(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.assertEqual('off', state.attributes.get('aux_heat'))
 
     def test_set_aux_heat_on(self):
         """Test setting the axillary heater on/true."""
-        climate.set_aux_heat(self.hass, True, ENTITY_CLIMATE)
+        common.set_aux_heat(self.hass, True, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('on', state.attributes.get('aux_heat'))
 
     def test_set_aux_heat_off(self):
         """Test setting the auxiliary heater off/false."""
-        climate.set_aux_heat(self.hass, False, ENTITY_CLIMATE)
+        common.set_aux_heat(self.hass, False, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('off', state.attributes.get('aux_heat'))

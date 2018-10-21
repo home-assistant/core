@@ -24,8 +24,8 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_HOSTS, CONF_NAME, CONF_PORT,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE,
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
+    STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -96,7 +96,7 @@ def _add_player(hass, async_add_entities, host, port=None, name=None):
     @callback
     def _init_player(event=None):
         """Start polling."""
-        hass.async_add_job(player.async_init())
+        hass.async_create_task(player.async_init())
 
     @callback
     def _start_polling(event=None):
@@ -272,7 +272,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     def start_polling(self):
         """Start the polling task."""
-        self._polling_task = self._hass.async_add_job(
+        self._polling_task = self._hass.async_create_task(
             self._start_poll_command())
 
     def stop_polling(self):

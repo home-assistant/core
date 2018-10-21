@@ -29,7 +29,7 @@ def test_get_platforms_from_mailbox(mock_http_client):
     req = yield from mock_http_client.get(url)
     assert req.status == 200
     result = yield from req.json()
-    assert len(result) == 1 and "DemoMailbox" in result
+    assert len(result) == 1 and "DemoMailbox" == result[0].get('name', None)
 
 
 @asyncio.coroutine

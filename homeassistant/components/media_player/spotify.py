@@ -4,47 +4,53 @@ Support for interacting with Spotify Connect.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.spotify/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET,
-    SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
-    PLATFORM_SCHEMA, MediaPlayerDevice)
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
+    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['spotipy-homeassistant==2.4.4.dev1']
 
-DEPENDENCIES = ['http']
-
 _LOGGER = logging.getLogger(__name__)
+
+AUTH_CALLBACK_NAME = 'api:spotify'
+AUTH_CALLBACK_PATH = '/api/spotify'
+
+CONF_ALIASES = 'aliases'
+CONF_CACHE_PATH = 'cache_path'
+CONF_CLIENT_ID = 'client_id'
+CONF_CLIENT_SECRET = 'client_secret'
+
+CONFIGURATOR_DESCRIPTION = 'To link your Spotify account, ' \
+                           'click the link, login, and authorize:'
+CONFIGURATOR_LINK_NAME = 'Link Spotify account'
+CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
+
+DEFAULT_CACHE_PATH = '.spotify-token-cache'
+DEFAULT_NAME = 'Spotify'
+DEPENDENCIES = ['http']
+DOMAIN = 'spotify'
+
+ICON = 'mdi:spotify'
+
+SCAN_INTERVAL = timedelta(seconds=30)
+
+SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private'
 
 SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET
-
-SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private'
-DEFAULT_CACHE_PATH = '.spotify-token-cache'
-AUTH_CALLBACK_PATH = '/api/spotify'
-AUTH_CALLBACK_NAME = 'api:spotify'
-ICON = 'mdi:spotify'
-DEFAULT_NAME = 'Spotify'
-DOMAIN = 'spotify'
-CONF_ALIASES = 'aliases'
-CONF_CLIENT_ID = 'client_id'
-CONF_CLIENT_SECRET = 'client_secret'
-CONF_CACHE_PATH = 'cache_path'
-CONFIGURATOR_LINK_NAME = 'Link Spotify account'
-CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
-CONFIGURATOR_DESCRIPTION = 'To link your Spotify account, ' \
-                           'click the link, login, and authorize:'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
@@ -53,8 +59,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CACHE_PATH): cv.string,
     vol.Optional(CONF_ALIASES, default={}): {cv.string: cv.string}
 })
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 
 def request_configuration(hass, config, add_entities, oauth):
@@ -71,6 +75,7 @@ def request_configuration(hass, config, add_entities, oauth):
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Spotify platform."""
     import spotipy.oauth2
+
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
     cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
     oauth = spotipy.oauth2.SpotifyOAuth(
@@ -88,8 +93,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         configurator = hass.components.configurator
         configurator.request_done(hass.data.get(DOMAIN))
         del hass.data[DOMAIN]
-    player = SpotifyMediaPlayer(oauth, config.get(CONF_NAME, DEFAULT_NAME),
-                                config[CONF_ALIASES])
+    player = SpotifyMediaPlayer(
+        oauth, config.get(CONF_NAME, DEFAULT_NAME), config[CONF_ALIASES])
     add_entities([player], True)
 
 

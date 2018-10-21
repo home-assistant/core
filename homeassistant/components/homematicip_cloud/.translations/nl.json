@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Accesspoint is al geconfigureerd",
-            "conection_aborted": "Kon geen verbinding maken met de HMIP-server",
             "connection_aborted": "Kon geen verbinding maken met de HMIP-server",
             "unknown": "Er is een onbekende fout opgetreden."
         },

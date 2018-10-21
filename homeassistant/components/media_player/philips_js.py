@@ -4,19 +4,19 @@ Media Player component to integrate TVs exposing the Joint Space API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.philips_js/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
-    SUPPORT_PLAY, MediaPlayerDevice)
+    MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_API_VERSION, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    CONF_API_VERSION, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.util import Throttle
 
@@ -37,7 +37,7 @@ CONF_ON_ACTION = 'turn_on_action'
 
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = '127.0.0.1'
-DEFAULT_NAME = 'Philips TV'
+DEFAULT_NAME = "Philips TV"
 DEFAULT_API_VERSION = '1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

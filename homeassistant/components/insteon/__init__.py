@@ -4,9 +4,10 @@ Support for INSTEON Modems (PLM and Hub).
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon/
 """
-import asyncio
 import collections
 import logging
+from typing import Dict
+
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -18,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.13.1']
+REQUIREMENTS = ['insteonplm==0.15.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,9 +28,9 @@ DOMAIN = 'insteon'
 CONF_IP_PORT = 'ip_port'
 CONF_HUB_USERNAME = 'username'
 CONF_HUB_PASSWORD = 'password'
+CONF_HUB_VERSION = 'hub_version'
 CONF_OVERRIDE = 'device_override'
-CONF_PLM_HUB_MSG = ('Must configure either a PLM port or a Hub host, username '
-                    'and password')
+CONF_PLM_HUB_MSG = 'Must configure either a PLM port or a Hub host'
 CONF_ADDRESS = 'address'
 CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
@@ -66,6 +67,22 @@ EVENT_BUTTON_ON = 'insteon.button_on'
 EVENT_BUTTON_OFF = 'insteon.button_off'
 EVENT_CONF_BUTTON = 'button'
 
+
+def set_default_port(schema: Dict) -> Dict:
+    """Set the default port based on the Hub version."""
+    # If the ip_port is found do nothing
+    # If it is not found the set the default
+    ip_port = schema.get(CONF_IP_PORT)
+    if not ip_port:
+        hub_version = schema.get(CONF_HUB_VERSION)
+        # Found hub_version but not ip_port
+        if hub_version == 1:
+            schema[CONF_IP_PORT] = 9761
+        else:
+            schema[CONF_IP_PORT] = 25105
+    return schema
+
+
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
         vol.Required(CONF_ADDRESS): cv.string,
@@ -88,12 +105,13 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(
         vol.Schema(
             {vol.Exclusive(CONF_PORT, 'plm_or_hub',
-                           msg=CONF_PLM_HUB_MSG): cv.isdevice,
+                           msg=CONF_PLM_HUB_MSG): cv.string,
              vol.Exclusive(CONF_HOST, 'plm_or_hub',
                            msg=CONF_PLM_HUB_MSG): cv.string,
-             vol.Optional(CONF_IP_PORT, default=25105): int,
+             vol.Optional(CONF_IP_PORT): cv.port,
              vol.Optional(CONF_HUB_USERNAME): cv.string,
              vol.Optional(CONF_HUB_PASSWORD): cv.string,
+             vol.Optional(CONF_HUB_VERSION, default=2): vol.In([1, 2]),
              vol.Optional(CONF_OVERRIDE): vol.All(
                  cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
              vol.Optional(CONF_X10_ALL_UNITS_OFF): vol.In(HOUSECODES),
@@ -103,14 +121,7 @@ CONFIG_SCHEMA = vol.Schema({
                                              [CONF_X10_SCHEMA])
              }, extra=vol.ALLOW_EXTRA, required=True),
         cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
-        vol.Schema(
-            {vol.Inclusive(CONF_HOST, 'hub',
-                           msg=CONF_PLM_HUB_MSG): cv.string,
-             vol.Inclusive(CONF_HUB_USERNAME, 'hub',
-                           msg=CONF_PLM_HUB_MSG): cv.string,
-             vol.Inclusive(CONF_HUB_PASSWORD, 'hub',
-                           msg=CONF_PLM_HUB_MSG): cv.string,
-             }, extra=vol.ALLOW_EXTRA, required=True))
+        set_default_port)
     }, extra=vol.ALLOW_EXTRA)
 
 
@@ -137,8 +148,7 @@ X10_HOUSECODE_SCHEMA = vol.Schema({
     })
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the connection to the modem."""
     import insteonplm
 
@@ -151,6 +161,7 @@ def async_setup(hass, config):
     ip_port = conf.get(CONF_IP_PORT)
     username = conf.get(CONF_HUB_USERNAME)
     password = conf.get(CONF_HUB_PASSWORD)
+    hub_version = conf.get(CONF_HUB_VERSION)
     overrides = conf.get(CONF_OVERRIDE, [])
     x10_devices = conf.get(CONF_X10, [])
     x10_all_units_off_housecode = conf.get(CONF_X10_ALL_UNITS_OFF)
@@ -279,16 +290,17 @@ def async_setup(hass, config):
 
     if host:
         _LOGGER.info('Connecting to Insteon Hub on %s', host)
-        conn = yield from insteonplm.Connection.create(
+        conn = await insteonplm.Connection.create(
             host=host,
             port=ip_port,
             username=username,
             password=password,
+            hub_version=hub_version,
             loop=hass.loop,
             workdir=hass.config.config_dir)
     else:
         _LOGGER.info("Looking for Insteon PLM on %s", port)
-        conn = yield from insteonplm.Connection.create(
+        conn = await insteonplm.Connection.create(
             device=port,
             loop=hass.loop,
             workdir=hass.config.config_dir)
@@ -454,6 +466,16 @@ class InsteonEntity(Entity):
         return self._insteon_device_state.group
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self._insteon_device_state.group == 0x01:
+            uid = self._insteon_device.id
+        else:
+            uid = '{:s}_{:d}'.format(self._insteon_device.id,
+                                     self._insteon_device_state.group)
+        return uid
+
+    @property
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
         name = ''
@@ -480,8 +502,7 @@ class InsteonEntity(Entity):
                       deviceid.human, group, val)
         self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register INSTEON update events."""
         _LOGGER.debug('Tracking updates for device %s group %d statename %s',
                       self.address, self.group,

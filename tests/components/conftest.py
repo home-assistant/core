@@ -1,8 +1,12 @@
 """Fixtures for component testing."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.http import URL
+from homeassistant.components.websocket_api.auth import (
+    TYPE_AUTH, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED)
 
 from tests.common import MockUser, CLIENT_ID
 
@@ -12,28 +16,55 @@ def hass_ws_client(aiohttp_client):
     """Websocket client fixture connected to websocket server."""
     async def create_client(hass, access_token=None):
         """Create a websocket client."""
-        wapi = hass.components.websocket_api
         assert await async_setup_component(hass, 'websocket_api')
 
         client = await aiohttp_client(hass.http.app)
-        websocket = await client.ws_connect(wapi.URL)
-        auth_resp = await websocket.receive_json()
 
-        if auth_resp['type'] == wapi.TYPE_AUTH_OK:
-            assert access_token is None, \
-                'Access token given but no auth required'
-            return websocket
+        patches = []
 
-        assert access_token is not None, 'Access token required for fixture'
+        if access_token is None:
+            patches.append(patch(
+                'homeassistant.auth.AuthManager.active', return_value=False))
+            patches.append(patch(
+                'homeassistant.auth.AuthManager.support_legacy',
+                return_value=True))
+            patches.append(patch(
+                'homeassistant.components.websocket_api.auth.'
+                'validate_password', return_value=True))
+        else:
+            patches.append(patch(
+                'homeassistant.auth.AuthManager.active', return_value=True))
+            patches.append(patch(
+                'homeassistant.components.http.auth.setup_auth'))
 
-        await websocket.send_json({
-            'type': websocket_api.TYPE_AUTH,
-            'access_token': access_token
-        })
+        for p in patches:
+            p.start()
 
-        auth_ok = await websocket.receive_json()
-        assert auth_ok['type'] == wapi.TYPE_AUTH_OK
+        try:
+            websocket = await client.ws_connect(URL)
+            auth_resp = await websocket.receive_json()
+            assert auth_resp['type'] == TYPE_AUTH_REQUIRED
 
+            if access_token is None:
+                await websocket.send_json({
+                    'type': TYPE_AUTH,
+                    'api_password': 'bla'
+                })
+            else:
+                await websocket.send_json({
+                    'type': TYPE_AUTH,
+                    'access_token': access_token
+                })
+
+            auth_ok = await websocket.receive_json()
+            assert auth_ok['type'] == TYPE_AUTH_OK
+
+        finally:
+            for p in patches:
+                p.stop()
+
+        # wrap in client
+        websocket.client = client
         return websocket
 
     return create_client

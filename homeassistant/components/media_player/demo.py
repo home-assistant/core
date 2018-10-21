@@ -5,11 +5,12 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, SUPPORT_SELECT_SOUND_MODE, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_PLAY, SUPPORT_SHUFFLE_SET, MediaPlayerDevice)
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
+    SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOUND_MODE,
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 import homeassistant.util.dt as dt_util
 
@@ -20,8 +21,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         DemoYoutubePlayer(
             'Living Room', 'eyU3bRy2x44',
             '♥♥ The Best Fireplace Video (3 hours)', 300),
-        DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours',
-                          360000),
+        DemoYoutubePlayer(
+            'Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours', 360000),
         DemoMusicPlayer(), DemoTVShowPlayer(),
     ])
 

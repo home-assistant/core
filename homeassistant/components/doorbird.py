@@ -212,8 +212,7 @@ class DoorbirdRequestView(HomeAssistantView):
         self._token = token
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def get(self, request, sensor):
+    async def get(self, request, sensor):
         """Respond to requests from the device."""
 
         request_token = request.query.get('token')

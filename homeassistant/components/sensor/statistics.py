@@ -4,7 +4,6 @@ Support for statistics for sensor values.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.statistics/
 """
-import asyncio
 import logging
 import statistics
 from collections import deque
@@ -25,23 +24,26 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_AVERAGE_CHANGE = 'average_change'
 ATTR_CHANGE = 'change'
+ATTR_CHANGE_RATE = 'change_rate'
 ATTR_COUNT = 'count'
+ATTR_MAX_AGE = 'max_age'
 ATTR_MAX_VALUE = 'max_value'
-ATTR_MIN_VALUE = 'min_value'
 ATTR_MEAN = 'mean'
 ATTR_MEDIAN = 'median'
-ATTR_VARIANCE = 'variance'
-ATTR_STANDARD_DEVIATION = 'standard_deviation'
-ATTR_SAMPLING_SIZE = 'sampling_size'
-ATTR_TOTAL = 'total'
-ATTR_MAX_AGE = 'max_age'
 ATTR_MIN_AGE = 'min_age'
+ATTR_MIN_VALUE = 'min_value'
+ATTR_SAMPLING_SIZE = 'sampling_size'
+ATTR_STANDARD_DEVIATION = 'standard_deviation'
+ATTR_TOTAL = 'total'
+ATTR_VARIANCE = 'variance'
 
 CONF_SAMPLING_SIZE = 'sampling_size'
 CONF_MAX_AGE = 'max_age'
+CONF_PRECISION = 'precision'
 
 DEFAULT_NAME = 'Stats'
 DEFAULT_SIZE = 20
+DEFAULT_PRECISION = 2
 ICON = 'mdi:calculator'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -49,29 +51,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SAMPLING_SIZE, default=DEFAULT_SIZE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_MAX_AGE): cv.time_period
+    vol.Optional(CONF_MAX_AGE): cv.time_period,
+    vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION):
+        vol.Coerce(int)
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Statistics sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
     max_age = config.get(CONF_MAX_AGE, None)
+    precision = config.get(CONF_PRECISION)
 
-    async_add_entities(
-        [StatisticsSensor(hass, entity_id, name, sampling_size, max_age)],
-        True)
+    async_add_entities([StatisticsSensor(hass, entity_id, name, sampling_size,
+                                         max_age, precision)], True)
+
     return True
 
 
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 
-    def __init__(self, hass, entity_id, name, sampling_size, max_age):
+    def __init__(self, hass, entity_id, name, sampling_size, max_age,
+                 precision):
         """Initialize the Statistics sensor."""
         self._hass = hass
         self._entity_id = entity_id
@@ -83,15 +88,16 @@ class StatisticsSensor(Entity):
             self._name = '{} {}'.format(name, ATTR_COUNT)
         self._sampling_size = sampling_size
         self._max_age = max_age
+        self._precision = precision
         self._unit_of_measurement = None
         self.states = deque(maxlen=self._sampling_size)
-        if self._max_age is not None:
-            self.ages = deque(maxlen=self._sampling_size)
+        self.ages = deque(maxlen=self._sampling_size)
 
-        self.median = self.mean = self.variance = self.stdev = 0
-        self.min = self.max = self.total = self.count = 0
-        self.average_change = self.change = 0
-        self.max_age = self.min_age = 0
+        self.count = 0
+        self.mean = self.median = self.stdev = self.variance = None
+        self.total = self.min = self.max = None
+        self.min_age = self.max_age = None
+        self.change = self.average_change = self.change_rate = None
 
         if 'recorder' in self._hass.config.components:
             # only use the database if it's configured
@@ -113,11 +119,9 @@ class StatisticsSensor(Entity):
     def _add_state_to_queue(self, new_state):
         try:
             self.states.append(float(new_state.state))
-            if self._max_age is not None:
-                self.ages.append(new_state.last_updated)
-            self.count = self.count + 1
+            self.ages.append(new_state.last_updated)
         except ValueError:
-            self.count = self.count + 1
+            pass
 
     @property
     def name(self):
@@ -143,26 +147,22 @@ class StatisticsSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         if not self.is_binary:
-            state = {
-                ATTR_MEAN: self.mean,
-                ATTR_COUNT: self.count,
-                ATTR_MAX_VALUE: self.max,
-                ATTR_MEDIAN: self.median,
-                ATTR_MIN_VALUE: self.min,
+            return {
                 ATTR_SAMPLING_SIZE: self._sampling_size,
+                ATTR_COUNT: self.count,
+                ATTR_MEAN: self.mean,
+                ATTR_MEDIAN: self.median,
                 ATTR_STANDARD_DEVIATION: self.stdev,
-                ATTR_TOTAL: self.total,
                 ATTR_VARIANCE: self.variance,
+                ATTR_TOTAL: self.total,
+                ATTR_MIN_VALUE: self.min,
+                ATTR_MAX_VALUE: self.max,
+                ATTR_MIN_AGE: self.min_age,
+                ATTR_MAX_AGE: self.max_age,
                 ATTR_CHANGE: self.change,
                 ATTR_AVERAGE_CHANGE: self.average_change,
+                ATTR_CHANGE_RATE: self.change_rate,
             }
-            # Only return min/max age if we have an age span
-            if self._max_age:
-                state.update({
-                    ATTR_MAX_AGE: self.max_age,
-                    ATTR_MIN_AGE: self.min_age,
-                })
-            return state
 
     @property
     def icon(self):
@@ -177,45 +177,63 @@ class StatisticsSensor(Entity):
             self.ages.popleft()
             self.states.popleft()
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data and updates the states."""
         if self._max_age is not None:
             self._purge_old()
 
+        self.count = len(self.states)
+
         if not self.is_binary:
             try:  # require only one data point
-                self.mean = round(statistics.mean(self.states), 2)
-                self.median = round(statistics.median(self.states), 2)
+                self.mean = round(statistics.mean(self.states),
+                                  self._precision)
+                self.median = round(statistics.median(self.states),
+                                    self._precision)
             except statistics.StatisticsError as err:
-                _LOGGER.error(err)
+                _LOGGER.debug(err)
                 self.mean = self.median = STATE_UNKNOWN
 
             try:  # require at least two data points
-                self.stdev = round(statistics.stdev(self.states), 2)
-                self.variance = round(statistics.variance(self.states), 2)
+                self.stdev = round(statistics.stdev(self.states),
+                                   self._precision)
+                self.variance = round(statistics.variance(self.states),
+                                      self._precision)
             except statistics.StatisticsError as err:
-                _LOGGER.error(err)
+                _LOGGER.debug(err)
                 self.stdev = self.variance = STATE_UNKNOWN
 
             if self.states:
-                self.count = len(self.states)
-                self.total = round(sum(self.states), 2)
-                self.min = min(self.states)
-                self.max = max(self.states)
+                self.total = round(sum(self.states), self._precision)
+                self.min = round(min(self.states), self._precision)
+                self.max = round(max(self.states), self._precision)
+
+                self.min_age = self.ages[0]
+                self.max_age = self.ages[-1]
+
                 self.change = self.states[-1] - self.states[0]
                 self.average_change = self.change
+                self.change_rate = 0
+
                 if len(self.states) > 1:
                     self.average_change /= len(self.states) - 1
-                if self._max_age is not None:
-                    self.max_age = max(self.ages)
-                    self.min_age = min(self.ages)
-            else:
-                self.min = self.max = self.total = STATE_UNKNOWN
-                self.average_change = self.change = STATE_UNKNOWN
 
-    @asyncio.coroutine
-    def _initialize_from_database(self):
+                    time_diff = (self.max_age - self.min_age).total_seconds()
+                    if time_diff > 0:
+                        self.change_rate = self.average_change / time_diff
+
+                self.change = round(self.change, self._precision)
+                self.average_change = round(self.average_change,
+                                            self._precision)
+                self.change_rate = round(self.change_rate, self._precision)
+
+            else:
+                self.total = self.min = self.max = STATE_UNKNOWN
+                self.min_age = self.max_age = dt_util.utcnow()
+                self.change = self.average_change = STATE_UNKNOWN
+                self.change_rate = STATE_UNKNOWN
+
+    async def _initialize_from_database(self):
         """Initialize the list of states from the database.
 
         The query will get the list of states in DESCENDING order so that we
