@@ -23,7 +23,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for relay in relays:
             switch = DoorBirdSwitch(doorstation, relay)
             switches.append(switch)
-            _LOGGER.info('Added DoorBird switch "%s"', switch.name)
 
     add_devices(switches)
 
