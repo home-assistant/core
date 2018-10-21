@@ -5,8 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.xmpp/
 """
 import logging
+import mimetypes
+import random
+import string
+import asyncio
+from concurrent.futures import TimeoutError as FutTimeoutError
+
 import requests
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
@@ -14,6 +21,8 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM, CONF_RESOURCE)
 
 REQUIREMENTS = ['slixmpp==1.4.0']
+
+DEFAULT_CONTENT_TYPE = 'application/octet-stream'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +34,7 @@ ATTR_PATH = 'path'
 ATTR_URL = 'url'
 ATTR_VERIFY = 'verify'
 ATTR_TIMEOUT = 'timeout'
-XEP_0363_TIMEOUT = 30
+XEP_0363_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENDER): cv.string,
@@ -126,7 +135,7 @@ async def async_send_message(sender, password, recipient, use_tls,
 
             self.disconnect(wait=True)
 
-        async def send_image(self, timeout=None):
+        async def send_image(self, timeout=XEP_0363_TIMEOUT):
             """Send image via XMPP.
 
             Send XMPP image message using OOB (XEP_0066) and
@@ -135,13 +144,18 @@ async def async_send_message(sender, password, recipient, use_tls,
             if room:
                 # self.plugin['xep_0045'].join_muc(room, sender, wait=True)
                 # message = self.Message(sto=room, stype='groupchat')
-                _LOGGER.warning("sorry, sending images to rooms is"
+                _LOGGER.warning("sorry, sending files to rooms is"
                                 " currently not supported")
                 return
 
             try:
                 # uploading with XEP_0363
+                _LOGGER.debug("timeout set to %ss", timeout)
                 url = await self.upload_file(timeout=timeout)
+                if url is None:
+                    raise FileUploadError("could not upload file")
+            except (IqError, IqTimeout, XMPPError) as ex:
+                _LOGGER.error("upload error, could not send message %s", ex)
             except FileTooBig as ex:
                 _LOGGER.error("File too big for server, "
                               "could not upload file %s", ex)
@@ -150,8 +164,6 @@ async def async_send_message(sender, password, recipient, use_tls,
                               " could not upload file %s", ex)
             except FileUploadError as ex:
                 _LOGGER.error("FileUploadError, could not upload file %s", ex)
-            except (IqError, IqTimeout, XMPPError) as ex:
-                _LOGGER.error("could not send message %s", ex)
             except requests.exceptions.SSLError as ex:
                 _LOGGER.error("cannot establish SSL connection %s", ex)
             except requests.exceptions.ConnectionError as ex:
@@ -161,6 +173,8 @@ async def async_send_message(sender, password, recipient, use_tls,
                     IsADirectoryError,
                     TimeoutError) as ex:
                 _LOGGER.error("Error reading file %s", ex)
+            except FutTimeoutError as ex:
+                _LOGGER.error("the server did not respond in time, %s", ex)
             else:
                 _LOGGER.info("Upload success")
                 _LOGGER.info('Sending file to %s', recipient)
@@ -172,7 +186,7 @@ async def async_send_message(sender, password, recipient, use_tls,
                 try:
                     message.send()
                 except (IqError, IqTimeout, XMPPError) as ex:
-                    _LOGGER.error("could not send message %s", ex)
+                    _LOGGER.error("could not send image message %s", ex)
 
         async def upload_file(self, timeout=None):
             """Upload file to Jabber server and return new URL.
@@ -181,50 +195,121 @@ async def async_send_message(sender, password, recipient, use_tls,
             file path and return a URL of that file.
             """
             if data.get(ATTR_URL):
-                # send a file from an URL
-                url = data.get(ATTR_URL)
-                _LOGGER.info('getting file from %s', url)
-
-                def get_url(url):
-                    return requests.get(url,
-                                        verify=data.get(ATTR_VERIFY, True),
-                                        timeout=timeout,
-                                        )
-                result = await hass.async_add_executor_job(get_url, url)
-
-                if result.status_code >= 400:
-                    _LOGGER.error("could not load file from %s", url)
-                    return
-
-                length = len(result.content)
-                # we need a file extension, the upload server needs a
-                # filename, if none is provided, through the path
-                # we guess the extension
-                if not data.get(ATTR_PATH):
-                    extension = self.get_extension(
-                        result.headers['Content-Type']) or ".unknown"
-                    _LOGGER.debug("got %s extension", extension)
-                filename = data.get(ATTR_PATH) if data.get(ATTR_PATH) \
-                    else "upload"+extension
-                _LOGGER.info('Uploading file %s ...', filename)
-                url = await self['xep_0363'].upload_file(
-                    filename,
-                    # size=int(result.headers['Content-Length']),
-                    size=length,
-                    input_file=result.content,
-                    content_type=result.headers['Content-Type'],
-                    timeout=timeout,
-                    )
+                url = await self.upload_file_from_url(data.get(ATTR_URL),
+                                                      timeout=timeout)
             elif data.get(ATTR_PATH):
-                # send message from local path
-                filename = data.get(ATTR_PATH) if data else None
-                _LOGGER.info('Uploading file %s ...', filename)
-                url = await self['xep_0363'].upload_file(filename,
-                                                         timeout=timeout)
+                url = await self.upload_file_from_path(data.get(ATTR_PATH),
+                                                       timeout=timeout)
             else:
                 _LOGGER.error("no path or URL found for image")
 
             _LOGGER.info('Upload success!')
+            return url
+
+        async def upload_file_from_url(self, url, timeout=None):
+            """Upload a file from a URL. Returns a URL.
+
+            uploaded via XEP_0363 and HTTPand returns the resulting URL
+            """
+            # send a file from an URL
+            _LOGGER.info('getting file from %s', url)
+
+            def get_url(url):
+                return requests.get(url,
+                                    verify=data.get(ATTR_VERIFY, True),
+                                    timeout=timeout,
+                                    )
+            result = await hass.async_add_executor_job(get_url, url)
+
+            if result.status_code >= 400:
+                _LOGGER.error("could not load file from %s", url)
+                return
+
+            filesize = len(result.content)
+            # we need a file extension, the upload server needs a
+            # filename, if none is provided, through the path
+            # we guess the extension
+            if not data.get(ATTR_PATH):
+                extension = mimetypes.guess_extension(
+                    result.headers['Content-Type']) or ".unknown"
+                # extension = self.get_extension(
+                #     result.headers['Content-Type']) or ".unknown"
+                _LOGGER.debug("got %s extension", extension)
+                filename = self.get_random_filename(extension)
+            else:
+                filename = self.get_random_filename(data.get(ATTR_PATH))
+
+            _LOGGER.info('Uploading file from URL, %s', filename)
+
+            # would be call if timeout worked with upload_file
+            # url = await self['xep_0363'].upload_file(
+            #     filename,
+            #     size=filesize,
+            #     input_file=result.content,
+            #     content_type=result.headers['Content-Type'],
+            #     timeout=timeout,
+            #     )
+
+            # current workaround for non-working timeout in slixmpp:
+            try:
+                url = await asyncio.wait_for(self['xep_0363'].upload_file(
+                    filename,
+                    size=filesize,
+                    input_file=result.content,
+                    content_type=result.headers['Content-Type'],
+                    timeout=timeout,
+                    ),
+                                             timeout,
+                                             loop=self.loop)
+            except (IqError, IqTimeout, XMPPError) as ex:
+                _LOGGER.error("could not upload file to server %s", ex)
+                raise
+
+            return url
+
+        async def upload_file_from_path(self, path, timeout=None):
+            """Upload a file from a local file path via XEP_0363."""
+            # send message from local path
+            _LOGGER.info('Uploading file from path, %s ...', path)
+
+            with open(path, 'rb') as upfile:
+                _LOGGER.debug("reading file %s", path)
+                input_file = upfile.read()
+            filesize = len(input_file)
+            _LOGGER.debug("filesize is %s bytes", filesize)
+
+            content_type = mimetypes.guess_type(path)[0]
+            if content_type is None:
+                content_type = DEFAULT_CONTENT_TYPE
+            _LOGGER.debug("content_type is %s", content_type)
+            # set random filename for privacy
+            filename = self.get_random_filename(data.get(ATTR_PATH))
+            _LOGGER.debug("uploading file with random filename %s", filename)
+            # would be call if timeout worked with upload_file
+            # url = await self['xep_0363'].upload_file(filename,
+            #                                      timeout=timeout)
+
+            try:
+                url = await asyncio.wait_for(self['xep_0363'].upload_file(
+                    filename,
+                    size=filesize,
+                    input_file=input_file,
+                    content_type=content_type,
+                    timeout=timeout,
+                    ),
+                                             timeout,
+                                             loop=self.loop)
+            except (IqError, IqTimeout, XMPPError) as ex:
+                _LOGGER.error("could not upload file to server %s", ex)
+                raise
+
+            # current workaround for non-working timeout in slixmpp:
+            # url = await asyncio.wait_for(self['xep_0363'].upload_file(
+            #     filename,
+            #     timeout=timeout,
+            #     ),
+            #                              timeout,
+            #                              loop=self.loop)
             return url
 
         def send_text_message(self):
@@ -244,92 +329,17 @@ async def async_send_message(sender, password, recipient, use_tls,
                                       mtype='chat',
                                       )
             except (IqError, IqTimeout, XMPPError) as ex:
-                _LOGGER.error("could not send message %s", ex)
+                _LOGGER.error("could not send text message %s", ex)
 
         # pylint: disable=no-self-use
-        def get_extension(self, content_type):
-            """Get a file extension based on a content type.
-
-            Used when downloaded file does not provide an extension.
-            Mainly useful for mobile recipients as they suggest an app to open
-            the file with.
-            """
-            types = {'audio/aac': '.aac',
-                     'application/x-abiword': '.abw',
-                     'video/x-msvideo': '.avi',
-                     'application/vnd.amazon.ebook': '.azw',
-                     'application/octet-stream': '.bin',
-                     'image/bmp': '.bmp',
-                     'application/x-bzip': '.bz',
-                     'application/x-bzip2': '.bz2',
-                     'application/x-csh': '.csh',
-                     'text/css': '.css',
-                     'text/csv': '.csv',
-                     'application/msword': '.doc',
-                     'application/vnd.openxmlformats-officedocument'
-                     '.wordprocessingml.document': '.docx',
-                     'application/vnd.ms-fontobject': '.eot',
-                     'application/epub+zip': '.epub',
-                     'application/ecmascript': '.es',
-                     'image/gif': '.gif',
-                     'text/html': '.html',
-                     'image/x-icon': '.ico',
-                     'text/calendar': '.ics',
-                     'application/java-archive': '.jar',
-                     'image/jpeg': '.jpg',
-                     'application/javascript': '.js',
-                     'application/json': '.json',
-                     'audio/midi': '.midi',
-                     'audio/x-midi': '.midi',
-                     'video/mpeg': '.mpeg',
-                     'application/vnd.apple.installer+xml': '.mpkg',
-                     'application/'
-                     'vnd.oasis.opendocument.presentation': '.odp',
-                     'application/vnd.oasis.opendocument.spreadsheet': '.ods',
-                     'application/vnd.oasis.opendocument.text': '.odt',
-                     'audio/ogg': '.oga',
-                     'video/ogg': '.ogv',
-                     'application/ogg': '.ogx',
-                     'font/otf': '.otf',
-                     'image/png': '.png',
-                     'application/pdf': '.pdf',
-                     'application/vnd.ms-powerpoint': '.ppt',
-                     'application/vnd.openxmlformats-officedocument.'
-                     'presentationml.presentation': '.pptx',
-                     'application/x-rar-compressed': '.rar',
-                     'application/rtf': '.rtf',
-                     'application/x-sh': '.sh',
-                     'image/svg+xml': '.svg',
-                     'application/x-shockwave-flash': '.swf',
-                     'application/x-tar': '.tar',
-                     'image/tiff': '.tiff',
-                     'application/typescript': '.ts',
-                     'font/ttf': '.ttf',
-                     'text/plain': '.txt',
-                     'application/vnd.visio': '.vsd',
-                     'audio/wav': '.wav',
-                     'audio/webm': '.weba',
-                     'video/webm': '.webm',
-                     'image/webp': '.webp',
-                     'font/woff': '.woff',
-                     'font/woff2': '.woff2',
-                     'application/xhtml+xml': '.xhtml',
-                     'application/vnd.ms-excel': '.xls',
-                     'application/vnd.openxmlformats-officedocument.'
-                     'spreadsheetml.sheet': '.xlsx',
-                     'application/xml': '.xml',
-                     'application/vnd.mozilla.xul+xml': '.xul',
-                     'application/zip': '.zip',
-                     'video/3gpp': '.3gp',
-                     'video/3gpp2': '.3g2',
-                     'application/x-7z-compressed': '.7z',
-                     }
-            try:
-                return types[content_type.lower()]
-            except KeyError:
-                _LOGGER.warning("can't provide file extension. "
-                                "Use path parameter to force filename.")
-                return None
+        def get_random_filename(self, filename):
+            """Return a random filename, leaving the extension intact."""
+            if '.' in filename:
+                extension = filename.split('.')[-1]
+            else:
+                extension = "txt"
+            return ''.join(random.choice(string.ascii_letters)
+                           for i in range(10)) + '.' + extension
 
         def disconnect_on_login_fail(self, event):
             """Disconnect from the server if credentials are invalid."""
