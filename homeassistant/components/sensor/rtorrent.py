@@ -49,6 +49,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(dev)
 
+def format_speed(speed):
+    """Return a bytes/s measurement as a human readable string."""
+    kb_spd = float(speed) / 1024
+    return round(kb_spd, 2 if kb_spd < 0.1 else 1)
+
 
 class RTorrentSensor(Entity):
     """Representation of an rtorrent sensor."""
@@ -84,11 +89,6 @@ class RTorrentSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    def format_speed(self, speed):
-        """Returns a bytes/s measurement as a human readable string."""
-        kb_spd = float(speed) / 1024
-        return round(kb_spd, 2 if kb_spd < 0.1 else 1)
-
     def update(self):
         """Get the latest data from rtorrent and updates the state."""
         multicall = xmlrpc.client.MultiCall(self.client)
@@ -121,6 +121,6 @@ class RTorrentSensor(Entity):
 
         if self.data:
             if self.type == SENSOR_TYPE_DOWNLOAD_SPEED:
-                self._state = self.format_speed(download)
+                self._state = format_speed(download)
             elif self.type == SENSOR_TYPE_UPLOAD_SPEED:
-                self._state = self.format_speed(upload)
+                self._state = format_speed(upload)
