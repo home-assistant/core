@@ -5,12 +5,12 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.somfy_mylink/
 """
 import logging
+
+from homeassistant.components.cover import (
+    ATTR_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
+    SUPPORT_STOP, CoverDevice)
 from homeassistant.components.somfy_mylink import (
-    DATA_SOMFY_MYLINK, CONF_COVER_OPTIONS, DOMAIN as SOMFY_MYLINK_DOMAIN)
-from homeassistant.components.cover import (ATTR_POSITION,
-                                            SUPPORT_CLOSE, SUPPORT_OPEN,
-                                            SUPPORT_SET_POSITION, SUPPORT_STOP,
-                                            CoverDevice)
+    CONF_COVER_OPTIONS, DATA_SOMFY_MYLINK)
 from homeassistant.helpers.event import track_time_change
 
 _LOGGER = logging.getLogger(__name__)

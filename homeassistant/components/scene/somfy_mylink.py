@@ -7,7 +7,7 @@ https://home-assistant.io/components/scene.somfy_mylink/
 import logging
 
 from homeassistant.components.scene import Scene
-from homeassistant.components.somfy_mylink import (DATA_SOMFY_MYLINK, DOMAIN as SOMFY_MYLINK_DOMAIN)
+from homeassistant.components.somfy_mylink import DATA_SOMFY_MYLINK
 
 _LOGGER = logging.getLogger(__name__)
 
