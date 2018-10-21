@@ -135,7 +135,7 @@ def setup_mysensors_platform(
     # Only act if called via MySensors by discovery event.
     # Otherwise gateway is not set up.
     if not discovery_info:
-        return
+        return None
     if device_args is None:
         device_args = ()
     new_devices = []
