@@ -1014,7 +1014,7 @@ pymusiccast==0.1.6
 pymyq==0.0.15
 
 # homeassistant.components.mysensors
-pymysensors==0.17.0
+pymysensors==0.18.0
 
 # homeassistant.components.lock.nello
 pynello==1.5.1
