@@ -99,8 +99,11 @@ class SomfyMyLink:
             "mylink.move.stop", dict(targetID=target_id))
         return self.send_message(message)
 
-    def build_message(self, method=str(), params=dict()):
+    def build_message(self, method=None, params=None):
         """Format a JSON API message."""
+        # Set "empty" values if none passed in to funciton
+        method = method if method else str()
+        params = params if params else dict()
         message = dict(method=method, params=params, id=randint(0, 100))
         message['params']['auth'] = self.system_id
         return message
