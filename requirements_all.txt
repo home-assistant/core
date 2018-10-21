@@ -800,7 +800,7 @@ pyairvisual==2.0.1
 pyalarmdotcom==0.3.2
 
 # homeassistant.components.arlo
-pyarlo==0.2.0
+pyarlo==0.2.2
 
 # homeassistant.components.netatmo
 pyatmo==1.2
