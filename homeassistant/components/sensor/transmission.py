@@ -140,10 +140,11 @@ class TransmissionSensor(Entity):
                 set(actual_completed_torrents).difference(
                     self.completed_torrents))
             if len(tmp_completed_torrents) > 0:
-                """Throw event"""
-                self.hass.bus.fire(
-                    'transmission_downloaded_torrent', {
-                        'name': tmp_completed_torrents[0]})
+                for x in tmp_completed_torrents:
+                    """Throw event"""
+                    self.hass.bus.fire(
+                        'transmission_downloaded_torrent', {
+                            'name': x})
 
             self.completed_torrents = actual_completed_torrents
             self._state = len(self.completed_torrents)
@@ -156,10 +157,11 @@ class TransmissionSensor(Entity):
                 set(actual_started_torrents).difference(
                     self.started_torrents))
             if len(tmp_started_torrents) > 0:
-                """Throw Event"""
-                self.hass.bus.fire(
-                    'transmission_started_torrent', {
-                        'name': tmp_started_torrents[0]})
+                for x in tmp_started_torrents:
+                    """Throw Event"""
+                    self.hass.bus.fire(
+                        'transmission_started_torrent', {
+                            'name': x})
             self.started_torrents = actual_started_torrents
             self._state = len(self.started_torrents)
 
