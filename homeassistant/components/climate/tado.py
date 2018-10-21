@@ -8,8 +8,8 @@ import logging
 
 from homeassistant.const import (PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.components.climate import (
-    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
-from homeassistant.util.temperature import convert as convert_temperature
+    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.components.tado import DATA_TADO
 
@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONST_MODE_SMART_SCHEDULE = 'SMART_SCHEDULE'  # Default mytado mode
 CONST_MODE_OFF = 'OFF'  # Switch off heating in a zone
+CONST_MODE_COOL = 'COOL'  # Turn an ac device into cooling mode
+CONST_MODE_HEAT = 'HEAT'  # Turn an ac device into heating mode
 
 # When we change the temperature setting, we need an overlay mode
 # wait until tado changes the mode automatic
@@ -231,13 +233,23 @@ class TadoClimate(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(self._min_temp, self._unit,
+        temperature = DEFAULT_MIN_TEMP
+
+        if self._min_temp:
+            temperature = self._min_temp
+
+        return convert_temperature(temperature, self._unit,
                                    self.hass.config.units.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(self._max_temp, self._unit,
+        temperature = DEFAULT_MAX_TEMP
+
+        if self._max_temp:
+            temperature = self._max_temp
+
+        return convert_temperature(temperature, self._unit,
                                    self.hass.config.units.temperature_unit)
 
     def update(self):
@@ -344,13 +356,14 @@ class TadoClimate(ClimateDevice):
         if self._current_operation == CONST_MODE_OFF:
             _LOGGER.info("Switching mytado.com to OFF for zone %s",
                          self.zone_name)
-            self._store.set_zone_overlay(self.zone_id, CONST_OVERLAY_MANUAL)
+            self._store.set_zone_overlay(self.zone_id, self.ac_mode, CONST_OVERLAY_MANUAL)
             self._overlay_mode = self._current_operation
             return
 
         _LOGGER.info("Switching mytado.com to %s mode for zone %s",
                      self._current_operation, self.zone_name)
+
         self._store.set_zone_overlay(
-            self.zone_id, self._current_operation, self._target_temp)
+            self.zone_id, self.ac_mode, self._current_operation, self._target_temp)
 
         self._overlay_mode = self._current_operation
