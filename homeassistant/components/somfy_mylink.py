@@ -36,16 +36,14 @@ def setup(hass, config):
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
     system_id = config[DOMAIN][CONF_PASSWORD]
-    cover_options = config[DOMAIN][CONF_COVER_OPTIONS]
-
     try:
         somfy_mylink = SomfyMyLink(host, port, system_id)
     except Exception:
         _LOGGER.error("Unable to connect to mytado with username and password")
         return False
-    hass.data[DATA_SOMFY_MYLINK] = dict(hub=somfy_mylink, opts=cover_options)
+    hass.data[DATA_SOMFY_MYLINK] = somfy_mylink
     for component in SOMFY_MYLINK_COMPONENTS:
-        load_platform(hass, component, DOMAIN, {}, config)
+        load_platform(hass, component, DOMAIN, config[DOMAIN])
 
     return True
 

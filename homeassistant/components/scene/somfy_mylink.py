@@ -15,7 +15,7 @@ DEPENDENCIES = ['somfy_mylink']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Discover and configure Somfy MyLink scenes."""
-    somfy_mylink = hass.data[DATA_SOMFY_MYLINK]['hub']
+    somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
     scene_list = list()
     mylink_scenes = somfy_mylink.scene_list()
     for scene in mylink_scenes['result']:

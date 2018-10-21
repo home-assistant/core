@@ -20,8 +20,8 @@ DEFAULT_SUPPORTED_FEATURES = (SUPPORT_OPEN | SUPPORT_STOP | SUPPORT_CLOSE)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Discover and configure Somfy covers."""
-    somfy_mylink = hass.data[DATA_SOMFY_MYLINK]['hub']
-    cover_options = hass.data[DATA_SOMFY_MYLINK].get('opts', [])
+    somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
+    cover_options = discovery_info.get(CONF_COVER_OPTIONS, [])
     cover_list = list()
     mylink_status = somfy_mylink.status_info()
     for cover in mylink_status['result']:
