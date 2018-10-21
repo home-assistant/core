@@ -157,22 +157,24 @@ class HKDevice():
                                 'aid': aid,
                                 'iid': service['iid']}
                 stype = service['type']
-                known_service = HOMEKIT_KNOWN_SERVICE_TYPES.get(stype, None)
-                # If the service type ID is known, it is dispatched to the corresponding platform
-                if known_service is not None:
-                    _LOGGER.debug("Mapped known service ID %s to type %s on platform %s",
-                                  stype, known_service['type'], known_service['platform'])
-                    component = known_service['type']
-                    device_domain = known_service['platform']
+                kservice = HOMEKIT_KNOWN_SERVICE_TYPES.get(stype, None)
+                # If service type ID is known, it is dispatched to platform
+                if kservice is not None:
+                    _LOGGER.debug("Mapped service: %s type: %s platform: %s",
+                                  stype,
+                                  kservice['type'],
+                                  kservice['platform'])
+                    component = kservice['type']
+                    devdomain = kservice['platform']
                 else:
                     # Supported generic device types are resolved here
                     devtype = homekit.ServicesTypes.get_short(stype)
                     _LOGGER.debug("Found %s", devtype)
                     component = HOMEKIT_ACCESSORY_DISPATCH.get(devtype, None)
-                    device_domain = DOMAIN
+                    devdomain = DOMAIN
 
                 if component is not None:
-                    discovery.load_platform(self.hass, component, device_domain,
+                    discovery.load_platform(self.hass, component, devdomain,
                                             service_info, self.config)
 
     def get_json(self, target):
