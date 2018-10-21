@@ -4,7 +4,6 @@ Support for Fast.com internet speed testing sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fastdotcom/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -88,10 +87,9 @@ class SpeedtestSensor(Entity):
 
         self._state = data['download']
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
+        state = await async_get_last_state(self.hass, self.entity_id)
         if not state:
             return
         self._state = state.state

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Nadzornik je \u017ee konfiguriran",
+            "user_privilege": "Uporabnik mora biti skrbnik"
+        },
+        "error": {
+            "faulty_credentials": "Napa\u010dni uporabni\u0161ki podatki",
+            "service_unavailable": "Nobena storitev ni na voljo"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "password": "Geslo",
+                    "port": "Vrata",
+                    "site": "Mesto ID",
+                    "username": "Uporabni\u0161ko ime",
+                    "verify_ssl": "Kontroler uporablja ustrezen certifikat"
+                },
+                "title": "Nastavi UniFi Controller"
+            }
+        },
+        "title": "UniFi Krmilnik"
+    }
+}

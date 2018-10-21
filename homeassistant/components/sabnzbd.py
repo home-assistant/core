@@ -15,11 +15,12 @@ from homeassistant.const import (
     CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_SENSORS, CONF_SSL)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pysabnzbd==1.0.1']
+REQUIREMENTS = ['pysabnzbd==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +103,8 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
                                         hass.config.path(CONFIG_FILE))
         api_key = conf.get(base_url, {}).get(CONF_API_KEY, '')
 
-    sab_api = SabnzbdApi(base_url, api_key)
+    sab_api = SabnzbdApi(base_url, api_key,
+                         session=async_get_clientsession(hass))
     if await async_check_sabnzbd(sab_api):
         async_setup_sabnzbd(hass, sab_api, config, name)
     else:
@@ -188,7 +190,8 @@ def async_request_configuration(hass, config, host):
     async def async_configuration_callback(data):
         """Handle configuration changes."""
         api_key = data.get(CONF_API_KEY)
-        sab_api = SabnzbdApi(host, api_key)
+        sab_api = SabnzbdApi(host, api_key,
+                             session=async_get_clientsession(hass))
         if not await async_check_sabnzbd(sab_api):
             return
 

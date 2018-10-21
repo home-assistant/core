@@ -19,9 +19,9 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
-    ATTR_NOW, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED,
-    EVENT_SERVICE_EXECUTED)
+    ATTR_NOW, EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, ATTR_SECONDS,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED, EVENT_SERVICE_EXECUTED)
 
 from tests.common import get_test_home_assistant, async_mock_service
 
@@ -916,12 +916,13 @@ def test_timer_out_of_sync(mock_monotonic, loop):
 
     delay, callback, target = hass.loop.call_later.mock_calls[0][1]
 
-    with patch.object(ha, '_LOGGER', MagicMock()) as mock_logger, \
-            patch('homeassistant.core.dt_util.utcnow',
-                  return_value=datetime(2018, 12, 31, 3, 4, 8, 200000)):
+    with patch('homeassistant.core.dt_util.utcnow',
+               return_value=datetime(2018, 12, 31, 3, 4, 8, 200000)):
         callback(target)
 
-        assert len(mock_logger.error.mock_calls) == 1
+        event_type, event_data = hass.bus.async_fire.mock_calls[1][1]
+        assert event_type == EVENT_TIMER_OUT_OF_SYNC
+        assert abs(event_data[ATTR_SECONDS] - 2.433333) < 0.001
 
         assert len(funcs) == 2
         fire_time_event, stop_timer = funcs

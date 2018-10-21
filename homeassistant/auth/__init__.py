@@ -16,6 +16,9 @@ from . import auth_store, models
 from .mfa_modules import auth_mfa_module_from_config, MultiFactorAuthModule
 from .providers import auth_provider_from_config, AuthProvider, LoginFlow
 
+EVENT_USER_ADDED = 'user_added'
+EVENT_USER_REMOVED = 'user_removed'
+
 _LOGGER = logging.getLogger(__name__)
 _MfaModuleDict = Dict[str, MultiFactorAuthModule]
 _ProviderKey = Tuple[str, Optional[str]]
@@ -126,23 +129,38 @@ class AuthManager:
 
     async def async_create_system_user(self, name: str) -> models.User:
         """Create a system user."""
-        return await self._store.async_create_user(
+        user = await self._store.async_create_user(
             name=name,
             system_generated=True,
             is_active=True,
+            groups=[],
         )
+
+        self.hass.bus.async_fire(EVENT_USER_ADDED, {
+            'user_id': user.id
+        })
+
+        return user
 
     async def async_create_user(self, name: str) -> models.User:
         """Create a user."""
+        group = (await self._store.async_get_groups())[0]
         kwargs = {
             'name': name,
             'is_active': True,
+            'groups': [group]
         }  # type: Dict[str, Any]
 
         if await self._user_should_be_owner():
             kwargs['is_owner'] = True
 
-        return await self._store.async_create_user(**kwargs)
+        user = await self._store.async_create_user(**kwargs)
+
+        self.hass.bus.async_fire(EVENT_USER_ADDED, {
+            'user_id': user.id
+        })
+
+        return user
 
     async def async_get_or_create_user(self, credentials: models.Credentials) \
             -> models.User:
@@ -162,11 +180,17 @@ class AuthManager:
         info = await auth_provider.async_user_meta_for_credentials(
             credentials)
 
-        return await self._store.async_create_user(
+        user = await self._store.async_create_user(
             credentials=credentials,
             name=info.name,
             is_active=info.is_active,
         )
+
+        self.hass.bus.async_fire(EVENT_USER_ADDED, {
+            'user_id': user.id
+        })
+
+        return user
 
     async def async_link_user(self, user: models.User,
                               credentials: models.Credentials) -> None:
@@ -184,6 +208,10 @@ class AuthManager:
             await asyncio.wait(tasks)
 
         await self._store.async_remove_user(user)
+
+        self.hass.bus.async_fire(EVENT_USER_REMOVED, {
+            'user_id': user.id
+        })
 
     async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""

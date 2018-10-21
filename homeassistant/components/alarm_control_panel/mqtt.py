@@ -4,7 +4,6 @@ This platform enables the possibility to control a MQTT alarm.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.mqtt/
 """
-import asyncio
 import logging
 import re
 
@@ -21,7 +20,10 @@ from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
     CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate)
+from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,17 +48,28 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_entities, discovery_info=None):
+    """Set up MQTT alarm control panel through configuration.yaml."""
+    await _async_setup_entity(hass, config, async_add_entities)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up MQTT alarm control panel dynamically through MQTT discovery."""
+    async def async_discover(discovery_payload):
+        """Discover and add an MQTT alarm control panel."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(hass, config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
+
+    async_dispatcher_connect(
+        hass, MQTT_DISCOVERY_NEW.format(alarm.DOMAIN, 'mqtt'),
+        async_discover)
+
+
+async def _async_setup_entity(hass, config, async_add_entities,
+                              discovery_hash=None):
     """Set up the MQTT Alarm Control Panel platform."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
-
-    discovery_hash = None
-    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
-        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
-
     async_add_entities([MqttAlarm(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
@@ -97,11 +110,10 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         self._code = code
         self._discovery_hash = discovery_hash
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe mqtt events."""
-        yield from MqttAvailability.async_added_to_hass(self)
-        yield from MqttDiscoveryUpdate.async_added_to_hass(self)
+        await MqttAvailability.async_added_to_hass(self)
+        await MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
         def message_received(topic, payload, qos):
@@ -114,7 +126,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             self._state = payload
             self.async_schedule_update_ha_state()
 
-        yield from mqtt.async_subscribe(
+        await mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, self._qos)
 
     @property
@@ -141,8 +153,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             return 'Number'
         return 'Any'
 
-    @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command.
 
         This method is a coroutine.
@@ -153,8 +164,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             self.hass, self._command_topic, self._payload_disarm, self._qos,
             self._retain)
 
-    @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code=None):
         """Send arm home command.
 
         This method is a coroutine.
@@ -165,8 +175,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             self.hass, self._command_topic, self._payload_arm_home, self._qos,
             self._retain)
 
-    @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None):
         """Send arm away command.
 
         This method is a coroutine.

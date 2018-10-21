@@ -4,7 +4,6 @@ Support for vacuum cleaner robots (botvacs).
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/vacuum/
 """
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -94,13 +93,12 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the vacuum component."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_VACUUMS)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
     component.async_register_entity_service(
         SERVICE_TURN_ON, VACUUM_SERVICE_SCHEMA,
