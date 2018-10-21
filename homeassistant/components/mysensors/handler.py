@@ -99,7 +99,6 @@ def _handle_child_update(hass, hass_config, msg):
     for signal in set(signals):
         # Only one signal per device is needed.
         # A device can have multiple platforms, ie multiple schemas.
-        # FOR LATER: Add timer to not signal if another update comes in.
         async_dispatcher_send(hass, signal)
 
 
