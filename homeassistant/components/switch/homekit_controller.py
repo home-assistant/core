@@ -14,10 +14,6 @@ DEPENDENCIES = ['homekit_controller']
 
 OUTLET_IN_USE = "outlet_in_use"
 
-PROP_TO_ATTR = {
-    'outlet_in_use': OUTLET_IN_USE
-}
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -72,18 +68,9 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
         self.put_characteristics(characteristics)
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the optional state attributes."""
-        data = {}
-
-        for prop, attr in PROP_TO_ATTR.items():
-            value = getattr(self, prop)
-            if value is not None:
-                data[attr] = value
-
-        return data
-
-    @property
-    def outlet_in_use(self):
-        """Return true if device is plugged to outlet."""
-        return self._outlet_in_use
+        if self._outlet_in_use is not None:
+            return {
+                OUTLET_IN_USE: self._outlet_in_use,
+            }
