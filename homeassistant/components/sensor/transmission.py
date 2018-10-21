@@ -94,7 +94,7 @@ class TransmissionSensor(Entity):
         self.type = sensor_type
         self.completed_torrents = []
         self.started_torrents = []
-        self.firstRun = True
+        self.first_run = True
         self.hass = hass
 
     @property
@@ -122,7 +122,7 @@ class TransmissionSensor(Entity):
         self._transmission_api.update()
         self._data = self._transmission_api.data
 
-        if self.firstRun:
+        if self.first_run:
             actual_torrents = self._transmission_api.torrents
             actual_completed_torrents = [
                 x.name for x in actual_torrents if x.status == "seeding"]
@@ -141,7 +141,6 @@ class TransmissionSensor(Entity):
                     self.completed_torrents))
             if len(tmp_completed_torrents) > 0:
                 for x in tmp_completed_torrents:
-                    """Throw event"""
                     self.hass.bus.fire(
                         'transmission_downloaded_torrent', {
                             'name': x})
@@ -158,14 +157,13 @@ class TransmissionSensor(Entity):
                     self.started_torrents))
             if len(tmp_started_torrents) > 0:
                 for x in tmp_started_torrents:
-                    """Throw Event"""
                     self.hass.bus.fire(
                         'transmission_started_torrent', {
                             'name': x})
             self.started_torrents = actual_started_torrents
             self._state = len(self.started_torrents)
 
-        self.firstRun = False
+        self.first_run = False
 
         if self.type == 'current_status':
             if self._data:
@@ -205,6 +203,7 @@ class TransmissionData:
     def __init__(self, api):
         """Initialize the Transmission data object."""
         self.data = None
+        self.torrents = None
         self.available = True
         self._api = api
 
