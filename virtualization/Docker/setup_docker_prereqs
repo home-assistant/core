@@ -64,7 +64,7 @@ if [ "$INSTALL_SSOCR" == "yes" ]; then
 fi
 
 if [ "$INSTALL_DLIB" == "yes" ]; then
-  pip3 install --no-cache-dir face_recognition==1.0.0
+  pip3 install --no-cache-dir "dlib>=19.5"
 fi
 
 # Remove packages
