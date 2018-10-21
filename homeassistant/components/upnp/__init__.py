@@ -31,7 +31,6 @@ from .device import Device
 
 
 REQUIREMENTS = ['async-upnp-client==0.12.7']
-DEPENDENCIES = ['discovery']
 
 NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'
