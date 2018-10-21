@@ -19,7 +19,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     scene_list = list()
     mylink_scenes = somfy_mylink.scene_list()
     for scene in mylink_scenes['result']:
-        _LOGGER.info('Adding Somfy Scene: %s with sceneID %s', scene.get('name'), scene.get('sceneID'))
+        _LOGGER.info('Adding Somfy Scene: %s with sceneID %s',
+                     scene.get('name'), scene.get('sceneID'))
         scene_data = dict(
             scene_name=scene.get('name'),
             scene_id=scene.get('sceneID')
