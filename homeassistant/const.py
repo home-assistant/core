@@ -338,6 +338,9 @@ MASS_POUNDS = 'lb'  # type: str
 # UV Index units
 UNIT_UV_INDEX = 'UV index'  # type: str
 
+# Power units
+POWER_WATT_HOUR = 'Wh'  # type: str
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
 SERVICE_HOMEASSISTANT_RESTART = 'restart'
