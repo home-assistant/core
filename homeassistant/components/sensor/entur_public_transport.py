@@ -11,8 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE,
-    CONF_LONGITUDE, CONF_NAME, STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -48,7 +47,7 @@ def due_in_minutes(timestamp: str) -> str:
     year-month-yearThour:minute:second+timezone
     """
     if timestamp is None:
-        return STATE_UNKNOWN
+        return None
     diff = datetime.strptime(
         timestamp, "%Y-%m-%dT%H:%M:%S%z") - dt_util.now()
 
@@ -106,11 +105,11 @@ class EnturPublicTransportSensor(Entity):
 
     def __init__(self, data: EnturProxy, stop: str, add_to_map: bool):
         """Initialize the sensor."""
+        from enturclient.consts import CONF_NAME
         self.data = data
         self._stop = stop
         self._add_to_map = add_to_map
         self._times = data.get_stop_info(stop)
-        self._state = STATE_UNKNOWN
         try:
             self._name = "Entur " + self._times[CONF_NAME]
         except TypeError:
@@ -129,14 +128,15 @@ class EnturPublicTransportSensor(Entity):
             return due_in_minutes(
                 self._times[ATTR][ATTR_EXPECTED_AT])
         except TypeError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
         from enturclient.consts import (
             CONF_LOCATION, ATTR, ATTR_NEXT_UP_AT,
-            ATTR_STOP_ID, ATTR_EXPECTED_AT)
+            ATTR_STOP_ID, ATTR_EXPECTED_AT,
+            CONF_LATITUDE as LAT, CONF_LONGITUDE as LONG)
         if self._times is not None:
             attr = self._times[ATTR]
             attr[ATTR_NEXT_UP_IN] = due_in_minutes(attr[ATTR_NEXT_UP_AT])
@@ -145,9 +145,9 @@ class EnturPublicTransportSensor(Entity):
             attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
             if CONF_LOCATION in self._times and self._add_to_map:
                 attr[CONF_LATITUDE] = \
-                    self._times[CONF_LOCATION][CONF_LATITUDE]
+                    self._times[CONF_LOCATION][LAT]
                 attr[CONF_LONGITUDE] = \
-                    self._times[CONF_LOCATION][CONF_LONGITUDE]
+                    self._times[CONF_LOCATION][LONG]
             return attr
 
     @property

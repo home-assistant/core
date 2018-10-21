@@ -1,4 +1,4 @@
-"""The tests for the tube_state platform."""
+"""The tests for the entur platform."""
 from datetime import datetime
 import unittest
 from unittest.mock import patch
@@ -28,7 +28,7 @@ TEST_TIMESTAMP = datetime(2018, 10, 10, 7, tzinfo=dt_util.UTC)
 
 
 class TestEnturPublicTransportSensor(unittest.TestCase):
-    """Test the tube_state platform."""
+    """Test the entur platform."""
 
     def setUp(self):
         """Initialize values for this testcase class."""
