@@ -134,32 +134,33 @@ class TransmissionSensor(Entity):
         elif self.type == 'completed_torrents':
             actual_torrents = self._transmission_api.torrents
             actual_completed_torrents = [
-                x.name for x in actual_torrents if x.status == "seeding"]
+                var.name for var in actual_torrents if var.status == "seeding"]
 
             tmp_completed_torrents = list(
                 set(actual_completed_torrents).difference(
                     self.completed_torrents))
-            if len(tmp_completed_torrents) > 0:
-                for x in tmp_completed_torrents:
+            if tmp_completed_torrents:
+                for var in tmp_completed_torrents:
                     self.hass.bus.fire(
                         'transmission_downloaded_torrent', {
-                            'name': x})
+                            'name': var})
 
             self.completed_torrents = actual_completed_torrents
             self._state = len(self.completed_torrents)
         elif self.type == 'started_torrents':
             actual_torrents = self._transmission_api.torrents
             actual_started_torrents = [
-                x.name for x in actual_torrents if x.status == "downloading"]
+                var.name for var
+                in actual_torrents if var.status == "downloading"]
 
             tmp_started_torrents = list(
                 set(actual_started_torrents).difference(
                     self.started_torrents))
-            if len(tmp_started_torrents) > 0:
-                for x in tmp_started_torrents:
+            if tmp_started_torrents:
+                for var in tmp_started_torrents:
                     self.hass.bus.fire(
                         'transmission_started_torrent', {
-                            'name': x})
+                            'name': var})
             self.started_torrents = actual_started_torrents
             self._state = len(self.started_torrents)
 
