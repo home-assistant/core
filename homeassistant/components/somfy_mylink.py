@@ -39,13 +39,12 @@ def setup(hass, config):
     try:
         somfy_mylink = SomfyMyLink(host, port, system_id)
     except TimeoutError:
-        _LOGGER.error("Unable to connect to the Somfy MyLink device"
-                      ", please check your settings")
+        _LOGGER.error("Unable to connect to the Somfy MyLink device, "
+                      "please check your settings")
         return False
     hass.data[DATA_SOMFY_MYLINK] = somfy_mylink
     for component in SOMFY_MYLINK_COMPONENTS:
         load_platform(hass, component, DOMAIN, config[DOMAIN])
-
     return True
 
 
