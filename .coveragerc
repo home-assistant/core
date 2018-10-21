@@ -713,6 +713,7 @@ omit =
     homeassistant/components/sensor/influxdb.py
     homeassistant/components/sensor/iperf3.py
     homeassistant/components/sensor/irish_rail_transport.py
+    homeassistant/components/sensor/koogeek.py
     homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lacrosse.py
     homeassistant/components/sensor/lastfm.py
