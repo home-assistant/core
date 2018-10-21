@@ -49,6 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(dev)
 
+
 def format_speed(speed):
     """Return a bytes/s measurement as a human readable string."""
     kb_spd = float(speed) / 1024
