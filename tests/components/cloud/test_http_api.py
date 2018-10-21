@@ -7,6 +7,7 @@ from jose import jwt
 
 from homeassistant.components.cloud import (
     DOMAIN, auth_api, iot, STORAGE_ENABLE_GOOGLE, STORAGE_ENABLE_ALEXA)
+from homeassistant.util import dt as dt_util
 
 from tests.common import mock_coro
 
@@ -352,24 +353,89 @@ async def test_websocket_status_not_logged_in(hass, hass_ws_client):
     }
 
 
-async def test_websocket_subscription(hass, hass_ws_client, aioclient_mock,
-                                      mock_auth):
-    """Test querying the status."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={'return': 'value'})
+async def test_websocket_subscription_reconnect(
+        hass, hass_ws_client, aioclient_mock, mock_auth):
+    """Test querying the status and connecting because valid account."""
+    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={'provider': 'stripe'})
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': dt_util.utcnow().date().isoformat()
+    }, 'test')
+    client = await hass_ws_client(hass)
+
+    with patch(
+        'homeassistant.components.cloud.auth_api.renew_access_token'
+    ) as mock_renew, patch(
+        'homeassistant.components.cloud.iot.CloudIoT.connect'
+    ) as mock_connect:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/subscription'
+        })
+        response = await client.receive_json()
+
+    assert response['result'] == {
+        'provider': 'stripe'
+    }
+    assert len(mock_renew.mock_calls) == 1
+    assert len(mock_connect.mock_calls) == 1
+
+
+async def test_websocket_subscription_no_reconnect_if_connected(
+        hass, hass_ws_client, aioclient_mock, mock_auth):
+    """Test querying the status and not reconnecting because still expired."""
+    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={'provider': 'stripe'})
+    hass.data[DOMAIN].iot.state = iot.STATE_CONNECTED
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': dt_util.utcnow().date().isoformat()
+    }, 'test')
+    client = await hass_ws_client(hass)
+
+    with patch(
+        'homeassistant.components.cloud.auth_api.renew_access_token'
+    ) as mock_renew, patch(
+        'homeassistant.components.cloud.iot.CloudIoT.connect'
+    ) as mock_connect:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/subscription'
+        })
+        response = await client.receive_json()
+
+    assert response['result'] == {
+        'provider': 'stripe'
+    }
+    assert len(mock_renew.mock_calls) == 0
+    assert len(mock_connect.mock_calls) == 0
+
+
+async def test_websocket_subscription_no_reconnect_if_expired(
+        hass, hass_ws_client, aioclient_mock, mock_auth):
+    """Test querying the status and not reconnecting because still expired."""
+    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={'provider': 'stripe'})
     hass.data[DOMAIN].id_token = jwt.encode({
         'email': 'hello@home-assistant.io',
         'custom:sub-exp': '2018-01-03'
     }, 'test')
     client = await hass_ws_client(hass)
-    await client.send_json({
-        'id': 5,
-        'type': 'cloud/subscription'
-    })
-    response = await client.receive_json()
+
+    with patch(
+        'homeassistant.components.cloud.auth_api.renew_access_token'
+    ) as mock_renew, patch(
+        'homeassistant.components.cloud.iot.CloudIoT.connect'
+    ) as mock_connect:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/subscription'
+        })
+        response = await client.receive_json()
 
     assert response['result'] == {
-        'return': 'value'
+        'provider': 'stripe'
     }
+    assert len(mock_renew.mock_calls) == 1
+    assert len(mock_connect.mock_calls) == 1
 
 
 async def test_websocket_subscription_fail(hass, hass_ws_client,
