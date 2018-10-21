@@ -7,7 +7,7 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.setup import setup_component
 from homeassistant.components import climate, mqtt
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
@@ -172,43 +172,18 @@ class TestMQTTClimate(unittest.TestCase):
         ])
         self.mock_publish.async_publish.reset_mock()
 
-    def test_set_operation_with_activity(self):
-        """Test setting operation mode and getting activity state."""
+    def test_get_state(self):
+        """Test setting operation mode and getting state."""
         config = copy.deepcopy(DEFAULT_CONFIG)
-        config['climate']['mode_state_topic'] = 'mode-state'
-        config['climate']['activity_state_topic'] = 'activity-state'
+        config['climate']['state_topic'] = 'state'
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(None, state.attributes.get('operation_mode'))
         self.assertEqual('unknown', state.state)
-
-        fire_mqtt_message(self.hass, 'mode-state', 'cool')
+        fire_mqtt_message(self.hass, 'state', 'cool')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('cool', state.attributes.get('operation_mode'))
-        self.assertEqual('unknown', state.state)
-
-        fire_mqtt_message(self.hass, 'mode-state', 'heat')
-        fire_mqtt_message(self.hass, 'activity-state', 'OFF')
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('heat', state.attributes.get('operation_mode'))
-        self.assertEqual(STATE_IDLE, state.state)
-        fire_mqtt_message(self.hass, 'activity-state', 'ON')
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('heat', state.state)
-
-        fire_mqtt_message(self.hass, 'mode-state', STATE_OFF)
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(STATE_OFF, state.attributes.get('operation_mode'))
-        self.assertEqual(STATE_OFF, state.state)
-        fire_mqtt_message(self.hass, 'activity-state', 'OFF')
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(STATE_OFF, state.state)
+        self.assertEqual('cool', state.state)
 
     def test_set_fan_mode_bad_attr(self):
         """Test setting fan mode without required attribute."""
@@ -565,7 +540,7 @@ class TestMQTTClimate(unittest.TestCase):
         config['climate']['aux_state_template'] = \
             "{{ value == 'switchmeon' }}"
 
-        config['climate']['activity_state_topic'] = 'activity-state'
+        config['climate']['state_topic'] = 'state'
         config['climate']['mode_state_topic'] = 'mode-state'
         config['climate']['fan_mode_state_topic'] = 'fan-state'
         config['climate']['swing_mode_state_topic'] = 'swing-state'
@@ -585,12 +560,12 @@ class TestMQTTClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("cool", state.attributes.get('operation_mode'))
 
-        # Activity
+        # State
         self.assertEqual('unknown', state.state)
-        fire_mqtt_message(self.hass, 'activity-state', '"ON"')
+        fire_mqtt_message(self.hass, 'state', '"cool"')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(state.attributes.get('operation_mode'), state.state)
+        self.assertEqual('cool', state.state)
 
         # Fan Mode
         self.assertEqual(None, state.attributes.get('fan_mode'))
