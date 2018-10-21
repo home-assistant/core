@@ -14,7 +14,7 @@ from homeassistant.components.somfy_mylink import (
 from homeassistant.helpers.event import track_time_change
 
 _LOGGER = logging.getLogger(__name__)
-
+DEPENDENCIES = ['somfy_mylink']
 DEFAULT_SUPPORTED_FEATURES = (SUPPORT_OPEN | SUPPORT_STOP | SUPPORT_CLOSE)
 
 

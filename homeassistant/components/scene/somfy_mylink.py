@@ -10,6 +10,7 @@ from homeassistant.components.scene import Scene
 from homeassistant.components.somfy_mylink import DATA_SOMFY_MYLINK
 
 _LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = ['somfy_mylink']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
