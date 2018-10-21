@@ -38,8 +38,9 @@ def setup(hass, config):
     system_id = config[DOMAIN][CONF_PASSWORD]
     try:
         somfy_mylink = SomfyMyLink(host, port, system_id)
-    except Exception:
-        _LOGGER.error("Unable to connect to mytado with username and password")
+    except TimeoutError:
+        _LOGGER.error("Unable to connect to the Somfy MyLink device"
+                      ", please check your settings")
         return False
     hass.data[DATA_SOMFY_MYLINK] = somfy_mylink
     for component in SOMFY_MYLINK_COMPONENTS:
@@ -130,4 +131,4 @@ class SomfyMyLink:
                 message['id'] += 10
                 return self.send_message(message, retry_count - 1)
             _LOGGER.info("Got error when receiving: %s", ex)
-            raise Exception("No response from the device") from ex
+            raise TimeoutError("No response from the device") from ex
