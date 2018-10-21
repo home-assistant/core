@@ -12,8 +12,8 @@ from homeassistant.core import callback
 from homeassistant.components import mqtt, climate
 
 from homeassistant.components.climate import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE, STATE_DRY, STATE_FAN_ONLY,
-    ClimateDevice, PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
+    STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, ClimateDevice,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
     ATTR_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_SWING_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
@@ -36,8 +36,8 @@ DEPENDENCIES = ['mqtt']
 
 DEFAULT_NAME = 'MQTT HVAC'
 
-CONF_ACTIVITY_STATE_TOPIC = 'activity_state_topic'
-CONF_ACTIVITY_STATE_TEMPLATE = 'activity_state_template'
+CONF_STATE_TOPIC = 'state_topic'
+CONF_STATE_TEMPLATE = 'state_template'
 CONF_POWER_COMMAND_TOPIC = 'power_command_topic'
 CONF_POWER_STATE_TOPIC = 'power_state_topic'
 CONF_POWER_STATE_TEMPLATE = 'power_state_template'
@@ -90,7 +90,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
 
-    vol.Optional(CONF_ACTIVITY_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TEMPERATURE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -101,7 +101,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
 
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_ACTIVITY_STATE_TEMPLATE): cv.template,
+    vol.Optional(CONF_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_TEMPERATURE_STATE_TEMPLATE): cv.template,
@@ -158,7 +158,7 @@ async def _async_setup_entity(hass, config, async_add_entities,
                               discovery_hash=None):
     """Set up the MQTT climate devices."""
     template_keys = (
-        CONF_ACTIVITY_STATE_TEMPLATE,
+        CONF_STATE_TEMPLATE,
         CONF_POWER_STATE_TEMPLATE,
         CONF_MODE_STATE_TEMPLATE,
         CONF_TEMPERATURE_STATE_TEMPLATE,
@@ -192,7 +192,7 @@ async def _async_setup_entity(hass, config, async_add_entities,
                     CONF_AWAY_MODE_COMMAND_TOPIC,
                     CONF_HOLD_COMMAND_TOPIC,
                     CONF_AUX_COMMAND_TOPIC,
-                    CONF_ACTIVITY_STATE_TOPIC,
+                    CONF_STATE_TOPIC,
                     CONF_POWER_STATE_TOPIC,
                     CONF_MODE_STATE_TOPIC,
                     CONF_TEMPERATURE_STATE_TOPIC,
@@ -231,7 +231,7 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
 
     def __init__(self, hass, name, topic, value_templates, qos, retain,
                  mode_list, fan_mode_list, swing_mode_list,
-                 target_temperature, is_active, away, hold, current_fan_mode,
+                 target_temperature, state, away, hold, current_fan_mode,
                  current_swing_mode, current_operation, aux, send_if_off,
                  payload_on, payload_off, availability_topic,
                  payload_available, payload_not_available,
@@ -252,7 +252,7 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
         if self._topic[CONF_TEMPERATURE_STATE_TOPIC] is None:
             self._target_temperature = target_temperature
         self._unit_of_measurement = hass.config.units.temperature_unit
-        self._is_active = is_active
+        self._state = state
         self._away = away
         self._hold = hold
         self._current_temperature = None
@@ -440,42 +440,25 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
                 handle_hold_mode_received, self._qos)
 
         @callback
-        def handle_activity_state_received(topic, payload, qos):
-            """Handle receiving activity state via MQTT."""
-            if CONF_ACTIVITY_STATE_TEMPLATE in self._value_templates:
-                payload = \
-                  self._value_templates[CONF_ACTIVITY_STATE_TEMPLATE].\
+        def handle_state_received(topic, payload, qos):
+            """Handle receiving state via MQTT."""
+            if CONF_STATE_TEMPLATE in self._value_templates:
+                payload = self._value_templates[CONF_STATE_TEMPLATE].\
                   async_render_with_possible_json_value(payload)
-                if payload == "True":
-                    payload = self._payload_on
-                elif payload == "False":
-                    payload = self._payload_off
 
-            if payload == self._payload_on:
-                self._is_active = True
-            elif payload == self._payload_off:
-                self._is_active = False
-            else:
-                _LOGGER.error("Invalid activity state: %s", payload)
-
+            self._state = payload
             self.async_schedule_update_ha_state()
 
-        if self._topic[CONF_ACTIVITY_STATE_TOPIC] is not None:
+        if self._topic[CONF_STATE_TOPIC] is not None:
             await mqtt.async_subscribe(
-                self.hass, self._topic[CONF_ACTIVITY_STATE_TOPIC],
-                handle_activity_state_received, self._qos)
+                self.hass, self._topic[CONF_STATE_TOPIC],
+                handle_state_received, self._qos)
 
     @property
     def state(self):
         """Return the current state."""
-        if self._topic[CONF_ACTIVITY_STATE_TOPIC] is not None:
-            if None in (self._current_operation, self._is_active):
-                return None
-            if self._is_active:
-                return self.current_operation
-            if self._current_operation != STATE_OFF:
-                return STATE_IDLE
-            return STATE_OFF
+        if self._topic[CONF_STATE_TOPIC] is not None:
+            return self._state
         return super().state
 
     @property
