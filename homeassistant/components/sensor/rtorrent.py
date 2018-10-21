@@ -13,15 +13,16 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
-_THROTTLED_REFRESH = None
+
+SENSOR_TYPE_CURRENT_STATUS = 'current_status'
+SENSOR_TYPE_DOWNLOAD_SPEED = 'download_speed'
+SENSOR_TYPE_UPLOAD_SPEED = 'upload_speed'
 
 DEFAULT_NAME = 'rtorrent'
-DHT_UPLOAD = 1000
-DHT_DOWNLOAD = 1000
 SENSOR_TYPES = {
-    'current_status': ['Status', None],
-    'download_speed': ['Down Speed', 'kB/s'],
-    'upload_speed': ['Up Speed', 'kB/s'],
+    SENSOR_TYPE_CURRENT_STATUS: ['Status', None],
+    SENSOR_TYPE_DOWNLOAD_SPEED: ['Down Speed', 'kB/s'],
+    SENSOR_TYPE_UPLOAD_SPEED: ['Up Speed', 'kB/s'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -34,8 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the rtorrent sensors."""
-    url = config.get(CONF_URL)
-    name = config.get(CONF_NAME)
+    url = config[CONF_URL]
+    name = config[CONF_NAME]
 
     try:
         rtorrent = xmlrpc.client.ServerProxy(url)
@@ -83,6 +84,11 @@ class RTorrentSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    def format_speed(self, speed):
+        """Returns a bytes/s measurement as a human readable string."""
+        kb_spd = float(speed) / 1024
+        return round(kb_spd, 2 if kb_spd < 0.1 else 1)
+
     def update(self):
         """Get the latest data from rtorrent and updates the state."""
         multicall = xmlrpc.client.MultiCall(self.client)
@@ -100,7 +106,7 @@ class RTorrentSensor(Entity):
         upload = self.data[0]
         download = self.data[1]
 
-        if self.type == 'current_status':
+        if self.type == SENSOR_TYPE_CURRENT_STATUS:
             if self.data:
                 if upload > 0 and download > 0:
                     self._state = 'Up/Down'
@@ -114,11 +120,7 @@ class RTorrentSensor(Entity):
                 self._state = None
 
         if self.data:
-            if self.type == 'download_speed':
-                kb_spd = float(download)
-                kb_spd = kb_spd / 1024
-                self._state = round(kb_spd, 2 if kb_spd < 0.1 else 1)
-            elif self.type == 'upload_speed':
-                kb_spd = float(upload)
-                kb_spd = kb_spd / 1024
-                self._state = round(kb_spd, 2 if kb_spd < 0.1 else 1)
+            if self.type == SENSOR_TYPE_DOWNLOAD_SPEED:
+                self._state = self.format_speed(download)
+            elif self.type == SENSOR_TYPE_UPLOAD_SPEED:
+                self._state = self.format_speed(upload)
