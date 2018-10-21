@@ -302,6 +302,9 @@ omit =
     homeassistant/components/smappee.py
     homeassistant/components/*/smappee.py
 
+    homeassistant/components/somfy_mylink.py
+    homeassistant/components/*/somfy_mylink.py
+
     homeassistant/components/sonos/__init__.py
     homeassistant/components/*/sonos.py
 
