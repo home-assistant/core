@@ -5,7 +5,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
 
-from .const import MYSENSORS_GATEWAY_READY, SIGNAL_CALLBACK
+from .const import MYSENSORS_GATEWAY_READY, CHILD_CALLBACK, NODE_CALLBACK
 from .device import get_mysensors_devices
 from .helpers import discover_mysensors_platform, validate_child
 
@@ -39,6 +39,24 @@ async def handle_internal(hass, hass_config, msg):
     await handler(hass, hass_config, msg)
 
 
+@HANDLERS.register('I_BATTERY_LEVEL')
+async def handle_battery_level(hass, hass_config, msg):
+    """Handle an internal battery level message."""
+    _handle_node_update(hass, msg)
+
+
+@HANDLERS.register('I_SKETCH_NAME')
+async def handle_sketch_name(hass, hass_config, msg):
+    """Handle an internal sketch name message."""
+    _handle_node_update(hass, msg)
+
+
+@HANDLERS.register('I_SKETCH_VERSION')
+async def handle_sketch_version(hass, hass_config, msg):
+    """Handle an internal sketch version message."""
+    _handle_node_update(hass, msg)
+
+
 @HANDLERS.register('I_GATEWAY_READY')
 async def handle_gateway_ready(hass, hass_config, msg):
     """Handle an internal gateway ready message.
@@ -54,6 +72,7 @@ async def handle_gateway_ready(hass, hass_config, msg):
 
 @callback
 def _handle_child_update(hass, hass_config, msg):
+    """Handle a child update."""
     child = msg.gateway.sensors[msg.node_id].children[msg.child_id]
     signals = []
 
@@ -65,7 +84,7 @@ def _handle_child_update(hass, hass_config, msg):
         new_dev_ids = []
         for dev_id in dev_ids:
             if dev_id in devices:
-                signals.append(SIGNAL_CALLBACK.format(*dev_id))
+                signals.append(CHILD_CALLBACK.format(*dev_id))
             else:
                 new_dev_ids.append(dev_id)
         if new_dev_ids:
@@ -76,3 +95,10 @@ def _handle_child_update(hass, hass_config, msg):
         # A device can have multiple platforms, ie multiple schemas.
         # FOR LATER: Add timer to not signal if another update comes in.
         async_dispatcher_send(hass, signal)
+
+
+@callback
+def _handle_node_update(hass, msg):
+    """Handle a node update."""
+    signal = NODE_CALLBACK.format(id(msg.gateway), msg.node_id)
+    async_dispatcher_send(hass, signal)
