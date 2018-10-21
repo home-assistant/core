@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Accesspoint \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "conection_aborted": "\u7121\u6cd5\u9023\u7dda\u81f3 HMIP \u4f3a\u670d\u5668",
             "connection_aborted": "\u7121\u6cd5\u9023\u7dda\u81f3 HMIP \u4f3a\u670d\u5668",
             "unknown": "\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002"
         },

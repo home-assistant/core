@@ -24,13 +24,13 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['samsungctl[websocket]==0.7.1', 'wakeonlan==1.0.0']
+REQUIREMENTS = ['samsungctl[websocket]==0.7.1', 'wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Samsung TV Remote'
 DEFAULT_PORT = 55000
-DEFAULT_TIMEOUT = 0
+DEFAULT_TIMEOUT = 1
 
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = 'samsungtv_known_devices'
@@ -125,10 +125,14 @@ class SamsungTVDevice(MediaPlayerDevice):
     def update(self):
         """Update state of device."""
         if sys.platform == 'win32':
-            _ping_cmd = ['ping', '-n 1', '-w', '1000', self._config['host']]
+            timeout_arg = '-w {}000'.format(self._config['timeout'])
+            _ping_cmd = [
+                'ping', '-n 3', timeout_arg, self._config['host']]
         else:
-            _ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
-                         self._config['host']]
+            timeout_arg = '-W{}'.format(self._config['timeout'])
+            _ping_cmd = [
+                'ping', '-n', '-q',
+                '-c3', timeout_arg, self._config['host']]
 
         ping = subprocess.Popen(
             _ping_cmd,

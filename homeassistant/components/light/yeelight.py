@@ -45,7 +45,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
     vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
-    vol.Optional(CONF_SAVE_ON_CHANGE, default=True): cv.boolean,
+    vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

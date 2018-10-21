@@ -45,6 +45,11 @@ class TuyaCover(TuyaDevice, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
+        state = self.tuya.state()
+        if state == 1:
+            return False
+        if state == 2:
+            return True
         return None
 
     def open_cover(self, **kwargs):

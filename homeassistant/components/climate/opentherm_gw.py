@@ -72,8 +72,9 @@ class OpenThermGateway(ClimateDevice):
         """Receive and handle a new report from the Gateway."""
         _LOGGER.debug("Received report: %s", status)
         ch_active = status.get(self.pyotgw.DATA_SLAVE_CH_ACTIVE)
+        flame_on = status.get(self.pyotgw.DATA_SLAVE_FLAME_ON)
         cooling_active = status.get(self.pyotgw.DATA_SLAVE_COOLING_ACTIVE)
-        if ch_active:
+        if ch_active and flame_on:
             self._current_operation = STATE_HEAT
         elif cooling_active:
             self._current_operation = STATE_COOL

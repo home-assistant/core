@@ -5,6 +5,8 @@ from homeassistant.setup import setup_component
 from homeassistant.components import lock
 
 from tests.common import get_test_home_assistant, mock_service
+from tests.components.lock import common
+
 FRONT = 'lock.front_door'
 KITCHEN = 'lock.kitchen_door'
 OPENABLE_LOCK = 'lock.openable_lock'
@@ -36,14 +38,14 @@ class TestLockDemo(unittest.TestCase):
 
     def test_locking(self):
         """Test the locking of a lock."""
-        lock.lock(self.hass, KITCHEN)
+        common.lock(self.hass, KITCHEN)
         self.hass.block_till_done()
 
         self.assertTrue(lock.is_locked(self.hass, KITCHEN))
 
     def test_unlocking(self):
         """Test the unlocking of a lock."""
-        lock.unlock(self.hass, FRONT)
+        common.unlock(self.hass, FRONT)
         self.hass.block_till_done()
 
         self.assertFalse(lock.is_locked(self.hass, FRONT))
@@ -51,6 +53,6 @@ class TestLockDemo(unittest.TestCase):
     def test_opening(self):
         """Test the opening of a lock."""
         calls = mock_service(self.hass, lock.DOMAIN, lock.SERVICE_OPEN)
-        lock.open_lock(self.hass, OPENABLE_LOCK)
+        common.open_lock(self.hass, OPENABLE_LOCK)
         self.hass.block_till_done()
         self.assertEqual(1, len(calls))

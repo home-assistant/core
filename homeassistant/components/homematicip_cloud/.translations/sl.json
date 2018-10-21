@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Dostopna to\u010dka je \u017ee konfigurirana",
-            "conection_aborted": "Povezave s stre\u017enikom HMIP ni bila mogo\u010da",
             "connection_aborted": "Povezava s stre\u017enikom HMIP ni bila mogo\u010da",
             "unknown": "Pri\u0161lo je do neznane napake"
         },

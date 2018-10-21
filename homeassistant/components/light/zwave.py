@@ -63,6 +63,16 @@ def brightness_state(value):
     return 0, STATE_OFF
 
 
+def byte_to_zwave_brightness(value):
+    """Convert brightness in 0-255 scale to 0-99 scale.
+
+    `value` -- (int) Brightness byte value from 0-255.
+    """
+    if value > 0:
+        return max(1, int((value / 255) * 99))
+    return 0
+
+
 def ct_to_hs(temp):
     """Convert color temperature (mireds) to hs."""
     colorlist = list(
@@ -187,7 +197,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         # brightness. Level 255 means to set it to previous value.
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            brightness = int((self._brightness / 255) * 99)
+            brightness = byte_to_zwave_brightness(self._brightness)
         else:
             brightness = 255
 

@@ -9,6 +9,7 @@ import attr
 
 from homeassistant.const import CONF_HOST, CONF_SENSORS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -30,6 +31,9 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info):
     """Set up Netgear LTE sensor devices."""
     modem_data = hass.data[DATA_KEY].get_modem_data(config)
+
+    if not modem_data:
+        raise PlatformNotReady
 
     sensors = []
     for sensor_type in config[CONF_SENSORS]:
@@ -88,4 +92,7 @@ class UsageSensor(LTESensor):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self.modem_data.usage is None:
+            return None
+
         return round(self.modem_data.usage / 1024**2, 1)

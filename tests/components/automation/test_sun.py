@@ -12,6 +12,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     fire_time_changed, get_test_home_assistant, mock_component)
+from tests.components.automation import common
 
 
 # pylint: disable=invalid-name
@@ -57,7 +58,7 @@ class TestAutomationSun(unittest.TestCase):
                 }
             })
 
-        automation.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
 
         fire_time_changed(self.hass, trigger_time)
@@ -66,7 +67,7 @@ class TestAutomationSun(unittest.TestCase):
 
         with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
-            automation.turn_on(self.hass)
+            common.turn_on(self.hass)
             self.hass.block_till_done()
 
         fire_time_changed(self.hass, trigger_time)

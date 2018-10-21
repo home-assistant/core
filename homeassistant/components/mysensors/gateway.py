@@ -106,7 +106,7 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
                 """Call callback."""
                 sub_cb(*args)
 
-            hass.async_add_job(
+            hass.async_create_task(
                 mqtt.async_subscribe(topic, internal_callback, qos))
 
         gateway = mysensors.AsyncMQTTGateway(
@@ -192,7 +192,7 @@ async def _gw_start(hass, gateway):
     @callback
     def gw_stop(event):
         """Trigger to stop the gateway."""
-        hass.async_add_job(gateway.stop())
+        hass.async_create_task(gateway.stop())
         if not connect_task.done():
             connect_task.cancel()
 

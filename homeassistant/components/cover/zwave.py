@@ -9,10 +9,9 @@ https://home-assistant.io/components/cover.zwave/
 import logging
 from homeassistant.components.cover import (
     DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION)
-from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
-from homeassistant.components.zwave import async_setup_platform  # noqa pylint: disable=unused-import
-from homeassistant.components.zwave import workaround
+from homeassistant.components.zwave import (  # noqa pylint: disable=unused-import
+    ZWaveDeviceEntity, async_setup_platform, workaround)
 from homeassistant.components.cover import CoverDevice
 
 _LOGGER = logging.getLogger(__name__)

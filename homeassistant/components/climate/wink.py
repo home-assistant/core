@@ -4,7 +4,6 @@ Support for Wink thermostats, Air Conditioners, and Water Heaters.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.wink/
 """
-import asyncio
 import logging
 
 from homeassistant.components.climate import (
@@ -92,8 +91,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS_THERMOSTAT
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['climate'].append(self)
 
@@ -118,7 +116,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
                 self.hass, self.target_temperature_low, self.temperature_unit,
                 PRECISION_TENTHS)
 
-        if self.external_temperature:
+        if self.external_temperature is not None:
             data[ATTR_EXTERNAL_TEMPERATURE] = show_temp(
                 self.hass, self.external_temperature, self.temperature_unit,
                 PRECISION_TENTHS)
@@ -126,16 +124,16 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         if self.smart_temperature:
             data[ATTR_SMART_TEMPERATURE] = self.smart_temperature
 
-        if self.occupied:
+        if self.occupied is not None:
             data[ATTR_OCCUPIED] = self.occupied
 
-        if self.eco_target:
+        if self.eco_target is not None:
             data[ATTR_ECO_TARGET] = self.eco_target
 
-        if self.heat_on:
+        if self.heat_on is not None:
             data[ATTR_HEAT_ON] = self.heat_on
 
-        if self.cool_on:
+        if self.cool_on is not None:
             data[ATTR_COOL_ON] = self.cool_on
 
         current_humidity = self.current_humidity

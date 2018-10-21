@@ -14,6 +14,7 @@
                 "data": {
                     "2fa": "2FA Pin"
                 },
+                "description": "Tom",
                 "title": "Tofaktorautentisering"
             },
             "user": {
@@ -21,6 +22,7 @@
                     "email": "E-postadresse",
                     "password": "Passord"
                 },
+                "description": "Tom",
                 "title": "Google Hangouts p\u00e5logging"
             }
         },

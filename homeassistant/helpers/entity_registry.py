@@ -31,7 +31,7 @@ STORAGE_VERSION = 1
 STORAGE_KEY = 'core.entity_registry'
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, frozen=True)
 class RegistryEntry:
     """Entity Registry Entry."""
 
@@ -113,14 +113,9 @@ class EntityRegistry:
         """Get entity. Create if it doesn't exist."""
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
         if entity_id:
-            entry = self.entities[entity_id]
-            if entry.config_entry_id == config_entry_id:
-                return entry
-
-            self._async_update_entity(
+            return self._async_update_entity(
                 entity_id, config_entry_id=config_entry_id,
                 device_id=device_id)
-            return self.entities[entity_id]
 
         entity_id = self.async_generate_entity_id(
             domain, suggested_object_id or '{}_{}'.format(platform, unique_id))
@@ -245,6 +240,7 @@ class EntityRegistry:
                 'unique_id': entry.unique_id,
                 'platform': entry.platform,
                 'name': entry.name,
+                'disabled_by': entry.disabled_by,
             } for entry in self.entities.values()
         ]
 
@@ -253,10 +249,9 @@ class EntityRegistry:
     @callback
     def async_clear_config_entry(self, config_entry):
         """Clear config entry from registry entries."""
-        for entry in self.entities.values():
+        for entity_id, entry in self.entities.items():
             if config_entry == entry.config_entry_id:
-                entry.config_entry_id = None
-                self.async_schedule_save()
+                self._async_update_entity(entity_id, config_entry_id=None)
 
 
 @bind_hass

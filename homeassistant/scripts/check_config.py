@@ -6,10 +6,10 @@ import os
 from collections import OrderedDict, namedtuple
 from glob import glob
 from platform import system
+from typing import Dict, List, Sequence
 from unittest.mock import patch
 
 import attr
-from typing import Dict, List, Sequence
 import voluptuous as vol
 
 from homeassistant import bootstrap, core, loader

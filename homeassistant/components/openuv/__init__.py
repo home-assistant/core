@@ -179,7 +179,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][DATA_OPENUV_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
             hass, refresh_sensors,
-            hass.data[DOMAIN][CONF_SCAN_INTERVAL])
+            hass.data[DOMAIN].get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
 
     return True
 
@@ -212,8 +212,15 @@ class OpenUV:
     async def async_update(self):
         """Update sensor/binary sensor data."""
         if TYPE_PROTECTION_WINDOW in self.binary_sensor_conditions:
-            data = await self.client.uv_protection_window()
-            self.data[DATA_PROTECTION_WINDOW] = data
+            resp = await self.client.uv_protection_window()
+            data = resp['result']
+
+            if data.get('from_time') and data.get('to_time'):
+                self.data[DATA_PROTECTION_WINDOW] = data
+            else:
+                _LOGGER.error(
+                    'No valid protection window data for this location')
+                self.data[DATA_PROTECTION_WINDOW] = {}
 
         if any(c in self.sensor_conditions for c in SENSORS):
             data = await self.client.uv_index()

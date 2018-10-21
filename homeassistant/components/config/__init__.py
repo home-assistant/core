@@ -13,8 +13,17 @@ from homeassistant.util.yaml import load_yaml, dump
 
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
-SECTIONS = ('core', 'customize', 'group', 'hassbian', 'automation', 'script',
-            'entity_registry', 'config_entries')
+SECTIONS = (
+    'automation',
+    'config_entries',
+    'core',
+    'customize',
+    'device_registry',
+    'entity_registry',
+    'group',
+    'hassbian',
+    'script',
+)
 ON_DEMAND = ('zwave',)
 
 
@@ -43,7 +52,7 @@ async def async_setup(hass, config):
         """Respond to components being loaded."""
         panel_name = event.data.get(ATTR_COMPONENT)
         if panel_name in ON_DEMAND:
-            hass.async_add_job(setup_panel(panel_name))
+            hass.async_create_task(setup_panel(panel_name))
 
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
 
@@ -127,7 +136,7 @@ class BaseEditConfigView(HomeAssistantView):
         await hass.async_add_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_add_job(self.post_write_hook(hass))
+            hass.async_create_task(self.post_write_hook(hass))
 
         return self.json({
             'result': 'ok',

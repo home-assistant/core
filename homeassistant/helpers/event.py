@@ -227,6 +227,10 @@ def async_call_later(hass, delay, action):
         hass, action, dt_util.utcnow() + timedelta(seconds=delay))
 
 
+call_later = threaded_listener_factory(
+    async_call_later)
+
+
 @callback
 @bind_hass
 def async_track_time_interval(hass, action, interval):

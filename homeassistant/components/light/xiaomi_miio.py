@@ -713,7 +713,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
-            self._state = state.eyecare
+            self._state = state.ambient
             self._brightness = ceil((255 / 100.0) * state.ambient_brightness)
 
         except DeviceException as ex:

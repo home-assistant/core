@@ -61,9 +61,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
     from miio import ChuangmiIr, DeviceException
 
@@ -109,8 +108,7 @@ def async_setup_platform(hass, config, async_add_entities,
 
     async_add_entities([xiaomi_miio_remote])
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Handle a learn command."""
         if service.service != SERVICE_LEARN:
             _LOGGER.error("We should not handle service: %s", service.service)
@@ -130,14 +128,14 @@ def async_setup_platform(hass, config, async_add_entities,
 
         slot = service.data.get(CONF_SLOT, entity.slot)
 
-        yield from hass.async_add_job(device.learn, slot)
+        await hass.async_add_job(device.learn, slot)
 
         timeout = service.data.get(CONF_TIMEOUT, entity.timeout)
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=timeout):
-            message = yield from hass.async_add_job(
+            message = await hass.async_add_job(
                 device.read, slot)
             _LOGGER.debug("Message received from device: '%s'", message)
 
@@ -150,9 +148,9 @@ def async_setup_platform(hass, config, async_add_entities,
 
             if ('error' in message and
                     message['error']['message'] == "learn timeout"):
-                yield from hass.async_add_job(device.learn, slot)
+                await hass.async_add_job(device.learn, slot)
 
-            yield from asyncio.sleep(1, loop=hass.loop)
+            await asyncio.sleep(1, loop=hass.loop)
 
         _LOGGER.error("Timeout. No infrared command captured")
         hass.components.persistent_notification.async_create(
@@ -230,14 +228,12 @@ class XiaomiMiioRemote(RemoteDevice):
             return {'hidden': 'true'}
         return
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         _LOGGER.error("Device does not support turn_on, "
                       "please use 'remote.send_command' to send commands.")
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGER.error("Device does not support turn_off, "
                       "please use 'remote.send_command' to send commands.")

@@ -6,12 +6,12 @@ coveralls==1.2.0
 flake8-docstrings==1.3.0
 flake8==3.5
 mock-open==1.3.1
-mypy==0.620
+mypy==0.630
 pydocstyle==2.1.1
 pylint==2.1.1
 pytest-aiohttp==0.3.0
 pytest-cov==2.5.1
 pytest-sugar==0.9.1
-pytest-timeout==1.3.1
-pytest==3.7.2
+pytest-timeout==1.3.2
+pytest==3.8.2
 requests_mock==1.5.2
