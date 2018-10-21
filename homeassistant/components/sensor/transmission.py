@@ -32,6 +32,8 @@ SENSOR_TYPES = {
     'paused_torrents': ['Paused Torrents', None],
     'total_torrents': ['Total Torrents', None],
     'upload_speed': ['Up Speed', 'MB/s'],
+    'completed_torrents': ['Completed Torrents', None],
+    'started_torrents': ['Started Torrents', None],
 }
 
 SCAN_INTERVAL = timedelta(minutes=2)
@@ -73,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
-        dev.append(TransmissionSensor(variable, transmission_api, name))
+        dev.append(TransmissionSensor(variable, transmission_api, name, hass))
 
     add_entities(dev, True)
 
@@ -81,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class TransmissionSensor(Entity):
     """Representation of a Transmission sensor."""
 
-    def __init__(self, sensor_type, transmission_api, client_name):
+    def __init__(self, sensor_type, transmission_api, client_name, hass):
         """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self._state = None
@@ -90,6 +92,10 @@ class TransmissionSensor(Entity):
         self._data = None
         self.client_name = client_name
         self.type = sensor_type
+        self.completed_torrents = []
+        self.started_torrents = []
+        self.firstRun = True
+        self.hass = hass
 
     @property
     def name(self):
@@ -115,6 +121,51 @@ class TransmissionSensor(Entity):
         """Get the latest data from Transmission and updates the state."""
         self._transmission_api.update()
         self._data = self._transmission_api.data
+
+        if self.firstRun:
+            actual_torrents = self._transmission_api.torrents
+            actual_completed_torrents = [
+                x.name for x in actual_torrents if x.status == "seeding"]
+            actual_started_torrents = [
+                x.name for x in actual_torrents if x.status == "downloading"]
+            self.completed_torrents = actual_completed_torrents
+            self.started_torrents = actual_started_torrents
+
+        elif self.type == 'completed_torrents':
+            actual_torrents = self._transmission_api.torrents
+            actual_completed_torrents = [
+                x.name for x in actual_torrents if x.status == "seeding"]
+
+            tmp_completed_torrents = list(
+                set(actual_completed_torrents).difference(
+                    self.completed_torrents))
+            if len(tmp_completed_torrents) > 0:
+                for x in tmp_completed_torrents:
+                    """Throw event"""
+                    self.hass.bus.fire(
+                        'transmission_downloaded_torrent', {
+                            'name': x})
+
+            self.completed_torrents = actual_completed_torrents
+            self._state = len(self.completed_torrents)
+        elif self.type == 'started_torrents':
+            actual_torrents = self._transmission_api.torrents
+            actual_started_torrents = [
+                x.name for x in actual_torrents if x.status == "downloading"]
+
+            tmp_started_torrents = list(
+                set(actual_started_torrents).difference(
+                    self.started_torrents))
+            if len(tmp_started_torrents) > 0:
+                for x in tmp_started_torrents:
+                    """Throw Event"""
+                    self.hass.bus.fire(
+                        'transmission_started_torrent', {
+                            'name': x})
+            self.started_torrents = actual_started_torrents
+            self._state = len(self.started_torrents)
+
+        self.firstRun = False
 
         if self.type == 'current_status':
             if self._data:
@@ -164,6 +215,7 @@ class TransmissionData:
 
         try:
             self.data = self._api.session_stats()
+            self.torrents = self._api.get_torrents()
             self.available = True
         except TransmissionError:
             self.available = False
