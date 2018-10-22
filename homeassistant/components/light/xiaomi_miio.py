@@ -818,4 +818,3 @@ class XiaomiMiDeskLamp(XiaomiAbstractLight):
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
-
