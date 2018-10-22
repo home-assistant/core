@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/cloud/
 """
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import logging
 import os
@@ -162,7 +162,7 @@ class Cloud:
     @property
     def subscription_expired(self):
         """Return a boolean if the subscription has expired."""
-        return dt_util.utcnow() > self.expiration_date
+        return dt_util.utcnow() > self.expiration_date + timedelta(days=3)
 
     @property
     def expiration_date(self):

@@ -81,7 +81,7 @@ georss_client==0.3
 ha-ffmpeg==1.9
 
 # homeassistant.components.hangouts
-hangups==0.4.5
+hangups==0.4.6
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -93,7 +93,7 @@ hdate==0.6.3
 holidays==0.9.7
 
 # homeassistant.components.frontend
-ais-dom-frontend==20181014.0
+ais-dom-frontend==20181021.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
