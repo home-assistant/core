@@ -1,4 +1,4 @@
-"""Tests for the Webhook Config Entry Flow helper"""
+"""Tests for the Webhook Config Entry Flow helper."""
 from unittest.mock import patch, Mock
 
 import pytest

@@ -39,10 +39,8 @@ async def async_setup(hass, config):
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook with Mailgun inbound messages."""
-    data = await request.post()
-
-    if isinstance(data, dict):
-        data[CONF_WEBHOOK_ID] = webhook_id
+    data = dict(await request.post())
+    data['webhook_id'] = webhook_id
     hass.bus.async_fire(MESSAGE_RECEIVED, data)
 
 
