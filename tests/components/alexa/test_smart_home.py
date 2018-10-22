@@ -695,6 +695,34 @@ def test_temp_sensor(hass):
 
 
 @asyncio.coroutine
+def test_contact_sensor(hass):
+    """Test contact sensor discovery."""
+    device = ('sensor.test_contact', 'on',
+        {
+            'friendly_name': "Test Contact Sensor",
+            'device_class': 'door',
+        }
+    )
+    appliance = yield from discovery_test(device, hass)
+
+    assert appliance['endpointId'] == 'sensor#test_contact'
+    assert appliance['displayCategories'][0] == 'CONTACT_SENSOR'
+    assert appliance['friendlyName'] == 'Test Contact Sensor'
+
+    (capability,) = assert_endpoint_capabilities(
+        appliance,
+        'Alexa.ContactSensor')
+    assert capability['interface'] == 'Alexa.ContactSensor'
+    properties = capability['properties']
+    assert properties['retrievable'] is True
+    assert {'name': 'detectionState'} in properties['supported']
+
+    properties = yield from reported_properties(hass, 'sensor#test_contact')
+    properties.assert_equal('Alexa.ContactSensor', 'detectionState',
+                            'DETECTED')
+
+
+@asyncio.coroutine
 def test_unknown_sensor(hass):
     """Test sensors of unknown quantities are not discovered."""
     device = (
