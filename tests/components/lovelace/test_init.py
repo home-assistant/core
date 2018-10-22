@@ -9,7 +9,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.components.lovelace import (load_yaml,
-                                               save_yaml, load_config)
+                                               save_yaml, load_config,
+                                               UnsupportedYamlError)
 
 TEST_YAML_A = """\
 title: My Awesome Home
@@ -55,6 +56,8 @@ views:
     # Title of the view. Will be used as the tooltip for tab icon
     title: Second view
     cards:
+      - id: test
+        type: entities
         # Entities card will take a list of entities and show their state.
       - type: entities
         # Title of the entities card
@@ -79,6 +82,7 @@ TEST_YAML_B = """\
 title: Home
 views:
   - title: Dashboard
+    id: dashboard
     icon: mdi:home
     cards:
       - id: testid
@@ -100,6 +104,15 @@ views:
     cards:
       - id: testid
           type: vertical-stack
+"""
+
+# Test unsupported YAML
+TEST_UNSUP_YAML = """\
+title: Home
+views:
+  - title: Dashboard
+    icon: mdi:home
+    cards: !include cards.yaml
 """
 
 
@@ -147,9 +160,11 @@ class TestYAML(unittest.TestCase):
         """Test if id is added."""
         fname = self._path_for("test6")
         with patch('homeassistant.components.lovelace.load_yaml',
-                   return_value=self.yaml.load(TEST_YAML_A)):
+                   return_value=self.yaml.load(TEST_YAML_A)), \
+                patch('homeassistant.components.lovelace.save_yaml'):
             data = load_config(fname)
         assert 'id' in data['views'][0]['cards'][0]
+        assert 'id' in data['views'][1]
 
     def test_id_not_changed(self):
         """Test if id is not changed if already exists."""
@@ -256,7 +271,7 @@ async def test_lovelace_ui_not_found(hass, hass_ws_client):
 
 
 async def test_lovelace_ui_load_err(hass, hass_ws_client):
-    """Test lovelace_ui command cannot find file."""
+    """Test lovelace_ui command load error."""
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
 
@@ -272,3 +287,156 @@ async def test_lovelace_ui_load_err(hass, hass_ws_client):
     assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
     assert msg['error']['code'] == 'load_error'
+
+
+async def test_lovelace_ui_load_json_err(hass, hass_ws_client):
+    """Test lovelace_ui command load error."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+
+    with patch('homeassistant.components.lovelace.load_config',
+               side_effect=UnsupportedYamlError):
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success'] is False
+    assert msg['error']['code'] == 'unsupported_error'
+
+
+async def test_lovelace_get_card(hass, hass_ws_client):
+    """Test get_card command."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.components.lovelace.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)):
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/card/get',
+            'card_id': 'test',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+    assert msg['result'] == 'id: test\ntype: entities\n'
+
+
+async def test_lovelace_get_card_not_found(hass, hass_ws_client):
+    """Test get_card command cannot find card."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.components.lovelace.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)):
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/card/get',
+            'card_id': 'not_found',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success'] is False
+    assert msg['error']['code'] == 'card_not_found'
+
+
+async def test_lovelace_get_card_bad_yaml(hass, hass_ws_client):
+    """Test get_card command bad yaml."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+
+    with patch('homeassistant.components.lovelace.load_yaml',
+               side_effect=HomeAssistantError):
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/card/get',
+            'card_id': 'testid',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success'] is False
+    assert msg['error']['code'] == 'load_error'
+
+
+async def test_lovelace_set_card(hass, hass_ws_client):
+    """Test set_card command."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.components.lovelace.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)), \
+        patch('homeassistant.components.lovelace.save_yaml') \
+            as save_yaml_mock:
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/card/set',
+            'card_id': 'test',
+            'card_config': 'id: test\ntype: glance\n',
+        })
+        msg = await client.receive_json()
+
+    result = save_yaml_mock.call_args_list[0][0][1]
+    assert result.mlget(['views', 1, 'cards', 0, 'type'],
+                        list_ok=True) == 'glance'
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+
+
+async def test_lovelace_set_card_not_found(hass, hass_ws_client):
+    """Test set_card command cannot find card."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.components.lovelace.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)):
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/card/set',
+            'card_id': 'not_found',
+            'card_config': 'id: test\ntype: glance\n',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success'] is False
+    assert msg['error']['code'] == 'card_not_found'
+
+
+async def test_lovelace_set_card_bad_yaml(hass, hass_ws_client):
+    """Test set_card command bad yaml."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.components.lovelace.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)), \
+        patch('homeassistant.components.lovelace.yaml_to_object',
+              side_effect=HomeAssistantError):
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/card/set',
+            'card_id': 'test',
+            'card_config': 'id: test\ntype: glance\n',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success'] is False
+    assert msg['error']['code'] == 'save_error'
