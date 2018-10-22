@@ -16,7 +16,7 @@ demo <https://home-assistant.io/demo/>`__, `installation instructions <https://h
 
 |screenshot-states|
 
-Featured integrations
+Featured integrationsss
 ---------------------
 
 |screenshot-components|
