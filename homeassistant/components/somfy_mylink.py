@@ -118,13 +118,13 @@ class SomfyMyLink:
             sock.sendall(message_as_bytes)
             sock.shutdown(socket.SHUT_WR)
         except OSError as ex:
-            _LOGGER.info("failed to send msg: %s", ex)
-            raise Exception from ex
+            _LOGGER.info("Failed to send msg: %s", ex)
+            raise TimeoutError("Unable to open socket") from ex
         try:
             data_bytes = sock.recv(1024)
             data_string = data_bytes.decode("utf-8")
             data_dict = json.loads(data_string)
-            _LOGGER.info(data_dict)
+            _LOGGER.debug(data_dict)
             return data_dict
         except OSError as ex:
             if retry_count > 0:

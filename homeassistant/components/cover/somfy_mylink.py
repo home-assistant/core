@@ -158,8 +158,8 @@ class SomfyShade(CoverDevice):
             return
         self._partial_move_time = self.calculate_move_time(self._set_position)
         self._requested_closing = position < self._position
-        _LOGGER.info("Moving to position %s in %s seconds",
-                     self._set_position, self._partial_move_time)
+        _LOGGER.debug("Moving to position %s in %s seconds",
+                      self._set_position, self._partial_move_time)
         if self._requested_closing:
             self.somfy_mylink.move_down(self._target_id)
             if self._position is None:
@@ -189,8 +189,8 @@ class SomfyShade(CoverDevice):
         else:
             self._position += move_increment
 
-        _LOGGER.info("%s At position %s, incrementing to %s",
-                     now, self._position, self._set_position)
+        _LOGGER.debug("%s At position %s, incrementing to %s",
+                      now, self._position, self._set_position)
         curr_position = round(self._position, -1)
         if curr_position == self._set_position:
             self._position = curr_position
