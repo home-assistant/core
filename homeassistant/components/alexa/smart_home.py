@@ -5,8 +5,9 @@ from datetime import datetime
 from uuid import uuid4
 
 from homeassistant.components import (
-    alert, automation, cover, climate, fan, group, input_boolean, light, lock,
-    media_player, scene, script, switch, http, sensor)
+    alert, automation, binary_sensor, cover, climate, fan, group,
+    input_boolean, light, lock, media_player, scene, script, switch, http,
+    sensor)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.temperature import convert as convert_temperature
@@ -642,27 +643,34 @@ class _SensorCapabilities(_AlexaEntity):
     def default_display_categories(self):
         # although there are other kinds of sensors, all but temperature
         # sensors are currently ignored.
-        sensor_type = self.get_type()
-        if sensor_type is self.TYPE_TEMPERATURE:
-            return [_DisplayCategory.TEMPERATURE_SENSOR]
-        elif sensor_type is self.TYPE_CONTACT:
-            return [_DisplayCategory.CONTACT_SENSOR]
+        return [_DisplayCategory.TEMPERATURE_SENSOR]
 
     def interfaces(self):
-        sensor_type = self.get_type()
-        if sensor_type is self.TYPE_TEMPERATURE:
-            yield _AlexaTemperatureSensor(self.hass, self.entity)
-        elif sensor_type is self.TYPE_CONTACT:
-            yield _AlexaContactSensor(self.hass, self.entity)
-
-    def get_type(self):
         attrs = self.entity.attributes
         if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in (
                 TEMP_FAHRENHEIT,
                 TEMP_CELSIUS,
         ):
-            return self.TYPE_TEMPERATURE
-        elif attrs.get(ATTR_DEVICE_CLASS) in (
+            yield _AlexaTemperatureSensor(self.hass, self.entity)
+
+
+@ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
+class _BinarySensorCapabilities(_AlexaEntity):
+    TYPE_CONTACT = 'contact'
+
+    def default_display_categories(self):
+        sensor_type = self.get_type()
+        if sensor_type is self.TYPE_CONTACT:
+            return [_DisplayCategory.CONTACT_SENSOR]
+
+    def interfaces(self):
+        sensor_type = self.get_type()
+        if sensor_type is self.TYPE_CONTACT:
+            yield _AlexaContactSensor(self.hass, self.entity)
+
+    def get_type(self):
+        attrs = self.entity.attributes
+        if attrs.get(ATTR_DEVICE_CLASS) in (
                 'door',
                 'garage_door',
                 'opening',

@@ -697,7 +697,9 @@ def test_temp_sensor(hass):
 @asyncio.coroutine
 def test_contact_sensor(hass):
     """Test contact sensor discovery."""
-    device = ('sensor.test_contact', 'on',
+    device = (
+        'sensor.test_contact',
+        'on',
         {
             'friendly_name': "Test Contact Sensor",
             'device_class': 'door',
