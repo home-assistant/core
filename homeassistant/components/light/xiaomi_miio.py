@@ -1,5 +1,6 @@
 """
-Support for Xiaomi Philips Lights (LED Ball & Ceiling Lamp, Eyecare Lamp 2).
+Support for Xiaomi Lights (Philips LED Ball & Ceiling Lamp, Eyecare Lamp 2)
+and and Yeelink models like the Mi Desk LED Lamp.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/light.xiaomi_miio/
@@ -25,7 +26,7 @@ REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Xiaomi Philips Light'
+DEFAULT_NAME = 'Xiaomi Light'
 DATA_KEY = 'light.xiaomi_miio'
 
 CONF_MODEL = 'model'
@@ -38,6 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         ['philips.light.sread1',
          'philips.light.ceiling',
          'philips.light.zyceiling',
+         'yeelink.light.lamp1',
          'philips.light.bulb',
          'philips.light.candle',
          'philips.light.candle2',
@@ -149,6 +151,12 @@ async def async_setup_platform(hass, config, async_add_entities,
         device = XiaomiPhilipsCeilingLamp(name, light, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
+    elif model in ['yeelink.light.lamp1']:
+        from miio import Yeelight
+        light = Yeelight(host, token)
+        device = XiaomiMiDeskLamp(name, light, model, unique_id)
+        devices.append(device)
+        hass.data[DATA_KEY][host] = device
     elif model in ['philips.light.bulb',
                    'philips.light.candle',
                    'philips.light.candle2']:
@@ -201,8 +209,8 @@ async def async_setup_platform(hass, config, async_add_entities,
             DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema)
 
 
-class XiaomiPhilipsAbstractLight(Light):
-    """Representation of a Abstract Xiaomi Philips Light."""
+class XiaomiAbstractLight(Light):
+    """Representation of a Abstract Xiaomi Light."""
 
     def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
@@ -315,7 +323,7 @@ class XiaomiPhilipsAbstractLight(Light):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
-class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
+class XiaomiPhilipsGenericLight(XiaomiAbstractLight):
     """Representation of a Generic Xiaomi Philips Light."""
 
     def __init__(self, name, light, model, unique_id):
@@ -570,6 +578,7 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
+
 class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
     """Representation of a Xiaomi Philips Eyecare Lamp 2."""
 
@@ -676,7 +685,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         return None
 
 
-class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
+class XiaomiPhilipsEyecareLampAmbientLight(XiaomiAbstractLight):
     """Representation of a Xiaomi Philips Eyecare Lamp Ambient Light."""
 
     def __init__(self, name, light, model, unique_id):
@@ -725,3 +734,88 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+
+class XiaomiMiDeskLamp(XiaomiAbstractLight):
+    """Representation of a Xiaomi Mi LED Desk Lamp (MJTD01YL)"""
+
+    def __init__(self, name, light, model, unique_id):
+        """Initialize the light device."""
+        super().__init__(name, light, model, unique_id)
+
+        self._color_temp = None
+
+    @property
+    def color_temp(self):
+        """Return the color temperature."""
+        return self._color_temp
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return int(1000000.0/4000.0)
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return int(1000000.0/2700.0)
+
+    @property
+    def supported_features(self):
+        """Return the supported features."""
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the light on."""
+        if ATTR_COLOR_TEMP in kwargs:
+            color_temp = kwargs[ATTR_COLOR_TEMP]
+            color_temp_kelvin = int(1000000.0/float(color_temp))
+            _LOGGER.debug(
+                "Setting color temperature: "
+                "%s mireds (%sK)",
+                color_temp, color_temp_kelvin)
+
+            result = await self._try_command(
+                "Setting color temperature failed: %s K",
+                self._light.set_color_temp, color_temp_kelvin)
+
+            if result:
+                self._color_temp = color_temp
+
+        elif ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            percent_brightness = ceil(100 * brightness / 255.0)
+
+            _LOGGER.debug(
+                "Setting brightness: %s %s%%",
+                brightness, percent_brightness)
+
+            result = await self._try_command(
+                "Setting brightness failed: %s",
+                self._light.set_brightness, percent_brightness)
+
+            if result:
+                self._brightness = brightness
+
+        else:
+            await self._try_command(
+                "Turning the light on failed.", self._light.on)
+
+    async def async_update(self):
+        """Fetch state from the device."""
+        from miio import DeviceException
+        try:
+            state = await self.hass.async_add_job(self._light.status)
+            _LOGGER.debug("Got new state: %s", state)
+
+            self._available = True
+            self._state = state.is_on
+            self._brightness = ceil((255 / 100.0) * state.brightness)
+
+            color_temp_mireds = int(1000000.0/float(state.color_temp))
+            self._color_temp = color_temp_mireds
+
+        except DeviceException as ex:
+            self._available = False
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
+
