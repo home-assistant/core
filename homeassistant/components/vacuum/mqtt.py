@@ -333,7 +333,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
                     self._status = "Docked"
             elif self._cleaning:
                 self._status = "Cleaning"
-            elif self._error is not None and len(self._error) > 0:
+            elif self._error is not None and not self._error:
                 self._status = "Error: " + self._error
             else:
                 self._status = "Stopped"
