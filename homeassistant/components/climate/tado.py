@@ -79,8 +79,10 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     unit = TEMP_CELSIUS
     ac_mode = capabilities['type'] == 'AIR_CONDITIONING'
 
-    if ac_mode:
-        temperatures = capabilities['HEAT']['temperatures']
+    if CONST_MODE_COOL in capabilities:
+        temperatures = capabilities[CONST_MODE_COOL]['temperatures']
+    elif CONST_MODE_HEAT in capabilities:
+        temperatures = capabilities[CONST_MODE_HEAT]['temperatures']
     elif 'temperatures' in capabilities:
         temperatures = capabilities['temperatures']
     else:

@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['python-tado==0.2.5']
@@ -129,7 +130,9 @@ class TadoDataStore:
         if ac_mode:
             device_type = 'AIR_CONDITIONING'
 
-        power = "ON" if temperature is not None "OFF"
+        power = "ON" 
+        if temperature is None:
+            power = "OFF"
         
         mode = None
 
