@@ -1,0 +1,18 @@
+{
+  "config": {
+    "title": "Luftdaten",
+    "step": {
+      "user": {
+        "title": "Fill in your information",
+        "data": {
+          "station_id": "Luftdaten Sensor ID"
+        }
+      }
+    },
+    "error": {
+      "sensor_exists": "Sensor already registered",
+      "invalid_sensor": "Sensor not available or invalid",
+      "communication_error": "Unable to communicate with the Luftdaten API"
+    }
+  }
+}
