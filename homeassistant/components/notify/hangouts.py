@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 NOTIFY_SERVICE_SCHEMA = NOTIFY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_TARGET): [TARGETS_SCHEMA],
-    vol.Optional(ATTR_DATA): MESSAGE_DATA_SCHEMA
+    vol.Optional(ATTR_DATA, default={}): MESSAGE_DATA_SCHEMA
 })
 
 
@@ -61,7 +61,7 @@ class HangoutsNotificationService(BaseNotificationService):
         service_data = {
             ATTR_TARGET: target_conversations,
             ATTR_MESSAGE: messages,
-            ATTR_DATA: kwargs.get(ATTR_DATA, {}) or {}
+            ATTR_DATA: kwargs[ATTR_DATA]
         }
 
         return self.hass.services.call(
