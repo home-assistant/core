@@ -48,10 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DirecTV platform."""
-    if DATA_DIRECTV not in hass.data:
-        hass.data[DATA_DIRECTV] = []
 
-    known_devices = hass.data.get(DATA_DIRECTV)
+    known_devices = hass.data.get(DATA_DIRECTV, [])
     hosts = []
 
     if CONF_HOST in config:
@@ -117,7 +115,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for host in hosts:
         dtvs.append(DirecTvDevice(*host))
-        hass.data[DATA_DIRECTV].append(host)
+        hass.data.setdefault(DATA_DIRECTV, []).append(host)
 
     add_entities(dtvs)
 
