@@ -25,8 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'axis'
 CONFIG_FILE = 'axis.conf'
 
-AXIS_DEVICES = {}
-
 EVENT_TYPES = ['motion', 'vmd3', 'pir', 'sound',
                'daynight', 'tampering', 'input']
 
@@ -98,8 +96,6 @@ def request_configuration(hass, config, name, host, serialnumber):
             return False
 
         if setup_device(hass, config, device_config):
-            del device_config['events']
-            del device_config['signal']
             config_file = load_json(hass.config.path(CONFIG_FILE))
             config_file[serialnumber] = dict(device_config)
             save_json(hass.config.path(CONFIG_FILE), config_file)
@@ -145,9 +141,11 @@ def request_configuration(hass, config, name, host, serialnumber):
 
 def setup(hass, config):
     """Set up for Axis devices."""
+    hass.data[DOMAIN] = {}
+
     def _shutdown(call):
         """Stop the event stream on shutdown."""
-        for serialnumber, device in AXIS_DEVICES.items():
+        for serialnumber, device in hass.data[DOMAIN].items():
             _LOGGER.info("Stopping event stream for %s.", serialnumber)
             device.stop()
 
@@ -159,7 +157,7 @@ def setup(hass, config):
         name = discovery_info['hostname']
         serialnumber = discovery_info['properties']['macaddress']
 
-        if serialnumber not in AXIS_DEVICES:
+        if serialnumber not in hass.data[DOMAIN]:
             config_file = load_json(hass.config.path(CONFIG_FILE))
             if serialnumber in config_file:
                 # Device config previously saved to file
@@ -177,7 +175,7 @@ def setup(hass, config):
                 request_configuration(hass, config, name, host, serialnumber)
         else:
             # Device already registered, but on a different IP
-            device = AXIS_DEVICES[serialnumber]
+            device = hass.data[DOMAIN][serialnumber]
             device.config.host = host
             dispatcher_send(hass, DOMAIN + '_' + device.name + '_new_ip', host)
 
@@ -194,7 +192,7 @@ def setup(hass, config):
 
     def vapix_service(call):
         """Service to send a message."""
-        for device in AXIS_DEVICES.values():
+        for device in hass.data[DOMAIN].values():
             if device.name == call.data[CONF_NAME]:
                 response = device.vapix.do_request(
                     call.data[SERVICE_CGI],
@@ -213,7 +211,7 @@ def setup(hass, config):
 
 def setup_device(hass, config, device_config):
     """Set up an Axis device."""
-    from axis import AxisDevice
+    import axis
 
     def signal_callback(action, event):
         """Call to configure events when initialized on event stream."""
@@ -228,17 +226,31 @@ def setup_device(hass, config, device_config):
             discovery.load_platform(
                 hass, component, DOMAIN, event_config, config)
 
-    event_types = list(filter(lambda x: x in device_config[CONF_INCLUDE],
-                              EVENT_TYPES))
-    device_config['events'] = event_types
-    device_config['signal'] = signal_callback
-    device = AxisDevice(hass.loop, **device_config)
-    device.name = device_config[CONF_NAME]
+    event_types = [
+        event
+        for event in device_config[CONF_INCLUDE]
+        if event in EVENT_TYPES
+    ]
 
-    if device.vapix.serial_number is None:
-        # If there is no serial number a connection could not be made
-        _LOGGER.error("Couldn't connect to %s", device_config[CONF_HOST])
+    device = axis.AxisDevice(
+        loop=hass.loop, host=device_config[CONF_HOST],
+        username=device_config[CONF_USERNAME],
+        password=device_config[CONF_PASSWORD],
+        port=device_config[CONF_PORT], web_proto='http',
+        event_types=event_types, signal=signal_callback)
+
+    try:
+        hass.data[DOMAIN][device.vapix.serial_number] = device
+
+    except axis.Unauthorized:
+        _LOGGER.error("Credentials for %s are faulty",
+                      device_config[CONF_HOST])
         return False
+
+    except axis.RequestError:
+        return False
+
+    device.name = device_config[CONF_NAME]
 
     for component in device_config[CONF_INCLUDE]:
         if component == 'camera':
@@ -252,7 +264,6 @@ def setup_device(hass, config, device_config):
             discovery.load_platform(
                 hass, component, DOMAIN, camera_config, config)
 
-    AXIS_DEVICES[device.vapix.serial_number] = device
     if event_types:
         hass.add_job(device.start)
     return True

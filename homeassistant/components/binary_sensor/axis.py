@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import (
     ATTR_LOCATION, CONF_EVENT, CONF_NAME, CONF_TRIGGER_TIME)
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 DEPENDENCIES = ['axis']
