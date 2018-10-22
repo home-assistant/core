@@ -8,10 +8,12 @@ from homeassistant import config_entries
 from homeassistant.util.network import is_local
 
 
-def register_webhook_flow(domain, title, description_placeholder):
+def register_webhook_flow(domain, title, description_placeholder,
+                          allow_multiple=False):
     """Register flow for webhook integrations.."""
     config_entries.HANDLERS.register(domain)(
-        partial(WebhookFlowHandler, domain, title, description_placeholder))
+        partial(WebhookFlowHandler, domain, title, description_placeholder,
+                allow_multiple))
 
 
 class WebhookFlowHandler(config_entries.ConfigFlow):
@@ -19,8 +21,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
 
-    def __init__(self, domain, title, description_placeholder,
-                 allow_multiple=False):
+    def __init__(self, domain, title, description_placeholder, allow_multiple):
         """Initialize the discovery config flow."""
         self._domain = domain
         self._title = title
