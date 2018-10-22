@@ -200,6 +200,9 @@ omit =
     homeassistant/components/logi_circle.py
     homeassistant/components/*/logi_circle.py
 
+    homeassistant/components/lupusec.py
+    homeassistant/components/*/lupusec.py
+
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
 
