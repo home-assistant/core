@@ -103,6 +103,7 @@ class DirecTvDevice(MediaPlayerDevice):
         self._paused = None
         self._lastposition = None
         self._isrecorded = None
+        self._assumed_state = None
 
         _LOGGER.debug("Created DirecTV device for %s", self._name)
 
@@ -113,14 +114,18 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             self._current = None
             self._isrecorded = None
+            self._paused = None
+            self._assumed_state = False
             self._lastposition = None
             self._lastupdate = None
         else:
             self._current = self.dtv.get_tuned()
             self._isrecorded = self._current.get('uniqueId') is not None
             self._paused = self._lastposition == self._current['offset']
+            self._assumed_state = self._isrecorded
             self._lastposition = self._current['offset']
-            self._lastupdate = dt_util.now()
+            self._lastupdate = dt_util.now() if not self._paused or\
+                self._lastupdate is None else self._lastupdate
 
     @property
     def device_state_attributes(self):
@@ -156,6 +161,11 @@ class DirecTvDevice(MediaPlayerDevice):
         return STATE_PLAYING
 
     @property
+    def assumed_state(self):
+        """Return if we assume the state or not."""
+        return self._assumed_state
+
+    @property
     def media_content_id(self):
         """Return the content ID of current playing media."""
         if self._is_standby:
@@ -165,6 +175,9 @@ class DirecTvDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Return the content type of current playing media."""
+        if self._is_standby:
+            return None
+
         if 'episodeTitle' in self._current:
             return MEDIA_TYPE_TVSHOW
         return MEDIA_TYPE_MOVIE
