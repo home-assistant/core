@@ -119,6 +119,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(dtvs)
 
+
 class DirecTvDevice(MediaPlayerDevice):
     """Representation of a DirecTV receiver on the network."""
 
