@@ -637,9 +637,6 @@ class _ScriptCapabilities(_AlexaEntity):
 
 @ENTITY_ADAPTERS.register(sensor.DOMAIN)
 class _SensorCapabilities(_AlexaEntity):
-    TYPE_TEMPERATURE = 'temperature'
-    TYPE_CONTACT = 'contact'
-
     def default_display_categories(self):
         # although there are other kinds of sensors, all but temperature
         # sensors are currently ignored.

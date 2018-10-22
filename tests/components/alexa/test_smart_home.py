@@ -698,7 +698,7 @@ def test_temp_sensor(hass):
 def test_contact_sensor(hass):
     """Test contact sensor discovery."""
     device = (
-        'sensor.test_contact',
+        'binary_sensor.test_contact',
         'on',
         {
             'friendly_name': "Test Contact Sensor",
@@ -707,7 +707,7 @@ def test_contact_sensor(hass):
     )
     appliance = yield from discovery_test(device, hass)
 
-    assert appliance['endpointId'] == 'sensor#test_contact'
+    assert appliance['endpointId'] == 'binary_sensor#test_contact'
     assert appliance['displayCategories'][0] == 'CONTACT_SENSOR'
     assert appliance['friendlyName'] == 'Test Contact Sensor'
 
@@ -719,7 +719,7 @@ def test_contact_sensor(hass):
     assert properties['retrievable'] is True
     assert {'name': 'detectionState'} in properties['supported']
 
-    properties = yield from reported_properties(hass, 'sensor#test_contact')
+    properties = yield from reported_properties(hass, 'binary_sensor#test_contact')
     properties.assert_equal('Alexa.ContactSensor', 'detectionState',
                             'DETECTED')
 
