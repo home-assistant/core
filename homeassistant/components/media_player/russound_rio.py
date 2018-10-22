@@ -4,7 +4,6 @@ Support for Russound multizone controllers using RIO Protocol.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.russound_rio/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -33,8 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(
+async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the Russound RIO platform."""
     from russound_rio import Russound
@@ -44,15 +42,15 @@ def async_setup_platform(
 
     russ = Russound(hass.loop, host, port)
 
-    yield from russ.connect()
+    await russ.connect()
 
     # Discover sources and zones
-    sources = yield from russ.enumerate_sources()
-    valid_zones = yield from russ.enumerate_zones()
+    sources = await russ.enumerate_sources()
+    valid_zones = await russ.enumerate_zones()
 
     devices = []
     for zone_id, name in valid_zones:
-        yield from russ.watch_zone(zone_id)
+        await russ.watch_zone(zone_id)
         dev = RussoundZoneDevice(russ, zone_id, name, sources)
         devices.append(dev)
 
@@ -108,8 +106,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
         if source_id == current:
             self.schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callback handlers."""
         self._russ.add_zone_callback(self._zone_callback_handler)
         self._russ.add_source_callback(self._source_callback_handler)

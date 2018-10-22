@@ -64,7 +64,8 @@ async def async_setup_platform(
     dev = []
     for sensor_type in config[CONF_SENSORS]:
         dev.append(JewishCalSensor(
-            name, language, sensor_type, latitude, longitude, diaspora))
+            name, language, sensor_type, latitude, longitude,
+            hass.config.time_zone, diaspora))
     async_add_entities(dev, True)
 
 
@@ -72,7 +73,8 @@ class JewishCalSensor(Entity):
     """Representation of an Jewish calendar sensor."""
 
     def __init__(
-            self, name, language, sensor_type, latitude, longitude, diaspora):
+            self, name, language, sensor_type, latitude, longitude, timezone,
+            diaspora):
         """Initialize the Jewish calendar sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -81,6 +83,7 @@ class JewishCalSensor(Entity):
         self._state = None
         self.latitude = latitude
         self.longitude = longitude
+        self.timezone = timezone
         self.diaspora = diaspora
         _LOGGER.debug("Sensor %s initialized", self.type)
 
@@ -116,10 +119,14 @@ class JewishCalSensor(Entity):
                 date.get_reading(self.diaspora), hebrew=self._hebrew)
         elif self.type == 'holiday_name':
             try:
-                self._state = next(
-                    x.description[self._hebrew].long
+                description = next(
+                    x.description[self._hebrew]
                     for x in hdate.htables.HOLIDAYS
                     if x.index == date.get_holyday())
+                if not self._hebrew:
+                    self._state = description
+                else:
+                    self._state = description.long
             except StopIteration:
                 self._state = None
         elif self.type == 'holyness':
@@ -127,7 +134,7 @@ class JewishCalSensor(Entity):
         else:
             times = hdate.Zmanim(
                 date=today, latitude=self.latitude, longitude=self.longitude,
-                hebrew=self._hebrew).zmanim
+                timezone=self.timezone, hebrew=self._hebrew).zmanim
             self._state = times[self.type].time()
 
         _LOGGER.debug("New value: %s", self._state)

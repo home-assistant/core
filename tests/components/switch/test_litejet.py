@@ -5,8 +5,10 @@ from unittest import mock
 
 from homeassistant import setup
 from homeassistant.components import litejet
-from tests.common import get_test_home_assistant
 import homeassistant.components.switch as switch
+
+from tests.common import get_test_home_assistant
+from tests.components.switch import common
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,11 +90,11 @@ class TestLiteJetSwitch(unittest.TestCase):
 
         assert not switch.is_on(self.hass, ENTITY_SWITCH)
 
-        switch.turn_on(self.hass, ENTITY_SWITCH)
+        common.turn_on(self.hass, ENTITY_SWITCH)
         self.hass.block_till_done()
         self.mock_lj.press_switch.assert_called_with(ENTITY_SWITCH_NUMBER)
 
-        switch.turn_off(self.hass, ENTITY_SWITCH)
+        common.turn_off(self.hass, ENTITY_SWITCH)
         self.hass.block_till_done()
         self.mock_lj.release_switch.assert_called_with(ENTITY_SWITCH_NUMBER)
 

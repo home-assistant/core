@@ -3,11 +3,26 @@
 import asyncio
 import unittest
 
+from homeassistant.components.input_text import (
+    ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import CoreState, State, Context
+from homeassistant.loader import bind_hass
 from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.components.input_text import (DOMAIN, set_value)
 
 from tests.common import get_test_home_assistant, mock_restore_cache
+
+
+@bind_hass
+def set_value(hass, entity_id, value):
+    """Set input_text to value.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_VALUE: value,
+    })
 
 
 class TestInputText(unittest.TestCase):

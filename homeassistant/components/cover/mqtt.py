@@ -5,11 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.mqtt/
 """
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components import mqtt
+from homeassistant.components import mqtt, cover
 from homeassistant.components.cover import (
     CoverDevice, ATTR_TILT_POSITION, SUPPORT_OPEN_TILT,
     SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
@@ -20,10 +21,14 @@ from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OPTIMISTIC, STATE_OPEN,
     STATE_CLOSED, STATE_UNKNOWN)
 from homeassistant.components.mqtt import (
-    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
-    valid_publish_topic, valid_subscribe_topic, MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
+    CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_QOS, CONF_RETAIN, valid_publish_topic, valid_subscribe_topic,
+    MqttAvailability, MqttDiscoveryUpdate)
+from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +50,7 @@ CONF_TILT_MIN = 'tilt_min'
 CONF_TILT_MAX = 'tilt_max'
 CONF_TILT_STATE_OPTIMISTIC = 'tilt_optimistic'
 CONF_TILT_INVERT_STATE = 'tilt_invert_state'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Cover'
 DEFAULT_PAYLOAD_OPEN = 'OPEN'
@@ -89,15 +95,32 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
                  default=DEFAULT_TILT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_TILT_INVERT_STATE,
                  default=DEFAULT_TILT_INVERT_STATE): cv.boolean,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
-    """Set up the MQTT Cover."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_entities, discovery_info=None):
+    """Set up MQTT cover through configuration.yaml."""
+    await _async_setup_entity(hass, config, async_add_entities)
 
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up MQTT cover dynamically through MQTT discovery."""
+    async def async_discover(discovery_payload):
+        """Discover and add an MQTT cover."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(hass, config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
+
+    async_dispatcher_connect(
+        hass, MQTT_DISCOVERY_NEW.format(cover.DOMAIN, 'mqtt'),
+        async_discover)
+
+
+async def _async_setup_entity(hass, config, async_add_entities,
+                              discovery_hash=None):
+    """Set up the MQTT Cover."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
@@ -131,10 +154,12 @@ async def async_setup_platform(hass, config, async_add_entities,
         config.get(CONF_TILT_INVERT_STATE),
         config.get(CONF_POSITION_TOPIC),
         set_position_template,
+        config.get(CONF_UNIQUE_ID),
+        discovery_hash
     )])
 
 
-class MqttCover(MqttAvailability, CoverDevice):
+class MqttCover(MqttAvailability, MqttDiscoveryUpdate, CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
     def __init__(self, name, state_topic, command_topic, availability_topic,
@@ -143,10 +168,12 @@ class MqttCover(MqttAvailability, CoverDevice):
                  payload_stop, payload_available, payload_not_available,
                  optimistic, value_template, tilt_open_position,
                  tilt_closed_position, tilt_min, tilt_max, tilt_optimistic,
-                 tilt_invert, position_topic, set_position_template):
+                 tilt_invert, position_topic, set_position_template,
+                 unique_id: Optional[str], discovery_hash):
         """Initialize the cover."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash)
         self._position = None
         self._state = None
         self._name = name
@@ -172,10 +199,13 @@ class MqttCover(MqttAvailability, CoverDevice):
         self._tilt_invert = tilt_invert
         self._position_topic = position_topic
         self._set_position_template = set_position_template
+        self._unique_id = unique_id
+        self._discovery_hash = discovery_hash
 
     async def async_added_to_hass(self):
         """Subscribe MQTT events."""
-        await super().async_added_to_hass()
+        await MqttAvailability.async_added_to_hass(self)
+        await MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
         def tilt_updated(topic, payload, qos):
@@ -387,3 +417,8 @@ class MqttCover(MqttAvailability, CoverDevice):
         if self._tilt_invert:
             position = self._tilt_max - position + offset
         return position
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id

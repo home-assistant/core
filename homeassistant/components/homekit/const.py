@@ -32,8 +32,12 @@ BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
 MANUFACTURER = 'Home Assistant'
 
 # #### Switch Types ####
+TYPE_FAUCET = 'faucet'
 TYPE_OUTLET = 'outlet'
+TYPE_SHOWER = 'shower'
+TYPE_SPRINKLER = 'sprinkler'
 TYPE_SWITCH = 'switch'
+TYPE_VALVE = 'valve'
 
 # #### Services ####
 SERV_ACCESSORY_INFO = 'AccessoryInformation'
@@ -57,6 +61,7 @@ SERV_SMOKE_SENSOR = 'SmokeSensor'
 SERV_SWITCH = 'Switch'
 SERV_TEMPERATURE_SENSOR = 'TemperatureSensor'
 SERV_THERMOSTAT = 'Thermostat'
+SERV_VALVE = 'Valve'
 SERV_WINDOW_COVERING = 'WindowCovering'
 
 # #### Characteristics ####
@@ -85,6 +90,7 @@ CHAR_CURRENT_TEMPERATURE = 'CurrentTemperature'
 CHAR_FIRMWARE_REVISION = 'FirmwareRevision'
 CHAR_HEATING_THRESHOLD_TEMPERATURE = 'HeatingThresholdTemperature'
 CHAR_HUE = 'Hue'
+CHAR_IN_USE = 'InUse'
 CHAR_LEAK_DETECTED = 'LeakDetected'
 CHAR_LOCK_CURRENT_STATE = 'LockCurrentState'
 CHAR_LOCK_TARGET_STATE = 'LockTargetState'
@@ -109,6 +115,7 @@ CHAR_TARGET_POSITION = 'TargetPosition'
 CHAR_TARGET_SECURITY_STATE = 'SecuritySystemTargetState'
 CHAR_TARGET_TEMPERATURE = 'TargetTemperature'
 CHAR_TEMP_DISPLAY_UNITS = 'TemperatureDisplayUnits'
+CHAR_VALVE_TYPE = 'ValveType'
 
 # #### Properties ####
 PROP_MAX_VALUE = 'maxValue'

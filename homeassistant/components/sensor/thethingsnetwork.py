@@ -38,9 +38,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up The Things Network Data storage sensors."""
     ttn = hass.data.get(DATA_TTN)
     device_id = config.get(CONF_DEVICE_ID)
@@ -50,7 +49,7 @@ def async_setup_platform(hass, config, async_add_entities,
 
     ttn_data_storage = TtnDataStorage(
         hass, app_id, device_id, access_key, values)
-    success = yield from ttn_data_storage.async_update()
+    success = await ttn_data_storage.async_update()
 
     if not success:
         return False
@@ -104,10 +103,9 @@ class TtnDataSensor(Entity):
                 ATTR_TIME: self._state['time'],
             }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the current state."""
-        yield from self._ttn_data_storage.async_update()
+        await self._ttn_data_storage.async_update()
         self._state = self._ttn_data_storage.data
 
 
@@ -128,13 +126,12 @@ class TtnDataStorage:
             AUTHORIZATION: 'key {}'.format(access_key),
         }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the current state from The Things Network Data Storage."""
         try:
             session = async_get_clientsession(self._hass)
             with async_timeout.timeout(DEFAULT_TIMEOUT, loop=self._hass.loop):
-                req = yield from session.get(self._url, headers=self._headers)
+                req = await session.get(self._url, headers=self._headers)
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while accessing: %s", self._url)
@@ -155,7 +152,7 @@ class TtnDataStorage:
             _LOGGER.error("Application ID is not available: %s", self._app_id)
             return False
 
-        data = yield from req.json()
+        data = await req.json()
         self.data = data[0]
 
         for value in self._values.items():

@@ -5,14 +5,28 @@ from pyhap.const import CATEGORY_OUTLET, CATEGORY_SWITCH
 
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON)
+    ATTR_ENTITY_ID, CONF_TYPE, SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON)
 from homeassistant.core import split_entity_id
 
 from . import TYPES
 from .accessories import HomeAccessory
-from .const import CHAR_ON, CHAR_OUTLET_IN_USE, SERV_OUTLET, SERV_SWITCH
+from .const import (
+    CHAR_ACTIVE, CHAR_IN_USE, CHAR_ON, CHAR_OUTLET_IN_USE, CHAR_VALVE_TYPE,
+    SERV_OUTLET, SERV_SWITCH, SERV_VALVE, TYPE_FAUCET, TYPE_SHOWER,
+    TYPE_SPRINKLER, TYPE_VALVE)
 
 _LOGGER = logging.getLogger(__name__)
+
+CATEGORY_SPRINKLER = 28
+CATEGORY_FAUCET = 29
+CATEGORY_SHOWER_HEAD = 30
+
+VALVE_TYPE = {
+    TYPE_FAUCET: (CATEGORY_FAUCET, 3),
+    TYPE_SHOWER: (CATEGORY_SHOWER_HEAD, 2),
+    TYPE_SPRINKLER: (CATEGORY_SPRINKLER, 1),
+    TYPE_VALVE: (CATEGORY_FAUCET, 0),
+}
 
 
 @TYPES.register('Outlet')
@@ -79,4 +93,44 @@ class Switch(HomeAccessory):
             _LOGGER.debug('%s: Set current state to %s',
                           self.entity_id, current_state)
             self.char_on.set_value(current_state)
+        self.flag_target_state = False
+
+
+@TYPES.register('Valve')
+class Valve(HomeAccessory):
+    """Generate a Valve accessory."""
+
+    def __init__(self, *args):
+        """Initialize a Valve accessory object."""
+        super().__init__(*args)
+        self.flag_target_state = False
+        valve_type = self.config[CONF_TYPE]
+        self.category = VALVE_TYPE[valve_type][0]
+
+        serv_valve = self.add_preload_service(SERV_VALVE)
+        self.char_active = serv_valve.configure_char(
+            CHAR_ACTIVE, value=False, setter_callback=self.set_state)
+        self.char_in_use = serv_valve.configure_char(
+            CHAR_IN_USE, value=False)
+        self.char_valve_type = serv_valve.configure_char(
+            CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type][1])
+
+    def set_state(self, value):
+        """Move value state to value if call came from HomeKit."""
+        _LOGGER.debug('%s: Set switch state to %s',
+                      self.entity_id, value)
+        self.flag_target_state = True
+        self.char_in_use.set_value(value)
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+        self.hass.services.call(DOMAIN, service, params)
+
+    def update_state(self, new_state):
+        """Update switch state after state changed."""
+        current_state = (new_state.state == STATE_ON)
+        if not self.flag_target_state:
+            _LOGGER.debug('%s: Set current state to %s',
+                          self.entity_id, current_state)
+            self.char_active.set_value(current_state)
+            self.char_in_use.set_value(current_state)
         self.flag_target_state = False

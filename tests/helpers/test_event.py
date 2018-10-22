@@ -13,6 +13,7 @@ import homeassistant.core as ha
 from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import (
     async_call_later,
+    call_later,
     track_point_in_utc_time,
     track_point_in_time,
     track_utc_time_change,
@@ -645,6 +646,22 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))
 
+    def test_call_later(self):
+        """Test calling an action later."""
+        def action(): pass
+        now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
+
+        with patch('homeassistant.helpers.event'
+                   '.async_track_point_in_utc_time') as mock, \
+                patch('homeassistant.util.dt.utcnow', return_value=now):
+            call_later(self.hass, 3, action)
+
+        assert len(mock.mock_calls) == 1
+        p_hass, p_action, p_point = mock.mock_calls[0][1]
+        assert p_hass is self.hass
+        assert p_action is action
+        assert p_point == now + timedelta(seconds=3)
+
 
 @asyncio.coroutine
 def test_async_call_later(hass):
@@ -659,7 +676,7 @@ def test_async_call_later(hass):
 
     assert len(mock.mock_calls) == 1
     p_hass, p_action, p_point = mock.mock_calls[0][1]
-    assert hass is hass
+    assert p_hass is hass
     assert p_action is action
     assert p_point == now + timedelta(seconds=3)
     assert remove is mock()

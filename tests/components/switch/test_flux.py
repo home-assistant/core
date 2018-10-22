@@ -11,6 +11,8 @@ import homeassistant.util.dt as dt_util
 from tests.common import (
     assert_setup_component, get_test_home_assistant, fire_time_changed,
     mock_service)
+from tests.components.light import common as common_light
+from tests.components.switch import common
 
 
 class TestSwitchFlux(unittest.TestCase):
@@ -147,7 +149,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -193,7 +195,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -240,7 +242,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -286,7 +288,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -334,7 +336,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -383,7 +385,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -434,7 +436,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -484,7 +486,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -534,7 +536,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -584,7 +586,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -633,7 +635,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -681,7 +683,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -698,9 +700,9 @@ class TestSwitchFlux(unittest.TestCase):
                             {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1, dev2, dev3 = platform.DEVICES
-        light.turn_on(self.hass, entity_id=dev2.entity_id)
+        common_light.turn_on(self.hass, entity_id=dev2.entity_id)
         self.hass.block_till_done()
-        light.turn_on(self.hass, entity_id=dev3.entity_id)
+        common_light.turn_on(self.hass, entity_id=dev3.entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(dev1.entity_id)
@@ -743,7 +745,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -794,7 +796,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
@@ -838,7 +840,7 @@ class TestSwitchFlux(unittest.TestCase):
                 })
                 turn_on_calls = mock_service(
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                switch.turn_on(self.hass, 'switch.flux')
+                common.turn_on(self.hass, 'switch.flux')
                 self.hass.block_till_done()
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
