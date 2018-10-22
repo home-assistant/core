@@ -4,10 +4,9 @@ Support for ASUSWRT routers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.asuswrt/
 """
+import asyncio
 import logging
 import re
-import socket
-import telnetlib
 from collections import namedtuple
 
 import voluptuous as vol
@@ -19,7 +18,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_MODE,
     CONF_PROTOCOL)
 
-REQUIREMENTS = ['pexpect==4.6.0']
+REQUIREMENTS = ['asyncssh==1.14.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,10 +77,10 @@ _ARP_REGEX = re.compile(
     r'.*')
 
 
-def get_scanner(hass, config):
+async def async_get_scanner(hass, config):
     """Validate the configuration and return an ASUS-WRT scanner."""
     scanner = AsusWrtDeviceScanner(config[DOMAIN])
-
+    await scanner.async_connect()
     return scanner if scanner.success_init else None
 
 
@@ -117,7 +116,12 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.mode = config[CONF_MODE]
         self.port = config[CONF_PORT]
         self.require_ip = config[CONF_REQUIRE_IP]
+        self.last_results = {}
+        self.success_init = False
+        self.connection = None
 
+    async def async_connect(self):
+        """Setup connection."""
         if self.protocol == 'ssh':
             self.connection = SshConnection(
                 self.host, self.port, self.username, self.password,
@@ -129,21 +133,21 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.last_results = {}
 
         # Test the router is accessible.
-        data = self.get_asuswrt_data()
+        data = await self.async_get_asuswrt_data()
         self.success_init = data is not None
 
-    def scan_devices(self):
+    async def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
+        await self.async_update_info()
         return list(self.last_results.keys())
 
-    def get_device_name(self, device):
+    async def async_get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if device not in self.last_results:
             return None
         return self.last_results[device].name
 
-    def _update_info(self):
+    async def async_update_info(self):
         """Ensure the information from the ASUSWRT router is up to date.
 
         Return boolean if scanning successful.
@@ -152,25 +156,25 @@ class AsusWrtDeviceScanner(DeviceScanner):
             return False
 
         _LOGGER.info('Checking Devices')
-        data = self.get_asuswrt_data()
+        data = await self.async_get_asuswrt_data()
         if not data:
             return False
 
         self.last_results = data
         return True
 
-    def get_asuswrt_data(self):
+    async def async_get_asuswrt_data(self):
         """Retrieve data from ASUSWRT.
 
         Calls various commands on the router and returns the superset of all
         responses. Some commands will not work on some routers.
         """
         devices = {}
-        devices.update(self._get_wl())
-        devices.update(self._get_arp())
-        devices.update(self._get_neigh(devices))
+        devices.update(await self.async_get_wl())
+        devices.update(await self.async_get_arp())
+        devices.update(await self.async_get_neigh(devices))
         if not self.mode == 'ap':
-            devices.update(self._get_leases(devices))
+            devices.update(await self.async_get_leases(devices))
 
         ret_devices = {}
         for key in devices:
@@ -178,8 +182,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 ret_devices[key] = devices[key]
         return ret_devices
 
-    def _get_wl(self):
-        lines = self.connection.run_command(_WL_CMD)
+    async def async_get_wl(self):
+        lines = await self.connection.async_run_command(_WL_CMD)
         if not lines:
             return {}
         result = _parse_lines(lines, _WL_REGEX)
@@ -189,8 +193,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
             devices[mac] = Device(mac, None, None)
         return devices
 
-    def _get_leases(self, cur_devices):
-        lines = self.connection.run_command(_LEASES_CMD)
+    async def async_get_leases(self, cur_devices):
+        lines = await self.connection.async_run_command(_LEASES_CMD)
         if not lines:
             return {}
         lines = [line for line in lines if not line.startswith('duid ')]
@@ -207,8 +211,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 devices[mac] = Device(mac, device['ip'], host)
         return devices
 
-    def _get_neigh(self, cur_devices):
-        lines = self.connection.run_command(_IP_NEIGH_CMD)
+    async def async_get_neigh(self, cur_devices):
+        lines = await self.connection.async_run_command(_IP_NEIGH_CMD)
         if not lines:
             return {}
         result = _parse_lines(lines, _IP_NEIGH_REGEX)
@@ -224,8 +228,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 devices[mac] = Device(mac, device.get('ip', old_ip), None)
         return devices
 
-    def _get_arp(self):
-        lines = self.connection.run_command(_ARP_CMD)
+    async def async_get_arp(self):
+        lines = await self.connection.async_run_command(_ARP_CMD)
         if not lines:
             return {}
         result = _parse_lines(lines, _ARP_REGEX)
@@ -237,152 +241,78 @@ class AsusWrtDeviceScanner(DeviceScanner):
         return devices
 
 
-class _Connection:
-    def __init__(self):
-        self._connected = False
-
-    @property
-    def connected(self):
-        """Return connection state."""
-        return self._connected
-
-    def connect(self):
-        """Mark current connection state as connected."""
-        self._connected = True
-
-    def disconnect(self):
-        """Mark current connection state as disconnected."""
-        self._connected = False
-
-
-class SshConnection(_Connection):
+class SshConnection:
     """Maintains an SSH connection to an ASUS-WRT router."""
 
     def __init__(self, host, port, username, password, ssh_key):
         """Initialize the SSH connection properties."""
-        super().__init__()
 
-        self._ssh = None
         self._host = host
         self._port = port
         self._username = username
         self._password = password
         self._ssh_key = ssh_key
+        self._client = None
 
-    def run_command(self, command):
+    async def async_run_command(self, command):
         """Run commands through an SSH connection.
 
         Connect to the SSH server if not currently connected, otherwise
         use the existing connection.
         """
-        from pexpect import pxssh, exceptions
+        await self.async_init_session()
+        result = await self._client.run(command)
+        return result.stdout.split('\n')
 
-        try:
-            if not self.connected:
-                self.connect()
-            self._ssh.sendline(command)
-            self._ssh.prompt()
-            lines = self._ssh.before.split(b'\n')[1:-1]
-            return [line.decode('utf-8') for line in lines]
-        except exceptions.EOF as err:
-            _LOGGER.error("Connection refused. %s", self._ssh.before)
-            self.disconnect()
-            return None
-        except pxssh.ExceptionPxssh as err:
-            _LOGGER.error("Unexpected SSH error: %s", err)
-            self.disconnect()
-            return None
-        except AssertionError as err:
-            _LOGGER.error("Connection to router unavailable: %s", err)
-            self.disconnect()
-            return None
+    async def async_init_session(self):
+        """Fetches the client or creates a new one."""
+        import asyncssh
+        kwargs = {
+            'username': self._username if self._username else None,
+            'client_keys': [self._ssh_key] if self._ssh_key else None,
+            'port': self._port,
+            'password': self._password if self._password else None
+        }
 
-    def connect(self):
-        """Connect to the ASUS-WRT SSH server."""
-        from pexpect import pxssh
-
-        self._ssh = pxssh.pxssh()
-        if self._ssh_key:
-            self._ssh.login(self._host, self._username, quiet=False,
-                            ssh_key=self._ssh_key, port=self._port)
-        else:
-            self._ssh.login(self._host, self._username, quiet=False,
-                            password=self._password, port=self._port)
-
-        super().connect()
-
-    def disconnect(self):
-        """Disconnect the current SSH connection."""
-        try:
-            self._ssh.logout()
-        except Exception:  # pylint: disable=broad-except
-            pass
-        finally:
-            self._ssh = None
-
-        super().disconnect()
+        if not self._client:
+            self._client = await asyncssh.connect(self._host, **kwargs)
 
 
-class TelnetConnection(_Connection):
+class TelnetConnection:
     """Maintains a Telnet connection to an ASUS-WRT router."""
 
     def __init__(self, host, port, username, password):
         """Initialize the Telnet connection properties."""
-        super().__init__()
 
-        self._telnet = None
+        self._reader = None
+        self._writer = None
         self._host = host
         self._port = port
         self._username = username
         self._password = password
         self._prompt_string = None
+        self.connected = False
 
-    def run_command(self, command):
+    async def async_run_command(self, command):
         """Run a command through a Telnet connection.
-
         Connect to the Telnet server if not currently connected, otherwise
         use the existing connection.
         """
-        try:
-            if not self.connected:
-                self.connect()
-            self._telnet.write('{}\n'.format(command).encode('ascii'))
-            data = (self._telnet.read_until(self._prompt_string).
-                    split(b'\n')[1:-1])
-            return [line.decode('utf-8') for line in data]
-        except EOFError:
-            _LOGGER.error("Unexpected response from router")
-            self.disconnect()
-            return None
-        except ConnectionRefusedError:
-            _LOGGER.error("Connection refused by router. Telnet enabled?")
-            self.disconnect()
-            return None
-        except socket.gaierror as exc:
-            _LOGGER.error("Socket exception: %s", exc)
-            self.disconnect()
-            return None
-        except OSError as exc:
-            _LOGGER.error("OSError: %s", exc)
-            self.disconnect()
-            return None
+        if not self.connected:
+            await self.async_connect()
+        await self._writer.write('{}\n'.format(command).encode('ascii'))
+        data = ((await self._reader.readuntil(self._prompt_string)).
+                split(b'\n')[1:-1])
+        return [line.decode('utf-8') for line in data]
 
-    def connect(self):
+    async def async_connect(self):
         """Connect to the ASUS-WRT Telnet server."""
-        self._telnet = telnetlib.Telnet(self._host)
-        self._telnet.read_until(b'login: ')
-        self._telnet.write((self._username + '\n').encode('ascii'))
-        self._telnet.read_until(b'Password: ')
-        self._telnet.write((self._password + '\n').encode('ascii'))
-        self._prompt_string = self._telnet.read_until(b'#').split(b'\n')[-1]
-
-        super().connect()
-
-    def disconnect(self):
-        """Disconnect the current Telnet connection."""
-        try:
-            self._telnet.write('exit\n'.encode('ascii'))
-        except Exception:  # pylint: disable=broad-except
-            pass
-
-        super().disconnect()
+        self._reader, self._writer = await asyncio.open_connection(
+            self._host, self._port)
+        await self._reader.readuntil(b'login: ')
+        await self._writer.write((self._username + '\n').encode('ascii'))
+        await self._reader.readuntil(b'Password: ')
+        await self._writer.write((self._password + '\n').encode('ascii'))
+        self._prompt_string = await self._reader.readuntil(
+            b'#').split(b'\n')[-1]
+        self.connected = True

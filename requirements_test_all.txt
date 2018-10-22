@@ -125,7 +125,6 @@ numpy==1.15.2
 paho-mqtt==1.4.0
 
 # homeassistant.components.device_tracker.aruba
-# homeassistant.components.device_tracker.asuswrt
 # homeassistant.components.device_tracker.cisco_ios
 # homeassistant.components.device_tracker.unifi_direct
 # homeassistant.components.media_player.pandora

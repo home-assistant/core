@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
     CONF_AWAY_HIDE)
 from homeassistant.components.device_tracker.asuswrt import (
     CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN, _ARP_REGEX,
-    CONF_PORT, PLATFORM_SCHEMA, Device, get_scanner, AsusWrtDeviceScanner,
+    CONF_PORT, PLATFORM_SCHEMA, Device, async_get_scanner, AsusWrtDeviceScanner,
     _parse_lines, SshConnection, TelnetConnection, CONF_REQUIRE_IP)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
@@ -157,14 +157,14 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
     def test_get_device_name(self):
         """Test for getting name."""
-        scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
+        scanner = async_get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
         scanner.last_results = WAKE_DEVICES
         self.assertEqual('TV', scanner.get_device_name('01:02:03:04:06:08'))
         self.assertEqual(None, scanner.get_device_name('01:02:03:04:08:08'))
 
     def test_scan_devices(self):
         """Test for scan devices."""
-        scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
+        scanner = async_get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
         scanner.last_results = WAKE_DEVICES
         self.assertEqual(list(WAKE_DEVICES), scanner.scan_devices())
 
@@ -389,7 +389,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
     def test_get_asuswrt_data(self):
         """Test asuswrt data fetch."""
-        scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
+        scanner = async_get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
         scanner._get_wl = mock.Mock()
         scanner._get_arp = mock.Mock()
         scanner._get_neigh = mock.Mock()
@@ -432,7 +432,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
     def test_update_info(self):
         """Test for update info."""
-        scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
+        scanner = async_get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
         scanner.get_asuswrt_data = mock.Mock()
         scanner.get_asuswrt_data.return_value = WAKE_DEVICES
         self.assertTrue(scanner._update_info())
@@ -445,7 +445,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     def test_get_wl(self, mocked_ssh):
         """Testing wl."""
         mocked_ssh.run_command.return_value = WL_DATA
-        scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
+        scanner = async_get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
         scanner.connection = mocked_ssh
         self.assertEqual(WL_DEVICES, scanner._get_wl())
         mocked_ssh.run_command.return_value = ''
@@ -457,7 +457,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         """Testing arp."""
         mocked_ssh.run_command.return_value = ARP_DATA
 
-        scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
+        scanner = async_get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
         scanner.connection = mocked_ssh
         self.assertEqual(ARP_DEVICES, scanner._get_arp())
         mocked_ssh.run_command.return_value = ''
@@ -469,7 +469,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         """Testing neigh."""
         mocked_ssh.run_command.return_value = NEIGH_DATA
 
-        scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
+        scanner = async_get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
         scanner.connection = mocked_ssh
         self.assertEqual(NEIGH_DEVICES, scanner._get_neigh(ARP_DEVICES.copy()))
         self.assertEqual(NEIGH_DEVICES, scanner._get_neigh({
@@ -484,7 +484,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         """Testing leases."""
         mocked_ssh.run_command.return_value = LEASES_DATA
 
-        scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
+        scanner = async_get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
         scanner.connection = mocked_ssh
         self.assertEqual(
             LEASES_DEVICES, scanner._get_leases(NEIGH_DEVICES.copy()))
