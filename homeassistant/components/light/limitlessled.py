@@ -20,7 +20,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_hs_to_RGB)
 from homeassistant.helpers.restore_state import async_get_last_state
 
-REQUIREMENTS = ['limitlessled==1.1.2']
+REQUIREMENTS = ['limitlessled==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
