@@ -87,12 +87,12 @@ async def async_setup(hass, config):
     # Setup alerts
     for entity_id, alert in alerts.items():
         entity = Alert(hass, entity_id,
-                       alert[CONF_NAME], alert.get(CONF_TITLE),
-                       alert.get(CONF_DATA), alert.get(CONF_DATA_TEMPLATE),
-                       alert.get(CONF_DONE_MESSAGE),
+                       alert[CONF_NAME], alert.get(CONF_DONE_MESSAGE),
                        alert[CONF_ENTITY_ID], alert[CONF_STATE],
                        alert[CONF_REPEAT], alert[CONF_SKIP_FIRST],
-                       alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK])
+                       alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK],
+                       alert.get(CONF_TITLE), alert.get(CONF_DATA),
+                       alert.get(CONF_DATA_TEMPLATE))
         all_alerts[entity.entity_id] = entity
 
     # Setup service calls
@@ -116,15 +116,12 @@ async def async_setup(hass, config):
 class Alert(ToggleEntity):
     """Representation of an alert."""
 
-    def __init__(self, hass, entity_id, name, title, data, data_template,
-                 done_message, watched_entity_id, state, repeat, skip_first,
-                 notifiers, can_ack):
+    def __init__(self, hass, entity_id, name, done_message, watched_entity_id,
+                 state, repeat, skip_first, notifiers,
+                 can_ack, title, data, data_template):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
-        self._title = title
-        self._data = data
-        self._data_template = data_template
         self._alert_state = state
         self._skip_first = skip_first
         self._notifiers = notifiers
@@ -136,6 +133,9 @@ class Alert(ToggleEntity):
 
         self._firing = False
         self._ack = False
+        self._title = title
+        self._data = data
+        self._data_template = data_template
         self._cancel = None
         self._send_done_message = False
         self.entity_id = ENTITY_ID_FORMAT.format(entity_id)

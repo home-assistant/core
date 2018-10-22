@@ -1,17 +1,16 @@
 """The tests for the Alert component."""
+import unittest
 # pylint: disable=protected-access
 from copy import deepcopy
-import unittest
 
-from homeassistant.setup import setup_component
-from homeassistant.core import callback
-from homeassistant.components.alert import DOMAIN
 import homeassistant.components.alert as alert
 import homeassistant.components.notify as notify
+from homeassistant.components.alert import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE,
     SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF)
-
+from homeassistant.core import callback
+from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 NAME = "alert_test"
@@ -26,10 +25,14 @@ TEST_CONFIG = \
             CONF_STATE: STATE_ON,
             alert.CONF_REPEAT: 30,
             alert.CONF_SKIP_FIRST: False,
-            alert.CONF_NOTIFIERS: [NOTIFIER]}
-        }}
+            alert.CONF_NOTIFIERS: [NOTIFIER],
+            alert.CONF_TITLE: '',
+            alert.CONF_DATA: {},
+            alert.CONF_DATA_TEMPLATE: {}
+        }
+    }}
 TEST_NOACK = [NAME, NAME, DONE_MESSAGE, "sensor.test",
-              STATE_ON, [30], False, NOTIFIER, False]
+              STATE_ON, [30], False, NOTIFIER, False, None, None, None]
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
 
 
@@ -184,7 +187,7 @@ class TestAlert(unittest.TestCase):
         """Test notifications."""
         events = []
         config = deepcopy(TEST_CONFIG)
-        del(config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE])
+        del (config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE])
 
         @callback
         def record_event(event):
