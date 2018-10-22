@@ -16,11 +16,15 @@ ATTR_DATA_ID = 'data_id'
 ATTR_DEVICE = 'device'
 ATTR_ZONE = 'zone'
 
+CLIMATE_ZONE = 'HEATING'
 CLIMATE_SENSOR_TYPES = ['temperature', 'humidity', 'power',
                         'link', 'heating', 'tado mode', 'overlay']
 
+HOT_WATER_ZONE = 'HOT_WATER'
 HOT_WATER_SENSOR_TYPES = ['power', 'link', 'tado mode', 'overlay']
 
+AIR_CONDITIONING_ZONE = 'AIR_CONDITIONING'
+AIR_CONDITIONING_SENSOR_TYPES = ['temperature', 'humidity', 'power', 'link', 'ac', 'tado mode', 'overlay']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
@@ -34,12 +38,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensor_items = []
     for zone in zones:
-        if zone['type'] == 'HEATING':
+        if zone['type'] == CLIMATE_ZONE:
             for variable in CLIMATE_SENSOR_TYPES:
                 sensor_items.append(create_zone_sensor(
                     tado, zone, zone['name'], zone['id'], variable))
-        elif zone['type'] == 'HOT_WATER':
+        elif zone['type'] == HOT_WATER_ZONE:
             for variable in HOT_WATER_SENSOR_TYPES:
+                sensor_items.append(create_zone_sensor(
+                    tado, zone, zone['name'], zone['id'], variable))
+        elif zone['type'] == AIR_CONDITIONING_ZONE:
+            for variable in AIR_CONDITIONING_SENSOR_TYPES:
                 sensor_items.append(create_zone_sensor(
                     tado, zone, zone['name'], zone['id'], variable))
 
@@ -195,6 +203,14 @@ class TadoSensor(Entity):
                     activity_data['heatingPower']['percentage'])
                 self._state_attributes = {
                     "time": activity_data['heatingPower']['timestamp'],
+                }
+
+        elif self.zone_variable == 'ac':
+            if 'activityDataPoints' in data:
+                activity_data = data['activityDataPoints']
+                self._state = activity_data['acPower']['value']
+                self._state_attributes = {
+                    "time": activity_data['acPower']['timestamp'],
                 }
 
         elif self.zone_variable == 'tado bridge status':
