@@ -376,7 +376,7 @@ fitbit==0.3.0
 fixerio==1.0.0a0
 
 # homeassistant.components.light.flux_led
-flux_led==0.21
+flux_led==0.22
 
 # homeassistant.components.sensor.foobot
 foobot_async==0.3.1
