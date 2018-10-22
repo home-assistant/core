@@ -87,6 +87,9 @@ abodepy==0.14.0
 # homeassistant.components.media_player.frontier_silicon
 afsapi==0.0.4
 
+# homeassistant.components.device_tracker.asuswrt
+aioasuswrt==1.0.0
+
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
 
@@ -154,9 +157,6 @@ asterisk_mbox==0.5.0
 # homeassistant.components.upnp
 # homeassistant.components.media_player.dlna_dmr
 async-upnp-client==0.12.7
-
-# homeassistant.components.device_tracker.asuswrt
-asyncssh==1.14.0
 
 # homeassistant.components.light.avion
 # avion==0.7
