@@ -25,7 +25,7 @@ def store(hass):
 
 
 async def test_loading(hass, store):
-    """Test we can save and load data."""
+    """Tests that we can save and load data."""
     await store.async_save(MOCK_DATA)
     data = await store.async_load()
     assert data == MOCK_DATA
