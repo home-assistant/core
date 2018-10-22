@@ -78,7 +78,7 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     capabilities = tado.get_capabilities(zone_id)
 
     unit = TEMP_CELSIUS
-    ac_mode = capabilities['type'] == 'AIR_CONDITIONING'
+    device_type = capabilities['type']
 
     if CONST_MODE_COOL in capabilities:
         temperatures = capabilities[CONST_MODE_COOL]['temperatures']
@@ -98,7 +98,7 @@ def create_climate_device(tado, hass, zone, name, zone_id):
                          name, zone_id, data_id,
                          hass.config.units.temperature(min_temp, unit),
                          hass.config.units.temperature(max_temp, unit),
-                         ac_mode)
+                         device_type)
 
     tado.add_sensor(data_id, {
         'id': zone_id,
@@ -114,7 +114,7 @@ class TadoClimate(ClimateDevice):
     """Representation of a tado climate device."""
 
     def __init__(self, store, zone_name, zone_id, data_id,
-                 min_temp, max_temp, ac_mode,
+                 min_temp, max_temp, device_type,
                  tolerance=0.3):
         """Initialize of Tado climate device."""
         self._store = store
@@ -123,7 +123,7 @@ class TadoClimate(ClimateDevice):
         self.zone_name = zone_name
         self.zone_id = zone_id
 
-        self.ac_mode = ac_mode
+        self.device_type = device_type
 
         self._active = False
         self._device_is_active = False
@@ -137,7 +137,7 @@ class TadoClimate(ClimateDevice):
         self._target_temp = None
         self._tolerance = tolerance
         self._cooling = False
-
+        self._ac_mode = None
         self._current_fan = CONST_MODE_OFF
         self._current_operation = CONST_MODE_SMART_SCHEDULE
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
@@ -177,14 +177,14 @@ class TadoClimate(ClimateDevice):
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
-        if self.ac_mode:
+        if self.device_type == "AIR_CONDITIONING":
             return FAN_MODES_LIST.get(self._current_fan)
         return None
 
     @property
     def fan_list(self):
         """List of available fan modes."""
-        if self.ac_mode:
+        if self.device_type == "AIR_CONDITIONING":
             return list(FAN_MODES_LIST.values())
         return None
 
@@ -309,6 +309,7 @@ class TadoClimate(ClimateDevice):
         overlay_data = None
         termination = CONST_MODE_SMART_SCHEDULE
         cooling = False
+        ac_mode = None
         fan_speed = CONST_MODE_OFF
 
         if 'overlay' in data:
@@ -325,6 +326,7 @@ class TadoClimate(ClimateDevice):
             if setting:
                 if 'mode' in setting_data:
                     cooling = setting_data['mode'] == 'COOL'
+                    ac_mode = setting_data['mode']
 
                 if 'fanSpeed' in setting_data:
                     fan_speed = setting_data['fanSpeed']
@@ -336,6 +338,7 @@ class TadoClimate(ClimateDevice):
             self._current_operation = termination
 
         self._cooling = cooling
+        self._ac_mode = ac_mode
         self._current_fan = fan_speed
 
     def _control_heating(self):
@@ -359,7 +362,7 @@ class TadoClimate(ClimateDevice):
         if self._current_operation == CONST_MODE_OFF:
             _LOGGER.info("Switching mytado.com to OFF for zone %s",
                          self.zone_name)
-            self._store.set_zone_overlay(self.zone_id, self.ac_mode, CONST_OVERLAY_MANUAL)
+            self._store.set_zone_overlay(self.zone_id, self.device_type, CONST_OVERLAY_MANUAL)
             self._overlay_mode = self._current_operation
             return
 
@@ -367,6 +370,6 @@ class TadoClimate(ClimateDevice):
                      self._current_operation, self.zone_name)
 
         self._store.set_zone_overlay(
-            self.zone_id, self.ac_mode, self._current_operation, self._target_temp)
+            self.zone_id, self.device_type, self._current_operation, self._target_temp, self._ac_mode)
 
         self._overlay_mode = self._current_operation
