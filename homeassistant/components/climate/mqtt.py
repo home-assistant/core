@@ -91,9 +91,9 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_TEMPERATURE_LOW_COMMAND_TOPIC):
-                 mqtt.valid_publish_topic,
+        mqtt.valid_publish_topic,
     vol.Optional(CONF_TEMPERATURE_HIGH_COMMAND_TOPIC):
-                 mqtt.valid_publish_topic,
+        mqtt.valid_publish_topic,
     vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -104,9 +104,9 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TEMPERATURE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TEMPERATURE_LOW_STATE_TOPIC):
-                 mqtt.valid_subscribe_topic,
+        mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TEMPERATURE_HIGH_STATE_TOPIC):
-                 mqtt.valid_subscribe_topic,
+        mqtt.valid_subscribe_topic,
     vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
