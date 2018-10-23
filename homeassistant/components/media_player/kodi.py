@@ -164,7 +164,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     unique_id = None
     # Is this a manual configuration?
-    if discovery_info is None:
+    if not discovery_info:
         name = config.get(CONF_NAME)
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
@@ -179,7 +179,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         encryption = DEFAULT_PROXY_SSL
         websocket = DEFAULT_ENABLE_WEBSOCKET
         properties = discovery_info.get('properties')
-        if properties is not None:
+        if properties:
             unique_id = properties.get('uuid', None)
 
     # Only add a device once, so discovered devices do not override manual
@@ -191,7 +191,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     # If we got an unique id, check that it does not exist already.
     # This is necessary as netdisco does not deterministally return the same
     # advertisement when the service is offered over multiple IP addresses.
-    if unique_id is not None:
+    if unique_id:
         for device in hass.data[DATA_KODI].values():
             if device.unique_id == unique_id:
                 return
@@ -287,7 +287,7 @@ class KodiDevice(MediaPlayerDevice):
             'session': async_get_clientsession(hass),
         }
 
-        if username is not None:
+        if username:
             kwargs['auth'] = aiohttp.BasicAuth(username, password)
             image_auth_string = "{}:{}@".format(username, password)
         else:
@@ -330,12 +330,12 @@ class KodiDevice(MediaPlayerDevice):
             self._ws_server = None
 
         # Script creation for the turn on/off config options
-        if turn_on_action is not None:
+        if turn_on_action:
             turn_on_action = script.Script(
                 self.hass, turn_on_action,
                 "{} turn ON script".format(self.name),
                 self.async_update_ha_state(True))
-        if turn_off_action is not None:
+        if turn_off_action:
             turn_off_action = script.Script(
                 self.hass, _check_deprecated_turn_off(hass, turn_off_action),
                 "{} turn OFF script".format(self.name))
@@ -365,7 +365,7 @@ class KodiDevice(MediaPlayerDevice):
     def async_on_stop(self, sender, data):
         """Handle the stop of the player playback."""
         # Prevent stop notifications which are sent after quit notification
-        if self._players is None:
+        if not self._players:
             return
 
         self._players = []
@@ -395,7 +395,7 @@ class KodiDevice(MediaPlayerDevice):
         try:
             return await self.server.Player.GetActivePlayers()
         except jsonrpc_base.jsonrpc.TransportError:
-            if self._players is not None:
+            if self._players:
                 _LOGGER.info("Unable to fetch kodi data")
                 _LOGGER.debug("Unable to fetch kodi data", exc_info=True)
             return None
@@ -408,7 +408,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._players is None:
+        if not self._players:
             return STATE_OFF
 
         if not self._players:
@@ -449,7 +449,7 @@ class KodiDevice(MediaPlayerDevice):
         """Retrieve latest state."""
         self._players = await self._get_players()
 
-        if self._players is None:
+        if not self._players:
             self._properties = {}
             self._item = {}
             self._app_properties = {}
@@ -523,7 +523,7 @@ class KodiDevice(MediaPlayerDevice):
 
         If the media type cannot be detected, the player type is used.
         """
-        if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:
+        if not MEDIA_TYPES.get(self._item.get('type')) and self._players:
             return MEDIA_TYPES.get(self._players[0]['type'])
         return MEDIA_TYPES.get(self._item.get('type'))
 
@@ -535,7 +535,7 @@ class KodiDevice(MediaPlayerDevice):
 
         total_time = self._properties.get('totaltime')
 
-        if total_time is None:
+        if not total_time:
             return None
 
         return (
@@ -547,7 +547,7 @@ class KodiDevice(MediaPlayerDevice):
     def media_image_url(self):
         """Image url of current playing media."""
         thumbnail = self._item.get('thumbnail')
-        if thumbnail is None:
+        if not thumbnail:
             return None
 
         url_components = urllib.parse.urlparse(thumbnail)
@@ -606,10 +606,10 @@ class KodiDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         supported_features = SUPPORT_KODI
 
-        if self._turn_on_action is not None:
+        if self._turn_on_action:
             supported_features |= SUPPORT_TURN_ON
 
-        if self._turn_off_action is not None:
+        if self._turn_off_action:
             supported_features |= SUPPORT_TURN_OFF
 
         return supported_features
@@ -617,7 +617,7 @@ class KodiDevice(MediaPlayerDevice):
     @cmd
     async def async_turn_on(self):
         """Execute turn_on_action to turn on media player."""
-        if self._turn_on_action is not None:
+        if self._turn_on_action:
             await self._turn_on_action.async_run(
                 variables={"entity_id": self.entity_id})
         else:
@@ -626,7 +626,7 @@ class KodiDevice(MediaPlayerDevice):
     @cmd
     async def async_turn_off(self):
         """Execute turn_off_action to turn off media player."""
-        if self._turn_off_action is not None:
+        if self._turn_off_action:
             await self._turn_off_action.async_run(
                 variables={"entity_id": self.entity_id})
         else:
@@ -664,7 +664,7 @@ class KodiDevice(MediaPlayerDevice):
         """Handle play/pause/toggle."""
         players = await self._get_players()
 
-        if players is not None and players:
+        if players:
             await self.server.Player.PlayPause(
                 players[0]['playerid'], state)
 
@@ -813,14 +813,14 @@ class KodiDevice(MediaPlayerDevice):
         import jsonrpc_base
         params = {"playlistid": 0}
         if media_type == "SONG":
-            if media_id is None:
+            if not media_id:
                 media_id = await self.async_find_song(
                     media_name, artist_name)
             if media_id:
                 params["item"] = {"songid": int(media_id)}
 
         elif media_type == "ALBUM":
-            if media_id is None:
+            if not media_id:
                 if media_name == "ALL":
                     await self.async_add_all_albums(artist_name)
                     return
@@ -833,7 +833,7 @@ class KodiDevice(MediaPlayerDevice):
         else:
             raise RuntimeError("Unrecognized media type.")
 
-        if media_id is not None:
+        if media_id:
             try:
                 await self.server.Playlist.Add(params)
             except jsonrpc_base.jsonrpc.ProtocolError as exc:
@@ -869,7 +869,7 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_get_albums(self, artist_id=None):
         """Get albums list."""
-        if artist_id is None:
+        if not artist_id:
             return await self.server.AudioLibrary.GetAlbums()
 
         return (await self.server.AudioLibrary.GetAlbums(
@@ -888,7 +888,7 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_get_songs(self, artist_id=None):
         """Get songs list."""
-        if artist_id is None:
+        if not artist_id:
             return await self.server.AudioLibrary.GetSongs()
 
         return (await self.server.AudioLibrary.GetSongs(
@@ -897,7 +897,7 @@ class KodiDevice(MediaPlayerDevice):
     async def async_find_song(self, song_name, artist_name=''):
         """Find song by name and optionally artist name."""
         artist_id = None
-        if artist_name != '':
+        if artist_name:
             artist_id = await self.async_find_artist(artist_name)
 
         songs = await self.async_get_songs(artist_id)
@@ -910,7 +910,7 @@ class KodiDevice(MediaPlayerDevice):
     async def async_find_album(self, album_name, artist_name=''):
         """Find album by name and optionally artist name."""
         artist_id = None
-        if artist_name != '':
+        if artist_name:
             artist_id = await self.async_find_artist(artist_name)
 
         albums = await self.async_get_albums(artist_id)

@@ -58,7 +58,7 @@ async def async_get_service(hass, config, discovery_info=None):
     http_protocol = 'https' if encryption else 'http'
     url = '{}://{}:{}/jsonrpc'.format(http_protocol, host, port)
 
-    if username is not None:
+    if username:
         auth = aiohttp.BasicAuth(username, password)
     else:
         auth = None
@@ -79,7 +79,7 @@ class KodiNotificationService(BaseNotificationService):
             'session': async_get_clientsession(hass),
         }
 
-        if auth is not None:
+        if auth:
             kwargs['auth'] = auth
 
         self._server = jsonrpc_async.Server(self._url, **kwargs)
