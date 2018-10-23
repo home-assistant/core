@@ -188,7 +188,6 @@ class SomfyShade(CoverDevice):
             self._position -= move_increment
         else:
             self._position += move_increment
-
         _LOGGER.debug("%s At position %s, incrementing to %s",
                       now, self._position, self._set_position)
         curr_position = round(self._position, -1)
