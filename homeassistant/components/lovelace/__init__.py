@@ -225,10 +225,10 @@ def add_card(fname: str, view_id: str, card_config: str,
         cards = view.get('cards', [])
         if data_format == FORMAT_YAML:
             card_config = yaml_to_object(card_config)
-        if position != None:
-            cards.insert(position, card_config)
-        else:
+        if position is None:
             cards.append(card_config)
+        else:
+            cards.insert(position, card_config)
         save_yaml(fname, config)
         return
 
