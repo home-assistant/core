@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-  DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, 
+                                                     PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
 REQUIREMENTS = ['btsmarthub_devicelist==0.1.1']
