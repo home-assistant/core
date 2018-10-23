@@ -14,7 +14,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sense import (SENSE_DATA, 
+from homeassistant.components.sense import (SENSE_DATA,
                                             MIN_TIME_BETWEEN_DAILY_UPDATES)
 
 _LOGGER = logging.getLogger(__name__)

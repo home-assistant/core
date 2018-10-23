@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.util import Throttle
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sense import SENSE_DATA
@@ -27,6 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
 
     data = hass.data[SENSE_DATA]
+    
     def update_active():
         """Update the active power usage."""
         data.get_realtime()
