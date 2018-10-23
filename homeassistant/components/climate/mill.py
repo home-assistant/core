@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['millheater==0.1.2']
+REQUIREMENTS = ['millheater==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         _LOGGER.error("Failed to connect to Mill")
         return
 
+    await mill_data_connection.update_rooms()
     await mill_data_connection.update_heaters()
 
     dev = []
