@@ -69,5 +69,5 @@ async def test_sensor_force_update_non_existent(hass, requests_mock):
                                        {ATTR_ENTITY_ID: 'sensor.dummy'})
         await hass.async_block_till_done()
 
-        assert mock_logger.warn.called is True
+        assert mock_logger.warning.called is True
         assert requests_mock.call_count == 2
