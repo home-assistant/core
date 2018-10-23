@@ -1,14 +1,13 @@
-"""Test the init file of Mailgun."""
+"""Test the init file of Twilio."""
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components import twilio
-
 from homeassistant.core import callback
 
 
 async def test_config_flow_registers_webhook(hass, aiohttp_client):
-    """Test setting up Mailgun and sending webhook."""
+    """Test setting up Twilio and sending webhook."""
     with patch('homeassistant.util.get_local_ip', return_value='example.com'):
         result = await hass.config_entries.flow.async_init('twilio', context={
             'source': 'user'
@@ -24,7 +23,7 @@ async def test_config_flow_registers_webhook(hass, aiohttp_client):
 
     @callback
     def handle_event(event):
-        """Handle Mailgun event."""
+        """Handle Twilio event."""
         twilio_events.append(event)
 
     hass.bus.async_listen(twilio.RECEIVED_DATA, handle_event)

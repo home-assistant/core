@@ -10,17 +10,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 
-REQUIREMENTS = ['twilio==5.7.0']
+REQUIREMENTS = ['twilio==6.19.1']
+DEPENDENCIES = ['webhook']
 
 DOMAIN = 'twilio'
-
-API_PATH = '/api/{}'.format(DOMAIN)
 
 CONF_ACCOUNT_SID = 'account_sid'
 CONF_AUTH_TOKEN = 'auth_token'
 
 DATA_TWILIO = DOMAIN
-DEPENDENCIES = ['webhook']
 
 RECEIVED_DATA = '{}_data_received'.format(DOMAIN)
 
@@ -28,15 +26,13 @@ CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN): vol.Schema({
         vol.Required(CONF_ACCOUNT_SID): cv.string,
         vol.Required(CONF_AUTH_TOKEN): cv.string,
-        vol.Optional(CONF_WEBHOOK_ID): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Twilio component."""
     from twilio.rest import TwilioRestClient
-
     if DOMAIN not in config:
         return True
 
