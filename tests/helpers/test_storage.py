@@ -31,14 +31,6 @@ async def test_loading(hass, store):
     assert data == MOCK_DATA
 
 
-async def test_overwriting(hass, store):
-    """Test we can save, overwrite and reload data."""
-    await store.async_save(MOCK_DATA)
-    await store.async_save(MOCK_DATA2)
-    data = await store.async_load()
-    assert data == MOCK_DATA2
-
-
 async def test_loading_non_existing(hass, store):
     """Test we can save and load data."""
     with patch('homeassistant.util.json.open', side_effect=FileNotFoundError):

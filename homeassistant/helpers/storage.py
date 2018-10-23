@@ -187,9 +187,7 @@ class Store:
             os.makedirs(os.path.dirname(path))
 
         _LOGGER.debug('Writing data for %s', self.key)
-        tmp_path = path + "__TEMP__"
-        json.save_json(tmp_path, data, self._private)
-        os.replace(tmp_path, path)
+        json.save_json(path, data, self._private)
 
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""
