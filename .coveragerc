@@ -209,7 +209,6 @@ omit =
     homeassistant/components/lutron_caseta.py
     homeassistant/components/*/lutron_caseta.py
 
-    homeassistant/components/mailgun.py
     homeassistant/components/*/mailgun.py
 
     homeassistant/components/matrix.py
@@ -467,6 +466,7 @@ omit =
     homeassistant/components/device_tracker/bluetooth_le_tracker.py
     homeassistant/components/device_tracker/bluetooth_tracker.py
     homeassistant/components/device_tracker/bt_home_hub_5.py
+    homeassistant/components/device_tracker/bt_smarthub.py
     homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/freebox.py
