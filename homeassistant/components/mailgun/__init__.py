@@ -23,7 +23,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_DOMAIN): cv.string,
         vol.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
-        vol.Optional(CONF_WEBHOOK_ID): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
