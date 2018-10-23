@@ -4,7 +4,6 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -21,7 +20,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_hs_to_RGB)
 from homeassistant.helpers.restore_state import async_get_last_state
 
-REQUIREMENTS = ['limitlessled==1.1.0']
+REQUIREMENTS = ['limitlessled==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ MIN_SATURATION = 10
 WHITE = [0, 0]
 
 SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                              SUPPORT_TRANSITION)
+                              SUPPORT_EFFECT | SUPPORT_TRANSITION)
 SUPPORT_LIMITLESSLED_DIMMER = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
                             SUPPORT_FLASH | SUPPORT_COLOR |
@@ -104,7 +103,7 @@ def rewrite_legacy(config):
     return {'bridges': new_bridges}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LimitlessLED lights."""
     from limitlessled.bridge import Bridge
 
@@ -126,7 +125,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             lights.append(LimitlessLEDGroup(group, {
                 'fade': group_conf[CONF_FADE]
             }))
-    add_devices(lights)
+    add_entities(lights)
 
 
 def state(new_state):
@@ -136,7 +135,7 @@ def state(new_state):
     """
     def decorator(function):
         """Set up the decorator function."""
-        # pylint: disable=no-member,protected-access
+        # pylint: disable=protected-access
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
             from limitlessled.pipeline import Pipeline
@@ -188,10 +187,9 @@ class LimitlessLEDGroup(Light):
         self._color = None
         self._effect = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Called when entity is about to be added to hass."""
-        last_state = yield from async_get_last_state(self.hass, self.entity_id)
+    async def async_added_to_hass(self):
+        """Handle entity about to be added to hass event."""
+        last_state = await async_get_last_state(self.hass, self.entity_id)
         if last_state:
             self._is_on = (last_state.state == STATE_ON)
             self._brightness = last_state.attributes.get('brightness')
@@ -239,12 +237,17 @@ class LimitlessLEDGroup(Light):
     @property
     def color_temp(self):
         """Return the temperature property."""
+        if self.hs_color is not None:
+            return None
         return self._temperature
 
     @property
     def hs_color(self):
         """Return the color property."""
         if self._effect == EFFECT_NIGHT:
+            return None
+
+        if self._color is None or self._color[1] == 0:
             return None
 
         return self._color

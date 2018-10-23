@@ -7,7 +7,7 @@ https://home-assistant.io/components/device_tracker.gpslogger/
 import logging
 from hmac import compare_digest
 
-from aiohttp.web import Request, HTTPUnauthorized  # NOQA
+from aiohttp.web import Request, HTTPUnauthorized
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -98,7 +98,7 @@ class GPSLoggerView(HomeAssistantView):
         if 'activity' in data:
             attrs['activity'] = data['activity']
 
-        hass.async_add_job(self.async_see(
+        hass.async_create_task(self.async_see(
             dev_id=device,
             gps=gps_location, battery=battery,
             gps_accuracy=accuracy,

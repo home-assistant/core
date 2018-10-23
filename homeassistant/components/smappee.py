@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['smappy==0.2.15']
+REQUIREMENTS = ['smappy==0.2.16']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ def setup(hass, config):
     return True
 
 
-class Smappee(object):
+class Smappee:
     """Stores data retrieved from Smappee sensor."""
 
     def __init__(self, client_id, client_secret, username,

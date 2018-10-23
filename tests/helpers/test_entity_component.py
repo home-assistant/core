@@ -39,7 +39,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         self.hass.stop()
 
     def test_setting_up_group(self):
-        """Setup the setting of a group."""
+        """Set up the setting of a group."""
         setup_component(self.hass, 'group', {'group': {}})
         component = EntityComponent(_LOGGER, DOMAIN, self.hass,
                                     group_name='everyone')
@@ -143,9 +143,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
            'async_track_time_interval')
     def test_set_scan_interval_via_config(self, mock_track):
         """Test the setting of the scan interval via configuration."""
-        def platform_setup(hass, config, add_devices, discovery_info=None):
+        def platform_setup(hass, config, add_entities, discovery_info=None):
             """Test the platform setup."""
-            add_devices([MockEntity(should_poll=True)])
+            add_entities([MockEntity(should_poll=True)])
 
         loader.set_component(self.hass, 'test_domain.platform',
                              MockPlatform(platform_setup))
@@ -165,9 +165,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
     def test_set_entity_namespace_via_config(self):
         """Test setting an entity namespace."""
-        def platform_setup(hass, config, add_devices, discovery_info=None):
+        def platform_setup(hass, config, add_entities, discovery_info=None):
             """Test the platform setup."""
-            add_devices([
+            add_entities([
                 MockEntity(name='beer'),
                 MockEntity(name=None),
             ])
@@ -346,7 +346,8 @@ async def test_setup_entry(hass):
     mock_setup_entry = Mock(return_value=mock_coro(True))
     loader.set_component(
         hass, 'test_domain.entry_domain',
-        MockPlatform(async_setup_entry=mock_setup_entry))
+        MockPlatform(async_setup_entry=mock_setup_entry,
+                     scan_interval=timedelta(seconds=5)))
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain='entry_domain')
@@ -356,6 +357,9 @@ async def test_setup_entry(hass):
     p_hass, p_entry, p_add_entities = mock_setup_entry.mock_calls[0][1]
     assert p_hass is hass
     assert p_entry is entry
+
+    assert component._platforms[entry.entry_id].scan_interval == \
+        timedelta(seconds=5)
 
 
 async def test_setup_entry_platform_not_exist(hass):
@@ -411,3 +415,19 @@ async def test_unload_entry_fails_if_never_loaded(hass):
 
     with pytest.raises(ValueError):
         await component.async_unload_entry(entry)
+
+
+async def test_update_entity(hass):
+    """Test that we can update an entity with the helper."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity = MockEntity()
+    entity.async_update_ha_state = Mock(return_value=mock_coro())
+    await component.async_add_entities([entity])
+
+    # Called as part of async_add_entities
+    assert len(entity.async_update_ha_state.mock_calls) == 1
+
+    await hass.helpers.entity_component.async_update_entity(entity.entity_id)
+
+    assert len(entity.async_update_ha_state.mock_calls) == 2
+    assert entity.async_update_ha_state.mock_calls[-1][1][0] is True

@@ -12,7 +12,8 @@
                     "name": "Nome",
                     "passive": "Passivo",
                     "radius": "Raio"
-                }
+                },
+                "title": "Definir os par\u00e2metros da zona"
             }
         },
         "title": "Zona"

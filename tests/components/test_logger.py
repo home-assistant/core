@@ -24,7 +24,7 @@ class TestUpdater(unittest.TestCase):
     """Test logger component."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.log_filter = None
 
@@ -34,7 +34,7 @@ class TestUpdater(unittest.TestCase):
         self.hass.stop()
 
     def setup_logger(self, config):
-        """Setup logger and save log filter."""
+        """Set up logger and save log filter."""
         setup_component(self.hass, logger.DOMAIN, config)
         self.log_filter = logging.root.handlers[-1].filters[0]
 

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il Bridge \u00e8 gi\u00e0 configurato",
+            "no_bridges": "Nessun bridge deCONZ rilevato",
+            "one_instance_only": "Il componente supporto solo un'istanza di deCONZ"
+        },
+        "error": {
+            "no_key": "Impossibile ottenere una API key"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta (valore di default: '80')"
+                },
+                "title": "Definisci il gateway deCONZ"
+            },
+            "link": {
+                "description": "Sblocca il tuo gateway deCONZ per registrarlo in Home Assistant.\n\n1. Vai nelle impostazioni di sistema di deCONZ\n2. Premi il bottone \"Unlock Gateway\"",
+                "title": "Collega con deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Consenti l'importazione di sensori virtuali",
+                    "allow_deconz_groups": "Consenti l'importazione di gruppi deCONZ"
+                },
+                "title": "Opzioni di configurazione extra per deCONZ"
+            }
+        },
+        "title": "deCONZ"
+    }
+}

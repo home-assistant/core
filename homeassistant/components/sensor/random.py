@@ -34,14 +34,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Random number sensor."""
     name = config.get(CONF_NAME)
     minimum = config.get(CONF_MINIMUM)
     maximum = config.get(CONF_MAXIMUM)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
 
-    async_add_devices([RandomSensor(name, minimum, maximum, unit)], True)
+    async_add_entities([RandomSensor(name, minimum, maximum, unit)], True)
 
 
 class RandomSensor(Entity):

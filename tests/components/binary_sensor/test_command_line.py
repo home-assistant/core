@@ -12,7 +12,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
     """Test the Command line Binary sensor."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -24,7 +24,9 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         config = {'name': 'Test',
                   'command': 'echo 1',
                   'payload_on': '1',
-                  'payload_off': '0'}
+                  'payload_off': '0',
+                  'command_timeout': 15
+                  }
 
         devices = []
 
@@ -43,7 +45,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
 
     def test_template(self):
         """Test setting the state with a template."""
-        data = command_line.CommandSensorData(self.hass, 'echo 10')
+        data = command_line.CommandSensorData(self.hass, 'echo 10', 15)
 
         entity = command_line.CommandBinarySensor(
             self.hass, data, 'test', None, '1.0', '0',
@@ -53,7 +55,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
 
     def test_sensor_off(self):
         """Test setting the state with a template."""
-        data = command_line.CommandSensorData(self.hass, 'echo 0')
+        data = command_line.CommandSensorData(self.hass, 'echo 0', 15)
 
         entity = command_line.CommandBinarySensor(
             self.hass, data, 'test', None, '1', '0', None)

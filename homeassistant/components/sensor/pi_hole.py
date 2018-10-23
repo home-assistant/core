@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pihole==0.1.2']
+REQUIREMENTS = ['hole==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,15 +65,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_MONITORED_CONDITIONS,
-                 default=list(MONITORED_CONDITIONS)):
+                 default=['ads_blocked_today']):
     vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Pi-hole sensor."""
-    from pihole import PiHole
+    from hole import Hole
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -82,7 +82,7 @@ async def async_setup_platform(
     verify_tls = config.get(CONF_VERIFY_SSL)
 
     session = async_get_clientsession(hass)
-    pi_hole = PiHoleData(PiHole(
+    pi_hole = PiHoleData(Hole(
         host, hass.loop, session, location=location, tls=use_tls,
         verify_tls=verify_tls))
 
@@ -94,7 +94,7 @@ async def async_setup_platform(
     sensors = [PiHoleSensor(pi_hole, name, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class PiHoleSensor(Entity):
@@ -153,7 +153,7 @@ class PiHoleSensor(Entity):
         self.data = self.pi_hole.api.data
 
 
-class PiHoleData(object):
+class PiHoleData:
     """Get the latest data and update the states."""
 
     def __init__(self, api):
@@ -164,11 +164,11 @@ class PiHoleData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the Pi-hole."""
-        from pihole.exceptions import PiHoleError
+        from hole.exceptions import HoleError
 
         try:
             await self.api.get_data()
             self.available = True
-        except PiHoleError:
+        except HoleError:
             _LOGGER.error("Unable to fetch data from Pi-hole")
             self.available = False

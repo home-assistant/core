@@ -17,7 +17,7 @@ class TestGraphite(unittest.TestCase):
     """Test the Graphite component."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.gf = graphite.GraphiteFeeder(self.hass, 'foo', 123, 'ha')
 
@@ -224,13 +224,12 @@ class TestGraphite(unittest.TestCase):
         def fake_get():
             if len(runs) >= 2:
                 return self.gf._quit_object
-            elif runs:
+            if runs:
                 runs.append(1)
                 return mock.MagicMock(event_type='somethingelse',
                                       data={'new_event': None})
-            else:
-                runs.append(1)
-                return event
+            runs.append(1)
+            return event
 
         with mock.patch.object(self.gf, '_queue') as mock_queue:
             with mock.patch.object(self.gf, '_report_attributes') as mock_r:

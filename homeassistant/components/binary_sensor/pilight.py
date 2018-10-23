@@ -44,12 +44,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Pilight Binary Sensor."""
     disarm = config.get(CONF_DISARM_AFTER_TRIGGER)
     if disarm:
-        add_devices([PilightTriggerSensor(
+        add_entities([PilightTriggerSensor(
             hass=hass,
             name=config.get(CONF_NAME),
             variable=config.get(CONF_VARIABLE),
@@ -59,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             rst_dly_sec=config.get(CONF_RESET_DELAY_SEC),
         )])
     else:
-        add_devices([PilightBinarySensor(
+        add_entities([PilightBinarySensor(
             hass=hass,
             name=config.get(CONF_NAME),
             variable=config.get(CONF_VARIABLE),

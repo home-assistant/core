@@ -9,6 +9,7 @@ import homeassistant.components.image_processing as ip
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture)
+from tests.components.image_processing import common
 
 
 @asyncio.coroutine
@@ -26,11 +27,11 @@ def mock_async_subprocess():
     return async_popen
 
 
-class TestOpenAlprLocalSetup(object):
+class TestOpenAlprLocalSetup:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self):
@@ -38,7 +39,7 @@ class TestOpenAlprLocalSetup(object):
         self.hass.stop()
 
     def test_setup_platform(self):
-        """Setup platform with one entity."""
+        """Set up platform with one entity."""
         config = {
             ip.DOMAIN: {
                 'platform': 'openalpr_local',
@@ -58,7 +59,7 @@ class TestOpenAlprLocalSetup(object):
         assert self.hass.states.get('image_processing.openalpr_demo_camera')
 
     def test_setup_platform_name(self):
-        """Setup platform with one entity and set name."""
+        """Set up platform with one entity and set name."""
         config = {
             ip.DOMAIN: {
                 'platform': 'openalpr_local',
@@ -79,7 +80,7 @@ class TestOpenAlprLocalSetup(object):
         assert self.hass.states.get('image_processing.test_local')
 
     def test_setup_platform_without_region(self):
-        """Setup platform with one entity without region."""
+        """Set up platform with one entity without region."""
         config = {
             ip.DOMAIN: {
                 'platform': 'openalpr_local',
@@ -96,11 +97,11 @@ class TestOpenAlprLocalSetup(object):
             setup_component(self.hass, ip.DOMAIN, config)
 
 
-class TestOpenAlprLocal(object):
+class TestOpenAlprLocal:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         config = {
@@ -143,10 +144,10 @@ class TestOpenAlprLocal(object):
     @patch('asyncio.create_subprocess_exec',
            return_value=mock_async_subprocess())
     def test_openalpr_process_image(self, popen_mock, aioclient_mock):
-        """Setup and scan a picture and test plates from event."""
+        """Set up and scan a picture and test plates from event."""
         aioclient_mock.get(self.url, content=b'image')
 
-        ip.scan(self.hass, entity_id='image_processing.test_local')
+        common.scan(self.hass, entity_id='image_processing.test_local')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.test_local')

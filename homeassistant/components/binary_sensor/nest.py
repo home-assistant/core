@@ -8,7 +8,8 @@ from itertools import chain
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.nest import DATA_NEST, NestSensorDevice
+from homeassistant.components.nest import (
+    DATA_NEST, DATA_NEST_CONFIG, CONF_BINARY_SENSORS, NestSensorDevice)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 DEPENDENCIES = ['nest']
@@ -30,12 +31,10 @@ CAMERA_BINARY_TYPES = {
 
 STRUCTURE_BINARY_TYPES = {
     'away': None,
-    # 'security_state', # pending python-nest update
 }
 
 STRUCTURE_BINARY_STATE_MAP = {
     'away': {'away': True, 'home': False},
-    'security_state': {'deter': True, 'ok': False},
 }
 
 _BINARY_TYPES_DEPRECATED = [
@@ -55,12 +54,19 @@ _VALID_BINARY_SENSOR_TYPES = {**BINARY_TYPES, **CLIMATE_BINARY_TYPES,
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Nest binary sensors."""
-    if discovery_info is None:
-        return
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Nest binary sensors.
 
+    No longer used.
+    """
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up a Nest binary sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
+
+    discovery_info = \
+        hass.data.get(DATA_NEST_CONFIG, {}).get(CONF_BINARY_SENSORS, {})
 
     # Add all available binary sensors if no Nest binary sensor config is set
     if discovery_info == {}:
@@ -76,32 +82,37 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     "for valid options.")
             _LOGGER.error(wstr)
 
-    sensors = []
-    for structure in nest.structures():
-        sensors += [NestBinarySensor(structure, None, variable)
-                    for variable in conditions
-                    if variable in STRUCTURE_BINARY_TYPES]
-    device_chain = chain(nest.thermostats(),
-                         nest.smoke_co_alarms(),
-                         nest.cameras())
-    for structure, device in device_chain:
-        sensors += [NestBinarySensor(structure, device, variable)
-                    for variable in conditions
-                    if variable in BINARY_TYPES]
-        sensors += [NestBinarySensor(structure, device, variable)
-                    for variable in conditions
-                    if variable in CLIMATE_BINARY_TYPES
-                    and device.is_thermostat]
-
-        if device.is_camera:
+    def get_binary_sensors():
+        """Get the Nest binary sensors."""
+        sensors = []
+        for structure in nest.structures():
+            sensors += [NestBinarySensor(structure, None, variable)
+                        for variable in conditions
+                        if variable in STRUCTURE_BINARY_TYPES]
+        device_chain = chain(nest.thermostats(),
+                             nest.smoke_co_alarms(),
+                             nest.cameras())
+        for structure, device in device_chain:
             sensors += [NestBinarySensor(structure, device, variable)
                         for variable in conditions
-                        if variable in CAMERA_BINARY_TYPES]
-            for activity_zone in device.activity_zones:
-                sensors += [NestActivityZoneSensor(structure,
-                                                   device,
-                                                   activity_zone)]
-    add_devices(sensors, True)
+                        if variable in BINARY_TYPES]
+            sensors += [NestBinarySensor(structure, device, variable)
+                        for variable in conditions
+                        if variable in CLIMATE_BINARY_TYPES
+                        and device.is_thermostat]
+
+            if device.is_camera:
+                sensors += [NestBinarySensor(structure, device, variable)
+                            for variable in conditions
+                            if variable in CAMERA_BINARY_TYPES]
+                for activity_zone in device.activity_zones:
+                    sensors += [NestActivityZoneSensor(structure,
+                                                       device,
+                                                       activity_zone)]
+
+        return sensors
+
+    async_add_entities(await hass.async_add_job(get_binary_sensors), True)
 
 
 class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
@@ -122,7 +133,7 @@ class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
         value = getattr(self.device, self.variable)
         if self.variable in STRUCTURE_BINARY_TYPES:
             self._state = bool(STRUCTURE_BINARY_STATE_MAP
-                               [self.variable][value])
+                               [self.variable].get(value))
         else:
             self._state = bool(value)
 
@@ -135,6 +146,11 @@ class NestActivityZoneSensor(NestBinarySensor):
         super(NestActivityZoneSensor, self).__init__(structure, device, "")
         self.zone = zone
         self._name = "{} {} activity".format(self._name, self.zone.name)
+
+    @property
+    def unique_id(self):
+        """Return unique id based on camera serial and zone id."""
+        return "{}-{}".format(self.device.serial, self.zone.zone_id)
 
     @property
     def device_class(self):

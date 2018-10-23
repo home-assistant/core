@@ -4,19 +4,18 @@ Support the ISY-994 controllers.
 For configuration details please visit the documentation for this component at
 https://home-assistant.io/components/isy994/
 """
-import asyncio
 from collections import namedtuple
 import logging
 from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant  # noqa
+from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, Dict  # noqa
+from homeassistant.helpers.typing import ConfigType, Dict
 
 REQUIREMENTS = ['PyISY==1.1.0']
 
@@ -268,7 +267,6 @@ def _is_sensor_a_binary_sensor(hass: HomeAssistant, node) -> bool:
 def _categorize_nodes(hass: HomeAssistant, nodes, ignore_identifier: str,
                       sensor_identifier: str)-> None:
     """Sort the nodes to their proper domains."""
-    # pylint: disable=no-member
     for (path, node) in nodes:
         ignored = ignore_identifier in path or ignore_identifier in node.name
         if ignored:
@@ -415,8 +413,7 @@ class ISYDevice(Entity):
         self._change_handler = None
         self._control_handler = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
         self._change_handler = self._node.status.subscribe(
             'changed', self.on_update)
@@ -425,7 +422,6 @@ class ISYDevice(Entity):
             self._control_handler = self._node.controlEvents.subscribe(
                 self.on_control)
 
-    # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Handle the update event from the ISY994 Node."""
         self.schedule_update_ha_state()

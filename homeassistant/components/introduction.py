@@ -4,7 +4,6 @@ Component that will help guide the user taking its first steps.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/introduction/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -16,8 +15,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config=None):
+async def async_setup(hass, config=None):
     """Set up the introduction component."""
     log = logging.getLogger(__name__)
     log.info("""

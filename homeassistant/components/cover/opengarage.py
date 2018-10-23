@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenGarage covers."""
     covers = []
     devices = config.get(CONF_COVERS)
@@ -66,13 +66,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         covers.append(OpenGarageCover(hass, args))
 
-    add_devices(covers, True)
+    add_entities(covers, True)
 
 
 class OpenGarageCover(CoverDevice):
     """Representation of a OpenGarage cover."""
 
-    # pylint: disable=no-self-use
     def __init__(self, hass, args):
         """Initialize the cover."""
         self.opengarage_url = 'http://{}:{}'.format(

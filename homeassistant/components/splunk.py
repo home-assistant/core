@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_SSL, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN, EVENT_STATE_CHANGED)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 
 _LOGGER = logging.getLogger(__name__)
 

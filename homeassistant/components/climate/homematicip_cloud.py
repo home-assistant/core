@@ -1,19 +1,18 @@
 """
-Support for HomematicIP climate.
+Support for HomematicIP Cloud climate devices.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.homematicip_cloud/
 """
-
 import logging
 
 from homeassistant.components.climate import (
-    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, ATTR_TEMPERATURE,
-    STATE_AUTO, STATE_MANUAL)
-from homeassistant.const import TEMP_CELSIUS
+    ATTR_TEMPERATURE, STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE,
+    ClimateDevice)
 from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
-    ATTR_HOME_ID)
+    HMIPC_HAPID, HomematicipGenericDevice)
+from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.const import TEMP_CELSIUS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,26 +26,28 @@ HA_STATE_TO_HMIP = {
 HMIP_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_HMIP.items()}
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
-    """Set up the HomematicIP climate devices."""
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the HomematicIP Cloud climate devices."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the HomematicIP climate from a config entry."""
     from homematicip.group import HeatingGroup
 
-    if discovery_info is None:
-        return
-    home = hass.data[HOMEMATICIP_CLOUD_DOMAIN][discovery_info[ATTR_HOME_ID]]
-
+    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.groups:
         if isinstance(device, HeatingGroup):
             devices.append(HomematicipHeatingGroup(home, device))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
-    """Representation of a MomematicIP heating group."""
+    """Representation of a HomematicIP heating group."""
 
     def __init__(self, home, device):
         """Initialize heating group."""

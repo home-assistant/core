@@ -13,10 +13,9 @@ FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the demo fan platform."""
-    add_devices_callback([
+    add_entities_callback([
         DemoFan(hass, "Living Room Fan", FULL_SUPPORT),
         DemoFan(hass, "Ceiling Fan", LIMITED_SUPPORT),
     ])

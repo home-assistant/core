@@ -23,13 +23,13 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
             id(device.gateway), device.node_id, device.child_id,
             device.value_type)
         async_dispatcher_connect(
-            hass, mysensors.SIGNAL_CALLBACK.format(*dev_id),
+            hass, mysensors.const.SIGNAL_CALLBACK.format(*dev_id),
             device.async_update_callback)
 
     return True
 
 
-class MySensorsDeviceScanner(mysensors.MySensorsDevice):
+class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
     """Represent a MySensors scanner."""
 
     def __init__(self, async_see, *args):

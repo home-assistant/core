@@ -12,14 +12,14 @@ import homeassistant.components.toon as toon_main
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the discovered Toon Smart Plugs."""
     _toon_main = hass.data[toon_main.TOON_HANDLE]
     switch_items = []
     for plug in _toon_main.toon.smartplugs:
         switch_items.append(EnecoSmartPlug(hass, plug))
 
-    add_devices(switch_items)
+    add_entities(switch_items)
 
 
 class EnecoSmartPlug(SwitchDevice):

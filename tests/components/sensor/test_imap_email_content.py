@@ -17,7 +17,7 @@ class FakeEMailReader:
     """A test class for sending test emails."""
 
     def __init__(self, messages):
-        """Setup the fake email reader."""
+        """Set up the fake email reader."""
         self._messages = messages
 
     def connect(self):
@@ -35,7 +35,7 @@ class EmailContentSensor(unittest.TestCase):
     """Test the IMAP email content sensor."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):

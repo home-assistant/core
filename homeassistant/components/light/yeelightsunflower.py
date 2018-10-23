@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight Sunflower Light platform."""
     import yeelightsunflower
 
@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Could not connect to Yeelight Sunflower hub")
         return False
 
-    add_devices(SunflowerBulb(light) for light in hub.get_lights())
+    add_entities(SunflowerBulb(light) for light in hub.get_lights())
 
 
 class SunflowerBulb(Light):

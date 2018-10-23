@@ -5,8 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.homematic/
 """
 import logging
+
+from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,10 @@ HM_UNIT_HA_CAST = {
     'GAS_POWER': 'm3',
     'GAS_ENERGY_COUNTER': 'm3',
     'LUX': 'lx',
+    'CURRENT_ILLUMINATION': 'lx',
+    'AVERAGE_ILLUMINATION': 'lx',
+    'LOWEST_ILLUMINATION': 'lx',
+    'HIGHEST_ILLUMINATION': 'lx',
     'RAIN_COUNTER': 'mm',
     'WIND_SPEED': 'km/h',
     'WIND_DIRECTION': '°',
@@ -63,14 +68,18 @@ HM_ICON_HA_CAST = {
     'TEMPERATURE': 'mdi:thermometer',
     'ACTUAL_TEMPERATURE': 'mdi:thermometer',
     'LUX': 'mdi:weather-sunny',
+    'CURRENT_ILLUMINATION': 'mdi:weather-sunny',
+    'AVERAGE_ILLUMINATION': 'mdi:weather-sunny',
+    'LOWEST_ILLUMINATION': 'mdi:weather-sunny',
+    'HIGHEST_ILLUMINATION': 'mdi:weather-sunny',
     'BRIGHTNESS': 'mdi:invert-colors',
     'POWER': 'mdi:flash-red-eye',
     'CURRENT': 'mdi:flash-red-eye',
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the HomeMatic platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the HomeMatic sensor platform."""
     if discovery_info is None:
         return
 
@@ -79,11 +88,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         new_device = HMSensor(conf)
         devices.append(new_device)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class HMSensor(HMDevice):
-    """Represents various HomeMatic sensors in Home Assistant."""
+    """Representation of a HomeMatic sensor."""
 
     @property
     def state(self):
@@ -111,4 +120,4 @@ class HMSensor(HMDevice):
         if self._state:
             self._data.update({self._state: STATE_UNKNOWN})
         else:
-            _LOGGER.critical("Can't initialize sensor %s", self._name)
+            _LOGGER.critical("Unable to initialize sensor: %s", self._name)

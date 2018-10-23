@@ -36,7 +36,7 @@ class DysonTest(unittest.TestCase):
     """Dyson parent component test class."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -87,7 +87,7 @@ class DysonTest(unittest.TestCase):
         self.assertEqual(mocked_login.call_count, 1)
         self.assertEqual(mocked_devices.call_count, 1)
         self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 1)
-        self.assertEqual(mocked_discovery.call_count, 3)
+        self.assertEqual(mocked_discovery.call_count, 4)
 
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])
@@ -172,7 +172,7 @@ class DysonTest(unittest.TestCase):
         self.assertEqual(mocked_login.call_count, 1)
         self.assertEqual(mocked_devices.call_count, 1)
         self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 1)
-        self.assertEqual(mocked_discovery.call_count, 3)
+        self.assertEqual(mocked_discovery.call_count, 4)
 
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])

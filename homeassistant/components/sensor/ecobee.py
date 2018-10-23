@@ -19,7 +19,7 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecobee sensors."""
     if discovery_info is None:
         return
@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
                 dev.append(EcobeeSensor(sensor['name'], item['type'], index))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class EcobeeSensor(Entity):

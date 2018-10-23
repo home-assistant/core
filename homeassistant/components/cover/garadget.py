@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Garadget covers."""
     covers = []
     devices = config.get(CONF_COVERS)
@@ -67,13 +67,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         covers.append(GaradgetCover(hass, args))
 
-    add_devices(covers)
+    add_entities(covers)
 
 
 class GaradgetCover(CoverDevice):
     """Representation of a Garadget cover."""
 
-    # pylint: disable=no-self-use
     def __init__(self, hass, args):
         """Initialize the cover."""
         self.particle_url = 'https://api.particle.io'

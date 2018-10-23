@@ -51,7 +51,7 @@ def render_complex(value, variables=None):
     if isinstance(value, list):
         return [render_complex(item, variables)
                 for item in value]
-    elif isinstance(value, dict):
+    if isinstance(value, dict):
         return {key: render_complex(item, variables)
                 for key, item in value.items()}
     return value.async_render(variables)
@@ -82,7 +82,7 @@ def extract_entities(template, variables=None):
     return MATCH_ALL
 
 
-class Template(object):
+class Template:
     """Class to hold a template and manage caching and rendering."""
 
     def __init__(self, template, hass=None):
@@ -142,7 +142,6 @@ class Template(object):
             self.hass.loop, self.async_render_with_possible_json_value, value,
             error_value).result()
 
-    # pylint: disable=invalid-name
     def async_render_with_possible_json_value(self, value,
                                               error_value=_SENTINEL):
         """Render template with value exposed.
@@ -198,7 +197,7 @@ class Template(object):
                 self.hass == other.hass)
 
 
-class AllStates(object):
+class AllStates:
     """Class to expose all HA states as attributes."""
 
     def __init__(self, hass):
@@ -226,7 +225,7 @@ class AllStates(object):
         return STATE_UNKNOWN if state is None else state.state
 
 
-class DomainStates(object):
+class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
     def __init__(self, hass, domain):
@@ -286,7 +285,7 @@ def _wrap_state(state):
     return None if state is None else TemplateState(state)
 
 
-class TemplateMethods(object):
+class TemplateMethods:
     """Class to expose helpers to templates."""
 
     def __init__(self, hass):
@@ -318,7 +317,7 @@ class TemplateMethods(object):
             if point_state is None:
                 _LOGGER.warning("Closest:Unable to find state %s", args[0])
                 return None
-            elif not loc_helper.has_location(point_state):
+            if not loc_helper.has_location(point_state):
                 _LOGGER.warning(
                     "Closest:State does not contain valid location: %s",
                     point_state)
@@ -368,18 +367,9 @@ class TemplateMethods(object):
 
         while to_process:
             value = to_process.pop(0)
+            point_state = self._resolve_state(value)
 
-            if isinstance(value, State):
-                latitude = value.attributes.get(ATTR_LATITUDE)
-                longitude = value.attributes.get(ATTR_LONGITUDE)
-
-                if latitude is None or longitude is None:
-                    _LOGGER.warning(
-                        "Distance:State does not contains a location: %s",
-                        value)
-                    return None
-
-            else:
+            if point_state is None:
                 # We expect this and next value to be lat&lng
                 if not to_process:
                     _LOGGER.warning(
@@ -394,6 +384,22 @@ class TemplateMethods(object):
                 if latitude is None or longitude is None:
                     _LOGGER.warning("Distance:Unable to process latitude and "
                                     "longitude: %s, %s", value, value_2)
+                    return None
+
+            else:
+                if not loc_helper.has_location(point_state):
+                    _LOGGER.warning(
+                        "distance:State does not contain valid location: %s",
+                        point_state)
+                    return None
+
+                latitude = point_state.attributes.get(ATTR_LATITUDE)
+                longitude = point_state.attributes.get(ATTR_LONGITUDE)
+
+                if latitude is None or longitude is None:
+                    _LOGGER.warning(
+                        "Distance:State does not contains a location: %s",
+                        value)
                     return None
 
             locations.append((latitude, longitude))
@@ -420,7 +426,7 @@ class TemplateMethods(object):
         """Return state or entity_id if given."""
         if isinstance(entity_id_or_state, State):
             return entity_id_or_state
-        elif isinstance(entity_id_or_state, str):
+        if isinstance(entity_id_or_state, str):
             return self._hass.states.get(entity_id_or_state)
         return None
 
@@ -581,6 +587,16 @@ def regex_findall_index(value, find='', index=0, ignorecase=False):
     return re.findall(find, value, flags)[index]
 
 
+def bitwise_and(first_value, second_value):
+    """Perform a bitwise and operation."""
+    return first_value & second_value
+
+
+def bitwise_or(first_value, second_value):
+    """Perform a bitwise or operation."""
+    return first_value | second_value
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -618,6 +634,8 @@ ENV.filters['regex_match'] = regex_match
 ENV.filters['regex_replace'] = regex_replace
 ENV.filters['regex_search'] = regex_search
 ENV.filters['regex_findall_index'] = regex_findall_index
+ENV.filters['bitwise_and'] = bitwise_and
+ENV.filters['bitwise_or'] = bitwise_or
 ENV.globals['log'] = logarithm
 ENV.globals['sin'] = sine
 ENV.globals['cos'] = cosine

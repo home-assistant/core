@@ -9,6 +9,7 @@ import attr
 
 from homeassistant.const import CONF_HOST, CONF_SENSORS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -27,29 +28,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info):
+        hass, config, async_add_entities, discovery_info):
     """Set up Netgear LTE sensor devices."""
-    lte_data = hass.data[DATA_KEY].get(config)
+    modem_data = hass.data[DATA_KEY].get_modem_data(config)
+
+    if not modem_data:
+        raise PlatformNotReady
 
     sensors = []
-    for sensortype in config[CONF_SENSORS]:
-        if sensortype == SENSOR_SMS:
-            sensors.append(SMSSensor(lte_data))
-        elif sensortype == SENSOR_USAGE:
-            sensors.append(UsageSensor(lte_data))
+    for sensor_type in config[CONF_SENSORS]:
+        if sensor_type == SENSOR_SMS:
+            sensors.append(SMSSensor(modem_data, sensor_type))
+        elif sensor_type == SENSOR_USAGE:
+            sensors.append(UsageSensor(modem_data, sensor_type))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 @attr.s
 class LTESensor(Entity):
-    """Data usage sensor entity."""
+    """Base LTE sensor entity."""
 
-    lte_data = attr.ib()
+    modem_data = attr.ib()
+    sensor_type = attr.ib()
 
     async def async_update(self):
         """Update state."""
-        await self.lte_data.async_update()
+        await self.modem_data.async_update()
+
+    @property
+    def unique_id(self):
+        """Return a unique ID like 'usage_5TG365AB0078V'."""
+        return "{}_{}".format(self.sensor_type, self.modem_data.serial_number)
 
 
 class SMSSensor(LTESensor):
@@ -63,7 +73,7 @@ class SMSSensor(LTESensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.lte_data.unread_count
+        return self.modem_data.unread_count
 
 
 class UsageSensor(LTESensor):
@@ -82,4 +92,7 @@ class UsageSensor(LTESensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return round(self.lte_data.usage / 1024**2, 1)
+        if self.modem_data.usage is None:
+            return None
+
+        return round(self.modem_data.usage / 1024**2, 1)

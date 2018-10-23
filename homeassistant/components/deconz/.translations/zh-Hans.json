@@ -19,6 +19,13 @@
             "link": {
                 "description": "\u89e3\u9501\u60a8\u7684 deCONZ \u7f51\u5173\u4ee5\u6ce8\u518c\u5230 Home Assistant\u3002 \n\n 1. \u524d\u5f80 deCONZ \u7cfb\u7edf\u8bbe\u7f6e\n 2. \u70b9\u51fb\u201c\u89e3\u9501\u7f51\u5173\u201d\u6309\u94ae",
                 "title": "\u8fde\u63a5 deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "\u5141\u8bb8\u5bfc\u5165\u865a\u62df\u4f20\u611f\u5668",
+                    "allow_deconz_groups": "\u5141\u8bb8\u5bfc\u5165 deCONZ \u7fa4\u7ec4"
+                },
+                "title": "deCONZ \u7684\u9644\u52a0\u914d\u7f6e\u9879"
             }
         },
         "title": "deCONZ"

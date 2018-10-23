@@ -8,10 +8,9 @@ from homeassistant.components.lock import LockDevice, SUPPORT_OPEN
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo lock platform."""
-    add_devices([
+    add_entities([
         DemoLock('Front Door', STATE_LOCKED),
         DemoLock('Kitchen Door', STATE_UNLOCKED),
         DemoLock('Openable Lock', STATE_LOCKED, True)

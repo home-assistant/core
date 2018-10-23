@@ -53,7 +53,7 @@ def setup(hass, config):
     return len(feeds) > 0
 
 
-class FeedManager(object):
+class FeedManager:
     """Abstraction over Feedparser module."""
 
     def __init__(self, url, scan_interval, max_entries, hass, storage):
@@ -143,7 +143,7 @@ class FeedManager(object):
         else:
             self._has_published_parsed = False
             _LOGGER.debug("No published_parsed info available for entry %s",
-                          entry.title)
+                          entry)
         entry.update({'feed_url': self._url})
         self._hass.bus.fire(self._event_type, entry)
 
@@ -164,13 +164,13 @@ class FeedManager(object):
                 self._update_and_fire_entry(entry)
                 new_entries = True
             else:
-                _LOGGER.debug("Entry %s already processed", entry.title)
+                _LOGGER.debug("Entry %s already processed", entry)
         if not new_entries:
             self._log_no_entries()
         self._firstrun = False
 
 
-class StoredData(object):
+class StoredData:
     """Abstraction over pickle data storage."""
 
     def __init__(self, data_file):
@@ -189,7 +189,7 @@ class StoredData(object):
                 with self._lock, open(self._data_file, 'rb') as myfile:
                     self._data = pickle.load(myfile) or {}
                     self._cache_outdated = False
-            except:  # noqa: E722  # pylint: disable=bare-except
+            except:  # noqa: E722 pylint: disable=bare-except
                 _LOGGER.error("Error loading data from pickled file %s",
                               self._data_file)
 
@@ -207,7 +207,7 @@ class StoredData(object):
                           feed_id, self._data_file)
             try:
                 pickle.dump(self._data, myfile)
-            except:  # noqa: E722  # pylint: disable=bare-except
+            except:  # noqa: E722 pylint: disable=bare-except
                 _LOGGER.error(
                     "Error saving pickled data to %s", self._data_file)
         self._cache_outdated = True

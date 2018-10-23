@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the devices associated with the account."""
     from foobot_async import FoobotClient
@@ -82,7 +82,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     except FoobotClient.ClientError:
         _LOGGER.error('Failed to fetch data from foobot servers.')
         return
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class FoobotSensor(Entity):

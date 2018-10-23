@@ -5,8 +5,10 @@ from pyhap.const import CATEGORY_ALARM_SYSTEM
 
 from homeassistant.components.alarm_control_panel import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED, STATE_ALARM_DISARMED)
+    ATTR_ENTITY_ID, ATTR_CODE, SERVICE_ALARM_ARM_AWAY, SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_DISARM, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED,
+    STATE_ALARM_DISARMED)
 
 from . import TYPES
 from .accessories import HomeAccessory
@@ -22,10 +24,11 @@ HASS_TO_HOMEKIT = {STATE_ALARM_ARMED_HOME: 0,
                    STATE_ALARM_DISARMED: 3,
                    STATE_ALARM_TRIGGERED: 4}
 HOMEKIT_TO_HASS = {c: s for s, c in HASS_TO_HOMEKIT.items()}
-STATE_TO_SERVICE = {STATE_ALARM_ARMED_HOME: 'alarm_arm_home',
-                    STATE_ALARM_ARMED_AWAY: 'alarm_arm_away',
-                    STATE_ALARM_ARMED_NIGHT: 'alarm_arm_night',
-                    STATE_ALARM_DISARMED: 'alarm_disarm'}
+STATE_TO_SERVICE = {
+    STATE_ALARM_ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
+    STATE_ALARM_ARMED_HOME: SERVICE_ALARM_ARM_HOME,
+    STATE_ALARM_ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
+    STATE_ALARM_DISARMED: SERVICE_ALARM_DISARM}
 
 
 @TYPES.register('SecuritySystem')
@@ -36,7 +39,7 @@ class SecuritySystem(HomeAccessory):
         """Initialize a SecuritySystem accessory object."""
         super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
         self._alarm_code = self.config.get(ATTR_CODE)
-        self.flag_target_state = False
+        self._flag_state = False
 
         serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
         self.char_current_state = serv_alarm.configure_char(
@@ -49,14 +52,14 @@ class SecuritySystem(HomeAccessory):
         """Move security state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set security state to %d',
                       self.entity_id, value)
-        self.flag_target_state = True
+        self._flag_state = True
         hass_value = HOMEKIT_TO_HASS[value]
         service = STATE_TO_SERVICE[hass_value]
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._alarm_code:
             params[ATTR_CODE] = self._alarm_code
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update security state after state changed."""
@@ -68,7 +71,7 @@ class SecuritySystem(HomeAccessory):
                           self.entity_id, hass_state, current_security_state)
 
             # SecuritySystemTargetState does not support triggered
-            if not self.flag_target_state and \
+            if not self._flag_state and \
                     hass_state != STATE_ALARM_TRIGGERED:
                 self.char_target_state.set_value(current_security_state)
-            self.flag_target_state = False
+            self._flag_state = False

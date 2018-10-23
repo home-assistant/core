@@ -26,12 +26,11 @@ SPEED_MAPPING = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ComfoConnect fan platform."""
     ccb = hass.data[DOMAIN]
 
-    add_devices([ComfoConnectFan(hass, name=ccb.name, ccb=ccb)], True)
-    return
+    add_entities([ComfoConnectFan(hass, name=ccb.name, ccb=ccb)], True)
 
 
 class ComfoConnectFan(FanEntity):

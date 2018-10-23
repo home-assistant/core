@@ -58,8 +58,8 @@ FIELD_TO_FLAG = {
 }
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up Sensibo devices."""
     import pysensibo
 
@@ -69,19 +69,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     devices = []
     try:
         for dev in (
-                yield from client.async_get_devices(_INITIAL_FETCH_FIELDS)):
+                await client.async_get_devices(_INITIAL_FETCH_FIELDS)):
             if config[CONF_ID] == ALL or dev['id'] in config[CONF_ID]:
-                devices.append(SensiboClimate(client, dev))
+                devices.append(SensiboClimate(
+                    client, dev, hass.config.units.temperature_unit))
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError):
         _LOGGER.exception('Failed to connect to Sensibo servers.')
         raise PlatformNotReady
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
-        @asyncio.coroutine
-        def async_assume_state(service):
+        async def async_assume_state(service):
             """Set state according to external service call.."""
             entity_ids = service.data.get(ATTR_ENTITY_ID)
             if entity_ids:
@@ -92,12 +92,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
             update_tasks = []
             for climate in target_climate:
-                yield from climate.async_assume_state(
+                await climate.async_assume_state(
                     service.data.get(ATTR_STATE))
                 update_tasks.append(climate.async_update_ha_state(True))
 
             if update_tasks:
-                yield from asyncio.wait(update_tasks, loop=hass.loop)
+                await asyncio.wait(update_tasks, loop=hass.loop)
         hass.services.async_register(
             DOMAIN, SERVICE_ASSUME_STATE, async_assume_state,
             schema=ASSUME_STATE_SCHEMA)
@@ -106,7 +106,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SensiboClimate(ClimateDevice):
     """Representation of a Sensibo device."""
 
-    def __init__(self, client, data):
+    def __init__(self, client, data, units):
         """Build SensiboClimate.
 
         client: aiohttp session.
@@ -115,6 +115,7 @@ class SensiboClimate(ClimateDevice):
         self._client = client
         self._id = data['id']
         self._external_state = None
+        self._units = units
         self._do_update(data)
 
     @property
@@ -139,7 +140,7 @@ class SensiboClimate(ClimateDevice):
             self._temperatures_list = self._current_capabilities[
                 'temperatures'].get(temperature_unit_key, {}).get('values', [])
         else:
-            self._temperature_unit = self.unit_of_measurement
+            self._temperature_unit = self._units
             self._temperatures_list = []
         self._supported_features = 0
         for key in self._ac_states:
@@ -175,7 +176,7 @@ class SensiboClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        if self.temperature_unit == self.unit_of_measurement:
+        if self.temperature_unit == self.hass.config.units.temperature_unit:
             # We are working in same units as the a/c unit. Use whole degrees
             # like the API supports.
             return 1
@@ -259,8 +260,7 @@ class SensiboClimate(ClimateDevice):
         """Return unique ID based on Sensibo ID."""
         return self._id
 
-    @asyncio.coroutine
-    def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
@@ -280,52 +280,46 @@ class SensiboClimate(ClimateDevice):
                 return
 
         with async_timeout.timeout(TIMEOUT):
-            yield from self._client.async_set_ac_state_property(
+            await self._client.async_set_ac_state_property(
                 self._id, 'targetTemperature', temperature, self._ac_states)
 
-    @asyncio.coroutine
-    def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         with async_timeout.timeout(TIMEOUT):
-            yield from self._client.async_set_ac_state_property(
+            await self._client.async_set_ac_state_property(
                 self._id, 'fanLevel', fan_mode, self._ac_states)
 
-    @asyncio.coroutine
-    def async_set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         with async_timeout.timeout(TIMEOUT):
-            yield from self._client.async_set_ac_state_property(
+            await self._client.async_set_ac_state_property(
                 self._id, 'mode', operation_mode, self._ac_states)
 
-    @asyncio.coroutine
-    def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
         with async_timeout.timeout(TIMEOUT):
-            yield from self._client.async_set_ac_state_property(
+            await self._client.async_set_ac_state_property(
                 self._id, 'swing', swing_mode, self._ac_states)
 
-    @asyncio.coroutine
-    def async_turn_on(self):
+    async def async_turn_on(self):
         """Turn Sensibo unit on."""
         with async_timeout.timeout(TIMEOUT):
-            yield from self._client.async_set_ac_state_property(
+            await self._client.async_set_ac_state_property(
                 self._id, 'on', True, self._ac_states)
 
-    @asyncio.coroutine
-    def async_turn_off(self):
+    async def async_turn_off(self):
         """Turn Sensibo unit on."""
         with async_timeout.timeout(TIMEOUT):
-            yield from self._client.async_set_ac_state_property(
+            await self._client.async_set_ac_state_property(
                 self._id, 'on', False, self._ac_states)
 
-    @asyncio.coroutine
-    def async_assume_state(self, state):
+    async def async_assume_state(self, state):
         """Set external state."""
         change_needed = (state != STATE_OFF and not self.is_on) \
             or (state == STATE_OFF and self.is_on)
         if change_needed:
             with async_timeout.timeout(TIMEOUT):
-                yield from self._client.async_set_ac_state_property(
+                await self._client.async_set_ac_state_property(
                     self._id,
                     'on',
                     state != STATE_OFF,  # value
@@ -338,12 +332,11 @@ class SensiboClimate(ClimateDevice):
         else:
             self._external_state = state
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve latest state."""
         try:
             with async_timeout.timeout(TIMEOUT):
-                data = yield from self._client.async_get_device(
+                data = await self._client.async_get_device(
                     self._id, _FETCH_FIELDS)
                 self._do_update(data)
         except aiohttp.client_exceptions.ClientError:

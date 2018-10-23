@@ -42,6 +42,8 @@ class TestRing(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup(self, mock):
         """Test the setup."""
+        mock.post('https://oauth.ring.com/oauth/token',
+                  text=load_fixture('ring_oauth.json'))
         mock.post('https://api.ring.com/clients_api/session',
                   text=load_fixture('ring_session.json'))
         response = ring.setup(self.hass, self.config)

@@ -29,8 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return Edimax Smart Plugs."""
     from pyedimax.smartplug import SmartPlug
 
@@ -38,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     auth = (config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
     name = config.get(CONF_NAME)
 
-    add_devices([SmartPlugSwitch(SmartPlug(host, auth), name)])
+    add_entities([SmartPlugSwitch(SmartPlug(host, auth), name)])
 
 
 class SmartPlugSwitch(SwitchDevice):

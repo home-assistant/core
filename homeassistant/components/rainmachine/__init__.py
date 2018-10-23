@@ -11,8 +11,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_IP_ADDRESS, CONF_PASSWORD,
-    CONF_PORT, CONF_SENSORS, CONF_SSL, CONF_MONITORED_CONDITIONS,
-    CONF_SWITCHES)
+    CONF_PORT, CONF_SCAN_INTERVAL, CONF_SENSORS, CONF_SSL,
+    CONF_MONITORED_CONDITIONS, CONF_SWITCHES)
 from homeassistant.helpers import (
     aiohttp_client, config_validation as cv, discovery)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -107,6 +107,8 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+                cv.time_period,
             vol.Optional(CONF_BINARY_SENSORS, default={}):
                 BINARY_SENSOR_SCHEMA,
             vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
@@ -149,7 +151,7 @@ async def async_setup(hass, config):
             ('sensor', conf[CONF_SENSORS]),
             ('switch', conf[CONF_SWITCHES]),
     ]:
-        hass.async_add_job(
+        hass.async_create_task(
             discovery.async_load_platform(hass, component, DOMAIN, schema,
                                           config))
 
@@ -159,7 +161,7 @@ async def async_setup(hass, config):
         await rainmachine.async_update()
         async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
 
-    async_track_time_interval(hass, refresh_sensors, DEFAULT_SCAN_INTERVAL)
+    async_track_time_interval(hass, refresh_sensors, conf[CONF_SCAN_INTERVAL])
 
     async def start_program(service):
         """Start a particular program."""
@@ -199,7 +201,7 @@ async def async_setup(hass, config):
     return True
 
 
-class RainMachine(object):
+class RainMachine:
     """Define a generic RainMachine object."""
 
     def __init__(self, client):

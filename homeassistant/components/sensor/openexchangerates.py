@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Open Exchange Rates sensor."""
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     rest.update()
-    add_devices([OpenexchangeratesSensor(rest, name, quote)], True)
+    add_entities([OpenexchangeratesSensor(rest, name, quote)], True)
 
 
 class OpenexchangeratesSensor(Entity):
@@ -93,7 +93,7 @@ class OpenexchangeratesSensor(Entity):
         self._state = round(value[str(self._quote)], 4)
 
 
-class OpenexchangeratesData(object):
+class OpenexchangeratesData:
     """Get data from Openexchangerates.org."""
 
     def __init__(self, resource, parameters, quote):

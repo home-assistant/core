@@ -8,16 +8,14 @@ CONF_ENTITY_CONFIG = 'entity_config'
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
 CONF_EXPOSED_DOMAINS = 'exposed_domains'
 CONF_PROJECT_ID = 'project_id'
-CONF_ACCESS_TOKEN = 'access_token'
-CONF_CLIENT_ID = 'client_id'
 CONF_ALIASES = 'aliases'
-CONF_AGENT_USER_ID = 'agent_user_id'
 CONF_API_KEY = 'api_key'
 CONF_ROOM_HINT = 'room'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
-    'switch', 'light', 'group', 'media_player', 'fan', 'cover', 'climate'
+    'climate', 'cover', 'fan', 'group', 'input_boolean', 'light',
+    'media_player', 'scene', 'script', 'switch'
 ]
 CLIMATE_MODE_HEATCOOL = 'heatcool'
 CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', CLIMATE_MODE_HEATCOOL}
