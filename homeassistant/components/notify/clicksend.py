@@ -69,7 +69,7 @@ class ClicksendNotificationService(BaseNotificationService):
         for recipient in self.recipients:
             data["messages"].append({
                 'source': 'hass.notify',
-                'from': self.sender,
+                'from': 'hass',
                 'to': recipient,
                 'body': message,
             })
