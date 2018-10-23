@@ -31,13 +31,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OhmConnect sensor."""
     name = config.get(CONF_NAME)
     ohmid = config.get(CONF_ID)
 
-    add_devices([OhmconnectSensor(name, ohmid)], True)
+    add_entities([OhmconnectSensor(name, ohmid)], True)
 
 
 class OhmconnectSensor(Entity):

@@ -50,7 +50,7 @@ class TestMQTTRoomSensor(unittest.TestCase):
     """Test the room presence sensor."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {

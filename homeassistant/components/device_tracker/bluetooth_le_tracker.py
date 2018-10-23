@@ -6,35 +6,25 @@ https://home-assistant.io/components/device_tracker.bluetooth_le_tracker/
 """
 import logging
 
-import voluptuous as vol
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
     YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
-    PLATFORM_SCHEMA, load_config, SOURCE_TYPE_BLUETOOTH_LE
+    load_config, SOURCE_TYPE_BLUETOOTH_LE
 )
 import homeassistant.util.dt as dt_util
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['gattlib==0.20150805']
+REQUIREMENTS = ['pygatt==3.2.0']
 
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5
-CONF_SCAN_DURATION = 'scan_duration'
-CONF_BLUETOOTH_DEVICE = 'device_id'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_int,
-    vol.Optional(CONF_BLUETOOTH_DEVICE, default='hci0'): cv.string
-})
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Bluetooth LE Scanner."""
     # pylint: disable=import-error
-    from gattlib import DiscoveryService
-
+    import pygatt
     new_devices = {}
 
     def see_device(address, name, new_device=False):
@@ -61,17 +51,17 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Discover Bluetooth LE devices."""
         _LOGGER.debug("Discovering Bluetooth LE devices")
         try:
-            service = DiscoveryService(ble_dev_id)
-            devices = service.discover(duration)
+            adapter = pygatt.GATTToolBackend()
+            devs = adapter.scan()
+
+            devices = {x['address']: x['name'] for x in devs}
             _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
         except RuntimeError as error:
             _LOGGER.error("Error during Bluetooth LE scan: %s", error)
-            devices = []
+            return {}
         return devices
 
     yaml_path = hass.config.path(YAML_DEVICES)
-    duration = config.get(CONF_SCAN_DURATION)
-    ble_dev_id = config.get(CONF_BLUETOOTH_DEVICE)
     devs_to_track = []
     devs_donot_track = []
 
@@ -102,11 +92,11 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Lookup Bluetooth LE devices and update status."""
         devs = discover_ble_devices()
         for mac in devs_to_track:
-            _LOGGER.debug("Checking %s", mac)
-            result = mac in devs
-            if not result:
-                # Could not lookup device name
+            if mac not in devs:
                 continue
+
+            if devs[mac] is None:
+                devs[mac] = mac
             see_device(mac, devs[mac])
 
         if track_new:
@@ -119,5 +109,4 @@ def setup_scanner(hass, config, see, discovery_info=None):
         track_point_in_utc_time(hass, update_ble, dt_util.utcnow() + interval)
 
     update_ble(dt_util.utcnow())
-
     return True

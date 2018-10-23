@@ -56,7 +56,7 @@ def retry(method):
     return wrapper_retry
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an Decora switch."""
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         light = DecoraLight(device)
         lights.append(light)
 
-    add_devices(lights)
+    add_entities(lights)
 
 
 class DecoraLight(Light):
@@ -75,7 +75,7 @@ class DecoraLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        # pylint: disable=import-error, no-member
+        # pylint: disable=no-member
         import decora
 
         self._name = device['name']

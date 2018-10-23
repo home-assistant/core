@@ -15,15 +15,14 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+                   add_entities: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 light platform."""
     devices = []
     for node in hass.data[ISY994_NODES][DOMAIN]:
         devices.append(ISYLightDevice(node))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class ISYLightDevice(ISYDevice, Light):
@@ -32,12 +31,14 @@ class ISYLightDevice(ISYDevice, Light):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 light is on."""
-        return self.value > 0
+        if self.is_unknown():
+            return False
+        return self.value != 0
 
     @property
     def brightness(self) -> float:
         """Get the brightness of the ISY994 light."""
-        return self.value
+        return None if self.is_unknown() else self.value
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 light device."""

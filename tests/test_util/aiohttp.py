@@ -7,9 +7,23 @@ from unittest import mock
 from urllib.parse import parse_qs
 
 from aiohttp import ClientSession
+from aiohttp.streams import StreamReader
 from yarl import URL
 
 from aiohttp.client_exceptions import ClientResponseError
+
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+
+retype = type(re.compile(''))
+
+
+def mock_stream(data):
+    """Mock a stream with data."""
+    protocol = mock.Mock(_reading_paused=False)
+    stream = StreamReader(protocol)
+    stream.feed_data(data)
+    stream.feed_eof()
+    return stream
 
 
 class AiohttpClientMocker:
@@ -40,10 +54,10 @@ class AiohttpClientMocker:
         if content is None:
             content = b''
 
-        if not isinstance(url, re._pattern_type):
+        if not isinstance(url, retype):
             url = URL(url)
         if params:
-                url = url.with_query(params)
+            url = url.with_query(params)
 
         self._mocks.append(AiohttpClientMockResponse(
             method, url, status, content, cookies, exc, headers))
@@ -128,25 +142,13 @@ class AiohttpClientMockResponse:
                 cookie.value = data
                 self._cookies[name] = cookie
 
-        if isinstance(response, list):
-            self.content = mock.MagicMock()
-
-            @asyncio.coroutine
-            def read(*argc, **kwargs):
-                """Read content stream mock."""
-                if self.response:
-                    return self.response.pop()
-                return None
-
-            self.content.read = read
-
     def match_request(self, method, url, params=None):
         """Test if response answers request."""
         if method.lower() != self.method.lower():
             return False
 
         # regular expression matching
-        if isinstance(self._url, re._pattern_type):
+        if isinstance(self._url, retype):
             return self._url.search(str(url)) is not None
 
         if (self._url.scheme != url.scheme or self._url.host != url.host or
@@ -174,6 +176,11 @@ class AiohttpClientMockResponse:
     def cookies(self):
         """Return dict of cookies."""
         return self._cookies
+
+    @property
+    def content(self):
+        """Return content."""
+        return mock_stream(self.response)
 
     @asyncio.coroutine
     def read(self):
@@ -211,7 +218,18 @@ def mock_aiohttp_client():
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 
+    def create_session(hass, *args):
+        session = mocker.create_session(hass.loop)
+
+        async def close_session(event):
+            """Close session."""
+            await session.close()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, close_session)
+
+        return session
+
     with mock.patch(
         'homeassistant.helpers.aiohttp_client.async_create_clientsession',
-            side_effect=lambda hass, *args: mocker.create_session(hass.loop)):
+            side_effect=create_session):
         yield mocker

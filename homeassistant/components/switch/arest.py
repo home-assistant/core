@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST switches."""
     resource = config.get(CONF_RESOURCE)
 
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             resource, config.get(CONF_NAME, response.json()[CONF_NAME]),
             func.get(CONF_NAME), funcname))
 
-    add_devices(dev)
+    add_entities(dev)
 
 
 class ArestSwitchBase(SwitchDevice):

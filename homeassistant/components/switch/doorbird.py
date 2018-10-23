@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 IR_RELAY = '__ir_light__'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DoorBird switch platform."""
     switches = []
 
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             switch = DoorBirdSwitch(doorstation, relay)
             switches.append(switch)
 
-    add_devices(switches)
+    add_entities(switches)
 
 
 class DoorBirdSwitch(SwitchDevice):

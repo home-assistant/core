@@ -6,6 +6,7 @@ https://home-assistant.io/components/wemo/
 """
 import logging
 
+import requests
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_WEMO
@@ -14,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.25']
+REQUIREMENTS = ['pywemo==0.4.28']
 
 DOMAIN = 'wemo'
 
@@ -26,6 +27,7 @@ WEMO_MODEL_DISPATCH = {
     'Insight': 'switch',
     'LightSwitch': 'switch',
     'Maker':   'switch',
+    'Motion': 'binary_sensor',
     'Sensor':  'binary_sensor',
     'Socket':  'switch'
 }
@@ -35,16 +37,36 @@ KNOWN_DEVICES = []
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def coerce_host_port(value):
+    """Validate that provided value is either just host or host:port.
+
+    Returns (host, None) or (host, port) respectively.
+    """
+    host, _, port = value.partition(':')
+
+    if not host:
+        raise vol.Invalid('host cannot be empty')
+
+    if port:
+        port = cv.port(port)
+    else:
+        port = None
+
+    return host, port
+
+
 CONF_STATIC = 'static'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_STATIC, default=[]): vol.Schema([cv.string])
+        vol.Optional(CONF_STATIC, default=[]): vol.Schema([
+            vol.All(cv.string, coerce_host_port)
+        ])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=unused-argument, too-many-function-args
 def setup(hass, config):
     """Set up for WeMo devices."""
     import pywemo
@@ -79,23 +101,47 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
-    _LOGGER.info("Scanning for WeMo devices.")
-    devices = [(device.host, device) for device in pywemo.discover_devices()]
+    def setup_url_for_device(device):
+        """Determine setup.xml url for given device."""
+        return 'http://{}:{}/setup.xml'.format(device.host, device.port)
 
-    # Add static devices from the config file.
-    devices.extend((address, None)
-                   for address in config.get(DOMAIN, {}).get(CONF_STATIC, []))
-
-    for address, device in devices:
-        port = pywemo.ouimeaux_device.probe_wemo(address)
+    def setup_url_for_address(host, port):
+        """Determine setup.xml url for given host and port pair."""
         if not port:
-            _LOGGER.warning('Unable to probe wemo at %s', address)
-            continue
-        _LOGGER.info('Adding wemo at %s:%i', address, port)
+            port = pywemo.ouimeaux_device.probe_wemo(host)
 
-        url = 'http://%s:%i/setup.xml' % (address, port)
-        if device is None:
+        if not port:
+            return None
+
+        return 'http://{}:{}/setup.xml'.format(host, port)
+
+    devices = []
+
+    for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
+        url = setup_url_for_address(host, port)
+
+        if not url:
+            _LOGGER.error(
+                'Unable to get description url for %s',
+                '{}:{}'.format(host, port) if port else host)
+            continue
+
+        try:
             device = pywemo.discovery.device_from_description(url, None)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as err:
+            _LOGGER.error('Unable to access %s (%s)', url, err)
+            continue
+
+        devices.append((url, device))
+
+    _LOGGER.info("Scanning for WeMo devices.")
+    devices.extend(
+        (setup_url_for_device(device), device)
+        for device in pywemo.discover_devices())
+
+    for url, device in devices:
+        _LOGGER.info('Adding wemo at %s:%i', device.host, device.port)
 
         discovery_info = {
             'model_name': device.model_name,

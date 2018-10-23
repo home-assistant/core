@@ -31,7 +31,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=broad-except
 def setup(hass, config):
     """Set up the LaMetricManager."""
     _LOGGER.debug("Setting up LaMetric platform")

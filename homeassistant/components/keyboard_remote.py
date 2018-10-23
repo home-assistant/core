@@ -4,7 +4,6 @@ Receive signals from a keyboard and use it as a remote control.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/keyboard_remote/
 """
-# pylint: disable=import-error
 import threading
 import logging
 import os
@@ -90,6 +89,7 @@ class KeyboardRemoteThread(threading.Thread):
             id_folder = '/dev/input/by-id/'
 
             if os.path.isdir(id_folder):
+                # pylint: disable=import-error
                 from evdev import InputDevice, list_devices
                 device_names = [InputDevice(file_name).name
                                 for file_name in list_devices()]
@@ -104,6 +104,7 @@ class KeyboardRemoteThread(threading.Thread):
 
     def _get_keyboard_device(self):
         """Get the keyboard device."""
+        # pylint: disable=import-error
         from evdev import InputDevice, list_devices
         if self.device_name:
             devices = [InputDevice(file_name) for file_name in list_devices()]
@@ -121,6 +122,7 @@ class KeyboardRemoteThread(threading.Thread):
 
     def run(self):
         """Run the loop of the KeyboardRemote."""
+        # pylint: disable=import-error
         from evdev import categorize, ecodes
 
         if self.dev is not None:
@@ -151,7 +153,6 @@ class KeyboardRemoteThread(threading.Thread):
             if not event:
                 continue
 
-            # pylint: disable=no-member
             if event.type is ecodes.EV_KEY and event.value is self.key_value:
                 _LOGGER.debug(categorize(event))
                 self.hass.bus.fire(
@@ -164,7 +165,7 @@ class KeyboardRemoteThread(threading.Thread):
                 )
 
 
-class KeyboardRemote(object):
+class KeyboardRemote:
     """Sets up one thread per device."""
 
     def __init__(self, hass, config):

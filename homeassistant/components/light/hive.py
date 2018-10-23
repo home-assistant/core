@@ -15,13 +15,13 @@ import homeassistant.util.color as color_util
 DEPENDENCIES = ['hive']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive light devices."""
     if discovery_info is None:
         return
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveDeviceLight(session, discovery_info)])
+    add_entities([HiveDeviceLight(session, discovery_info)])
 
 
 class HiveDeviceLight(Light):

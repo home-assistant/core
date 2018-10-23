@@ -19,6 +19,13 @@
             "link": {
                 "description": "Entsperrt \u00e4r deCONZ gateway fir se mat Home Assistant ze registr\u00e9ieren.\n\n1. Gidd op\u00a0deCONZ System Astellungen\n2. Dr\u00e9ckt \"Unlock\" Gateway Kn\u00e4ppchen",
                 "title": "Link mat deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Erlaabt den Import vun virtuellen Sensoren",
+                    "allow_deconz_groups": "Erlaabt den Import vun deCONZ Gruppen"
+                },
+                "title": "Extra Konfiguratiouns Optiounen fir deCONZ"
             }
         },
         "title": "deCONZ"

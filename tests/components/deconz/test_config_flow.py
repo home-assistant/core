@@ -23,7 +23,7 @@ async def test_flow_works(hass, aioclient_mock):
     await flow.async_step_init()
     await flow.async_step_link(user_input={})
     result = await flow.async_step_options(
-        user_input={'allow_clip_sensor': True})
+        user_input={'allow_clip_sensor': True, 'allow_deconz_groups': True})
 
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
@@ -32,7 +32,8 @@ async def test_flow_works(hass, aioclient_mock):
         'host': '1.2.3.4',
         'port': 80,
         'api_key': '1234567890ABCDEF',
-        'allow_clip_sensor': True
+        'allow_clip_sensor': True,
+        'allow_deconz_groups': True
     }
 
 
@@ -149,6 +150,7 @@ async def test_bridge_discovery_config_file(hass):
             'port': 80,
             'serial': 'id'
         })
+
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
     assert result['data'] == {
@@ -156,7 +158,8 @@ async def test_bridge_discovery_config_file(hass):
         'host': '1.2.3.4',
         'port': 80,
         'api_key': '1234567890ABCDEF',
-        'allow_clip_sensor': True
+        'allow_clip_sensor': True,
+        'allow_deconz_groups': True
     }
 
 
@@ -217,6 +220,7 @@ async def test_import_with_api_key(hass):
         'port': 80,
         'api_key': '1234567890ABCDEF'
     })
+
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
     assert result['data'] == {
@@ -224,7 +228,8 @@ async def test_import_with_api_key(hass):
         'host': '1.2.3.4',
         'port': 80,
         'api_key': '1234567890ABCDEF',
-        'allow_clip_sensor': True
+        'allow_clip_sensor': True,
+        'allow_deconz_groups': True
     }
 
 
@@ -238,7 +243,7 @@ async def test_options(hass, aioclient_mock):
                           'port': 80,
                           'api_key': '1234567890ABCDEF'}
     result = await flow.async_step_options(
-        user_input={'allow_clip_sensor': False})
+        user_input={'allow_clip_sensor': False, 'allow_deconz_groups': False})
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
     assert result['data'] == {
@@ -246,5 +251,6 @@ async def test_options(hass, aioclient_mock):
         'host': '1.2.3.4',
         'port': 80,
         'api_key': '1234567890ABCDEF',
-        'allow_clip_sensor': False
+        'allow_clip_sensor': False,
+        'allow_deconz_groups': False
     }

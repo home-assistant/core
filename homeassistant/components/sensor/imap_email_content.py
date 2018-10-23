@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Email sensor platform."""
     reader = EmailReader(
         config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
@@ -53,12 +53,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_SENDERS), value_template)
 
     if sensor.connected:
-        add_devices([sensor], True)
+        add_entities([sensor], True)
     else:
         return False
 
 
-class EmailReader(object):
+class EmailReader:
     """A class to read emails from an IMAP server."""
 
     def __init__(self, user, password, server, port):

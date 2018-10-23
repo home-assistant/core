@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce pont est d\u00e9j\u00e0 configur\u00e9",
+            "no_bridges": "Aucun pont deCONZ n'a \u00e9t\u00e9 d\u00e9couvert",
+            "one_instance_only": "Le composant prend uniquement en charge une instance deCONZ"
+        },
+        "error": {
+            "no_key": "Impossible d'obtenir une cl\u00e9 d'API"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port (valeur par d\u00e9faut : 80)"
+                },
+                "title": "Initialiser la passerelle deCONZ"
+            },
+            "link": {
+                "description": "D\u00e9verrouillez votre passerelle deCONZ pour vous enregistrer aupr\u00e8s de Home Assistant. \n\n 1. Acc\u00e9dez aux param\u00e8tres du syst\u00e8me deCONZ \n 2. Cliquez sur \"D\u00e9verrouiller la passerelle\"",
+                "title": "Lien vers deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Autoriser l'importation de capteurs virtuels",
+                    "allow_deconz_groups": "Autoriser l'importation des groupes deCONZ"
+                },
+                "title": "Options de configuration suppl\u00e9mentaires pour deCONZ"
+            }
+        },
+        "title": "Passerelle deCONZ Zigbee"
+    }
+}

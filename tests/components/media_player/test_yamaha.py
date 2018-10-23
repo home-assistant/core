@@ -15,7 +15,7 @@ def _create_zone_mock(name, url):
     return zone
 
 
-class FakeYamahaDevice(object):
+class FakeYamahaDevice:
     """A fake Yamaha device."""
 
     def __init__(self, ctrl_url, name, zones=None):
@@ -33,7 +33,7 @@ class TestYamahaMediaPlayer(unittest.TestCase):
     """Test the Yamaha media player."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.main_zone = _create_zone_mock('Main zone', 'http://main')
         self.device = FakeYamahaDevice(

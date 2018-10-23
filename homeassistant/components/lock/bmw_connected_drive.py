@@ -4,7 +4,6 @@ Support for BMW cars with BMW ConnectedDrive.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/lock.bmw_connected_drive/
 """
-import asyncio
 import logging
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
@@ -16,17 +15,18 @@ DEPENDENCIES = ['bmw_connected_drive']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the BMW Connected Drive lock."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the BMW Connected Drive lock."""
     accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
                   ', '.join([a.name for a in accounts]))
     devices = []
     for account in accounts:
-        for vehicle in account.account.vehicles:
-            device = BMWLock(account, vehicle, 'lock', 'BMW lock')
-            devices.append(device)
-    add_devices(devices, True)
+        if not account.read_only:
+            for vehicle in account.account.vehicles:
+                device = BMWLock(account, vehicle, 'lock', 'BMW lock')
+                devices.append(device)
+    add_entities(devices, True)
 
 
 class BMWLock(LockDevice):
@@ -110,8 +110,7 @@ class BMWLock(LockDevice):
         """Schedule a state update."""
         self.schedule_update_ha_state(True)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Add callback after being added to hass.
 
         Show latest data after startup.

@@ -12,7 +12,7 @@ def prometheus_client(loop, hass, aiohttp_client):
     assert loop.run_until_complete(async_setup_component(
         hass,
         prometheus.DOMAIN,
-        {},
+        {prometheus.DOMAIN: {}},
     ))
     return loop.run_until_complete(aiohttp_client(hass.http.app))
 

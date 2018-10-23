@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.components.remote as remote
+from homeassistant.components import remote
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME, CONF_NAME, CONF_MAC, CONF_HOST, CONF_PORT,
     CONF_DEVICES)
@@ -44,8 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ITach connection and devices."""
     import pyitachip2ir
     itachip2ir = pyitachip2ir.ITachIP2IR(
@@ -72,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             cmddatas += "{}\n{}\n".format(cmdname, cmddata)
         itachip2ir.addDevice(name, modaddr, connaddr, cmddatas)
         devices.append(ITachIP2IRRemote(itachip2ir, name))
-    add_devices(devices, True)
+    add_entities(devices, True)
     return True
 
 

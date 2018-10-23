@@ -122,7 +122,7 @@ def geofency_client(loop, hass, aiohttp_client):
 
 @pytest.fixture(autouse=True)
 def setup_zones(loop, hass):
-    """Setup Zone config in HA."""
+    """Set up Zone config in HA."""
     assert loop.run_until_complete(async_setup_component(
         hass, zone.DOMAIN, {
             'zone': {

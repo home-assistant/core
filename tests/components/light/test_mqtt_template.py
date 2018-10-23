@@ -34,16 +34,18 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
 import homeassistant.components.light as light
 import homeassistant.core as ha
+
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message,
     assert_setup_component, mock_coro)
+from tests.components.light import common
 
 
 class TestLightMQTTTemplate(unittest.TestCase):
     """Test the MQTT Template light."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
@@ -51,8 +53,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_fails(self): \
-            # pylint: disable=invalid-name
+    def test_setup_fails(self):
         """Test that setup fails with missing required configuration items."""
         with assert_setup_component(0, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -63,8 +64,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
             })
         self.assertIsNone(self.hass.states.get('light.test'))
 
-    def test_state_change_via_topic(self): \
-            # pylint: disable=invalid-name
+    def test_state_change_via_topic(self):
         """Test state change via topic."""
         with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -103,8 +103,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertIsNone(state.attributes.get('color_temp'))
         self.assertIsNone(state.attributes.get('white_value'))
 
-    def test_state_brightness_color_effect_temp_white_change_via_topic(self): \
-            # pylint: disable=invalid-name
+    def test_state_brightness_color_effect_temp_white_change_via_topic(self):
         """Test state, bri, color, effect, color temp, white val change."""
         with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -206,8 +205,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.assertEqual('rainbow', light_state.attributes.get('effect'))
 
-    def test_optimistic(self): \
-            # pylint: disable=invalid-name
+    def test_optimistic(self):
         """Test optimistic mode."""
         fake_state = ha.State('light.test', 'on', {'brightness': 95,
                                                    'hs_color': [100, 100],
@@ -232,6 +230,8 @@ class TestLightMQTTTemplate(unittest.TestCase):
                                                '{{ green|d }}-'
                                                '{{ blue|d }}',
                         'command_off_template': 'off',
+                        'effect_list': ['colorloop', 'random'],
+                        'effect_command_topic': 'test_light_rgb/effect/set',
                         'qos': 2
                     }
                 })
@@ -246,7 +246,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         # turn on the light
-        light.turn_on(self.hass, 'light.test')
+        common.turn_on(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -256,7 +256,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
 
         # turn the light off
-        light.turn_off(self.hass, 'light.test')
+        common.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -266,8 +266,8 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         # turn on the light with brightness, color
-        light.turn_on(self.hass, 'light.test', brightness=50,
-                      rgb_color=[75, 75, 75])
+        common.turn_on(self.hass, 'light.test', brightness=50,
+                       rgb_color=[75, 75, 75])
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -275,7 +275,8 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # turn on the light with color temp and white val
-        light.turn_on(self.hass, 'light.test', color_temp=200, white_value=139)
+        common.turn_on(self.hass, 'light.test',
+                       color_temp=200, white_value=139)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -289,8 +290,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(200, state.attributes['color_temp'])
         self.assertEqual(139, state.attributes['white_value'])
 
-    def test_flash(self): \
-            # pylint: disable=invalid-name
+    def test_flash(self):
         """Test flash."""
         with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -308,7 +308,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         # short flash
-        light.turn_on(self.hass, 'light.test', flash='short')
+        common.turn_on(self.hass, 'light.test', flash='short')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -316,7 +316,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # long flash
-        light.turn_on(self.hass, 'light.test', flash='long')
+        common.turn_on(self.hass, 'light.test', flash='long')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -339,7 +339,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         # transition on
-        light.turn_on(self.hass, 'light.test', transition=10)
+        common.turn_on(self.hass, 'light.test', transition=10)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -347,14 +347,13 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # transition off
-        light.turn_off(self.hass, 'light.test', transition=4)
+        common.turn_off(self.hass, 'light.test', transition=4)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
             'test_light_rgb/set', 'off,4', 0, False)
 
-    def test_invalid_values(self): \
-            # pylint: disable=invalid-name
+    def test_invalid_values(self):
         """Test that invalid values are ignored."""
         with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {

@@ -27,7 +27,7 @@ class AttrDict(dict):
         return self[item]
 
 
-class MockMonoprice(object):
+class MockMonoprice:
     """Mock for pymonoprice object."""
 
     def __init__(self):

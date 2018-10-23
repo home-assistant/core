@@ -17,7 +17,7 @@ class TestLoader(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup tests."""
+        """Set up tests."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -79,10 +79,10 @@ def test_component_loader_non_existing(hass):
 @asyncio.coroutine
 def test_component_wrapper(hass):
     """Test component wrapper."""
-    calls = async_mock_service(hass, 'light', 'turn_on')
+    calls = async_mock_service(hass, 'persistent_notification', 'create')
 
     components = loader.Components(hass)
-    components.light.async_turn_on('light.test')
+    components.persistent_notification.async_create('message')
     yield from hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -124,3 +124,13 @@ async def test_custom_component_name(hass):
     # Test custom components is mounted
     from custom_components.test_package import TEST
     assert TEST == 5
+
+
+async def test_log_warning_custom_component(hass, caplog):
+    """Test that we log a warning when loading a custom component."""
+    loader.get_component(hass, 'test_standalone')
+    assert \
+        'You are using a custom component for test_standalone' in caplog.text
+
+    loader.get_component(hass, 'light.test')
+    assert 'You are using a custom component for light.test' in caplog.text

@@ -29,9 +29,9 @@ CONDITION_CLASSES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo weather."""
-    add_devices([
+    add_entities([
         DemoWeather('South', 'Sunshine', 21.6414, 92, 1099, 0.5, TEMP_CELSIUS,
                     [['rainy', 1, 22, 15], ['rainy', 5, 19, 8],
                      ['cloudy', 0, 15, 9], ['sunny', 0, 12, 6],

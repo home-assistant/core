@@ -38,6 +38,7 @@ AXIS_INCLUDE = EVENT_TYPES + PLATFORMS
 AXIS_DEFAULT_HOST = '192.168.0.90'
 AXIS_DEFAULT_USERNAME = 'root'
 AXIS_DEFAULT_PASSWORD = 'pass'
+DEFAULT_PORT = 80
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_INCLUDE):
@@ -47,7 +48,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_TRIGGER_TIME, default=0): cv.positive_int,
-    vol.Optional(CONF_PORT, default=80): cv.positive_int,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(ATTR_LOCATION, default=''): cv.string,
 })
 
@@ -145,7 +146,7 @@ def request_configuration(hass, config, name, host, serialnumber):
 
 def setup(hass, config):
     """Set up for Axis devices."""
-    def _shutdown(call):  # pylint: disable=unused-argument
+    def _shutdown(call):
         """Stop the event stream on shutdown."""
         for serialnumber, device in AXIS_DEVICES.items():
             _LOGGER.info("Stopping event stream for %s.", serialnumber)
