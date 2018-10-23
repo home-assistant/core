@@ -22,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 BASE_API_URL = 'https://rest.clicksend.com/v3'
 
+DEFAULT_SENDER = 'hass'
+
 HEADERS = {CONTENT_TYPE: CONTENT_TYPE_JSON}
 
 
@@ -29,7 +31,7 @@ def validate_sender(config):
     """Set the optional sender name if sender name is not provided."""
     if CONF_SENDER in config:
         return config
-    config[CONF_SENDER] = 'hass'
+    config[CONF_SENDER] = DEFAULT_SENDER
     return config
 
 
