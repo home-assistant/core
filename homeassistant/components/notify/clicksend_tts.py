@@ -67,8 +67,11 @@ class ClicksendNotificationService(BaseNotificationService):
                                'to': self.recipient, 'body': message,
                                'lang': self.language, 'voice': self.voice}]})
         api_url = "{}/voice/send".format(BASE_API_URL)
-        resp = requests.post(api_url, data=json.dumps(data), headers=HEADERS,
-                             auth=(self.username, self.api_key), timeout=TIMEOUT)
+        resp = requests.post(api_url,
+                             data=json.dumps(data),
+                             headers=HEADERS,
+                             auth=(self.username, self.api_key),
+                             timeout=TIMEOUT)
 
         if resp.status_code == 200:
             return
