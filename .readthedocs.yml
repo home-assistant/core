@@ -6,3 +6,5 @@ build:
 python:
   version: 3.6
   setup_py_install: true
+
+requirements_file: requirements_docs.txt
