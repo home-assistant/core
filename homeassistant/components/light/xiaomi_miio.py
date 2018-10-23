@@ -781,7 +781,6 @@ class XiaomiMiDeskLamp(XiaomiAbstractLight):
 
             if result:
                 self._color_temp = color_temp
-
         elif ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             percent_brightness = ceil(100 * brightness / 255.0)
@@ -796,7 +795,6 @@ class XiaomiMiDeskLamp(XiaomiAbstractLight):
 
             if result:
                 self._brightness = brightness
-
         else:
             await self._try_command(
                 "Turning the light on failed.", self._light.on)
@@ -814,7 +812,6 @@ class XiaomiMiDeskLamp(XiaomiAbstractLight):
 
             color_temp_mireds = int(1000000.0/float(state.color_temp))
             self._color_temp = color_temp_mireds
-
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
