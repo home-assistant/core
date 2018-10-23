@@ -58,6 +58,7 @@ homeassistant/components/climate/mill.py @danielhiversen
 homeassistant/components/climate/sensibo.py @andrey-git
 homeassistant/components/cover/group.py @cdce8p
 homeassistant/components/cover/template.py @PhracturedBlue
+homeassistant/components/device_tracker/asuswrt.py @kennedyshead
 homeassistant/components/device_tracker/automatic.py @armills
 homeassistant/components/device_tracker/huawei_router.py @abmantis
 homeassistant/components/device_tracker/quantum_gateway.py @cisasteelersfan
