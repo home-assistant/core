@@ -1338,7 +1338,7 @@ sendgrid==5.6.0
 # homeassistant.components.sensor.sensehat
 sense-hat==2.2.0
 
-# homeassistant.components.sensor.sense
+# homeassistant.components.sense
 sense_energy==0.5.1
 
 # homeassistant.components.media_player.aquostv
