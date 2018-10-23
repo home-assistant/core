@@ -40,6 +40,7 @@ class AugustLock(LockDevice):
         self._lock_status = None
         self._lock_detail = None
         self._changed_by = None
+        self._available = False
 
     def lock(self, **kwargs):
         """Lock the device."""
@@ -52,6 +53,8 @@ class AugustLock(LockDevice):
     def update(self):
         """Get the latest state of the sensor."""
         self._lock_status = self._data.get_lock_status(self._lock.device_id)
+        self._available = self._lock_status is not None
+
         self._lock_detail = self._data.get_lock_detail(self._lock.device_id)
 
         from august.activity import ActivityType
@@ -66,6 +69,11 @@ class AugustLock(LockDevice):
     def name(self):
         """Return the name of this device."""
         return self._lock.device_name
+
+    @property
+    def available(self):
+        """Return the availability of this sensor."""
+        return self._available
 
     @property
     def is_locked(self):
