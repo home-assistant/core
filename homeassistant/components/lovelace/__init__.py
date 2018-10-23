@@ -18,10 +18,15 @@ REQUIREMENTS = ['ruamel.yaml==0.15.72']
 LOVELACE_CONFIG_FILE = 'ui-lovelace.yaml'
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 
+FORMAT_YAML = 'yaml'
+FORMAT_JSON = 'json'
+
 OLD_WS_TYPE_GET_LOVELACE_UI = 'frontend/lovelace_config'
 WS_TYPE_GET_LOVELACE_UI = 'lovelace/config'
+
 WS_TYPE_GET_CARD = 'lovelace/config/card/get'
 WS_TYPE_UPDATE_CARD = 'lovelace/config/card/update'
+WS_TYPE_ADD_CARD = 'lovelace/config/card/add'
 
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): vol.Any(WS_TYPE_GET_LOVELACE_UI,
@@ -31,14 +36,25 @@ SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_GET_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_GET_CARD,
     vol.Required('card_id'): str,
-    vol.Optional('format', default='yaml'): str,
+    vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
+                                                         FORMAT_YAML),
 })
 
 SCHEMA_UPDATE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_UPDATE_CARD,
     vol.Required('card_id'): str,
     vol.Required('card_config'): vol.Any(str, Dict),
-    vol.Optional('format', default='yaml'): str,
+    vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
+                                                         FORMAT_YAML),
+})
+
+SCHEMA_ADD_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_ADD_CARD,
+    vol.Required('view_id'): str,
+    vol.Required('card_config'): vol.Any(str, Dict),
+    vol.Optional('position'): int,
+    vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
+                                                         FORMAT_YAML),
 })
 
 
@@ -48,6 +64,10 @@ class WriteError(HomeAssistantError):
 
 class CardNotFoundError(HomeAssistantError):
     """Card not found in data."""
+
+
+class ViewNotFoundError(HomeAssistantError):
+    """View not found in data."""
 
 
 class UnsupportedYamlError(HomeAssistantError):
@@ -161,35 +181,59 @@ def yaml_to_object(data: str) -> JSON_TYPE:
         raise HomeAssistantError(exc)
 
 
-def get_card(fname: str, card_id: str, data_format: str) -> JSON_TYPE:
+def get_card(fname: str, card_id: str, data_format: str = FORMAT_YAML)\
+        -> JSON_TYPE:
     """Load a specific card config for id."""
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
-            if card.get('id') == card_id:
-                if data_format == 'yaml':
-                    return object_to_yaml(card)
-                return card
+            if card.get('id') != card_id:
+                continue
+            if data_format == FORMAT_YAML:
+                return object_to_yaml(card)
+            return card
 
     raise CardNotFoundError(
         "Card with ID: {} was not found in {}.".format(card_id, fname))
 
 
-def update_card(fname: str, card_id: str, card_config: str, data_format: str)\
-        -> bool:
+def update_card(fname: str, card_id: str, card_config: str,
+                data_format: str = FORMAT_YAML):
     """Save a specific card config for id."""
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
-            if card.get('id') == card_id:
-                if data_format == 'yaml':
-                    card_config = yaml_to_object(card_config)
-                card.update(card_config)
-                save_yaml(fname, config)
-                return True
+            if card.get('id') != card_id:
+                continue
+            if data_format == FORMAT_YAML:
+                card_config = yaml_to_object(card_config)
+            card.update(card_config)
+            save_yaml(fname, config)
+            return
 
     raise CardNotFoundError(
         "Card with ID: {} was not found in {}.".format(card_id, fname))
+
+
+def add_card(fname: str, view_id: str, card_config: str,
+             position: int = None, data_format: str = FORMAT_YAML):
+    """Add a card to a view."""
+    config = load_yaml(fname)
+    for view in config.get('views', []):
+        if view.get('id') != view_id:
+            continue
+        cards = view.get('cards', [])
+        if data_format == FORMAT_YAML:
+            card_config = yaml_to_object(card_config)
+        if position != None:
+            cards.insert(position, card_config)
+        else:
+            cards.append(card_config)
+        save_yaml(fname, config)
+        return
+
+    raise ViewNotFoundError(
+        "View with ID: {} was not found in {}.".format(view_id, fname))
 
 
 async def async_setup(hass, config):
@@ -210,6 +254,10 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_UPDATE_CARD, websocket_lovelace_update_card,
         SCHEMA_UPDATE_CARD)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_ADD_CARD, websocket_lovelace_add_card,
+        SCHEMA_ADD_CARD)
 
     return True
 
@@ -245,7 +293,7 @@ async def websocket_lovelace_get_card(hass, connection, msg):
     try:
         card = await hass.async_add_executor_job(
             get_card, hass.config.path(LOVELACE_CONFIG_FILE), msg['card_id'],
-            msg.get('format', 'yaml'))
+            msg.get('format', FORMAT_YAML))
         message = websocket_api.result_message(
             msg['id'], card
         )
@@ -254,9 +302,8 @@ async def websocket_lovelace_get_card(hass, connection, msg):
                  'Could not find ui-lovelace.yaml in your config dir.')
     except UnsupportedYamlError as err:
         error = 'unsupported_error', str(err)
-    except CardNotFoundError:
-        error = ('card_not_found',
-                 'Could not find card in ui-lovelace.yaml.')
+    except CardNotFoundError as err:
+        error = 'card_not_found', str(err)
     except HomeAssistantError as err:
         error = 'load_error', str(err)
 
@@ -271,20 +318,47 @@ async def websocket_lovelace_update_card(hass, connection, msg):
     """Receive lovelace card config over websocket and save."""
     error = None
     try:
-        result = await hass.async_add_executor_job(
+        await hass.async_add_executor_job(
             update_card, hass.config.path(LOVELACE_CONFIG_FILE),
-            msg['card_id'], msg['card_config'], msg.get('format', 'yaml'))
+            msg['card_id'], msg['card_config'], msg.get('format', FORMAT_YAML))
         message = websocket_api.result_message(
-            msg['id'], result
+            msg['id'], True
         )
     except FileNotFoundError:
         error = ('file_not_found',
                  'Could not find ui-lovelace.yaml in your config dir.')
     except UnsupportedYamlError as err:
         error = 'unsupported_error', str(err)
-    except CardNotFoundError:
-        error = ('card_not_found',
-                 'Could not find card in ui-lovelace.yaml.')
+    except CardNotFoundError as err:
+        error = 'card_not_found', str(err)
+    except HomeAssistantError as err:
+        error = 'save_error', str(err)
+
+    if error is not None:
+        message = websocket_api.error_message(msg['id'], *error)
+
+    connection.send_message(message)
+
+
+@websocket_api.async_response
+async def websocket_lovelace_add_card(hass, connection, msg):
+    """Add new card to view over websocket and save."""
+    error = None
+    try:
+        await hass.async_add_executor_job(
+            add_card, hass.config.path(LOVELACE_CONFIG_FILE),
+            msg['view_id'], msg['card_config'], msg.get('position'),
+            msg.get('format', FORMAT_YAML))
+        message = websocket_api.result_message(
+            msg['id'], True
+        )
+    except FileNotFoundError:
+        error = ('file_not_found',
+                 'Could not find ui-lovelace.yaml in your config dir.')
+    except UnsupportedYamlError as err:
+        error = 'unsupported_error', str(err)
+    except ViewNotFoundError as err:
+        error = 'view_not_found', str(err)
     except HomeAssistantError as err:
         error = 'save_error', str(err)
 
