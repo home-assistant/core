@@ -719,7 +719,8 @@ def test_contact_sensor(hass):
     assert properties['retrievable'] is True
     assert {'name': 'detectionState'} in properties['supported']
 
-    properties = yield from reported_properties(hass, 'binary_sensor#test_contact')
+    properties = yield from reported_properties(hass,
+                                                'binary_sensor#test_contact')
     properties.assert_equal('Alexa.ContactSensor', 'detectionState',
                             'DETECTED')
 
