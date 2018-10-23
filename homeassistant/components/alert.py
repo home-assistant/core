@@ -255,7 +255,6 @@ class Alert(ToggleEntity):
             msg_payload.update(self._data)
         elif self._data_template:
             def _data_template_creator(value):
-
                 """Recursive template creator helper function."""
                 if isinstance(value, list):
                     return [_data_template_creator(item) for item in value]
