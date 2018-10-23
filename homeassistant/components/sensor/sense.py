@@ -14,8 +14,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sense import (SENSE_DATA,
-                                            MIN_TIME_BETWEEN_DAILY_UPDATES)
+from homeassistant.components.sense import SENSE_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +55,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(VALID_SENSORS)]),
 })
+
+MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sense/
 """
 import logging
-from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT)
@@ -28,7 +27,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ACTIVE_UPDATE_RATE = 30
-MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
 DEFAULT_TIMEOUT = 5
 
 
