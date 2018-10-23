@@ -29,7 +29,7 @@ def validate_sender(config):
     """Set the optional sender name if sender name is not provided."""
     if CONF_SENDER in config:
         return config
-    config[CONF_SENDER] = config[CONF_RECIPIENT]
+    config[CONF_SENDER] = 'hass'
     return config
 
 
@@ -61,7 +61,7 @@ class ClicksendNotificationService(BaseNotificationService):
         self.username = config.get(CONF_USERNAME)
         self.api_key = config.get(CONF_API_KEY)
         self.recipients = config.get(CONF_RECIPIENT)
-        self.sender = config.get(CONF_SENDER, CONF_RECIPIENT)
+        self.sender = config.get(CONF_SENDER)
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
@@ -69,7 +69,7 @@ class ClicksendNotificationService(BaseNotificationService):
         for recipient in self.recipients:
             data["messages"].append({
                 'source': 'hass.notify',
-                'from': 'hass',
+                'from': self.sender,
                 'to': recipient,
                 'body': message,
             })
