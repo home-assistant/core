@@ -67,8 +67,6 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
     async def async_connect(self):
         """Initialize connection to the router."""
-        self.last_results = {}
-
         # Test the router is accessible.
         data = await self.connection.async_get_connected_devices()
         self.success_init = data is not None
