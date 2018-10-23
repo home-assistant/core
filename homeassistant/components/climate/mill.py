@@ -80,7 +80,7 @@ class MillHeater(ClimateDevice):
         """Return information about the device."""
         return {
             'identifiers': {
-                ('MILL', self.device.device_id),
+                ('MILL', self._heater.device_id),
             },
             'name': self._heater.name,
             'manufacturer': 'Mill heater',
