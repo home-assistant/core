@@ -111,7 +111,8 @@ class MochadCtrl(threading.Thread):
                         retry_count = 0
                 except Exception as exception_instance:
                     _LOGGER.error(
-                        "Failed to read from the socket. {}".format(exception_instance))
+                        "Failed to read from the socket. {}".format(
+                            exception_instance))
                     if retry_count >= 300:
                         raise Exception(
                             "Retry attempts exceeded. Failed to read for the"
@@ -122,7 +123,8 @@ class MochadCtrl(threading.Thread):
                     content = ""
 
         except Exception as exception_instance:
-            _LOGGER.error("Failed to read from the socket. {}".format(exception_instance))
+            _LOGGER.error("Failed to read from the socket. {}".format(
+                exception_instance))
         finally:
             _LOGGER.error(
                 "Loop exited. No more X10 msgs will be received from Mochad.")
