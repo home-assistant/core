@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
 
     data = hass.data[SENSE_DATA]
-    
+
     def update_active():
         """Update the active power usage."""
         data.get_realtime()
