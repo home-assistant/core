@@ -49,10 +49,16 @@ async def async_setup(hass, config):
     await component.async_setup(config)
 
     async def async_schedule_forced_update(call: ServiceCall):
-        """Handle sensor force_update service calls"""
+        """Handle sensor force_update service calls."""
         entity_id = call.data[ATTR_ENTITY_ID]
         entity = component.get_entity(entity_id)
-        entity.async_schedule_update_ha_state(True)
+        _LOGGER.debug("Forced sensor update for entity ID: %s (%s)",
+                      entity_id, entity)
+        if entity:
+            entity.async_schedule_update_ha_state(True)
+        else:
+            _LOGGER.warn("Force update requested for non-existant sensor: %s",
+                         entity_id)
 
     hass.services.async_register(DOMAIN, SERVICE_FORCE_UPDATE,
                                  async_schedule_forced_update,
