@@ -1,5 +1,5 @@
 """Test the init file of IFTTT."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.core import callback
