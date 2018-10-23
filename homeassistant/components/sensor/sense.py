@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data.get_realtime()
 
     devices = []
-    for sensor in config.get(CONF_MONITORED_CONDITIONS, []):
+    for sensor in config.get(CONF_MONITORED_CONDITIONS):
         config_name, prod = sensor.rsplit('_', 1)
         name = SENSOR_TYPES[config_name].name
         sensor_type = SENSOR_TYPES[config_name].sensor_type

@@ -2,7 +2,7 @@
 Support for monitoring a Sense energy sensor.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sense/
+https://home-assistant.io/components/sense/
 """
 import logging
 import voluptuous as vol
@@ -18,16 +18,16 @@ SENSE_DATA = 'sense_data'
 
 DOMAIN = 'sense'
 
+ACTIVE_UPDATE_RATE = 30
+DEFAULT_TIMEOUT = 5
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_EMAIL): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_TIMEOUT, DEFAULT_TIMEOUT): cv.positive_int,
     })
 }, extra=vol.ALLOW_EXTRA)
-
-ACTIVE_UPDATE_RATE = 30
-DEFAULT_TIMEOUT = 5
 
 
 def setup(hass, config):
@@ -37,7 +37,7 @@ def setup(hass, config):
     username = config[DOMAIN].get(CONF_EMAIL)
     password = config[DOMAIN].get(CONF_PASSWORD)
 
-    timeout = config[DOMAIN].get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+    timeout = config[DOMAIN].get(CONF_TIMEOUT)
     hass.data[SENSE_DATA] = Senseable(api_timeout=timeout, wss_timeout=timeout)
     hass.data[SENSE_DATA].authenticate(username, password)
     hass.data[SENSE_DATA].rate_limit = ACTIVE_UPDATE_RATE

@@ -1,8 +1,8 @@
 """
-Support for monitoring a Sense energy sensor.
+Support for monitoring a Sense energy sensor device.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sense/
+https://home-assistant.io/components/binary_sensor.sense/
 """
 import logging
 import voluptuous as vol
@@ -26,14 +26,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
     data = hass.data[SENSE_DATA]
 
-    def update_active():
-        """Update the active power usage."""
-        data.get_realtime()
-
     devices = []
-
     device = config.get(CONF_NAME)
-    devices.append(SenseDevice(data, device, update_active))
+    devices.append(SenseDevice(data, device))
 
     add_entities(devices)
 
@@ -41,11 +36,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SenseDevice(BinarySensorDevice):
     """Implementation of a Sense energy device binary sensor."""
 
-    def __init__(self, data, name, update_call):
+    def __init__(self, data, name):
         """Initialize the sensor."""
         self._name = name
         self._data = data
-        self.update_sensor = update_call
         self._state = False
 
     @property
@@ -67,7 +61,7 @@ class SenseDevice(BinarySensorDevice):
         """Retrieve latest state."""
         from sense_energy import SenseAPITimeoutException
         try:
-            self.update_sensor()
+            self._data.get_realtime()
         except SenseAPITimeoutException:
             _LOGGER.error("Timeout retrieving data")
             return
