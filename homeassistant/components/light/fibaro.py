@@ -28,11 +28,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class FibaroLight(FibaroDevice, Light):
     """Representation of a Fibaro Light, including dimmable."""
 
+    __supports_dimming = False
+    __supports_color = False
+    __supported_features_flags = 0
+
     def __init__(self, fibaro_device, controller):
         """Initialize the light."""
         self._state = False
         self._color = None
         self._brightness = None
+        if 'levelChange' in fibaro_device.interfaces:
+            self.__supported_features_flags |= SUPPORT_BRIGHTNESS
+            self.__supports_dimming = True
+        if 'color' in fibaro_device.properties:
+            self.__supported_features_flags |= SUPPORT_COLOR
+            self.__supports_color = True
         FibaroDevice.__init__(self, fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.fibaro_id)
 
@@ -49,9 +59,7 @@ class FibaroLight(FibaroDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._color:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
-        return SUPPORT_BRIGHTNESS
+        return self.__supported_features_flags
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
@@ -79,16 +87,16 @@ class FibaroLight(FibaroDevice, Light):
 
     def update(self):
         """Call to update state."""
-        self._state = (self.fibaro_device.properties.value is 'true') or (int(self.fibaro_device.properties.value) > 0)
-        if 'levelChange' in self.fibaro_device.interfaces:
+        self._state = self.current_binary_state
+        if self.__supports_dimming:
             # If it is dimmable, both functions exist. In case color
             # is not supported, it will return None
             if 'brightness' in self.fibaro_device.properties:
                 self._brightness = int(self.fibaro_device.properties.brightness)
             else:
                 self._brightness = int(self.fibaro_device.properties.value)
-            if 'color' in self.fibaro_device.properties:
-                rgbs = self.fibaro_device.properties.color
-                rgb = [int(i) for i in rgbs.split(",")][:3]
-                c = color_util.color_RGB_to_hs(*rgb) if rgb else None
-                self._color = c
+        if self.__supports_color:
+            rgbw_color_str = self.fibaro_device.properties.color
+            rgb = [int(i) for i in rgbw_color_str.split(",")][:3]
+            c = color_util.color_RGB_to_hs(*rgb) if rgb else None
+            self._color = c
