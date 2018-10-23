@@ -63,7 +63,7 @@ def async_setup(hass, config):
     """Start listening thread for Mochad data."""
     CONTROLLER.start()
 
-    return True 
+    return True
 
 
 class MochadCtrl(threading.Thread):
@@ -79,10 +79,10 @@ class MochadCtrl(threading.Thread):
 
         self.ctrl = controller.PyMochad(server=self._host, port=self._port)
         super(MochadCtrl, self).__init__()
-    
+
     def run(self):
         self._ws_listen()
-    
+
     @property
     def host(self):
         """Return the server where mochad is running."""
@@ -102,22 +102,23 @@ class MochadCtrl(threading.Thread):
         _LOGGER.info("Entering Mochad event listening loop")
         try:
             # READ FROM NETWORK LOOP
-            retry_count=0
+            retry_count = 0
             while True:
                 try:
                     content = self.ctrl.read_data()
                     if content:
-                        retry_count=0
+                        retry_count = 0
                 except Exception as e:
                     _LOGGER.error(
                         "Failed to read from the socket. {}".format(e))
-                    if retry_count>=300:
+                    if retry_count >= 300:
                         raise Exception(
-                            "Retry attempts exceeded. Failed to read for the socket.")
+                            "Retry attempts exceeded. Failed to read for the"
+                            " socket.")
                     else:
-                        retry_count+=1
+                        retry_count += 1
                     time.sleep(10)
-                    content=""
+                    content = ""
 
         except Exception as e:
             _LOGGER.error("Failed to read from the socket. {}".format(e))
