@@ -76,6 +76,18 @@ class MillHeater(ClimateDevice):
         return self._heater.device_id
 
     @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                ('MILL', self.device.device_id),
+            },
+            'name': self._heater.name,
+            'manufacturer': 'Mill heater',
+            'model': "Thermostat",
+        }
+
+    @property
     def name(self):
         """Return the name of the entity."""
         return self._heater.name
