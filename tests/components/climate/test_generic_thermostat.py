@@ -220,9 +220,9 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
         self.assertEqual(23, state.attributes.get('temperature'))
-        
+
     def test_set_away_mode_twice_and_restore_prev_temp(self):
-        """Test the setting away mode twice in a row
+        """Test the setting away mode twice in a row.
 
         Verify original temperature is restored.
         """
