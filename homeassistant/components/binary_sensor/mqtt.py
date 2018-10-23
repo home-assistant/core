@@ -131,7 +131,14 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         await MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
-        def state_message_received(topic, payload, qos):
+        def off_delay_listener(now):
+            """Switch device off after a delay."""
+            self._delay_listener = None
+            self._state = False
+            self.async_schedule_update_ha_state()
+
+        @callback
+        def state_message_received(_topic, payload, _qos):
             """Handle a new received MQTT state message."""
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
@@ -146,17 +153,10 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
                                 self._name, self._state_topic)
                 return
 
+            if self._delay_listener is not None:
+                self._delay_listener()
+
             if (self._state and self._off_delay is not None):
-                @callback
-                def off_delay_listener(now):
-                    """Switch device off after a delay."""
-                    self._delay_listener = None
-                    self._state = False
-                    self.async_schedule_update_ha_state()
-
-                if self._delay_listener is not None:
-                    self._delay_listener()
-
                 self._delay_listener = evt.async_call_later(
                     self.hass, self._off_delay, off_delay_listener)
 
