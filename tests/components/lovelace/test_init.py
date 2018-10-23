@@ -370,8 +370,8 @@ async def test_lovelace_get_card_bad_yaml(hass, hass_ws_client):
     assert msg['error']['code'] == 'load_error'
 
 
-async def test_lovelace_set_card(hass, hass_ws_client):
-    """Test set_card command."""
+async def test_lovelace_update_card(hass, hass_ws_client):
+    """Test update_card command."""
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
@@ -382,7 +382,7 @@ async def test_lovelace_set_card(hass, hass_ws_client):
             as save_yaml_mock:
         await client.send_json({
             'id': 5,
-            'type': 'lovelace/config/card/set',
+            'type': 'lovelace/config/card/update',
             'card_id': 'test',
             'card_config': 'id: test\ntype: glance\n',
         })
@@ -396,8 +396,8 @@ async def test_lovelace_set_card(hass, hass_ws_client):
     assert msg['success']
 
 
-async def test_lovelace_set_card_not_found(hass, hass_ws_client):
-    """Test set_card command cannot find card."""
+async def test_lovelace_update_card_not_found(hass, hass_ws_client):
+    """Test update_card command cannot find card."""
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
@@ -406,7 +406,7 @@ async def test_lovelace_set_card_not_found(hass, hass_ws_client):
                return_value=yaml.load(TEST_YAML_A)):
         await client.send_json({
             'id': 5,
-            'type': 'lovelace/config/card/set',
+            'type': 'lovelace/config/card/update',
             'card_id': 'not_found',
             'card_config': 'id: test\ntype: glance\n',
         })
@@ -418,8 +418,8 @@ async def test_lovelace_set_card_not_found(hass, hass_ws_client):
     assert msg['error']['code'] == 'card_not_found'
 
 
-async def test_lovelace_set_card_bad_yaml(hass, hass_ws_client):
-    """Test set_card command bad yaml."""
+async def test_lovelace_update_card_bad_yaml(hass, hass_ws_client):
+    """Test update_card command bad yaml."""
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
@@ -430,7 +430,7 @@ async def test_lovelace_set_card_bad_yaml(hass, hass_ws_client):
               side_effect=HomeAssistantError):
         await client.send_json({
             'id': 5,
-            'type': 'lovelace/config/card/set',
+            'type': 'lovelace/config/card/update',
             'card_id': 'test',
             'card_config': 'id: test\ntype: glance\n',
         })
@@ -440,3 +440,56 @@ async def test_lovelace_set_card_bad_yaml(hass, hass_ws_client):
     assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
     assert msg['error']['code'] == 'save_error'
+
+
+async def test_lovelace_add_card(hass, hass_ws_client):
+    """Test add_card command."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.components.lovelace.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)), \
+        patch('homeassistant.components.lovelace.save_yaml') \
+            as save_yaml_mock:
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/card/add',
+            'view_id': 'example',
+            'card_config': 'id: test\ntype: added\n',
+        })
+        msg = await client.receive_json()
+
+    result = save_yaml_mock.call_args_list[0][0][1]
+    assert result.mlget(['views', 0, 'cards', 2, 'type'],
+                        list_ok=True) == 'added'
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+
+
+async def test_lovelace_add_card_position(hass, hass_ws_client):
+    """Test add_card command."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.components.lovelace.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)), \
+        patch('homeassistant.components.lovelace.save_yaml') \
+            as save_yaml_mock:
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/card/add',
+            'view_id': 'example',
+            'position': 0,
+            'card_config': 'id: test\ntype: added\n',
+        })
+        msg = await client.receive_json()
+
+    result = save_yaml_mock.call_args_list[0][0][1]
+    assert result.mlget(['views', 0, 'cards', 0, 'type'],
+                        list_ok=True) == 'added'
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
