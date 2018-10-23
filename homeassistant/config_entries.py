@@ -143,6 +143,7 @@ FLOWS = [
     'ifttt',
     'ios',
     'lifx',
+    'mailgun',
     'mqtt',
     'nest',
     'openuv',

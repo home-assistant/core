@@ -94,10 +94,10 @@ hbmqtt==0.9.4
 hdate==0.6.5
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.7
+holidays==0.9.8
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181018.0
+home-assistant-frontend==20181023.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -125,7 +125,6 @@ numpy==1.15.2
 paho-mqtt==1.4.0
 
 # homeassistant.components.device_tracker.aruba
-# homeassistant.components.device_tracker.asuswrt
 # homeassistant.components.device_tracker.cisco_ios
 # homeassistant.components.device_tracker.unifi_direct
 # homeassistant.components.media_player.pandora
@@ -222,7 +221,7 @@ ruamel.yaml==0.15.72
 rxv==0.5.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==3.1.12
+simplisafe-python==3.1.13
 
 # homeassistant.components.sleepiq
 sleepyq==0.6
