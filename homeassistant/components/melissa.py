@@ -35,11 +35,12 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
-
     api = melissa.AsyncMelissa(username=username, password=password)
     await api.async_connect()
     hass.data[DATA_MELISSA] = api
 
-    await async_load_platform(hass, 'sensor', DOMAIN, {}, config)
-    await async_load_platform(hass, 'climate', DOMAIN, {}, config)
+    hass.async_create_task(
+        async_load_platform(hass, 'sensor', DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, 'climate', DOMAIN, {}, config))
     return True

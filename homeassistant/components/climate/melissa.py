@@ -35,7 +35,7 @@ FAN_MODES = [
 
 
 async def async_setup_platform(
-        hass, config, add_entities, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Iterate through and add all Melissa devices."""
     api = hass.data[DATA_MELISSA]
     devices = (await api.async_fetch_devices()).values()
@@ -47,7 +47,7 @@ async def async_setup_platform(
             all_devices.append(MelissaClimate(
                 api, device['serial_number'], device))
 
-    add_entities(all_devices)
+    async_add_entities(all_devices)
 
 
 class MelissaClimate(ClimateDevice):
