@@ -1,55 +1,48 @@
 """
-Support for Vera switches.
+Support for Fibaro switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.vera/
+https://home-assistant.io/components/switch.fibaro/
 """
 import logging
 
 from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+from homeassistant.components.fibaro import (
+    FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
 
-DEPENDENCIES = ['vera']
+DEPENDENCIES = ['fibaro']
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Vera switches."""
+    """Set up the Fibaro switches."""
     add_entities(
-        [VeraSwitch(device, hass.data[VERA_CONTROLLER]) for
-         device in hass.data[VERA_DEVICES]['switch']], True)
+        [FibaroSwitch(device, hass.data[FIBARO_CONTROLLER]) for
+         device in hass.data[FIBARO_DEVICES]['switch']], True)
 
 
-class VeraSwitch(VeraDevice, SwitchDevice):
-    """Representation of a Vera Switch."""
+class FibaroSwitch(FibaroDevice, SwitchDevice):
+    """Representation of a Fibaro Switch."""
 
-    def __init__(self, vera_device, controller):
-        """Initialize the Vera device."""
+    def __init__(self, fibaro_device, controller):
+        """Initialize the Fibaro device."""
         self._state = False
-        VeraDevice.__init__(self, vera_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
+        FibaroDevice.__init__(self, fibaro_device, controller)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.fibaro_id)
 
     def turn_on(self, **kwargs):
         """Turn device on."""
-        self.vera_device.switch_on()
+        self.switch_on()
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn device off."""
-        self.vera_device.switch_off()
+        self.switch_off()
         self._state = False
         self.schedule_update_ha_state()
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        power = self.vera_device.power
-        if power:
-            return convert(power, float, 0.0)
 
     @property
     def is_on(self):
@@ -58,4 +51,4 @@ class VeraSwitch(VeraDevice, SwitchDevice):
 
     def update(self):
         """Update device state."""
-        self._state = self.vera_device.is_switched_on()
+        self._state = self.current_binary_state

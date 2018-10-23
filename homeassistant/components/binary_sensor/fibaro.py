@@ -40,7 +40,4 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
 
     def update(self):
         """Get the latest data and update the state."""
-        if self.fibaro_device.properties.value == "false":
-            self._state = False
-        else:
-            self._state = True
+        self._state = self.current_binary_state

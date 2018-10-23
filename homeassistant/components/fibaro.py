@@ -30,10 +30,10 @@ FIBARO_COMPONENTS = [
 	'binary_sensor',
 	'sensor',
 	'light',
-#	'switch',
+	'switch',
 #   'lock',
 #	'climate',
-#	'cover',
+	'cover',
 #	'scene'
 ]
 
@@ -102,30 +102,32 @@ def setup(hass, config):
 	for device in devices:
 		session.devices[device.id]=device
 	hass.data[DATA_FIBARO] = session
-#	unknowninterfaces= []
-#	unknowntypes= []
-#	unknownbasetypes= []
-	typemapping = {'com.fibaro.temperatureSensor' : 'sensor',
-				   'com.fibaro.multilevelSensor' : "sensor",
-				   'com.fibaro.humiditySensor' : 'sensor',
-				   'com.fibaro.binarySwitch' : 'switch',
-				   'com.fibaro.FGRGBW441M' : 'light',
-				   'com.fibaro.multilevelSwitch' : 'switch',
-				   'com.fibaro.remoteController' : 'switch',
-				   'com.fibaro.FGD212' : 'light',
-				   'com.fibaro.FGRM222' : 'cover',
-				   'com.fibaro.doorSensor' : 'binary_sensor',
-				   'com.fibaro.FGMS001v2' : 'binary_sensor',
-				   'com.fibaro.lightSensor' : 'sensor',
-				   'com.fibaro.seismometer' : 'sensor',
-				   'com.fibaro.accelerometer' : 'sensor',
-				   'com.fibaro.FGSS001' : 'sensor',
-				   'com.fibaro.remoteSwitch' : 'switch' }
+	typemapping = { 'com.fibaro.temperatureSensor' : 'sensor',
+					'com.fibaro.multilevelSensor' : "sensor",
+					'com.fibaro.humiditySensor' : 'sensor',
+					'com.fibaro.binarySwitch' : 'switch',
+					'com.fibaro.FGRGBW441M' : 'light',
+					'com.fibaro.multilevelSwitch' : 'switch',
+					'com.fibaro.FGD212' : 'light',
+					'com.fibaro.FGRM222' : 'cover',
+					'com.fibaro.FGR' : 'cover',
+					'com.fibaro.doorSensor' : 'binary_sensor',
+					'com.fibaro.FGMS001v2' : 'binary_sensor',
+					'com.fibaro.lightSensor' : 'sensor',
+					'com.fibaro.seismometer' : 'sensor',
+					'com.fibaro.accelerometer' : 'sensor',
+					'com.fibaro.FGSS001' : 'sensor',
+					'com.fibaro.remoteSwitch' : 'switch',
+					'com.fibaro.sensor': 'sensor',
+					'com.fibaro.colorController': 'sensor'
+	}
 	fibaro_devices = defaultdict(list)
 	for idx, device in session.devices.items():
-		if device.enabled is True:
+		if (device.enabled is True) and (device.visible is True):
 			device_type = None
 			if device.type in typemapping:
+				device_type = typemapping[device.type]
+			elif device.baseType in typemapping:
 				device_type = typemapping[device.type]
 			if device_type is None:
 				continue
@@ -160,6 +162,57 @@ class FibaroDevice(Entity):
 	def _update_callback(self, _device):
 		"""Update the state."""
 		self.schedule_update_ha_state(True)
+
+	def get_level(self):
+		if ('value' in self.fibaro_device.properties):
+			return self.fibaro_device.properties.value
+		return None
+
+	def set_level(self, level):
+		pass
+
+	def get_level2(self):
+		if ('value2' in self.fibaro_device.properties):
+			return self.fibaro_device.properties.value2
+		return None
+
+	def set_level2(self, level):
+		pass
+
+	def open(self):
+		pass
+
+	def close(self):
+		pass
+
+	def stop(self):
+		pass
+
+	def switch_on(self):
+		pass
+
+	def switch_off(self):
+		pass
+
+	@property
+	def current_power_w(self):
+		"""Return the current power usage in W."""
+		if 'power' in self.fibaro_device.properties:
+			power = self.fibaro_device.properties.power
+			if power:
+				return convert(power, float, 0.0)
+		else:
+			return 0
+
+	@property
+	def current_binary_state(self):
+		if self.fibaro_device.properties.value == "false":
+			return False
+		if self.fibaro_device.properties.value == "true":
+			return True
+		if int(self.fibaro_device.properties.value) > 0:
+			return True
+		return False
 
 	@property
 	def name(self):

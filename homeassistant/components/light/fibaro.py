@@ -68,7 +68,7 @@ class FibaroLight(FibaroDevice, Light):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-#        self.fibaro_device.switch_off()
+        self.switch_off()
         self._state = False
         self.schedule_update_ha_state()
 
