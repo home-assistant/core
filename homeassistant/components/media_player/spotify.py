@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -83,16 +83,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         callback_url, scope=SCOPE,
         cache_path=cache)
     token_info = oauth.get_cached_token()
+
     if not token_info:
         _LOGGER.info("no token; requesting authorization")
         hass.http.register_view(SpotifyAuthCallbackView(
             config, add_entities, oauth))
         request_configuration(hass, config, add_entities, oauth)
         return
+
     if hass.data.get(DOMAIN):
         configurator = hass.components.configurator
         configurator.request_done(hass.data.get(DOMAIN))
         del hass.data[DOMAIN]
+
     player = SpotifyMediaPlayer(
         oauth, config.get(CONF_NAME, DEFAULT_NAME), config[CONF_ALIASES])
     add_entities([player], True)
@@ -132,7 +135,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._artist = None
         self._uri = None
         self._image_url = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._current_device = None
         self._devices = {}
         self._volume = None
@@ -146,19 +149,19 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         """Fetch a new spotify instance."""
         import spotipy
         token_refreshed = False
-        need_token = (self._token_info is None or
+        need_token = (not self._token_info or
                       self._oauth.is_token_expired(self._token_info))
         if need_token:
             new_token = \
                 self._oauth.refresh_access_token(
                     self._token_info['refresh_token'])
             # skip when refresh failed
-            if new_token is None:
+            if not new_token:
                 return
 
             self._token_info = new_token
             token_refreshed = True
-        if self._player is None or token_refreshed:
+        if not self._player or token_refreshed:
             self._player = \
                 spotipy.Spotify(auth=self._token_info.get('access_token'))
             self._user = self._player.me()
@@ -174,21 +177,21 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
         # Available devices
         player_devices = self._player.devices()
-        if player_devices is not None:
+        if player_devices:
             devices = player_devices.get('devices')
-            if devices is not None:
+            if devices:
                 old_devices = self._devices
                 self._devices = {self._aliases.get(device.get('id'),
                                                    device.get('name')):
                                  device.get('id')
                                  for device in devices}
                 device_diff = {name: id for name, id in self._devices.items()
-                               if old_devices.get(name, None) is None}
+                               if not old_devices.get(name, None)}
                 if device_diff:
                     _LOGGER.info("New Devices: %s", str(device_diff))
         # Current playback state
         current = self._player.current_playback()
-        if current is None:
+        if not current:
             self._state = STATE_IDLE
             return
         # Track metadata
@@ -207,7 +210,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             self._state = STATE_PLAYING
         self._shuffle = current.get('shuffle_state')
         device = current.get('device')
-        if device is None:
+        if not device:
             self._state = STATE_IDLE
         else:
             if device.get('volume_percent'):
@@ -324,7 +327,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Return the media player features that are supported."""
-        if self._user is not None and self._user['product'] == 'premium':
+        if self._user and self._user['product'] == 'premium':
             return SUPPORT_SPOTIFY
         return None
 
