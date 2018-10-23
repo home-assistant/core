@@ -297,7 +297,7 @@ class DoorBirdCleanupView(HomeAssistantView):
         # Find matching device
         for config_device in hass.data[DOMAIN]:
             if config_device.name == name:
-                await self.hass.async_add_executor_job(self._clear)
+                await hass.async_add_executor_job(self._clear)
 
         # No matching device
         return web.Response(status=404,
