@@ -10,7 +10,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import (
     ATTR_LOCATION, CONF_EVENT, CONF_NAME, CONF_TRIGGER_TIME)
-from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 DEPENDENCIES = ['axis']
@@ -20,20 +20,22 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Axis binary devices."""
-    add_entities([AxisBinarySensor(hass, discovery_info)], True)
+    add_entities([AxisBinarySensor(discovery_info)], True)
 
 
 class AxisBinarySensor(BinarySensorDevice):
     """Representation of a binary Axis event."""
 
-    def __init__(self, hass, event_config):
+    def __init__(self, event_config):
         """Initialize the Axis binary sensor."""
-        self.hass = hass
         self.axis_event = event_config[CONF_EVENT]
         self.device_name = event_config[CONF_NAME]
-        self.delay = event_config[CONF_TRIGGER_TIME]
         self.location = event_config[ATTR_LOCATION]
+        self.delay = event_config[CONF_TRIGGER_TIME]
         self._timer = None
+
+    async def async_added_to_hass(self):
+        """Subscribe sensors events."""
         self.axis_event.callback = self._update_callback
 
     def _update_callback(self):
@@ -42,8 +44,9 @@ class AxisBinarySensor(BinarySensorDevice):
             self._timer()
             self._timer = None
 
-        if self.delay > 0 and not self.is_on:
-            # Set timer to wait until updating the state
+        if self.delay == 0 or self.is_on:
+            self.schedule_update_ha_state()
+        else:  # Run timer to delay updating the state
             def _delay_update(now):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s called delayed (%s sec) update",
@@ -51,11 +54,9 @@ class AxisBinarySensor(BinarySensorDevice):
                 self.schedule_update_ha_state()
                 self._timer = None
 
-            self._timer = track_point_in_utc_time(
+            self._timer = async_track_point_in_utc_time(
                 self.hass, _delay_update,
                 utcnow() + timedelta(seconds=self.delay))
-        else:
-            self.schedule_update_ha_state()
 
     @property
     def is_on(self):
