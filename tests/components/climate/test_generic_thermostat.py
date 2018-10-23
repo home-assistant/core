@@ -221,6 +221,24 @@ class TestClimateGenericThermostat(unittest.TestCase):
         state = self.hass.states.get(ENTITY)
         self.assertEqual(23, state.attributes.get('temperature'))
 
+    def test_set_away_mode_twice_and_restore_prev_temp(self):
+        """Test the setting away mode twice in a row.
+
+        Verify original temperature is restored.
+        """
+        common.set_temperature(self.hass, 23)
+        self.hass.block_till_done()
+        common.set_away_mode(self.hass, True)
+        self.hass.block_till_done()
+        common.set_away_mode(self.hass, True)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY)
+        self.assertEqual(16, state.attributes.get('temperature'))
+        common.set_away_mode(self.hass, False)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY)
+        self.assertEqual(23, state.attributes.get('temperature'))
+
     def test_sensor_bad_value(self):
         """Test sensor that have None as state."""
         state = self.hass.states.get(ENTITY)
