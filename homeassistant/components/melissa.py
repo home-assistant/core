@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform
 
 REQUIREMENTS = ["py-melissa-climate==1.0.6"]
 
@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Melissa Climate component."""
     import melissa
 
@@ -36,9 +36,10 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
 
-    api = melissa.Melissa(username=username, password=password)
+    api = melissa.AsyncMelissa(username=username, password=password)
+    await api.async_connect()
     hass.data[DATA_MELISSA] = api
 
-    load_platform(hass, 'sensor', DOMAIN, {})
-    load_platform(hass, 'climate', DOMAIN, {})
+    await async_load_platform(hass, 'sensor', DOMAIN, {})
+    await async_load_platform(hass, 'climate', DOMAIN, {})
     return True
