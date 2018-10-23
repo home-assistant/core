@@ -667,6 +667,7 @@ class _BinarySensorCapabilities(_AlexaEntity):
             yield _AlexaContactSensor(self.hass, self.entity)
 
     def get_type(self):
+        """Return the type of binary sensor."""
         attrs = self.entity.attributes
         if attrs.get(ATTR_DEVICE_CLASS) in (
                 'door',
