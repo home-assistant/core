@@ -119,7 +119,7 @@ def is_on(hass, entity_id):
         group_on, _ = _get_group_on_off(state.state)
 
         # If we found a group_type, compare to ON-state
-        return group_on is not None and state.state == group_on
+        return state.state == group_on
 
     return False
 
@@ -187,7 +187,7 @@ async def async_setup(hass, config):
     """Set up all groups found defined in the configuration."""
     component = hass.data.get(DOMAIN)
 
-    if component is None:
+    if not component:
         component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await _async_process_config(hass, config, component)
@@ -197,7 +197,7 @@ async def async_setup(hass, config):
         auto = list(filter(lambda e: not e.user_defined, component.entities))
 
         conf = await component.async_prepare_reload()
-        if conf is None:
+        if not conf:
             return
         await _async_process_config(hass, conf, component)
 
@@ -214,13 +214,13 @@ async def async_setup(hass, config):
         group = component.get_entity(entity_id)
 
         # new group
-        if service.service == SERVICE_SET and group is None:
+        if service.service == SERVICE_SET and not group:
             entity_ids = service.data.get(ATTR_ENTITIES) or \
                 service.data.get(ATTR_ADD_ENTITIES) or None
 
             extra_arg = {attr: service.data[attr] for attr in (
                 ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL
-            ) if service.data.get(attr) is not None}
+            ) if service.data.get(attr)}
 
             await Group.async_create_group(
                 hass, service.data.get(ATTR_NAME, object_id),
@@ -232,7 +232,7 @@ async def async_setup(hass, config):
             )
             return
 
-        if group is None:
+        if not group:
             _LOGGER.warning("%s:Group '%s' doesn't exist!",
                             service.service, object_id)
             return
@@ -392,7 +392,7 @@ class Group(Entity):
         # If called before the platform async_setup is called (test cases)
         component = hass.data.get(DOMAIN)
 
-        if component is None:
+        if not component:
             component = hass.data[DOMAIN] = \
                 EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -481,7 +481,7 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        if self._async_unsub_state_changed is None:
+        if not self._async_unsub_state_changed:
             self._async_unsub_state_changed = async_track_state_change(
                 self.hass, self.tracking, self._async_state_changed_listener
             )
@@ -518,7 +518,7 @@ class Group(Entity):
         This method must be run in the event loop.
         """
         # removed
-        if self._async_unsub_state_changed is None:
+        if not self._async_unsub_state_changed:
             return
 
         self._async_update_group_state(new_state)
@@ -532,7 +532,7 @@ class Group(Entity):
         for entity_id in self.tracking:
             state = self.hass.states.get(entity_id)
 
-            if state is not None:
+            if state:
                 states.append(state)
 
         return states
@@ -553,32 +553,32 @@ class Group(Entity):
         gr_off = self.group_off
 
         # We have not determined type of group yet
-        if gr_on is None:
-            if tr_state is None:
+        if not gr_on:
+            if not tr_state:
                 states = self._tracking_states
 
                 for state in states:
                     gr_on, gr_off = \
                         _get_group_on_off(state.state)
-                    if gr_on is not None:
+                    if gr_on:
                         break
             else:
                 gr_on, gr_off = _get_group_on_off(tr_state.state)
 
-            if gr_on is not None:
+            if gr_on:
                 self.group_on, self.group_off = gr_on, gr_off
 
         # We cannot determine state of the group
-        if gr_on is None:
+        if not gr_on:
             return
 
         # pylint: disable=too-many-boolean-expressions
-        if tr_state is None or ((gr_state == gr_on and
+        if not tr_state or ((gr_state == gr_on and
                                  tr_state.state == gr_off) or
                                 (gr_state == gr_off and
                                  tr_state.state == gr_on) or
                                 tr_state.state not in (gr_on, gr_off)):
-            if states is None:
+            if not states:
                 states = self._tracking_states
 
             if self.mode(state.state == gr_on for state in states):
@@ -589,9 +589,9 @@ class Group(Entity):
         elif tr_state.state in (gr_on, gr_off):
             self._state = tr_state.state
 
-        if tr_state is None or self._assumed_state and \
+        if not tr_state or self._assumed_state and \
            not tr_state.attributes.get(ATTR_ASSUMED_STATE):
-            if states is None:
+            if not states:
                 states = self._tracking_states
 
             self._assumed_state = self.mode(
