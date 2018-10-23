@@ -21,7 +21,7 @@ JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 OLD_WS_TYPE_GET_LOVELACE_UI = 'frontend/lovelace_config'
 WS_TYPE_GET_LOVELACE_UI = 'lovelace/config'
 WS_TYPE_GET_CARD = 'lovelace/config/card/get'
-WS_TYPE_SET_CARD = 'lovelace/config/card/set'
+WS_TYPE_UPDATE_CARD = 'lovelace/config/card/update'
 
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): vol.Any(WS_TYPE_GET_LOVELACE_UI,
@@ -34,8 +34,8 @@ SCHEMA_GET_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Optional('format', default='yaml'): str,
 })
 
-SCHEMA_SET_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): WS_TYPE_SET_CARD,
+SCHEMA_UPDATE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_UPDATE_CARD,
     vol.Required('card_id'): str,
     vol.Required('card_config'): vol.Any(str, Dict),
     vol.Optional('format', default='yaml'): str,
@@ -175,7 +175,7 @@ def get_card(fname: str, card_id: str, data_format: str) -> JSON_TYPE:
         "Card with ID: {} was not found in {}.".format(card_id, fname))
 
 
-def set_card(fname: str, card_id: str, card_config: str, data_format: str)\
+def update_card(fname: str, card_id: str, card_config: str, data_format: str)\
         -> bool:
     """Save a specific card config for id."""
     config = load_yaml(fname)
@@ -208,8 +208,8 @@ async def async_setup(hass, config):
         SCHEMA_GET_CARD)
 
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SET_CARD, websocket_lovelace_set_card,
-        SCHEMA_SET_CARD)
+        WS_TYPE_UPDATE_CARD, websocket_lovelace_update_card,
+        SCHEMA_UPDATE_CARD)
 
     return True
 
@@ -267,12 +267,12 @@ async def websocket_lovelace_get_card(hass, connection, msg):
 
 
 @websocket_api.async_response
-async def websocket_lovelace_set_card(hass, connection, msg):
+async def websocket_lovelace_update_card(hass, connection, msg):
     """Receive lovelace card config over websocket and save."""
     error = None
     try:
         result = await hass.async_add_executor_job(
-            set_card, hass.config.path(LOVELACE_CONFIG_FILE),
+            update_card, hass.config.path(LOVELACE_CONFIG_FILE),
             msg['card_id'], msg['card_config'], msg.get('format', 'yaml'))
         message = websocket_api.result_message(
             msg['id'], result
