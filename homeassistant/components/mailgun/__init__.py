@@ -9,7 +9,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_WEBHOOK_ID
-from homeassistant.helpers import webhook_config_entry_flow
+from homeassistant.helpers import config_entry_flow
 
 DOMAIN = 'mailgun'
 API_PATH = '/api/{}'.format(DOMAIN)
@@ -56,7 +56,7 @@ async def async_unload_entry(hass, entry):
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     return True
 
-webhook_config_entry_flow.register_webhook_flow(
+config_entry_flow.register_webhook_flow(
     DOMAIN,
     'Mailgun Webhook',
     {

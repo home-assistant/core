@@ -1,4 +1,4 @@
-"""Test the init file of Mailgun"""
+"""Test the init file of Mailgun."""
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
