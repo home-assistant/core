@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "user_privilege": "Gebruiker moet beheerder zijn"
+        },
+        "error": {
+            "faulty_credentials": "Foutieve gebruikersgegevens",
+            "service_unavailable": "Geen service beschikbaar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Stel de UniFi-controller in"
+            }
+        },
+        "title": "UniFi-controller"
+    }
+}
