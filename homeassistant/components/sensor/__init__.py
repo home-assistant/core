@@ -57,8 +57,9 @@ async def async_setup(hass, config):
         if entity:
             entity.async_schedule_update_ha_state(True)
         else:
-            _LOGGER.warn("Force update requested for non-existant sensor: %s",
-                         entity_id)
+            _LOGGER.warning(
+                "Force update requested for non-existant sensor: %s",
+                entity_id)
 
     hass.services.async_register(DOMAIN, SERVICE_FORCE_UPDATE,
                                  async_schedule_forced_update,
