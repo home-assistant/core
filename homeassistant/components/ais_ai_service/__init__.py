@@ -1196,13 +1196,17 @@ def _publish_command_to_frame(hass, key, val, ip):
             return
         _say_it(hass, "dodajemy: " + name, None)
         password = hass.states.get('input_text.ais_iot_device_wifi_password').state
+
         requests.post(
             url + '/command',
             json={key: iot, "ip": ip, "WifiNetworkPass": password, "WifiNetworkSsid": wifi, "IotName": name})
     else:
-        requests.post(
-            url + '/command',
-            json={key: val, "ip": ip})
+        try:
+            requests.post(
+                url + '/command',
+                json={key: val, "ip": ip})
+        except Exception as e:
+            _LOGGER.info("requests.post problem")
 
 
 def _widi_rssi_to_info(rssi):

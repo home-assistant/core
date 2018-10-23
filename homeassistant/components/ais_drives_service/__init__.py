@@ -301,7 +301,7 @@ class LocalData:
     def rclone_fix_permissions(self):
         command = 'su -c "chmod -R 777 /sdcard/rclone"'
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-        process.wait()
+        # process.wait()
 
     def rclone_append_listremotes(self, say):
         self.rclone_fix_permissions()
@@ -343,7 +343,12 @@ class LocalData:
                     })
 
     def rclone_browse_folder(self, path, silent):
-        rclone_cmd = ["rclone", "lsjson", path, G_RCLONE_CONF, '--drive-formats=txt']
+        if ais_global.G_DRIVE_SHARED_WITH_ME in path:
+            rclone_cmd = ["rclone", "lsjson",
+                          path.replace(ais_global.G_DRIVE_SHARED_WITH_ME, ''),
+                          G_RCLONE_CONF, '--drive-formats=txt', '--drive-shared-with-me']
+        else:
+            rclone_cmd = ["rclone", "lsjson", path, G_RCLONE_CONF, '--drive-formats=txt']
         proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         #  will wait for the process to complete and then we are going to return the output
@@ -356,12 +361,14 @@ class LocalData:
         else:
             self.folders = [ais_global.G_EMPTY_OPTION]
             self.folders.append('..')
+            if self.current_path.endswith(':'):
+                self.folders.append(self.current_path + ais_global.G_DRIVE_SHARED_WITH_ME)
             self.folders_json = json.loads(proc.stdout)
             for item in self.folders_json:
                 if self.current_path.endswith(':'):
-                    self.folders.append(self.current_path + item["Path"])
+                    self.folders.append(self.current_path + item["Path"].strip())
                 else:
-                    self.folders.append(self.current_path + "/" + item["Path"])
+                    self.folders.append(self.current_path + "/" + item["Path"].strip())
             if silent is False:
                 self.hass.services.call(
                     'input_select',
@@ -385,7 +392,13 @@ class LocalData:
 
     def rclone_copy_and_read(self, path, item_path):
         # TODO clear .temp files...
-        rclone_cmd = ["rclone", "copy", path, G_LOCAL_FILES_ROOT + '/.temp/', G_RCLONE_CONF, '--drive-formats=txt']
+        if ais_global.G_DRIVE_SHARED_WITH_ME in path:
+            rclone_cmd = ["rclone", "copy", path.replace(ais_global.G_DRIVE_SHARED_WITH_ME, ''),
+                          G_LOCAL_FILES_ROOT + '/.temp/', G_RCLONE_CONF,
+                          '--drive-formats=txt', '--drive-shared-with-me']
+        else:
+            rclone_cmd = ["rclone", "copy", path, G_LOCAL_FILES_ROOT + '/.temp/',
+                          G_RCLONE_CONF, '--drive-formats=txt']
         proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if "" != proc.stderr:
@@ -454,7 +467,11 @@ class LocalData:
         # try to kill previous serve if exists
         self.check_kill_process('rclone')
         # serve and play
-        rclone_cmd = ["rclone", "serve", 'http', path, G_RCLONE_CONF, '--addr=:8080']
+        if ais_global.G_DRIVE_SHARED_WITH_ME in path:
+            rclone_cmd = ["rclone", "serve", 'http',
+                          path.replace(ais_global.G_DRIVE_SHARED_WITH_ME, ""), G_RCLONE_CONF, '--addr=:8080']
+        else:
+            rclone_cmd = ["rclone", "serve", 'http', path, G_RCLONE_CONF, '--addr=:8080']
         rclone_serving_process = subprocess.Popen(
                 rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.rclone_url_to_stream = G_RCLONE_URL_TO_STREAM + str(item_path)

@@ -402,7 +402,7 @@ class PlayLastBookmarkIntent(intent.IntentHandler):
 
         else:
             bookmark = bookmarks[0]["source"] + '; ' + bookmarks[0]["name"]
-            answer = "Właczam ostatnią zakładkę {}".format(bookmark)
+            answer = "Włączam ostatnią zakładkę {}".format(bookmark)
             yield from hass.services.async_call(
                 'ais_bookmarks', 'play_bookmark', {"bookmark": bookmark})
         response.async_set_speech(answer)

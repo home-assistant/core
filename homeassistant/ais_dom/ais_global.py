@@ -6,6 +6,7 @@ import logging
 
 # LV settings
 G_EMPTY_OPTION = "-"
+G_DRIVE_SHARED_WITH_ME = " Udostępnione dla mnie"
 
 # TTS settings
 GLOBAL_TTS_RATE = 1
