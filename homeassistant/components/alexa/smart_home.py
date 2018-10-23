@@ -436,8 +436,9 @@ class _AlexaContactSensor(_AlexaInterface):
         if name != 'detectionState':
             raise _UnsupportedProperty(name)
 
-        state = 'DETECTED' if self.entity.state else "NOT DETECTED"
-        return state
+        if self.entity.state == STATE_ON:
+            return 'DETECTED'
+        return 'NOT_DETECTED'
 
 
 class _AlexaThermostatController(_AlexaInterface):
