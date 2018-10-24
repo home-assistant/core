@@ -7,142 +7,127 @@ https://home-assistant.io/components/sensor.meteofrance/
 
 import logging
 import datetime
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-
-
 from homeassistant.const import (
-    STATE_UNKNOWN, ATTR_ATTRIBUTION)
+    CONF_MONITORED_CONDITIONS, STATE_UNKNOWN, ATTR_ATTRIBUTION, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-_RESOURCE = 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/{}/'
+REQUIREMENTS = ['meteofrance==0.2.0']
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by Meteo France"
-CONF_LOCATION_ID = 'location_id'
-CONF_NAME = 'name'
+CONF_ATTRIBUTION = "Data provided by Meteo-France"
+CONF_POSTAL_CODE = 'postal_code'
 
 STATE_ATTR_FORECAST = 'Forecast'
-STATE_ATTR_FORECAST_INTERVAL = 'Interval_'
 
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=5)
-DEFAULT_TIMEOUT = 10
+SCAN_INTERVAL = datetime.timedelta(minutes=1)
+
+SENSOR_TYPES = {
+    'rain_chance': ['Rain chance', '%'],
+    'freeze_chance': ['Freeze chance', '%'],
+    'thunder_chance': ['Thunder chance', '%'],
+    'snow_chance': ['Snow chance', '%'],
+    'weather': ['Weather', None],
+    'wind_speed': ['Wind Speed', 'km/h'],
+    'next_rain': ['Next rain', 'min'],
+    'temperature': ['Temperature', TEMP_CELSIUS],
+    'uv': ['UV', None],
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_LOCATION_ID): cv.string,
-    vol.Optional(CONF_NAME): cv.string
+    vol.Required(CONF_POSTAL_CODE): cv.string,
+    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Météo-France sensor."""
-    location_id = config.get(CONF_LOCATION_ID)
-    if len(location_id) == 5:  # convert insee code to needed meteofrance code
-        location_id = str(location_id)+'0'
-    location_name = config.get(CONF_NAME)
-    meteofrance_data = MeteoFranceCurrentData(hass, location_id)
+    """Set up the Meteo-France sensor."""
+    postal_code = config.get(CONF_POSTAL_CODE)
+
+    from meteofrance.client import meteofranceClient, meteofranceError
 
     try:
-        meteofrance_data.update()
-    except ValueError as err:
-        _LOGGER.error("Received error from Meteo France: %s", err)
-        return False
+        meteofrance_client = meteofranceClient(postal_code)
+    except meteofranceError as exp:
+        _LOGGER.error(exp)
+        return
 
-    add_devices([MeteoFranceSensor(meteofrance_data, location_name)])
+    client = MeteoFranceUpdater(meteofrance_client)
+
+    add_devices([MeteoFranceSensor('Météo-France', variable, client)
+                 for variable in config[CONF_MONITORED_CONDITIONS]])
 
 
 class MeteoFranceSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, meteofrance_data, location_name):
+    def __init__(self, name, condition, client):
         """Initialize the sensor."""
-        self.current_data = meteofrance_data
-        self.location_name = location_name
-        self._unit = "Min"
-        self._time_to_rain = None
+        self._name = name
+        self._condition = condition
+        self._client = client
+        self._data = client.get_data()
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self.location_name is None:
-            return "1hr rain forecast"
-        return "{} 1hr rain forecast".format(self.location_name)
+        return self._data["name"]+' '+SENSOR_TYPES[self._condition][0]
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.current_data and self.current_data.rain_forecast:
-            self._time_to_rain = 0
-            for interval in self.current_data.intervals:
-                if interval["niveauPluie"] > 1:
-                    self._unit = "Min"
-                    return self._time_to_rain
-                self._time_to_rain += 5
-            self._unit = ""
-            return "No rain"
+        if self._data[self._condition] is not False:
+            return self._data[self._condition]
         return STATE_UNKNOWN
 
     @property
     def state_attributes(self):
         """Return the state attributes of the sun."""
-        if self.current_data and self.current_data.rain_forecast:
+        if self._condition == 'next_rain':
             return {
                 **{
-                    STATE_ATTR_FORECAST: self.current_data.rain_forecast,
+                    STATE_ATTR_FORECAST: self._data["rain_forecast"],
                 },
-                **{
-                    STATE_ATTR_FORECAST_INTERVAL+str(interval+1):
-                        self.current_data.intervals[interval]["niveauPluie"]
-                    for interval in range(0, len(self.current_data.intervals))
-                },
+                ** self._data["next_rain_intervals"],
                 **{
                     ATTR_ATTRIBUTION: CONF_ATTRIBUTION
                 }
             }
+        return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._unit
+        return SENSOR_TYPES[self._condition][1]
 
     def update(self):
         """Fetch new state data for the sensor."""
-        self.current_data.update()
+        self._client.update()
 
 
-class MeteoFranceCurrentData():
-    """Get data from Meteo France."""
+class MeteoFranceUpdater:
+    """Update data from Meteo-France."""
 
-    def __init__(self, hass, location_id):
+    def __init__(self, client):
         """Initialize the data object."""
-        self._hass = hass
-        self._location_id = location_id
-        self.rain_forecast = None
-        self.intervals = None
+        self._client = client
 
-    def _build_url(self):
-        url = _RESOURCE.format(self._location_id)
-        _LOGGER.info("Meteo France rain forecast URL %s", url)
-        return url
+    def get_data(self):
+        """Get the latest data from Meteo-France."""
+        return self._client.get_data()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(SCAN_INTERVAL)
     def update(self):
-        """Get the latest data from BOM."""
+        """Get the latest data from Meteo-France."""
+        _LOGGER.error("updating meteofrance")
+        from meteofrance.client import meteofranceError
         try:
-            result = requests.get(self._build_url(), timeout=10).json()
-            if result['hasData'] is True:
-                self.rain_forecast = result["niveauPluieText"][0]
-                self.intervals = result["dataCadran"]
-            else:
-                raise ValueError(
-                    "No forecast for this location: {}"
-                    .format(self._location_id)
-                )
-        except ValueError as err:
-            _LOGGER.error("Meteo-France component: %s", err.args)
-            raise
+            self._client.update()
+        except meteofranceError as exp:
+            _LOGGER.error(exp)
+            return
