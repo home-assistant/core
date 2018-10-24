@@ -25,9 +25,11 @@ CONF_RESET = 'reset'
 CONF_CHANGES = 'changes'
 CONF_REPEAT = 'repeat'
 CONF_REPEAT_TIME = 'repeat_time'
+CONF_RUN_TEST = 'run_test'
 
 DEFAULT_NAME = 'FFmpeg Motion'
 DEFAULT_INIT_STATE = True
+DEFAULT_RUN_TEST = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_INPUT): cv.string,
@@ -42,6 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Inclusive(CONF_REPEAT_TIME, 'repeat'):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_RUN_TEST, default=DEFAULT_RUN_TEST): cv.boolean,
 })
 
 
@@ -50,8 +53,9 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the FFmpeg binary motion sensor."""
     manager = hass.data[DATA_FFMPEG]
 
-    if not await manager.async_run_test(config.get(CONF_INPUT)):
-        return
+    if config.get(CONF_RUN_TEST):
+        if not await manager.async_run_test(config.get(CONF_INPUT)):
+            return
 
     entity = FFmpegMotion(hass, manager, config)
     async_add_entities([entity])

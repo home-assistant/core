@@ -22,18 +22,25 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ffmpeg']
 DEFAULT_NAME = 'FFmpeg'
 
+CONF_RUN_TEST = 'run_test'
+
+DEFAULT_RUN_TEST = True
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_INPUT): cv.string,
     vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_RUN_TEST, default=DEFAULT_RUN_TEST): cv.boolean,
 })
 
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up a FFmpeg camera."""
-    if not await hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_INPUT)):
-        return
+    if config.get(CONF_RUN_TEST):
+        if not await hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_INPUT)):
+            return
+
     async_add_entities([FFmpegCamera(hass, config)])
 
 
