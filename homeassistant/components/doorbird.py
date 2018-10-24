@@ -38,6 +38,8 @@ SENSOR_TYPES = {
     },
 }
 
+CLEAR_SCHEDULE_EVENT = 'doorbird_clear_schedule'
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
@@ -102,6 +104,21 @@ def setup(hass, config):
             doorstation.update_schedule(hass)
 
     hass.data[DOMAIN] = doorstations
+
+    def _clear_device_schedule_handler(event):
+
+        # Clear webhooks
+        favorites = device.favorites()
+        for favorite_type in favorites:
+            for favorite_id in favorites[favorite_type]:
+                device.delete_favorite(favorite_type, favorite_id)
+
+        # Clear schedule
+        schedule = device.schedule()
+        for entry in schedule:
+            device.delete_schedule(entry.input, entry.param)
+
+    hass.bus.listen(CLEAR_SCHEDULE_EVENT, _clear_device_schedule_handler)
 
     return True
 
@@ -297,25 +314,12 @@ class DoorBirdCleanupView(HomeAssistantView):
         # Find matching device
         for config_device in hass.data[DOMAIN]:
             if config_device.name == name:
-                await hass.async_add_executor_job(self._clear)
+                hass.bus.async_fire(CLEAR_SCHEDULE_EVENT,
+                                    {'device': config_device.name})
+
+                message = 'Clearing schedule for {}'.format(name)
+                return web.Response(status=200, text=message)
 
         # No matching device
         return web.Response(status=404,
                             text='Device "{}" not found'.format(name))
-
-    @staticmethod
-    def _clear(device):
-        from aiohttp import web
-
-        # Clear webhooks
-        favorites = device.favorites()
-        for favorite_type in favorites:
-            for favorite_id in favorites[favorite_type]:
-                device.delete_favorite(favorite_type, favorite_id)
-
-        # Clear schedule
-        schedule = device.schedule()
-        for entry in schedule:
-            device.delete_schedule(entry.input, entry.param)
-
-        return web.Response(status=202)
