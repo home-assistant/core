@@ -1,5 +1,5 @@
 """
-Support for ZigBee Home Automation devices.
+Support for Zigbee Home Automation devices.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
@@ -71,7 +71,7 @@ SERVICE_SCHEMAS = {
 }
 
 
-# ZigBee definitions
+# Zigbee definitions
 CENTICELSIUS = 'C-100'
 # Key in hass.data dict containing discovery info
 DISCOVERY_KEY = 'zha_discovery_info'
