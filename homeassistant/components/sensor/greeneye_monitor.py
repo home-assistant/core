@@ -46,15 +46,15 @@ async def async_setup_platform(
         async_add_devices,
         discovery_info=None):
     """Set up a single GEM temperature sensor."""
-    type = discovery_info[CONF_SENSOR_TYPE]
-    if type == SENSOR_TYPE_CURRENT:
+    sensor_type = discovery_info[CONF_SENSOR_TYPE]
+    if sensor_type == SENSOR_TYPE_CURRENT:
         async_add_devices([
             CurrentSensor(
                 discovery_info[CONF_MONITOR_SERIAL_NUMBER],
                 discovery_info[CONF_NUMBER],
                 discovery_info[CONF_NAME],
                 discovery_info.get(CONF_NET_METERING, False))])
-    elif type == SENSOR_TYPE_PULSE_COUNTER:
+    elif sensor_type == SENSOR_TYPE_PULSE_COUNTER:
         async_add_devices([
             PulseCounter(
                 discovery_info[CONF_MONITOR_SERIAL_NUMBER],
@@ -63,7 +63,7 @@ async def async_setup_platform(
                 discovery_info[CONF_COUNTED_QUANTITY],
                 discovery_info.get(CONF_TIME_UNIT, TIME_UNIT_SECOND),
                 discovery_info.get(CONF_COUNTED_QUANTITY_PER_PULSE, 1.0))])
-    elif type == SENSOR_TYPE_TEMPERATURE:
+    elif sensor_type == SENSOR_TYPE_TEMPERATURE:
         async_add_devices([
             TemperatureSensor(
                 discovery_info[CONF_MONITOR_SERIAL_NUMBER],
@@ -73,7 +73,7 @@ async def async_setup_platform(
 
 
 class GEMSensor(Entity):
-    """Base class for GreenEye Monitor sensors"""
+    """Base class for GreenEye Monitor sensors."""
 
     should_poll = False
 
@@ -81,6 +81,7 @@ class GEMSensor(Entity):
             self,
             monitor_serial_number,
             name):
+        """Construct the entity."""
         self._monitor_serial_number = monitor_serial_number
         self._name = name
         self._sensor = None
@@ -91,7 +92,7 @@ class GEMSensor(Entity):
         return self._name
 
     async def async_added_to_hass(self):
-        """Wait for and connect to the sensor"""
+        """Wait for and connect to the sensor."""
         monitors = self.hass.data[DATA_GREENEYE_MONITOR]
 
         if not self._try_connect_to_monitor(monitors):
@@ -103,7 +104,7 @@ class GEMSensor(Entity):
             monitors.remove_listener(self._on_new_monitor)
 
     async def async_will_remove_from_hass(self):
-        """Remove listener from the sensor"""
+        """Remove listener from the sensor."""
         if self._sensor:
             self._sensor.remove_listener(self._schedule_update)
         else:
@@ -121,7 +122,7 @@ class GEMSensor(Entity):
         return True
 
     def _get_sensor(self, monitor):
-        return None
+        raise NotImplementedError()
 
     def _schedule_update(self):
         self.async_schedule_update_ha_state(False)
