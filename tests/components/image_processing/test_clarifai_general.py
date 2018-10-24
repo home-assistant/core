@@ -109,7 +109,8 @@ async def test_setup_platform(hass, mock_app, mock_image):
     assert hass.states.get(VALID_ENTITY_ID)
 
 
-@patch.object(Model, 'predict_by_base64', return_value=MOCK_RESPONSE)
+@patch.object('clarifai.rest.client.Model',
+              'predict_by_base64', return_value=MOCK_RESPONSE)
 async def test_process_image(hass, mock_app, mock_image):
     """Test successful processing of an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
