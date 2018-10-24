@@ -10,6 +10,7 @@ from typing import Any, Dict, cast
 import functools as ft
 import logging
 import async_timeout
+import numbers
 
 import voluptuous as vol
 
@@ -19,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
@@ -43,6 +43,8 @@ CONF_AUTOMATIC_ADD = 'automatic_add'
 CONF_FIRE_EVENT = 'fire_event'
 CONF_MEDIA = 'iobl_media'
 CONF_COMM_MODE = 'iobl_comm_mode'
+CONF_PACKET_TYPE = 'iobl_pkt_type'
+CONF_DIMENSION_VALUES = 'iobl_dim_values'
 CONF_IGNORE_DEVICES = 'ignore_devices'
 CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 
@@ -53,6 +55,7 @@ DEFAULT_SIGNAL_REPETITIONS = 1
 CONNECTION_TIMEOUT = 10
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
+EVENT_KEY_ID = 'legrand_id'
 EVENT_KEY_COMMAND = 'command'
 EVENT_TYPE_COMMAND = 'what'
 
@@ -64,7 +67,7 @@ SIGNAL_AVAILABILITY = 'iobl_device_available'
 
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-    vol.Optional(CONF_MEDIA, default='cpl'): cv.string,
+    vol.Optional(CONF_MEDIA, default='plc'): cv.string,
     vol.Optional(CONF_COMM_MODE, default='unicast'): cv.string,
 })
 
@@ -87,6 +90,8 @@ SEND_COMMAND_SCHEMA = vol.Schema({
     vol.Required(CONF_COMM_MEDIA): cv.string,
     vol.Required(CONF_COMM_MODE): cv.string,
     vol.Required(CONF_COMMAND): cv.string,
+    vol.Optional(CONF_PACKET_TYPE): cv.string,
+    vol.Optional(CONF_DIMENSION_VALUES): [cv.string],
 })
 
 
@@ -122,14 +127,20 @@ def async_setup(hass, config):
         _LOGGER.debug('LegrandInOne command for %s', str(call.data))
 
         data = cast(Dict[str, Any], {
-            'type': 'command',
-            'legrand_id' : call.data.get(CONF_DEVICE_ID),
-            'who' : call.data.get(CONF_DEVICE_TYPE),
+            'legrand_id': call.data.get(CONF_DEVICE_ID),
+            'who': call.data.get(CONF_DEVICE_TYPE),
             'mode': call.data.get(CONF_COMM_MODE),
             'media': call.data.get(CONF_COMM_MEDIA),
             'unit': call.data.get(CONF_DEVICE_UNIT),
             'what': call.data.get(CONF_COMMAND)
         })
+
+        data['type'] = call.data.get(CONF_PACKET_TYPE)
+        if data['type'] is None:
+            # Default to bus_command packet if not specified.
+            data['type'] = 'bus_command'
+
+        data['values'] = call.data.get(CONF_DIMENSION_VALUES)
 
         if not (yield from LegrandInOneCommand.send_command(data)):
             _LOGGER.error('Failed LegrandInOne command for %s', str(call.data))
@@ -230,8 +241,7 @@ def async_setup(hass, config):
         async_dispatcher_send(hass, SIGNAL_AVAILABILITY, True)
 
         # Bind protocol to command class to allow entities to send commands
-        LegrandInOneCommand.set_iobl_protocol(
-            protocol)
+        LegrandInOneCommand.set_iobl_protocol(protocol)
 
         # handle shutdown of IOBL asyncio transport
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
@@ -252,15 +262,19 @@ class IoblDevice(Entity):
     platform = None
     _state = STATE_UNKNOWN
     _available = True
+    legrand_id = ''
+    iobl_mode = ''
+    iobl_media = ''
 
-    def __init__(self, device_id, hass, name=None, fire_event=False, iobl_media = 'cpl', iobl_comm_mode = 'unicast'):
+    def __init__(self, device_id, hass, name=None, fire_event=False,
+                 iobl_media='plc', iobl_comm_mode='unicast'):
         """Initialize the device."""
         self.hass = hass
 
         self.legrand_id = device_id
         self.iobl_mode = iobl_comm_mode
         self.iobl_media = iobl_media
-        
+
         if name:
             self._name = name
         else:
@@ -355,9 +369,9 @@ class LegrandInOneCommand(IoblDevice):
 
     @classmethod
     @asyncio.coroutine
-    def send_command(cls, device_id, action):
+    def send_command(cls, command_data):
         """Send device command to IOBL."""
-        return (yield from cls._protocol.send_packet(device_id, action))
+        return (yield from cls._protocol.send_packet(command_data))
 
     @asyncio.coroutine
     def _async_handle_command(self, command, *args):
@@ -369,6 +383,12 @@ class LegrandInOneCommand(IoblDevice):
         elif command == 'turn_off':
             cmd = 'off'
             self._state = False
+
+        elif command == 'dim':
+            _LOGGER.debug("handling command: %s to iobl device: %s - Level : %d", command, self.legrand_id, args[0])
+            # convert brightness to rflink dim level
+            cmd = int(args[0] * 100 / 255)
+            self._state = True
 
         elif command == 'toggle':
             cmd = 'on'
@@ -411,24 +431,37 @@ class LegrandInOneCommand(IoblDevice):
         # to serial/tcp device. Does not wait for command send
         # confirmation.
         data = cast(Dict[str, Any], {
-            'type': 'command',
-            'legrand_id' : self.legrand_id,
-            'who' : self.iobl_type,
+            'legrand_id': self.legrand_id,
+            'who': self.iobl_type,
             'mode': self.iobl_mode,
             'media': self.iobl_media,
             'unit': self.iobl_unit,
-            'what': cmd
         })
 
-        self.hass.async_add_job(ft.partial(
-            self._protocol.send_packet, data))
+        if isinstance(cmd, numbers.Integral):
+            data['type'] = 'set_dimension'
+            data['dimension'] = 'go_to_level_time'
+            data['values'] = [str(cmd)]
+        else:
+            data['type'] = 'bus_command'
+            data['what'] = cmd
+
+        self.hass.async_create_task(self._protocol.send_packet(data))
+
 
 class SwitchableIoblDevice(LegrandInOneCommand):
     """IOBL entity which can switch on/off (eg: light, switch)."""
 
+    """Representation of an IOBL light."""
+    def __init__(self, *args, **kwargs):
+        """Initialize device type and unit number."""
+        self.iobl_type = 'light'
+        self.iobl_unit = '0'
+        super().__init__(*args, **kwargs)
+
     def _handle_event(self, event):
 
-        command = event['command']
+        command = event['what']
         if command in ['on']:
             self._state = True
         elif command in ['off']:
@@ -436,8 +469,8 @@ class SwitchableIoblDevice(LegrandInOneCommand):
 
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        return self._async_handle_command("on")
+        return self._async_handle_command("turn_on")
 
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        return self._async_handle_command("off")
+        return self._async_handle_command("turn_off")

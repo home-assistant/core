@@ -68,6 +68,7 @@ class LegrandInOneCover(LegrandInOneCommand, CoverDevice):
     """IOBL entity which can switch on/stop/off (eg: cover)."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize device type and unit number."""
         self.iobl_type = 'automation'
         self.iobl_unit = '2'
         super().__init__(*args, **kwargs)

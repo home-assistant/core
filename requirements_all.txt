@@ -1138,6 +1138,9 @@ python-gitlab==1.6.0
 # homeassistant.components.sensor.hp_ilo
 python-hpilo==3.9
 
+# homeassistant.components.legrandinone
+iobl==0.0.3
+
 # homeassistant.components.joaoapps_join
 # homeassistant.components.notify.joaoapps_join
 python-join-api==0.0.2
