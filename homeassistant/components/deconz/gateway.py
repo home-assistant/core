@@ -22,6 +22,10 @@ class DeconzGateway:
         self.api = None
         self._cancel_retry_setup = None
 
+        self.deconz_ids = {}
+        self.events = []
+        self.listeners = []
+
     async def async_setup(self, tries=0):
         """Set up a deCONZ gateway."""
         hass = self.hass
@@ -51,7 +55,7 @@ class DeconzGateway:
             hass.async_create_task(hass.config_entries.async_forward_entry_setup(
                 self.config_entry, component))
 
-        self.hass.data[DATA_DECONZ_UNSUB].append(
+        self.listeners.append(
             async_dispatcher_connect(
                 self.hass, 'deconz_new_sensor', self.async_add_remote))
 
@@ -78,8 +82,15 @@ class DeconzGateway:
         for sensor in sensors:
             if sensor.type in DECONZ_REMOTE and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
-                self.hass.data[DATA_DECONZ_EVENT].append(
-                    DeconzEvent(self.hass, sensor))
+                self.events.append(DeconzEvent(self.hass, sensor))
+
+    @callback
+    def shutdown(self, event):
+        """Wrap the call to deconz.close.
+
+        Used as an argument to EventBus.async_listen_once.
+        """
+        self.api.close()
 
 
 async def get_gateway(hass, config, async_add_device_callback):

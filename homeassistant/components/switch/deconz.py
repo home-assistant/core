@@ -5,8 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.deconz/
 """
 from homeassistant.components.deconz.const import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB,
-    DECONZ_DOMAIN, POWER_PLUGS, SIRENS)
+    DOMAIN as DATA_DECONZ, DECONZ_DOMAIN, POWER_PLUGS, SIRENS)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -37,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities.append(DeconzSiren(light))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    hass.data[DATA_DECONZ].listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_switch))
 
     async_add_switch(hass.data[DATA_DECONZ].api.lights.values())
@@ -53,7 +52,8 @@ class DeconzSwitch(SwitchDevice):
     async def async_added_to_hass(self):
         """Subscribe to switches events."""
         self._switch.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._switch.deconz_id
+        self.hass.data[DATA_DECONZ].deconz_ids[self.entity_id] = \
+            self._switch.deconz_id
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect switch object when removed."""

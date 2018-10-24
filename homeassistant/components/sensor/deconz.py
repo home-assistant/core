@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.deconz/
 """
 from homeassistant.components.deconz.const import (
     ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN)
+    DECONZ_DOMAIN)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
@@ -46,7 +46,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     entities.append(DeconzSensor(sensor))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    hass.data[DATA_DECONZ].listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
     async_add_sensor(hass.data[DATA_DECONZ].api.sensors.values())
@@ -62,7 +62,8 @@ class DeconzSensor(Entity):
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
+        self.hass.data[DATA_DECONZ].deconz_ids[self.entity_id] = \
+            self._sensor.deconz_id
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect sensor object when removed."""
@@ -171,7 +172,8 @@ class DeconzBattery(Entity):
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
+        self.hass.data[DATA_DECONZ].deconz_ids[self.entity_id] = \
+            self._sensor.deconz_id
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect sensor object when removed."""
