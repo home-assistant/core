@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_switch))
 
-    async_add_switch(hass.data[DATA_DECONZ].lights.values())
+    async_add_switch(hass.data[DATA_DECONZ].api.lights.values())
 
 
 class DeconzSwitch(SwitchDevice):
@@ -92,7 +92,7 @@ class DeconzSwitch(SwitchDevice):
                 self._switch.uniqueid.count(':') != 7):
             return None
         serial = self._switch.uniqueid.split('-', 1)[0]
-        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
+        bridgeid = self.hass.data[DATA_DECONZ].api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},

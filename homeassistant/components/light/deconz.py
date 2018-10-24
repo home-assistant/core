@@ -54,8 +54,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_group', async_add_group))
 
-    async_add_light(hass.data[DATA_DECONZ].lights.values())
-    async_add_group(hass.data[DATA_DECONZ].groups.values())
+    async_add_light(hass.data[DATA_DECONZ].api.lights.values())
+    async_add_group(hass.data[DATA_DECONZ].api.groups.values())
 
 
 class DeconzLight(Light):
@@ -214,7 +214,7 @@ class DeconzLight(Light):
                 self._light.uniqueid.count(':') != 7):
             return None
         serial = self._light.uniqueid.split('-', 1)[0]
-        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
+        bridgeid = self.hass.data[DATA_DECONZ].api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
