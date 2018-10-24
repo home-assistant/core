@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from itertools import chain
 import logging
+from collections import OrderedDict
 
 from homeassistant import config as conf_util
 from homeassistant.setup import async_prepare_setup_platform
@@ -262,6 +263,16 @@ class EntityComponent:
         except HomeAssistantError as err:
             self.logger.error(err)
             return None
+
+        # Make a copy because we are mutating it.
+        conf = OrderedDict(conf)
+
+        # Merge packages
+        conf_util.merge_packages_config(
+            self.hass,
+            conf,
+            conf.get(conf_util.CONF_CORE, {}).get(conf_util.CONF_PACKAGES, {})
+        )
 
         conf = conf_util.async_process_component_config(
             self.hass, conf, self.domain)
