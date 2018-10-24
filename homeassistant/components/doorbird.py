@@ -192,6 +192,9 @@ class ConfiguredDoorBird(object):
                 _LOGGER.info('Registered for %s pushes from DoorBird "%s". '
                              'Use the "%s_%s" event for automations.',
                              sensor_type, self.name, DOMAIN, slug)
+
+                # Register a dummy listener so event is listed in GUI
+                hass.bus.listen('{}_{}'.format(DOMAIN, slug), handle_event)
             else:
                 # Disabled -> deregister
                 self._deregister_event(url, sensor_type)
