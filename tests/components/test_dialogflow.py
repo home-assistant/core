@@ -371,7 +371,7 @@ class TestDialogflow(unittest.TestCase):
         text = req.json().get("speech")
 
         assert "Anne Therese is at unknown and Paulus is at unknown" == \
-                         text
+            text
 
         hass.states.set("device_tracker.paulus", "home")
         hass.states.set("device_tracker.anne_therese", "home")
@@ -476,7 +476,8 @@ class TestDialogflow(unittest.TestCase):
         req = _intent_req(data)
         assert 200 == req.status_code
         text = req.json().get("speech")
-        assert "You have not defined an action in your Dialogflow intent." == text
+        assert \
+            "You have not defined an action in your Dialogflow intent." == text
 
     def test_intent_with_unknown_action(self):
         """Test an intent with an action not defined in the conf."""
@@ -520,4 +521,5 @@ class TestDialogflow(unittest.TestCase):
         req = _intent_req(data)
         assert 200 == req.status_code
         text = req.json().get("speech")
-        assert "This intent is not yet configured within Home Assistant." == text
+        assert \
+            "This intent is not yet configured within Home Assistant." == text

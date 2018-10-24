@@ -49,7 +49,7 @@ class TestEcobee(unittest.TestCase):
     def test_temperature_unit(self):
         """Test temperature unit property."""
         assert const.TEMP_FAHRENHEIT == \
-                         self.thermostat.temperature_unit
+            self.thermostat.temperature_unit
 
     def test_current_temperature(self):
         """Test current temperature."""
@@ -155,7 +155,7 @@ class TestEcobee(unittest.TestCase):
     def test_operation_list(self):
         """Test operation list property."""
         assert ['auto', 'auxHeatOnly', 'cool',
-                          'heat', 'off'] == self.thermostat.operation_list
+                'heat', 'off'] == self.thermostat.operation_list
 
     def test_operation_mode(self):
         """Test operation mode property."""
@@ -179,46 +179,46 @@ class TestEcobee(unittest.TestCase):
         """Test device state attributes property."""
         self.ecobee['equipmentStatus'] = 'heatPump2'
         assert {'actual_humidity': 15,
-                          'climate_list': ['Climate1', 'Climate2'],
-                          'fan': 'off',
-                          'fan_min_on_time': 10,
-                          'climate_mode': 'Climate1',
-                          'operation': 'heat'} == \
-                         self.thermostat.device_state_attributes
+                'climate_list': ['Climate1', 'Climate2'],
+                'fan': 'off',
+                'fan_min_on_time': 10,
+                'climate_mode': 'Climate1',
+                'operation': 'heat'} == \
+            self.thermostat.device_state_attributes
 
         self.ecobee['equipmentStatus'] = 'auxHeat2'
         assert {'actual_humidity': 15,
-                          'climate_list': ['Climate1', 'Climate2'],
-                          'fan': 'off',
-                          'fan_min_on_time': 10,
-                          'climate_mode': 'Climate1',
-                          'operation': 'heat'} == \
-                         self.thermostat.device_state_attributes
+                'climate_list': ['Climate1', 'Climate2'],
+                'fan': 'off',
+                'fan_min_on_time': 10,
+                'climate_mode': 'Climate1',
+                'operation': 'heat'} == \
+            self.thermostat.device_state_attributes
         self.ecobee['equipmentStatus'] = 'compCool1'
         assert {'actual_humidity': 15,
-                          'climate_list': ['Climate1', 'Climate2'],
-                          'fan': 'off',
-                          'fan_min_on_time': 10,
-                          'climate_mode': 'Climate1',
-                          'operation': 'cool'} == \
-                         self.thermostat.device_state_attributes
+                'climate_list': ['Climate1', 'Climate2'],
+                'fan': 'off',
+                'fan_min_on_time': 10,
+                'climate_mode': 'Climate1',
+                'operation': 'cool'} == \
+            self.thermostat.device_state_attributes
         self.ecobee['equipmentStatus'] = ''
         assert {'actual_humidity': 15,
-                          'climate_list': ['Climate1', 'Climate2'],
-                          'fan': 'off',
-                          'fan_min_on_time': 10,
-                          'climate_mode': 'Climate1',
-                          'operation': 'idle'} == \
-                         self.thermostat.device_state_attributes
+                'climate_list': ['Climate1', 'Climate2'],
+                'fan': 'off',
+                'fan_min_on_time': 10,
+                'climate_mode': 'Climate1',
+                'operation': 'idle'} == \
+            self.thermostat.device_state_attributes
 
         self.ecobee['equipmentStatus'] = 'Unknown'
         assert {'actual_humidity': 15,
-                          'climate_list': ['Climate1', 'Climate2'],
-                          'fan': 'off',
-                          'fan_min_on_time': 10,
-                          'climate_mode': 'Climate1',
-                          'operation': 'Unknown'} == \
-                         self.thermostat.device_state_attributes
+                'climate_list': ['Climate1', 'Climate2'],
+                'fan': 'off',
+                'fan_min_on_time': 10,
+                'climate_mode': 'Climate1',
+                'operation': 'Unknown'} == \
+            self.thermostat.device_state_attributes
 
     def test_is_away_mode_on(self):
         """Test away mode property."""
@@ -446,12 +446,12 @@ class TestEcobee(unittest.TestCase):
                        'nextPeriod', 'indefinite', 'askMe']:
             self.ecobee['settings']['holdAction'] = action
             assert 'nextTransition' == \
-                             self.thermostat.hold_preference()
+                self.thermostat.hold_preference()
 
     def test_climate_list(self):
         """Test climate list property."""
         assert ['Climate1', 'Climate2'] == \
-                         self.thermostat.climate_list
+            self.thermostat.climate_list
 
     def test_set_fan_mode_on(self):
         """Test set fan mode to on."""

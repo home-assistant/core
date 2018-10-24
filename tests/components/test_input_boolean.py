@@ -129,7 +129,7 @@ class TestInputBoolean(unittest.TestCase):
 
         assert STATE_ON == state_2.state
         assert 'Hello World' == \
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME)
+            state_2.attributes.get(ATTR_FRIENDLY_NAME)
         assert 'mdi:work' == state_2.attributes.get(ATTR_ICON)
 
 

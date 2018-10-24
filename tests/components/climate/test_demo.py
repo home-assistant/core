@@ -82,21 +82,21 @@ class TestDemoClimate(unittest.TestCase):
     def test_set_target_temp_range(self):
         """Test the setting of the target temperature with range."""
         state = self.hass.states.get(ENTITY_ECOBEE)
-        assert None == state.attributes.get('temperature')
+        assert state.attributes.get('temperature') is None
         assert 21.0 == state.attributes.get('target_temp_low')
         assert 24.0 == state.attributes.get('target_temp_high')
         common.set_temperature(self.hass, target_temp_high=25,
                                target_temp_low=20, entity_id=ENTITY_ECOBEE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
-        assert None == state.attributes.get('temperature')
+        assert state.attributes.get('temperature') is None
         assert 20.0 == state.attributes.get('target_temp_low')
         assert 25.0 == state.attributes.get('target_temp_high')
 
     def test_set_target_temp_range_bad_attr(self):
         """Test setting the target temperature range without attribute."""
         state = self.hass.states.get(ENTITY_ECOBEE)
-        assert None == state.attributes.get('temperature')
+        assert state.attributes.get('temperature') is None
         assert 21.0 == state.attributes.get('target_temp_low')
         assert 24.0 == state.attributes.get('target_temp_high')
         common.set_temperature(self.hass, temperature=None,
@@ -104,7 +104,7 @@ class TestDemoClimate(unittest.TestCase):
                                target_temp_high=None)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
-        assert None == state.attributes.get('temperature')
+        assert state.attributes.get('temperature') is None
         assert 21.0 == state.attributes.get('target_temp_low')
         assert 24.0 == state.attributes.get('target_temp_high')
 

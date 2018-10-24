@@ -98,7 +98,7 @@ class TestVultrSensorSetup(unittest.TestCase):
 
                 elif device.subscription == '123456':
                     assert 'Server Current Bandwidth Used' == \
-                                     device.name
+                        device.name
                     assert 957.46 == device.state
                     tested += 1
 
@@ -106,7 +106,7 @@ class TestVultrSensorSetup(unittest.TestCase):
 
                 if device.subscription == '576965':  # Default 'Vultr {} {}'
                     assert 'Vultr my new server Pending Charges' == \
-                                     device.name
+                        device.name
                     assert 'mdi:currency-usd' == device.icon
                     assert 46.67 == device.state
                     assert 'mdi:currency-usd' == device.icon

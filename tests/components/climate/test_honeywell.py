@@ -138,8 +138,7 @@ class TestHoneywell(unittest.TestCase):
         mock_sc.return_value = mock.MagicMock(locations_by_id=locations)
         hass = mock.MagicMock()
         add_entities = mock.MagicMock()
-        assert True == \
-                         honeywell.setup_platform(hass, config, add_entities)
+        assert honeywell.setup_platform(hass, config, add_entities) is True
 
         return mock_ht.call_args_list, mock_sc
 
@@ -162,8 +161,7 @@ class TestHoneywell(unittest.TestCase):
         result, client = self._test_us_filtered_devices(
             loc=mock.sentinel.loc1)
         devices = [x[0][1].deviceid for x in result]
-        assert [mock.sentinel.loc1dev1,
-                          mock.sentinel.loc1dev2] == devices
+        assert [mock.sentinel.loc1dev1, mock.sentinel.loc1dev2] == devices
 
     def test_us_filtered_location_2(self):
         """Test for US filtered locations."""
@@ -290,7 +288,7 @@ class TestHoneywellRound(unittest.TestCase):
         assert 'Hot Water' == self.round2.name
         assert TEMP_CELSIUS == self.round2.temperature_unit
         assert 21 == self.round2.current_temperature
-        assert None == self.round2.target_temperature
+        assert self.round2.target_temperature is None
         assert not self.round2.is_away_mode_on
 
     def test_away_mode(self):
@@ -425,11 +423,11 @@ class TestHoneywellUS(unittest.TestCase):
         self.honeywell.turn_away_mode_on()
         assert self.honeywell.is_away_mode_on
         assert self.device.setpoint_heat == self.heat_away_temp
-        assert self.device.hold_heat == True
+        assert self.device.hold_heat is True
 
         self.honeywell.turn_away_mode_off()
         assert not self.honeywell.is_away_mode_on
-        assert self.device.hold_heat == False
+        assert self.device.hold_heat is False
 
     @mock.patch('somecomfort.SomeComfort')
     def test_retry(self, test_somecomfort):

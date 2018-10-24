@@ -66,10 +66,10 @@ class TestFritzboxClimate(unittest.TestCase):
         assert 19.5 == self.thermostat.target_temperature
 
         self.thermostat._target_temperature = 126.5
-        assert None == self.thermostat.target_temperature
+        assert self.thermostat.target_temperature is None
 
         self.thermostat._target_temperature = 127.0
-        assert None == self.thermostat.target_temperature
+        assert self.thermostat.target_temperature is None
 
     @patch.object(FritzboxThermostat, 'set_operation_mode')
     def test_set_temperature_operation_mode(self, mock_set_op):
@@ -114,7 +114,7 @@ class TestFritzboxClimate(unittest.TestCase):
     def test_operation_list(self):
         """Test operation_list property."""
         assert ['heat', 'eco', 'off', 'on'] == \
-                         self.thermostat.operation_list
+            self.thermostat.operation_list
 
     @patch.object(FritzboxThermostat, 'set_temperature')
     def test_set_operation_mode(self, mock_set_temp):
@@ -143,9 +143,9 @@ class TestFritzboxClimate(unittest.TestCase):
     def test_device_state_attributes(self):
         """Test device_state property."""
         attr = self.thermostat.device_state_attributes
-        assert attr['device_locked'] == True
-        assert attr['locked'] == False
-        assert attr['battery_low'] == True
+        assert attr['device_locked'] is True
+        assert attr['locked'] is False
+        assert attr['battery_low'] is True
 
     def test_update(self):
         """Test update function."""

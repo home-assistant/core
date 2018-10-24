@@ -114,7 +114,7 @@ class TestRFXTRX(unittest.TestCase):
         assert self.hass.states.get('switch.test').state == 'on'
         assert 1 == len(calls)
         assert calls[0].data == \
-                         {'entity_id': 'switch.test', 'state': 'on'}
+            {'entity_id': 'switch.test', 'state': 'on'}
 
     def test_fire_event_sensor(self):
         """Test fire event."""
@@ -149,4 +149,4 @@ class TestRFXTRX(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(calls)
         assert calls[0].data == \
-                         {'entity_id': 'sensor.test'}
+            {'entity_id': 'sensor.test'}

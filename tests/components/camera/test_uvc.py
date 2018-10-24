@@ -268,14 +268,14 @@ class TestUVC(unittest.TestCase):
     def test_login_fails_both_properly(self, mock_camera, mock_store):
         """Test if login fails properly."""
         mock_camera.return_value.login.side_effect = socket.error
-        assert None == self.uvc._login()
-        assert None == self.uvc._connect_addr
+        assert self.uvc._login() is None
+        assert self.uvc._connect_addr is None
 
     def test_camera_image_tries_login_bails_on_failure(self):
         """Test retrieving failure."""
         with mock.patch.object(self.uvc, '_login') as mock_login:
             mock_login.return_value = False
-            assert None == self.uvc.camera_image()
+            assert self.uvc.camera_image() is None
             assert mock_login.call_count == 1
             assert mock_login.call_args == mock.call()
 
@@ -283,13 +283,13 @@ class TestUVC(unittest.TestCase):
         """Test the login state."""
         self.uvc._camera = mock.MagicMock()
         assert self.uvc._camera.get_snapshot.return_value == \
-                         self.uvc.camera_image()
+            self.uvc.camera_image()
 
     def test_camera_image_error(self):
         """Test the camera image error."""
         self.uvc._camera = mock.MagicMock()
         self.uvc._camera.get_snapshot.side_effect = camera.CameraConnectError
-        assert None == self.uvc.camera_image()
+        assert self.uvc.camera_image() is None
 
     def test_camera_image_reauths(self):
         """Test the re-authentication."""

@@ -49,7 +49,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
         assert 'Test' == entity.name
         assert TEMP_CELSIUS == entity.unit_of_measurement
-        assert None == entity.state
+        assert entity.state is None
 
     def test_one_sensor(self):
         """Test with 1 sensor."""
@@ -64,7 +64,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
         assert 'Test' == entity.name
         assert TEMP_CELSIUS == entity.unit_of_measurement
-        assert None == entity.state
+        assert entity.state is None
 
     def test_one_sensor_no_datatype(self):
         """Test with 1 sensor."""
@@ -78,7 +78,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
         assert 'Test' == entity.name
         assert TEMP_CELSIUS == entity.unit_of_measurement
-        assert None == entity.state
+        assert entity.state is None
 
         entity_id = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']\
             .entity_id
@@ -109,14 +109,14 @@ class TestSensorRfxtrx(unittest.TestCase):
                 _entity_hum = rfxtrx_core.RFX_DEVICES[id]['Humidity']
                 assert '%' == _entity_hum.unit_of_measurement
                 assert 'Bath' == _entity_hum.__str__()
-                assert None == _entity_hum.state
+                assert _entity_hum.state is None
                 assert TEMP_CELSIUS == \
-                                 _entity_temp.unit_of_measurement
+                    _entity_temp.unit_of_measurement
                 assert 'Bath' == _entity_temp.__str__()
             elif id == 'sensor_0502':
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]['Temperature']
-                assert None == entity.state
+                assert entity.state is None
                 assert TEMP_CELSIUS == entity.unit_of_measurement
                 assert 'Test' == entity.__str__()
 
@@ -136,13 +136,13 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0701']['Temperature']
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
         assert {'Humidity status': 'normal',
-                          'Temperature': 18.4,
-                          'Rssi numeric': 7, 'Humidity': 27,
-                          'Battery numeric': 9,
-                          'Humidity status numeric': 2} == \
-                         entity.device_state_attributes
+                'Temperature': 18.4,
+                'Rssi numeric': 7, 'Humidity': 27,
+                'Battery numeric': 9,
+                'Humidity status numeric': 2} == \
+            entity.device_state_attributes
         assert '0a520801070100b81b0279' == \
-                         entity.__str__()
+            entity.__str__()
 
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
@@ -153,13 +153,13 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         assert {'Humidity status': 'normal',
-                          'Temperature': 14.9,
-                          'Rssi numeric': 7, 'Humidity': 36,
-                          'Battery numeric': 9,
-                          'Humidity status numeric': 2} == \
-                         entity.device_state_attributes
+                'Temperature': 14.9,
+                'Rssi numeric': 7, 'Humidity': 36,
+                'Battery numeric': 9,
+                'Humidity status numeric': 2} == \
+            entity.device_state_attributes
         assert '0a52080405020095240279' == \
-                         entity.__str__()
+            entity.__str__()
 
         event = rfxtrx_core.get_rfx_object('0a52085e070100b31b0279')
         event.data = bytearray(b'\nR\x08^\x07\x01\x00\xb3\x1b\x02y')
@@ -167,13 +167,13 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0701']['Temperature']
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         assert {'Humidity status': 'normal',
-                          'Temperature': 17.9,
-                          'Rssi numeric': 7, 'Humidity': 27,
-                          'Battery numeric': 9,
-                          'Humidity status numeric': 2} == \
-                         entity.device_state_attributes
+                'Temperature': 17.9,
+                'Rssi numeric': 7, 'Humidity': 27,
+                'Battery numeric': 9,
+                'Humidity status numeric': 2} == \
+            entity.device_state_attributes
         assert '0a520801070100b81b0279' == \
-                         entity.__str__()
+            entity.__str__()
 
         # trying to add a switch
         event = rfxtrx_core.get_rfx_object('0b1100cd0213c7f210010f70')
@@ -230,14 +230,14 @@ class TestSensorRfxtrx(unittest.TestCase):
                 _entity_hum = rfxtrx_core.RFX_DEVICES[id]['Humidity']
                 assert '%' == _entity_hum.unit_of_measurement
                 assert 'Bath' == _entity_hum.__str__()
-                assert None == _entity_temp.state
+                assert _entity_temp.state is None
                 assert TEMP_CELSIUS == \
-                                 _entity_temp.unit_of_measurement
+                    _entity_temp.unit_of_measurement
                 assert 'Bath' == _entity_temp.__str__()
             elif id == 'sensor_0502':
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]['Temperature']
-                assert None == entity.state
+                assert entity.state is None
                 assert TEMP_CELSIUS == entity.unit_of_measurement
                 assert 'Test' == entity.__str__()
 
@@ -264,20 +264,20 @@ class TestSensorRfxtrx(unittest.TestCase):
                 assert '%' == _entity_hum.unit_of_measurement
                 assert 15 == _entity_hum.state
                 assert {'Battery numeric': 9, 'Temperature': 51.1,
-                                  'Humidity': 15, 'Humidity status': 'normal',
-                                  'Humidity status numeric': 2,
-                                  'Rssi numeric': 6} == \
-                                 _entity_hum.device_state_attributes
+                        'Humidity': 15, 'Humidity status': 'normal',
+                        'Humidity status numeric': 2,
+                        'Rssi numeric': 6} == \
+                    _entity_hum.device_state_attributes
                 assert 'Bath' == _entity_hum.__str__()
 
                 assert TEMP_CELSIUS == \
-                                 _entity_temp.unit_of_measurement
+                    _entity_temp.unit_of_measurement
                 assert 51.1 == _entity_temp.state
                 assert {'Battery numeric': 9, 'Temperature': 51.1,
-                                  'Humidity': 15, 'Humidity status': 'normal',
-                                  'Humidity status numeric': 2,
-                                  'Rssi numeric': 6} == \
-                                 _entity_temp.device_state_attributes
+                        'Humidity': 15, 'Humidity status': 'normal',
+                        'Humidity status numeric': 2,
+                        'Rssi numeric': 6} == \
+                    _entity_temp.device_state_attributes
                 assert 'Bath' == _entity_temp.__str__()
             elif id == 'sensor_0502':
                 device_num = device_num + 1
@@ -285,11 +285,11 @@ class TestSensorRfxtrx(unittest.TestCase):
                 assert TEMP_CELSIUS == entity.unit_of_measurement
                 assert 13.3 == entity.state
                 assert {'Humidity status': 'normal',
-                                  'Temperature': 13.3,
-                                  'Rssi numeric': 6, 'Humidity': 34,
-                                  'Battery numeric': 9,
-                                  'Humidity status numeric': 2} == \
-                                 entity.device_state_attributes
+                        'Temperature': 13.3,
+                        'Rssi numeric': 6, 'Humidity': 34,
+                        'Battery numeric': 9,
+                        'Humidity status numeric': 2} == \
+                    entity.device_state_attributes
                 assert 'Test' == entity.__str__()
 
         assert 2 == device_num

@@ -32,7 +32,7 @@ class TestLogentries(unittest.TestCase):
         assert setup_component(self.hass, logentries.DOMAIN, config)
         assert self.hass.bus.listen.called
         assert EVENT_STATE_CHANGED == \
-                         self.hass.bus.listen.call_args_list[0][0][0]
+            self.hass.bus.listen.call_args_list[0][0][0]
 
     def test_setup_config_defaults(self):
         """Test setup with defaults."""
@@ -45,7 +45,7 @@ class TestLogentries(unittest.TestCase):
         assert setup_component(self.hass, logentries.DOMAIN, config)
         assert self.hass.bus.listen.called
         assert EVENT_STATE_CHANGED == \
-                         self.hass.bus.listen.call_args_list[0][0][0]
+            self.hass.bus.listen.call_args_list[0][0][0]
 
     def _setup(self, mock_requests):
         """Test the setup."""

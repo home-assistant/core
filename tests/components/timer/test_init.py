@@ -80,7 +80,7 @@ class TestTimer(unittest.TestCase):
 
         assert STATUS_IDLE == state_2.state
         assert 'Hello World' == \
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME)
+            state_2.attributes.get(ATTR_FRIENDLY_NAME)
         assert 'mdi:work' == state_2.attributes.get(ATTR_ICON)
         assert '0:00:10' == state_2.attributes.get(ATTR_DURATION)
 

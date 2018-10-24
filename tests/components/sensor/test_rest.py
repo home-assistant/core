@@ -208,7 +208,7 @@ class TestRestSensor(unittest.TestCase):
                                       self.force_update)
         self.sensor.update()
         assert 'some_json_value' == \
-                         self.sensor.device_state_attributes['key']
+            self.sensor.device_state_attributes['key']
 
     @patch('homeassistant.components.sensor.rest._LOGGER')
     def test_update_with_json_attrs_no_data(self, mock_logger):
@@ -262,8 +262,8 @@ class TestRestSensor(unittest.TestCase):
 
         assert 'json_state_updated_value' == self.sensor.state
         assert 'json_state_updated_value' == \
-                         self.sensor.device_state_attributes['key'], \
-                         self.force_update
+            self.sensor.device_state_attributes['key'], \
+            self.force_update
 
 
 class TestRestData(unittest.TestCase):
@@ -288,4 +288,4 @@ class TestRestData(unittest.TestCase):
     def test_update_request_exception(self, mock_req):
         """Test update when a request exception occurs."""
         self.rest.update()
-        assert None == self.rest.data
+        assert self.rest.data is None

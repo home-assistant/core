@@ -89,38 +89,38 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                 assert 'Vultr Another Server' == device.name
 
             if device.name == 'A Server':
-                assert True == device.is_on
+                assert device.is_on is True
                 assert 'power' == device.device_class
                 assert 'on' == device.state
                 assert 'mdi:server' == device.icon
                 assert '1000' == \
-                                 device_attrs[ATTR_ALLOWED_BANDWIDTH]
+                    device_attrs[ATTR_ALLOWED_BANDWIDTH]
                 assert 'yes' == \
-                                 device_attrs[ATTR_AUTO_BACKUPS]
+                    device_attrs[ATTR_AUTO_BACKUPS]
                 assert '123.123.123.123' == \
-                                 device_attrs[ATTR_IPV4_ADDRESS]
+                    device_attrs[ATTR_IPV4_ADDRESS]
                 assert '10.05' == \
-                                 device_attrs[ATTR_COST_PER_MONTH]
+                    device_attrs[ATTR_COST_PER_MONTH]
                 assert '2013-12-19 14:45:41' == \
-                                 device_attrs[ATTR_CREATED_AT]
+                    device_attrs[ATTR_CREATED_AT]
                 assert '576965' == \
-                                 device_attrs[ATTR_SUBSCRIPTION_ID]
+                    device_attrs[ATTR_SUBSCRIPTION_ID]
             elif device.name == 'Failed Server':
-                assert False == device.is_on
+                assert device.is_on is False
                 assert 'off' == device.state
                 assert 'mdi:server-off' == device.icon
                 assert '1000' == \
-                                 device_attrs[ATTR_ALLOWED_BANDWIDTH]
+                    device_attrs[ATTR_ALLOWED_BANDWIDTH]
                 assert 'no' == \
-                                 device_attrs[ATTR_AUTO_BACKUPS]
+                    device_attrs[ATTR_AUTO_BACKUPS]
                 assert '192.168.100.50' == \
-                                 device_attrs[ATTR_IPV4_ADDRESS]
+                    device_attrs[ATTR_IPV4_ADDRESS]
                 assert '73.25' == \
-                                 device_attrs[ATTR_COST_PER_MONTH]
+                    device_attrs[ATTR_COST_PER_MONTH]
                 assert '2014-10-13 14:45:41' == \
-                                 device_attrs[ATTR_CREATED_AT]
+                    device_attrs[ATTR_CREATED_AT]
                 assert '123456' == \
-                                 device_attrs[ATTR_SUBSCRIPTION_ID]
+                    device_attrs[ATTR_SUBSCRIPTION_ID]
 
     def test_invalid_sensor_config(self):
         """Test config type failures."""

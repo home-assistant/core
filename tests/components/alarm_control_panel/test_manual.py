@@ -52,13 +52,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_home(self.hass, CODE)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_HOME == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_arm_home_with_pending(self):
         """Test arm home method."""
@@ -75,13 +75,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_home(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         state = self.hass.states.get(entity_id)
         assert state.attributes['post_pending_state'] == STATE_ALARM_ARMED_HOME
@@ -110,13 +110,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_home(self.hass, CODE + '2')
         self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_arm_away_no_pending(self):
         """Test arm home method."""
@@ -133,13 +133,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_arm_home_with_template_code(self):
         """Attempt to arm with a template-based code."""
@@ -159,7 +159,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_home(self.hass, 'abc')
         self.hass.block_till_done()
@@ -182,13 +182,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         state = self.hass.states.get(entity_id)
         assert state.attributes['post_pending_state'] == STATE_ALARM_ARMED_AWAY
@@ -217,13 +217,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE + '2')
         self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_arm_night_no_pending(self):
         """Test arm night method."""
@@ -240,13 +240,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_night(self.hass, CODE)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_NIGHT == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_arm_night_with_pending(self):
         """Test arm night method."""
@@ -263,13 +263,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_night(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         state = self.hass.states.get(entity_id)
         assert state.attributes['post_pending_state'] == \
@@ -289,7 +289,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_NIGHT == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_arm_night_with_invalid_code(self):
         """Attempt to night home without a valid code."""
@@ -306,13 +306,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_night(self.hass, CODE + '2')
         self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_trigger_no_pending(self):
         """Test triggering when no pending submitted method."""
@@ -328,13 +328,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=60)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -343,7 +343,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_TRIGGERED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_trigger_with_delay(self):
         """Test trigger method and switch from pending to triggered."""
@@ -361,13 +361,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
@@ -375,7 +375,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert STATE_ALARM_PENDING == state.state
         assert STATE_ALARM_TRIGGERED == \
-                         state.attributes['post_pending_state']
+            state.attributes['post_pending_state']
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -401,13 +401,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_trigger_zero_trigger_time_with_pending(self):
         """Test disabled trigger."""
@@ -424,13 +424,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_trigger_with_pending(self):
         """Test arm home method."""
@@ -447,13 +447,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         state = self.hass.states.get(entity_id)
         assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
@@ -495,13 +495,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
@@ -509,7 +509,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert STATE_ALARM_PENDING == state.state
         assert STATE_ALARM_TRIGGERED == \
-                         state.attributes['post_pending_state']
+            state.attributes['post_pending_state']
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -539,13 +539,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
@@ -553,7 +553,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert STATE_ALARM_PENDING == state.state
         assert STATE_ALARM_TRIGGERED == \
-                         state.attributes['post_pending_state']
+            state.attributes['post_pending_state']
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -583,13 +583,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
@@ -639,13 +639,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
@@ -692,7 +692,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=2)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -701,7 +701,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_HOME == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_armed_away_with_specific_pending(self):
         """Test arm home method."""
@@ -722,7 +722,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=2)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -731,7 +731,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_armed_night_with_specific_pending(self):
         """Test arm home method."""
@@ -752,7 +752,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=2)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -761,7 +761,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_NIGHT == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_trigger_with_specific_pending(self):
         """Test arm home method."""
@@ -784,7 +784,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=2)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -793,7 +793,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_TRIGGERED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -802,7 +802,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_trigger_with_disarm_after_trigger(self):
         """Test disarm after trigger."""
@@ -819,13 +819,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_TRIGGERED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -834,7 +834,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_trigger_with_zero_specific_trigger_time(self):
         """Test trigger method."""
@@ -854,13 +854,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_trigger_with_unused_zero_specific_trigger_time(self):
         """Test disarm after trigger."""
@@ -880,13 +880,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_TRIGGERED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -895,7 +895,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_trigger_with_specific_trigger_time(self):
         """Test disarm after trigger."""
@@ -914,13 +914,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_TRIGGERED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -929,7 +929,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_trigger_with_no_disarm_after_trigger(self):
         """Test disarm after trigger."""
@@ -946,19 +946,19 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_TRIGGERED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -967,7 +967,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_back_to_back_trigger_with_no_disarm_after_trigger(self):
         """Test disarm after trigger."""
@@ -984,19 +984,19 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_TRIGGERED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -1005,13 +1005,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_TRIGGERED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -1020,7 +1020,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_AWAY == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_disarm_while_pending_trigger(self):
         """Test disarming while pending state."""
@@ -1036,19 +1036,19 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_disarm(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -1057,7 +1057,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_disarm_during_trigger_with_invalid_code(self):
         """Test disarming while code is invalid."""
@@ -1074,19 +1074,19 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_disarm(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -1095,7 +1095,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_TRIGGERED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_disarm_with_template_code(self):
         """Attempt to disarm with a valid or invalid template-based code."""
@@ -1116,7 +1116,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_home(self.hass, 'def')
         self.hass.block_till_done()
@@ -1151,13 +1151,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_custom_bypass(self.hass, CODE)
         self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_CUSTOM_BYPASS == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_arm_custom_bypass_with_pending(self):
         """Test arm custom bypass method."""
@@ -1174,13 +1174,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_custom_bypass(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         state = self.hass.states.get(entity_id)
         assert state.attributes['post_pending_state'] == \
@@ -1210,13 +1210,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_custom_bypass(self.hass, CODE + '2')
         self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_armed_custom_bypass_with_specific_pending(self):
         """Test arm custom bypass method."""
@@ -1237,7 +1237,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.hass.block_till_done()
 
         assert STATE_ALARM_PENDING == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=2)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -1246,7 +1246,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_ALARM_ARMED_CUSTOM_BYPASS == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
     def test_arm_away_after_disabled_disarmed(self):
         """Test pending state with and without zero trigger time."""
@@ -1270,7 +1270,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_ALARM_DISARMED == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
@@ -1278,9 +1278,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert STATE_ALARM_PENDING == state.state
         assert STATE_ALARM_DISARMED == \
-                         state.attributes['pre_pending_state']
+            state.attributes['pre_pending_state']
         assert STATE_ALARM_ARMED_AWAY == \
-                         state.attributes['post_pending_state']
+            state.attributes['post_pending_state']
 
         common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
@@ -1288,9 +1288,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert STATE_ALARM_PENDING == state.state
         assert STATE_ALARM_DISARMED == \
-                         state.attributes['pre_pending_state']
+            state.attributes['pre_pending_state']
         assert STATE_ALARM_ARMED_AWAY == \
-                         state.attributes['post_pending_state']
+            state.attributes['post_pending_state']
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -1307,9 +1307,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             state = self.hass.states.get(entity_id)
             assert STATE_ALARM_PENDING == state.state
             assert STATE_ALARM_ARMED_AWAY == \
-                             state.attributes['pre_pending_state']
+                state.attributes['pre_pending_state']
             assert STATE_ALARM_TRIGGERED == \
-                             state.attributes['post_pending_state']
+                state.attributes['post_pending_state']
 
         future += timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual.'

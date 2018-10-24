@@ -200,14 +200,14 @@ class TestInputSelect(unittest.TestCase):
 
         assert '1' == state_1.state
         assert ['1', '2'] == \
-                         state_1.attributes.get(ATTR_OPTIONS)
+            state_1.attributes.get(ATTR_OPTIONS)
         assert ATTR_ICON not in state_1.attributes
 
         assert 'Better Option' == state_2.state
         assert test_2_options == \
-                         state_2.attributes.get(ATTR_OPTIONS)
+            state_2.attributes.get(ATTR_OPTIONS)
         assert 'Hello World' == \
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME)
+            state_2.attributes.get(ATTR_FRIENDLY_NAME)
         assert 'mdi:work' == state_2.attributes.get(ATTR_ICON)
 
     def test_set_options_service(self):

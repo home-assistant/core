@@ -133,9 +133,9 @@ class TestHDDTempSensor(unittest.TestCase):
         assert state.attributes.get('device') == reference['device']
         assert state.attributes.get('model') == reference['model']
         assert state.attributes.get('unit_of_measurement') == \
-                         reference['unit_of_measurement']
+            reference['unit_of_measurement']
         assert state.attributes.get('friendly_name') == \
-                         'HD Temperature ' + reference['device']
+            'HD Temperature ' + reference['device']
 
     @patch('telnetlib.Telnet', new=TelnetMock)
     def test_hddtemp_rename_config(self):
@@ -148,7 +148,7 @@ class TestHDDTempSensor(unittest.TestCase):
         reference = self.reference[state.attributes.get('device')]
 
         assert state.attributes.get('friendly_name') == \
-                         'FooBar ' + reference['device']
+            'FooBar ' + reference['device']
 
     @patch('telnetlib.Telnet', new=TelnetMock)
     def test_hddtemp_one_disk(self):
@@ -163,9 +163,9 @@ class TestHDDTempSensor(unittest.TestCase):
         assert state.attributes.get('device') == reference['device']
         assert state.attributes.get('model') == reference['model']
         assert state.attributes.get('unit_of_measurement') == \
-                         reference['unit_of_measurement']
+            reference['unit_of_measurement']
         assert state.attributes.get('friendly_name') == \
-                         'HD Temperature ' + reference['device']
+            'HD Temperature ' + reference['device']
 
     @patch('telnetlib.Telnet', new=TelnetMock)
     def test_hddtemp_wrong_disk(self):
@@ -175,7 +175,7 @@ class TestHDDTempSensor(unittest.TestCase):
         assert len(self.hass.states.all()) == 1
         state = self.hass.states.get('sensor.hd_temperature_devsdx1')
         assert state.attributes.get('friendly_name') == \
-                         'HD Temperature ' + '/dev/sdx1'
+            'HD Temperature ' + '/dev/sdx1'
 
     @patch('telnetlib.Telnet', new=TelnetMock)
     def test_hddtemp_multiple_disks(self):
@@ -192,15 +192,15 @@ class TestHDDTempSensor(unittest.TestCase):
             reference = self.reference[state.attributes.get('device')]
 
             assert state.state == \
-                             reference['temperature']
+                reference['temperature']
             assert state.attributes.get('device') == \
-                             reference['device']
+                reference['device']
             assert state.attributes.get('model') == \
-                             reference['model']
+                reference['model']
             assert state.attributes.get('unit_of_measurement') == \
-                             reference['unit_of_measurement']
+                reference['unit_of_measurement']
             assert state.attributes.get('friendly_name') == \
-                             'HD Temperature ' + reference['device']
+                'HD Temperature ' + reference['device']
 
     @patch('telnetlib.Telnet', new=TelnetMock)
     def test_hddtemp_host_refused(self):

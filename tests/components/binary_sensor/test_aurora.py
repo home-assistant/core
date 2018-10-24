@@ -52,8 +52,8 @@ class TestAuroraSensorSetUp(unittest.TestCase):
         aurora_component = entities[0]
         assert len(entities) == 1
         assert aurora_component.name == "Test"
-        assert aurora_component.device_state_attributes["visibility_level"] == \
-            '0'
+        assert \
+            aurora_component.device_state_attributes["visibility_level"] == '0'
         assert aurora_component.device_state_attributes["message"] == \
             "nothing's out"
         assert not aurora_component.is_on

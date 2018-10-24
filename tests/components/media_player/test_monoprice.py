@@ -186,10 +186,8 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
     def test_setup_platform(self, *args):
         """Test setting up platform."""
         # Two services must be registered
-        assert self.hass.services.has_service(DOMAIN,
-                                                       SERVICE_RESTORE)
-        assert self.hass.services.has_service(DOMAIN,
-                                                       SERVICE_SNAPSHOT)
+        assert self.hass.services.has_service(DOMAIN, SERVICE_RESTORE)
+        assert self.hass.services.has_service(DOMAIN, SERVICE_SNAPSHOT)
         assert len(self.hass.data[DATA_MONOPRICE]) == 1
         assert self.hass.data[DATA_MONOPRICE][0].name == 'Zone name'
 
@@ -356,9 +354,9 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
     def test_supported_features(self):
         """Test supported features property."""
         assert SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
-                         SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | \
-                         SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE == \
-                         self.media_player.supported_features
+            SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | \
+            SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE == \
+            self.media_player.supported_features
 
     def test_source(self):
         """Test source property."""
@@ -376,7 +374,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         """Test source list property."""
         # Note, the list is sorted!
         assert ['one', 'two', 'three'] == \
-                         self.media_player.source_list
+            self.media_player.source_list
 
     def test_select_source(self):
         """Test source selection methods."""

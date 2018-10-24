@@ -49,7 +49,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         assert '100' == state.state
         assert 'fav unit' == \
-                         state.attributes.get('unit_of_measurement')
+            state.attributes.get('unit_of_measurement')
 
     @patch('homeassistant.core.dt_util.utcnow')
     def test_setting_sensor_value_expires(self, mock_utcnow):
@@ -266,7 +266,7 @@ class TestSensorMQTT(unittest.TestCase):
         state = self.hass.states.get('sensor.test')
 
         assert '100' == \
-                         state.attributes.get('val')
+            state.attributes.get('val')
 
     @patch('homeassistant.components.sensor.mqtt._LOGGER')
     def test_update_with_json_attrs_not_dict(self, mock_logger):
@@ -286,8 +286,7 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('sensor.test')
 
-        assert None == \
-                         state.attributes.get('val')
+        assert state.attributes.get('val') is None
         assert mock_logger.warning.called
 
     @patch('homeassistant.components.sensor.mqtt._LOGGER')
@@ -308,8 +307,7 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test')
-        assert None == \
-                         state.attributes.get('val')
+        assert state.attributes.get('val') is None
         assert mock_logger.warning.called
         assert mock_logger.debug.called
 
@@ -332,7 +330,7 @@ class TestSensorMQTT(unittest.TestCase):
         state = self.hass.states.get('sensor.test')
 
         assert '100' == \
-                         state.attributes.get('val')
+            state.attributes.get('val')
         assert '100' == state.state
 
     def test_invalid_device_class(self):

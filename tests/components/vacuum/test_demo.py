@@ -49,39 +49,39 @@ class TestVacuumDemo(unittest.TestCase):
         assert 100 == state.attributes.get(ATTR_BATTERY_LEVEL)
         assert "medium" == state.attributes.get(ATTR_FAN_SPEED)
         assert FAN_SPEEDS == \
-                             state.attributes.get(ATTR_FAN_SPEED_LIST)
+            state.attributes.get(ATTR_FAN_SPEED_LIST)
         assert STATE_OFF == state.state
 
         state = self.hass.states.get(ENTITY_VACUUM_MOST)
         assert 219 == state.attributes.get(ATTR_SUPPORTED_FEATURES)
         assert "Charging" == state.attributes.get(ATTR_STATUS)
         assert 100 == state.attributes.get(ATTR_BATTERY_LEVEL)
-        assert None == state.attributes.get(ATTR_FAN_SPEED)
-        assert None == state.attributes.get(ATTR_FAN_SPEED_LIST)
+        assert state.attributes.get(ATTR_FAN_SPEED) is None
+        assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
         assert STATE_OFF == state.state
 
         state = self.hass.states.get(ENTITY_VACUUM_BASIC)
         assert 195 == state.attributes.get(ATTR_SUPPORTED_FEATURES)
         assert "Charging" == state.attributes.get(ATTR_STATUS)
         assert 100 == state.attributes.get(ATTR_BATTERY_LEVEL)
-        assert None == state.attributes.get(ATTR_FAN_SPEED)
-        assert None == state.attributes.get(ATTR_FAN_SPEED_LIST)
+        assert state.attributes.get(ATTR_FAN_SPEED) is None
+        assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
         assert STATE_OFF == state.state
 
         state = self.hass.states.get(ENTITY_VACUUM_MINIMAL)
         assert 3 == state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        assert None == state.attributes.get(ATTR_STATUS)
-        assert None == state.attributes.get(ATTR_BATTERY_LEVEL)
-        assert None == state.attributes.get(ATTR_FAN_SPEED)
-        assert None == state.attributes.get(ATTR_FAN_SPEED_LIST)
+        assert state.attributes.get(ATTR_STATUS) is None
+        assert state.attributes.get(ATTR_BATTERY_LEVEL) is None
+        assert state.attributes.get(ATTR_FAN_SPEED) is None
+        assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
         assert STATE_OFF == state.state
 
         state = self.hass.states.get(ENTITY_VACUUM_NONE)
         assert 0 == state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        assert None == state.attributes.get(ATTR_STATUS)
-        assert None == state.attributes.get(ATTR_BATTERY_LEVEL)
-        assert None == state.attributes.get(ATTR_FAN_SPEED)
-        assert None == state.attributes.get(ATTR_FAN_SPEED_LIST)
+        assert state.attributes.get(ATTR_STATUS) is None
+        assert state.attributes.get(ATTR_BATTERY_LEVEL) is None
+        assert state.attributes.get(ATTR_FAN_SPEED) is None
+        assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
         assert STATE_OFF == state.state
 
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
@@ -90,7 +90,7 @@ class TestVacuumDemo(unittest.TestCase):
         assert 100 == state.attributes.get(ATTR_BATTERY_LEVEL)
         assert "medium" == state.attributes.get(ATTR_FAN_SPEED)
         assert FAN_SPEEDS == \
-                             state.attributes.get(ATTR_FAN_SPEED_LIST)
+            state.attributes.get(ATTR_FAN_SPEED_LIST)
 
     def test_methods(self):
         """Test if methods call the services as expected."""
@@ -241,7 +241,7 @@ class TestVacuumDemo(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_NONE)
         assert FAN_SPEEDS[-1] != \
-                            state.attributes.get(ATTR_FAN_SPEED)
+            state.attributes.get(ATTR_FAN_SPEED)
 
         common.clean_spot(self.hass, entity_id=ENTITY_VACUUM_BASIC)
         self.hass.block_till_done()
@@ -341,15 +341,15 @@ class TestVacuumDemo(unittest.TestCase):
 
         assert old_state_complete != new_state_complete
         assert FAN_SPEEDS[1] == \
-                         old_state_complete.attributes[ATTR_FAN_SPEED]
+            old_state_complete.attributes[ATTR_FAN_SPEED]
         assert FAN_SPEEDS[0] == \
-                         new_state_complete.attributes[ATTR_FAN_SPEED]
+            new_state_complete.attributes[ATTR_FAN_SPEED]
 
         assert old_state_state != new_state_state
         assert FAN_SPEEDS[1] == \
-                         old_state_state.attributes[ATTR_FAN_SPEED]
+            old_state_state.attributes[ATTR_FAN_SPEED]
         assert FAN_SPEEDS[0] == \
-                         new_state_state.attributes[ATTR_FAN_SPEED]
+            new_state_state.attributes[ATTR_FAN_SPEED]
 
     def test_send_command(self):
         """Test vacuum service to send a command."""
@@ -370,4 +370,4 @@ class TestVacuumDemo(unittest.TestCase):
         assert old_state_complete != new_state_complete
         assert STATE_ON == new_state_complete.state
         assert "Executing test_command({'p1': 3})" == \
-                         new_state_complete.attributes[ATTR_STATUS]
+            new_state_complete.attributes[ATTR_STATUS]

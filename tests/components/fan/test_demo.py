@@ -43,7 +43,7 @@ class TestDemoFan(unittest.TestCase):
         self.hass.block_till_done()
         assert STATE_ON == self.get_entity().state
         assert fan.SPEED_HIGH == \
-                         self.get_entity().attributes[fan.ATTR_SPEED]
+            self.get_entity().attributes[fan.ATTR_SPEED]
 
     def test_turn_off(self):
         """Test turning off the device."""
@@ -76,7 +76,7 @@ class TestDemoFan(unittest.TestCase):
         common.set_direction(self.hass, FAN_ENTITY_ID, fan.DIRECTION_REVERSE)
         self.hass.block_till_done()
         assert fan.DIRECTION_REVERSE == \
-                         self.get_entity().attributes.get('direction')
+            self.get_entity().attributes.get('direction')
 
     def test_set_speed(self):
         """Test setting the speed of the device."""
@@ -85,7 +85,7 @@ class TestDemoFan(unittest.TestCase):
         common.set_speed(self.hass, FAN_ENTITY_ID, fan.SPEED_LOW)
         self.hass.block_till_done()
         assert fan.SPEED_LOW == \
-                         self.get_entity().attributes.get('speed')
+            self.get_entity().attributes.get('speed')
 
     def test_oscillate(self):
         """Test oscillating the fan."""

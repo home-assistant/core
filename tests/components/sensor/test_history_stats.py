@@ -134,7 +134,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 sensor4.update()
 
         assert sensor1.state == 0.5
-        assert sensor2.state == None
+        assert sensor2.state is None
         assert sensor3.state == 2
         assert sensor4.state == 50
 
@@ -174,7 +174,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         }
 
         setup_component(self.hass, 'sensor', config)
-        assert self.hass.states.get('sensor.test') == None
+        assert self.hass.states.get('sensor.test')is None
         with pytest.raises(TypeError):
             setup_component(self.hass, 'sensor', config)()
 
@@ -213,7 +213,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         }
 
         setup_component(self.hass, 'sensor', config)
-        assert self.hass.states.get('sensor.test') == None
+        assert self.hass.states.get('sensor.test')is None
         with pytest.raises(TypeError):
             setup_component(self.hass, 'sensor', config)()
 
@@ -235,7 +235,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         }
 
         setup_component(self.hass, 'sensor', config)
-        assert self.hass.states.get('sensor.test') == None
+        assert self.hass.states.get('sensor.test')is None
         with pytest.raises(TypeError):
             setup_component(self.hass, 'sensor', config)()
 

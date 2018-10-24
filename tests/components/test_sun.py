@@ -120,7 +120,7 @@ class TestSun(unittest.TestCase):
         assert test_time is not None
 
         assert sun.STATE_BELOW_HORIZON == \
-                         self.hass.states.get(sun.ENTITY_ID).state
+            self.hass.states.get(sun.ENTITY_ID).state
 
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
                            {ha.ATTR_NOW: test_time + timedelta(seconds=5)})
@@ -128,7 +128,7 @@ class TestSun(unittest.TestCase):
         self.hass.block_till_done()
 
         assert sun.STATE_ABOVE_HORIZON == \
-                         self.hass.states.get(sun.ENTITY_ID).state
+            self.hass.states.get(sun.ENTITY_ID).state
 
     def test_norway_in_june(self):
         """Test location in Norway where the sun doesn't set in summer."""

@@ -160,4 +160,4 @@ class TestDarkSkySetup(unittest.TestCase):
         assert state is not None
         assert state.state == 'Clear'
         assert state.attributes.get('friendly_name') == \
-                         'Dark Sky Summary'
+            'Dark Sky Summary'

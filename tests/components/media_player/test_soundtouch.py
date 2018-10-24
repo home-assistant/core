@@ -271,7 +271,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         assert mocked_status.call_count == 1
         assert mocked_volume.call_count == 1
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
-        assert all_devices[0].media_title == None
+        assert all_devices[0].media_title is None
 
     @mock.patch('libsoundtouch.device.SoundTouchDevice.volume')
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status',
@@ -291,10 +291,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         assert all_devices[0].state == STATE_PLAYING
         assert all_devices[0].media_image_url == "image.url"
         assert all_devices[0].media_title == "station"
-        assert all_devices[0].media_track == None
-        assert all_devices[0].media_artist == None
-        assert all_devices[0].media_album_name == None
-        assert all_devices[0].media_duration == None
+        assert all_devices[0].media_track is None
+        assert all_devices[0].media_artist is None
+        assert all_devices[0].media_album_name is None
+        assert all_devices[0].media_duration is None
 
     @mock.patch('libsoundtouch.device.SoundTouchDevice.volume',
                 side_effect=MockVolume)
@@ -362,7 +362,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         assert mocked_status.call_count == 1
         assert mocked_volume.call_count == 1
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
-        assert all_devices[0].is_volume_muted == True
+        assert all_devices[0].is_volume_muted is True
 
     @mock.patch('libsoundtouch.soundtouch_device')
     def test_media_commands(self, mocked_soundtouch_device):

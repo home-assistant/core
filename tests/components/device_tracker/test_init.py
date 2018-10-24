@@ -208,7 +208,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                 self.hass.block_till_done()
 
         assert STATE_HOME == \
-                         self.hass.states.get('device_tracker.dev1').state
+            self.hass.states.get('device_tracker.dev1').state
 
         scanner.leave_home('DEV1')
 
@@ -218,7 +218,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             self.hass.block_till_done()
 
         assert STATE_NOT_HOME == \
-                         self.hass.states.get('device_tracker.dev1').state
+            self.hass.states.get('device_tracker.dev1').state
 
     def test_entity_attributes(self):
         """Test the entity attributes."""
@@ -282,8 +282,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         state = self.hass.states.get(device_tracker.ENTITY_ID_ALL_DEVICES)
         assert state is not None
         assert STATE_NOT_HOME == state.state
-        assert (entity_id,) == \
-                                 state.attributes.get(ATTR_ENTITY_ID)
+        assert (entity_id,) == state.attributes.get(ATTR_ENTITY_ID)
 
     @patch('homeassistant.components.device_tracker.DeviceTracker.async_see')
     def test_see_service(self, mock_see):
@@ -377,7 +376,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     def test_see_state(self):
         """Test device tracker see records state correctly."""
         assert setup_component(self.hass, device_tracker.DOMAIN,
-                                        TEST_PLATFORM)
+                               TEST_PLATFORM)
 
         params = {
             'mac': 'AA:BB:CC:DD:EE:FF',
@@ -456,7 +455,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert attrs.get('longitude') == 2
         assert attrs.get('gps_accuracy') == 0
         assert attrs.get('source_type') == \
-                         device_tracker.SOURCE_TYPE_ROUTER
+            device_tracker.SOURCE_TYPE_ROUTER
 
         scanner.leave_home('dev1')
 
@@ -471,11 +470,11 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert state.object_id == 'dev1'
         assert state.name == 'dev1'
         assert attrs.get('friendly_name') == 'dev1'
-        assert attrs.get('latitude') == None
-        assert attrs.get('longitude') == None
-        assert attrs.get('gps_accuracy') == None
+        assert attrs.get('latitude')is None
+        assert attrs.get('longitude')is None
+        assert attrs.get('gps_accuracy')is None
         assert attrs.get('source_type') == \
-                         device_tracker.SOURCE_TYPE_ROUTER
+            device_tracker.SOURCE_TYPE_ROUTER
 
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
     def test_see_failures(self, mock_warning):

@@ -124,7 +124,7 @@ class DysonTest(unittest.TestCase):
         assert component.fan_speed == "Quiet"
         assert component.fan_speed_list == ["Quiet", "Max"]
         assert component.device_state_attributes['position'] == \
-                         '(0, 0)'
+            '(0, 0)'
         assert component.available
         assert component.supported_features == 255
         assert component.battery_icon == "mdi:battery-80"

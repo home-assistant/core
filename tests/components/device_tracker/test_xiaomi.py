@@ -236,9 +236,9 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
         assert scanner is not None
         assert 2 == len(scanner.scan_devices())
         assert "Device1" == \
-                         scanner.get_device_name("23:83:BF:F6:38:A0")
+            scanner.get_device_name("23:83:BF:F6:38:A0")
         assert "Device2" == \
-                         scanner.get_device_name("1D:98:EC:5E:D5:A6")
+            scanner.get_device_name("1D:98:EC:5E:D5:A6")
 
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
@@ -259,6 +259,6 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
         assert scanner is not None
         assert 2 == len(scanner.scan_devices())
         assert "Device1" == \
-                         scanner.get_device_name("23:83:BF:F6:38:A0")
+            scanner.get_device_name("23:83:BF:F6:38:A0")
         assert "Device2" == \
-                         scanner.get_device_name("1D:98:EC:5E:D5:A6")
+            scanner.get_device_name("1D:98:EC:5E:D5:A6")

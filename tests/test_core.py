@@ -434,12 +434,10 @@ class TestState(unittest.TestCase):
 
     def test_init(self):
         """Test state.init."""
-        with pytest.raises(
-            InvalidEntityFormatError):
+        with pytest.raises(InvalidEntityFormatError):
             ha.State('invalid_entity_format', 'test_state')
 
-        with pytest.raises(
-            InvalidStateError):
+        with pytest.raises(InvalidStateError):
             ha.State('domain.long_state', 't' * 256)
 
     def test_domain(self):
@@ -478,9 +476,9 @@ class TestState(unittest.TestCase):
     def test_repr(self):
         """Test state.repr."""
         assert "<state happy.happy=on @ 1984-12-08T12:00:00+00:00>" == \
-                         str(ha.State(
-                             "happy.happy", "on",
-                             last_changed=datetime(1984, 12, 8, 12, 0, 0)))
+            str(ha.State(
+                "happy.happy", "on",
+                last_changed=datetime(1984, 12, 8, 12, 0, 0)))
 
         assert "<state happy.happy=on; brightness=144 @ " \
             "1984-12-08T12:00:00+00:00>" == \
@@ -669,7 +667,8 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data['domain'] == 'test_domain'
         assert self.calls_register[-1].data['service'] == 'register_calls'
 
-        assert self.services.call('test_domain', 'REGISTER_CALLS', blocking=True)
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
         assert 1 == len(calls)
 
     def test_call_non_existing_with_blocking(self):
@@ -699,7 +698,8 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data['domain'] == 'test_domain'
         assert self.calls_register[-1].data['service'] == 'register_calls'
 
-        assert self.services.call('test_domain', 'REGISTER_CALLS', blocking=True)
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
         self.hass.block_till_done()
         assert 1 == len(calls)
 
@@ -720,7 +720,8 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data['domain'] == 'test_domain'
         assert self.calls_register[-1].data['service'] == 'register_calls'
 
-        assert self.services.call('test_domain', 'REGISTER_CALLS', blocking=True)
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
         self.hass.block_till_done()
         assert 1 == len(calls)
 
@@ -775,13 +776,13 @@ class TestConfig(unittest.TestCase):
         """Test get_config_path method."""
         self.config.config_dir = '/tmp/ha-config'
         assert "/tmp/ha-config/test.conf" == \
-                         self.config.path("test.conf")
+            self.config.path("test.conf")
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
         self.config.config_dir = '/tmp/ha-config'
         assert "/tmp/ha-config/dir/test.conf" == \
-                         self.config.path("dir", "test.conf")
+            self.config.path("dir", "test.conf")
 
     def test_as_dict(self):
         """Test as dict."""

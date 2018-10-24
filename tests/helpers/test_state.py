@@ -93,7 +93,7 @@ class TestStateHelpers(unittest.TestCase):
         self.hass.block_till_done()
 
         assert len(calls) == 0
-        assert None == self.hass.states.get('light.test')
+        assert self.hass.states.get('light.test') is None
 
     def test_reproduce_turn_on(self):
         """Test reproduce_state with SERVICE_TURN_ON."""
@@ -184,7 +184,7 @@ class TestStateHelpers(unittest.TestCase):
         assert 'media_player' == last_call.domain
         assert SERVICE_MEDIA_PLAY == last_call.service
         assert ['media_player.test'] == \
-                         last_call.data.get('entity_id')
+            last_call.data.get('entity_id')
 
     def test_reproduce_media_pause(self):
         """Test reproduce_state with SERVICE_MEDIA_PAUSE."""
@@ -202,7 +202,7 @@ class TestStateHelpers(unittest.TestCase):
         assert 'media_player' == last_call.domain
         assert SERVICE_MEDIA_PAUSE == last_call.service
         assert ['media_player.test'] == \
-                         last_call.data.get('entity_id')
+            last_call.data.get('entity_id')
 
     def test_reproduce_bad_state(self):
         """Test reproduce_state with bad state."""
@@ -233,7 +233,7 @@ class TestStateHelpers(unittest.TestCase):
         assert 'light' == last_call.domain
         assert SERVICE_TURN_ON == last_call.service
         assert ['light.test1', 'light.test2'] == \
-                         last_call.data.get('entity_id')
+            last_call.data.get('entity_id')
 
     def test_reproduce_group_same_data(self):
         """Test reproduce_state with group with same domain and data."""
@@ -253,7 +253,7 @@ class TestStateHelpers(unittest.TestCase):
         assert 'light' == last_call.domain
         assert SERVICE_TURN_ON == last_call.service
         assert ['light.test1', 'light.test2'] == \
-                         last_call.data.get('entity_id')
+            last_call.data.get('entity_id')
         assert 95 == last_call.data.get('brightness')
 
     def test_as_number_states(self):

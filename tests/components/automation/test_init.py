@@ -154,7 +154,7 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         assert ['hello.world'] == \
-                         self.calls[0].data.get(ATTR_ENTITY_ID)
+            self.calls[0].data.get(ATTR_ENTITY_ID)
 
     def test_service_specify_entity_id_list(self):
         """Test service data."""
@@ -175,7 +175,7 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         assert ['hello.world', 'hello.world2'] == \
-                         self.calls[0].data.get(ATTR_ENTITY_ID)
+            self.calls[0].data.get(ATTR_ENTITY_ID)
 
     def test_two_triggers(self):
         """Test triggers."""

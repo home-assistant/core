@@ -79,14 +79,14 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.variance == state.attributes.get('variance')
         assert self.median == state.attributes.get('median')
         assert self.deviation == \
-                         state.attributes.get('standard_deviation')
+            state.attributes.get('standard_deviation')
         assert self.mean == state.attributes.get('mean')
         assert self.count == state.attributes.get('count')
         assert self.total == state.attributes.get('total')
         assert '°C' == state.attributes.get('unit_of_measurement')
         assert self.change == state.attributes.get('change')
         assert self.average_change == \
-                         state.attributes.get('average_change')
+            state.attributes.get('average_change')
 
     def test_sampling_size(self):
         """Test rotation."""
@@ -139,7 +139,7 @@ class TestStatisticsSensor(unittest.TestCase):
         # require at least two data points
         assert STATE_UNKNOWN == state.attributes.get('variance')
         assert STATE_UNKNOWN == \
-                         state.attributes.get('standard_deviation')
+            state.attributes.get('standard_deviation')
 
     def test_max_age(self):
         """Test value deprecation."""
@@ -203,10 +203,10 @@ class TestStatisticsSensor(unittest.TestCase):
             state = self.hass.states.get('sensor.test_mean')
 
         assert datetime(2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC) == \
-                         state.attributes.get('min_age')
+            state.attributes.get('min_age')
         assert datetime(2017, 8, 2, 12, 23 + self.count - 1, 42,
-                                  tzinfo=dt_util.UTC) == \
-                         state.attributes.get('max_age')
+                        tzinfo=dt_util.UTC) == \
+            state.attributes.get('max_age')
         assert self.change_rate == state.attributes.get('change_rate')
 
     def test_initialize_from_database(self):

@@ -57,9 +57,9 @@ class TestDatadog(unittest.TestCase):
 
         assert self.hass.bus.listen.called
         assert EVENT_LOGBOOK_ENTRY == \
-                         self.hass.bus.listen.call_args_list[0][0][0]
+            self.hass.bus.listen.call_args_list[0][0][0]
         assert EVENT_STATE_CHANGED == \
-                         self.hass.bus.listen.call_args_list[1][0][0]
+            self.hass.bus.listen.call_args_list[1][0][0]
 
     @MockDependency('datadog')
     def test_datadog_setup_defaults(self, mock_datadog):

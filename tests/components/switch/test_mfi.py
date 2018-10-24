@@ -75,7 +75,7 @@ class TestMfiSwitch(unittest.TestCase):
         self.port.data['output'] = 'stale'
         self.switch.update()
         assert 1.0 == self.port.data['output']
-        assert None == self.switch._target_state
+        assert self.switch._target_state is None
         self.port.data['output'] = 'untouched'
         self.switch.update()
         assert 'untouched' == self.port.data['output']
@@ -109,4 +109,4 @@ class TestMfiSwitch(unittest.TestCase):
         self.port.data = {'v_rms': 1.25,
                           'i_rms': 2.75}
         assert {'volts': 1.2, 'amps': 2.8} == \
-                         self.switch.device_state_attributes
+            self.switch.device_state_attributes

@@ -89,8 +89,8 @@ class TestComponentHistory(unittest.TestCase):
             assert state1 == state2
 
         # Test get_state here because we have a DB setup
-        assert states[0] == history.get_state(self.hass, future,
-                                         states[0].entity_id)
+        assert states[0] == \
+            history.get_state(self.hass, future, states[0].entity_id)
 
     def test_state_changes_during_period(self):
         """Test state change during period."""

@@ -230,7 +230,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.hass.block_till_done()
         assert 100 == \
-                         light_state.attributes['brightness']
+            light_state.attributes['brightness']
 
         fire_mqtt_message(self.hass, 'test_light_rgb',
                           '{"state":"ON",'
@@ -239,7 +239,7 @@ class TestLightMQTTJSON(unittest.TestCase):
 
         light_state = self.hass.states.get('light.test')
         assert (255, 255, 255) == \
-                         light_state.attributes.get('rgb_color')
+            light_state.attributes.get('rgb_color')
 
         fire_mqtt_message(self.hass, 'test_light_rgb',
                           '{"state":"ON",'
@@ -248,7 +248,7 @@ class TestLightMQTTJSON(unittest.TestCase):
 
         light_state = self.hass.states.get('light.test')
         assert (0.141, 0.14) == \
-                         light_state.attributes.get('xy_color')
+            light_state.attributes.get('xy_color')
 
         fire_mqtt_message(self.hass, 'test_light_rgb',
                           '{"state":"ON",'
@@ -257,7 +257,7 @@ class TestLightMQTTJSON(unittest.TestCase):
 
         light_state = self.hass.states.get('light.test')
         assert (180.0, 50.0) == \
-                         light_state.attributes.get('hs_color')
+            light_state.attributes.get('hs_color')
 
         fire_mqtt_message(self.hass, 'test_light_rgb',
                           '{"state":"ON",'
@@ -342,11 +342,10 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         assert 'test_light_rgb/set' == \
-                         self.mock_publish.async_publish.mock_calls[0][1][0]
+            self.mock_publish.async_publish.mock_calls[0][1][0]
         assert 2 == \
-                         self.mock_publish.async_publish.mock_calls[0][1][2]
-        assert False == \
-                         self.mock_publish.async_publish.mock_calls[0][1][3]
+            self.mock_publish.async_publish.mock_calls[0][1][2]
+        assert self.mock_publish.async_publish.mock_calls[0][1][3] is False
         # Get the sent message
         message_json = json.loads(
             self.mock_publish.async_publish.mock_calls[0][1][1])
@@ -369,11 +368,10 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         assert 'test_light_rgb/set' == \
-                         self.mock_publish.async_publish.mock_calls[0][1][0]
+            self.mock_publish.async_publish.mock_calls[0][1][0]
         assert 2 == \
-                         self.mock_publish.async_publish.mock_calls[0][1][2]
-        assert False == \
-                         self.mock_publish.async_publish.mock_calls[0][1][3]
+            self.mock_publish.async_publish.mock_calls[0][1][2]
+        assert self.mock_publish.async_publish.mock_calls[0][1][3] is False
         # Get the sent message
         message_json = json.loads(
             self.mock_publish.async_publish.mock_calls[1][1][1])
@@ -434,11 +432,10 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         assert 'test_light_rgb/set' == \
-                         self.mock_publish.async_publish.mock_calls[0][1][0]
+            self.mock_publish.async_publish.mock_calls[0][1][0]
         assert 0 == \
-                         self.mock_publish.async_publish.mock_calls[0][1][2]
-        assert False == \
-                         self.mock_publish.async_publish.mock_calls[0][1][3]
+            self.mock_publish.async_publish.mock_calls[0][1][2]
+        assert self.mock_publish.async_publish.mock_calls[0][1][3] is False
         # Get the sent message
         message_json = json.loads(
             self.mock_publish.async_publish.mock_calls[0][1][1])
@@ -450,11 +447,10 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         assert 'test_light_rgb/set' == \
-                         self.mock_publish.async_publish.mock_calls[0][1][0]
+            self.mock_publish.async_publish.mock_calls[0][1][0]
         assert 0 == \
-                         self.mock_publish.async_publish.mock_calls[0][1][2]
-        assert False == \
-                         self.mock_publish.async_publish.mock_calls[0][1][3]
+            self.mock_publish.async_publish.mock_calls[0][1][2]
+        assert self.mock_publish.async_publish.mock_calls[0][1][3] is False
         # Get the sent message
         message_json = json.loads(
             self.mock_publish.async_publish.mock_calls[0][1][1])
@@ -481,11 +477,10 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         assert 'test_light_rgb/set' == \
-                         self.mock_publish.async_publish.mock_calls[0][1][0]
+            self.mock_publish.async_publish.mock_calls[0][1][0]
         assert 0 == \
-                         self.mock_publish.async_publish.mock_calls[0][1][2]
-        assert False == \
-                         self.mock_publish.async_publish.mock_calls[0][1][3]
+            self.mock_publish.async_publish.mock_calls[0][1][2]
+        assert self.mock_publish.async_publish.mock_calls[0][1][3] is False
         # Get the sent message
         message_json = json.loads(
             self.mock_publish.async_publish.mock_calls[0][1][1])
@@ -497,11 +492,10 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         assert 'test_light_rgb/set' == \
-                         self.mock_publish.async_publish.mock_calls[1][1][0]
+            self.mock_publish.async_publish.mock_calls[1][1][0]
         assert 0 == \
-                         self.mock_publish.async_publish.mock_calls[1][1][2]
-        assert False == \
-                         self.mock_publish.async_publish.mock_calls[1][1][3]
+            self.mock_publish.async_publish.mock_calls[1][1][2]
+        assert self.mock_publish.async_publish.mock_calls[1][1][3] is False
         # Get the sent message
         message_json = json.loads(
             self.mock_publish.async_publish.mock_calls[1][1][1])

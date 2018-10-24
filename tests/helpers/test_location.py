@@ -41,7 +41,8 @@ class TestHelpersLocation(unittest.TestCase):
             ATTR_LONGITUDE: 123.45,
         })
 
-        assert location.closest(123.45, 123.45, [state, state2, state3]) is None
+        assert \
+            location.closest(123.45, 123.45, [state, state2, state3]) is None
 
     def test_closest_returns_closest(self):
         """Test ."""

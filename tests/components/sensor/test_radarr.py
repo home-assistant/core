@@ -429,4 +429,4 @@ class TestRadarrSetup(unittest.TestCase):
         radarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
-            assert None == device.state
+            assert device.state is None

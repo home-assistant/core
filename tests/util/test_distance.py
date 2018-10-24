@@ -15,16 +15,12 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_convert_same_unit(self):
         """Test conversion from any unit to same unit."""
-        assert 5 == \
-                         distance_util.convert(5, LENGTH_KILOMETERS,
-                                               LENGTH_KILOMETERS)
-        assert 2 == \
-                         distance_util.convert(2, LENGTH_METERS,
-                                               LENGTH_METERS)
-        assert 10 == \
-                         distance_util.convert(10, LENGTH_MILES, LENGTH_MILES)
-        assert 9 == \
-                         distance_util.convert(9, LENGTH_FEET, LENGTH_FEET)
+        assert 5 == distance_util.convert(5, LENGTH_KILOMETERS,
+                                          LENGTH_KILOMETERS)
+        assert 2 == distance_util.convert(2, LENGTH_METERS,
+                                          LENGTH_METERS)
+        assert 10 == distance_util.convert(10, LENGTH_MILES, LENGTH_MILES)
+        assert 9 == distance_util.convert(9, LENGTH_FEET, LENGTH_FEET)
 
     def test_convert_invalid_unit(self):
         """Test exception is thrown for invalid units."""
@@ -44,8 +40,9 @@ class TestDistanceUtil(unittest.TestCase):
     def test_convert_from_miles(self):
         """Test conversion from miles to other units."""
         miles = 5
-        assert distance_util.convert(miles, LENGTH_MILES, LENGTH_KILOMETERS) == \
-            8.04672
+        assert distance_util.convert(
+            miles, LENGTH_MILES, LENGTH_KILOMETERS
+        ) == 8.04672
         assert distance_util.convert(miles, LENGTH_MILES, LENGTH_METERS) == \
             8046.72
         assert distance_util.convert(miles, LENGTH_MILES, LENGTH_FEET) == \
@@ -75,8 +72,8 @@ class TestDistanceUtil(unittest.TestCase):
         """Test conversion from meters to other units."""
         m = 5000
         assert distance_util.convert(m, LENGTH_METERS, LENGTH_FEET) == \
-                         16404.2
+            16404.2
         assert distance_util.convert(m, LENGTH_METERS, LENGTH_KILOMETERS) == \
             5
         assert distance_util.convert(m, LENGTH_METERS, LENGTH_MILES) == \
-                         3.106855
+            3.106855

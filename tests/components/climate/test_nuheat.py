@@ -158,7 +158,8 @@ class TestNuHeat(unittest.TestCase):
         assert self.thermostat.current_hold_mode == nuheat.MODE_AUTO
 
         self.thermostat._thermostat.schedule_mode = SCHEDULE_HOLD
-        assert self.thermostat.current_hold_mode == nuheat.MODE_HOLD_TEMPERATURE
+        assert self.thermostat.current_hold_mode == \
+            nuheat.MODE_HOLD_TEMPERATURE
 
         self.thermostat._thermostat.schedule_mode = SCHEDULE_TEMPORARY_HOLD
         assert self.thermostat.current_hold_mode == nuheat.MODE_TEMPORARY_HOLD
@@ -184,7 +185,8 @@ class TestNuHeat(unittest.TestCase):
         assert self.thermostat._force_update
 
         self.thermostat.set_hold_mode("temporary_temperature")
-        assert self.thermostat._thermostat.schedule_mode == SCHEDULE_TEMPORARY_HOLD
+        assert self.thermostat._thermostat.schedule_mode == \
+            SCHEDULE_TEMPORARY_HOLD
         assert self.thermostat._force_update
 
         self.thermostat.set_hold_mode("auto")

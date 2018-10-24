@@ -220,11 +220,12 @@ class TestZWaveNodeEntity(unittest.TestCase):
     def test_node_changed(self):
         """Test node_changed function."""
         self.maxDiff = None
-        assert {'node_id': self.node.node_id,
-             'node_name': 'Mock Node',
-             'manufacturer_name': 'Test Manufacturer',
-             'product_name': 'Test Product'} == \
-            self.entity.device_state_attributes
+        assert {
+            'node_id': self.node.node_id,
+            'node_name': 'Mock Node',
+            'manufacturer_name': 'Test Manufacturer',
+            'product_name': 'Test Product'
+        } == self.entity.device_state_attributes
 
         self.node.get_values.return_value = {
             1: mock_zwave.MockValue(data=1800)
@@ -277,32 +278,33 @@ class TestZWaveNodeEntity(unittest.TestCase):
             "averageResponseRTT": 2443,
             "receivedTS": "2017-03-27 15:38:19:298 "}
         self.entity.node_changed()
-        assert {'node_id': self.node.node_id,
-             'node_name': 'Mock Node',
-             'manufacturer_name': 'Test Manufacturer',
-             'product_name': 'Test Product',
-             'query_stage': 'Dynamic',
-             'is_awake': True,
-             'is_ready': False,
-             'is_failed': False,
-             'is_info_received': True,
-             'max_baud_rate': 40000,
-             'is_zwave_plus': False,
-             'battery_level': 42,
-             'wake_up_interval': 1800,
-             'averageRequestRTT': 2462,
-             'averageResponseRTT': 2443,
-             'lastRequestRTT': 1591,
-             'lastResponseRTT': 3679,
-             'receivedCnt': 4,
-             'receivedDups': 1,
-             'receivedTS': '2017-03-27 15:38:19:298 ',
-             'receivedUnsolicited': 0,
-             'retries': 0,
-             'sentCnt': 7,
-             'sentFailed': 1,
-             'sentTS': '2017-03-27 15:38:15:620 '} == \
-            self.entity.device_state_attributes
+        assert {
+            'node_id': self.node.node_id,
+            'node_name': 'Mock Node',
+            'manufacturer_name': 'Test Manufacturer',
+            'product_name': 'Test Product',
+            'query_stage': 'Dynamic',
+            'is_awake': True,
+            'is_ready': False,
+            'is_failed': False,
+            'is_info_received': True,
+            'max_baud_rate': 40000,
+            'is_zwave_plus': False,
+            'battery_level': 42,
+            'wake_up_interval': 1800,
+            'averageRequestRTT': 2462,
+            'averageResponseRTT': 2443,
+            'lastRequestRTT': 1591,
+            'lastResponseRTT': 3679,
+            'receivedCnt': 4,
+            'receivedDups': 1,
+            'receivedTS': '2017-03-27 15:38:19:298 ',
+            'receivedUnsolicited': 0,
+            'retries': 0,
+            'sentCnt': 7,
+            'sentFailed': 1,
+            'sentTS': '2017-03-27 15:38:15:620 '
+        } == self.entity.device_state_attributes
 
         self.node.can_wake_up_value = False
         self.entity.node_changed()

@@ -233,18 +233,18 @@ class TestMQTTComponent(unittest.TestCase):
         # no identifiers
         with pytest.raises(vol.Invalid):
             mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
-            'manufacturer': 'Whatever',
-            'name': 'Beer',
-            'model': 'Glass',
-            'sw_version': '0.1-beta',
-        })
+                'manufacturer': 'Whatever',
+                'name': 'Beer',
+                'model': 'Glass',
+                'sw_version': '0.1-beta',
+            })
         # empty identifiers
         with pytest.raises(vol.Invalid):
             mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
-            'identifiers': [],
-            'connections': [],
-            'name': 'Beer',
-        })
+                'identifiers': [],
+                'connections': [],
+                'name': 'Beer',
+            })
 
 
 # pylint: disable=invalid-name
@@ -278,7 +278,8 @@ class TestMQTTCallbacks(unittest.TestCase):
             fire_mqtt_message(self.hass, 'test-topic', b'\x9a')
 
             self.hass.block_till_done()
-            assert "WARNING:homeassistant.components.mqtt:Can't decode payload " \
+            assert \
+                "WARNING:homeassistant.components.mqtt:Can't decode payload " \
                 "b'\\x9a' on test-topic with encoding utf-8" in \
                 test_handle.output[0]
 
@@ -493,7 +494,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         assert self.hass.data['mqtt']._mqttc.reconnect.called
         assert 4 == len(self.hass.data['mqtt']._mqttc.reconnect.mock_calls)
         assert [1, 2, 4] == \
-                         [call[1][0] for call in mock_sleep.mock_calls]
+            [call[1][0] for call in mock_sleep.mock_calls]
 
     def test_retained_message_on_subscribe_received(self):
         """Test every subscriber receives retained message on subscribe."""
@@ -552,12 +553,12 @@ class TestMQTTCallbacks(unittest.TestCase):
             mock.call('test/state', 1)
         ]
         assert self.hass.data['mqtt']._mqttc.subscribe.mock_calls == \
-                         expected
+            expected
 
         unsub()
         self.hass.block_till_done()
         assert self.hass.data['mqtt']._mqttc.unsubscribe.call_count == \
-                         0
+            0
 
         self.hass.data['mqtt']._mqtt_on_disconnect(None, None, 0)
         self.hass.data['mqtt']._mqtt_on_connect(None, None, None, 0)
@@ -565,7 +566,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         expected.append(mock.call('test/state', 1))
         assert self.hass.data['mqtt']._mqttc.subscribe.mock_calls == \
-                         expected
+            expected
 
 
 @asyncio.coroutine

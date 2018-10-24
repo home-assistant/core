@@ -70,13 +70,13 @@ class TestConfiguration(unittest.TestCase):
                 patch.object(rtm.RememberTheMilkConfiguration, 'save_config'):
             config = rtm.RememberTheMilkConfiguration(self.hass)
 
-            assert None == config.get_rtm_id(self.profile, hass_id)
+            assert config.get_rtm_id(self.profile, hass_id) is None
             config.set_rtm_id(self.profile, hass_id, list_id, timeseries_id,
                               rtm_id)
             assert (list_id, timeseries_id, rtm_id) == \
-                             config.get_rtm_id(self.profile, hass_id)
+                config.get_rtm_id(self.profile, hass_id)
             config.delete_rtm_id(self.profile, hass_id)
-            assert None == config.get_rtm_id(self.profile, hass_id)
+            assert config.get_rtm_id(self.profile, hass_id) is None
 
     def test_load_key_map(self):
         """Test loading an existing key map from the file."""
@@ -84,4 +84,4 @@ class TestConfiguration(unittest.TestCase):
                 patch("os.path.isfile", Mock(return_value=True)):
             config = rtm.RememberTheMilkConfiguration(self.hass)
         assert ('0', '1', '2',) == \
-                         config.get_rtm_id(self.profile, "1234")
+            config.get_rtm_id(self.profile, "1234")

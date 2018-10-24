@@ -23,8 +23,7 @@ class TestUtil(unittest.TestCase):
         """Test sanitize_path."""
         assert "test/path" == util.sanitize_path("test/path")
         assert "test/path" == util.sanitize_path("~test/path")
-        assert "//test/path" == \
-                         util.sanitize_path("~/../test/path")
+        assert "//test/path" == util.sanitize_path("~/../test/path")
 
     def test_slugify(self):
         """Test slugify."""
@@ -35,9 +34,9 @@ class TestUtil(unittest.TestCase):
         assert "b827eb000000" == util.slugify("B8:27:EB:00:00:00")
         assert "testcom" == util.slugify("test.com")
         assert "greg_phone__exp_wayp1" == \
-                         util.slugify("greg_phone - exp_wayp1")
+            util.slugify("greg_phone - exp_wayp1")
         assert "we_are_we_are_a_test_calendar" == \
-                         util.slugify("We are, we are, a... Test Calendar")
+            util.slugify("We are, we are, a... Test Calendar")
         assert "test_aouss_aou" == util.slugify("Tèst_äöüß_ÄÖÜ")
 
     def test_repr_helper(self):
@@ -45,16 +44,15 @@ class TestUtil(unittest.TestCase):
         assert "A" == util.repr_helper("A")
         assert "5" == util.repr_helper(5)
         assert "True" == util.repr_helper(True)
-        assert "test=1" == \
-                         util.repr_helper({"test": 1})
+        assert "test=1" == util.repr_helper({"test": 1})
         assert "1986-07-09T12:00:00+00:00" == \
-                         util.repr_helper(datetime(1986, 7, 9, 12, 0, 0))
+            util.repr_helper(datetime(1986, 7, 9, 12, 0, 0))
 
     def test_convert(self):
         """Test convert."""
         assert 5 == util.convert("5", int)
         assert 5.0 == util.convert("5", float)
-        assert True == util.convert("True", bool)
+        assert util.convert("True", bool) is True
         assert 1 == util.convert("NOT A NUMBER", int, 1)
         assert 1 == util.convert(None, int, 1)
         assert 1 == util.convert(object, int, 1)

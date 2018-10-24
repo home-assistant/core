@@ -133,7 +133,8 @@ class TestGoogleWifiSensor(unittest.TestCase):
         """Test the unit of measurement."""
         for name in self.sensor_dict:
             sensor = self.sensor_dict[name]['sensor']
-            assert self.sensor_dict[name]['units'] == sensor.unit_of_measurement
+            assert \
+                self.sensor_dict[name]['units'] == sensor.unit_of_measurement
 
     def test_icon(self):
         """Test the icon."""

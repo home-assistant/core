@@ -94,7 +94,7 @@ class TestServiceHelpers(unittest.TestCase):
         })
         self.hass.block_till_done()
         assert ['hello.world', 'sensor.beer'] == \
-                         self.calls[-1].data.get('entity_id')
+            self.calls[-1].data.get('entity_id')
 
     def test_not_mutate_input(self):
         """Test for immutable input."""
@@ -145,13 +145,13 @@ class TestServiceHelpers(unittest.TestCase):
                               {ATTR_ENTITY_ID: 'light.Bowl'})
 
         assert ['light.bowl'] == \
-                         service.extract_entity_ids(self.hass, call)
+            service.extract_entity_ids(self.hass, call)
 
         call = ha.ServiceCall('light', 'turn_on',
                               {ATTR_ENTITY_ID: 'group.test'})
 
         assert ['light.ceiling', 'light.kitchen'] == \
-                         service.extract_entity_ids(self.hass, call)
+            service.extract_entity_ids(self.hass, call)
 
         assert ['group.test'] == service.extract_entity_ids(
             self.hass, call, expand_group=False)

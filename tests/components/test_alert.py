@@ -255,7 +255,7 @@ class TestAlert(unittest.TestCase):
         self.hass.add_job(entity.begin_alerting)
         self.hass.block_till_done()
 
-        assert True == entity.hidden
+        assert entity.hidden is True
 
     def test_done_message_state_tracker_reset_on_cancel(self):
         """Test that the done message is reset when canceled."""

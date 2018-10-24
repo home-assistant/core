@@ -3,7 +3,6 @@
 
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
     SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -94,8 +93,3 @@ class TestRemote(unittest.TestCase):
         assert remote.DOMAIN == call.domain
         assert SERVICE_SEND_COMMAND == call.service
         assert 'entity_id_val' == call.data[ATTR_ENTITY_ID]
-
-    def test_services(self):
-        """Test the provided services."""
-        assert setup_component(self.hass, remote.DOMAIN,
-                                        TEST_PLATFORM)

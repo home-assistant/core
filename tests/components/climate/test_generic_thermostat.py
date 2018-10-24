@@ -62,13 +62,13 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
 
     def test_valid_conf(self):
         """Test set up generic_thermostat with valid config values."""
-        assert setup_component(self.hass, 'climate',
-                            {'climate': {
-                                'platform': 'generic_thermostat',
-                                'name': 'test',
-                                'heater': ENT_SWITCH,
-                                'target_sensor': ENT_SENSOR
-                                }})
+        assert setup_component(self.hass, 'climate', {
+            'climate': {
+                'platform': 'generic_thermostat',
+                'name': 'test',
+                'heater': ENT_SWITCH,
+                'target_sensor': ENT_SENSOR
+            }})
 
 
 class TestGenericThermostatHeaterSwitching(unittest.TestCase):
@@ -103,7 +103,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
         }})
 
         assert STATE_OFF == \
-                         self.hass.states.get(heater_switch).state
+            self.hass.states.get(heater_switch).state
 
         self._setup_sensor(18)
         self.hass.block_till_done()
@@ -111,7 +111,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
         self.hass.block_till_done()
 
         assert STATE_ON == \
-                         self.hass.states.get(heater_switch).state
+            self.hass.states.get(heater_switch).state
 
     def test_heater_switch(self):
         """Test heater switching test switch."""
@@ -130,7 +130,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
         }})
 
         assert STATE_OFF == \
-                         self.hass.states.get(heater_switch).state
+            self.hass.states.get(heater_switch).state
 
         self._setup_sensor(18)
         self.hass.block_till_done()
@@ -138,7 +138,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
         self.hass.block_till_done()
 
         assert STATE_ON == \
-                         self.hass.states.get(heater_switch).state
+            self.hass.states.get(heater_switch).state
 
     def _setup_sensor(self, temp):
         """Set up the test sensor."""
@@ -950,9 +950,9 @@ class TestClimateGenericThermostatTurnOnOff(unittest.TestCase):
         state_heat = self.hass.states.get(self.HEAT_ENTITY)
         state_cool = self.hass.states.get(self.COOL_ENTITY)
         assert STATE_HEAT == \
-                         state_heat.attributes.get('operation_mode')
+            state_heat.attributes.get('operation_mode')
         assert STATE_COOL == \
-                         state_cool.attributes.get('operation_mode')
+            state_cool.attributes.get('operation_mode')
 
     def test_turn_on_when_on(self):
         """Test if climate.turn_on does nothing to a turned on device."""
@@ -964,9 +964,9 @@ class TestClimateGenericThermostatTurnOnOff(unittest.TestCase):
         state_heat = self.hass.states.get(self.HEAT_ENTITY)
         state_cool = self.hass.states.get(self.COOL_ENTITY)
         assert STATE_HEAT == \
-                         state_heat.attributes.get('operation_mode')
+            state_heat.attributes.get('operation_mode')
         assert STATE_COOL == \
-                         state_cool.attributes.get('operation_mode')
+            state_cool.attributes.get('operation_mode')
 
     def test_turn_off_when_on(self):
         """Test if climate.turn_off turns off a turned on device."""
@@ -978,9 +978,9 @@ class TestClimateGenericThermostatTurnOnOff(unittest.TestCase):
         state_heat = self.hass.states.get(self.HEAT_ENTITY)
         state_cool = self.hass.states.get(self.COOL_ENTITY)
         assert STATE_OFF == \
-                         state_heat.attributes.get('operation_mode')
+            state_heat.attributes.get('operation_mode')
         assert STATE_OFF == \
-                         state_cool.attributes.get('operation_mode')
+            state_cool.attributes.get('operation_mode')
 
     def test_turn_off_when_off(self):
         """Test if climate.turn_off does nothing to a turned off device."""
@@ -991,9 +991,9 @@ class TestClimateGenericThermostatTurnOnOff(unittest.TestCase):
         state_heat = self.hass.states.get(self.HEAT_ENTITY)
         state_cool = self.hass.states.get(self.COOL_ENTITY)
         assert STATE_OFF == \
-                         state_heat.attributes.get('operation_mode')
+            state_heat.attributes.get('operation_mode')
         assert STATE_OFF == \
-                         state_cool.attributes.get('operation_mode')
+            state_cool.attributes.get('operation_mode')
 
 
 @asyncio.coroutine
@@ -1096,7 +1096,7 @@ class TestClimateGenericThermostatRestoreState(unittest.TestCase):
         state = self.hass.states.get(ENTITY)
         assert 20 == state.attributes[ATTR_TEMPERATURE]
         assert STATE_OFF == \
-                         state.attributes[climate.ATTR_OPERATION_MODE]
+            state.attributes[climate.ATTR_OPERATION_MODE]
         assert STATE_OFF == state.state
         assert 0 == len(self.calls)
 
@@ -1104,7 +1104,7 @@ class TestClimateGenericThermostatRestoreState(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
         assert STATE_OFF == \
-                         state.attributes[climate.ATTR_OPERATION_MODE]
+            state.attributes[climate.ATTR_OPERATION_MODE]
         assert STATE_OFF == state.state
 
     def _setup_climate(self):

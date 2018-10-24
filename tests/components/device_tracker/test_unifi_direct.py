@@ -87,9 +87,9 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
         devices = scanner.scan_devices()
         assert 23 == len(devices)
         assert "iPhone" == \
-                         scanner.get_device_name("98:00:c6:56:34:12")
+            scanner.get_device_name("98:00:c6:56:34:12")
         assert "iPhone" == \
-                         scanner.get_device_name("98:00:C6:56:34:12")
+            scanner.get_device_name("98:00:C6:56:34:12")
 
     @patch('pexpect.pxssh.pxssh.logout')
     @patch('pexpect.pxssh.pxssh.login')

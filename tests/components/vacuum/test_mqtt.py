@@ -58,9 +58,9 @@ class TestVacuumMQTT(unittest.TestCase):
         entity_features = \
             entity.attributes.get(mqtt.CONF_SUPPORTED_FEATURES, 0)
         assert sorted(mqtt.services_to_strings(entity_features)) == \
-                             sorted(['turn_on', 'turn_off', 'stop',
-                                     'return_home', 'battery', 'status',
-                                     'clean_spot'])
+            sorted(['turn_on', 'turn_off', 'stop',
+                    'return_home', 'battery', 'status',
+                    'clean_spot'])
 
     def test_all_commands(self):
         """Test simple commands to the vacuum."""
@@ -184,7 +184,7 @@ class TestVacuumMQTT(unittest.TestCase):
         state = self.hass.states.get('vacuum.mqtttest')
         assert 54 == state.attributes.get(ATTR_BATTERY_LEVEL)
         assert state.attributes.get(ATTR_BATTERY_ICON) == \
-                         'mdi:battery-50'
+            'mdi:battery-50'
 
     def test_status_invalid_json(self):
         """Test to make sure nothing breaks if the vacuum sends bad JSON."""

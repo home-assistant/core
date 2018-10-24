@@ -296,7 +296,7 @@ class TestLightMQTT(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.hass.block_till_done()
         assert 100 == \
-                         light_state.attributes['brightness']
+            light_state.attributes['brightness']
 
         fire_mqtt_message(self.hass, 'test_light_rgb/color_temp/status', '300')
         self.hass.block_till_done()
@@ -317,7 +317,7 @@ class TestLightMQTT(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.hass.block_till_done()
         assert 100 == \
-                         light_state.attributes['white_value']
+            light_state.attributes['white_value']
 
         fire_mqtt_message(self.hass, 'test_light_rgb/status', '1')
         self.hass.block_till_done()
@@ -328,7 +328,7 @@ class TestLightMQTT(unittest.TestCase):
 
         light_state = self.hass.states.get('light.test')
         assert (255, 255, 255) == \
-                         light_state.attributes.get('rgb_color')
+            light_state.attributes.get('rgb_color')
 
         fire_mqtt_message(self.hass, 'test_light_rgb/hs/status',
                           '200,50')
@@ -336,7 +336,7 @@ class TestLightMQTT(unittest.TestCase):
 
         light_state = self.hass.states.get('light.test')
         assert (200, 50) == \
-                         light_state.attributes.get('hs_color')
+            light_state.attributes.get('hs_color')
 
         fire_mqtt_message(self.hass, 'test_light_rgb/xy/status',
                           '0.675,0.322')
@@ -344,7 +344,7 @@ class TestLightMQTT(unittest.TestCase):
 
         light_state = self.hass.states.get('light.test')
         assert (0.672, 0.324) == \
-                         light_state.attributes.get('xy_color')
+            light_state.attributes.get('xy_color')
 
     def test_brightness_controlling_scale(self):
         """Test the brightness controlling scale."""
@@ -391,7 +391,7 @@ class TestLightMQTT(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.hass.block_till_done()
         assert 255 == \
-                         light_state.attributes['brightness']
+            light_state.attributes['brightness']
 
     def test_brightness_from_rgb_controlling_scale(self):
         """Test the brightness controlling scale."""
@@ -473,7 +473,7 @@ class TestLightMQTT(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.hass.block_till_done()
         assert 255 == \
-                         light_state.attributes['white_value']
+            light_state.attributes['white_value']
 
     def test_controlling_state_via_topic_with_templates(self):
         """Test the setting of the state with a template."""

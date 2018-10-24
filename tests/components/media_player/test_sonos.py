@@ -299,7 +299,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
             assert alarm1.enabled == attrs['enabled']
             assert alarm1.start_time == attrs['time']
             assert alarm1.include_linked_zones == \
-                             attrs['include_linked_zones']
+                attrs['include_linked_zones']
             assert alarm1.volume == 30
             alarm1.save.assert_called_once_with()
 

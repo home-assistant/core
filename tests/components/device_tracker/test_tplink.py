@@ -40,8 +40,7 @@ class TestTplink4DeviceScanner(unittest.TestCase):
         # Mock the token retrieval process
         FAKE_TOKEN = 'fake_token'
         fake_auth_token_response = 'window.parent.location.href = ' \
-                                   '"https://a/{}/userRpm/Index.htm";'.format(
-                                       FAKE_TOKEN)
+            '"https://a/{}/userRpm/Index.htm";'.format(FAKE_TOKEN)
 
         m.get('http://{}/userRpm/LoginRpm.htm?Save=Save'.format(
             conf_dict[CONF_HOST]), text=fake_auth_token_response)

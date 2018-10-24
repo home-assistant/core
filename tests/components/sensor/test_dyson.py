@@ -112,7 +112,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state is None
-        assert sensor.unit_of_measurement == None
+        assert sensor.unit_of_measurement is None
         assert sensor.name == "Device_name Dust"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -123,7 +123,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 5
-        assert sensor.unit_of_measurement == None
+        assert sensor.unit_of_measurement is None
         assert sensor.name == "Device_name Dust"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -213,7 +213,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state is None
-        assert sensor.unit_of_measurement == None
+        assert sensor.unit_of_measurement is None
         assert sensor.name == "Device_name AQI"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -224,6 +224,6 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 2
-        assert sensor.unit_of_measurement == None
+        assert sensor.unit_of_measurement is None
         assert sensor.name == "Device_name AQI"
         assert sensor.entity_id == "sensor.dyson_1"

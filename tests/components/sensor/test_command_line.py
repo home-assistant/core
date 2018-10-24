@@ -72,7 +72,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         data = command_line.CommandSensorData(self.hass, 'asdfasdf', 15)
         data.update()
 
-        assert None == data.value
+        assert data.value is None
 
     def test_update_with_json_attrs(self):
         """Test attributes get extracted from a JSON result."""
@@ -89,11 +89,11 @@ class TestCommandSensorSensor(unittest.TestCase):
                                                               'key_three'])
         self.sensor.update()
         assert 'some_json_value' == \
-                         self.sensor.device_state_attributes['key']
+            self.sensor.device_state_attributes['key']
         assert 'another_json_value' == \
-                         self.sensor.device_state_attributes['another_key']
+            self.sensor.device_state_attributes['another_key']
         assert 'value_three' == \
-                         self.sensor.device_state_attributes['key_three']
+            self.sensor.device_state_attributes['key_three']
 
     @patch('homeassistant.components.sensor.command_line._LOGGER')
     def test_update_with_json_attrs_no_data(self, mock_logger):
@@ -150,11 +150,11 @@ class TestCommandSensorSensor(unittest.TestCase):
                                                               'special_key'])
         self.sensor.update()
         assert 'some_json_value' == \
-                         self.sensor.device_state_attributes['key']
+            self.sensor.device_state_attributes['key']
         assert 'another_json_value' == \
-                         self.sensor.device_state_attributes['another_key']
+            self.sensor.device_state_attributes['another_key']
         assert 'value_three' == \
-                         self.sensor.device_state_attributes['key_three']
+            self.sensor.device_state_attributes['key_three']
         assert not ('special_key' in self.sensor.device_state_attributes)
 
     def test_update_with_unnecessary_json_attrs(self):
@@ -171,7 +171,7 @@ class TestCommandSensorSensor(unittest.TestCase):
                                                               'another_key'])
         self.sensor.update()
         assert 'some_json_value' == \
-                         self.sensor.device_state_attributes['key']
+            self.sensor.device_state_attributes['key']
         assert 'another_json_value' == \
-                         self.sensor.device_state_attributes['another_key']
+            self.sensor.device_state_attributes['another_key']
         assert not ('key_three' in self.sensor.device_state_attributes)

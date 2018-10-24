@@ -187,7 +187,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
 
         light_state = self.hass.states.get('light.test')
         assert (243, 249, 255) == \
-                         light_state.attributes.get('rgb_color')
+            light_state.attributes.get('rgb_color')
 
         # change the white value
         fire_mqtt_message(self.hass, 'test_light_rgb', 'on,,,134')

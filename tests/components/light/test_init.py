@@ -122,7 +122,7 @@ class TestLight(unittest.TestCase):
 
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1, dev2, dev3 = platform.DEVICES
 

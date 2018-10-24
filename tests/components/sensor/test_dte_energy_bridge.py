@@ -28,7 +28,7 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
     def test_setup_with_config(self):
         """Test the platform setup with configuration."""
         assert setup_component(self.hass, 'sensor',
-                            {'dte_energy_bridge': DTE_ENERGY_BRIDGE_CONFIG})
+                               {'dte_energy_bridge': DTE_ENERGY_BRIDGE_CONFIG})
 
     @requests_mock.Mocker()
     def test_setup_correct_reading(self, mock_req):
@@ -39,8 +39,8 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', {
             'sensor': DTE_ENERGY_BRIDGE_CONFIG})
         assert '0.411' == \
-                         self.hass.states \
-                         .get('sensor.current_energy_usage').state
+            self.hass.states \
+            .get('sensor.current_energy_usage').state
 
     @requests_mock.Mocker()
     def test_setup_incorrect_units_reading(self, mock_req):
@@ -51,8 +51,8 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', {
             'sensor': DTE_ENERGY_BRIDGE_CONFIG})
         assert '0.411' == \
-                         self.hass.states \
-                         .get('sensor.current_energy_usage').state
+            self.hass.states \
+            .get('sensor.current_energy_usage').state
 
     @requests_mock.Mocker()
     def test_setup_bad_format_reading(self, mock_req):
@@ -63,5 +63,5 @@ class TestDteEnergyBridgeSetup(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', {
             'sensor': DTE_ENERGY_BRIDGE_CONFIG})
         assert 'unknown' == \
-                         self.hass.states \
-                         .get('sensor.current_energy_usage').state
+            self.hass.states \
+            .get('sensor.current_energy_usage').state

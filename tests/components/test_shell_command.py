@@ -160,7 +160,7 @@ class TestShellCommand(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == mock_output.call_count
         assert test_phrase.encode() + b'\n' == \
-                         mock_output.call_args_list[0][0][-1]
+            mock_output.call_args_list[0][0][-1]
 
     @patch('homeassistant.components.shell_command._LOGGER.debug')
     def test_stderr_captured(self, mock_output):
@@ -178,4 +178,4 @@ class TestShellCommand(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == mock_output.call_count
         assert test_phrase.encode() + b'\n' == \
-                         mock_output.call_args_list[0][0][-1]
+            mock_output.call_args_list[0][0][-1]

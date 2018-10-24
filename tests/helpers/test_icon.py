@@ -10,19 +10,19 @@ class TestIconUtil(unittest.TestCase):
         from homeassistant.helpers.icon import icon_for_battery_level
 
         assert 'mdi:battery-unknown' == \
-                         icon_for_battery_level(None, True)
+            icon_for_battery_level(None, True)
         assert 'mdi:battery-unknown' == \
-                         icon_for_battery_level(None, False)
+            icon_for_battery_level(None, False)
 
         assert 'mdi:battery-outline' == \
-                         icon_for_battery_level(5, True)
+            icon_for_battery_level(5, True)
         assert 'mdi:battery-alert' == \
-                         icon_for_battery_level(5, False)
+            icon_for_battery_level(5, False)
 
         assert 'mdi:battery-charging-100' == \
-                         icon_for_battery_level(100, True)
+            icon_for_battery_level(100, True)
         assert 'mdi:battery' == \
-                         icon_for_battery_level(100, False)
+            icon_for_battery_level(100, False)
 
         iconbase = 'mdi:battery'
         for level in range(0, 100, 5):
@@ -48,6 +48,6 @@ class TestIconUtil(unittest.TestCase):
             else:
                 postfix = ''
             assert iconbase + postfix == \
-                             icon_for_battery_level(level, False)
+                icon_for_battery_level(level, False)
             assert iconbase + postfix_charging == \
-                             icon_for_battery_level(level, True)
+                icon_for_battery_level(level, True)

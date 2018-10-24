@@ -66,7 +66,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_UNKNOWN == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         for state in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
                       STATE_ALARM_ARMED_AWAY, STATE_ALARM_PENDING,
@@ -89,7 +89,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         entity_id = 'alarm_control_panel.test'
 
         assert STATE_UNKNOWN == \
-                         self.hass.states.get(entity_id).state
+            self.hass.states.get(entity_id).state
 
         fire_mqtt_message(self.hass, 'alarm/state', 'unsupported state')
         self.hass.block_till_done()

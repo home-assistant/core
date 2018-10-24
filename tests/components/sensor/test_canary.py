@@ -82,7 +82,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor = CanarySensor(data, SENSOR_TYPES[0], location, device)
         sensor.update()
 
-        assert None == sensor.state
+        assert sensor.state is None
 
     def test_humidity_sensor(self):
         """Test humidity sensor."""
@@ -112,7 +112,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor.update()
 
         assert "Home Family Room Air Quality" == sensor.name
-        assert None == sensor.unit_of_measurement
+        assert sensor.unit_of_measurement is None
         assert 0.4 == sensor.state
         assert "mdi:weather-windy" == sensor.icon
 
@@ -131,7 +131,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor.update()
 
         assert "Home Family Room Air Quality" == sensor.name
-        assert None == sensor.unit_of_measurement
+        assert sensor.unit_of_measurement is None
         assert 0.59 == sensor.state
         assert "mdi:weather-windy" == sensor.icon
 
@@ -150,7 +150,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor.update()
 
         assert "Home Family Room Air Quality" == sensor.name
-        assert None == sensor.unit_of_measurement
+        assert sensor.unit_of_measurement is None
         assert 1.0 == sensor.state
         assert "mdi:weather-windy" == sensor.icon
 
@@ -168,8 +168,8 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor = CanarySensor(data, SENSOR_TYPES[2], location, device)
         sensor.update()
 
-        assert None == sensor.state
-        assert None == sensor.device_state_attributes
+        assert sensor.state is None
+        assert sensor.device_state_attributes is None
 
     def test_battery_sensor(self):
         """Test battery sensor."""

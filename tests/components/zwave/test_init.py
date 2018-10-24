@@ -566,10 +566,8 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert values.primary is self.primary
         assert len(list(values)) == 3
-        assert sorted(list(values),
-                                key=lambda a: id(a)) == \
-                         sorted([self.primary, None, None],
-                                key=lambda a: id(a))
+        assert sorted(list(values), key=lambda a: id(a)) == \
+            sorted([self.primary, None, None], key=lambda a: id(a))
         assert not discovery.async_load_platform.called
 
         values.check_value(self.secondary)
@@ -577,10 +575,8 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert values.secondary is self.secondary
         assert len(list(values)) == 3
-        assert sorted(list(values),
-                                key=lambda a: id(a)) == \
-                         sorted([self.primary, self.secondary, None],
-                                key=lambda a: id(a))
+        assert sorted(list(values), key=lambda a: id(a)) == \
+            sorted([self.primary, self.secondary, None], key=lambda a: id(a))
 
         assert discovery.async_load_platform.called
         assert len(discovery.async_load_platform.mock_calls) == 1
@@ -599,10 +595,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert values.optional is self.optional
         assert len(list(values)) == 3
-        assert sorted(list(values),
-                                key=lambda a: id(a)) == \
-                         sorted([self.primary, self.secondary, self.optional],
-                                key=lambda a: id(a))
+        assert sorted(list(values), key=lambda a: id(a)) == \
+            sorted([self.primary, self.secondary, self.optional],
+                   key=lambda a: id(a))
         assert not discovery.async_load_platform.called
 
         assert values._entity.value_added.called
@@ -641,10 +636,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert values.secondary is self.secondary
         assert values.optional is self.optional
         assert len(list(values)) == 3
-        assert sorted(list(values),
-                                key=lambda a: id(a)) == \
-                         sorted([self.primary, self.secondary, self.optional],
-                                key=lambda a: id(a))
+        assert sorted(list(values), key=lambda a: id(a)) == \
+            sorted([self.primary, self.secondary, self.optional],
+                   key=lambda a: id(a))
 
         assert discovery.async_load_platform.called
         assert len(discovery.async_load_platform.mock_calls) == 1
@@ -1385,8 +1379,8 @@ class TestZWaveServices(unittest.TestCase):
         assert node.refresh_value.called
         assert len(node.refresh_value.mock_calls) == 2
         assert sorted([node.refresh_value.mock_calls[0][1][0],
-                                 node.refresh_value.mock_calls[1][1][0]]) == \
-                         sorted([value.value_id, power_value.value_id])
+                       node.refresh_value.mock_calls[1][1][0]]) == \
+            sorted([value.value_id, power_value.value_id])
 
     def test_refresh_node(self):
         """Test zwave refresh_node service."""

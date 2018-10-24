@@ -26,7 +26,8 @@ class TestConfigurator(unittest.TestCase):
         request_id = configurator.request_config(
             self.hass, "Test Request", lambda _: None)
 
-        assert 1 == len(self.hass.services.services.get(configurator.DOMAIN, [])), \
+        assert 1 == \
+            len(self.hass.services.services.get(configurator.DOMAIN, [])), \
             "No new service registered"
 
         states = self.hass.states.all()
@@ -36,7 +37,8 @@ class TestConfigurator(unittest.TestCase):
         state = states[0]
 
         assert configurator.STATE_CONFIGURE == state.state
-        assert request_id == state.attributes.get(configurator.ATTR_CONFIGURE_ID)
+        assert \
+            request_id == state.attributes.get(configurator.ATTR_CONFIGURE_ID)
 
     def test_request_all_info(self):
         """Test request config with all possible info."""

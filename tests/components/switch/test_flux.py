@@ -76,7 +76,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -116,7 +116,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -161,7 +161,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -207,7 +207,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -254,7 +254,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -299,7 +299,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -349,7 +349,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -400,7 +400,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -450,7 +450,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -499,7 +499,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -549,7 +549,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -596,7 +596,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -645,7 +645,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -692,7 +692,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1, dev2, dev3 = platform.DEVICES
         common_light.turn_on(self.hass, entity_id=dev2.entity_id)
@@ -760,7 +760,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
@@ -804,7 +804,7 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         assert setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}})
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 

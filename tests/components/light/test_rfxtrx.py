@@ -180,14 +180,15 @@ class TestLightRfxtrx(unittest.TestCase):
     def test_several_lights(self):
         """Test with 3 lights."""
         assert setup_component(self.hass, 'light', {
-            'light': {'platform': 'rfxtrx',
-                      'signal_repetitions': 3,
-                      'devices':
-                      {'0b1100cd0213c7f230010f71': {
-                               'name': 'Test'},
-                        '0b1100100118cdea02010f70': {
-                            'name': 'Bath'},
-                        '0b1100101118cdea02010f70': {
+            'light': {
+                'platform': 'rfxtrx',
+                'signal_repetitions': 3,
+                'devices': {
+                    '0b1100cd0213c7f230010f71': {
+                        'name': 'Test'},
+                    '0b1100100118cdea02010f70': {
+                        'name': 'Bath'},
+                    '0b1100101118cdea02010f70': {
                             'name': 'Living'}}}})
 
         assert 3 == len(rfxtrx_core.RFX_DEVICES)
@@ -224,7 +225,7 @@ class TestLightRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['0e611622']
         assert 1 == len(rfxtrx_core.RFX_DEVICES)
         assert '<Entity 0b11009e00e6116202020070: on>' == \
-                         entity.__str__()
+            entity.__str__()
 
         event = rfxtrx_core.get_rfx_object('0b11009e00e6116201010070')
         event.data = bytearray(b'\x0b\x11\x00\x9e\x00\xe6\x11b\x01\x01\x00p')
@@ -240,7 +241,7 @@ class TestLightRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['118cdea2']
         assert 2 == len(rfxtrx_core.RFX_DEVICES)
         assert '<Entity 0b1100120118cdea02020070: on>' == \
-                         entity.__str__()
+            entity.__str__()
 
         # trying to add a sensor
         event = rfxtrx_core.get_rfx_object('0a52085e070100b31b0279')

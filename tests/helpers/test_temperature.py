@@ -32,7 +32,7 @@ class TestHelpersTemperature(unittest.TestCase):
             display_temp(self.hass, temp, TEMP_CELSIUS, PRECISION_HALVES)
 
         assert "Temperature is not a number: {}".format(temp) \
-                        in str(exception)
+            in str(exception)
 
     def test_celsius_halves(self):
         """Test temperature to celsius rounding to halves."""

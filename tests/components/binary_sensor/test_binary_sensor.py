@@ -17,9 +17,9 @@ class TestBinarySensor(unittest.TestCase):
                         'BinarySensorDevice.is_on',
                         new=False):
             assert STATE_OFF == \
-                             binary_sensor.BinarySensorDevice().state
+                binary_sensor.BinarySensorDevice().state
         with mock.patch('homeassistant.components.binary_sensor.'
                         'BinarySensorDevice.is_on',
                         new=True):
             assert STATE_ON == \
-                             binary_sensor.BinarySensorDevice().state
+                binary_sensor.BinarySensorDevice().state

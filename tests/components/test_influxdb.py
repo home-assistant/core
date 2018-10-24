@@ -8,7 +8,7 @@ import influxdb as influx_client
 from homeassistant.setup import setup_component
 import homeassistant.components.influxdb as influxdb
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON, \
-                                STATE_STANDBY
+                   STATE_STANDBY
 
 from tests.common import get_test_home_assistant
 
@@ -46,7 +46,8 @@ class TestInfluxDB(unittest.TestCase):
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         assert self.hass.bus.listen.called
-        assert EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
+        assert \
+            EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
         assert mock_client.return_value.query.called
 
     def test_setup_config_defaults(self, mock_client):
@@ -60,7 +61,8 @@ class TestInfluxDB(unittest.TestCase):
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         assert self.hass.bus.listen.called
-        assert EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
+        assert \
+            EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
 
     def test_setup_minimal_config(self, mock_client):
         """Test the setup with minimal configuration."""

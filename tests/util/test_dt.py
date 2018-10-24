@@ -50,15 +50,17 @@ class TestDateUtil(unittest.TestCase):
         """Test the now method."""
         dt_util.set_default_time_zone(dt_util.get_time_zone(TEST_TIME_ZONE))
 
-        assert abs(dt_util.as_utc(dt_util.now()).replace(tzinfo=None)-datetime.utcnow()) < \
-            timedelta(seconds=1)
+        assert abs(
+            dt_util.as_utc(dt_util.now()).replace(
+                tzinfo=None
+            ) - datetime.utcnow()
+        ) < timedelta(seconds=1)
 
     def test_as_utc_with_naive_object(self):
         """Test the now method."""
         utcnow = datetime.utcnow()
 
-        assert utcnow == \
-                         dt_util.as_utc(utcnow).replace(tzinfo=None)
+        assert utcnow == dt_util.as_utc(utcnow).replace(tzinfo=None)
 
     def test_as_utc_with_utc_object(self):
         """Test UTC time with UTC object."""

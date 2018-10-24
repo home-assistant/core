@@ -70,8 +70,7 @@ class TestGeoJsonPlatform(unittest.TestCase):
         # Patching 'utcnow' to gain more control over the timed update.
         with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
             with assert_setup_component(1, geo_location.DOMAIN):
-                assert setup_component(self.hass, geo_location.DOMAIN,
-                                                CONFIG)
+                assert setup_component(self.hass, geo_location.DOMAIN, CONFIG)
                 # Artificially trigger update.
                 self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
                 # Collect events.
@@ -162,8 +161,7 @@ class TestGeoJsonPlatform(unittest.TestCase):
         # Patching 'utcnow' to gain more control over the timed update.
         with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
             with assert_setup_component(1, geo_location.DOMAIN):
-                assert setup_component(self.hass, geo_location.DOMAIN,
-                                                CONFIG)
+                assert setup_component(self.hass, geo_location.DOMAIN, CONFIG)
 
                 # This gives us the ability to assert the '_delete_callback'
                 # has been called while still executing it.

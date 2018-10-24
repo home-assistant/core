@@ -366,7 +366,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                False,
                                                "This is a normal event")
 
-        assert cal.data.event == None
+        assert cal.data.event is None
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
     def test_no_result_with_filtering(self, mock_now):
@@ -377,7 +377,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                                False,
                                                "This is a non-existing event")
 
-        assert cal.data.event == None
+        assert cal.data.event is None
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 30))
     def test_all_day_event_returned(self, mock_now):

@@ -960,7 +960,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.hass.block_till_done()
         self.send_message(EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
         assert len(self.context.mobile_beacons_active['greg_phone']) == \
-                         0
+            0
 
     def test_mobile_multiple_enter_exit(self):
         """Test the multiple entering."""
@@ -969,7 +969,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.send_message(EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
 
         assert len(self.context.mobile_beacons_active['greg_phone']) == \
-                         0
+            0
 
     def test_complex_movement(self):
         """Test a complex sequence representative of real-world use."""

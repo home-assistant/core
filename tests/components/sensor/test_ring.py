@@ -74,28 +74,28 @@ class TestRingSensorSetup(unittest.TestCase):
             if device.name == 'Front Battery':
                 assert 80 == device.state
                 assert 'hp_cam_v1' == \
-                                 device.device_state_attributes['kind']
+                    device.device_state_attributes['kind']
                 assert 'stickup_cams' == \
-                                 device.device_state_attributes['type']
+                    device.device_state_attributes['type']
             if device.name == 'Front Door Battery':
                 assert 100 == device.state
                 assert 'lpd_v1' == \
-                                 device.device_state_attributes['kind']
+                    device.device_state_attributes['kind']
                 assert 'chimes' != \
-                                    device.device_state_attributes['type']
+                       device.device_state_attributes['type']
             if device.name == 'Downstairs Volume':
                 assert 2 == device.state
                 assert '1.2.3' == \
-                                 device.device_state_attributes['firmware']
+                    device.device_state_attributes['firmware']
                 assert 'ring_mock_wifi' == \
-                                 device.device_state_attributes['wifi_name']
+                    device.device_state_attributes['wifi_name']
                 assert 'mdi:bell-ring' == device.icon
                 assert 'chimes' == \
-                                 device.device_state_attributes['type']
+                    device.device_state_attributes['type']
             if device.name == 'Front Door Last Activity':
                 assert not device.device_state_attributes['answered']
                 assert 'America/New_York' == \
-                                 device.device_state_attributes['timezone']
+                    device.device_state_attributes['timezone']
 
             if device.name == 'Downstairs WiFi Signal Strength':
                 assert -39 == device.state
@@ -108,4 +108,4 @@ class TestRingSensorSetup(unittest.TestCase):
 
             assert device.entity_picture is None
             assert ATTRIBUTION == \
-                             device.device_state_attributes['attribution']
+                device.device_state_attributes['attribution']

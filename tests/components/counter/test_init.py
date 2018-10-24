@@ -80,7 +80,7 @@ class TestCounter(unittest.TestCase):
 
         assert 10 == int(state_2.state)
         assert 'Hello World' == \
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME)
+            state_2.attributes.get(ATTR_FRIENDLY_NAME)
         assert 'mdi:work' == state_2.attributes.get(ATTR_ICON)
 
     def test_methods(self):

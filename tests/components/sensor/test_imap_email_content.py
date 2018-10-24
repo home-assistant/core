@@ -62,12 +62,12 @@ class EmailContentSensor(unittest.TestCase):
         self.hass.block_till_done()
         assert 'Test' == sensor.state
         assert "Test Message" == \
-                         sensor.device_state_attributes['body']
+            sensor.device_state_attributes['body']
         assert 'sender@test.com' == \
-                         sensor.device_state_attributes['from']
+            sensor.device_state_attributes['from']
         assert 'Test' == sensor.device_state_attributes['subject']
         assert datetime.datetime(2016, 1, 1, 12, 44, 57) == \
-                         sensor.device_state_attributes['date']
+            sensor.device_state_attributes['date']
 
     def test_multi_part_with_text(self):
         """Test multi part emails."""
@@ -93,7 +93,7 @@ class EmailContentSensor(unittest.TestCase):
         self.hass.block_till_done()
         assert 'Link' == sensor.state
         assert "Test Message" == \
-                         sensor.device_state_attributes['body']
+            sensor.device_state_attributes['body']
 
     def test_multi_part_only_html(self):
         """Test multi part emails with only HTML."""
@@ -142,7 +142,7 @@ class EmailContentSensor(unittest.TestCase):
         self.hass.block_till_done()
         assert 'Link' == sensor.state
         assert "Test Message" == \
-                         sensor.device_state_attributes['body']
+            sensor.device_state_attributes['body']
 
     def test_multiple_emails(self):
         """Test multiple emails."""
@@ -182,7 +182,7 @@ class EmailContentSensor(unittest.TestCase):
         assert "Test 2" == states[1].state
 
         assert "Test Message 2" == \
-                         sensor.device_state_attributes['body']
+            sensor.device_state_attributes['body']
 
     def test_sender_not_allowed(self):
         """Test not whitelisted emails."""
@@ -199,7 +199,7 @@ class EmailContentSensor(unittest.TestCase):
         sensor.entity_id = 'sensor.emailtest'
         sensor.schedule_update_ha_state(True)
         self.hass.block_till_done()
-        assert None == sensor.state
+        assert sensor.state is None
 
     def test_template(self):
         """Test value template."""

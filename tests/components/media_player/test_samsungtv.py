@@ -102,7 +102,7 @@ class TestSamsungTv(unittest.TestCase):
     def test_update_on(self):
         """Testing update tv on."""
         self.device.update()
-        assert None == self.device._state
+        assert self.device._state is None
 
     def test_update_off(self):
         """Testing update tv off."""
@@ -116,7 +116,7 @@ class TestSamsungTv(unittest.TestCase):
     def test_send_key(self):
         """Test for send key."""
         self.device.send_key('KEY_POWER')
-        assert None == self.device._state
+        assert self.device._state is None
 
     def test_send_key_broken_pipe(self):
         """Testing broken pipe Exception."""
@@ -126,7 +126,7 @@ class TestSamsungTv(unittest.TestCase):
         self.device.get_remote = mock.Mock(return_value=_remote)
         self.device.send_key('HELLO')
         assert self.device._remote is None
-        assert None == self.device._state
+        assert self.device._state is None
 
     def test_send_key_connection_closed_retry_succeed(self):
         """Test retry on connection closed."""
@@ -137,7 +137,7 @@ class TestSamsungTv(unittest.TestCase):
         self.device.get_remote = mock.Mock(return_value=_remote)
         command = 'HELLO'
         self.device.send_key(command)
-        assert None == self.device._state
+        assert self.device._state is None
         # verify that _remote.control() get called twice because of retry logic
         expected = [mock.call(command),
                     mock.call(command)]
@@ -152,7 +152,7 @@ class TestSamsungTv(unittest.TestCase):
         self.device.get_remote = mock.Mock(return_value=_remote)
         self.device.send_key('HELLO')
         assert self.device._remote is None
-        assert None == self.device._state
+        assert self.device._state is None
 
     def test_send_key_os_error(self):
         """Testing broken pipe Exception."""
@@ -178,7 +178,7 @@ class TestSamsungTv(unittest.TestCase):
     def test_state(self):
         """Test for state property."""
         self.device._state = None
-        assert None == self.device.state
+        assert self.device.state is None
         self.device._state = STATE_OFF
         assert STATE_OFF == self.device.state
 

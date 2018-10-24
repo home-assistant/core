@@ -55,7 +55,7 @@ class TestAutomationMQTT(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         assert 'mqtt - test-topic - { "hello": "world" } - world' == \
-                         self.calls[0].data['some']
+            self.calls[0].data['some']
 
         common.turn_off(self.hass)
         self.hass.block_till_done()

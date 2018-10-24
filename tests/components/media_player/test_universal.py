@@ -308,7 +308,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
-        assert None == ump.master_state
+        assert ump.master_state is None
 
     def test_master_state_with_attrs(self):
         """Test master state property."""
@@ -353,28 +353,28 @@ class TestMediaPlayer(unittest.TestCase):
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
-        assert None == ump._child_state
+        assert ump._child_state is None
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         assert self.mock_mp_1.entity_id == \
-                         ump._child_state.entity_id
+            ump._child_state.entity_id
 
         self.mock_mp_2._state = STATE_PLAYING
         self.mock_mp_2.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         assert self.mock_mp_1.entity_id == \
-                         ump._child_state.entity_id
+            ump._child_state.entity_id
 
         self.mock_mp_1._state = STATE_OFF
         self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         assert self.mock_mp_2.entity_id == \
-                         ump._child_state.entity_id
+            ump._child_state.entity_id
 
     def test_name(self):
         """Test name property."""
@@ -390,7 +390,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
-        assert False == ump.should_poll
+        assert ump.should_poll is False
 
     def test_state_children_only(self):
         """Test media player state with only children."""
@@ -440,7 +440,7 @@ class TestMediaPlayer(unittest.TestCase):
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
-        assert None == ump.volume_level
+        assert ump.volume_level is None
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.schedule_update_ha_state()
@@ -463,7 +463,7 @@ class TestMediaPlayer(unittest.TestCase):
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
-        assert None == ump.media_image_url
+        assert ump.media_image_url is None
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1._media_image_url = test_url

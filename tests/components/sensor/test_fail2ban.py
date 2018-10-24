@@ -108,8 +108,10 @@ class TestBanSensor(unittest.TestCase):
             sensor.update()
 
         assert sensor.state == '111.111.111.111'
-        assert sensor.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
-        assert sensor.state_attributes[STATE_ALL_BANS] == ['111.111.111.111']
+        assert \
+            sensor.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
+        assert \
+            sensor.state_attributes[STATE_ALL_BANS] == ['111.111.111.111']
 
     def test_multiple_ban(self):
         """Test that log is parsed correctly for multiple ban."""
@@ -172,10 +174,12 @@ class TestBanSensor(unittest.TestCase):
             sensor2.update()
 
         assert sensor1.state == '111.111.111.111'
-        assert sensor1.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
+        assert \
+            sensor1.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
         assert sensor1.state_attributes[STATE_ALL_BANS] == ['111.111.111.111']
         assert sensor2.state == '222.222.222.222'
-        assert sensor2.state_attributes[STATE_CURRENT_BANS] == ['222.222.222.222']
+        assert \
+            sensor2.state_attributes[STATE_CURRENT_BANS] == ['222.222.222.222']
         assert sensor2.state_attributes[STATE_ALL_BANS] == ['222.222.222.222']
 
     def test_ban_active_after_update(self):
@@ -190,5 +194,6 @@ class TestBanSensor(unittest.TestCase):
             assert sensor.state == '111.111.111.111'
             sensor.update()
             assert sensor.state == '111.111.111.111'
-        assert sensor.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
+        assert \
+            sensor.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
         assert sensor.state_attributes[STATE_ALL_BANS] == ['111.111.111.111']

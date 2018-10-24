@@ -56,7 +56,7 @@ class TestStatsd(unittest.TestCase):
 
         assert self.hass.bus.listen.called
         assert EVENT_STATE_CHANGED == \
-                         self.hass.bus.listen.call_args_list[0][0][0]
+            self.hass.bus.listen.call_args_list[0][0][0]
 
     @mock.patch('statsd.StatsClient')
     def test_statsd_setup_defaults(self, mock_connection):

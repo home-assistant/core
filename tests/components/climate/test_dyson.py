@@ -321,7 +321,7 @@ class DysonTest(unittest.TestCase):
         """Test properties of entity."""
         device = _get_device_with_no_state()
         entity = dyson.DysonPureHotCoolLinkDevice(device)
-        assert entity.should_poll == False
+        assert entity.should_poll is False
         assert entity.supported_features == dyson.SUPPORT_FLAGS
         assert entity.temperature_unit == TEMP_CELSIUS
 
@@ -336,13 +336,13 @@ class DysonTest(unittest.TestCase):
         device = _get_device_off()
         device.environmental_state.humidity = 0
         entity = dyson.DysonPureHotCoolLinkDevice(device)
-        assert entity.current_humidity == None
+        assert entity.current_humidity is None
 
     def test_property_current_humidity_without_env_state(self):
         """Test properties of current humidity without env state."""
         device = _get_device_with_no_state()
         entity = dyson.DysonPureHotCoolLinkDevice(device)
-        assert entity.current_humidity == None
+        assert entity.current_humidity is None
 
     def test_property_current_temperature(self):
         """Test properties of current temperature."""

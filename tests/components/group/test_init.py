@@ -160,7 +160,7 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
 
         assert sorted(['light.ceiling', 'light.bowl']) == \
-                         sorted(group.expand_entity_ids(
+            sorted(group.expand_entity_ids(
                              self.hass, [test_group.entity_id]))
 
     def test_expand_entity_ids_does_not_return_duplicates(self):
@@ -189,7 +189,7 @@ class TestComponentsGroup(unittest.TestCase):
             False)
 
         assert sorted(['light.ceiling', 'light.bowl']) == \
-                         sorted(group.expand_entity_ids(
+            sorted(group.expand_entity_ids(
                              self.hass, [test_group.entity_id]))
 
     def test_expand_entity_ids_ignores_non_strings(self):
@@ -280,13 +280,13 @@ class TestComponentsGroup(unittest.TestCase):
             group.ENTITY_ID_FORMAT.format('second_group'))
         assert STATE_ON == group_state.state
         assert set((test_group.entity_id, 'light.bowl')) == \
-                         set(group_state.attributes['entity_id'])
+            set(group_state.attributes['entity_id'])
         assert group_state.attributes.get(group.ATTR_AUTO) is None
         assert 'mdi:work' == \
-                         group_state.attributes.get(ATTR_ICON)
+            group_state.attributes.get(ATTR_ICON)
         assert group_state.attributes.get(group.ATTR_VIEW)
         assert 'hidden' == \
-                         group_state.attributes.get(group.ATTR_CONTROL)
+            group_state.attributes.get(group.ATTR_CONTROL)
         assert group_state.attributes.get(ATTR_HIDDEN)
         assert 1 == group_state.attributes.get(group.ATTR_ORDER)
 
@@ -294,7 +294,7 @@ class TestComponentsGroup(unittest.TestCase):
             group.ENTITY_ID_FORMAT.format('test_group'))
         assert STATE_UNKNOWN == group_state.state
         assert set(('sensor.happy', 'hello.world')) == \
-                         set(group_state.attributes['entity_id'])
+            set(group_state.attributes['entity_id'])
         assert group_state.attributes.get(group.ATTR_AUTO) is None
         assert group_state.attributes.get(ATTR_ICON) is None
         assert group_state.attributes.get(group.ATTR_VIEW) is None
@@ -318,7 +318,8 @@ class TestComponentsGroup(unittest.TestCase):
         group.Group.create_group(
             self.hass, 'group_of_groups', ['group.light', 'group.switch'])
 
-        assert ['light.test_1', 'light.test_2', 'switch.test_1', 'switch.test_2'] == \
+        assert ['light.test_1', 'light.test_2',
+                'switch.test_1', 'switch.test_2'] == \
             sorted(group.expand_entity_ids(self.hass,
                                            ['group.group_of_groups']))
 
@@ -358,7 +359,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.states.set('device_tracker.Adam', 'cool_state_not_home')
         self.hass.block_till_done()
         assert STATE_NOT_HOME == \
-                         self.hass.states.get(
+            self.hass.states.get(
                              group.ENTITY_ID_FORMAT.format('peeps')).state
 
     def test_reloading_groups(self):

@@ -83,7 +83,7 @@ class TestMelissa(unittest.TestCase):
         """Test for faulty update."""
         self.temp._api.status.return_value = {}
         self.temp.update()
-        assert None == self.temp.state
+        assert self.temp.state is None
         self.hum._api.status.return_value = {}
         self.hum.update()
-        assert None == self.hum.state
+        assert self.hum.state is None

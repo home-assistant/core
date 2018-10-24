@@ -120,11 +120,10 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        assert self.hass.services.call(notify.DOMAIN,
-                                                'apns_test_app',
-                                                {'push_id': '1234',
-                                                 'name': 'test device'},
-                                                blocking=True)
+        assert self.hass.services.call(notify.DOMAIN, 'apns_test_app', {
+            'push_id': '1234',
+            'name': 'test device'
+        }, blocking=True)
 
         assert len(written_devices) == 1
         assert written_devices[0].name == 'test device'
@@ -156,9 +155,9 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        assert self.hass.services.call(notify.DOMAIN, 'apns_test_app',
-                                                {'push_id': '1234'},
-                                                blocking=True)
+        assert self.hass.services.call(notify.DOMAIN, 'apns_test_app', {
+            'push_id': '1234'
+        }, blocking=True)
 
         devices = {dev.push_id: dev for dev in written_devices}
 
@@ -192,11 +191,10 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        assert self.hass.services.call(notify.DOMAIN,
-                                                'apns_test_app',
-                                                {'push_id': '1234',
-                                                 'name': 'updated device 1'},
-                                                blocking=True)
+        assert self.hass.services.call(notify.DOMAIN, 'apns_test_app', {
+            'push_id': '1234',
+            'name': 'updated device 1'
+        }, blocking=True)
 
         devices = {dev.push_id: dev for dev in written_devices}
 
@@ -235,11 +233,10 @@ class TestApns(unittest.TestCase):
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
-        assert self.hass.services.call(notify.DOMAIN,
-                                                'apns_test_app',
-                                                {'push_id': '1234',
-                                                 'name': 'updated device 1'},
-                                                blocking=True)
+        assert self.hass.services.call(notify.DOMAIN, 'apns_test_app', {
+            'push_id': '1234',
+            'name': 'updated device 1'
+        }, blocking=True)
 
         devices = {dev.push_id: dev for dev in written_devices}
 
@@ -250,9 +247,9 @@ class TestApns(unittest.TestCase):
         assert test_device_2 is not None
 
         assert 'tracking123' == \
-                         test_device_1.tracking_device_id
+            test_device_1.tracking_device_id
         assert 'tracking456' == \
-                         test_device_2.tracking_device_id
+            test_device_2.tracking_device_id
 
     @patch('apns2.client.APNsClient')
     def test_send(self, mock_client):
@@ -387,14 +384,14 @@ class TestApns(unittest.TestCase):
             self._setup_notify()
 
         assert self.hass.services.call('notify', 'test_app',
-                                                {'message': 'Hello'},
-                                                blocking=True)
+                                       {'message': 'Hello'},
+                                       blocking=True)
 
         devices = {dev.push_id: dev for dev in written_devices}
 
         test_device_1 = devices.get('1234')
         assert test_device_1 is not None
-        assert True == test_device_1.disabled
+        assert test_device_1.disabled is True
 
 
 def test_write_device():

@@ -193,11 +193,10 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
     def test_setup_platform(self, *args):
         """Test setting up platform."""
         # One service must be registered
-        assert self.hass.services.has_service(DOMAIN,
-                                                       SERVICE_SETALLZONES)
+        assert self.hass.services.has_service(DOMAIN, SERVICE_SETALLZONES)
         assert len(self.hass.data[DATA_BLACKBIRD]) == 1
         assert self.hass.data[DATA_BLACKBIRD]['/dev/ttyUSB0-3'].name == \
-                         'Zone name'
+            'Zone name'
 
     def test_setallzones_service_call_with_entity_id(self):
         """Test set all zone source service call with entity id."""
@@ -261,8 +260,8 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
     def test_supported_features(self):
         """Test supported features property."""
         assert SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-                         SUPPORT_SELECT_SOURCE == \
-                         self.media_player.supported_features
+            SUPPORT_SELECT_SOURCE == \
+            self.media_player.supported_features
 
     def test_source(self):
         """Test source property."""
@@ -280,7 +279,7 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         """Test source list property."""
         # Note, the list is sorted!
         assert ['one', 'two', 'three'] == \
-                         self.media_player.source_list
+            self.media_player.source_list
 
     def test_select_source(self):
         """Test source selection methods."""

@@ -58,7 +58,8 @@ class TestNX584SensorSetup(unittest.TestCase):
              [mock.call(zone, 'opening') for zone in self.fake_zones])
         assert add_entities.called
         assert nx584_client.Client.call_count == 1
-        assert nx584_client.Client.call_args == mock.call('http://localhost:5007')
+        assert nx584_client.Client.call_args == \
+            mock.call('http://localhost:5007')
 
     @mock.patch('homeassistant.components.binary_sensor.nx584.NX584Watcher')
     @mock.patch('homeassistant.components.binary_sensor.nx584.NX584ZoneSensor')

@@ -247,9 +247,8 @@ class TestHelpersTemplate(unittest.TestCase):
             else:
                 fil = 'timestamp_custom'
 
-            assert out == \
-                    template.Template('{{ %s | %s }}' % (inp, fil),
-                                      self.hass).render()
+            assert out == template.Template(
+                '{{ %s | %s }}' % (inp, fil), self.hass).render()
 
     def test_timestamp_local(self):
         """Test the timestamps to local filter."""
@@ -293,17 +292,17 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_as_timestamp(self):
         """Test the as_timestamp function."""
         assert "None" == \
-                         template.Template('{{ as_timestamp("invalid") }}',
-                                           self.hass).render()
+            template.Template(
+                '{{ as_timestamp("invalid") }}', self.hass).render()
         self.hass.mock = None
         assert "None" == \
-                         template.Template('{{ as_timestamp(states.mock) }}',
-                                           self.hass).render()
+            template.Template('{{ as_timestamp(states.mock) }}',
+                              self.hass).render()
 
         tpl = '{{ as_timestamp(strptime("2024-02-03T09:10:24+0000", ' \
             '"%Y-%m-%dT%H:%M:%S%z")) }}'
         assert "1706951424.0" == \
-                         template.Template(tpl, self.hass).render()
+            template.Template(tpl, self.hass).render()
 
     @patch.object(random, 'choice')
     def test_random_every_time(self, test_choice):
@@ -440,7 +439,7 @@ class TestHelpersTemplate(unittest.TestCase):
         assert 'yes' == tpl.render()
 
         tpl = template.Template("""
-{{ state_attr("test.noobject", "mode") == None }}
+{{ state_attr("test.noobject", "mode")is None }}
                 """, self.hass)
         assert 'True' == tpl.render()
 

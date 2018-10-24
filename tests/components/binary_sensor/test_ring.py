@@ -66,11 +66,11 @@ class TestRingBinarySensorSetup(unittest.TestCase):
             if device.name == 'Front Door Ding':
                 assert 'on' == device.state
                 assert 'America/New_York' == \
-                                 device.device_state_attributes['timezone']
+                    device.device_state_attributes['timezone']
             elif device.name == 'Front Door Motion':
                 assert 'off' == device.state
                 assert 'motion' == device.device_class
 
             assert device.entity_picture is None
             assert ATTRIBUTION == \
-                             device.device_state_attributes['attribution']
+                device.device_state_attributes['attribution']

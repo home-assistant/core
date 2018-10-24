@@ -192,7 +192,7 @@ class TestGraphite(unittest.TestCase):
         """Test the stops."""
         with mock.patch.object(self.gf, '_queue') as mock_queue:
             mock_queue.get.return_value = self.gf._quit_object
-            assert None == self.gf.run()
+            assert self.gf.run() is None
             assert mock_queue.get.call_count == 1
             assert mock_queue.get.call_args == mock.call()
             assert mock_queue.task_done.call_count == 1

@@ -80,7 +80,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(summer_day, season.NORTHERN,
                                            season.TYPE_ASTRONOMICAL)
         assert season.STATE_SUMMER == \
-                         current_season
+            current_season
 
     def test_season_should_be_summer_northern_meteorological(self):
         """Test that season should be summer."""
@@ -89,7 +89,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(summer_day, season.NORTHERN,
                                            season.TYPE_METEOROLOGICAL)
         assert season.STATE_SUMMER == \
-                         current_season
+            current_season
 
     def test_season_should_be_autumn_northern_astronomical(self):
         """Test that season should be autumn."""
@@ -98,7 +98,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(autumn_day, season.NORTHERN,
                                            season.TYPE_ASTRONOMICAL)
         assert season.STATE_AUTUMN == \
-                         current_season
+            current_season
 
     def test_season_should_be_autumn_northern_meteorological(self):
         """Test that season should be autumn."""
@@ -107,7 +107,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(autumn_day, season.NORTHERN,
                                            season.TYPE_METEOROLOGICAL)
         assert season.STATE_AUTUMN == \
-                         current_season
+            current_season
 
     def test_season_should_be_winter_northern_astronomical(self):
         """Test that season should be winter."""
@@ -116,7 +116,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(winter_day, season.NORTHERN,
                                            season.TYPE_ASTRONOMICAL)
         assert season.STATE_WINTER == \
-                         current_season
+            current_season
 
     def test_season_should_be_winter_northern_meteorological(self):
         """Test that season should be winter."""
@@ -125,7 +125,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(winter_day, season.NORTHERN,
                                            season.TYPE_METEOROLOGICAL)
         assert season.STATE_WINTER == \
-                         current_season
+            current_season
 
     def test_season_should_be_spring_northern_astronomical(self):
         """Test that season should be spring."""
@@ -134,7 +134,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(spring_day, season.NORTHERN,
                                            season.TYPE_ASTRONOMICAL)
         assert season.STATE_SPRING == \
-                         current_season
+            current_season
 
     def test_season_should_be_spring_northern_meteorological(self):
         """Test that season should be spring."""
@@ -143,7 +143,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(spring_day, season.NORTHERN,
                                            season.TYPE_METEOROLOGICAL)
         assert season.STATE_SPRING == \
-                         current_season
+            current_season
 
     def test_season_should_be_winter_southern_astronomical(self):
         """Test that season should be winter."""
@@ -152,7 +152,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(winter_day, season.SOUTHERN,
                                            season.TYPE_ASTRONOMICAL)
         assert season.STATE_WINTER == \
-                         current_season
+            current_season
 
     def test_season_should_be_winter_southern_meteorological(self):
         """Test that season should be winter."""
@@ -161,7 +161,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(winter_day, season.SOUTHERN,
                                            season.TYPE_METEOROLOGICAL)
         assert season.STATE_WINTER == \
-                         current_season
+            current_season
 
     def test_season_should_be_spring_southern_astronomical(self):
         """Test that season should be spring."""
@@ -170,7 +170,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(spring_day, season.SOUTHERN,
                                            season.TYPE_ASTRONOMICAL)
         assert season.STATE_SPRING == \
-                         current_season
+            current_season
 
     def test_season_should_be_spring_southern_meteorological(self):
         """Test that season should be spring."""
@@ -179,7 +179,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(spring_day, season.SOUTHERN,
                                            season.TYPE_METEOROLOGICAL)
         assert season.STATE_SPRING == \
-                         current_season
+            current_season
 
     def test_season_should_be_summer_southern_astronomical(self):
         """Test that season should be summer."""
@@ -188,7 +188,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(summer_day, season.SOUTHERN,
                                            season.TYPE_ASTRONOMICAL)
         assert season.STATE_SUMMER == \
-                         current_season
+            current_season
 
     def test_season_should_be_summer_southern_meteorological(self):
         """Test that season should be summer."""
@@ -197,7 +197,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(summer_day, season.SOUTHERN,
                                            season.TYPE_METEOROLOGICAL)
         assert season.STATE_SUMMER == \
-                         current_season
+            current_season
 
     def test_season_should_be_autumn_southern_astronomical(self):
         """Test that season should be spring."""
@@ -206,7 +206,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(autumn_day, season.SOUTHERN,
                                            season.TYPE_ASTRONOMICAL)
         assert season.STATE_AUTUMN == \
-                         current_season
+            current_season
 
     def test_season_should_be_autumn_southern_meteorological(self):
         """Test that season should be autumn."""
@@ -215,7 +215,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(autumn_day, season.SOUTHERN,
                                            season.TYPE_METEOROLOGICAL)
         assert season.STATE_AUTUMN == \
-                         current_season
+            current_season
 
     def test_on_equator_results_in_none(self):
         """Test that season should be unknown."""
@@ -224,7 +224,7 @@ class TestSeason(unittest.TestCase):
         current_season = season.get_season(summer_day,
                                            season.EQUATOR,
                                            season.TYPE_ASTRONOMICAL)
-        assert None == current_season
+        assert current_season is None
 
     def test_setup_hemisphere_northern(self):
         """Test platform setup of northern hemisphere."""
@@ -232,7 +232,7 @@ class TestSeason(unittest.TestCase):
             'homeassistant']['latitude']
         assert setup_component(self.hass, 'sensor', HEMISPHERE_NORTHERN)
         assert self.hass.config.as_dict()['latitude'] == \
-                         HEMISPHERE_NORTHERN['homeassistant']['latitude']
+            HEMISPHERE_NORTHERN['homeassistant']['latitude']
         state = self.hass.states.get('sensor.season')
         assert state.attributes.get('friendly_name') == 'Season'
 
@@ -242,7 +242,7 @@ class TestSeason(unittest.TestCase):
             'homeassistant']['latitude']
         assert setup_component(self.hass, 'sensor', HEMISPHERE_SOUTHERN)
         assert self.hass.config.as_dict()['latitude'] == \
-                         HEMISPHERE_SOUTHERN['homeassistant']['latitude']
+            HEMISPHERE_SOUTHERN['homeassistant']['latitude']
         state = self.hass.states.get('sensor.season')
         assert state.attributes.get('friendly_name') == 'Season'
 
@@ -252,7 +252,7 @@ class TestSeason(unittest.TestCase):
             'homeassistant']['latitude']
         assert setup_component(self.hass, 'sensor', HEMISPHERE_EQUATOR)
         assert self.hass.config.as_dict()['latitude'] == \
-                         HEMISPHERE_EQUATOR['homeassistant']['latitude']
+            HEMISPHERE_EQUATOR['homeassistant']['latitude']
         state = self.hass.states.get('sensor.season')
         assert state.attributes.get('friendly_name') == 'Season'
 
@@ -260,4 +260,4 @@ class TestSeason(unittest.TestCase):
         """Test platform setup of missing latlong."""
         self.hass.config.latitude = None
         assert setup_component(self.hass, 'sensor', HEMISPHERE_EMPTY)
-        assert self.hass.config.as_dict()['latitude'] == None
+        assert self.hass.config.as_dict()['latitude']is None
