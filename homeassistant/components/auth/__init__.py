@@ -129,6 +129,7 @@ from homeassistant.auth.models import User, Credentials, \
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_REAL_IP
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
@@ -169,6 +170,14 @@ SCHEMA_WS_DELETE_REFRESH_TOKEN = \
         vol.Required('refresh_token_id'): str,
     })
 
+WS_TYPE_SIGN_PATH = 'auth/sign_path'
+SCHEMA_WS_SIGN_PATH = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_SIGN_PATH,
+        vol.Required('path'): str,
+        vol.Optional('expires', default=30): int,
+    })
+
 RESULT_TYPE_CREDENTIALS = 'credentials'
 RESULT_TYPE_USER = 'user'
 
@@ -200,6 +209,11 @@ async def async_setup(hass, config):
         WS_TYPE_DELETE_REFRESH_TOKEN,
         websocket_delete_refresh_token,
         SCHEMA_WS_DELETE_REFRESH_TOKEN
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_SIGN_PATH,
+        websocket_sign_path,
+        SCHEMA_WS_SIGN_PATH
     )
 
     await login_flow.async_setup(hass, store_result)
@@ -500,3 +514,14 @@ async def websocket_delete_refresh_token(
 
     connection.send_message(
         websocket_api.result_message(msg['id'], {}))
+
+
+@websocket_api.ws_require_user()
+@callback
+def websocket_sign_path(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
+    """Handle a sign path request."""
+    connection.send_message(websocket_api.result_message(msg['id'], {
+        'path': async_sign_path(hass, connection.user, msg['path'],
+                                timedelta(seconds=msg['expires']))
+        }))
