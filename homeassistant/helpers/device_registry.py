@@ -129,7 +129,7 @@ class DeviceRegistry:
         ):
             old_value = getattr(old, attr_name)
             # If not undefined, check if `value` contains new items.
-            if value is not _UNDEF and not (old_value >= value):
+            if value is not _UNDEF and not value.issubset(old_value):
                 changes[attr_name] = old_value | value
 
         for attr_name, value in (
