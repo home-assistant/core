@@ -66,7 +66,7 @@ DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
-SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'fan',
+SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover', 'fan',
                        'light', 'sensor', 'switch']
 
 RENAME_NODE_SCHEMA = vol.Schema({
