@@ -47,16 +47,16 @@ class TestWOLSwitch(unittest.TestCase):
         """Test with valid hostname."""
         global TEST_STATE
         TEST_STATE = False
-        self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
+        assert setup_component(self.hass, switch.DOMAIN, {
             'switch': {
                 'platform': 'wake_on_lan',
                 'mac_address': '00-01-02-03-04-05',
                 'host': 'validhostname',
             }
-        }))
+        })
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
         TEST_STATE = True
 
@@ -64,13 +64,13 @@ class TestWOLSwitch(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
         common.turn_off(self.hass, 'switch.wake_on_lan')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
     @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
     @patch('subprocess.call', new=call)
@@ -79,16 +79,16 @@ class TestWOLSwitch(unittest.TestCase):
         """Test with valid hostname on windows."""
         global TEST_STATE
         TEST_STATE = False
-        self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
+        assert setup_component(self.hass, switch.DOMAIN, {
             'switch': {
                 'platform': 'wake_on_lan',
                 'mac_address': '00-01-02-03-04-05',
                 'host': 'validhostname',
             }
-        }))
+        })
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
         TEST_STATE = True
 
@@ -96,33 +96,33 @@ class TestWOLSwitch(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
     @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
     @patch('subprocess.call', new=call)
     def test_minimal_config(self):
         """Test with minimal config."""
-        self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
+        assert setup_component(self.hass, switch.DOMAIN, {
             'switch': {
                 'platform': 'wake_on_lan',
                 'mac_address': '00-01-02-03-04-05',
             }
-        }))
+        })
 
     @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
     @patch('subprocess.call', new=call)
     def test_broadcast_config(self):
         """Test with broadcast address config."""
-        self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
+        assert setup_component(self.hass, switch.DOMAIN, {
             'switch': {
                 'platform': 'wake_on_lan',
                 'mac_address': '00-01-02-03-04-05',
                 'broadcast_address': '255.255.255.255',
             }
-        }))
+        })
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
         common.turn_on(self.hass, 'switch.wake_on_lan')
         self.hass.block_till_done()
@@ -133,7 +133,7 @@ class TestWOLSwitch(unittest.TestCase):
         """Test with turn off script."""
         global TEST_STATE
         TEST_STATE = False
-        self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
+        assert setup_component(self.hass, switch.DOMAIN, {
             'switch': {
                 'platform': 'wake_on_lan',
                 'mac_address': '00-01-02-03-04-05',
@@ -142,11 +142,11 @@ class TestWOLSwitch(unittest.TestCase):
                     'service': 'shell_command.turn_off_TARGET',
                 },
             }
-        }))
+        })
         calls = mock_service(self.hass, 'shell_command', 'turn_off_TARGET')
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
         TEST_STATE = True
 
@@ -154,7 +154,7 @@ class TestWOLSwitch(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
         assert len(calls) == 0
 
         TEST_STATE = False
@@ -163,7 +163,7 @@ class TestWOLSwitch(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
         assert len(calls) == 1
 
     @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
@@ -173,16 +173,16 @@ class TestWOLSwitch(unittest.TestCase):
         """Test with invalid hostname on windows."""
         global TEST_STATE
         TEST_STATE = False
-        self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
+        assert setup_component(self.hass, switch.DOMAIN, {
             'switch': {
                 'platform': 'wake_on_lan',
                 'mac_address': '00-01-02-03-04-05',
                 'host': 'invalidhostname',
             }
-        }))
+        })
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
         TEST_STATE = True
 
@@ -190,4 +190,4 @@ class TestWOLSwitch(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state

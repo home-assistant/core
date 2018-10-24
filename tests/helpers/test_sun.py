@@ -83,18 +83,18 @@ class TestSun(unittest.TestCase):
 
         with patch('homeassistant.helpers.condition.dt_util.utcnow',
                    return_value=utc_now):
-            self.assertEqual(next_dawn, sun.get_astral_event_next(
-                self.hass, 'dawn'))
-            self.assertEqual(next_dusk, sun.get_astral_event_next(
-                self.hass, 'dusk'))
-            self.assertEqual(next_midnight, sun.get_astral_event_next(
-                self.hass, 'solar_midnight'))
-            self.assertEqual(next_noon, sun.get_astral_event_next(
-                self.hass, 'solar_noon'))
-            self.assertEqual(next_rising, sun.get_astral_event_next(
-                self.hass, 'sunrise'))
-            self.assertEqual(next_setting, sun.get_astral_event_next(
-                self.hass, 'sunset'))
+            assert next_dawn == sun.get_astral_event_next(
+                self.hass, 'dawn')
+            assert next_dusk == sun.get_astral_event_next(
+                self.hass, 'dusk')
+            assert next_midnight == sun.get_astral_event_next(
+                self.hass, 'solar_midnight')
+            assert next_noon == sun.get_astral_event_next(
+                self.hass, 'solar_noon')
+            assert next_rising == sun.get_astral_event_next(
+                self.hass, 'sunrise')
+            assert next_setting == sun.get_astral_event_next(
+                self.hass, 'sunset')
 
     def test_date_events(self):
         """Test retrieving next sun events."""
@@ -114,18 +114,18 @@ class TestSun(unittest.TestCase):
         sunrise = astral.sunrise_utc(utc_today, latitude, longitude)
         sunset = astral.sunset_utc(utc_today, latitude, longitude)
 
-        self.assertEqual(dawn, sun.get_astral_event_date(
-            self.hass, 'dawn', utc_today))
-        self.assertEqual(dusk, sun.get_astral_event_date(
-            self.hass, 'dusk', utc_today))
-        self.assertEqual(midnight, sun.get_astral_event_date(
-            self.hass, 'solar_midnight', utc_today))
-        self.assertEqual(noon, sun.get_astral_event_date(
-            self.hass, 'solar_noon', utc_today))
-        self.assertEqual(sunrise, sun.get_astral_event_date(
-            self.hass, 'sunrise', utc_today))
-        self.assertEqual(sunset, sun.get_astral_event_date(
-            self.hass, 'sunset', utc_today))
+        assert dawn == sun.get_astral_event_date(
+            self.hass, 'dawn', utc_today)
+        assert dusk == sun.get_astral_event_date(
+            self.hass, 'dusk', utc_today)
+        assert midnight == sun.get_astral_event_date(
+            self.hass, 'solar_midnight', utc_today)
+        assert noon == sun.get_astral_event_date(
+            self.hass, 'solar_noon', utc_today)
+        assert sunrise == sun.get_astral_event_date(
+            self.hass, 'sunrise', utc_today)
+        assert sunset == sun.get_astral_event_date(
+            self.hass, 'sunset', utc_today)
 
     def test_date_events_default_date(self):
         """Test retrieving next sun events."""
@@ -146,18 +146,18 @@ class TestSun(unittest.TestCase):
         sunset = astral.sunset_utc(utc_today, latitude, longitude)
 
         with patch('homeassistant.util.dt.now', return_value=utc_now):
-            self.assertEqual(dawn, sun.get_astral_event_date(
-                self.hass, 'dawn', utc_today))
-            self.assertEqual(dusk, sun.get_astral_event_date(
-                self.hass, 'dusk', utc_today))
-            self.assertEqual(midnight, sun.get_astral_event_date(
-                self.hass, 'solar_midnight', utc_today))
-            self.assertEqual(noon, sun.get_astral_event_date(
-                self.hass, 'solar_noon', utc_today))
-            self.assertEqual(sunrise, sun.get_astral_event_date(
-                self.hass, 'sunrise', utc_today))
-            self.assertEqual(sunset, sun.get_astral_event_date(
-                self.hass, 'sunset', utc_today))
+            assert dawn == sun.get_astral_event_date(
+                self.hass, 'dawn', utc_today)
+            assert dusk == sun.get_astral_event_date(
+                self.hass, 'dusk', utc_today)
+            assert midnight == sun.get_astral_event_date(
+                self.hass, 'solar_midnight', utc_today)
+            assert noon == sun.get_astral_event_date(
+                self.hass, 'solar_noon', utc_today)
+            assert sunrise == sun.get_astral_event_date(
+                self.hass, 'sunrise', utc_today)
+            assert sunset == sun.get_astral_event_date(
+                self.hass, 'sunset', utc_today)
 
     def test_date_events_accepts_datetime(self):
         """Test retrieving next sun events."""
@@ -177,30 +177,30 @@ class TestSun(unittest.TestCase):
         sunrise = astral.sunrise_utc(utc_today, latitude, longitude)
         sunset = astral.sunset_utc(utc_today, latitude, longitude)
 
-        self.assertEqual(dawn, sun.get_astral_event_date(
-            self.hass, 'dawn', utc_now))
-        self.assertEqual(dusk, sun.get_astral_event_date(
-            self.hass, 'dusk', utc_now))
-        self.assertEqual(midnight, sun.get_astral_event_date(
-            self.hass, 'solar_midnight', utc_now))
-        self.assertEqual(noon, sun.get_astral_event_date(
-            self.hass, 'solar_noon', utc_now))
-        self.assertEqual(sunrise, sun.get_astral_event_date(
-            self.hass, 'sunrise', utc_now))
-        self.assertEqual(sunset, sun.get_astral_event_date(
-            self.hass, 'sunset', utc_now))
+        assert dawn == sun.get_astral_event_date(
+            self.hass, 'dawn', utc_now)
+        assert dusk == sun.get_astral_event_date(
+            self.hass, 'dusk', utc_now)
+        assert midnight == sun.get_astral_event_date(
+            self.hass, 'solar_midnight', utc_now)
+        assert noon == sun.get_astral_event_date(
+            self.hass, 'solar_noon', utc_now)
+        assert sunrise == sun.get_astral_event_date(
+            self.hass, 'sunrise', utc_now)
+        assert sunset == sun.get_astral_event_date(
+            self.hass, 'sunset', utc_now)
 
     def test_is_up(self):
         """Test retrieving next sun events."""
         utc_now = datetime(2016, 11, 1, 12, 0, 0, tzinfo=dt_util.UTC)
         with patch('homeassistant.helpers.condition.dt_util.utcnow',
                    return_value=utc_now):
-            self.assertFalse(sun.is_up(self.hass))
+            assert not sun.is_up(self.hass)
 
         utc_now = datetime(2016, 11, 1, 18, 0, 0, tzinfo=dt_util.UTC)
         with patch('homeassistant.helpers.condition.dt_util.utcnow',
                    return_value=utc_now):
-            self.assertTrue(sun.is_up(self.hass))
+            assert sun.is_up(self.hass)
 
     def test_norway_in_june(self):
         """Test location in Norway where the sun doesn't set in summer."""

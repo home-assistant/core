@@ -168,18 +168,18 @@ class TestBinarySensorTemplate(unittest.TestCase):
             template_hlpr.Template('{{ 1 > 1 }}', self.hass),
             None, None, MATCH_ALL, None, None
         ).result()
-        self.assertFalse(vs.should_poll)
-        self.assertEqual('motion', vs.device_class)
-        self.assertEqual('Parent', vs.name)
+        assert not vs.should_poll
+        assert 'motion' == vs.device_class
+        assert 'Parent' == vs.name
 
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
-        self.assertFalse(vs.is_on)
+        assert not vs.is_on
 
         # pylint: disable=protected-access
         vs._template = template_hlpr.Template("{{ 2 > 1 }}", self.hass)
 
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
-        self.assertTrue(vs.is_on)
+        assert vs.is_on
 
     def test_event(self):
         """Test the event."""

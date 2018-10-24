@@ -75,11 +75,10 @@ class TestAutomationZone(unittest.TestCase):
         }, context=context)
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         assert self.calls[0].context is context
-        self.assertEqual(
-            'zone - test.entity - hello - hello - test',
-            self.calls[0].data['some'])
+        assert 'zone - test.entity - hello - hello - test' == \
+            self.calls[0].data['some']
 
         # Set out of zone again so we can trigger call
         self.hass.states.set('test.entity', 'hello', {
@@ -97,7 +96,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_for_enter_on_zone_leave(self):
         """Test for not firing on zone leave."""
@@ -127,7 +126,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_zone_leave(self):
         """Test for firing on zone leave."""
@@ -157,7 +156,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_for_leave_on_zone_enter(self):
         """Test for not firing on zone enter."""
@@ -187,7 +186,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_zone_condition(self):
         """Test for zone condition."""
@@ -216,4 +215,4 @@ class TestAutomationZone(unittest.TestCase):
 
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)

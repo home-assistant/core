@@ -21,6 +21,7 @@ from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
                                           STATE_BELOW_HORIZON)
 
 from tests.common import get_test_home_assistant, mock_service
+import pytest
 
 
 @asyncio.coroutine
@@ -80,9 +81,8 @@ class TestStateHelpers(unittest.TestCase):
             self.hass.states.set('light.test3', 'on')
             state3 = self.hass.states.get('light.test3')
 
-        self.assertEqual(
-            [state2, state3],
-            state.get_changed_since([state1, state2, state3], point2))
+        assert [state2, state3] == \
+            state.get_changed_since([state1, state2, state3], point2)
 
     def test_reproduce_with_no_entity(self):
         """Test reproduce_state with no entity."""
@@ -92,8 +92,8 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertTrue(len(calls) == 0)
-        self.assertEqual(None, self.hass.states.get('light.test'))
+        assert len(calls) == 0
+        assert self.hass.states.get('light.test') is None
 
     def test_reproduce_turn_on(self):
         """Test reproduce_state with SERVICE_TURN_ON."""
@@ -105,11 +105,11 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertTrue(len(calls) > 0)
+        assert len(calls) > 0
         last_call = calls[-1]
-        self.assertEqual('light', last_call.domain)
-        self.assertEqual(SERVICE_TURN_ON, last_call.service)
-        self.assertEqual(['light.test'], last_call.data.get('entity_id'))
+        assert 'light' == last_call.domain
+        assert SERVICE_TURN_ON == last_call.service
+        assert ['light.test'] == last_call.data.get('entity_id')
 
     def test_reproduce_turn_off(self):
         """Test reproduce_state with SERVICE_TURN_OFF."""
@@ -121,11 +121,11 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertTrue(len(calls) > 0)
+        assert len(calls) > 0
         last_call = calls[-1]
-        self.assertEqual('light', last_call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, last_call.service)
-        self.assertEqual(['light.test'], last_call.data.get('entity_id'))
+        assert 'light' == last_call.domain
+        assert SERVICE_TURN_OFF == last_call.service
+        assert ['light.test'] == last_call.data.get('entity_id')
 
     def test_reproduce_complex_data(self):
         """Test reproduce_state with complex service data."""
@@ -141,11 +141,11 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertTrue(len(calls) > 0)
+        assert len(calls) > 0
         last_call = calls[-1]
-        self.assertEqual('light', last_call.domain)
-        self.assertEqual(SERVICE_TURN_ON, last_call.service)
-        self.assertEqual(complex_data, last_call.data.get('complex'))
+        assert 'light' == last_call.domain
+        assert SERVICE_TURN_ON == last_call.service
+        assert complex_data == last_call.data.get('complex')
 
     def test_reproduce_media_data(self):
         """Test reproduce_state with SERVICE_PLAY_MEDIA."""
@@ -161,12 +161,12 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertTrue(len(calls) > 0)
+        assert len(calls) > 0
         last_call = calls[-1]
-        self.assertEqual('media_player', last_call.domain)
-        self.assertEqual(SERVICE_PLAY_MEDIA, last_call.service)
-        self.assertEqual('movie', last_call.data.get('media_content_type'))
-        self.assertEqual('batman', last_call.data.get('media_content_id'))
+        assert 'media_player' == last_call.domain
+        assert SERVICE_PLAY_MEDIA == last_call.service
+        assert 'movie' == last_call.data.get('media_content_type')
+        assert 'batman' == last_call.data.get('media_content_id')
 
     def test_reproduce_media_play(self):
         """Test reproduce_state with SERVICE_MEDIA_PLAY."""
@@ -179,12 +179,12 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertTrue(len(calls) > 0)
+        assert len(calls) > 0
         last_call = calls[-1]
-        self.assertEqual('media_player', last_call.domain)
-        self.assertEqual(SERVICE_MEDIA_PLAY, last_call.service)
-        self.assertEqual(['media_player.test'],
-                         last_call.data.get('entity_id'))
+        assert 'media_player' == last_call.domain
+        assert SERVICE_MEDIA_PLAY == last_call.service
+        assert ['media_player.test'] == \
+            last_call.data.get('entity_id')
 
     def test_reproduce_media_pause(self):
         """Test reproduce_state with SERVICE_MEDIA_PAUSE."""
@@ -197,12 +197,12 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertTrue(len(calls) > 0)
+        assert len(calls) > 0
         last_call = calls[-1]
-        self.assertEqual('media_player', last_call.domain)
-        self.assertEqual(SERVICE_MEDIA_PAUSE, last_call.service)
-        self.assertEqual(['media_player.test'],
-                         last_call.data.get('entity_id'))
+        assert 'media_player' == last_call.domain
+        assert SERVICE_MEDIA_PAUSE == last_call.service
+        assert ['media_player.test'] == \
+            last_call.data.get('entity_id')
 
     def test_reproduce_bad_state(self):
         """Test reproduce_state with bad state."""
@@ -214,8 +214,8 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertTrue(len(calls) == 0)
-        self.assertEqual('off', self.hass.states.get('light.test').state)
+        assert len(calls) == 0
+        assert 'off' == self.hass.states.get('light.test').state
 
     def test_reproduce_group(self):
         """Test reproduce_state with group."""
@@ -228,12 +228,12 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(light_calls))
+        assert 1 == len(light_calls)
         last_call = light_calls[-1]
-        self.assertEqual('light', last_call.domain)
-        self.assertEqual(SERVICE_TURN_ON, last_call.service)
-        self.assertEqual(['light.test1', 'light.test2'],
-                         last_call.data.get('entity_id'))
+        assert 'light' == last_call.domain
+        assert SERVICE_TURN_ON == last_call.service
+        assert ['light.test1', 'light.test2'] == \
+            last_call.data.get('entity_id')
 
     def test_reproduce_group_same_data(self):
         """Test reproduce_state with group with same domain and data."""
@@ -248,13 +248,13 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(light_calls))
+        assert 1 == len(light_calls)
         last_call = light_calls[-1]
-        self.assertEqual('light', last_call.domain)
-        self.assertEqual(SERVICE_TURN_ON, last_call.service)
-        self.assertEqual(['light.test1', 'light.test2'],
-                         last_call.data.get('entity_id'))
-        self.assertEqual(95, last_call.data.get('brightness'))
+        assert 'light' == last_call.domain
+        assert SERVICE_TURN_ON == last_call.service
+        assert ['light.test1', 'light.test2'] == \
+            last_call.data.get('entity_id')
+        assert 95 == last_call.data.get('brightness')
 
     def test_as_number_states(self):
         """Test state_as_number with states."""
@@ -263,27 +263,24 @@ class TestStateHelpers(unittest.TestCase):
         one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON,
                       STATE_HOME)
         for _state in zero_states:
-            self.assertEqual(0, state.state_as_number(
-                ha.State('domain.test', _state, {})))
+            assert 0 == state.state_as_number(
+                ha.State('domain.test', _state, {}))
         for _state in one_states:
-            self.assertEqual(1, state.state_as_number(
-                ha.State('domain.test', _state, {})))
+            assert 1 == state.state_as_number(
+                ha.State('domain.test', _state, {}))
 
     def test_as_number_coercion(self):
         """Test state_as_number with number."""
         for _state in ('0', '0.0', 0, 0.0):
-            self.assertEqual(
-                0.0, state.state_as_number(
-                    ha.State('domain.test', _state, {})))
+            assert 0.0 == state.state_as_number(
+                    ha.State('domain.test', _state, {}))
         for _state in ('1', '1.0', 1, 1.0):
-            self.assertEqual(
-                1.0, state.state_as_number(
-                    ha.State('domain.test', _state, {})))
+            assert 1.0 == state.state_as_number(
+                    ha.State('domain.test', _state, {}))
 
     def test_as_number_invalid_cases(self):
         """Test state_as_number with invalid cases."""
         for _state in ('', 'foo', 'foo.bar', None, False, True, object,
                        object()):
-            self.assertRaises(ValueError,
-                              state.state_as_number,
-                              ha.State('domain.test', _state, {}))
+            with pytest.raises(ValueError):
+                state.state_as_number(ha.State('domain.test', _state, {}))

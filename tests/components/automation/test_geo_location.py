@@ -75,11 +75,10 @@ class TestAutomationGeoLocation(unittest.TestCase):
         }, context=context)
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         assert self.calls[0].context is context
-        self.assertEqual(
-            'geo_location - geo_location.entity - hello - hello - test',
-            self.calls[0].data['some'])
+        assert 'geo_location - geo_location.entity - hello - hello - test' == \
+            self.calls[0].data['some']
 
         # Set out of zone again so we can trigger call
         self.hass.states.set('geo_location.entity', 'hello', {
@@ -97,7 +96,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_for_enter_on_zone_leave(self):
         """Test for not firing on zone leave."""
@@ -128,7 +127,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_zone_leave(self):
         """Test for firing on zone leave."""
@@ -160,7 +159,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_for_leave_on_zone_enter(self):
         """Test for not firing on zone enter."""
@@ -191,7 +190,7 @@ class TestAutomationGeoLocation(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_zone_appear(self):
         """Test for firing if entity appears in zone."""
@@ -225,11 +224,10 @@ class TestAutomationGeoLocation(unittest.TestCase):
         }, context=context)
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         assert self.calls[0].context is context
-        self.assertEqual(
-            'geo_location - geo_location.entity -  - hello - test',
-            self.calls[0].data['some'])
+        assert 'geo_location - geo_location.entity -  - hello - test' == \
+            self.calls[0].data['some']
 
     def test_if_fires_on_zone_disappear(self):
         """Test for firing if entity disappears from zone."""
@@ -265,7 +263,6 @@ class TestAutomationGeoLocation(unittest.TestCase):
         self.hass.states.async_remove('geo_location.entity')
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual(
-            'geo_location - geo_location.entity - hello -  - test',
-            self.calls[0].data['some'])
+        assert 1 == len(self.calls)
+        assert 'geo_location - geo_location.entity - hello -  - test' == \
+            self.calls[0].data['some']

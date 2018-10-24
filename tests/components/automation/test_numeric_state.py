@@ -53,7 +53,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 9 is below 10
         self.hass.states.set('test.entity', 9, context=context)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         assert self.calls[0].context is context
 
         # Set above 12 so the automation will fire again
@@ -62,7 +62,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.block_till_done()
         self.hass.states.set('test.entity', 9)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_over_to_below(self):
         """Test the firing with changed entity."""
@@ -85,7 +85,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 9 is below 10
         self.hass.states.set('test.entity', 9)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_entities_change_over_to_below(self):
         """Test the firing with changed entities."""
@@ -112,10 +112,10 @@ class TestAutomationNumericState(unittest.TestCase):
         # 9 is below 10
         self.hass.states.set('test.entity_1', 9)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         self.hass.states.set('test.entity_2', 9)
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        assert 2 == len(self.calls)
 
     def test_if_not_fires_on_entity_change_below_to_below(self):
         """Test the firing with changed entity."""
@@ -139,18 +139,18 @@ class TestAutomationNumericState(unittest.TestCase):
         # 9 is below 10 so this should fire
         self.hass.states.set('test.entity', 9, context=context)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         assert self.calls[0].context is context
 
         # already below so should not fire again
         self.hass.states.set('test.entity', 5)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         # still below so should not fire again
         self.hass.states.set('test.entity', 3)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_below_fires_on_entity_change_to_equal(self):
         """Test the firing with changed entity."""
@@ -173,7 +173,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 10 is not below 10 so this should not fire again
         self.hass.states.set('test.entity', 10)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_initial_entity_below(self):
         """Test the firing when starting with a match."""
@@ -196,7 +196,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # Fire on first update even if initial state was already below
         self.hass.states.set('test.entity', 8)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_initial_entity_above(self):
         """Test the firing when starting with a match."""
@@ -219,7 +219,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # Fire on first update even if initial state was already above
         self.hass.states.set('test.entity', 12)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_above(self):
         """Test the firing with changed entity."""
@@ -238,7 +238,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 11 is above 10
         self.hass.states.set('test.entity', 11)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_below_to_above(self):
         """Test the firing with changed entity."""
@@ -262,7 +262,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 11 is above 10 and 9 is below
         self.hass.states.set('test.entity', 11)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_on_entity_change_above_to_above(self):
         """Test the firing with changed entity."""
@@ -286,12 +286,12 @@ class TestAutomationNumericState(unittest.TestCase):
         # 12 is above 10 so this should fire
         self.hass.states.set('test.entity', 12)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         # already above, should not fire again
         self.hass.states.set('test.entity', 15)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_above_fires_on_entity_change_to_equal(self):
         """Test the firing with changed entity."""
@@ -315,7 +315,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 10 is not above 10 so this should not fire again
         self.hass.states.set('test.entity', 10)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_entity_change_below_range(self):
         """Test the firing with changed entity."""
@@ -335,7 +335,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 9 is below 10
         self.hass.states.set('test.entity', 9)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_below_above_range(self):
         """Test the firing with changed entity."""
@@ -355,7 +355,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 4 is below 5
         self.hass.states.set('test.entity', 4)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_entity_change_over_to_below_range(self):
         """Test the firing with changed entity."""
@@ -379,7 +379,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 9 is below 10
         self.hass.states.set('test.entity', 9)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_over_to_below_above_range(self):
         """Test the firing with changed entity."""
@@ -403,7 +403,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 4 is below 5 so it should not fire
         self.hass.states.set('test.entity', 4)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_not_fires_if_entity_not_match(self):
         """Test if not fired with non matching entity."""
@@ -422,7 +422,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
         self.hass.states.set('test.entity', 11)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_entity_change_below_with_attribute(self):
         """Test attributes change."""
@@ -441,7 +441,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 9 is below 10
         self.hass.states.set('test.entity', 9, {'test_attribute': 11})
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_on_entity_change_not_below_with_attribute(self):
         """Test attributes."""
@@ -460,7 +460,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 11 is not below 10
         self.hass.states.set('test.entity', 11, {'test_attribute': 9})
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_attribute_change_with_attribute_below(self):
         """Test attributes change."""
@@ -480,7 +480,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 9 is below 10
         self.hass.states.set('test.entity', 'entity', {'test_attribute': 9})
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_on_attribute_change_with_attribute_not_below(self):
         """Test attributes change."""
@@ -500,7 +500,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 11 is not below 10
         self.hass.states.set('test.entity', 'entity', {'test_attribute': 11})
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_not_fires_on_entity_change_with_attribute_below(self):
         """Test attributes change."""
@@ -520,7 +520,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 11 is not below 10, entity state value should not be tested
         self.hass.states.set('test.entity', '9', {'test_attribute': 11})
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_not_fires_on_entity_change_with_not_attribute_below(self):
         """Test attributes change."""
@@ -540,7 +540,7 @@ class TestAutomationNumericState(unittest.TestCase):
         # 11 is not below 10, entity state value should not be tested
         self.hass.states.set('test.entity', 'entity')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(self):
         """Test attributes change."""
@@ -561,7 +561,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 'entity',
                              {'test_attribute': 9, 'not_test_attribute': 11})
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_template_list(self):
         """Test template list."""
@@ -583,7 +583,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 'entity',
                              {'test_attribute': [11, 15, 3]})
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_template_string(self):
         """Test template string."""
@@ -612,11 +612,10 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 'test state 2',
                              {'test_attribute': '0.9'})
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual(
-            'numeric_state - test.entity - 10.0 - None - test state 1 - '
-            'test state 2',
-            self.calls[0].data['some'])
+        assert 1 == len(self.calls)
+        assert 'numeric_state - test.entity - 10.0 - None - test state 1 - ' \
+            'test state 2' == \
+            self.calls[0].data['some']
 
     def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(self):
         """Test if not fired changed attributes."""
@@ -637,7 +636,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 'entity',
                              {'test_attribute': 11, 'not_test_attribute': 9})
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_action(self):
         """Test if action."""
@@ -664,19 +663,19 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         self.hass.states.set(entity_id, 8)
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         self.hass.states.set(entity_id, 9)
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
 
-        self.assertEqual(2, len(self.calls))
+        assert 2 == len(self.calls)
 
     def test_if_fails_setup_bad_for(self):
         """Test for setup failure for bad for."""
@@ -739,7 +738,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.block_till_done()
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_not_fires_on_entities_change_with_for_after_stop(self):
         """Test for not firing on entities change with for after stop."""
@@ -768,7 +767,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.block_till_done()
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        assert 2 == len(self.calls)
 
         self.hass.states.set('test.entity_1', 15)
         self.hass.states.set('test.entity_2', 15)
@@ -781,7 +780,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        assert 2 == len(self.calls)
 
     def test_if_fires_on_entity_change_with_for_attribute_change(self):
         """Test for firing on entity change with for and attribute change."""
@@ -812,11 +811,11 @@ class TestAutomationNumericState(unittest.TestCase):
             self.hass.states.set('test.entity', 9,
                                  attributes={"mock_attr": "attr_change"})
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
             mock_utcnow.return_value += timedelta(seconds=4)
             fire_time_changed(self.hass, mock_utcnow.return_value)
             self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
+            assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_with_for(self):
         """Test for firing on entity change with for."""
@@ -841,7 +840,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.block_till_done()
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_wait_template_with_trigger(self):
         """Test using wait template with 'trigger.entity_id'."""
@@ -872,7 +871,6 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.block_till_done()
         self.hass.states.set('test.entity', '8')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual(
-            'numeric_state - test.entity - 12',
-            self.calls[0].data['some'])
+        assert 1 == len(self.calls)
+        assert 'numeric_state - test.entity - 12' == \
+            self.calls[0].data['some']
