@@ -63,7 +63,7 @@ class TestAutomationSun(unittest.TestCase):
 
         fire_time_changed(self.hass, trigger_time)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
         with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
@@ -72,7 +72,7 @@ class TestAutomationSun(unittest.TestCase):
 
         fire_time_changed(self.hass, trigger_time)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_sunrise_trigger(self):
         """Test the sunrise trigger."""
@@ -95,7 +95,7 @@ class TestAutomationSun(unittest.TestCase):
 
         fire_time_changed(self.hass, trigger_time)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_sunset_trigger_with_offset(self):
         """Test the sunset trigger with offset."""
@@ -124,8 +124,8 @@ class TestAutomationSun(unittest.TestCase):
 
         fire_time_changed(self.hass, trigger_time)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual('sun - sunset - 0:30:00', self.calls[0].data['some'])
+        assert 1 == len(self.calls)
+        assert 'sun - sunset - 0:30:00' == self.calls[0].data['some']
 
     def test_sunrise_trigger_with_offset(self):
         """Test the sunrise trigger with offset."""
@@ -149,7 +149,7 @@ class TestAutomationSun(unittest.TestCase):
 
         fire_time_changed(self.hass, trigger_time)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_action_before(self):
         """Test if action was before."""
@@ -174,14 +174,14 @@ class TestAutomationSun(unittest.TestCase):
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
 
         now = datetime(2015, 9, 16, 10, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
+            assert 1 == len(self.calls)
 
     def test_if_action_after(self):
         """Test if action was after."""
@@ -206,14 +206,14 @@ class TestAutomationSun(unittest.TestCase):
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
 
         now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
+            assert 1 == len(self.calls)
 
     def test_if_action_before_with_offset(self):
         """Test if action was before offset."""
@@ -239,14 +239,14 @@ class TestAutomationSun(unittest.TestCase):
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
 
         now = datetime(2015, 9, 16, 14, 32, 43, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
+            assert 1 == len(self.calls)
 
     def test_if_action_after_with_offset(self):
         """Test if action was after offset."""
@@ -272,14 +272,14 @@ class TestAutomationSun(unittest.TestCase):
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
 
         now = datetime(2015, 9, 16, 14, 32, 43, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
+            assert 1 == len(self.calls)
 
     def test_if_action_before_and_after_during(self):
         """Test if action was before and after during."""
@@ -305,18 +305,18 @@ class TestAutomationSun(unittest.TestCase):
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
 
         now = datetime(2015, 9, 17, 2, 25, 18, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
 
         now = datetime(2015, 9, 16, 16, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
+            assert 1 == len(self.calls)

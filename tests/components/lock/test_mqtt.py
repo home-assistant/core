@@ -39,20 +39,20 @@ class TestLockMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_UNLOCKED, state.state)
-        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+        assert STATE_UNLOCKED == state.state
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
         fire_mqtt_message(self.hass, 'state-topic', 'LOCK')
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_LOCKED, state.state)
+        assert STATE_LOCKED == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', 'UNLOCK')
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_UNLOCKED, state.state)
+        assert STATE_UNLOCKED == state.state
 
     def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending MQTT commands in optimistic mode."""
@@ -68,8 +68,8 @@ class TestLockMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_UNLOCKED, state.state)
-        self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
+        assert STATE_UNLOCKED == state.state
+        assert state.attributes.get(ATTR_ASSUMED_STATE)
 
         common.lock(self.hass, 'lock.test')
         self.hass.block_till_done()
@@ -78,7 +78,7 @@ class TestLockMQTT(unittest.TestCase):
             'command-topic', 'LOCK', 2, False)
         self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_LOCKED, state.state)
+        assert STATE_LOCKED == state.state
 
         common.unlock(self.hass, 'lock.test')
         self.hass.block_till_done()
@@ -86,7 +86,7 @@ class TestLockMQTT(unittest.TestCase):
         self.mock_publish.async_publish.assert_called_once_with(
             'command-topic', 'UNLOCK', 2, False)
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_UNLOCKED, state.state)
+        assert STATE_UNLOCKED == state.state
 
     def test_controlling_state_via_topic_and_json_message(self):
         """Test the controlling state via topic and JSON message."""
@@ -103,23 +103,23 @@ class TestLockMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_UNLOCKED, state.state)
+        assert STATE_UNLOCKED == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', '{"val":"LOCK"}')
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_LOCKED, state.state)
+        assert STATE_LOCKED == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', '{"val":"UNLOCK"}')
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_UNLOCKED, state.state)
+        assert STATE_UNLOCKED == state.state
 
     def test_default_availability_payload(self):
         """Test availability by default payload with defined topic."""
-        self.assertTrue(setup_component(self.hass, lock.DOMAIN, {
+        assert setup_component(self.hass, lock.DOMAIN, {
             lock.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
@@ -129,26 +129,26 @@ class TestLockMQTT(unittest.TestCase):
                 'payload_unlock': 'UNLOCK',
                 'availability_topic': 'availability-topic'
             }
-        }))
+        })
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'online')
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'offline')
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
     def test_custom_availability_payload(self):
         """Test availability by custom payload with defined topic."""
-        self.assertTrue(setup_component(self.hass, lock.DOMAIN, {
+        assert setup_component(self.hass, lock.DOMAIN, {
             lock.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
@@ -160,22 +160,22 @@ class TestLockMQTT(unittest.TestCase):
                 'payload_available': 'good',
                 'payload_not_available': 'nogood'
             }
-        }))
+        })
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
         self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
 
 async def test_discovery_removal_lock(hass, mqtt_mock, caplog):

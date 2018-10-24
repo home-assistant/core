@@ -42,20 +42,20 @@ class TestSwitchMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+        assert STATE_OFF == state.state
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
         fire_mqtt_message(self.hass, 'state-topic', '1')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', '0')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
     def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending MQTT commands in optimistic mode."""
@@ -75,8 +75,8 @@ class TestSwitchMQTT(unittest.TestCase):
             })
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_ON, state.state)
-        self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
+        assert STATE_ON == state.state
+        assert state.attributes.get(ATTR_ASSUMED_STATE)
 
         common.turn_on(self.hass, 'switch.test')
         self.hass.block_till_done()
@@ -85,7 +85,7 @@ class TestSwitchMQTT(unittest.TestCase):
             'command-topic', 'beer on', 2, False)
         self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
         common.turn_off(self.hass, 'switch.test')
         self.hass.block_till_done()
@@ -93,7 +93,7 @@ class TestSwitchMQTT(unittest.TestCase):
         self.mock_publish.async_publish.assert_called_once_with(
             'command-topic', 'beer off', 2, False)
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
     def test_controlling_state_via_topic_and_json_message(self):
         """Test the controlling state via topic and JSON message."""
@@ -110,19 +110,19 @@ class TestSwitchMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', '{"val":"beer on"}')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', '{"val":"beer off"}')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
     def test_controlling_availability(self):
         """Test the controlling state via topic."""
@@ -141,32 +141,32 @@ class TestSwitchMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability_topic', '1')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+        assert STATE_OFF == state.state
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
         fire_mqtt_message(self.hass, 'availability_topic', '0')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', '1')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability_topic', '1')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
     def test_default_availability_payload(self):
         """Test the availability payload."""
@@ -183,32 +183,32 @@ class TestSwitchMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability_topic', 'online')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+        assert STATE_OFF == state.state
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
         fire_mqtt_message(self.hass, 'availability_topic', 'offline')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', '1')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability_topic', 'online')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
     def test_custom_availability_payload(self):
         """Test the availability payload."""
@@ -227,32 +227,32 @@ class TestSwitchMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability_topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+        assert STATE_OFF == state.state
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
         fire_mqtt_message(self.hass, 'availability_topic', 'nogood')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', '1')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability_topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
     def test_custom_state_payload(self):
         """Test the state payload."""
@@ -270,20 +270,20 @@ class TestSwitchMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+        assert STATE_OFF == state.state
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
         fire_mqtt_message(self.hass, 'state-topic', 'HIGH')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', 'LOW')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
 
 async def test_unique_id(hass):

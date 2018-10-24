@@ -69,9 +69,8 @@ class TestDdwrt(unittest.TestCase):
                         CONF_PASSWORD: '0'
                     }})
 
-                self.assertTrue(
-                    'Failed to authenticate' in
-                    str(mock_error.call_args_list[-1]))
+                assert 'Failed to authenticate' in \
+                    str(mock_error.call_args_list[-1])
 
     @mock.patch('homeassistant.components.device_tracker.ddwrt._LOGGER.error')
     def test_invalid_response(self, mock_error):
@@ -89,9 +88,8 @@ class TestDdwrt(unittest.TestCase):
                         CONF_PASSWORD: '0'
                     }})
 
-                self.assertTrue(
-                    'Invalid response from DD-WRT' in
-                    str(mock_error.call_args_list[-1]))
+                assert 'Invalid response from DD-WRT' in \
+                    str(mock_error.call_args_list[-1])
 
     @mock.patch('homeassistant.components.device_tracker._LOGGER.error')
     @mock.patch('homeassistant.components.device_tracker.'
@@ -106,9 +104,8 @@ class TestDdwrt(unittest.TestCase):
                     CONF_USERNAME: 'fake_user',
                     CONF_PASSWORD: '0'
                 }})
-            self.assertTrue(
-                'Error setting up platform' in
-                str(error_mock.call_args_list[-1]))
+            assert 'Error setting up platform' in \
+                str(error_mock.call_args_list[-1])
 
     @mock.patch('homeassistant.components.device_tracker.ddwrt.requests.get',
                 side_effect=requests.exceptions.Timeout)
@@ -124,9 +121,8 @@ class TestDdwrt(unittest.TestCase):
                     CONF_PASSWORD: '0'
                 }})
 
-            self.assertTrue(
-                'Connection to the router timed out' in
-                str(mock_error.call_args_list[-1]))
+            assert 'Connection to the router timed out' in \
+                str(mock_error.call_args_list[-1])
 
     def test_scan_devices(self):
         """Test creating device info (MAC, name) from response.
@@ -158,8 +154,8 @@ class TestDdwrt(unittest.TestCase):
             path = self.hass.config.path(device_tracker.YAML_DEVICES)
             devices = config.load_yaml_config_file(path)
             for device in devices:
-                self.assertIn(devices[device]['mac'], status_lan)
-                self.assertIn(slugify(devices[device]['name']), status_lan)
+                assert devices[device]['mac'] in status_lan
+                assert slugify(devices[device]['name']) in status_lan
 
     def test_device_name_no_data(self):
         """Test creating device info (MAC only) when no response."""
@@ -185,7 +181,7 @@ class TestDdwrt(unittest.TestCase):
             status_lan = load_fixture('Ddwrt_Status_Lan.txt')
             for device in devices:
                 _LOGGER.error(devices[device])
-                self.assertIn(devices[device]['mac'], status_lan)
+                assert devices[device]['mac'] in status_lan
 
     def test_device_name_no_dhcp(self):
         """Test creating device info (MAC) when missing dhcp response."""
@@ -213,7 +209,7 @@ class TestDdwrt(unittest.TestCase):
             status_lan = load_fixture('Ddwrt_Status_Lan.txt')
             for device in devices:
                 _LOGGER.error(devices[device])
-                self.assertIn(devices[device]['mac'], status_lan)
+                assert devices[device]['mac'] in status_lan
 
     def test_update_no_data(self):
         """Test error handling of no response when active devices checked."""

@@ -63,17 +63,16 @@ class TestAutomationState(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world', context=context)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         assert self.calls[0].context is context
-        self.assertEqual(
-            'state - test.entity - hello - world - None',
-            self.calls[0].data['some'])
+        assert 'state - test.entity - hello - world - None' == \
+            self.calls[0].data['some']
 
         common.turn_off(self.hass)
         self.hass.block_till_done()
         self.hass.states.set('test.entity', 'planet')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_with_from_filter(self):
         """Test for firing on entity change with filter."""
@@ -92,7 +91,7 @@ class TestAutomationState(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_with_to_filter(self):
         """Test for firing on entity change with no filter."""
@@ -111,7 +110,7 @@ class TestAutomationState(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_attribute_change_with_to_filter(self):
         """Test for not firing on attribute change."""
@@ -131,7 +130,7 @@ class TestAutomationState(unittest.TestCase):
         self.hass.states.set('test.entity', 'world', {'test_attribute': 11})
         self.hass.states.set('test.entity', 'world', {'test_attribute': 12})
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_with_both_filters(self):
         """Test for firing if both filters are a non match."""
@@ -151,7 +150,7 @@ class TestAutomationState(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_if_to_filter_not_match(self):
         """Test for not firing if to filter is not a match."""
@@ -171,7 +170,7 @@ class TestAutomationState(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'moon')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_not_fires_if_from_filter_not_match(self):
         """Test for not firing if from filter is not a match."""
@@ -193,7 +192,7 @@ class TestAutomationState(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_not_fires_if_entity_not_match(self):
         """Test for not firing if entity is not matching."""
@@ -211,7 +210,7 @@ class TestAutomationState(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_action(self):
         """Test for to action."""
@@ -238,13 +237,13 @@ class TestAutomationState(unittest.TestCase):
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         self.hass.states.set(entity_id, test_state + 'something')
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fails_setup_if_to_boolean_value(self):
         """Test for setup failure for boolean to."""
@@ -335,7 +334,7 @@ class TestAutomationState(unittest.TestCase):
         self.hass.block_till_done()
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_not_fires_on_entities_change_with_for_after_stop(self):
         """Test for not firing on entity change with for after stop trigger."""
@@ -363,7 +362,7 @@ class TestAutomationState(unittest.TestCase):
         self.hass.block_till_done()
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        assert 2 == len(self.calls)
 
         self.hass.states.set('test.entity_1', 'world_no')
         self.hass.states.set('test.entity_2', 'world_no')
@@ -376,7 +375,7 @@ class TestAutomationState(unittest.TestCase):
 
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        assert 2 == len(self.calls)
 
     def test_if_fires_on_entity_change_with_for_attribute_change(self):
         """Test for firing on entity change with for and attribute change."""
@@ -406,11 +405,11 @@ class TestAutomationState(unittest.TestCase):
             self.hass.states.set('test.entity', 'world',
                                  attributes={"mock_attr": "attr_change"})
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
             mock_utcnow.return_value += timedelta(seconds=4)
             fire_time_changed(self.hass, mock_utcnow.return_value)
             self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
+            assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_with_for_multiple_force_update(self):
         """Test for firing on entity change with for and force update."""
@@ -440,11 +439,11 @@ class TestAutomationState(unittest.TestCase):
                 fire_time_changed(self.hass, mock_utcnow.return_value)
                 self.hass.states.set('test.force_entity', 'world', None, True)
                 self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
             mock_utcnow.return_value += timedelta(seconds=4)
             fire_time_changed(self.hass, mock_utcnow.return_value)
             self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
+            assert 1 == len(self.calls)
 
     def test_if_fires_on_entity_change_with_for(self):
         """Test for firing on entity change with for."""
@@ -468,7 +467,7 @@ class TestAutomationState(unittest.TestCase):
         self.hass.block_till_done()
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_for_condition(self):
         """Test for firing if condition is on."""
@@ -498,13 +497,13 @@ class TestAutomationState(unittest.TestCase):
             # not enough time has passed
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
 
             # Time travel 10 secs into the future
             mock_utcnow.return_value = point2
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
+            assert 1 == len(self.calls)
 
     def test_if_fires_on_for_condition_attribute_change(self):
         """Test for firing if condition is on with attribute change."""
@@ -535,7 +534,7 @@ class TestAutomationState(unittest.TestCase):
             # not enough time has passed
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
 
             # Still not enough time has passed, but an attribute is changed
             mock_utcnow.return_value = point2
@@ -543,13 +542,13 @@ class TestAutomationState(unittest.TestCase):
                                  attributes={"mock_attr": "attr_change"})
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
+            assert 0 == len(self.calls)
 
             # Enough time has now passed
             mock_utcnow.return_value = point3
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
+            assert 1 == len(self.calls)
 
     def test_if_fails_setup_for_without_time(self):
         """Test for setup failure if no time is provided."""
@@ -615,7 +614,6 @@ class TestAutomationState(unittest.TestCase):
         self.hass.block_till_done()
         self.hass.states.set('test.entity', 'hello')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual(
-            'state - test.entity - hello - world',
-            self.calls[0].data['some'])
+        assert 1 == len(self.calls)
+        assert 'state - test.entity - hello - world' == \
+            self.calls[0].data['some']
