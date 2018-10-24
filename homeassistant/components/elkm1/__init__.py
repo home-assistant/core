@@ -35,8 +35,8 @@ CONF_ENABLED = 'enabled'
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ['alarm_control_panel', 'light', 'scene', 'sensor',
-                     'switch']
+SUPPORTED_DOMAINS = ['alarm_control_panel', 'climate', 'light', 'scene',
+                     'sensor', 'switch']
 
 SPEAK_SERVICE_SCHEMA = vol.Schema({
     vol.Required('number'):
