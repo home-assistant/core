@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
-    async_add_sensor(hass.data[DATA_DECONZ].sensors.values())
+    async_add_sensor(hass.data[DATA_DECONZ].api.sensors.values())
 
 
 class DeconzBinarySensor(BinarySensorDevice):
@@ -127,7 +127,7 @@ class DeconzBinarySensor(BinarySensorDevice):
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
-        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
+        bridgeid = self.hass.data[DATA_DECONZ].api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},

@@ -31,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_scene', async_add_scene))
 
-    async_add_scene(hass.data[DATA_DECONZ].scenes.values())
+    async_add_scene(hass.data[DATA_DECONZ].api.scenes.values())
 
 
 class DeconzScene(Scene):

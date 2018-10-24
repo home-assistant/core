@@ -23,6 +23,7 @@ from .config_flow import configured_hosts
 from .const import (
     CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
+from .gateway import DeconzGateway
 
 REQUIREMENTS = ['pydeconz==47']
 
@@ -80,61 +81,81 @@ async def async_setup_entry(hass, config_entry):
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
-    from pydeconz import DeconzSession
+    # from pydeconz import DeconzSession
     if DOMAIN in hass.data:
         _LOGGER.error(
             "Config entry failed since one deCONZ instance already exists")
         return False
 
-    @callback
-    def async_add_device_callback(device_type, device):
-        """Handle event of new device creation in deCONZ."""
-        if not isinstance(device, list):
-            device = [device]
-        async_dispatcher_send(
-            hass, 'deconz_new_{}'.format(device_type), device)
+    gateway = DeconzGateway(hass, config_entry)
 
-    session = aiohttp_client.async_get_clientsession(hass)
-    deconz = DeconzSession(hass.loop, session, **config_entry.data,
-                           async_add_device=async_add_device_callback)
-    result = await deconz.async_load_parameters()
+    hass.data[DOMAIN] = gateway
 
-    if result is False:
-        return False
-
-    hass.data[DOMAIN] = deconz
     hass.data[DATA_DECONZ_ID] = {}
     hass.data[DATA_DECONZ_EVENT] = []
     hass.data[DATA_DECONZ_UNSUB] = []
 
-    for component in SUPPORTED_PLATFORMS:
-        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-            config_entry, component))
-
-    @callback
-    def async_add_remote(sensors):
-        """Set up remote from deCONZ."""
-        from pydeconz.sensor import SWITCH as DECONZ_REMOTE
-        allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
-        for sensor in sensors:
-            if sensor.type in DECONZ_REMOTE and \
-               not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
-                hass.data[DATA_DECONZ_EVENT].append(DeconzEvent(hass, sensor))
-    hass.data[DATA_DECONZ_UNSUB].append(
-        async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_remote))
-
-    async_add_remote(deconz.sensors.values())
-
-    deconz.start()
+    if not await gateway.async_setup():
+        return False
 
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, deconz.config.mac)},
-        identifiers={(DOMAIN, deconz.config.bridgeid)},
-        manufacturer='Dresden Elektronik', model=deconz.config.modelid,
-        name=deconz.config.name, sw_version=deconz.config.swversion)
+        connections={(CONNECTION_NETWORK_MAC, gateway.api.config.mac)},
+        identifiers={(DOMAIN, gateway.api.config.bridgeid)},
+        manufacturer='Dresden Elektronik', model=gateway.api.config.modelid,
+        name=gateway.api.config.name, sw_version=gateway.api.config.swversion)
+
+    # @callback
+    # def async_add_device_callback(device_type, device):
+    #     """Handle event of new device creation in deCONZ."""
+    #     if not isinstance(device, list):
+    #         device = [device]
+    #     async_dispatcher_send(
+    #         hass, 'deconz_new_{}'.format(device_type), device)
+
+    # session = aiohttp_client.async_get_clientsession(hass)
+    # deconz = DeconzSession(hass.loop, session, **config_entry.data,
+    #                        async_add_device=async_add_device_callback)
+    # result = await deconz.async_load_parameters()
+
+    # if result is False:
+    #     return False
+
+    # hass.data[DOMAIN] = deconz
+    # hass.data[DATA_DECONZ_ID] = {}
+    # hass.data[DATA_DECONZ_EVENT] = []
+    # hass.data[DATA_DECONZ_UNSUB] = []
+
+    # for component in SUPPORTED_PLATFORMS:
+    #     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+    #         config_entry, component))
+
+    # @callback
+    # def async_add_remote(sensors):
+    #     """Set up remote from deCONZ."""
+    #     from pydeconz.sensor import SWITCH as DECONZ_REMOTE
+    #     allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
+    #     for sensor in sensors:
+    #         if sensor.type in DECONZ_REMOTE and \
+    #            not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
+    #             hass.data[DATA_DECONZ_EVENT].append(DeconzEvent(hass, sensor))
+    # hass.data[DATA_DECONZ_UNSUB].append(
+    #     async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_remote))
+
+    # async_add_remote(deconz.sensors.values())
+
+    # deconz.start()
+
+    # device_registry = await \
+    #     hass.helpers.device_registry.async_get_registry()
+    # device_registry.async_get_or_create(
+    #     config_entry_id=config_entry.entry_id,
+    #     connections={(CONNECTION_NETWORK_MAC, deconz.config.mac)},
+    #     identifiers={(DOMAIN, deconz.config.bridgeid)},
+    #     manufacturer='Dresden Elektronik', model=deconz.config.modelid,
+    #     name=deconz.config.name, sw_version=deconz.config.swversion)
 
     async def async_configure(call):
         """Set attribute of device in deCONZ.
@@ -168,44 +189,44 @@ async def async_setup_entry(hass, config_entry):
     hass.services.async_register(
         DOMAIN, SERVICE_DECONZ, async_configure, schema=SERVICE_SCHEMA)
 
-    async def async_refresh_devices(call):
-        """Refresh available devices from deCONZ."""
-        deconz = hass.data[DOMAIN]
+    # async def async_refresh_devices(call):
+    #     """Refresh available devices from deCONZ."""
+    #     deconz = hass.data[DOMAIN]
 
-        groups = list(deconz.groups.keys())
-        lights = list(deconz.lights.keys())
-        scenes = list(deconz.scenes.keys())
-        sensors = list(deconz.sensors.keys())
+    #     groups = list(deconz.groups.keys())
+    #     lights = list(deconz.lights.keys())
+    #     scenes = list(deconz.scenes.keys())
+    #     sensors = list(deconz.sensors.keys())
 
-        if not await deconz.async_load_parameters():
-            return
+    #     if not await deconz.async_load_parameters():
+    #         return
 
-        async_add_device_callback(
-            'group', [group
-                      for group_id, group in deconz.groups.items()
-                      if group_id not in groups]
-        )
+    #     async_add_device_callback(
+    #         'group', [group
+    #                   for group_id, group in deconz.groups.items()
+    #                   if group_id not in groups]
+    #     )
 
-        async_add_device_callback(
-            'light', [light
-                      for light_id, light in deconz.lights.items()
-                      if light_id not in lights]
-        )
+    #     async_add_device_callback(
+    #         'light', [light
+    #                   for light_id, light in deconz.lights.items()
+    #                   if light_id not in lights]
+    #     )
 
-        async_add_device_callback(
-            'scene', [scene
-                      for scene_id, scene in deconz.scenes.items()
-                      if scene_id not in scenes]
-        )
+    #     async_add_device_callback(
+    #         'scene', [scene
+    #                   for scene_id, scene in deconz.scenes.items()
+    #                   if scene_id not in scenes]
+    #     )
 
-        async_add_device_callback(
-            'sensor', [sensor
-                       for sensor_id, sensor in deconz.sensors.items()
-                       if sensor_id not in sensors]
-        )
+    #     async_add_device_callback(
+    #         'sensor', [sensor
+    #                    for sensor_id, sensor in deconz.sensors.items()
+    #                    if sensor_id not in sensors]
+    #     )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_DEVICE_REFRESH, async_refresh_devices)
+    # hass.services.async_register(
+    #     DOMAIN, SERVICE_DEVICE_REFRESH, async_refresh_devices)
 
     @callback
     def deconz_shutdown(event):
@@ -216,7 +237,8 @@ async def async_setup_entry(hass, config_entry):
         this method with the event as the first argument, which should not
         be passed on to deconz.close.
         """
-        deconz.close()
+        # deconz.close()
+        gateway.api.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz_shutdown)
     return True
