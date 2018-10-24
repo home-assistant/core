@@ -124,7 +124,6 @@ class MeteoFranceUpdater:
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from Meteo-France."""
-        _LOGGER.error("updating meteofrance")
         from meteofrance.client import meteofranceError
         try:
             self._client.update()
