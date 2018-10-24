@@ -103,5 +103,5 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         conf_dict[DOMAIN][CONF_MODE] = 'router'
         conf_dict[DOMAIN][CONF_PROTOCOL] = 'ssh'
         conf_dict[DOMAIN][CONF_PORT] = 22
-        self.assertEqual(asuswrt_mock.call_count, 1)
-        self.assertEqual(asuswrt_mock.call_args, mock.call(conf_dict[DOMAIN]))
+        assert asuswrt_mock.call_count == 1
+        assert asuswrt_mock.call_args == mock.call(conf_dict[DOMAIN])

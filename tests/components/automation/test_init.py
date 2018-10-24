@@ -152,9 +152,9 @@ class TestAutomation(unittest.TestCase):
 
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual(['hello.world'],
-                         self.calls[0].data.get(ATTR_ENTITY_ID))
+        assert 1 == len(self.calls)
+        assert ['hello.world'] == \
+            self.calls[0].data.get(ATTR_ENTITY_ID)
 
     def test_service_specify_entity_id_list(self):
         """Test service data."""
@@ -173,9 +173,9 @@ class TestAutomation(unittest.TestCase):
 
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual(['hello.world', 'hello.world2'],
-                         self.calls[0].data.get(ATTR_ENTITY_ID))
+        assert 1 == len(self.calls)
+        assert ['hello.world', 'hello.world2'] == \
+            self.calls[0].data.get(ATTR_ENTITY_ID)
 
     def test_two_triggers(self):
         """Test triggers."""
@@ -199,10 +199,10 @@ class TestAutomation(unittest.TestCase):
 
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         self.hass.states.set('test.entity', 'hello')
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        assert 2 == len(self.calls)
 
     def test_trigger_service_ignoring_condition(self):
         """Test triggers."""
@@ -268,21 +268,21 @@ class TestAutomation(unittest.TestCase):
         self.hass.states.set(entity_id, 100)
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         self.hass.states.set(entity_id, 101)
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         self.hass.states.set(entity_id, 151)
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_automation_list_setting(self):
         """Event is not a valid condition."""
-        self.assertTrue(setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: [{
                 'trigger': {
                     'platform': 'event',
@@ -301,19 +301,19 @@ class TestAutomation(unittest.TestCase):
                     'service': 'test.automation',
                 }
             }]
-        }))
+        })
 
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         self.hass.bus.fire('test_event_2')
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        assert 2 == len(self.calls)
 
     def test_automation_calling_two_actions(self):
         """Test if we can call two actions from automation definition."""
-        self.assertTrue(setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -328,7 +328,7 @@ class TestAutomation(unittest.TestCase):
                     'data': {'position': 1},
                 }],
             }
-        }))
+        })
 
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()

@@ -53,15 +53,15 @@ class TestAutomationMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic', '{ "hello": "world" }')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual('mqtt - test-topic - { "hello": "world" } - world',
-                         self.calls[0].data['some'])
+        assert 1 == len(self.calls)
+        assert 'mqtt - test-topic - { "hello": "world" } - world' == \
+            self.calls[0].data['some']
 
         common.turn_off(self.hass)
         self.hass.block_till_done()
         fire_mqtt_message(self.hass, 'test-topic', 'test_payload')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_topic_and_payload_match(self):
         """Test if message is fired on topic and payload match."""
@@ -80,7 +80,7 @@ class TestAutomationMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic', 'hello')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_on_topic_but_no_payload_match(self):
         """Test if message is not fired on topic but no payload."""
@@ -99,4 +99,4 @@ class TestAutomationMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic', 'no-hello')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)

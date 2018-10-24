@@ -11,6 +11,7 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.components.lovelace import (load_yaml,
                                                save_yaml, load_config,
                                                UnsupportedYamlError)
+import pytest
 
 TEST_YAML_A = """\
 title: My Awesome Home
@@ -138,7 +139,7 @@ class TestYAML(unittest.TestCase):
         fname = self._path_for("test1")
         save_yaml(fname, self.yaml.load(TEST_YAML_A))
         data = load_yaml(fname)
-        self.assertEqual(data, self.yaml.load(TEST_YAML_A))
+        assert data == self.yaml.load(TEST_YAML_A)
 
     def test_overwrite_and_reload(self):
         """Test that we can overwrite an existing file and read back."""
@@ -146,14 +147,14 @@ class TestYAML(unittest.TestCase):
         save_yaml(fname, self.yaml.load(TEST_YAML_A))
         save_yaml(fname, self.yaml.load(TEST_YAML_B))
         data = load_yaml(fname)
-        self.assertEqual(data, self.yaml.load(TEST_YAML_B))
+        assert data == self.yaml.load(TEST_YAML_B)
 
     def test_load_bad_data(self):
         """Test error from trying to load unserialisable data."""
         fname = self._path_for("test5")
         with open(fname, "w") as fh:
             fh.write(TEST_BAD_YAML)
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             load_yaml(fname)
 
     def test_add_id(self):
@@ -172,7 +173,7 @@ class TestYAML(unittest.TestCase):
         with patch('homeassistant.components.lovelace.load_yaml',
                    return_value=self.yaml.load(TEST_YAML_B)):
             data = load_config(fname)
-        self.assertEqual(data, self.yaml.load(TEST_YAML_B))
+        assert data == self.yaml.load(TEST_YAML_B)
 
 
 async def test_deprecated_lovelace_ui(hass, hass_ws_client):

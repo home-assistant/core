@@ -53,7 +53,7 @@ class TestMQTTRoomSensor(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
+        assert setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 CONF_PLATFORM: 'mqtt_room',
                 CONF_NAME: NAME,
@@ -61,7 +61,7 @@ class TestMQTTRoomSensor(unittest.TestCase):
                 CONF_STATE_TOPIC: 'room_presence',
                 CONF_QOS: DEFAULT_QOS,
                 CONF_TIMEOUT: 5
-            }}))
+            }})
 
         # Clear state between tests
         self.hass.states.set(SENSOR_STATE, None)
@@ -79,12 +79,12 @@ class TestMQTTRoomSensor(unittest.TestCase):
     def assert_state(self, room):
         """Test the assertion of a room state."""
         state = self.hass.states.get(SENSOR_STATE)
-        self.assertEqual(state.state, room)
+        assert state.state == room
 
     def assert_distance(self, distance):
         """Test the assertion of a distance state."""
         state = self.hass.states.get(SENSOR_STATE)
-        self.assertEqual(state.attributes.get('distance'), distance)
+        assert state.attributes.get('distance') == distance
 
     def test_room_update(self):
         """Test the updating between rooms."""
