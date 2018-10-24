@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.ffmpeg import (
     FFmpegBase, DATA_FFMPEG, CONF_INPUT, CONF_EXTRA_ARGUMENTS,
-    CONF_INITIAL_STATE)
+    CONF_INITIAL_STATE, CONF_RUN_TEST)
 from homeassistant.const import CONF_NAME
 
 DEPENDENCIES = ['ffmpeg']
@@ -25,7 +25,6 @@ CONF_RESET = 'reset'
 CONF_CHANGES = 'changes'
 CONF_REPEAT = 'repeat'
 CONF_REPEAT_TIME = 'repeat_time'
-CONF_RUN_TEST = 'run_test'
 
 DEFAULT_NAME = 'FFmpeg Motion'
 DEFAULT_INIT_STATE = True

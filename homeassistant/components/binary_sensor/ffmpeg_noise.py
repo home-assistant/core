@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor.ffmpeg_motion import (
     FFmpegBinarySensor)
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG, CONF_INPUT, CONF_OUTPUT, CONF_EXTRA_ARGUMENTS,
-    CONF_INITIAL_STATE)
+    CONF_INITIAL_STATE, CONF_RUN_TEST)
 from homeassistant.const import CONF_NAME
 
 DEPENDENCIES = ['ffmpeg']
@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PEAK = 'peak'
 CONF_DURATION = 'duration'
 CONF_RESET = 'reset'
-CONF_RUN_TEST = 'run_test'
 
 DEFAULT_NAME = 'FFmpeg Noise'
 DEFAULT_INIT_STATE = True
