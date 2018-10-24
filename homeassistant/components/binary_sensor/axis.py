@@ -32,7 +32,7 @@ class AxisBinarySensor(BinarySensorDevice):
         self.device_name = event_config[CONF_NAME]
         self.location = event_config[ATTR_LOCATION]
         self.delay = event_config[CONF_TRIGGER_TIME]
-        self._timer = None
+        self.remove_timer = None
 
     async def async_added_to_hass(self):
         """Subscribe sensors events."""
@@ -40,9 +40,9 @@ class AxisBinarySensor(BinarySensorDevice):
 
     def _update_callback(self):
         """Update the sensor's state, if needed."""
-        if self._timer is not None:
-            self._timer()
-            self._timer = None
+        if self.remove_timer is not None:
+            self.remove_timer()
+            self.remove_timer = None
 
         if self.delay == 0 or self.is_on:
             self.schedule_update_ha_state()
@@ -52,9 +52,9 @@ class AxisBinarySensor(BinarySensorDevice):
                 _LOGGER.debug("%s called delayed (%s sec) update",
                               self.name, self.delay)
                 self.schedule_update_ha_state()
-                self._timer = None
+                self.remove_timer = None
 
-            self._timer = async_track_point_in_utc_time(
+            self.remove_timer = async_track_point_in_utc_time(
                 self.hass, _delay_update,
                 utcnow() + timedelta(seconds=self.delay))
 
