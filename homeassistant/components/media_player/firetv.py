@@ -77,9 +77,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     "ADB public key {} does not exist".format(adbkey + '.pub'))
 
             # Check whether the key files can be read
-            with open(adbkey) as _:
+            with open(adbkey):
                 pass
-            with open(adbkey + '.pub') as _:
+            with open(adbkey + '.pub'):
                 pass
 
     else:
