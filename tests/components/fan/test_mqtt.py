@@ -37,32 +37,32 @@ class TestMqttFan(unittest.TestCase):
         })
 
         state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability_topic', 'online')
         self.hass.block_till_done()
 
         state = self.hass.states.get('fan.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
-        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+        assert STATE_UNAVAILABLE != state.state
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
         fire_mqtt_message(self.hass, 'availability_topic', 'offline')
         self.hass.block_till_done()
 
         state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', '1')
         self.hass.block_till_done()
 
         state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability_topic', 'online')
         self.hass.block_till_done()
 
         state = self.hass.states.get('fan.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
     def test_custom_availability_payload(self):
         """Test the availability payload."""
@@ -79,32 +79,32 @@ class TestMqttFan(unittest.TestCase):
         })
 
         state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability_topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('fan.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
-        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+        assert STATE_UNAVAILABLE != state.state
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
         fire_mqtt_message(self.hass, 'availability_topic', 'nogood')
         self.hass.block_till_done()
 
         state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', '1')
         self.hass.block_till_done()
 
         state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability_topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('fan.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
 
 async def test_discovery_removal_fan(hass, mqtt_mock, caplog):

@@ -45,10 +45,9 @@ class TestInfluxDB(unittest.TestCase):
             }
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
-        self.assertTrue(self.hass.bus.listen.called)
-        self.assertEqual(
-            EVENT_STATE_CHANGED, self.hass.bus.listen.call_args_list[0][0][0])
-        self.assertTrue(mock_client.return_value.query.called)
+        assert self.hass.bus.listen.called
+        assert EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
+        assert mock_client.return_value.query.called
 
     def test_setup_config_defaults(self, mock_client):
         """Test the setup with default configuration."""
@@ -60,9 +59,8 @@ class TestInfluxDB(unittest.TestCase):
             }
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
-        self.assertTrue(self.hass.bus.listen.called)
-        self.assertEqual(
-            EVENT_STATE_CHANGED, self.hass.bus.listen.call_args_list[0][0][0])
+        assert self.hass.bus.listen.called
+        assert EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
 
     def test_setup_minimal_config(self, mock_client):
         """Test the setup with minimal configuration."""
@@ -169,13 +167,9 @@ class TestInfluxDB(unittest.TestCase):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
 
-            self.assertEqual(
-                mock_client.return_value.write_points.call_count, 1
-            )
-            self.assertEqual(
-                mock_client.return_value.write_points.call_args,
+            assert mock_client.return_value.write_points.call_count == 1
+            assert mock_client.return_value.write_points.call_args == \
                 mock.call(body)
-            )
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_no_units(self, mock_client):
@@ -204,13 +198,9 @@ class TestInfluxDB(unittest.TestCase):
             }]
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
-            self.assertEqual(
-                mock_client.return_value.write_points.call_count, 1
-            )
-            self.assertEqual(
-                mock_client.return_value.write_points.call_args,
+            assert mock_client.return_value.write_points.call_count == 1
+            assert mock_client.return_value.write_points.call_args == \
                 mock.call(body)
-            )
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_inf(self, mock_client):
@@ -235,13 +225,9 @@ class TestInfluxDB(unittest.TestCase):
         }]
         self.handler_method(event)
         self.hass.data[influxdb.DOMAIN].block_till_done()
-        self.assertEqual(
-            mock_client.return_value.write_points.call_count, 1
-        )
-        self.assertEqual(
-            mock_client.return_value.write_points.call_args,
+        assert mock_client.return_value.write_points.call_count == 1
+        assert mock_client.return_value.write_points.call_args == \
             mock.call(body)
-        )
         mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_states(self, mock_client):
@@ -267,15 +253,11 @@ class TestInfluxDB(unittest.TestCase):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
             if state_state == 1:
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_count, 1
-                )
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_args,
+                assert mock_client.return_value.write_points.call_count == 1
+                assert mock_client.return_value.write_points.call_args == \
                     mock.call(body)
-                )
             else:
-                self.assertFalse(mock_client.return_value.write_points.called)
+                assert not mock_client.return_value.write_points.called
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_blacklist(self, mock_client):
@@ -301,15 +283,11 @@ class TestInfluxDB(unittest.TestCase):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
             if entity_id == 'ok':
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_count, 1
-                )
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_args,
+                assert mock_client.return_value.write_points.call_count == 1
+                assert mock_client.return_value.write_points.call_args == \
                     mock.call(body)
-                )
             else:
-                self.assertFalse(mock_client.return_value.write_points.called)
+                assert not mock_client.return_value.write_points.called
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_blacklist_domain(self, mock_client):
@@ -336,15 +314,11 @@ class TestInfluxDB(unittest.TestCase):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
             if domain == 'ok':
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_count, 1
-                )
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_args,
+                assert mock_client.return_value.write_points.call_count == 1
+                assert mock_client.return_value.write_points.call_args == \
                     mock.call(body)
-                )
             else:
-                self.assertFalse(mock_client.return_value.write_points.called)
+                assert not mock_client.return_value.write_points.called
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_whitelist(self, mock_client):
@@ -381,15 +355,11 @@ class TestInfluxDB(unittest.TestCase):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
             if entity_id == 'included':
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_count, 1
-                )
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_args,
+                assert mock_client.return_value.write_points.call_count == 1
+                assert mock_client.return_value.write_points.call_args == \
                     mock.call(body)
-                )
             else:
-                self.assertFalse(mock_client.return_value.write_points.called)
+                assert not mock_client.return_value.write_points.called
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_whitelist_domain(self, mock_client):
@@ -427,15 +397,11 @@ class TestInfluxDB(unittest.TestCase):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
             if domain == 'fake':
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_count, 1
-                )
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_args,
+                assert mock_client.return_value.write_points.call_count == 1
+                assert mock_client.return_value.write_points.call_args == \
                     mock.call(body)
-                )
             else:
-                self.assertFalse(mock_client.return_value.write_points.called)
+                assert not mock_client.return_value.write_points.called
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_invalid_type(self, mock_client):
@@ -482,13 +448,9 @@ class TestInfluxDB(unittest.TestCase):
 
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
-            self.assertEqual(
-                mock_client.return_value.write_points.call_count, 1
-            )
-            self.assertEqual(
-                mock_client.return_value.write_points.call_args,
+            assert mock_client.return_value.write_points.call_count == 1
+            assert mock_client.return_value.write_points.call_args == \
                 mock.call(body)
-            )
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_default_measurement(self, mock_client):
@@ -526,15 +488,11 @@ class TestInfluxDB(unittest.TestCase):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
             if entity_id == 'ok':
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_count, 1
-                )
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_args,
+                assert mock_client.return_value.write_points.call_count == 1
+                assert mock_client.return_value.write_points.call_args == \
                     mock.call(body)
-                )
             else:
-                self.assertFalse(mock_client.return_value.write_points.called)
+                assert not mock_client.return_value.write_points.called
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_unit_of_measurement_field(self, mock_client):
@@ -571,13 +529,9 @@ class TestInfluxDB(unittest.TestCase):
         }]
         self.handler_method(event)
         self.hass.data[influxdb.DOMAIN].block_till_done()
-        self.assertEqual(
-            mock_client.return_value.write_points.call_count, 1
-        )
-        self.assertEqual(
-            mock_client.return_value.write_points.call_args,
+        assert mock_client.return_value.write_points.call_count == 1
+        assert mock_client.return_value.write_points.call_args == \
             mock.call(body)
-        )
         mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_tags_attributes(self, mock_client):
@@ -617,13 +571,9 @@ class TestInfluxDB(unittest.TestCase):
         }]
         self.handler_method(event)
         self.hass.data[influxdb.DOMAIN].block_till_done()
-        self.assertEqual(
-            mock_client.return_value.write_points.call_count, 1
-        )
-        self.assertEqual(
-            mock_client.return_value.write_points.call_args,
+        assert mock_client.return_value.write_points.call_count == 1
+        assert mock_client.return_value.write_points.call_args == \
             mock.call(body)
-        )
         mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_component_override_measurement(self, mock_client):
@@ -678,13 +628,9 @@ class TestInfluxDB(unittest.TestCase):
             }]
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
-            self.assertEqual(
-                mock_client.return_value.write_points.call_count, 1
-            )
-            self.assertEqual(
-                mock_client.return_value.write_points.call_args,
+            assert mock_client.return_value.write_points.call_count == 1
+            assert mock_client.return_value.write_points.call_args == \
                 mock.call(body)
-            )
             mock_client.return_value.write_points.reset_mock()
 
     def test_scheduled_write(self, mock_client):
@@ -713,7 +659,7 @@ class TestInfluxDB(unittest.TestCase):
             self.hass.data[influxdb.DOMAIN].block_till_done()
             assert mock_sleep.called
         json_data = mock_client.return_value.write_points.call_args[0][0]
-        self.assertEqual(mock_client.return_value.write_points.call_count, 2)
+        assert mock_client.return_value.write_points.call_count == 2
         mock_client.return_value.write_points.assert_called_with(json_data)
 
         # Write works again
@@ -722,7 +668,7 @@ class TestInfluxDB(unittest.TestCase):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
             assert not mock_sleep.called
-        self.assertEqual(mock_client.return_value.write_points.call_count, 3)
+        assert mock_client.return_value.write_points.call_count == 3
 
     def test_queue_backlog_full(self, mock_client):
         """Test the event listener to drop old events."""
@@ -746,8 +692,6 @@ class TestInfluxDB(unittest.TestCase):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
 
-            self.assertEqual(
-                mock_client.return_value.write_points.call_count, 0
-            )
+            assert mock_client.return_value.write_points.call_count == 0
 
         mock_client.return_value.write_points.reset_mock()

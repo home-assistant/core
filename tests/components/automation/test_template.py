@@ -48,14 +48,14 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         common.turn_off(self.hass)
         self.hass.block_till_done()
 
         self.hass.states.set('test.entity', 'planet')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_change_str(self):
         """Test for firing on change."""
@@ -73,7 +73,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_change_str_crazy(self):
         """Test for firing on change."""
@@ -91,7 +91,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_on_change_bool(self):
         """Test for not firing on boolean change."""
@@ -109,7 +109,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_not_fires_on_change_str(self):
         """Test for not firing on string change."""
@@ -127,7 +127,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_not_fires_on_change_str_crazy(self):
         """Test for not firing on string change."""
@@ -145,7 +145,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_no_change(self):
         """Test for firing on no change."""
@@ -166,7 +166,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'hello')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_two_change(self):
         """Test for firing on two changes."""
@@ -185,12 +185,12 @@ class TestAutomationTemplate(unittest.TestCase):
         # Trigger once
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         # Trigger again
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_change_with_template(self):
         """Test for firing on change with template."""
@@ -208,7 +208,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_on_change_with_template(self):
         """Test for not firing on change with template."""
@@ -257,11 +257,10 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world', context=context)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         assert self.calls[0].context is context
-        self.assertEqual(
-            'template - test.entity - hello - world',
-            self.calls[0].data['some'])
+        assert 'template - test.entity - hello - world' == \
+            self.calls[0].data['some']
 
     def test_if_fires_on_no_change_with_template_advanced(self):
         """Test for firing on no change with template advanced."""
@@ -284,12 +283,12 @@ class TestAutomationTemplate(unittest.TestCase):
         # Different state
         self.hass.states.set('test.entity', 'worldz')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
         # Different state
         self.hass.states.set('test.entity', 'hello')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_if_fires_on_change_with_template_2(self):
         """Test for firing on change with template."""
@@ -354,17 +353,17 @@ class TestAutomationTemplate(unittest.TestCase):
         # Condition is not true yet
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
         # Change condition to true, but it shouldn't be triggered yet
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
         # Condition is true and event is triggered
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_change_with_bad_template(self):
         """Test for firing on change with bad template."""
@@ -397,7 +396,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_wait_template_with_trigger(self):
         """Test using wait template with 'trigger.entity_id'."""
@@ -429,7 +428,6 @@ class TestAutomationTemplate(unittest.TestCase):
         self.hass.block_till_done()
         self.hass.states.set('test.entity', 'hello')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual(
-            'template - test.entity - hello - world',
-            self.calls[0].data['some'])
+        assert 1 == len(self.calls)
+        assert 'template - test.entity - hello - world' == \
+            self.calls[0].data['some']
