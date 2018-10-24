@@ -38,7 +38,7 @@ SENSOR_TYPES = {
     },
 }
 
-CLEAR_SCHEDULE_EVENT = 'doorbird_clear_schedule'
+RESET_DEVICE_FAVORITES = 'doorbird_reset_favorites'
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -105,23 +105,39 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = doorstations
 
-    def _clear_device_schedule_handler(event):
+    def _reset_device_favorites_handler(event):
+        """Handle clearing favorites on device."""
+        slug = event.data.get('slug')
+
+        if slug is None:
+            return
+
+        doorstation = get_doorstation_by_slug(hass, slug)
+
+        if doorstation is None:
+            _LOGGER.error('Device not found {}'.format(slug))
 
         # Clear webhooks
-        favorites = device.favorites()
+        favorites = doorstation.device.favorites()
+
         for favorite_type in favorites:
             for favorite_id in favorites[favorite_type]:
-                device.delete_favorite(favorite_type, favorite_id)
+                doorstation.device.delete_favorite(favorite_type, favorite_id)
 
-        # Clear schedule
-        schedule = device.schedule()
-        for entry in schedule:
-            device.delete_schedule(entry.input, entry.param)
-
-    hass.bus.listen(CLEAR_SCHEDULE_EVENT, _clear_device_schedule_handler)
+    hass.bus.listen(RESET_DEVICE_FAVORITES, _reset_device_favorites_handler)
 
     return True
 
+def get_doorstation_by_slug(hass, slug):
+    """Get doorstation by slug"""
+    for doorstation in hass.data[DOMAIN]:
+        if slugify(doorstation.name) in slug:
+            return doorstation
+
+
+def handle_event(event):
+    """Dummy handler used to register events in GUI"""
+    return None
 
 class ConfiguredDoorBird(object):
     """Attach additional information to pass along with configured device."""
@@ -302,24 +318,26 @@ class DoorBirdCleanupView(HomeAssistantView):
     """Provide a URL to call to delete ALL webhooks/schedules."""
 
     requires_auth = False
-    url = API_URL + '/clear/{name}'
+    url = API_URL + '/clear/{slug}'
     name = 'DoorBird Cleanup'
 
     # pylint: disable=no-self-use
-    async def get(self, request, name):
+    async def get(self, request, slug):
         """Act on requests."""
         from aiohttp import web
         hass = request.app['hass']
 
-        # Find matching device
-        for config_device in hass.data[DOMAIN]:
-            if config_device.name == name:
-                hass.bus.async_fire(CLEAR_SCHEDULE_EVENT,
-                                    {'device': config_device.name})
-
-                message = 'Clearing schedule for {}'.format(name)
-                return web.Response(status=200, text=message)
+        device = get_doorstation_by_slug(hass, slug)
 
         # No matching device
-        return web.Response(status=404,
-                            text='Device "{}" not found'.format(name))
+        if device is None:
+            return web.Response(status=404,
+                                text='Device slug {} not found'.format(slug))
+
+        hass.bus.async_fire(RESET_DEVICE_FAVORITES,
+                            {'slug': slug})
+
+        message = 'Clearing schedule for {}'.format(slug)
+        return web.Response(status=200, text=message)
+
+
