@@ -69,7 +69,7 @@ def setup_auth(app, trusted_networks, use_auth,
         # We first start with a string check to avoid parsing query params
         # for every request.
         elif (request.method == "GET" and SIGN_QUERY_PARAM in request.query and
-                await async_validate_signed_request(request)):
+              await async_validate_signed_request(request)):
             authenticated = True
 
         elif (legacy_auth and HTTP_HEADER_HA_AUTH in request.headers and
