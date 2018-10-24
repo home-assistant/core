@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_sign_path(hass, refresh_token, path, expiration):
+def async_sign_path(hass, refresh_token_id, path, expiration):
     """Sign a path for temporary access without auth header."""
     secret = hass.data.get(DATA_SIGN_SECRET)
 
@@ -32,7 +32,7 @@ def async_sign_path(hass, refresh_token, path, expiration):
 
     now = dt_util.utcnow()
     return "{}?{}={}".format(path, SIGN_QUERY_PARAM, jwt.encode({
-        'iss': refresh_token.id,
+        'iss': refresh_token_id,
         'path': path,
         'iat': now,
         'exp': now + expiration,

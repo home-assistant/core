@@ -370,7 +370,7 @@ async def test_ws_sign_path(hass, hass_ws_client, hass_access_token):
     assert result['success'], result
     assert result['result'] == {'path': 'hello_world'}
     assert len(mock_sign.mock_calls) == 1
-    hass, user, path, expires = mock_sign.mock_calls[0][1]
-    assert user == refresh_token.user
+    hass, p_refresh_token, path, expires = mock_sign.mock_calls[0][1]
+    assert p_refresh_token == refresh_token.id
     assert path == '/api/hello'
     assert expires.total_seconds() == 20

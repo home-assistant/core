@@ -271,7 +271,7 @@ async def test_auth_access_signed_path(
         hass_access_token)
 
     signed_path = async_sign_path(
-        hass, refresh_token, '/', timedelta(seconds=5)
+        hass, refresh_token.id, '/', timedelta(seconds=5)
     )
 
     req = await client.get(signed_path)
@@ -291,7 +291,7 @@ async def test_auth_access_signed_path(
 
     # Never valid as expired in the past.
     expired_signed_path = async_sign_path(
-        hass, refresh_token, '/', timedelta(seconds=-5)
+        hass, refresh_token.id, '/', timedelta(seconds=-5)
     )
 
     req = await client.get(expired_signed_path)

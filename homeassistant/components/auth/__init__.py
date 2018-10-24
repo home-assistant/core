@@ -522,6 +522,6 @@ def websocket_sign_path(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Handle a sign path request."""
     connection.send_message(websocket_api.result_message(msg['id'], {
-        'path': async_sign_path(hass, connection.user, msg['path'],
+        'path': async_sign_path(hass, connection.refresh_token_id, msg['path'],
                                 timedelta(seconds=msg['expires']))
         }))
