@@ -65,15 +65,15 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         entity_id = 'alarm_control_panel.test'
 
-        self.assertEqual(STATE_UNKNOWN,
-                         self.hass.states.get(entity_id).state)
+        assert STATE_UNKNOWN == \
+            self.hass.states.get(entity_id).state
 
         for state in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
                       STATE_ALARM_ARMED_AWAY, STATE_ALARM_PENDING,
                       STATE_ALARM_TRIGGERED):
             fire_mqtt_message(self.hass, 'alarm/state', state)
             self.hass.block_till_done()
-            self.assertEqual(state, self.hass.states.get(entity_id).state)
+            assert state == self.hass.states.get(entity_id).state
 
     def test_ignore_update_state_if_unknown_via_state_topic(self):
         """Test ignoring updates via state topic."""
@@ -88,12 +88,12 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         entity_id = 'alarm_control_panel.test'
 
-        self.assertEqual(STATE_UNKNOWN,
-                         self.hass.states.get(entity_id).state)
+        assert STATE_UNKNOWN == \
+            self.hass.states.get(entity_id).state
 
         fire_mqtt_message(self.hass, 'alarm/state', 'unsupported state')
         self.hass.block_till_done()
-        self.assertEqual(STATE_UNKNOWN, self.hass.states.get(entity_id).state)
+        assert STATE_UNKNOWN == self.hass.states.get(entity_id).state
 
     def test_arm_home_publishes_mqtt(self):
         """Test publishing of MQTT messages while armed."""
@@ -126,7 +126,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         call_count = self.mock_publish.call_count
         common.alarm_arm_home(self.hass, 'abcd')
         self.hass.block_till_done()
-        self.assertEqual(call_count, self.mock_publish.call_count)
+        assert call_count == self.mock_publish.call_count
 
     def test_arm_away_publishes_mqtt(self):
         """Test publishing of MQTT messages while armed."""
@@ -159,7 +159,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         call_count = self.mock_publish.call_count
         common.alarm_arm_away(self.hass, 'abcd')
         self.hass.block_till_done()
-        self.assertEqual(call_count, self.mock_publish.call_count)
+        assert call_count == self.mock_publish.call_count
 
     def test_disarm_publishes_mqtt(self):
         """Test publishing of MQTT messages while disarmed."""
@@ -192,7 +192,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         call_count = self.mock_publish.call_count
         common.alarm_disarm(self.hass, 'abcd')
         self.hass.block_till_done()
-        self.assertEqual(call_count, self.mock_publish.call_count)
+        assert call_count == self.mock_publish.call_count
 
     def test_default_availability_payload(self):
         """Test availability by default payload with defined topic."""
@@ -208,19 +208,19 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('alarm_control_panel.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'online')
         self.hass.block_till_done()
 
         state = self.hass.states.get('alarm_control_panel.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'offline')
         self.hass.block_till_done()
 
         state = self.hass.states.get('alarm_control_panel.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
     def test_custom_availability_payload(self):
         """Test availability by custom payload with defined topic."""
@@ -238,7 +238,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('alarm_control_panel.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'good')
 

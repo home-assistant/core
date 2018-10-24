@@ -51,17 +51,15 @@ class TestDatadog(unittest.TestCase):
             }
         })
 
-        self.assertEqual(mock_connection.call_count, 1)
-        self.assertEqual(
-            mock_connection.call_args,
+        assert mock_connection.call_count == 1
+        assert mock_connection.call_args == \
             mock.call(statsd_host='host', statsd_port=123)
-        )
 
-        self.assertTrue(self.hass.bus.listen.called)
-        self.assertEqual(EVENT_LOGBOOK_ENTRY,
-                         self.hass.bus.listen.call_args_list[0][0][0])
-        self.assertEqual(EVENT_STATE_CHANGED,
-                         self.hass.bus.listen.call_args_list[1][0][0])
+        assert self.hass.bus.listen.called
+        assert EVENT_LOGBOOK_ENTRY == \
+            self.hass.bus.listen.call_args_list[0][0][0]
+        assert EVENT_STATE_CHANGED == \
+            self.hass.bus.listen.call_args_list[1][0][0]
 
     @MockDependency('datadog')
     def test_datadog_setup_defaults(self, mock_datadog):
@@ -77,12 +75,10 @@ class TestDatadog(unittest.TestCase):
             }
         })
 
-        self.assertEqual(mock_connection.call_count, 1)
-        self.assertEqual(
-            mock_connection.call_args,
+        assert mock_connection.call_count == 1
+        assert mock_connection.call_args == \
             mock.call(statsd_host='host', statsd_port=8125)
-        )
-        self.assertTrue(self.hass.bus.listen.called)
+        assert self.hass.bus.listen.called
 
     @MockDependency('datadog')
     def test_logbook_entry(self, mock_datadog):
@@ -97,7 +93,7 @@ class TestDatadog(unittest.TestCase):
             }
         })
 
-        self.assertTrue(self.hass.bus.listen.called)
+        assert self.hass.bus.listen.called
         handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
         event = {
@@ -108,9 +104,8 @@ class TestDatadog(unittest.TestCase):
         }
         handler_method(mock.MagicMock(data=event))
 
-        self.assertEqual(mock_client.event.call_count, 1)
-        self.assertEqual(
-            mock_client.event.call_args,
+        assert mock_client.event.call_count == 1
+        assert mock_client.event.call_args == \
             mock.call(
                 title="Home Assistant",
                 text="%%% \n **{}** {} \n %%%".format(
@@ -119,7 +114,6 @@ class TestDatadog(unittest.TestCase):
                 ),
                 tags=["entity:sensor.foo.bar", "domain:automation"]
             )
-        )
 
         mock_client.event.reset_mock()
 
@@ -137,7 +131,7 @@ class TestDatadog(unittest.TestCase):
             }
         })
 
-        self.assertTrue(self.hass.bus.listen.called)
+        assert self.hass.bus.listen.called
         handler_method = self.hass.bus.listen.call_args_list[1][0][1]
 
         valid = {
@@ -157,7 +151,7 @@ class TestDatadog(unittest.TestCase):
                                    state=in_, attributes=attributes)
             handler_method(mock.MagicMock(data={'new_state': state}))
 
-            self.assertEqual(mock_client.gauge.call_count, 3)
+            assert mock_client.gauge.call_count == 3
 
             for attribute, value in attributes.items():
                 mock_client.gauge.assert_has_calls([
@@ -169,16 +163,14 @@ class TestDatadog(unittest.TestCase):
                     )
                 ])
 
-            self.assertEqual(
-                mock_client.gauge.call_args,
+            assert mock_client.gauge.call_args == \
                 mock.call("ha.sensor", out, sample_rate=1, tags=[
                     "entity:{}".format(state.entity_id)
                 ])
-            )
 
             mock_client.gauge.reset_mock()
 
         for invalid in ('foo', '', object):
             handler_method(mock.MagicMock(data={
                 'new_state': ha.State('domain.test', invalid, {})}))
-            self.assertFalse(mock_client.gauge.called)
+            assert not mock_client.gauge.called

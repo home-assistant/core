@@ -50,8 +50,8 @@ class TestUkTransportSensor(unittest.TestCase):
         with requests_mock.Mocker() as mock_req:
             uri = re.compile(UkTransportSensor.TRANSPORT_API_URL_BASE + '*')
             mock_req.get(uri, text=load_fixture('uk_transport_bus.json'))
-            self.assertTrue(
-                setup_component(self.hass, 'sensor', {'sensor': self.config}))
+            assert setup_component(
+                self.hass, 'sensor', {'sensor': self.config})
 
         bus_state = self.hass.states.get('sensor.next_bus_to_wantage')
 
@@ -73,8 +73,8 @@ class TestUkTransportSensor(unittest.TestCase):
         with requests_mock.Mocker() as mock_req:
             uri = re.compile(UkTransportSensor.TRANSPORT_API_URL_BASE + '*')
             mock_req.get(uri, text=load_fixture('uk_transport_train.json'))
-            self.assertTrue(
-                setup_component(self.hass, 'sensor', {'sensor': self.config}))
+            assert setup_component(
+                self.hass, 'sensor', {'sensor': self.config})
 
         train_state = self.hass.states.get('sensor.next_train_to_WAT')
 
