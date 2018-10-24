@@ -439,7 +439,7 @@ class TestHelpersTemplate(unittest.TestCase):
         assert 'yes' == tpl.render()
 
         tpl = template.Template("""
-{{ state_attr("test.noobject", "mode")is None }}
+{{ state_attr("test.noobject", "mode") == None }}
                 """, self.hass)
         assert 'True' == tpl.render()
 
