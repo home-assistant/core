@@ -118,7 +118,7 @@ mficlient==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.15.2
+numpy==1.15.3
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
