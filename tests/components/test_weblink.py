@@ -20,15 +20,15 @@ class TestComponentWeblink(unittest.TestCase):
 
     def test_bad_config(self):
         """Test if new entity is created."""
-        self.assertFalse(setup_component(self.hass, 'weblink', {
+        assert not setup_component(self.hass, 'weblink', {
             'weblink': {
                 'entities': [{}],
             }
-        }))
+        })
 
     def test_bad_config_relative_url(self):
         """Test if new entity is created."""
-        self.assertFalse(setup_component(self.hass, 'weblink', {
+        assert not setup_component(self.hass, 'weblink', {
             'weblink': {
                 'entities': [
                     {
@@ -37,11 +37,11 @@ class TestComponentWeblink(unittest.TestCase):
                     },
                 ],
             }
-        }))
+        })
 
     def test_bad_config_relative_file(self):
         """Test if new entity is created."""
-        self.assertFalse(setup_component(self.hass, 'weblink', {
+        assert not setup_component(self.hass, 'weblink', {
             'weblink': {
                 'entities': [
                     {
@@ -50,11 +50,11 @@ class TestComponentWeblink(unittest.TestCase):
                     },
                 ],
             }
-        }))
+        })
 
     def test_good_config_absolute_path(self):
         """Test if new entity is created."""
-        self.assertTrue(setup_component(self.hass, 'weblink', {
+        assert setup_component(self.hass, 'weblink', {
             'weblink': {
                 'entities': [
                     {
@@ -63,11 +63,11 @@ class TestComponentWeblink(unittest.TestCase):
                     },
                 ],
             }
-        }))
+        })
 
     def test_good_config_path_short(self):
         """Test if new entity is created."""
-        self.assertTrue(setup_component(self.hass, 'weblink', {
+        assert setup_component(self.hass, 'weblink', {
             'weblink': {
                 'entities': [
                     {
@@ -76,11 +76,11 @@ class TestComponentWeblink(unittest.TestCase):
                     },
                 ],
             }
-        }))
+        })
 
     def test_good_config_path_directory(self):
         """Test if new entity is created."""
-        self.assertTrue(setup_component(self.hass, 'weblink', {
+        assert setup_component(self.hass, 'weblink', {
             'weblink': {
                 'entities': [
                     {
@@ -89,11 +89,11 @@ class TestComponentWeblink(unittest.TestCase):
                     },
                 ],
             }
-        }))
+        })
 
     def test_good_config_ftp_link(self):
         """Test if new entity is created."""
-        self.assertTrue(setup_component(self.hass, 'weblink', {
+        assert setup_component(self.hass, 'weblink', {
             'weblink': {
                 'entities': [
                     {
@@ -102,11 +102,11 @@ class TestComponentWeblink(unittest.TestCase):
                     },
                 ],
             }
-        }))
+        })
 
     def test_entities_get_created(self):
         """Test if new entity is created."""
-        self.assertTrue(setup_component(self.hass, weblink.DOMAIN, {
+        assert setup_component(self.hass, weblink.DOMAIN, {
             weblink.DOMAIN: {
                 'entities': [
                     {
@@ -115,7 +115,7 @@ class TestComponentWeblink(unittest.TestCase):
                     },
                 ]
             }
-        }))
+        })
 
         state = self.hass.states.get('weblink.my_router')
 

@@ -39,6 +39,6 @@ class TestYahooFinanceSetup(unittest.TestCase):
                 'sensor': VALID_CONFIG})
 
         state = self.hass.states.get('sensor.yhoo')
-        self.assertEqual('41.69', state.attributes.get('open'))
-        self.assertEqual('41.79', state.attributes.get('prev_close'))
-        self.assertEqual('YHOO', state.attributes.get('unit_of_measurement'))
+        assert '41.69' == state.attributes.get('open')
+        assert '41.79' == state.attributes.get('prev_close')
+        assert 'YHOO' == state.attributes.get('unit_of_measurement')

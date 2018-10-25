@@ -179,7 +179,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             -> Dict[str, Any]:
         """Handle the first step of login flow.
 
-        Return self.async_show_form(step_id='init') if user_input == None.
+        Return self.async_show_form(step_id='init') if user_input is None.
         Return await self.async_finish(flow_result) if login init step pass.
         """
         raise NotImplementedError

@@ -54,7 +54,7 @@ class TestStatisticsSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_count')
 
-        self.assertEqual(str(len(values)), state.state)
+        assert str(len(values)) == state.state
 
     def test_sensor_source(self):
         """Test if source is a sensor."""
@@ -73,20 +73,20 @@ class TestStatisticsSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(str(self.mean), state.state)
-        self.assertEqual(self.min, state.attributes.get('min_value'))
-        self.assertEqual(self.max, state.attributes.get('max_value'))
-        self.assertEqual(self.variance, state.attributes.get('variance'))
-        self.assertEqual(self.median, state.attributes.get('median'))
-        self.assertEqual(self.deviation,
-                         state.attributes.get('standard_deviation'))
-        self.assertEqual(self.mean, state.attributes.get('mean'))
-        self.assertEqual(self.count, state.attributes.get('count'))
-        self.assertEqual(self.total, state.attributes.get('total'))
-        self.assertEqual('°C', state.attributes.get('unit_of_measurement'))
-        self.assertEqual(self.change, state.attributes.get('change'))
-        self.assertEqual(self.average_change,
-                         state.attributes.get('average_change'))
+        assert str(self.mean) == state.state
+        assert self.min == state.attributes.get('min_value')
+        assert self.max == state.attributes.get('max_value')
+        assert self.variance == state.attributes.get('variance')
+        assert self.median == state.attributes.get('median')
+        assert self.deviation == \
+            state.attributes.get('standard_deviation')
+        assert self.mean == state.attributes.get('mean')
+        assert self.count == state.attributes.get('count')
+        assert self.total == state.attributes.get('total')
+        assert '°C' == state.attributes.get('unit_of_measurement')
+        assert self.change == state.attributes.get('change')
+        assert self.average_change == \
+            state.attributes.get('average_change')
 
     def test_sampling_size(self):
         """Test rotation."""
@@ -106,8 +106,8 @@ class TestStatisticsSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(3.8, state.attributes.get('min_value'))
-        self.assertEqual(14, state.attributes.get('max_value'))
+        assert 3.8 == state.attributes.get('min_value')
+        assert 14 == state.attributes.get('max_value')
 
     def test_sampling_size_1(self):
         """Test validity of stats requiring only one sample."""
@@ -128,18 +128,18 @@ class TestStatisticsSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.test_mean')
 
         # require only one data point
-        self.assertEqual(self.values[-1], state.attributes.get('min_value'))
-        self.assertEqual(self.values[-1], state.attributes.get('max_value'))
-        self.assertEqual(self.values[-1], state.attributes.get('mean'))
-        self.assertEqual(self.values[-1], state.attributes.get('median'))
-        self.assertEqual(self.values[-1], state.attributes.get('total'))
-        self.assertEqual(0, state.attributes.get('change'))
-        self.assertEqual(0, state.attributes.get('average_change'))
+        assert self.values[-1] == state.attributes.get('min_value')
+        assert self.values[-1] == state.attributes.get('max_value')
+        assert self.values[-1] == state.attributes.get('mean')
+        assert self.values[-1] == state.attributes.get('median')
+        assert self.values[-1] == state.attributes.get('total')
+        assert 0 == state.attributes.get('change')
+        assert 0 == state.attributes.get('average_change')
 
         # require at least two data points
-        self.assertEqual(STATE_UNKNOWN, state.attributes.get('variance'))
-        self.assertEqual(STATE_UNKNOWN,
-                         state.attributes.get('standard_deviation'))
+        assert STATE_UNKNOWN == state.attributes.get('variance')
+        assert STATE_UNKNOWN == \
+            state.attributes.get('standard_deviation')
 
     def test_max_age(self):
         """Test value deprecation."""
@@ -170,8 +170,8 @@ class TestStatisticsSensor(unittest.TestCase):
 
             state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(6, state.attributes.get('min_value'))
-        self.assertEqual(14, state.attributes.get('max_value'))
+        assert 6 == state.attributes.get('min_value')
+        assert 14 == state.attributes.get('max_value')
 
     def test_change_rate(self):
         """Test min_age/max_age and change_rate."""
@@ -202,12 +202,12 @@ class TestStatisticsSensor(unittest.TestCase):
 
             state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(datetime(2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC),
-                         state.attributes.get('min_age'))
-        self.assertEqual(datetime(2017, 8, 2, 12, 23 + self.count - 1, 42,
-                                  tzinfo=dt_util.UTC),
-                         state.attributes.get('max_age'))
-        self.assertEqual(self.change_rate, state.attributes.get('change_rate'))
+        assert datetime(2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC) == \
+            state.attributes.get('min_age')
+        assert datetime(2017, 8, 2, 12, 23 + self.count - 1, 42,
+                        tzinfo=dt_util.UTC) == \
+            state.attributes.get('max_age')
+        assert self.change_rate == state.attributes.get('change_rate')
 
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
@@ -232,4 +232,4 @@ class TestStatisticsSensor(unittest.TestCase):
         })
         # check if the result is as in test_sensor_source()
         state = self.hass.states.get('sensor.test_mean')
-        self.assertEqual(str(self.mean), state.state)
+        assert str(self.mean) == state.state

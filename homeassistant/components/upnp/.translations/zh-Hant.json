@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "enable_port_mapping": "\u958b\u555f Home Assistant \u901a\u8a0a\u57e0\u8f49\u767c",
-                    "enable_sensors": "\u65b0\u589e\u4ea4\u901a\u611f\u61c9\u5668",
+                    "enable_sensors": "\u65b0\u589e\u6d41\u91cf\u611f\u61c9\u5668",
                     "igd": "UPnP/IGD"
                 },
                 "title": "UPnP/IGD \u8a2d\u5b9a\u9078\u9805"
