@@ -25,7 +25,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 
 
-REQUIREMENTS = ['iobl']
+REQUIREMENTS = ['iobl==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +67,9 @@ DOMAIN = 'legrandinone'
 SERVICE_SEND_COMMAND = 'send_packet'
 
 SIGNAL_AVAILABILITY = 'iobl_device_available'
+SIGNAL_HANDLE_EVENT = 'iobl_handle_event_{}'
+
+TMP_ENTITY = 'tmp.{}'
 
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -74,9 +77,6 @@ DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMM_MODE, default='unicast'): cv.string,
 })
 
-DEVICE_DEFAULTS_SCHEMA = vol.Schema({
-    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-})
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
@@ -103,14 +103,13 @@ def identify_event_type(event):
 
     Async friendly.
     """
-    if EVENT_KEY_COMMAND in event:
+    if event.get('type') == EVENT_KEY_COMMAND:
         return EVENT_KEY_COMMAND
 
     return 'unknown'
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the IOBL component."""
     from iobl.protocol import create_iobl_connection
     import serial
@@ -125,8 +124,7 @@ def async_setup(hass, config):
     hass.data[DATA_DEVICE_REGISTER] = {}
     hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = {}
 
-    @asyncio.coroutine
-    def async_send_command(call):
+    async def async_send_command(call):
         """Send legrandinone command."""
         _LOGGER.debug('LegrandInOne command for %s', str(call.data))
 
@@ -146,7 +144,7 @@ def async_setup(hass, config):
 
         data['values'] = call.data.get(CONF_DIMENSION_VALUES)
 
-        if not (yield from LegrandInOneCommand.send_command(data)):
+        if not (await LegrandInOneCommand.send_command(data)):
             _LOGGER.error('Failed LegrandInOne command for %s', str(call.data))
 
     hass.services.async_register(
@@ -172,22 +170,32 @@ def async_setup(hass, config):
         # Lookup entities who registered this device id as device id or alias
         event_id = event.get('legrand_id', None)
 
-        entities = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
+        entity_ids = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
 
-        if entities:
+        if entity_ids:
             # Propagate event to every entity matching the device id
-            for entity in entities:
-                _LOGGER.debug('passing event to %s', entities)
-                entity.handle_event(event)
+            for entity in entity_ids:
+                _LOGGER.debug('passing event to %s', entity)
+                async_dispatcher_send(hass,
+                                      SIGNAL_HANDLE_EVENT.format(entity),
+                                      event)
         else:
-            _LOGGER.debug('device_id not known, adding new device')
             device_type = event.get('who')
 
             # If device is not yet known, register with platform (if loaded)
             if event_type in hass.data[DATA_DEVICE_REGISTER]:
                 if device_type in hass.data[DATA_DEVICE_REGISTER][event_type]:
-                    hass.async_run_job(
-                        hass.data[DATA_DEVICE_REGISTER][event_type][device_type], event, hass)
+                    _LOGGER.debug('device_id not known, adding new device')
+
+                    hass.data[DATA_ENTITY_LOOKUP][event_type][
+                        event_id].append(TMP_ENTITY.format(event_id))
+                    hass.async_create_task(
+                        hass.data[DATA_DEVICE_REGISTER][event_type][device_type](event))
+
+                else:
+                    _LOGGER.debug('device_id not known and automatic %s add disabled', device_type)
+            else:
+                _LOGGER.debug('device_id not known and automatic add disabled')
 
     # When connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN].get(CONF_HOST)
@@ -205,10 +213,9 @@ def async_setup(hass, config):
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
             _LOGGER.warning('disconnected from Iobl, reconnecting')
-            hass.async_add_job(connect)
+            hass.async_create_task(connect())
 
-    @asyncio.coroutine
-    def connect():
+    async def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
         _LOGGER.info('Initiating Iobl connection')
 
@@ -228,7 +235,7 @@ def async_setup(hass, config):
         try:
             with async_timeout.timeout(CONNECTION_TIMEOUT,
                                        loop=hass.loop):
-                transport, protocol = yield from connection
+                transport, protocol = await connection
 
         except (serial.serialutil.SerialException, ConnectionRefusedError,
                 TimeoutError, OSError, asyncio.TimeoutError) as exc:
@@ -255,7 +262,7 @@ def async_setup(hass, config):
 
         _LOGGER.info('Connected to Iobl')
 
-    hass.async_add_job(connect)
+    hass.async_create_task(connect())
     return True
 
 
@@ -266,17 +273,16 @@ class LegrandInOneDevice(Entity):
     """
 
     platform = None
-    _state = STATE_UNKNOWN
+    _state = None
     _available = True
-    legrand_id = ''
-    iobl_mode = ''
-    iobl_media = ''
+    legrand_id = None
+    iobl_mode = None
+    iobl_media = None
 
-    def __init__(self, device_id, hass, name=None, fire_event=False,
-                 iobl_media='plc', iobl_comm_mode='unicast'):
+    def __init__(self, device_id, initial_event=None, name=None,
+                 fire_event=False, iobl_media='plc', iobl_comm_mode='unicast'):
         """Initialize the device."""
-        self.hass = hass
-
+        self._initial_event = initial_event
         self.legrand_id = device_id
         self.iobl_mode = iobl_comm_mode
         self.iobl_media = iobl_media
@@ -288,7 +294,8 @@ class LegrandInOneDevice(Entity):
 
         self._should_fire_event = fire_event
 
-    def handle_event(self, event):
+    @callback
+    def handle_event_callback(self, event):
         """Handle incoming event for device type."""
         # Call platform specific event handler
         self._handle_event(event)
@@ -299,12 +306,12 @@ class LegrandInOneDevice(Entity):
         # Put command onto bus for user to subscribe to
         if self._should_fire_event and identify_event_type(
                 event) == EVENT_KEY_COMMAND:
-            self.hass.bus.fire(EVENT_BUTTON_PRESSED, {
+            self.hass.bus.async_fire(EVENT_BUTTON_PRESSED, {
                 ATTR_ENTITY_ID: self.entity_id,
-                ATTR_STATE: event[EVENT_TYPE_COMMAND],
+                ATTR_STATE: event.get(EVENT_TYPE_COMMAND),
             })
             _LOGGER.debug("Fired bus event for %s: %s",
-                          self.entity_id, event[EVENT_KEY_COMMAND])
+                          self.entity_id, event.get(EVENT_TYPE_COMMAND))
 
     def _handle_event(self, event):
         """Platform specific event handler."""
@@ -330,7 +337,7 @@ class LegrandInOneDevice(Entity):
     @property
     def assumed_state(self):
         """Assume device state until first device event sets state."""
-        return self._state is STATE_UNKNOWN
+        return self._state is None
 
     @property
     def available(self):
@@ -338,17 +345,33 @@ class LegrandInOneDevice(Entity):
         return self._available
 
     @callback
-    def set_availability(self, availability):
+    def _availability_callback(self, availability):
         """Update availability state."""
         self._available = availability
         self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register update callback."""
-        async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
-                                 self.set_availability)
+        # Remove temporary bogus entity_id if added
+#         tmp_entity = TMP_ENTITY.format(self.legrand_id)
+#         if tmp_entity in self.hass.data[DATA_ENTITY_LOOKUP][
+#                 EVENT_KEY_SENSOR][self.legrand_id]:
+#             self.hass.data[DATA_ENTITY_LOOKUP][
+#                 EVENT_KEY_SENSOR][self.legrand_id].remove(tmp_entity)
 
+        # Register id and aliases
+        self.hass.data[DATA_ENTITY_LOOKUP][
+            EVENT_KEY_COMMAND][self.legrand_id].append(self.legrand_id)
+
+        async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
+                                 self._availability_callback)
+        async_dispatcher_connect(self.hass,
+                                 SIGNAL_HANDLE_EVENT.format(self.legrand_id),
+                                 self.handle_event_callback)
+
+        # Process the initial event now that the entity is created
+        if self._initial_event:
+            self.handle_event_callback(self._initial_event)
 
 class LegrandInOneCommand(LegrandInOneDevice):
     """Singleton class to make IOBL command interface available to entities.
@@ -374,13 +397,11 @@ class LegrandInOneCommand(LegrandInOneDevice):
         return bool(cls._protocol)
 
     @classmethod
-    @asyncio.coroutine
-    def send_command(cls, command_data):
+    async def send_command(cls, command_data):
         """Send device command to IOBL."""
-        return (yield from cls._protocol.send_packet(command_data))
+        return await cls._protocol.send_packet(command_data)
 
-    @asyncio.coroutine
-    def _async_handle_command(self, command, *args):
+    async def _async_handle_command(self, command, *args):
 
         if command == 'turn_on':
             cmd = 'on'
@@ -400,7 +421,7 @@ class LegrandInOneCommand(LegrandInOneDevice):
             cmd = 'on'
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
-            self._state = self._state in [STATE_UNKNOWN, False]
+            self._state = self._state in [None, False]
 
         # Cover options for IOBL
         elif command == 'close_cover':
@@ -418,13 +439,12 @@ class LegrandInOneCommand(LegrandInOneDevice):
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
-        yield from self._async_send_command(cmd)
+        await self._async_send_command(cmd)
 
         # Update state of entity
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def _async_send_command(self, cmd):
+    async def _async_send_command(self, cmd):
         """Send a command for device to iobl gateway."""
         _LOGGER.debug(
             "Sending command: %s to iobl device: %s", cmd, self.legrand_id)
