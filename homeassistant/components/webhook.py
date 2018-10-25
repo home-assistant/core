@@ -63,7 +63,7 @@ class WebhookView(HomeAssistantView):
     name = "api:webhook"
     requires_auth = False
 
-    async def post(self, request, webhook_id):
+    async def handle(self, request, webhook_id):
         """Handle webhook call."""
         hass = request.app['hass']
         handlers = hass.data.setdefault(DOMAIN, {})
@@ -83,3 +83,11 @@ class WebhookView(HomeAssistantView):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error processing webhook %s", webhook_id)
             return Response(status=200)
+
+    async def post(self, request, webhook_id):
+        """Handle webhook POST call."""
+        await self.handle(request, webhook_id)
+
+    async def get(self, request, webhook_id):
+        """Handle webhook GET call."""
+        await self.handle(request, webhook_id)
