@@ -90,9 +90,6 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN] = gateway
 
-    hass.data[DATA_DECONZ_ID] = {}
-    hass.data[DATA_DECONZ_UNSUB] = []
-
     if not await gateway.async_setup():
         return False
 
@@ -142,10 +139,10 @@ async def async_setup_entry(hass, config_entry):
         """Refresh available devices from deCONZ."""
         gateway = hass.data[DOMAIN]
 
-        groups = list(gateway.api.groups.keys())
-        lights = list(gateway.api.lights.keys())
-        scenes = list(gateway.api.scenes.keys())
-        sensors = list(gateway.api.sensors.keys())
+        groups = set(gateway.api.groups.keys())
+        lights = set(gateway.api.lights.keys())
+        scenes = set(gateway.api.scenes.keys())
+        sensors = set(gateway.api.sensors.keys())
 
         if not await gateway.api.async_load_parameters():
             return
@@ -186,20 +183,4 @@ async def async_unload_entry(hass, config_entry):
     gateway = hass.data.pop(DOMAIN)
     hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
     hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
-    gateway.api.close()
-
-    for component in SUPPORTED_PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(
-            config_entry, component)
-
-    for unsub_dispatcher in gateway.listeners:
-        unsub_dispatcher()
-    gateway.listeners = []
-
-    for event in gateway.events:
-        event.async_will_remove_from_hass()
-        gateway.events.remove(event)
-
-    gateway.deconz_ids = []
-
-    return True
+    return await gateway.async_reset()
