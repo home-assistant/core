@@ -48,7 +48,7 @@ class TestAutomationEvent(unittest.TestCase):
 
         self.hass.bus.fire('test_event', context=context)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         assert self.calls[0].context is context
 
         common.turn_off(self.hass)
@@ -56,7 +56,7 @@ class TestAutomationEvent(unittest.TestCase):
 
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_event_extra_data(self):
         """Test the firing of events still matches with event data."""
@@ -74,14 +74,14 @@ class TestAutomationEvent(unittest.TestCase):
 
         self.hass.bus.fire('test_event', {'extra_key': 'extra_data'})
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
         common.turn_off(self.hass)
         self.hass.block_till_done()
 
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_event_with_data(self):
         """Test the firing of events with data."""
@@ -101,7 +101,7 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.bus.fire('test_event', {'some_attr': 'some_value',
                                           'another': 'value'})
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_event_with_empty_data_config(self):
         """Test the firing of events with empty data config.
@@ -125,7 +125,7 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.bus.fire('test_event', {'some_attr': 'some_value',
                                           'another': 'value'})
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_fires_on_event_with_nested_data(self):
         """Test the firing of events with nested data."""
@@ -153,7 +153,7 @@ class TestAutomationEvent(unittest.TestCase):
             }
         })
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
 
     def test_if_not_fires_if_event_data_not_matches(self):
         """Test firing of event if no match."""
@@ -172,4 +172,4 @@ class TestAutomationEvent(unittest.TestCase):
 
         self.hass.bus.fire('test_event', {'some_attr': 'some_other_value'})
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)

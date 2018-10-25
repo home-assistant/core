@@ -40,16 +40,16 @@ class TestLight(unittest.TestCase):
         """Test if methods call the services as expected."""
         # Test is_on
         self.hass.states.set('light.test', STATE_ON)
-        self.assertTrue(light.is_on(self.hass, 'light.test'))
+        assert light.is_on(self.hass, 'light.test')
 
         self.hass.states.set('light.test', STATE_OFF)
-        self.assertFalse(light.is_on(self.hass, 'light.test'))
+        assert not light.is_on(self.hass, 'light.test')
 
         self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, STATE_ON)
-        self.assertTrue(light.is_on(self.hass))
+        assert light.is_on(self.hass)
 
         self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, STATE_OFF)
-        self.assertFalse(light.is_on(self.hass))
+        assert not light.is_on(self.hass)
 
         # Test turn_on
         turn_on_calls = mock_service(
@@ -68,22 +68,19 @@ class TestLight(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(turn_on_calls))
+        assert 1 == len(turn_on_calls)
         call = turn_on_calls[-1]
 
-        self.assertEqual(light.DOMAIN, call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual('entity_id_val', call.data.get(ATTR_ENTITY_ID))
-        self.assertEqual(
-            'transition_val', call.data.get(light.ATTR_TRANSITION))
-        self.assertEqual(
-            'brightness_val', call.data.get(light.ATTR_BRIGHTNESS))
-        self.assertEqual('rgb_color_val', call.data.get(light.ATTR_RGB_COLOR))
-        self.assertEqual('xy_color_val', call.data.get(light.ATTR_XY_COLOR))
-        self.assertEqual('profile_val', call.data.get(light.ATTR_PROFILE))
-        self.assertEqual(
-            'color_name_val', call.data.get(light.ATTR_COLOR_NAME))
-        self.assertEqual('white_val', call.data.get(light.ATTR_WHITE_VALUE))
+        assert light.DOMAIN == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert 'entity_id_val' == call.data.get(ATTR_ENTITY_ID)
+        assert 'transition_val' == call.data.get(light.ATTR_TRANSITION)
+        assert 'brightness_val' == call.data.get(light.ATTR_BRIGHTNESS)
+        assert 'rgb_color_val' == call.data.get(light.ATTR_RGB_COLOR)
+        assert 'xy_color_val' == call.data.get(light.ATTR_XY_COLOR)
+        assert 'profile_val' == call.data.get(light.ATTR_PROFILE)
+        assert 'color_name_val' == call.data.get(light.ATTR_COLOR_NAME)
+        assert 'white_val' == call.data.get(light.ATTR_WHITE_VALUE)
 
         # Test turn_off
         turn_off_calls = mock_service(
@@ -94,13 +91,13 @@ class TestLight(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(turn_off_calls))
+        assert 1 == len(turn_off_calls)
         call = turn_off_calls[-1]
 
-        self.assertEqual(light.DOMAIN, call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
-        self.assertEqual('transition_val', call.data[light.ATTR_TRANSITION])
+        assert light.DOMAIN == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert 'entity_id_val' == call.data[ATTR_ENTITY_ID]
+        assert 'transition_val' == call.data[light.ATTR_TRANSITION]
 
         # Test toggle
         toggle_calls = mock_service(
@@ -111,29 +108,28 @@ class TestLight(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(toggle_calls))
+        assert 1 == len(toggle_calls)
         call = toggle_calls[-1]
 
-        self.assertEqual(light.DOMAIN, call.domain)
-        self.assertEqual(SERVICE_TOGGLE, call.service)
-        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
-        self.assertEqual('transition_val', call.data[light.ATTR_TRANSITION])
+        assert light.DOMAIN == call.domain
+        assert SERVICE_TOGGLE == call.service
+        assert 'entity_id_val' == call.data[ATTR_ENTITY_ID]
+        assert 'transition_val' == call.data[light.ATTR_TRANSITION]
 
     def test_services(self):
         """Test the provided services."""
         platform = loader.get_component(self.hass, 'light.test')
 
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1, dev2, dev3 = platform.DEVICES
 
         # Test init
-        self.assertTrue(light.is_on(self.hass, dev1.entity_id))
-        self.assertFalse(light.is_on(self.hass, dev2.entity_id))
-        self.assertFalse(light.is_on(self.hass, dev3.entity_id))
+        assert light.is_on(self.hass, dev1.entity_id)
+        assert not light.is_on(self.hass, dev2.entity_id)
+        assert not light.is_on(self.hass, dev3.entity_id)
 
         # Test basic turn_on, turn_off, toggle services
         common.turn_off(self.hass, entity_id=dev1.entity_id)
@@ -141,44 +137,44 @@ class TestLight(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertFalse(light.is_on(self.hass, dev1.entity_id))
-        self.assertTrue(light.is_on(self.hass, dev2.entity_id))
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert light.is_on(self.hass, dev2.entity_id)
 
         # turn on all lights
         common.turn_on(self.hass)
 
         self.hass.block_till_done()
 
-        self.assertTrue(light.is_on(self.hass, dev1.entity_id))
-        self.assertTrue(light.is_on(self.hass, dev2.entity_id))
-        self.assertTrue(light.is_on(self.hass, dev3.entity_id))
+        assert light.is_on(self.hass, dev1.entity_id)
+        assert light.is_on(self.hass, dev2.entity_id)
+        assert light.is_on(self.hass, dev3.entity_id)
 
         # turn off all lights
         common.turn_off(self.hass)
 
         self.hass.block_till_done()
 
-        self.assertFalse(light.is_on(self.hass, dev1.entity_id))
-        self.assertFalse(light.is_on(self.hass, dev2.entity_id))
-        self.assertFalse(light.is_on(self.hass, dev3.entity_id))
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert not light.is_on(self.hass, dev2.entity_id)
+        assert not light.is_on(self.hass, dev3.entity_id)
 
         # toggle all lights
         common.toggle(self.hass)
 
         self.hass.block_till_done()
 
-        self.assertTrue(light.is_on(self.hass, dev1.entity_id))
-        self.assertTrue(light.is_on(self.hass, dev2.entity_id))
-        self.assertTrue(light.is_on(self.hass, dev3.entity_id))
+        assert light.is_on(self.hass, dev1.entity_id)
+        assert light.is_on(self.hass, dev2.entity_id)
+        assert light.is_on(self.hass, dev3.entity_id)
 
         # toggle all lights
         common.toggle(self.hass)
 
         self.hass.block_till_done()
 
-        self.assertFalse(light.is_on(self.hass, dev1.entity_id))
-        self.assertFalse(light.is_on(self.hass, dev2.entity_id))
-        self.assertFalse(light.is_on(self.hass, dev3.entity_id))
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert not light.is_on(self.hass, dev2.entity_id)
+        assert not light.is_on(self.hass, dev3.entity_id)
 
         # Ensure all attributes process correctly
         common.turn_on(self.hass, dev1.entity_id,
@@ -191,22 +187,22 @@ class TestLight(unittest.TestCase):
         self.hass.block_till_done()
 
         _, data = dev1.last_call('turn_on')
-        self.assertEqual({
+        assert {
             light.ATTR_TRANSITION: 10,
             light.ATTR_BRIGHTNESS: 20,
             light.ATTR_HS_COLOR: (240, 100),
-        }, data)
+        } == data
 
         _, data = dev2.last_call('turn_on')
-        self.assertEqual({
+        assert {
             light.ATTR_HS_COLOR: (0, 0),
             light.ATTR_WHITE_VALUE: 255,
-        }, data)
+        } == data
 
         _, data = dev3.last_call('turn_on')
-        self.assertEqual({
+        assert {
             light.ATTR_HS_COLOR: (71.059, 100),
-        }, data)
+        } == data
 
         # One of the light profiles
         prof_name, prof_h, prof_s, prof_bri = 'relax', 35.932, 69.412, 144
@@ -221,16 +217,16 @@ class TestLight(unittest.TestCase):
         self.hass.block_till_done()
 
         _, data = dev1.last_call('turn_on')
-        self.assertEqual({
+        assert {
             light.ATTR_BRIGHTNESS: prof_bri,
             light.ATTR_HS_COLOR: (prof_h, prof_s),
-        }, data)
+        } == data
 
         _, data = dev2.last_call('turn_on')
-        self.assertEqual({
+        assert {
             light.ATTR_BRIGHTNESS: 100,
             light.ATTR_HS_COLOR: (prof_h, prof_s),
-        }, data)
+        } == data
 
         # Test bad data
         common.turn_on(self.hass)
@@ -241,13 +237,13 @@ class TestLight(unittest.TestCase):
         self.hass.block_till_done()
 
         _, data = dev1.last_call('turn_on')
-        self.assertEqual({}, data)
+        assert {} == data
 
         _, data = dev2.last_call('turn_on')
-        self.assertEqual({}, data)
+        assert {} == data
 
         _, data = dev3.last_call('turn_on')
-        self.assertEqual({}, data)
+        assert {} == data
 
         # faulty attributes will not trigger a service call
         common.turn_on(
@@ -263,10 +259,10 @@ class TestLight(unittest.TestCase):
         self.hass.block_till_done()
 
         _, data = dev1.last_call('turn_on')
-        self.assertEqual({}, data)
+        assert {} == data
 
         _, data = dev2.last_call('turn_on')
-        self.assertEqual({}, data)
+        assert {} == data
 
     def test_broken_light_profiles(self):
         """Test light profiles."""
@@ -280,8 +276,8 @@ class TestLight(unittest.TestCase):
             user_file.write('id,x,y,brightness\n')
             user_file.write('I,WILL,NOT,WORK\n')
 
-        self.assertFalse(setup_component(
-            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert not setup_component(
+            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
     def test_light_profiles(self):
         """Test light profiles."""
@@ -294,9 +290,9 @@ class TestLight(unittest.TestCase):
             user_file.write('id,x,y,brightness\n')
             user_file.write('test,.4,.6,100\n')
 
-        self.assertTrue(setup_component(
+        assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
-        ))
+        )
 
         dev1, _, _ = platform.DEVICES
 
@@ -306,10 +302,10 @@ class TestLight(unittest.TestCase):
 
         _, data = dev1.last_call('turn_on')
 
-        self.assertEqual({
+        assert {
             light.ATTR_HS_COLOR: (71.059, 100),
             light.ATTR_BRIGHTNESS: 100
-        }, data)
+        } == data
 
     def test_default_profiles_group(self):
         """Test default turn-on light profile for all lights."""
@@ -335,19 +331,19 @@ class TestLight(unittest.TestCase):
         with mock.patch('os.path.isfile', side_effect=_mock_isfile):
             with mock.patch('builtins.open', side_effect=_mock_open):
                 with mock_storage():
-                    self.assertTrue(setup_component(
+                    assert setup_component(
                         self.hass, light.DOMAIN,
                         {light.DOMAIN: {CONF_PLATFORM: 'test'}}
-                    ))
+                    )
 
         dev, _, _ = platform.DEVICES
         common.turn_on(self.hass, dev.entity_id)
         self.hass.block_till_done()
         _, data = dev.last_call('turn_on')
-        self.assertEqual({
+        assert {
             light.ATTR_HS_COLOR: (71.059, 100),
             light.ATTR_BRIGHTNESS: 99
-        }, data)
+        } == data
 
     def test_default_profiles_light(self):
         """Test default turn-on light profile for a specific light."""
@@ -374,20 +370,20 @@ class TestLight(unittest.TestCase):
         with mock.patch('os.path.isfile', side_effect=_mock_isfile):
             with mock.patch('builtins.open', side_effect=_mock_open):
                 with mock_storage():
-                    self.assertTrue(setup_component(
+                    assert setup_component(
                         self.hass, light.DOMAIN,
                         {light.DOMAIN: {CONF_PLATFORM: 'test'}}
-                    ))
+                    )
 
         dev = next(filter(lambda x: x.entity_id == 'light.ceiling_2',
                           platform.DEVICES))
         common.turn_on(self.hass, dev.entity_id)
         self.hass.block_till_done()
         _, data = dev.last_call('turn_on')
-        self.assertEqual({
+        assert {
             light.ATTR_HS_COLOR: (50.353, 100),
             light.ATTR_BRIGHTNESS: 100
-        }, data)
+        } == data
 
 
 async def test_intent_set_color(hass):

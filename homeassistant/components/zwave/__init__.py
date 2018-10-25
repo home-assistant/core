@@ -66,7 +66,7 @@ DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
-SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'fan',
+SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover', 'fan',
                        'light', 'sensor', 'switch']
 
 RENAME_NODE_SCHEMA = vol.Schema({
@@ -387,7 +387,7 @@ async def async_setup_entry(hass, config_entry):
     def network_complete_some_dead():
         """Handle the querying of all nodes on network."""
         _LOGGER.info("Z-Wave network is complete. All nodes on the network "
-                     "have been queried, but some node are marked dead")
+                     "have been queried, but some nodes are marked dead")
         hass.bus.fire(const.EVENT_NETWORK_COMPLETE_SOME_DEAD)
 
     dispatcher.connect(

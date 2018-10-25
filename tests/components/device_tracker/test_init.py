@@ -25,6 +25,7 @@ from homeassistant.helpers.json import JSONEncoder
 from tests.common import (
     get_test_home_assistant, fire_time_changed,
     patch_yaml_files, assert_setup_component, mock_restore_cache)
+import pytest
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
 
@@ -57,11 +58,11 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         self.hass.states.set(entity_id, STATE_HOME)
 
-        self.assertTrue(device_tracker.is_on(self.hass, entity_id))
+        assert device_tracker.is_on(self.hass, entity_id)
 
         self.hass.states.set(entity_id, STATE_NOT_HOME)
 
-        self.assertFalse(device_tracker.is_on(self.hass, entity_id))
+        assert not device_tracker.is_on(self.hass, entity_id)
 
     # pylint: disable=no-self-use
     def test_reading_broken_yaml_config(self):
@@ -103,13 +104,13 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                    TEST_PLATFORM)
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             device.consider_home)[0]
-        self.assertEqual(device.dev_id, config.dev_id)
-        self.assertEqual(device.track, config.track)
-        self.assertEqual(device.mac, config.mac)
-        self.assertEqual(device.config_picture, config.config_picture)
-        self.assertEqual(device.away_hide, config.away_hide)
-        self.assertEqual(device.consider_home, config.consider_home)
-        self.assertEqual(device.icon, config.icon)
+        assert device.dev_id == config.dev_id
+        assert device.track == config.track
+        assert device.mac == config.mac
+        assert device.config_picture == config.config_picture
+        assert device.away_hide == config.away_hide
+        assert device.consider_home == config.consider_home
+        assert device.icon == config.icon
 
     # pylint: disable=invalid-name
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
@@ -157,7 +158,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             'AB:CD:EF:GH:IJ', 'Test name', gravatar='test@example.com')
         gravatar_url = ("https://www.gravatar.com/avatar/"
                         "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
-        self.assertEqual(device.config_picture, gravatar_url)
+        assert device.config_picture == gravatar_url
 
     def test_gravatar_and_picture(self):
         """Test that Gravatar overrides picture."""
@@ -168,7 +169,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             gravatar='test@example.com')
         gravatar_url = ("https://www.gravatar.com/avatar/"
                         "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
-        self.assertEqual(device.config_picture, gravatar_url)
+        assert device.config_picture == gravatar_url
 
     @patch(
         'homeassistant.components.device_tracker.DeviceTracker.see')
@@ -206,8 +207,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                     }})
                 self.hass.block_till_done()
 
-        self.assertEqual(STATE_HOME,
-                         self.hass.states.get('device_tracker.dev1').state)
+        assert STATE_HOME == \
+            self.hass.states.get('device_tracker.dev1').state
 
         scanner.leave_home('DEV1')
 
@@ -216,8 +217,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             fire_time_changed(self.hass, scan_time)
             self.hass.block_till_done()
 
-        self.assertEqual(STATE_NOT_HOME,
-                         self.hass.states.get('device_tracker.dev1').state)
+        assert STATE_NOT_HOME == \
+            self.hass.states.get('device_tracker.dev1').state
 
     def test_entity_attributes(self):
         """Test the entity attributes."""
@@ -238,9 +239,9 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         attrs = self.hass.states.get(entity_id).attributes
 
-        self.assertEqual(friendly_name, attrs.get(ATTR_FRIENDLY_NAME))
-        self.assertEqual(icon, attrs.get(ATTR_ICON))
-        self.assertEqual(picture, attrs.get(ATTR_ENTITY_PICTURE))
+        assert friendly_name == attrs.get(ATTR_FRIENDLY_NAME)
+        assert icon == attrs.get(ATTR_ICON)
+        assert picture == attrs.get(ATTR_ENTITY_PICTURE)
 
     def test_device_hidden(self):
         """Test hidden devices."""
@@ -258,8 +259,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             assert setup_component(self.hass, device_tracker.DOMAIN,
                                    TEST_PLATFORM)
 
-        self.assertTrue(self.hass.states.get(entity_id)
-                        .attributes.get(ATTR_HIDDEN))
+        assert self.hass.states.get(entity_id) \
+                        .attributes.get(ATTR_HIDDEN)
 
     def test_group_all_devices(self):
         """Test grouping of devices."""
@@ -279,10 +280,9 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get(device_tracker.ENTITY_ID_ALL_DEVICES)
-        self.assertIsNotNone(state)
-        self.assertEqual(STATE_NOT_HOME, state.state)
-        self.assertSequenceEqual((entity_id,),
-                                 state.attributes.get(ATTR_ENTITY_ID))
+        assert state is not None
+        assert STATE_NOT_HOME == state.state
+        assert (entity_id,) == state.attributes.get(ATTR_ENTITY_ID)
 
     @patch('homeassistant.components.device_tracker.DeviceTracker.async_see')
     def test_see_service(self, mock_see):
@@ -302,8 +302,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         device_tracker.see(self.hass, **params)
         self.hass.block_till_done()
         assert mock_see.call_count == 1
-        self.assertEqual(mock_see.call_count, 1)
-        self.assertEqual(mock_see.call_args, call(**params))
+        assert mock_see.call_count == 1
+        assert mock_see.call_args == call(**params)
 
         mock_see.reset_mock()
         params['dev_id'] += chr(233)  # e' acute accent from icloud
@@ -311,8 +311,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         device_tracker.see(self.hass, **params)
         self.hass.block_till_done()
         assert mock_see.call_count == 1
-        self.assertEqual(mock_see.call_count, 1)
-        self.assertEqual(mock_see.call_args, call(**params))
+        assert mock_see.call_count == 1
+        assert mock_see.call_args == call(**params)
 
     def test_new_device_event_fired(self):
         """Test that the device tracker will fire an event."""
@@ -375,8 +375,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_see_state(self):
         """Test device tracker see records state correctly."""
-        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
-                                        TEST_PLATFORM))
+        assert setup_component(self.hass, device_tracker.DOMAIN,
+                               TEST_PLATFORM)
 
         params = {
             'mac': 'AA:BB:CC:DD:EE:FF',
@@ -401,17 +401,17 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         state = self.hass.states.get('device_tracker.examplecom')
         attrs = state.attributes
-        self.assertEqual(state.state, 'Work')
-        self.assertEqual(state.object_id, 'examplecom')
-        self.assertEqual(state.name, 'example.com')
-        self.assertEqual(attrs['friendly_name'], 'example.com')
-        self.assertEqual(attrs['battery'], 100)
-        self.assertEqual(attrs['latitude'], 0.3)
-        self.assertEqual(attrs['longitude'], 0.8)
-        self.assertEqual(attrs['test'], 'test')
-        self.assertEqual(attrs['gps_accuracy'], 1)
-        self.assertEqual(attrs['source_type'], 'gps')
-        self.assertEqual(attrs['number'], 1)
+        assert state.state == 'Work'
+        assert state.object_id == 'examplecom'
+        assert state.name == 'example.com'
+        assert attrs['friendly_name'] == 'example.com'
+        assert attrs['battery'] == 100
+        assert attrs['latitude'] == 0.3
+        assert attrs['longitude'] == 0.8
+        assert attrs['test'] == 'test'
+        assert attrs['gps_accuracy'] == 1
+        assert attrs['source_type'] == 'gps'
+        assert attrs['number'] == 1
 
     def test_see_passive_zone_state(self):
         """Test that the device tracker sets gps for passive trackers."""
@@ -447,15 +447,15 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         state = self.hass.states.get('device_tracker.dev1')
         attrs = state.attributes
-        self.assertEqual(STATE_HOME, state.state)
-        self.assertEqual(state.object_id, 'dev1')
-        self.assertEqual(state.name, 'dev1')
-        self.assertEqual(attrs.get('friendly_name'), 'dev1')
-        self.assertEqual(attrs.get('latitude'), 1)
-        self.assertEqual(attrs.get('longitude'), 2)
-        self.assertEqual(attrs.get('gps_accuracy'), 0)
-        self.assertEqual(attrs.get('source_type'),
-                         device_tracker.SOURCE_TYPE_ROUTER)
+        assert STATE_HOME == state.state
+        assert state.object_id == 'dev1'
+        assert state.name == 'dev1'
+        assert attrs.get('friendly_name') == 'dev1'
+        assert attrs.get('latitude') == 1
+        assert attrs.get('longitude') == 2
+        assert attrs.get('gps_accuracy') == 0
+        assert attrs.get('source_type') == \
+            device_tracker.SOURCE_TYPE_ROUTER
 
         scanner.leave_home('dev1')
 
@@ -466,15 +466,15 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         state = self.hass.states.get('device_tracker.dev1')
         attrs = state.attributes
-        self.assertEqual(STATE_NOT_HOME, state.state)
-        self.assertEqual(state.object_id, 'dev1')
-        self.assertEqual(state.name, 'dev1')
-        self.assertEqual(attrs.get('friendly_name'), 'dev1')
-        self.assertEqual(attrs.get('latitude'), None)
-        self.assertEqual(attrs.get('longitude'), None)
-        self.assertEqual(attrs.get('gps_accuracy'), None)
-        self.assertEqual(attrs.get('source_type'),
-                         device_tracker.SOURCE_TYPE_ROUTER)
+        assert STATE_NOT_HOME == state.state
+        assert state.object_id == 'dev1'
+        assert state.name == 'dev1'
+        assert attrs.get('friendly_name') == 'dev1'
+        assert attrs.get('latitude')is None
+        assert attrs.get('longitude')is None
+        assert attrs.get('gps_accuracy')is None
+        assert attrs.get('source_type') == \
+            device_tracker.SOURCE_TYPE_ROUTER
 
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
     def test_see_failures(self, mock_warning):
@@ -486,7 +486,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         tracker.see(mac=567, host_name="Number MAC")
 
         # No device id or MAC(not added)
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             run_coroutine_threadsafe(
                 tracker.async_see(), self.hass.loop).result()
         assert mock_warning.call_count == 0

@@ -169,8 +169,8 @@ class TestDialogflow(unittest.TestCase):
         }
 
         req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        self.assertEqual("", req.text)
+        assert 200 == req.status_code
+        assert "" == req.text
 
     def test_intent_slot_filling(self):
         """Test when Dialogflow asks for slot-filling return none."""
@@ -238,8 +238,8 @@ class TestDialogflow(unittest.TestCase):
         }
 
         req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        self.assertEqual("", req.text)
+        assert 200 == req.status_code
+        assert "" == req.text
 
     def test_intent_request_with_parameters(self):
         """Test a request with parameters."""
@@ -281,9 +281,9 @@ class TestDialogflow(unittest.TestCase):
             "originalRequest": None
         }
         req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
+        assert 200 == req.status_code
         text = req.json().get("speech")
-        self.assertEqual("You told us your sign is virgo.", text)
+        assert "You told us your sign is virgo." == text
 
     def test_intent_request_with_parameters_but_empty(self):
         """Test a request with parameters but empty value."""
@@ -325,9 +325,9 @@ class TestDialogflow(unittest.TestCase):
             "originalRequest": None
         }
         req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
+        assert 200 == req.status_code
         text = req.json().get("speech")
-        self.assertEqual("You told us your sign is .", text)
+        assert "You told us your sign is ." == text
 
     def test_intent_request_without_slots(self):
         """Test a request without slots."""
@@ -367,19 +367,19 @@ class TestDialogflow(unittest.TestCase):
             "originalRequest": None
         }
         req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
+        assert 200 == req.status_code
         text = req.json().get("speech")
 
-        self.assertEqual("Anne Therese is at unknown and Paulus is at unknown",
-                         text)
+        assert "Anne Therese is at unknown and Paulus is at unknown" == \
+            text
 
         hass.states.set("device_tracker.paulus", "home")
         hass.states.set("device_tracker.anne_therese", "home")
 
         req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
+        assert 200 == req.status_code
         text = req.json().get("speech")
-        self.assertEqual("You are both home, you silly", text)
+        assert "You are both home, you silly" == text
 
     def test_intent_request_calling_service(self):
         """Test a request for calling a service.
@@ -426,13 +426,13 @@ class TestDialogflow(unittest.TestCase):
         }
         call_count = len(calls)
         req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        self.assertEqual(call_count + 1, len(calls))
+        assert 200 == req.status_code
+        assert call_count + 1 == len(calls)
         call = calls[-1]
-        self.assertEqual("test", call.domain)
-        self.assertEqual("dialogflow", call.service)
-        self.assertEqual(["switch.test"], call.data.get("entity_id"))
-        self.assertEqual("virgo", call.data.get("hello"))
+        assert "test" == call.domain
+        assert "dialogflow" == call.service
+        assert ["switch.test"] == call.data.get("entity_id")
+        assert "virgo" == call.data.get("hello")
 
     def test_intent_with_no_action(self):
         """Test an intent with no defined action."""
@@ -474,10 +474,10 @@ class TestDialogflow(unittest.TestCase):
             "originalRequest": None
         }
         req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
+        assert 200 == req.status_code
         text = req.json().get("speech")
-        self.assertEqual(
-            "You have not defined an action in your Dialogflow intent.", text)
+        assert \
+            "You have not defined an action in your Dialogflow intent." == text
 
     def test_intent_with_unknown_action(self):
         """Test an intent with an action not defined in the conf."""
@@ -519,7 +519,7 @@ class TestDialogflow(unittest.TestCase):
             "originalRequest": None
         }
         req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
+        assert 200 == req.status_code
         text = req.json().get("speech")
-        self.assertEqual(
-            "This intent is not yet configured within Home Assistant.", text)
+        assert \
+            "This intent is not yet configured within Home Assistant." == text

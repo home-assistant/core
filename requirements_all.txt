@@ -31,7 +31,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.0.0
 
 # homeassistant.components.homekit
-HAP-python==2.2.2
+HAP-python==2.3.0
 
 # homeassistant.components.notify.mastodon
 Mastodon.py==1.3.1
@@ -472,7 +472,7 @@ hole==0.3.0
 holidays==0.9.8
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181023.0
+home-assistant-frontend==20181024.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -1383,9 +1383,7 @@ smappy==0.2.16
 # smbus-cffi==0.5.1
 
 # homeassistant.components.smhi
-# homeassistant.components.smhi.config_flow
-# homeassistant.components.weather.smhi
-smhi-pkg==1.0.4
+smhi-pkg==1.0.5
 
 # homeassistant.components.media_player.snapcast
 snapcast==2.0.9
