@@ -81,6 +81,9 @@ class _DisplayCategory:
     # Indicates light sources or fixtures.
     LIGHT = "LIGHT"
 
+    # Indicates an endpoint that detects and reports motion.
+    MOTION_SENSOR = "MOTION_SENSOR"
+
     # An endpoint that cannot be described in on of the other categories.
     OTHER = "OTHER"
 
@@ -441,6 +444,29 @@ class _AlexaContactSensor(_AlexaInterface):
         return 'NOT_DETECTED'
 
 
+class _AlexaMotionSensor(_AlexaInterface):
+    def __init__(self, hass, entity):
+        _AlexaInterface.__init__(self, entity)
+        self.hass = hass
+
+    def name(self):
+        return 'Alexa.MotionSensor'
+
+    def properties_supported(self):
+        return [{'name': 'detectionState'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'detectionState':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.state == STATE_ON:
+            return 'DETECTED'
+        return 'NOT_DETECTED'
+
+
 class _AlexaThermostatController(_AlexaInterface):
     def __init__(self, hass, entity):
         _AlexaInterface.__init__(self, entity)
@@ -655,16 +681,21 @@ class _SensorCapabilities(_AlexaEntity):
 @ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
 class _BinarySensorCapabilities(_AlexaEntity):
     TYPE_CONTACT = 'contact'
+    TYPE_MOTION = 'motion'
 
     def default_display_categories(self):
         sensor_type = self.get_type()
         if sensor_type is self.TYPE_CONTACT:
             return [_DisplayCategory.CONTACT_SENSOR]
+        elif sensor_type is self.TYPE_MOTION:
+            return [_DisplayCategory.MOTION_SENSOR]
 
     def interfaces(self):
         sensor_type = self.get_type()
         if sensor_type is self.TYPE_CONTACT:
             yield _AlexaContactSensor(self.hass, self.entity)
+        elif sensor_type is self.TYPE_MOTION:
+            yield _AlexaMotionSensor(self.hass, self.entity)
 
     def get_type(self):
         """Return the type of binary sensor."""
@@ -676,6 +707,8 @@ class _BinarySensorCapabilities(_AlexaEntity):
                 'window',
         ):
             return self.TYPE_CONTACT
+        elif attrs.get(ATTR_DEVICE_CLASS) is 'motion':
+            return self.TYPE_MOTION
 
 
 class _Cause:
