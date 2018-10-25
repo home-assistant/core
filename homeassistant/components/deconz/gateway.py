@@ -57,7 +57,7 @@ class DeconzGateway:
 
         self.listeners.append(
             async_dispatcher_connect(
-                self.hass, 'deconz_new_sensor', self.async_add_remote))
+                hass, 'deconz_new_sensor', self.async_add_remote))
 
         self.async_add_remote(self.api.sensors.values())
 
@@ -104,10 +104,6 @@ class DeconzGateway:
             self._cancel_retry_setup = None
             return True
 
-        # If the authentication was wrong.
-        if not self.api:
-            return True
-
         self.api.close()
 
         for component in SUPPORTED_PLATFORMS:
@@ -122,7 +118,7 @@ class DeconzGateway:
             event.async_will_remove_from_hass()
             self.events.remove(event)
 
-        self.deconz_ids = []
+        self.deconz_ids = {}
         return True
 
 
