@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['meteofrance==0.2.0']
+REQUIREMENTS = ['meteofrance==0.2.2']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by Meteo-France"
@@ -82,23 +82,28 @@ class MeteoFranceSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._data[self._condition] is not False:
+        try:
             return self._data[self._condition]
+        except KeyError:
+            _LOGGER.error("No result for the monitored condition `{}`".format(self._condition))
         return None
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._condition == 'next_rain':
-            return {
-                **{
-                    STATE_ATTR_FORECAST: self._data["rain_forecast"],
-                },
-                ** self._data["next_rain_intervals"],
-                **{
-                    ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+            try:
+                return {
+                    **{
+                        STATE_ATTR_FORECAST: self._data["rain_forecast"],
+                    },
+                    ** self._data["next_rain_intervals"],
+                    **{
+                        ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+                    }
                 }
-            }
+            except KeyError:
+                _LOGGER.error("No result for the monitored condition `{}`".format(self._condition))
         return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
 
     @property
