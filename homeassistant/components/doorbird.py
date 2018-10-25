@@ -132,6 +132,7 @@ def setup(hass, config):
 
     return True
 
+
 def get_doorstation_by_slug(hass, slug):
     """Get doorstation by slug"""
     for doorstation in hass.data[DOMAIN]:
@@ -142,6 +143,7 @@ def get_doorstation_by_slug(hass, slug):
 def handle_event(event):
     """Dummy handler used to register events in GUI"""
     return None
+
 
 class ConfiguredDoorBird(object):
     """Attach additional information to pass along with configured device."""
@@ -370,5 +372,3 @@ class DoorBirdCleanupView(HomeAssistantView):
 
         message = 'Clearing schedule for {}'.format(slug)
         return web.Response(status=200, text=message)
-
-
