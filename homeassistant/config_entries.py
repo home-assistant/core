@@ -151,6 +151,7 @@ FLOWS = [
     'smhi',
     'sonos',
     'tradfri',
+    'twilio',
     'unifi',
     'upnp',
     'zone',
