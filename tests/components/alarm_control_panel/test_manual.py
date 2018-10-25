@@ -3,18 +3,17 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch, MagicMock
 from homeassistant.components.alarm_control_panel import demo
-
-
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.components import alarm_control_panel
 import homeassistant.util.dt as dt_util
-
-from tests.common import fire_time_changed, get_test_home_assistant
+from tests.common import (fire_time_changed, get_test_home_assistant,
+                          mock_component, mock_restore_cache)
 from tests.components.alarm_control_panel import common
+from homeassistant.core import State, CoreState
 
 CODE = 'HELLO_CODE'
 
@@ -1319,3 +1318,49 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
         state = self.hass.states.get(entity_id)
         assert STATE_ALARM_TRIGGERED == state.state
+
+
+async def test_restore_armed_state(hass):
+    """Ensure armed state is restored on startup."""
+    mock_restore_cache(hass, (
+        State('alarm_control_panel.test', STATE_ALARM_ARMED_AWAY),
+        ))
+
+    hass.state = CoreState.starting
+    mock_component(hass, 'recorder')
+
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, {
+        'alarm_control_panel': {
+            'platform': 'manual',
+            'name': 'test',
+            'pending_time': 0,
+            'trigger_time': 0,
+            'disarm_after_trigger': False
+        }})
+
+    state = hass.states.get('alarm_control_panel.test')
+    assert state
+    assert state.state == STATE_ALARM_ARMED_AWAY
+
+
+async def test_restore_disarmed_state(hass):
+    """Ensure disarmed state is restored on startup."""
+    mock_restore_cache(hass, (
+        State('alarm_control_panel.test', STATE_ALARM_DISARMED),
+        ))
+
+    hass.state = CoreState.starting
+    mock_component(hass, 'recorder')
+
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, {
+        'alarm_control_panel': {
+            'platform': 'manual',
+            'name': 'test',
+            'pending_time': 0,
+            'trigger_time': 0,
+            'disarm_after_trigger': False
+        }})
+
+    state = hass.states.get('alarm_control_panel.test')
+    assert state
+    assert state.state == STATE_ALARM_DISARMED
