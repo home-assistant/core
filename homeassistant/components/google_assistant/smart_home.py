@@ -213,7 +213,7 @@ async def _process(hass, config, message):
             'requestId': request_id,
             'payload': {'errorCode': err.code}
         }
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.exception('Unexpected error')
         return {
             'requestId': request_id,
