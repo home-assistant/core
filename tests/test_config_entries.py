@@ -56,12 +56,14 @@ async def test_remove_entry(hass, manager):
         assert result
         return result
 
+    entity = MockEntity(
+        unique_id='1234',
+        name='Test Entity',
+    )
+
     async def mock_setup_entry_platform(hass, entry, async_add_entities):
         """Mock setting up platform."""
-        async_add_entities([MockEntity(
-            unique_id='1234',
-            name='Test Entity',
-        )])
+        async_add_entities([entity])
 
     loader.set_component(hass, 'test', MockModule(
         'test',
