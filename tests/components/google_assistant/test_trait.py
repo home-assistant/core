@@ -3,7 +3,7 @@ import pytest
 
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES)
 from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.components import (
     climate,
@@ -15,6 +15,7 @@ from homeassistant.components import (
     scene,
     script,
     switch,
+    vacuum,
 )
 from homeassistant.components.google_assistant import trait, helpers, const
 from homeassistant.util import color
@@ -354,6 +355,75 @@ async def test_onoff_media_player(hass):
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'media_player.bla',
+    }
+
+
+async def test_dock_vacuum(hass):
+    """Test dock trait support for vacuum domain."""
+    assert trait.DockTrait.supported(vacuum.DOMAIN, 0)
+
+    trt = trait.DockTrait(hass, State('vacuum.bla', vacuum.STATE_IDLE))
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {
+        'isDocked': False
+    }
+
+    calls = async_mock_service(hass, vacuum.DOMAIN,
+                               vacuum.SERVICE_RETURN_TO_BASE)
+    await trt.execute(trait.COMMAND_DOCK, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'vacuum.bla',
+    }
+
+
+async def test_startstop_vacuum(hass):
+    """Test startStop trait support for vacuum domain."""
+    assert trait.StartStopTrait.supported(vacuum.DOMAIN, 0)
+
+    trt = trait.StartStopTrait(hass, State('vacuum.bla', vacuum.STATE_PAUSED, {
+        ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_PAUSE,
+    }))
+
+    assert trt.sync_attributes() == {'pausable': True}
+
+    assert trt.query_attributes() == {
+        'isRunning': False,
+        'isPaused': True
+    }
+
+    start_calls = async_mock_service(hass, vacuum.DOMAIN,
+                                     vacuum.SERVICE_START)
+    await trt.execute(trait.COMMAND_STARTSTOP, {'start': True})
+    assert len(start_calls) == 1
+    assert start_calls[0].data == {
+        ATTR_ENTITY_ID: 'vacuum.bla',
+    }
+
+    stop_calls = async_mock_service(hass, vacuum.DOMAIN,
+                                    vacuum.SERVICE_STOP)
+    await trt.execute(trait.COMMAND_STARTSTOP, {'start': False})
+    assert len(stop_calls) == 1
+    assert stop_calls[0].data == {
+        ATTR_ENTITY_ID: 'vacuum.bla',
+    }
+
+    pause_calls = async_mock_service(hass, vacuum.DOMAIN,
+                                     vacuum.SERVICE_PAUSE)
+    await trt.execute(trait.COMMAND_PAUSEUNPAUSE, {'pause': True})
+    assert len(pause_calls) == 1
+    assert pause_calls[0].data == {
+        ATTR_ENTITY_ID: 'vacuum.bla',
+    }
+
+    unpause_calls = async_mock_service(hass, vacuum.DOMAIN,
+                                       vacuum.SERVICE_START)
+    await trt.execute(trait.COMMAND_PAUSEUNPAUSE, {'pause': False})
+    assert len(unpause_calls) == 1
+    assert unpause_calls[0].data == {
+        ATTR_ENTITY_ID: 'vacuum.bla',
     }
 
 
