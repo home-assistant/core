@@ -10,6 +10,7 @@ CONF_BINARY_SENSOR = 'binary_sensor'
 CONF_LIGHT = 'light'
 CONF_SENSOR = 'sensor'
 CONF_SWITCH = 'switch'
+CONF_SECONDARY = 'secondary'
 
 ATTR_IHC_ID = 'ihc_id'
 ATTR_VALUE = 'value'

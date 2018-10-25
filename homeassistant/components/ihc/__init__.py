@@ -26,20 +26,36 @@ from homeassistant.helpers.typing import HomeAssistantType
 REQUIREMENTS = ['ihcsdk==2.2.0']
 
 DOMAIN = 'ihc'
-IHC_DATA = 'ihc'
+IHC_DATA = 'ihc{}'
 IHC_CONTROLLER = 'controller'
 IHC_INFO = 'info'
 AUTO_SETUP_YAML = 'ihc_auto_setup.yaml'
+CONF_CONTROLLER2 = 'secondary'
+CONTROLLER_ID = [2,1]
+PRIMARY = True
+SECONDARY = False
+
+
+IHC_SCHEMA = vol.Schema({
+    vol.Required(CONF_URL): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
+    vol.Optional(CONF_INFO, default=True): cv.boolean,    
+    vol.Optional(CONF_CONTROLLER2):
+        vol.All({
+            vol.Required(CONF_URL): cv.string,
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
+            vol.Optional(CONF_INFO, default=True): cv.boolean,    
+        }),
+}, extra=vol.ALLOW_EXTRA)    
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_URL): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
-        vol.Optional(CONF_INFO, default=True): cv.boolean,
-    }),
+    DOMAIN: IHC_SCHEMA
 }, extra=vol.ALLOW_EXTRA)
+
 
 AUTO_SETUP_SCHEMA = vol.Schema({
     vol.Optional(CONF_BINARY_SENSOR, default=[]):
@@ -99,30 +115,41 @@ IHC_PLATFORMS = ('binary_sensor', 'light', 'sensor', 'switch')
 
 def setup(hass, config):
     """Set up the IHC component."""
-    from ihcsdk.ihccontroller import IHCController
     conf = config[DOMAIN]
+    ihc_status = ihc_setup(hass, config, conf, CONTROLLER_ID[PRIMARY])
+    
+    """Setup optional secondary controller."""
+    if ihc_status and CONF_CONTROLLER2 in conf:
+        conf2 = conf[CONF_CONTROLLER2]
+        ihc_status = ihc_setup(hass, config, conf2, CONTROLLER_ID[SECONDARY]) 
+    return ihc_status
+    
+
+def ihc_setup(hass, config, conf, controller_id):
+    from ihcsdk.ihccontroller import IHCController
+    
     url = conf[CONF_URL]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
+    
     ihc_controller = IHCController(url, username, password)
-
     if not ihc_controller.authenticate():
         _LOGGER.error("Unable to authenticate on IHC controller")
         return False
 
     if (conf[CONF_AUTOSETUP] and
-            not autosetup_ihc_products(hass, config, ihc_controller)):
+            not autosetup_ihc_products(hass, config, ihc_controller,controller_id)):
         return False
 
-    hass.data[IHC_DATA] = {
+    ihc_key = IHC_DATA.format(controller_id)
+    hass.data[ihc_key] = {
         IHC_CONTROLLER: ihc_controller,
         IHC_INFO: conf[CONF_INFO]}
-
     setup_service_functions(hass, ihc_controller)
+
     return True
 
-
-def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller):
+def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller, controller_id):
     """Auto setup of IHC products from the IHC project file."""
     project_xml = ihc_controller.get_project()
     if not project_xml:
@@ -143,14 +170,14 @@ def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller):
     groups = project.findall('.//group')
     for component in IHC_PLATFORMS:
         component_setup = auto_setup_conf[component]
-        discovery_info = get_discovery_info(component_setup, groups)
+        discovery_info = get_discovery_info(component_setup, groups, controller_id)
         if discovery_info:
             discovery.load_platform(hass, component, DOMAIN, discovery_info,
                                     config)
     return True
 
 
-def get_discovery_info(component_setup, groups):
+def get_discovery_info(component_setup, groups, controller_id):
     """Get discovery info for specified IHC component."""
     discovery_data = {}
     for group in groups:
@@ -167,6 +194,7 @@ def get_discovery_info(component_setup, groups):
                     name = '{}_{}'.format(groupname, ihc_id)
                     device = {
                         'ihc_id': ihc_id,
+                        'ctrl_id': controller_id,
                         'product': {
                             'name': product.attrib['name'],
                             'note': product.attrib['note'],
