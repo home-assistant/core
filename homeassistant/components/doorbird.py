@@ -22,10 +22,11 @@ DOMAIN = 'doorbird'
 
 API_URL = '/api/{}'.format(DOMAIN)
 
-CONF_DOORBELL_EVENTS = 'doorbell_events'
-CONF_MOTION_EVENTS = 'motion_events'
 CONF_CUSTOM_URL = 'hass_url_override'
+CONF_DOORBELL_EVENTS = 'doorbell_events'
 CONF_DOORBELL_NUMS = 'doorbell_numbers'
+CONF_MOTION_EVENTS = 'motion_events'
+CONF_TOKEN = 'token'
 
 SENSOR_TYPES = {
     'doorbell': {
@@ -54,6 +55,7 @@ DEVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
+        vol.Required(CONF_TOKEN): cv.string,
         vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -63,11 +65,13 @@ def setup(hass, config):
     """Set up the DoorBird component."""
     from doorbirdpy import DoorBird
 
+    token = config[DOMAIN].get(CONF_TOKEN)
+
     # Provide an endpoint for the doorstations to call to trigger events
-    hass.http.register_view(DoorBirdRequestView())
+    hass.http.register_view(DoorBirdRequestView(token))
 
     # Provide an endpoint for the user to call to clear device changes
-    hass.http.register_view(DoorBirdCleanupView())
+    hass.http.register_view(DoorBirdCleanupView(token))
 
     doorstations = []
 
@@ -86,7 +90,7 @@ def setup(hass, config):
 
         if status[0]:
             doorstation = ConfiguredDoorBird(device, name, events, custom_url,
-                                             doorbell_nums)
+                                             doorbell_nums, token)
             doorstations.append(doorstation)
             _LOGGER.info('Connected to DoorBird "%s" as %s@%s',
                          doorstation.name, username, device_ip)
@@ -142,13 +146,14 @@ def handle_event(event):
 class ConfiguredDoorBird(object):
     """Attach additional information to pass along with configured device."""
 
-    def __init__(self, device, name, events, custom_url, doorbell_nums):
+    def __init__(self, device, name, events, custom_url, doorbell_nums, token):
         """Initialize configured device."""
         self._name = name
         self._device = device
         self._custom_url = custom_url
         self._monitored_events = events
         self._doorbell_nums = doorbell_nums
+        self._token = token
 
     @property
     def name(self):
@@ -184,8 +189,9 @@ class ConfiguredDoorBird(object):
         for sensor_type in SENSOR_TYPES:
             name = '{} {}'.format(self.name, SENSOR_TYPES[sensor_type]['name'])
             slug = slugify(name)
-            url = '{}{}/{}'.format(hass_url, API_URL, slug)
 
+            url = '{}{}/{}?token={}'.format(hass_url, API_URL, slug,
+                                            self._token)
             if sensor_type in self._monitored_events:
                 # Enabled -> register
                 self._register_event(url, sensor_type, schedule)
@@ -306,11 +312,22 @@ class DoorBirdRequestView(HomeAssistantView):
     name = API_URL[1:].replace('/', ':')
     extra_urls = [API_URL + '/{sensor}']
 
+    def __init__(self, token):
+        HomeAssistantView.__init__(self)
+        self._token = token
+
     # pylint: disable=no-self-use
     async def get(self, request, sensor):
         """Respond to requests from the device."""
         from aiohttp import web
         hass = request.app['hass']
+
+        request_token = request.query.get('token')
+
+        authenticated = request_token == self._token
+
+        if request_token == '' or not authenticated:
+            return web.Response(status=401, text='Unauthorized')
 
         hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor))
 
@@ -324,11 +341,22 @@ class DoorBirdCleanupView(HomeAssistantView):
     url = API_URL + '/clear/{slug}'
     name = 'DoorBird Cleanup'
 
+    def __init__(self, token):
+        HomeAssistantView.__init__(self)
+        self._token = token
+
     # pylint: disable=no-self-use
     async def get(self, request, slug):
         """Act on requests."""
         from aiohttp import web
         hass = request.app['hass']
+
+        request_token = request.query.get('token')
+
+        authenticated = request_token == self._token
+
+        if request_token == '' or not authenticated:
+            return web.Response(status=401, text='Unauthorized')
 
         device = get_doorstation_by_slug(hass, slug)
 
