@@ -80,27 +80,46 @@ async def test_remove_entry(hass, manager):
     entry.add_to_manager(manager)
     MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
 
+    # Check all config entries exist
     assert [item.entry_id for item in manager.async_entries()] == \
         ['test1', 'test2', 'test3']
 
+    # Setup entry
     await entry.async_setup(hass)
     await hass.async_block_till_done()
+
+    # Check entity state got added
     assert hass.states.get('light.test_entity') is not None
     # Group all_lights, light.test_entity
     assert len(hass.states.async_all()) == 2
 
+    # Check entity got added to entity registry
+    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    assert len(ent_reg.entities) == 1
+    entity_entry = list(ent_reg.entities.values())[0]
+    assert entity_entry.config_entry_id == entry.entry_id
+
+    # Remove entry
     result = await manager.async_remove('test2')
     await hass.async_block_till_done()
 
+    # Check that unload went well and so no need to restart
     assert result == {
         'require_restart': False
     }
+
+    # Check that config entry was removed.
     assert [item.entry_id for item in manager.async_entries()] == \
         ['test1', 'test3']
 
+    # Check that entity state has been removed
     assert hass.states.get('light.test_entity') is None
     # Just Group all_lights
     assert len(hass.states.async_all()) == 1
+
+    # Check that entity registry entry no longer references config_entry_id
+    entity_entry = list(ent_reg.entities.values())[0]
+    assert entity_entry.config_entry_id is None
 
 
 @asyncio.coroutine
