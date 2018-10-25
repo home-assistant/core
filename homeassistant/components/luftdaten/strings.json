@@ -3,9 +3,11 @@
     "title": "Luftdaten",
     "step": {
       "user": {
-        "title": "Fill in your information",
+        "title": "Define Luftdaten",
         "data": {
-          "station_id": "Luftdaten Sensor ID"
+          "station_id": "Luftdaten Sensor ID",
+          "show_on_map": "Show on map"
+
         }
       }
     },

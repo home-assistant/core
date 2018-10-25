@@ -10,12 +10,12 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL,
-    CONF_SENSORS, CONF_SHOW_ON_MAP, TEMP_CELSIUS)
+    CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL, CONF_SENSORS,
+    CONF_SHOW_ON_MAP, TEMP_CELSIUS)
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_sensors
@@ -29,9 +29,6 @@ DATA_LUFTDATEN = 'luftdaten'
 DATA_LUFTDATEN_CLIENT = 'data_luftdaten_client'
 DATA_LUFTDATEN_LISTENER = 'data_luftdaten_listener'
 DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
-
-NOTIFICATION_ID = 'luftdaten_notification'
-NOTIFICATION_TITLE = 'Luftdaten Component Setup'
 
 SENSOR_HUMIDITY = 'humidity'
 SENSOR_PM10 = 'P1'
@@ -83,7 +80,7 @@ async def async_setup(hass, config):
     station_id = conf.get(CONF_SENSOR_ID)
 
     if station_id not in configured_sensors(hass):
-        hass.async_add_job(
+        hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={'source': SOURCE_IMPORT},
@@ -112,19 +109,12 @@ async def async_setup_entry(hass, config_entry):
             Luftdaten(
                 config_entry.data[CONF_SENSOR_ID], hass.loop, session),
             config_entry.data.get(CONF_SENSORS, {}).get(
-                    CONF_MONITORED_CONDITIONS, list(SENSORS)))
+                CONF_MONITORED_CONDITIONS, list(SENSORS)))
         await luftdaten.async_update()
         hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT][config_entry.entry_id] = \
             luftdaten
-    except LuftdatenError as err:
-        _LOGGER.error("An error occurred: %s", str(err))
-        hass.components.persistent_notification.create(
-            'Error: {0}<br />'
-            'You will need to restart Home Assistant after fixing.'
-            ''.format(err),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
-        return False
+    except LuftdatenError:
+        raise ConfigEntryNotReady
 
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         config_entry, 'sensor'))
@@ -144,15 +134,15 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload an Luftdaten config entry."""
+    remove_listener = hass.data[DOMAIN][DATA_LUFTDATEN_LISTENER].pop(
+        config_entry.entry_id)
+    remove_listener()
+
     for component in ('sensor', ):
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
 
     hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT].pop(config_entry.entry_id)
-
-    remove_listener = hass.data[DOMAIN][DATA_LUFTDATEN_LISTENER].pop(
-        config_entry.entry_id)
-    remove_listener()
 
     return True
 
@@ -178,23 +168,3 @@ class LuftDatenData:
 
         except LuftdatenError:
             _LOGGER.error("Unable to retrieve data from luftdaten.info")
-
-
-class LuftDatenEntity(Entity):
-    """Define a generic Luftdaten entity."""
-
-    def __init__(self, luftdaten):
-        """Initialize an Luftdaten entity."""
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._name = None
-        self.luftdaten = luftdaten
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name

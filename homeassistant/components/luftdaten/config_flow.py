@@ -24,20 +24,17 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize the config flow."""
-        pass
-
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         data_schema = vol.Schema({
             vol.Required(CONF_SENSOR_ID): str,
+            vol.Optional(CONF_SHOW_ON_MAP): bool,
         })
 
         return self.async_show_form(
             step_id='user',
             data_schema=data_schema,
-            errors=errors if errors else {},
+            errors=errors or {}
         )
 
     async def async_step_import(self, import_config):
@@ -73,7 +70,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input.update({
             CONF_SCAN_INTERVAL: scan_interval.seconds,
-            CONF_SHOW_ON_MAP: False,
             CONF_SENSOR_ID: sensor_id,
         })
 

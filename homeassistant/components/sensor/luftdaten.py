@@ -7,12 +7,14 @@ https://home-assistant.io/components/sensor.luftdaten/
 import logging
 
 from homeassistant.components.luftdaten import (
-    DATA_LUFTDATEN, DATA_LUFTDATEN_CLIENT, DOMAIN, SENSORS, TOPIC_UPDATE,
-    LuftDatenEntity)
+    DATA_LUFTDATEN, DATA_LUFTDATEN_CLIENT, DEFAULT_ATTRIBUTION, DOMAIN,
+    SENSORS, TOPIC_UPDATE)
 from homeassistant.components.luftdaten.const import ATTR_SENSOR_ID
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,30 +36,28 @@ async def async_setup_entry(hass, entry, async_add_entities):
         name, icon, unit = SENSORS[sensor_type]
         sensors.append(
             LuftdatenSensor(
-                luftdaten, sensor_type, name, icon, unit, entry.entry_id,
+                luftdaten, sensor_type, name, icon, unit,
                 entry.data[CONF_SHOW_ON_MAP])
         )
 
     async_add_entities(sensors, True)
 
 
-class LuftdatenSensor(LuftDatenEntity):
+class LuftdatenSensor(Entity):
     """Implementation of a Luftdaten sensor."""
 
     def __init__(
-            self, luftdaten, sensor_type, name, icon, unit, entry_id, show):
+            self, luftdaten, sensor_type, name, icon, unit, show):
         """Initialize the Luftdaten sensor."""
-        super().__init__(luftdaten)
-
         self._async_unsub_dispatcher_connect = None
         self.luftdaten = luftdaten
-        self._entry_id = entry_id
         self._icon = icon
         self._name = name
         self._data = None
         self.sensor_type = sensor_type
         self._unit_of_measurement = unit
         self._show_on_map = show
+        self._attrs = {}
 
     @property
     def icon(self):
@@ -88,6 +88,7 @@ class LuftdatenSensor(LuftDatenEntity):
     def device_state_attributes(self):
         """Return the state attributes."""
         self._attrs[ATTR_SENSOR_ID] = self._data['sensor_id']
+        self._attrs[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
 
         on_map = ATTR_LATITUDE, ATTR_LONGITUDE
         no_map = 'lat', 'long'
