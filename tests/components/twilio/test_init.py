@@ -1,11 +1,14 @@
 """Test the init file of Twilio."""
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from homeassistant import data_entry_flow
 from homeassistant.components import twilio
 from homeassistant.core import callback
+from tests.common import MockDependency
 
 
+@MockDependency('twilio', 'rest')
+@MockDependency('twilio', 'twiml')
 async def test_config_flow_registers_webhook(hass, aiohttp_client):
     """Test setting up Twilio and sending webhook."""
     with patch('homeassistant.util.get_local_ip', return_value='example.com'):
