@@ -342,7 +342,6 @@ class AuthManager:
         """Create a new access token."""
         self._store.async_log_refresh_token_usage(refresh_token, remote_ip)
 
-        # pylint: disable=no-self-use
         now = dt_util.utcnow()
         return jwt.encode({
             'iss': refresh_token.id,
