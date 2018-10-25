@@ -74,6 +74,10 @@ class UnsupportedYamlError(HomeAssistantError):
     """Unsupported YAML."""
 
 
+class DuplicateIdError(HomeAssistantError):
+    """Duplicate ID's"""
+
+
 def save_yaml(fname: str, data: JSON_TYPE):
     """Save a YAML file."""
     from ruamel.yaml import YAML
@@ -134,19 +138,33 @@ def load_yaml(fname: str) -> JSON_TYPE:
 def load_config(fname: str) -> JSON_TYPE:
     """Load a YAML file and adds id to views and cards if not present."""
     config = load_yaml(fname)
-    # Check if all views and cards have an id or else add one
+    # Check if all views and cards have a unique id or else add one
     updated = False
+    seen_card_ids = set()
+    seen_view_ids = set()
     index = 0
     for view in config.get('views', []):
-        if 'id' not in view:
+        view_id = view.get('id')
+        if view_id is None:
             updated = True
             view.insert(0, 'id', index,
                         comment="Automatically created id")
+        else:
+            if view_id in seen_view_ids:
+                raise DuplicateIdError(
+                    'ID `{}` has multiple occurances in views'.format(view_id))
+            seen_view_ids.add(view_id)
         for card in view.get('cards', []):
-            if 'id' not in card:
+            card_id = card.get('id')
+            if card_id is None:
                 updated = True
                 card.insert(0, 'id', uuid.uuid4().hex,
                             comment="Automatically created id")
+            else:
+                if card_id in seen_card_ids:
+                    raise DuplicateIdError(
+                        'ID `{}` has multiple occurances in cards'.format(card_id))
+                seen_card_ids.add(card_id)
         index += 1
     if updated:
         save_yaml(fname, config)
@@ -187,7 +205,7 @@ def get_card(fname: str, card_id: str, data_format: str = FORMAT_YAML)\
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
-            if card.get('id') != card_id:
+            if str(card.get('id')) != card_id:
                 continue
             if data_format == FORMAT_YAML:
                 return object_to_yaml(card)
@@ -203,7 +221,7 @@ def update_card(fname: str, card_id: str, card_config: str,
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
-            if card.get('id') != card_id:
+            if str(card.get('id')) != card_id:
                 continue
             if data_format == FORMAT_YAML:
                 card_config = yaml_to_object(card_config)
@@ -220,7 +238,7 @@ def add_card(fname: str, view_id: str, card_config: str,
     """Add a card to a view."""
     config = load_yaml(fname)
     for view in config.get('views', []):
-        if view.get('id') != view_id:
+        if str(view.get('id')) != view_id:
             continue
         cards = view.get('cards', [])
         if data_format == FORMAT_YAML:
