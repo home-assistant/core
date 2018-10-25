@@ -361,15 +361,17 @@ class Entity:
             self._on_remove = []
         self._on_remove.append(func)
 
-    async def async_will_remove_from_hass(self):
-        """Do things when entity is removed from hass."""
+    async def async_remove(self):
+        """Remove entity from Home Assistant."""
+        will_remove = getattr(self, 'async_will_remove_from_hass', None)
+
+        if will_remove:
+            await will_remove()  # pylint: disable=not-callable
+
         if self._on_remove is not None:
             while self._on_remove:
                 self._on_remove.pop()()
 
-    async def async_remove(self):
-        """Remove entity from Home Assistant."""
-        await self.async_will_remove_from_hass()
         self.hass.states.async_remove(self.entity_id)
 
     @callback
