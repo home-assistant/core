@@ -887,11 +887,11 @@ async def test_wait_template_with_trigger(hass, calls):
     })
 
     await hass.async_block_till_done()
-    calls = []
 
     hass.states.async_set('test.entity', '12')
     await hass.async_block_till_done()
     hass.states.async_set('test.entity', '8')
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert 1 == len(calls)
     assert 'numeric_state - test.entity - 12' == \

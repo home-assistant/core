@@ -619,7 +619,6 @@ async def test_wait_template_with_trigger(hass, calls):
     })
 
     await hass.async_block_till_done()
-    calls = []
 
     hass.states.async_set('test.entity', 'world')
     await hass.async_block_till_done()

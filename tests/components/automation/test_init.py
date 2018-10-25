@@ -25,11 +25,6 @@ def calls(hass):
     return async_mock_service(hass, 'test', 'automation')
 
 
-@pytest.fixture(autouse=True)
-def setup_comp(hass):
-    mock_component(hass, 'group')
-
-
 async def test_service_data_not_a_dict(hass, calls):
     """Test service data not dict."""
     with assert_setup_component(0, automation.DOMAIN):
@@ -72,6 +67,7 @@ async def test_service_specify_data(hass, calls):
                return_value=time):
         hass.bus.async_fire('test_event')
         await hass.async_block_till_done()
+
     assert len(calls) == 1
     assert calls[0].data['some'] == 'event - test_event'
     state = hass.states.get('automation.hello')
@@ -235,10 +231,10 @@ async def test_trigger_service_ignoring_condition(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.services.async_call('automation', 'trigger',
-                             {'entity_id': 'automation.test'},
-                             blocking=True)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        'automation', 'trigger',
+        {'entity_id': 'automation.test'},
+        blocking=True)
     assert len(calls) == 1
 
 
