@@ -185,7 +185,7 @@ class EntityRegistry:
         for listener_ref in new.update_listeners:
             listener = listener_ref()
             if listener is None:
-                to_remove.append(listener)
+                to_remove.append(listener_ref)
             else:
                 try:
                     listener.async_registry_updated(old, new)
