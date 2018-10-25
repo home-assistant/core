@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_CLOSING, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_STANDBY, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMED_CUSTOM_BYPASS, STATE_ALARM_PENDING,
     STATE_ALARM_ARMING, STATE_ALARM_DISARMING, STATE_ALARM_TRIGGERED, STATE_LOCKED, STATE_UNLOCKED,
-    STATE_UNAVAILABLE, STATE_OK, STATE_PROBLEM)
+    STATE_UNAVAILABLE, STATE_OK, STATE_PROBLEM, ATTR_ASSUMED_STATE)
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import ais_cloud
 import homeassistant.components.mqtt as mqtt
@@ -1757,12 +1757,16 @@ class TurnOnIntent(intent.IntentHandler):
         else:
             # check if we can turn_on on this device
             if isSwitch(entity.entity_id):
-                if entity.state == 'on':
-                    # check if the device is already on
-                    message = 'Urządzenie ' + name + ' jest już włączone'
-                elif entity.state == 'unavailable':
-                    message = 'Urządzenie ' + name + ' jest niedostępne'
-                else:
+                assumed_state = entity.attributes.get(ATTR_ASSUMED_STATE, False)
+                if assumed_state is False:
+                    if entity.state == 'on':
+                        # check if the device is already on
+                        message = 'Urządzenie ' + name + ' jest już włączone'
+                    elif entity.state == 'unavailable':
+                        message = 'Urządzenie ' + name + ' jest niedostępne'
+                    else:
+                        assumed_state = True
+                if assumed_state:
                     yield from hass.services.async_call(
                         core.DOMAIN, SERVICE_TURN_ON, {
                             ATTR_ENTITY_ID: entity.entity_id,
@@ -1795,14 +1799,18 @@ class TurnOffIntent(intent.IntentHandler):
         else:
             # check if we can turn_off on this device
             if isSwitch(entity.entity_id):
-                # check if the device is already pff
-                if entity.state == 'off':
-                    msg = 'Urządzenie {} jest już wyłączone'.format(
-                        entity.name)
-                elif entity.state == 'unavailable':
-                    msg = 'Urządzenie {}} jest niedostępne'.format(
-                        entity.name)
-                else:
+                assumed_state = entity.attributes.get(ATTR_ASSUMED_STATE, False)
+                if assumed_state is False:
+                    # check if the device is already off
+                    if entity.state == 'off':
+                        msg = 'Urządzenie {} jest już wyłączone'.format(
+                            entity.name)
+                    elif entity.state == 'unavailable':
+                        msg = 'Urządzenie {}} jest niedostępne'.format(
+                            entity.name)
+                    else:
+                        assumed_state = True
+                if assumed_state:
                     yield from hass.services.async_call(
                         core.DOMAIN, SERVICE_TURN_OFF, {
                             ATTR_ENTITY_ID: entity.entity_id,

@@ -93,8 +93,9 @@ async def process_wrong_login(request):
     _LOGGER.warning(msg)
 
     hass = request.app['hass']
-    hass.components.persistent_notification.async_create(
-        msg, 'Login attempt failed', NOTIFICATION_ID_LOGIN)
+    # AIS dom comment
+    # hass.components.persistent_notification.async_create(
+    #     msg, 'Login attempt failed', NOTIFICATION_ID_LOGIN)
 
     # Check if ban middleware is loaded
     if (KEY_BANNED_IPS not in request.app or

@@ -28,6 +28,7 @@ group:
       # - sensor.airly_aqi
       # - sensor.airly_pm10
       # - sensor.airly_pm25
+
   audio_player:
     name: Odtwarzacz
     entities:

@@ -118,24 +118,6 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
             if platform not in CONFIG_ENTRY_PLATFORMS.get(component, []):
                 await async_load_platform(
                     hass, component, platform, payload, hass_config)
-                # AIS dom, we are doing this here because the EVENT_PLATFORM_DISCOVERED is not fired
-                if component == 'sensor' and 'unique_id' in payload:
-                    hass.async_add_job(
-                        hass.services.async_call(
-                            'group',
-                            'set', {
-                                "object_id": "all_ais_sensors",
-                                "add_entities": ["sensor." + payload['unique_id']]
-                            }
-                        )
-                    )
-                    # prepare ais dom menu
-                    hass.async_add_job(
-                        hass.services.async_call(
-                            'ais_ai_service',
-                            'prepare_remote_menu'
-                        )
-                    )
                 return
 
             config_entries_key = '{}.{}'.format(component, platform)
@@ -147,6 +129,24 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
 
             async_dispatcher_send(hass, MQTT_DISCOVERY_NEW.format(
                 component, platform), payload)
+            # AIS dom, we are doing this here because the EVENT_PLATFORM_DISCOVERED is not fired
+            if component == 'sensor' and 'unique_id' in payload:
+                hass.async_add_job(
+                    hass.services.async_call(
+                        'group',
+                        'set', {
+                            "object_id": "all_ais_sensors",
+                            "add_entities": ["sensor." + payload['unique_id']]
+                        }
+                    )
+                )
+                # prepare ais dom menu
+                hass.async_add_job(
+                    hass.services.async_call(
+                        'ais_ai_service',
+                        'prepare_remote_menu'
+                    )
+                )
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
