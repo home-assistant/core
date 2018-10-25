@@ -54,7 +54,7 @@ class Outlet(HomeAccessory):
     def update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = (new_state.state == STATE_ON)
-        if not self._flag_state:
+        if not self._flag_state or new_state.domain == 'script':
             _LOGGER.debug('%s: Set current state to %s',
                           self.entity_id, current_state)
             self.char_on.set_value(current_state)
