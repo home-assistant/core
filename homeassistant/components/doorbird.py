@@ -134,14 +134,14 @@ def setup(hass, config):
 
 
 def get_doorstation_by_slug(hass, slug):
-    """Get doorstation by slug"""
+    """Get doorstation by slug."""
     for doorstation in hass.data[DOMAIN]:
         if slugify(doorstation.name) in slug:
             return doorstation
 
 
 def handle_event(event):
-    """Dummy handler used to register events in GUI"""
+    """Handle dummy events."""
     return None
 
 
@@ -261,9 +261,7 @@ class ConfiguredDoorBird(object):
             self._delete_schedule_action(event, fav_id)
 
     def _delete_schedule_action(self, sensor, fav_id, param=""):
-        """
-        Remove the HA output from a schedule.
-        """
+        """Remove the HA output from a schedule."""
         entries = self._device.schedule()
         for entry in entries:
             if entry.input != sensor or entry.param != param:
@@ -315,6 +313,7 @@ class DoorBirdRequestView(HomeAssistantView):
     extra_urls = [API_URL + '/{sensor}']
 
     def __init__(self, token):
+        """Initialize view."""
         HomeAssistantView.__init__(self)
         self._token = token
 
@@ -344,6 +343,7 @@ class DoorBirdCleanupView(HomeAssistantView):
     name = 'DoorBird Cleanup'
 
     def __init__(self, token):
+        """Initialize view."""
         HomeAssistantView.__init__(self)
         self._token = token
 
