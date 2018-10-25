@@ -43,48 +43,63 @@ TEMPERATURE_ICON = 'mdi:thermometer'
 async def async_setup_platform(
         hass,
         config,
-        async_add_devices,
+        async_add_entities,
         discovery_info=None):
     """Set up a single GEM temperature sensor."""
-    sensor_type = discovery_info[CONF_SENSOR_TYPE]
-    if sensor_type == SENSOR_TYPE_CURRENT:
-        async_add_devices([
-            CurrentSensor(
-                discovery_info[CONF_MONITOR_SERIAL_NUMBER],
-                discovery_info[CONF_NUMBER],
-                discovery_info[CONF_NAME],
-                discovery_info.get(CONF_NET_METERING, False))])
-    elif sensor_type == SENSOR_TYPE_PULSE_COUNTER:
-        async_add_devices([
-            PulseCounter(
-                discovery_info[CONF_MONITOR_SERIAL_NUMBER],
-                discovery_info[CONF_NUMBER],
-                discovery_info[CONF_NAME],
-                discovery_info[CONF_COUNTED_QUANTITY],
-                discovery_info.get(CONF_TIME_UNIT, TIME_UNIT_SECOND),
-                discovery_info.get(CONF_COUNTED_QUANTITY_PER_PULSE, 1.0))])
-    elif sensor_type == SENSOR_TYPE_TEMPERATURE:
-        async_add_devices([
-            TemperatureSensor(
-                discovery_info[CONF_MONITOR_SERIAL_NUMBER],
-                discovery_info[CONF_NUMBER],
-                discovery_info[CONF_NAME],
-                discovery_info[CONF_TEMPERATURE_UNIT])])
+    if not discovery_info:
+        return
+
+    entities = []
+    for sensor in discovery_info:
+        sensor_type = sensor[CONF_SENSOR_TYPE]
+        if sensor_type == SENSOR_TYPE_CURRENT:
+            entities.append(CurrentSensor(
+                sensor[CONF_MONITOR_SERIAL_NUMBER],
+                sensor[CONF_NUMBER],
+                sensor[CONF_NAME],
+                sensor[CONF_NET_METERING]))
+        elif sensor_type == SENSOR_TYPE_PULSE_COUNTER:
+            entities.append(PulseCounter(
+                sensor[CONF_MONITOR_SERIAL_NUMBER],
+                sensor[CONF_NUMBER],
+                sensor[CONF_NAME],
+                sensor[CONF_COUNTED_QUANTITY],
+                sensor[CONF_TIME_UNIT],
+                sensor[CONF_COUNTED_QUANTITY_PER_PULSE]))
+        elif sensor_type == SENSOR_TYPE_TEMPERATURE:
+            entities.append(TemperatureSensor(
+                sensor[CONF_MONITOR_SERIAL_NUMBER],
+                sensor[CONF_NUMBER],
+                sensor[CONF_NAME],
+                sensor[CONF_TEMPERATURE_UNIT]))
+
+    async_add_entities(entities)
 
 
 class GEMSensor(Entity):
     """Base class for GreenEye Monitor sensors."""
 
-    should_poll = False
-
-    def __init__(
-            self,
-            monitor_serial_number,
-            name):
+    def __init__(self, monitor_serial_number, name, sensor_type, number):
         """Construct the entity."""
         self._monitor_serial_number = monitor_serial_number
         self._name = name
         self._sensor = None
+        self._sensor_type = sensor_type
+        self._number = number
+
+    @property
+    def should_poll(self):
+        """GEM pushes changes, so this returns False."""
+        return False
+
+    @property
+    def unique_id(self):
+        """Return a unique ID for this sensor."""
+        return "{serial}-{sensor_type}-{number}".format(
+            serial=self._monitor_serial_number,
+            sensor_type=self._sensor_type,
+            number=self._number,
+        )
 
     @property
     def name(self):
@@ -112,7 +127,7 @@ class GEMSensor(Entity):
             monitors.remove_listener(self._on_new_monitor)
 
     def _try_connect_to_monitor(self, monitors):
-        monitor = monitors.monitors.get(self._monitor_serial_number, None)
+        monitor = monitors.monitors.get(self._monitor_serial_number)
         if not monitor:
             return False
 
@@ -131,29 +146,23 @@ class GEMSensor(Entity):
 class CurrentSensor(GEMSensor):
     """Entity showing power usage on one channel of the monitor."""
 
-    icon = CURRENT_SENSOR_ICON
-    unit_of_measurement = UNIT_WATTS
-
-    def __init__(
-            self,
-            monitor_serial_number,
-            number,
-            name,
-            net_metering):
+    def __init__(self, monitor_serial_number, number, name, net_metering):
         """Construct the entity."""
-        super().__init__(monitor_serial_number, name)
-        self._number = number
+        super().__init__(monitor_serial_number, name, 'current', number)
         self._net_metering = net_metering
 
     def _get_sensor(self, monitor):
         return monitor.channels[self._number - 1]
 
     @property
-    def unique_id(self):
-        """Return a unique identifier for this channel."""
-        return "{serial}-current-{number}".format(
-            serial=self._monitor_serial_number,
-            number=self._number)
+    def icon(self):
+        """Return the icon that should represent this sensor in the UI."""
+        return CURRENT_SENSOR_ICON
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement used by this sensor."""
+        return UNIT_WATTS
 
     @property
     def state(self):
@@ -182,8 +191,6 @@ class CurrentSensor(GEMSensor):
 class PulseCounter(GEMSensor):
     """Entity showing rate of change in one pulse counter of the monitor."""
 
-    icon = COUNTER_ICON
-
     def __init__(
             self,
             monitor_serial_number,
@@ -193,8 +200,7 @@ class PulseCounter(GEMSensor):
             time_unit,
             counted_quantity_per_pulse):
         """Construct the entity."""
-        super().__init__(monitor_serial_number, name)
-        self._number = number
+        super().__init__(monitor_serial_number, name, 'pulse', number)
         self._counted_quantity = counted_quantity
         self._counted_quantity_per_pulse = counted_quantity_per_pulse
         self._time_unit = time_unit
@@ -203,11 +209,9 @@ class PulseCounter(GEMSensor):
         return monitor.pulse_counters[self._number - 1]
 
     @property
-    def unique_id(self):
-        """Return a unique identifier for this pulse counter."""
-        return "{serial}-pulse-{number}".format(
-            serial=self._monitor_serial_number,
-            number=self._number)
+    def icon(self):
+        """Return the icon that should represent this sensor in the UI."""
+        return COUNTER_ICON
 
     @property
     def state(self):
@@ -232,7 +236,10 @@ class PulseCounter(GEMSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement for this pulse counter."""
-        return self._counted_quantity + '/' + self._time_unit
+        return "{counted_quantity}/{time_unit}".format(
+            counted_quantity=self._counted_quantity,
+            time_unit=self._time_unit,
+        )
 
     @property
     def device_state_attributes(self):
@@ -248,23 +255,18 @@ class PulseCounter(GEMSensor):
 class TemperatureSensor(GEMSensor):
     """Entity showing temperature from one temperature sensor."""
 
-    icon = TEMPERATURE_ICON
-
     def __init__(self, monitor_serial_number, number, name, unit):
         """Construct the entity."""
-        super().__init__(monitor_serial_number, name)
-        self._number = number
+        super().__init__(monitor_serial_number, name, 'temp', number)
         self._unit = unit
 
     def _get_sensor(self, monitor):
         return monitor.temperature_sensors[self._number - 1]
 
     @property
-    def unique_id(self):
-        """Return a unique identifier for this temperature sensor."""
-        return "{serial}-temp-{number}".format(
-            serial=self._monitor_serial_number,
-            number=self._number)
+    def icon(self):
+        """Return the icon that should represent this sensor in the UI."""
+        return TEMPERATURE_ICON
 
     @property
     def state(self):
