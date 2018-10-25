@@ -1,5 +1,5 @@
 """Test the init file of Twilio."""
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components import twilio
