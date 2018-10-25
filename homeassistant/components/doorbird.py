@@ -119,7 +119,7 @@ def setup(hass, config):
         doorstation = get_doorstation_by_slug(hass, slug)
 
         if doorstation is None:
-            _LOGGER.error('Device not found {}'.format(slug))
+            _LOGGER.error('Device not found %s', format(slug))
 
         # Clear webhooks
         favorites = doorstation.device.favorites()
@@ -145,7 +145,7 @@ def handle_event(event):
     return None
 
 
-class ConfiguredDoorBird(object):
+class ConfiguredDoorBird():
     """Attach additional information to pass along with configured device."""
 
     def __init__(self, device, name, events, custom_url, doorbell_nums, token):
