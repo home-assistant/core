@@ -45,18 +45,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def devices_from_config(domain_config, hass=None):
+def devices_from_config(domain_config):
     """Parse configuration and add IOBL cover devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
-        device = LegrandInOneCover(device_id, hass, **device_config)
+        device = LegrandInOneCover(device_id, **device_config)
         devices.append(device)
-
-        # Register entity (and aliases) to listen to incoming IOBL events
-        # Device id and normal aliases respond to normal and group command
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
 
     return devices
 
@@ -64,14 +59,14 @@ def devices_from_config(domain_config, hass=None):
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the IOBL cover platform."""
-    async_add_entities(devices_from_config(config, hass))
+    async_add_entities(devices_from_config(config))
 
-    async def add_new_device(event, hass):
+    async def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
         device_id = event[EVENT_KEY_ID]
 
         device_config = config[CONF_DEVICE_DEFAULTS]
-        device = LegrandInOneCover(device_id, hass, **device_config)
+        device = LegrandInOneCover(device_id, initial_event=event, **device_config)
         async_add_entities([device])
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][device_id].append(device)
@@ -87,6 +82,7 @@ class LegrandInOneCover(LegrandInOneCommand, CoverDevice):
         """Initialize device type and unit number."""
         self.iobl_type = 'automation'
         self.iobl_unit = '2'
+        # TODO: Fetch initial state from initial event if present
         super().__init__(*args, **kwargs)
 
     def _handle_event(self, event):

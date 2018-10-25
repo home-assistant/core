@@ -6,6 +6,7 @@ control of IOBL switch devices.
 """
 
 import asyncio
+from typing import Any, Dict, cast
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.legrandinone import EVENT_BUTTON_PRESSED
@@ -82,6 +83,7 @@ def test_default_setup(hass, monkeypatch):
     event_callback({
         'type': 'bus_command',
         'legrand_id': '666666',
+        'who': 'light',
         'what': 'on',
     })
     yield from hass.async_block_till_done()
@@ -94,30 +96,30 @@ def test_default_setup(hass, monkeypatch):
                                  {ATTR_ENTITY_ID: DOMAIN + '.test'}))
     yield from hass.async_block_till_done()
     assert hass.states.get(DOMAIN + '.test').state == 'off'
-    assert protocol.send_packet.call_args_list[0][0][0] == (Dict[str, Any], {
+    assert protocol.send_packet.call_args_list[0][0][0] == {
     'type': 'bus_command',
-    'legrand_id' : '666666',
+    'legrand_id' : '123456',
     'who' : 'light',
     'mode': 'unicast',
     'media': 'plc',
-    'unit': '1',
+    'unit': '0',
     'what': 'off'
-    })
+    }
 
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_ON,
                                  {ATTR_ENTITY_ID: DOMAIN + '.test'}))
     yield from hass.async_block_till_done()
     assert hass.states.get(DOMAIN + '.test').state == 'on'
-    assert protocol.send_packet.call_args_list[1][0][0] == (Dict[str, Any], {
+    assert protocol.send_packet.call_args_list[1][0][0] == {
     'type': 'bus_command',
-    'legrand_id' : '666666',
+    'legrand_id' : '123456',
     'who' : 'light',
     'mode': 'unicast',
     'media': 'plc',
-    'unit': '1',
+    'unit': '0',
     'what': 'on'
-    })
+    }
 
     # protocols supporting dimming and on/off should create hybrid light entity
     event_callback({
@@ -129,21 +131,21 @@ def test_default_setup(hass, monkeypatch):
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_ON,
                                  {
-                                     ATTR_ENTITY_ID: DOMAIN + '.234567',
+                                     ATTR_ENTITY_ID: DOMAIN + '.dim_test',
                                      ATTR_BRIGHTNESS: 128,
                                  }))
     yield from hass.async_block_till_done()
 
-    assert protocol.send_command_ack.call_args_list[2][0][0] == (Dict[str, Any], {
+    assert protocol.send_packet.call_args_list[2][0][0] == {
     'type': 'set_dimension',
     'legrand_id' : '234567',
     'who' : 'light',
     'mode': 'unicast',
     'media': 'plc',
-    'unit': '1',
+    'unit': '0',
     'dimension': 'go_to_level_time',
     'values': ['50']
-    })
+    }
 
 
 @asyncio.coroutine
@@ -175,7 +177,7 @@ def test_firing_bus_event(hass, monkeypatch):
         calls.append(event)
     hass.bus.async_listen_once(EVENT_BUTTON_PRESSED, listener)
 
-    # test event for new unconfigured sensor
+    # test event for firing event
     event_callback({
         'type': 'bus_command',
         'legrand_id': '123456',
@@ -184,41 +186,6 @@ def test_firing_bus_event(hass, monkeypatch):
     yield from hass.async_block_till_done()
 
     assert calls[0].data == {'state': 'off', 'entity_id': DOMAIN + '.test'}
-
-
-@asyncio.coroutine
-def test_type_toggle(hass, monkeypatch):
-    """Test toggle type lights (on/on)."""
-    config = {
-        'legrandinone': {
-            'port': '/dev/ttyABC0',
-        },
-        DOMAIN: {
-            'platform': 'legrandinone',
-            'devices': {
-                '123456': {
-                    'name': 'toggle_test',
-                    'type': 'toggle',
-                },
-            },
-        },
-    }
-
-    # setup mocking rflink module
-    event_callback, _, _, _ = yield from mock_legrandinone(
-        hass, config, DOMAIN, monkeypatch)
-
-    assert hass.states.get(DOMAIN + '.toggle_test').state == 'off'
-
-    # test sending on command to toggle alias
-    event_callback({
-        'type': 'bus_command',
-        'legrand_id': '123456',
-        'what': 'on',
-    })
-    yield from hass.async_block_till_done()
-
-    assert hass.states.get(DOMAIN + '.toggle_test').state == 'on'
 
 
 @asyncio.coroutine
