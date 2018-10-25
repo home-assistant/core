@@ -1,4 +1,6 @@
 """Tests for the Device Registry."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.helpers import device_registry
@@ -239,3 +241,21 @@ async def test_loading_saving_data(hass, registry):
 
     assert orig_hub == new_hub
     assert orig_light == new_light
+
+
+async def test_no_unnecessary_changes(registry):
+    """Make sure we do not consider devices changes."""
+    entry = registry.async_get_or_create(
+        config_entry_id='1234',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        identifiers={('hue', '456'), ('bla', '123')},
+    )
+    with patch('homeassistant.helpers.device_registry'
+               '.DeviceRegistry.async_schedule_save') as mock_save:
+        entry2 = registry.async_get_or_create(
+            config_entry_id='1234',
+            identifiers={('hue', '456')},
+        )
+
+    assert entry.id == entry2.id
+    assert len(mock_save.mock_calls) == 0
