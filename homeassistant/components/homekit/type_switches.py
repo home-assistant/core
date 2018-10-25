@@ -1,7 +1,9 @@
 """Class to hold all switch accessories."""
 import logging
 
-from pyhap.const import CATEGORY_OUTLET, CATEGORY_SWITCH
+from pyhap.const import (
+    CATEGORY_FAUCET, CATEGORY_OUTLET, CATEGORY_SHOWER_HEAD,
+    CATEGORY_SPRINKLER, CATEGORY_SWITCH)
 
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
@@ -16,10 +18,6 @@ from .const import (
     TYPE_SPRINKLER, TYPE_VALVE)
 
 _LOGGER = logging.getLogger(__name__)
-
-CATEGORY_SPRINKLER = 28
-CATEGORY_FAUCET = 29
-CATEGORY_SHOWER_HEAD = 30
 
 VALVE_TYPE = {
     TYPE_FAUCET: (CATEGORY_FAUCET, 3),
