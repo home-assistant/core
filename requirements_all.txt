@@ -1385,7 +1385,7 @@ smappy==0.2.16
 # homeassistant.components.smhi
 # homeassistant.components.smhi.config_flow
 # homeassistant.components.weather.smhi
-smhi-pkg==1.0.4
+smhi-pkg==1.0.5
 
 # homeassistant.components.media_player.snapcast
 snapcast==2.0.9

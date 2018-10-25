@@ -30,7 +30,7 @@ from homeassistant.components.smhi.const import (
     ENTITY_ID_SENSOR_FORMAT, ATTR_SMHI_CLOUDINESS)
 
 DEPENDENCIES = ['smhi']
-REQUIREMENTS = ['smhi-pkg==1.0.4']
+REQUIREMENTS = ['smhi-pkg==1.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
