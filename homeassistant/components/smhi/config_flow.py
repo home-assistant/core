@@ -20,8 +20,6 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN, HOME_LOCATION_NAME
 
-REQUIREMENTS = ['smhi-pkg==1.0.4']
-
 
 @callback
 def smhi_locations(hass: HomeAssistant):
