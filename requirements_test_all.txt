@@ -227,8 +227,6 @@ simplisafe-python==3.1.13
 sleepyq==0.6
 
 # homeassistant.components.smhi
-# homeassistant.components.smhi.config_flow
-# homeassistant.components.weather.smhi
 smhi-pkg==1.0.5
 
 # homeassistant.components.climate.honeywell
