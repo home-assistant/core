@@ -44,13 +44,13 @@ async def async_setup(hass, config):
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook from Twilio for inbound messages and calls."""
-    from twilio.twiml import Response
+    from twilio.twiml import TwiML
 
     data = dict(await request.post())
     data['webhook_id'] = webhook_id
     hass.bus.async_fire(RECEIVED_DATA, dict(data))
 
-    return Response().toxml()
+    return TwiML().to_xml()
 
 
 async def async_setup_entry(hass, entry):
