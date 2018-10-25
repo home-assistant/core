@@ -10,7 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components.legrandinone import (
     DATA_ENTITY_LOOKUP, CONF_MEDIA, CONF_COMM_MODE,
-    DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND, LegrandInOneCommand)
+    DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND,
+    DEVICE_TYPE_AUTOMATION, DATA_DEVICE_REGISTER,
+    EVENT_KEY_ID, LegrandInOneCommand)
 from homeassistant.components.cover import (
     CoverDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
@@ -31,6 +33,7 @@ CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
     DEVICE_DEFAULTS_SCHEMA,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
@@ -62,6 +65,19 @@ async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the IOBL cover platform."""
     async_add_entities(devices_from_config(config, hass))
+
+    async def add_new_device(event, hass):
+        """Check if device is known, otherwise add to list of known devices."""
+        device_id = event[EVENT_KEY_ID]
+
+        device_config = config[CONF_DEVICE_DEFAULTS]
+        device = LegrandInOneCover(device_id, hass, **device_config)
+        async_add_entities([device])
+        hass.data[DATA_ENTITY_LOOKUP][
+            EVENT_KEY_COMMAND][device_id].append(device)
+
+    if config[CONF_AUTOMATIC_ADD]:
+        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND][DEVICE_TYPE_AUTOMATION] = add_new_device
 
 
 class LegrandInOneCover(LegrandInOneCommand, CoverDevice):
