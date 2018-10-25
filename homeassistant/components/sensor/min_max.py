@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_MIN_VALUE = 'min_value'
 ATTR_MAX_VALUE = 'max_value'
+ATTR_DELTA_VALUE = 'delta_value'
 ATTR_COUNT_SENSORS = 'count_sensors'
 ATTR_MEAN = 'mean'
 ATTR_LAST = 'last'
@@ -30,6 +31,7 @@ ATTR_TO_PROPERTY = [
     ATTR_MEAN,
     ATTR_MIN_VALUE,
     ATTR_LAST,
+    ATTR_DELTA_VALUE,
 ]
 
 CONF_ENTITY_IDS = 'entity_ids'
@@ -40,6 +42,7 @@ ICON = 'mdi:calculator'
 SENSOR_TYPES = {
     ATTR_MIN_VALUE: 'min',
     ATTR_MAX_VALUE: 'max',
+    ATTR_DELTA_VALUE: 'delta',
     ATTR_MEAN: 'mean',
     ATTR_LAST: 'last',
 }
@@ -118,7 +121,7 @@ class MinMaxSensor(Entity):
                      if self._sensor_type == v)).capitalize()
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
-        self.min_value = self.max_value = self.mean = self.last = STATE_UNKNOWN
+        self.min_value = self.max_value = self.delta_value = self.mean = self.last = STATE_UNKNOWN
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
@@ -198,4 +201,5 @@ class MinMaxSensor(Entity):
                          if k in self.states]
         self.min_value = calc_min(sensor_values)
         self.max_value = calc_max(sensor_values)
+        self.delta_value = self.max_value - self.min_value
         self.mean = calc_mean(sensor_values, self._round_digits)
