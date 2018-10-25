@@ -2,16 +2,17 @@
 Support for Meteo France raining forecast.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.meteofrance/
+https://home-assistant.io/components/sensor.meteo_france/
 """
 
 import logging
 import datetime
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, STATE_UNKNOWN, ATTR_ATTRIBUTION, TEMP_CELSIUS)
+    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -40,14 +41,14 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_POSTAL_CODE): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
+    vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Meteo-France sensor."""
-    postal_code = config.get(CONF_POSTAL_CODE)
+    postal_code = config[CONF_POSTAL_CODE]
 
     from meteofrance.client import meteofranceClient, meteofranceError
 
@@ -59,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     client = MeteoFranceUpdater(meteofrance_client)
 
-    add_devices([MeteoFranceSensor('Météo-France', variable, client)
+    add_entities([MeteoFranceSensor('Météo-France', variable, client)
                  for variable in config[CONF_MONITORED_CONDITIONS]])
 
 
@@ -83,11 +84,11 @@ class MeteoFranceSensor(Entity):
         """Return the state of the sensor."""
         if self._data[self._condition] is not False:
             return self._data[self._condition]
-        return STATE_UNKNOWN
+        return None
 
     @property
-    def state_attributes(self):
-        """Return the state attributes of the sun."""
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
         if self._condition == 'next_rain':
             return {
                 **{
