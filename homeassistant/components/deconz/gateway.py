@@ -8,8 +8,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util import slugify
 
 from .const import (
-    _LOGGER, CONF_ALLOW_CLIP_SENSOR, DATA_DECONZ_EVENT, DATA_DECONZ_UNSUB,
-    SUPPORTED_PLATFORMS)
+    _LOGGER, CONF_ALLOW_CLIP_SENSOR, SUPPORTED_PLATFORMS)
 
 
 class DeconzGateway:
@@ -52,8 +51,9 @@ class DeconzGateway:
             return False
 
         for component in SUPPORTED_PLATFORMS:
-            hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-                self.config_entry, component))
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, component))
 
         self.listeners.append(
             async_dispatcher_connect(
@@ -91,6 +91,39 @@ class DeconzGateway:
         Used as an argument to EventBus.async_listen_once.
         """
         self.api.close()
+
+    async def async_reset(self):
+        """Reset this gateway to default state.
+
+        Will cancel any scheduled setup retry and will unload
+        the config entry.
+        """
+        # If we have a retry scheduled, we were never setup.
+        if self._cancel_retry_setup is not None:
+            self._cancel_retry_setup()
+            self._cancel_retry_setup = None
+            return True
+
+        # If the authentication was wrong.
+        if not self.api:
+            return True
+
+        self.api.close()
+
+        for component in SUPPORTED_PLATFORMS:
+            await self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, component)
+
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
+
+        for event in self.events:
+            event.async_will_remove_from_hass()
+            self.events.remove(event)
+
+        self.deconz_ids = []
+        return True
 
 
 async def get_gateway(hass, config, async_add_device_callback):
