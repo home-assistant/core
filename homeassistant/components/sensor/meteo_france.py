@@ -24,7 +24,7 @@ CONF_POSTAL_CODE = 'postal_code'
 
 STATE_ATTR_FORECAST = 'Forecast'
 
-SCAN_INTERVAL = datetime.timedelta(minutes=1)
+SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
 SENSOR_TYPES = {
     'rain_chance': ['Rain chance', '%'],
