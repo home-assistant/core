@@ -122,3 +122,27 @@ async def test_listing_webhook(hass, hass_ws_client, hass_access_token):
             'name': 'Test hook'
         }
     ]
+
+
+async def test_getting_webhook_nonexisting(hass, mock_client):
+    """Test posting to a nonexisting webhook."""
+    resp = await mock_client.get('/api/webhook/non-existing')
+    assert resp.status == 200
+
+
+async def test_getting_webhook(hass, mock_client):
+    """Test posting a webhook with no data."""
+    hooks = []
+    webhook_id = hass.components.webhook.async_generate_id()
+
+    async def handle(*args):
+        """Handle webhook."""
+        hooks.append(args)
+
+    hass.components.webhook.async_register(webhook_id, handle)
+
+    resp = await mock_client.get('/api/webhook/{}'.format(webhook_id))
+    assert resp.status == 200
+    assert len(hooks) == 1
+    assert hooks[0][0] is hass
+    assert hooks[0][1] == webhook_id
