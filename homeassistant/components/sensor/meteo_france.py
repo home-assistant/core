@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     client = MeteoFranceUpdater(meteofrance_client)
 
     add_entities([MeteoFranceSensor('Météo-France', variable, client)
-                 for variable in config[CONF_MONITORED_CONDITIONS]])
+                  for variable in config[CONF_MONITORED_CONDITIONS]])
 
 
 class MeteoFranceSensor(Entity):
@@ -77,7 +77,8 @@ class MeteoFranceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._data["name"]+' '+SENSOR_TYPES[self._condition][0]
+        return "{} {}".format(self._data["name"],
+                              SENSOR_TYPES[self._condition][0])
 
     @property
     def state(self):
@@ -85,7 +86,7 @@ class MeteoFranceSensor(Entity):
         try:
             return self._data[self._condition]
         except KeyError:
-            _LOGGER.error("No result for the monitored condition `{}`".format(self._condition))
+            _LOGGER.error("No result for the condition `%s`", self._condition)
         return None
 
     @property
@@ -103,7 +104,8 @@ class MeteoFranceSensor(Entity):
                     }
                 }
             except KeyError:
-                _LOGGER.error("No result for the monitored condition `{}`".format(self._condition))
+                _LOGGER.error("No result for the condition `%s`",
+                              self._condition)
         return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
 
     @property
