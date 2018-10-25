@@ -12,7 +12,8 @@ from homeassistant.components.legrandinone import (
     CONF_AUTOMATIC_ADD, CONF_DEVICE_DEFAULTS,
     CONF_DEVICES, CONF_FIRE_EVENT, DATA_DEVICE_REGISTER,
     DEVICE_DEFAULTS_SCHEMA, CONF_MEDIA, CONF_COMM_MODE,
-    EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableIoblDevice, cv,
+    EVENT_KEY_COMMAND, EVENT_KEY_ID, DATA_ENTITY_LOOKUP,
+    DEVICE_TYPE_LIGHT, SwitchableLegrandInOneDevice, cv,
     vol)
 from homeassistant.const import (CONF_NAME, CONF_TYPE)
 
@@ -50,15 +51,15 @@ def entity_class_for_type(entity_type):
     entity_device_mapping = {
         # sends 'dim', 'off' and 'on' command to support both dimmers and on/off
         # switches.
-        TYPE_DIMMABLE: DimmableIoblLight,
+        TYPE_DIMMABLE: DimmableLegrandInOneLight,
         # sends only 'on/off' commands not advices with dimmers 
-        TYPE_SWITCHABLE: IoblLight,
+        TYPE_SWITCHABLE: LegrandInOneLight,
         # sends only 'on' commands for switches which turn on and off
         # using the same 'on' command for both.
-        TYPE_TOGGLE: ToggleIoblLight,
+        TYPE_TOGGLE: ToggleLegrandInOneLight,
     }
 
-    return entity_device_mapping.get(entity_type, IoblLight)
+    return entity_device_mapping.get(entity_type, LegrandInOneLight)
 
 
 def devices_from_config(domain_config, hass=None):
@@ -80,30 +81,35 @@ def devices_from_config(domain_config, hass=None):
         device = entity_class(device_id, hass, **device_config)
         devices.append(device)
 
+        hass.data[DATA_ENTITY_LOOKUP][
+            EVENT_KEY_COMMAND][device_id].append(device)
+
     return devices
 
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the IOBL light platform."""
-    async_add_entities(devices_from_config(config))
+    async_add_entities(devices_from_config(config, hass))
 
-    async def add_new_device(event):
+    async def add_new_device(event, hass):
         """Check if device is known, otherwise add to list of known devices."""
         device_id = event[EVENT_KEY_ID]
 
-        entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
+        entity_type = TYPE_SWITCHABLE
         entity_class = entity_class_for_type(entity_type)
 
         device_config = config[CONF_DEVICE_DEFAULTS]
-        device = entity_class(device_id, initial_event=event, **device_config)
+        device = entity_class(device_id, hass, **device_config)
         async_add_entities([device])
+        hass.data[DATA_ENTITY_LOOKUP][
+            EVENT_KEY_COMMAND][device_id].append(device)
 
     if config[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
+        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND][DEVICE_TYPE_LIGHT] = add_new_device
 
 
-class IoblLight(SwitchableIoblDevice, Light):
+class LegrandInOneLight(SwitchableLegrandInOneDevice, Light):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
@@ -114,7 +120,7 @@ class IoblLight(SwitchableIoblDevice, Light):
         await self._async_handle_command('turn_off')
 
 
-class DimmableIoblLight(SwitchableIoblDevice, Light):
+class DimmableLegrandInOneLight(SwitchableLegrandInOneDevice, Light):
     """IOBL light device that support dimming."""
 
     def __init__(self, *args, **kwargs):
@@ -146,7 +152,7 @@ class DimmableIoblLight(SwitchableIoblDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
-class ToggleIoblLight(SwitchableIoblDevice, Light):
+class ToggleLegrandInOneLight(SwitchableLegrandInOneDevice, Light):
     """Iobl light device which sends out only 'on' commands."""
 
     def __init__(self, *args, **kwargs):

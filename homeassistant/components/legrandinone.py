@@ -56,8 +56,11 @@ CONNECTION_TIMEOUT = 10
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
 EVENT_KEY_ID = 'legrand_id'
-EVENT_KEY_COMMAND = 'command'
+EVENT_KEY_COMMAND = 'bus_command'
 EVENT_TYPE_COMMAND = 'what'
+
+DEVICE_TYPE_AUTOMATION = 'automation'
+DEVICE_TYPE_LIGHT = 'light'
 
 DOMAIN = 'legrandinone'
 
@@ -120,6 +123,7 @@ def async_setup(hass, config):
 
     # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
+    hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = {}
 
     @asyncio.coroutine
     def async_send_command(call):
@@ -177,11 +181,13 @@ def async_setup(hass, config):
                 entity.handle_event(event)
         else:
             _LOGGER.debug('device_id not known, adding new device')
+            device_type = event.get('who')
 
             # If device is not yet known, register with platform (if loaded)
             if event_type in hass.data[DATA_DEVICE_REGISTER]:
-                hass.async_run_job(
-                    hass.data[DATA_DEVICE_REGISTER][event_type], event)
+                if device_type in hass.data[DATA_DEVICE_REGISTER][event_type]:
+                    hass.async_run_job(
+                        hass.data[DATA_DEVICE_REGISTER][event_type][device_type], event, hass)
 
     # When connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN].get(CONF_HOST)
@@ -253,7 +259,7 @@ def async_setup(hass, config):
     return True
 
 
-class IoblDevice(Entity):
+class LegrandInOneDevice(Entity):
     """Representation of an iobl device.
 
     Contains the common logic for Iobl entities.
@@ -344,7 +350,7 @@ class IoblDevice(Entity):
                                  self.set_availability)
 
 
-class LegrandInOneCommand(IoblDevice):
+class LegrandInOneCommand(LegrandInOneDevice):
     """Singleton class to make IOBL command interface available to entities.
 
     This class is to be inherited by every Entity class that is actionable
@@ -449,7 +455,7 @@ class LegrandInOneCommand(IoblDevice):
         self.hass.async_create_task(self._protocol.send_packet(data))
 
 
-class SwitchableIoblDevice(LegrandInOneCommand):
+class SwitchableLegrandInOneDevice(LegrandInOneCommand):
     """IOBL entity which can switch on/off (eg: light, switch)."""
 
     """Representation of an IOBL light."""
