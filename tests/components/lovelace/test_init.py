@@ -160,19 +160,21 @@ class TestYAML(unittest.TestCase):
 
     def test_add_id(self):
         """Test if id is added."""
-        fname = self._path_for("test6")
+        fname = self._path_for("test")
         with patch('homeassistant.components.lovelace.load_yaml',
                    return_value=self.yaml.load(TEST_YAML_A)), \
-                patch('homeassistant.components.lovelace.save_yaml'):
+                patch('homeassistant.components.lovelace.save_yaml'), \
+                patch('os.path.getmtime', return_value=1):
             data = load_config(fname)
         assert 'id' in data['views'][0]['cards'][0]
         assert 'id' in data['views'][1]
 
     def test_id_not_changed(self):
         """Test if id is not changed if already exists."""
-        fname = self._path_for("test7")
+        fname = self._path_for("test")
         with patch('homeassistant.components.lovelace.load_yaml',
-                   return_value=self.yaml.load(TEST_YAML_B)):
+                   return_value=self.yaml.load(TEST_YAML_B)), \
+                patch('os.path.getmtime', return_value=1):
             data = load_config(fname)
         assert data == self.yaml.load(TEST_YAML_B)
 

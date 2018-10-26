@@ -1,6 +1,7 @@
 """Lovelace UI."""
 import logging
 import uuid
+import time
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY
 from collections import OrderedDict
@@ -16,6 +17,7 @@ DOMAIN = 'lovelace'
 REQUIREMENTS = ['ruamel.yaml==0.15.72']
 
 LOVELACE_CONFIG_FILE = 'ui-lovelace.yaml'
+CONFIG_CACHE = (None, 0)
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 
 FORMAT_YAML = 'yaml'
@@ -98,6 +100,8 @@ def save_yaml(fname: str, data: JSON_TYPE):
                   'w', encoding='utf-8') as temp_file:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
+        global CONFIG_CACHE
+        CONFIG_CACHE = (data, time.time())
     except YAMLError as exc:
         _LOGGER.error(str(exc))
         raise HomeAssistantError(exc)
@@ -122,6 +126,13 @@ def _yaml_unsupported(loader, node):
 
 def load_yaml(fname: str) -> JSON_TYPE:
     """Load a YAML file."""
+    global CONFIG_CACHE
+    config, last_update = CONFIG_CACHE
+    modtime = os.path.getmtime(fname)
+
+    if config and last_update > modtime:
+        return config
+
     from ruamel.yaml import YAML
     from ruamel.yaml.constructor import RoundTripConstructor
     from ruamel.yaml.error import YAMLError
@@ -134,7 +145,9 @@ def load_yaml(fname: str) -> JSON_TYPE:
         with open(fname, encoding='utf-8') as conf_file:
             # If configuration file is empty YAML returns None
             # We convert that to an empty dict
-            return yaml.load(conf_file) or OrderedDict()
+            config = yaml.load(conf_file) or OrderedDict()
+            CONFIG_CACHE = (config, time.time())
+            return config
     except YAMLError as exc:
         _LOGGER.error("YAML error in %s: %s", fname, exc)
         raise HomeAssistantError(exc)
@@ -145,6 +158,11 @@ def load_yaml(fname: str) -> JSON_TYPE:
 
 def load_config(fname: str) -> JSON_TYPE:
     """Load a YAML file and adds id to views and cards if not present."""
+    config, last_update = CONFIG_CACHE
+    modtime = os.path.getmtime(fname)
+    if config and last_update > modtime:
+        return config
+
     config = load_yaml(fname)
     # Check if all views and cards have a unique id or else add one
     updated = False
