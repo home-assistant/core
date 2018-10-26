@@ -4,6 +4,7 @@ Platform to retrieve Jewish calendar information for Home Assistant.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.jewish_calendar/
 """
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -14,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['hdate==0.6.3']
+REQUIREMENTS = ['hdate==0.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,16 +108,20 @@ class JewishCalSensor(Entity):
         import hdate
 
         today = dt_util.now().date()
+        upcoming_saturday = today + timedelta((12 - today.weekday()) % 7)
 
         date = hdate.HDate(
             today, diaspora=self.diaspora, hebrew=self._hebrew)
+        upcoming_shabbat = hdate.HDate(
+            upcoming_saturday, diaspora=self.diaspora, hebrew=self._hebrew)
 
         if self.type == 'date':
             self._state = hdate.date.get_hebrew_date(
                 date.h_day, date.h_month, date.h_year, hebrew=self._hebrew)
         elif self.type == 'weekly_portion':
             self._state = hdate.date.get_parashe(
-                date.get_reading(self.diaspora), hebrew=self._hebrew)
+                upcoming_shabbat.get_reading(self.diaspora),
+                hebrew=self._hebrew)
         elif self.type == 'holiday_name':
             try:
                 description = next(

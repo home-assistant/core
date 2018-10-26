@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O Z-Wave j\u00e1 est\u00e1 configurado",
+            "one_instance_only": "Componente suporta apenas uma inst\u00e2ncia Z-Wave"
+        },
+        "error": {
+            "option_error": "A valida\u00e7\u00e3o Z-Wave falhou. O caminho para o stick USB est\u00e1 correto?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Network Key (deixe em branco para auto-gera\u00e7\u00e3o)",
+                    "usb_path": "Endere\u00e7o USB"
+                },
+                "description": "Consulte https://www.home-assistant.io/docs/z-wave/installation/ para obter informa\u00e7\u00f5es sobre as vari\u00e1veis de configura\u00e7\u00e3o",
+                "title": "Configurar o Z-Wave"
+            }
+        },
+        "title": "Z-Wave"
+    }
+}

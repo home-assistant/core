@@ -16,7 +16,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_RADIUS, CONF_URL)
+    STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, CONF_NAME,
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_URL)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['georss_client==0.3']
@@ -40,6 +41,8 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_CATEGORIES, default=[]):
@@ -51,8 +54,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GeoRSS component."""
-    home_latitude = hass.config.latitude
-    home_longitude = hass.config.longitude
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     url = config.get(CONF_URL)
     radius_in_km = config.get(CONF_RADIUS)
     name = config.get(CONF_NAME)
@@ -60,18 +63,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s",
-                  home_latitude, home_longitude, url, radius_in_km)
+                  latitude, longitude, url, radius_in_km)
 
     # Create all sensors based on categories.
     devices = []
     if not categories:
-        device = GeoRssServiceSensor((home_latitude, home_longitude), url,
+        device = GeoRssServiceSensor((latitude, longitude), url,
                                      radius_in_km, None, name,
                                      unit_of_measurement)
         devices.append(device)
     else:
         for category in categories:
-            device = GeoRssServiceSensor((home_latitude, home_longitude), url,
+            device = GeoRssServiceSensor((latitude, longitude), url,
                                          radius_in_km, category, name,
                                          unit_of_measurement)
             devices.append(device)
@@ -81,7 +84,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class GeoRssServiceSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, home_coordinates, url, radius, category, service_name,
+    def __init__(self, coordinates, url, radius, category, service_name,
                  unit_of_measurement):
         """Initialize the sensor."""
         self._category = category
@@ -90,7 +93,7 @@ class GeoRssServiceSensor(Entity):
         self._state_attributes = None
         self._unit_of_measurement = unit_of_measurement
         from georss_client.generic_feed import GenericFeed
-        self._feed = GenericFeed(home_coordinates, url, filter_radius=radius,
+        self._feed = GenericFeed(coordinates, url, filter_radius=radius,
                                  filter_categories=None if not category
                                  else [category])
 
@@ -145,3 +148,4 @@ class GeoRssServiceSensor(Entity):
             # If no events were found due to an error then just set state to
             # zero.
             self._state = 0
+            self._state_attributes = {}

@@ -21,6 +21,9 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
+# dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
+logging.getLogger('dicttoxml').setLevel(logging.WARNING)
+
 REQUIREMENTS = ['huawei-lte-api==1.0.16']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)

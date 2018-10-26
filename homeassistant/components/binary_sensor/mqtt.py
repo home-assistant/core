@@ -15,19 +15,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON,
-    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS)
+    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS, CONF_DEVICE)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
-    MqttAvailability, MqttDiscoveryUpdate)
+    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.helpers.event as evt
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MQTT Binary sensor'
+CONF_OFF_DELAY = 'off_delay'
 CONF_UNIQUE_ID = 'unique_id'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
@@ -41,9 +43,12 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_OFF_DELAY):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
     # Integrations shouldn't never expose unique_id through configuration
     # this here is an exception because MQTT is a msg transport, not a protocol
     vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -80,28 +85,32 @@ async def _async_setup_entity(hass, config, async_add_entities,
         config.get(CONF_DEVICE_CLASS),
         config.get(CONF_QOS),
         config.get(CONF_FORCE_UPDATE),
+        config.get(CONF_OFF_DELAY),
         config.get(CONF_PAYLOAD_ON),
         config.get(CONF_PAYLOAD_OFF),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         value_template,
         config.get(CONF_UNIQUE_ID),
+        config.get(CONF_DEVICE),
         discovery_hash,
     )])
 
 
 class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
-                       BinarySensorDevice):
+                       MqttEntityDeviceInfo, BinarySensorDevice):
     """Representation a binary sensor that is updated by MQTT."""
 
     def __init__(self, name, state_topic, availability_topic, device_class,
-                 qos, force_update, payload_on, payload_off, payload_available,
-                 payload_not_available, value_template,
-                 unique_id: Optional[str], discovery_hash):
+                 qos, force_update, off_delay, payload_on, payload_off,
+                 payload_available, payload_not_available, value_template,
+                 unique_id: Optional[str], device_config: Optional[ConfigType],
+                 discovery_hash):
         """Initialize the MQTT binary sensor."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash)
+        MqttEntityDeviceInfo.__init__(self, device_config)
         self._name = name
         self._state = None
         self._state_topic = state_topic
@@ -110,9 +119,11 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         self._payload_off = payload_off
         self._qos = qos
         self._force_update = force_update
+        self._off_delay = off_delay
         self._template = value_template
         self._unique_id = unique_id
         self._discovery_hash = discovery_hash
+        self._delay_listener = None
 
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
@@ -134,6 +145,20 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
                                 ' for entity: %s with state_topic: %s',
                                 self._name, self._state_topic)
                 return
+
+            if (self._state and self._off_delay is not None):
+                @callback
+                def off_delay_listener(now):
+                    """Switch device off after a delay."""
+                    self._delay_listener = None
+                    self._state = False
+                    self.async_schedule_update_ha_state()
+
+                if self._delay_listener is not None:
+                    self._delay_listener()
+
+                self._delay_listener = evt.async_call_later(
+                    self.hass, self._off_delay, off_delay_listener)
 
             self.async_schedule_update_ha_state()
 

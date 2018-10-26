@@ -104,7 +104,7 @@ def validate_media_player_features(state, feature_list):
             error_list.append(feature)
 
     if error_list:
-        _LOGGER.error("%s does not support features: %s",
+        _LOGGER.error('%s does not support features: %s',
                       state.entity_id, error_list)
         return False
     return True

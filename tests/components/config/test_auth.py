@@ -6,7 +6,7 @@ import pytest
 from homeassistant.auth import models as auth_models
 from homeassistant.components.config import auth as auth_config
 
-from tests.common import MockUser, CLIENT_ID
+from tests.common import MockGroup, MockUser, CLIENT_ID
 
 
 @pytest.fixture(autouse=True)
@@ -39,10 +39,13 @@ async def test_list_requires_owner(hass, hass_ws_client, hass_access_token):
 
 async def test_list(hass, hass_ws_client):
     """Test get users."""
+    group = MockGroup().add_to_hass(hass)
+
     owner = MockUser(
         id='abc',
         name='Test Owner',
         is_owner=True,
+        groups=[group],
     ).add_to_hass(hass)
 
     owner.credentials.append(auth_models.Credentials(
@@ -61,6 +64,7 @@ async def test_list(hass, hass_ws_client):
         id='hij',
         name='Inactive User',
         is_active=False,
+        groups=[group],
     ).add_to_hass(hass)
 
     refresh_token = await hass.auth.async_create_refresh_token(
@@ -83,6 +87,7 @@ async def test_list(hass, hass_ws_client):
         'is_owner': True,
         'is_active': True,
         'system_generated': False,
+        'group_ids': [group.id for group in owner.groups],
         'credentials': [{'type': 'homeassistant'}]
     }
     assert data[1] == {
@@ -91,6 +96,7 @@ async def test_list(hass, hass_ws_client):
         'is_owner': False,
         'is_active': True,
         'system_generated': True,
+        'group_ids': [],
         'credentials': [],
     }
     assert data[2] == {
@@ -99,6 +105,7 @@ async def test_list(hass, hass_ws_client):
         'is_owner': False,
         'is_active': False,
         'system_generated': False,
+        'group_ids': [group.id for group in inactive.groups],
         'credentials': [],
     }
 
