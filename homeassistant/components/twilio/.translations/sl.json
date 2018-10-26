@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": " \u010ce \u017eelite prejemati sporo\u010dila Twilio, mora biti Home Assistent dostopen prek interneta.",
+            "one_instance_allowed": "Potrebna je samo ena instanca."
+        },
+        "create_entry": {
+            "default": "Za po\u0161iljanje dogodkov Home Assistent-u, boste morali nastaviti [Webhooks z Twilio]({twilio_url}).\n\nIzpolnite naslednje informacije:\n\n- URL: `{webhook_url}`\n- Metoda: POST\n- Vrsta vsebine: application/x-www-form-urlencoded\n\nGlej [dokumentacijo]({docs_url}) o tem, kako nastavite avtomatizacijo za obravnavo dohodnih podatkov."
+        },
+        "step": {
+            "user": {
+                "description": "Ali ste prepri\u010dani, da \u017eelite nastaviti Twilio?",
+                "title": "Nastavite Twilio Webhook"
+            }
+        },
+        "title": "Twilio"
+    }
+}
