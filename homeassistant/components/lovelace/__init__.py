@@ -27,6 +27,7 @@ WS_TYPE_GET_LOVELACE_UI = 'lovelace/config'
 WS_TYPE_GET_CARD = 'lovelace/config/card/get'
 WS_TYPE_UPDATE_CARD = 'lovelace/config/card/update'
 WS_TYPE_ADD_CARD = 'lovelace/config/card/add'
+WS_TYPE_MOVE_CARD = 'lovelace/config/card/move'
 
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): vol.Any(WS_TYPE_GET_LOVELACE_UI,
@@ -53,6 +54,15 @@ SCHEMA_ADD_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('view_id'): str,
     vol.Required('card_config'): vol.Any(str, Dict),
     vol.Optional('position'): int,
+    vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
+                                                         FORMAT_YAML),
+})
+
+SCHEMA_MOVE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_MOVE_CARD,
+    vol.Required('card_id'): str,
+    vol.Optional('position'): int,
+    vol.Optional('view_id'): str,
     vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
                                                          FORMAT_YAML),
 })
@@ -163,7 +173,8 @@ def load_config(fname: str) -> JSON_TYPE:
             else:
                 if card_id in seen_card_ids:
                     raise DuplicateIdError(
-                        'ID `{}` has multiple occurances in cards'.format(card_id))
+                        'ID `{}` has multiple occurances in cards'
+                        .format(card_id))
                 seen_card_ids.add(card_id)
         index += 1
     if updated:
@@ -254,6 +265,56 @@ def add_card(fname: str, view_id: str, card_config: str,
         "View with ID: {} was not found in {}.".format(view_id, fname))
 
 
+def move_card(fname: str, card_id: str, position: int = None):
+    """Move a card to a different position."""
+    if position is None:
+        raise HomeAssistantError('Position is required if view is not\
+                                 specified.')
+    config = load_yaml(fname)
+    for view in config.get('views', []):
+        for card in view.get('cards', []):
+            if str(card.get('id')) != card_id:
+                continue
+            cards = view.get('cards')
+            cards.insert(position, cards.pop(cards.index(card)))
+            save_yaml(fname, config)
+            return
+
+    raise CardNotFoundError(
+        "Card with ID: {} was not found in {}.".format(card_id, fname))
+
+
+def move_card_view(fname: str, card_id: str, view_id: str,
+                   position: int = None):
+    """Move a card to a different view."""
+    config = load_yaml(fname)
+    for view in config.get('views', []):
+        if str(view.get('id')) == view_id:
+            destination = view.get('cards')
+        for card in view.get('cards'):
+            if str(card.get('id')) != card_id:
+                continue
+            origin = view.get('cards')
+            card_to_move = card
+
+    if 'destination' not in locals():
+        raise ViewNotFoundError(
+            "View with ID: {} was not found in {}.".format(view_id, fname))
+    if 'card_to_move' not in locals():
+        raise CardNotFoundError(
+            "Card with ID: {} was not found in {}.".format(card_id, fname))
+
+    origin.pop(origin.index(card_to_move))
+
+    if position is None:
+        destination.append(card_to_move)
+    else:
+        destination.insert(position, card_to_move)
+
+    save_yaml(fname, config)
+    return
+
+
 async def async_setup(hass, config):
     """Set up the Lovelace commands."""
     # Backwards compat. Added in 0.80. Remove after 0.85
@@ -276,6 +337,10 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_ADD_CARD, websocket_lovelace_add_card,
         SCHEMA_ADD_CARD)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_MOVE_CARD, websocket_lovelace_move_card,
+        SCHEMA_MOVE_CARD)
 
     return True
 
@@ -377,6 +442,41 @@ async def websocket_lovelace_add_card(hass, connection, msg):
         error = 'unsupported_error', str(err)
     except ViewNotFoundError as err:
         error = 'view_not_found', str(err)
+    except HomeAssistantError as err:
+        error = 'save_error', str(err)
+
+    if error is not None:
+        message = websocket_api.error_message(msg['id'], *error)
+
+    connection.send_message(message)
+
+
+@websocket_api.async_response
+async def websocket_lovelace_move_card(hass, connection, msg):
+    """Move card to different position over websocket and save."""
+    error = None
+    try:
+        if ('view_id' in msg):
+            await hass.async_add_executor_job(
+                move_card_view, hass.config.path(LOVELACE_CONFIG_FILE),
+                msg['card_id'], msg['view_id'], msg.get('position'))
+        else:
+            await hass.async_add_executor_job(
+                move_card, hass.config.path(LOVELACE_CONFIG_FILE),
+                msg['card_id'], msg.get('position'))
+
+        message = websocket_api.result_message(
+            msg['id'], True
+        )
+    except FileNotFoundError:
+        error = ('file_not_found',
+                 'Could not find ui-lovelace.yaml in your config dir.')
+    except UnsupportedYamlError as err:
+        error = 'unsupported_error', str(err)
+    except ViewNotFoundError as err:
+        error = 'view_not_found', str(err)
+    except CardNotFoundError as err:
+        error = 'card_not_found', str(err)
     except HomeAssistantError as err:
         error = 'save_error', str(err)
 
