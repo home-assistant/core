@@ -160,8 +160,8 @@ async def _async_setup_component(hass: core.HomeAssistant,
         log_error("Component failed to initialize.")
         return False
     if result is not True:
-        log_error("Component did not return boolean if setup was successful. "
-                  "Disabling component.")
+        log_error("Component {!r} did not return boolean if setup was successful. "
+                  "Disabling component.".format(domain))
         loader.set_component(hass, domain, None)
         return False
 
