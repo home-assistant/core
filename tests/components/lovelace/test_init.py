@@ -3,6 +3,7 @@ import os
 import unittest
 from unittest.mock import patch
 from tempfile import mkdtemp
+import pytest
 from ruamel.yaml import YAML
 
 from homeassistant.exceptions import HomeAssistantError
@@ -11,7 +12,6 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.components.lovelace import (load_yaml,
                                                save_yaml, load_config,
                                                UnsupportedYamlError)
-import pytest
 
 TEST_YAML_A = """\
 title: My Awesome Home
