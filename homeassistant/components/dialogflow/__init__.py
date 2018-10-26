@@ -15,16 +15,8 @@ from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_INTENTS = 'intents'
-CONF_SPEECH = 'speech'
-CONF_ACTION = 'action'
-CONF_ASYNC_ACTION = 'async_action'
-
-DEFAULT_CONF_ASYNC_ACTION = False
 DEPENDENCIES = ['webhook', 'http']
 DOMAIN = 'dialogflow'
-
-INTENTS_API_ENDPOINT = '/api/dialogflow'
 
 SOURCE = "Home Assistant Dialogflow"
 
