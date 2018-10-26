@@ -231,6 +231,11 @@ class OsramLightifyLight(Luminary):
                 self._luminary.temp())
         self._brightness = int(self._luminary.lum() * 2.55)
 
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._light_id
+
 
 class OsramLightifyGroup(Luminary):
     """Representation of an Osram Lightify Group."""
@@ -240,6 +245,7 @@ class OsramLightifyGroup(Luminary):
         self._bridge = bridge
         self._light_ids = []
         super().__init__(group, update_lights)
+        self._unique_id = '{}'.format(self._light_ids)
 
     def _get_state(self):
         """Get state of group."""
@@ -260,3 +266,8 @@ class OsramLightifyGroup(Luminary):
         else:
             self._temperature = color_temperature_kelvin_to_mired(o_temp)
         self._state = light.on()
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id

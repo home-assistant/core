@@ -8,8 +8,6 @@ import asyncio
 from datetime import timedelta
 import logging
 import socket
-import subprocess
-import sys
 
 import voluptuous as vol
 
@@ -19,8 +17,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF,
-    STATE_ON, STATE_UNKNOWN)
+    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
@@ -102,7 +99,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._muted = False
         # Assume that the TV is in Play mode
         self._playing = True
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._remote = None
         # Mark the end of a shutdown command (need to wait 15 seconds before
         # sending the next command to avoid turning the TV back ON).
@@ -124,24 +121,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
-        if sys.platform == 'win32':
-            timeout_arg = '-w {}000'.format(self._config['timeout'])
-            _ping_cmd = [
-                'ping', '-n 3', timeout_arg, self._config['host']]
-        else:
-            timeout_arg = '-W{}'.format(self._config['timeout'])
-            _ping_cmd = [
-                'ping', '-n', '-q',
-                '-c3', timeout_arg, self._config['host']]
-
-        ping = subprocess.Popen(
-            _ping_cmd,
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        try:
-            ping.communicate()
-            self._state = STATE_ON if ping.returncode == 0 else STATE_OFF
-        except subprocess.CalledProcessError:
-            self._state = STATE_OFF
+        self.send_key("KEY")
 
     def get_remote(self):
         """Create or return a remote control instance."""
@@ -168,11 +148,11 @@ class SamsungTVDevice(MediaPlayerDevice):
                         BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
                     self._remote = None
-            self._state = STATE_ON
+            self._state = None
         except (self._exceptions_class.UnhandledResponse,
                 self._exceptions_class.AccessDenied):
             # We got a response so it's on.
-            self._state = STATE_ON
+            self._state = None
             self._remote = None
             _LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return

@@ -183,22 +183,23 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id]
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id]
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 173)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.439, 0.37])
@@ -229,23 +230,24 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id],
-                        'stop_time': '22:00'
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id],
+                    'stop_time': '22:00'
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 146)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.506, 0.385])
@@ -322,24 +324,25 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id],
-                        'start_time': '6:00',
-                        'stop_time': '23:30'
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id],
+                    'start_time': '6:00',
+                    'stop_time': '23:30'
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 147)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.504, 0.385])
@@ -372,23 +375,24 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id],
-                        'stop_time': '01:00'
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id],
+                    'stop_time': '01:00'
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 112)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.606, 0.379])
@@ -423,23 +427,24 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id],
-                        'stop_time': '01:00'
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id],
+                    'stop_time': '01:00'
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 173)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.439, 0.37])
@@ -523,23 +528,24 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id],
-                        'stop_time': '01:00'
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id],
+                    'stop_time': '01:00'
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 114)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.601, 0.382])
@@ -573,23 +579,24 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id],
-                        'stop_time': '01:00'
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id],
+                    'stop_time': '01:00'
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 112)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.606, 0.379])
@@ -620,25 +627,26 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id],
-                        'start_colortemp': '1000',
-                        'stop_colortemp': '6000',
-                        'stop_time': '22:00'
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id],
+                    'start_colortemp': '1000',
+                    'stop_colortemp': '6000',
+                    'stop_time': '22:00'
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 159)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.469, 0.378])
@@ -669,24 +677,25 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id],
-                        'brightness': 255,
-                        'stop_time': '22:00'
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id],
+                    'brightness': 255,
+                    'stop_time': '22:00'
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 255)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.506, 0.385])
@@ -731,24 +740,25 @@ class TestSwitchFlux(unittest.TestCase):
             print('sunset {}'.format(sunset_time))
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id,
-                                   dev2.entity_id,
-                                   dev3.entity_id]
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id,
+                               dev2.entity_id,
+                               dev3.entity_id]
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 163)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.46, 0.376])
@@ -783,23 +793,24 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id],
-                        'mode': 'mired'
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id],
+                    'mode': 'mired'
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 269)
 
@@ -827,23 +838,24 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            with patch('homeassistant.helpers.sun.get_astral_event_date',
-                       side_effect=event_date):
-                assert setup_component(self.hass, switch.DOMAIN, {
-                    switch.DOMAIN: {
-                        'platform': 'flux',
-                        'name': 'flux',
-                        'lights': [dev1.entity_id],
-                        'mode': 'rgb'
-                    }
-                })
-                turn_on_calls = mock_service(
-                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
-                common.turn_on(self.hass, 'switch.flux')
-                self.hass.block_till_done()
-                fire_time_changed(self.hass, test_time)
-                self.hass.block_till_done()
+        with patch('homeassistant.components.switch.flux.dt_now',
+                   return_value=test_time), \
+            patch('homeassistant.helpers.sun.get_astral_event_date',
+                  side_effect=event_date):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'flux',
+                    'name': 'flux',
+                    'lights': [dev1.entity_id],
+                    'mode': 'rgb'
+                }
+            })
+            turn_on_calls = mock_service(
+                self.hass, light.DOMAIN, SERVICE_TURN_ON)
+            common.turn_on(self.hass, 'switch.flux')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, test_time)
+            self.hass.block_till_done()
         call = turn_on_calls[-1]
         rgb = (255, 198, 152)
         rounded_call = tuple(map(round, call.data[light.ATTR_RGB_COLOR]))
