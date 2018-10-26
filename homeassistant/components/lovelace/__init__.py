@@ -597,6 +597,7 @@ async def websocket_lovelace_delete_card(hass, connection, msg):
     connection.send_message(message)
 
 
+@websocket_api.async_response
 async def websocket_lovelace_get_view(hass, connection, msg):
     """Send lovelace view config over websocket config."""
     error = None
