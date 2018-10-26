@@ -18,7 +18,7 @@
                     "username": "Nazwa u\u017cytkownika",
                     "verify_ssl": "Kontroler u\u017cywa prawid\u0142owego certyfikatu"
                 },
-                "title": "Skonfiguruj kontroler UniFi"
+                "title": "Konfiguracja kontrolera UniFi"
             }
         },
         "title": "Kontroler UniFi"
