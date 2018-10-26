@@ -12,3 +12,4 @@ The process is straight-forward.
 
 Still interested? Then you should take a peek at the [developer documentation](https://developers.home-assistant.io/) to get more details.
 
+- [Ammara](https://github.com/UmmeAmmaraa/)
