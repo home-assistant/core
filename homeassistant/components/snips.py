@@ -154,7 +154,7 @@ async def async_setup(hass, config):
 
         _LOGGER.debug("end_dialogue %s", json.dumps(notification))
         mqtt.async_publish(hass, 'hermes/dialogueManager/endSession',
-                            json.dumps(notification))
+                           json.dumps(notification))
 
     await hass.components.mqtt.async_subscribe(
         INTENT_TOPIC, message_received)
