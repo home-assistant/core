@@ -687,7 +687,7 @@ class _BinarySensorCapabilities(_AlexaEntity):
         sensor_type = self.get_type()
         if sensor_type is self.TYPE_CONTACT:
             return [_DisplayCategory.CONTACT_SENSOR]
-        elif sensor_type is self.TYPE_MOTION:
+        if sensor_type is self.TYPE_MOTION:
             return [_DisplayCategory.MOTION_SENSOR]
 
     def interfaces(self):
@@ -707,7 +707,7 @@ class _BinarySensorCapabilities(_AlexaEntity):
                 'window',
         ):
             return self.TYPE_CONTACT
-        elif attrs.get(ATTR_DEVICE_CLASS) is 'motion':
+        if attrs.get(ATTR_DEVICE_CLASS) == 'motion':
             return self.TYPE_MOTION
 
 
