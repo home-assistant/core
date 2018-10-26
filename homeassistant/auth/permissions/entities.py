@@ -5,7 +5,7 @@ from typing import (  # noqa: F401
 
 import voluptuous as vol
 
-from .common import CategoryType, SUBCAT_ALL
+from .common import CategoryType, ValueType, SUBCAT_ALL
 
 
 POLICY_READ = 'read'
@@ -32,7 +32,8 @@ ENTITY_POLICY_SCHEMA = vol.Any(True, vol.Schema({
 }))
 
 
-def _entity_allowed(schema: Dict[str, bool], keys: Tuple[str]):
+def _entity_allowed(schema: ValueType, keys: Tuple[str]) \
+        -> Union[bool, None]:
     """Test if an entity is allowed based on the keys."""
     if schema is None or isinstance(schema, bool):
         return schema
@@ -116,7 +117,7 @@ def compile_entities(policy: CategoryType) \
         def allowed_all_entities_dict(entity_id: str, keys: Tuple[str]) \
                 -> Union[None, bool]:
             """Test if allowed domain."""
-            return _entity_allowed(all_entities, keys)  # type: ignore
+            return _entity_allowed(all_entities, keys)
         funcs.append(allowed_all_entities_dict)
 
     # Can happen if no valid subcategories specified

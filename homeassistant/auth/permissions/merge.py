@@ -46,7 +46,7 @@ def _merge_policies(sources: List[CategoryType]) -> CategoryType:
         assert isinstance(source, dict)
 
         if policy is None:
-            policy = {}
+            policy = cast(CategoryType, {})
 
         assert isinstance(policy, dict)
 
