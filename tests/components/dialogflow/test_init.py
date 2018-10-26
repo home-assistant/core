@@ -22,7 +22,6 @@ calls = []
 @pytest.fixture
 async def fixture(hass, aiohttp_client):
     """Initialize a Home Assistant server for testing this module."""
-
     @callback
     def mock_service(call):
         """Mock action call."""
