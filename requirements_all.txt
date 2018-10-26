@@ -1567,9 +1567,6 @@ xknx==0.8.5
 # homeassistant.components.sensor.zestimate
 xmltodict==0.11.0
 
-# homeassistant.components.sensor.yahoo_finance
-yahoo-finance==1.4.0
-
 # homeassistant.components.sensor.yweather
 # homeassistant.components.weather.yweather
 yahooweather==0.10

@@ -106,7 +106,6 @@ TEST_REQUIREMENTS = (
     'statsd',
     'uvcclient',
     'warrant',
-    'yahoo-finance',
     'pythonwhois',
     'wakeonlan',
     'vultr',
