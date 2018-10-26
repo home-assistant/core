@@ -52,9 +52,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device = avion.Avion(
             mac=address,
             passphrase=device_config[CONF_API_KEY],
-            name=(device_config[CONF_NAME] if CONF_NAME in device_config
-                  else None),
-            object_id=device_config[CONF_ID],
+            name=device_config.get(CONF_NAME, None),
+            object_id=device_config.get(CONF_ID, None),
             connect=False)
         lights.append(AvionLight(device))
 
