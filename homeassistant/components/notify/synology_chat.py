@@ -15,7 +15,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_RESOURCE
 import homeassistant.helpers.config_validation as cv
 
-ATTR_FILE_URL =  'file_url'
+ATTR_FILE_URL = 'file_url'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -45,7 +45,7 @@ class SynologyChatNotificationService(BaseNotificationService):
         }
 
         extended_data = kwargs.get(ATTR_DATA)
-        file_url = extended_data.get(ATTR_FILE_URL, None) if extended_data else None
+        file_url = extended_data.get(ATTR_FILE_URL) if extended_data else None
 
         if file_url:
             data['file_url'] = file_url
