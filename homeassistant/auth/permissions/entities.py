@@ -5,7 +5,7 @@ from typing import (  # noqa: F401
 
 import voluptuous as vol
 
-from .common import CategoryType
+from .common import CategoryType, SUBCAT_ALL
 
 
 POLICY_READ = 'read'
@@ -26,6 +26,7 @@ ENTITY_VALUES_SCHEMA = vol.Any(True, vol.Schema({
 }))
 
 ENTITY_POLICY_SCHEMA = vol.Any(True, vol.Schema({
+    vol.Optional(SUBCAT_ALL): SINGLE_ENTITY_SCHEMA,
     vol.Optional(ENTITY_DOMAINS): ENTITY_VALUES_SCHEMA,
     vol.Optional(ENTITY_ENTITY_IDS): ENTITY_VALUES_SCHEMA,
 }))
@@ -61,6 +62,7 @@ def compile_entities(policy: CategoryType) \
 
     domains = policy.get(ENTITY_DOMAINS)
     entity_ids = policy.get(ENTITY_ENTITY_IDS)
+    all_entities = policy.get(SUBCAT_ALL)
 
     funcs = []  # type: List[Callable[[str, Tuple[str]], Union[None, bool]]]
 
@@ -71,37 +73,51 @@ def compile_entities(policy: CategoryType) \
     # Setting entity_ids to a boolean is final decision for permissions
     # So return right away.
     if isinstance(entity_ids, bool):
-        def apply_entity_id_policy(entity_id: str, keys: Tuple[str]) -> bool:
+        def allowed_entity_id_bool(entity_id: str, keys: Tuple[str]) -> bool:
             """Test if allowed entity_id."""
             return entity_ids  # type: ignore
 
-        return apply_entity_id_policy
+        return allowed_entity_id_bool
 
     if entity_ids is not None:
-        def allowed_entity_id(entity_id: str, keys: Tuple[str]) \
+        def allowed_entity_id_dict(entity_id: str, keys: Tuple[str]) \
                 -> Union[None, bool]:
             """Test if allowed entity_id."""
             return _entity_allowed(
                 entity_ids.get(entity_id), keys)  # type: ignore
 
-        funcs.append(allowed_entity_id)
+        funcs.append(allowed_entity_id_dict)
 
     if isinstance(domains, bool):
-        def allowed_domain(entity_id: str, keys: Tuple[str]) \
+        def allowed_domain_bool(entity_id: str, keys: Tuple[str]) \
                 -> Union[None, bool]:
             """Test if allowed domain."""
             return domains
 
-        funcs.append(allowed_domain)
+        funcs.append(allowed_domain_bool)
 
     elif domains is not None:
-        def allowed_domain(entity_id: str, keys: Tuple[str]) \
+        def allowed_domain_dict(entity_id: str, keys: Tuple[str]) \
                 -> Union[None, bool]:
             """Test if allowed domain."""
             domain = entity_id.split(".", 1)[0]
             return _entity_allowed(domains.get(domain), keys)  # type: ignore
 
-        funcs.append(allowed_domain)
+        funcs.append(allowed_domain_dict)
+
+    if isinstance(all_entities, bool):
+        def allowed_all_entities_bool(entity_id: str, keys: Tuple[str]) \
+                -> Union[None, bool]:
+            """Test if allowed domain."""
+            return all_entities
+        funcs.append(allowed_all_entities_bool)
+
+    elif all_entities is not None:
+        def allowed_all_entities_dict(entity_id: str, keys: Tuple[str]) \
+                -> Union[None, bool]:
+            """Test if allowed domain."""
+            return _entity_allowed(all_entities, keys)  # type: ignore
+        funcs.append(allowed_all_entities_dict)
 
     # Can happen if no valid subcategories specified
     if not funcs:

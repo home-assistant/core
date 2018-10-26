@@ -144,3 +144,44 @@ def test_entities_read_control():
     assert compiled('light.kitchen', ('read',)) is True
     assert compiled('light.kitchen', ('control',)) is True
     assert compiled('light.kitchen', ('edit',)) is False
+
+
+def test_entities_all_allow():
+    """Test policy allowing all entities."""
+    policy = {
+        'all': True
+    }
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(policy)
+    assert compiled('light.kitchen', ('read',)) is True
+    assert compiled('light.kitchen', ('control',)) is True
+    assert compiled('switch.kitchen', ('read',)) is True
+
+
+def test_entities_all_read():
+    """Test policy applying read to all entities."""
+    policy = {
+        'all': {
+            'read': True
+        }
+    }
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(policy)
+    assert compiled('light.kitchen', ('read',)) is True
+    assert compiled('light.kitchen', ('control',)) is False
+    assert compiled('switch.kitchen', ('read',)) is True
+
+
+def test_entities_all_control():
+    """Test entity ID policy applying control to all."""
+    policy = {
+        'all': {
+            'control': True
+        }
+    }
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(policy)
+    assert compiled('light.kitchen', ('read',)) is False
+    assert compiled('light.kitchen', ('control',)) is True
+    assert compiled('switch.kitchen', ('read',)) is False
+    assert compiled('switch.kitchen', ('control',)) is True

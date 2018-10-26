@@ -4,3 +4,5 @@ from typing import (  # noqa: F401
 
 CategoryType = Union[Mapping[str, 'CategoryType'], bool, None]
 PolicyType = Mapping[str, CategoryType]
+
+SUBCAT_ALL = 'all'
