@@ -7,16 +7,15 @@ https://home-assistant.io/components/legrandinone/
 import asyncio
 from collections import defaultdict
 from typing import Any, Dict, cast
-import functools as ft
 import logging
-import async_timeout
 import numbers
+import async_timeout
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -144,7 +143,7 @@ async def async_setup(hass, config):
 
         data['values'] = call.data.get(CONF_DIMENSION_VALUES)
 
-        if not (await LegrandInOneCommand.send_command(data)):
+        if not await LegrandInOneCommand.send_command(data):
             _LOGGER.error('Failed LegrandInOne command for %s', str(call.data))
 
     hass.services.async_register(
@@ -190,7 +189,8 @@ async def async_setup(hass, config):
                     hass.data[DATA_ENTITY_LOOKUP][event_type][
                         event_id].append(TMP_ENTITY.format(event_id))
                     hass.async_create_task(
-                        hass.data[DATA_DEVICE_REGISTER][event_type][device_type](event))
+                        hass.data[DATA_DEVICE_REGISTER][event_type][
+                            device_type](event))
 
                 else:
                     _LOGGER.debug('device_id not known and automatic %s add disabled', device_type)
@@ -278,6 +278,9 @@ class LegrandInOneDevice(Entity):
     legrand_id = None
     iobl_mode = None
     iobl_media = None
+    iobl_type = None
+    iobl_unit = None
+
 
     def __init__(self, device_id, initial_event=None, name=None,
                  fire_event=False, iobl_media='plc', iobl_comm_mode='unicast'):
@@ -373,6 +376,7 @@ class LegrandInOneDevice(Entity):
         if self._initial_event:
             self.handle_event_callback(self._initial_event)
 
+
 class LegrandInOneCommand(LegrandInOneDevice):
     """Singleton class to make IOBL command interface available to entities.
 
@@ -412,7 +416,6 @@ class LegrandInOneCommand(LegrandInOneDevice):
             self._state = False
 
         elif command == 'dim':
-            _LOGGER.debug("handling command: %s to iobl device: %s - Level : %d", command, self.legrand_id, args[0])
             # convert brightness to rflink dim level
             cmd = int(args[0] * 100 / 255)
             self._state = True
@@ -478,7 +481,6 @@ class LegrandInOneCommand(LegrandInOneDevice):
 class SwitchableLegrandInOneDevice(LegrandInOneCommand):
     """IOBL entity which can switch on/off (eg: light, switch)."""
 
-    """Representation of an IOBL light."""
     def __init__(self, *args, **kwargs):
         """Initialize device type and unit number."""
         self.iobl_type = 'light'

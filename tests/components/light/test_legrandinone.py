@@ -6,7 +6,6 @@ control of IOBL switch devices.
 """
 
 import asyncio
-from typing import Any, Dict, cast
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.legrandinone import EVENT_BUTTON_PRESSED
@@ -97,14 +96,14 @@ def test_default_setup(hass, monkeypatch):
     yield from hass.async_block_till_done()
     assert hass.states.get(DOMAIN + '.test').state == 'off'
     assert protocol.send_packet.call_args_list[0][0][0] == {
-    'type': 'bus_command',
-    'legrand_id' : '123456',
-    'who' : 'light',
-    'mode': 'unicast',
-    'media': 'plc',
-    'unit': '0',
-    'what': 'off'
-    }
+        'type': 'bus_command',
+        'legrand_id': '123456',
+        'who': 'light',
+        'mode': 'unicast',
+        'media': 'plc',
+        'unit': '0',
+        'what': 'off'
+        }
 
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_ON,
@@ -112,14 +111,14 @@ def test_default_setup(hass, monkeypatch):
     yield from hass.async_block_till_done()
     assert hass.states.get(DOMAIN + '.test').state == 'on'
     assert protocol.send_packet.call_args_list[1][0][0] == {
-    'type': 'bus_command',
-    'legrand_id' : '123456',
-    'who' : 'light',
-    'mode': 'unicast',
-    'media': 'plc',
-    'unit': '0',
-    'what': 'on'
-    }
+        'type': 'bus_command',
+        'legrand_id': '123456',
+        'who': 'light',
+        'mode': 'unicast',
+        'media': 'plc',
+        'unit': '0',
+        'what': 'on'
+        }
 
     # protocols supporting dimming and on/off should create hybrid light entity
     event_callback({
@@ -137,15 +136,15 @@ def test_default_setup(hass, monkeypatch):
     yield from hass.async_block_till_done()
 
     assert protocol.send_packet.call_args_list[2][0][0] == {
-    'type': 'set_dimension',
-    'legrand_id' : '234567',
-    'who' : 'light',
-    'mode': 'unicast',
-    'media': 'plc',
-    'unit': '0',
-    'dimension': 'go_to_level_time',
-    'values': ['50']
-    }
+        'type': 'set_dimension',
+        'legrand_id': '234567',
+        'who': 'light',
+        'mode': 'unicast',
+        'media': 'plc',
+        'unit': '0',
+        'dimension': 'go_to_level_time',
+        'values': ['50']
+        }
 
 
 @asyncio.coroutine

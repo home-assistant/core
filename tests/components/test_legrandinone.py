@@ -1,15 +1,13 @@
 """Common functions for legrandinone component tests and generic platform tests."""
 
 import asyncio
-from collections import defaultdict
-from typing import Any, Dict, cast
 from unittest.mock import Mock
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.legrandinone import (
     CONF_RECONNECT_INTERVAL, SERVICE_SEND_COMMAND)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_OPEN_COVER, SERVICE_STOP_COVER)
+    ATTR_ENTITY_ID, SERVICE_OPEN_COVER)
 
 
 @asyncio.coroutine
@@ -48,7 +46,8 @@ def mock_legrandinone(hass, config, domain, monkeypatch, failures=None):
     event_callback = mock_create.call_args_list[0][1]['event_callback']
     assert event_callback
 
-    disconnect_callback = mock_create.call_args_list[0][1]['disconnect_callback']
+    disconnect_callback = mock_create.call_args_list[0][
+        1]['disconnect_callback']
 
     return event_callback, mock_create, protocol, disconnect_callback
 
@@ -80,17 +79,16 @@ def test_send_command(hass, monkeypatch):
                                  {ATTR_ENTITY_ID: 'cover.test'}))
     yield from hass.async_block_till_done()
 
-    data = cast(Dict[str, Any], {
-    'type': 'bus_command',
-    'legrand_id' : '123456',
-    'who' : 'automation',
-    'mode': 'unicast',
-    'media': 'plc',
-    'unit': '2',
-    'what': 'move_up'
-    })
+    assert protocol.send_packet.call_args_list[0][0][0] == {
+        'type': 'bus_command',
+        'legrand_id': '123456',
+        'who': 'automation',
+        'mode': 'unicast',
+        'media': 'plc',
+        'unit': '2',
+        'what': 'move_up'
+        }
 
-    assert protocol.send_packet.call_args_list[0][0][0] == data
 
 @asyncio.coroutine
 def test_send_command_invalid_arguments(hass, monkeypatch):
@@ -106,16 +104,14 @@ def test_send_command_invalid_arguments(hass, monkeypatch):
     _, _, protocol, _ = yield from mock_legrandinone(
         hass, config, domain, monkeypatch)
 
-    # one argument missing
-    data = cast(Dict[str, Any], {
-    'type': 'bus_command',
-    'who' : 'automation',
-    'mode': 'unicast',
-    'media': 'plc',
-    'unit': '2',
-    'what': 'move_up'
-    })
-
+    data = {
+        'type': 'bus_command',
+        'who': 'automation',
+        'mode': 'unicast',
+        'media': 'plc',
+        'unit': '2',
+        'what': 'move_up'
+        }
     hass.async_add_job(
         hass.services.async_call(domain, SERVICE_SEND_COMMAND,
                                  data))
@@ -133,8 +129,8 @@ def test_reconnecting_after_disconnect(hass, monkeypatch):
     config = {
         'legrandinone': {
             'port': '/dev/ttyABC0',
-             CONF_RECONNECT_INTERVAL: 0,
-       },
+            CONF_RECONNECT_INTERVAL: 0,
+        },
         domain: {
             'platform': 'legrandinone',
             'devices': {
