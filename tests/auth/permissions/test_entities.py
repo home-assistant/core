@@ -10,7 +10,7 @@ def test_entities_none():
     """Test entity ID policy."""
     policy = None
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', []) is False
+    assert compiled('light.kitchen', ('read',)) is False
 
 
 def test_entities_empty():
@@ -18,7 +18,7 @@ def test_entities_empty():
     policy = {}
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', []) is False
+    assert compiled('light.kitchen', ('read',)) is False
 
 
 def test_entities_false():
@@ -33,7 +33,7 @@ def test_entities_true():
     policy = True
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', []) is True
+    assert compiled('light.kitchen', ('read',)) is True
 
 
 def test_entities_domains_true():
@@ -43,7 +43,7 @@ def test_entities_domains_true():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', []) is True
+    assert compiled('light.kitchen', ('read',)) is True
 
 
 def test_entities_domains_domain_true():
@@ -55,8 +55,8 @@ def test_entities_domains_domain_true():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', []) is True
-    assert compiled('switch.kitchen', []) is False
+    assert compiled('light.kitchen', ('read',)) is True
+    assert compiled('switch.kitchen', ('read',)) is False
 
 
 def test_entities_domains_domain_false():
@@ -77,7 +77,7 @@ def test_entities_entity_ids_true():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', []) is True
+    assert compiled('light.kitchen', ('read',)) is True
 
 
 def test_entities_entity_ids_false():
@@ -98,8 +98,8 @@ def test_entities_entity_ids_entity_id_true():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', []) is True
-    assert compiled('switch.kitchen', []) is False
+    assert compiled('light.kitchen', ('read',)) is True
+    assert compiled('switch.kitchen', ('read',)) is False
 
 
 def test_entities_entity_ids_entity_id_false():
@@ -111,3 +111,36 @@ def test_entities_entity_ids_entity_id_false():
     }
     with pytest.raises(vol.Invalid):
         ENTITY_POLICY_SCHEMA(policy)
+
+
+def test_entities_control_only():
+    """Test policy granting control only."""
+    policy = {
+        'entity_ids': {
+            'light.kitchen': {
+                'read': True,
+            }
+        }
+    }
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(policy)
+    assert compiled('light.kitchen', ('read',)) is True
+    assert compiled('light.kitchen', ('control',)) is False
+    assert compiled('light.kitchen', ('edit',)) is False
+
+
+def test_entities_read_control():
+    """Test policy granting control only."""
+    policy = {
+        'domains': {
+            'light': {
+                'read': True,
+                'control': True,
+            }
+        }
+    }
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(policy)
+    assert compiled('light.kitchen', ('read',)) is True
+    assert compiled('light.kitchen', ('control',)) is True
+    assert compiled('light.kitchen', ('edit',)) is False

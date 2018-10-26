@@ -1,23 +1,42 @@
 """Entity permissions."""
+from functools import wraps
 from typing import (  # noqa: F401
-    Callable, List, Tuple, Union)
+    Callable, Dict, List, Tuple, Union)
 
 import voluptuous as vol
 
 from .common import CategoryType
 
 
+POLICY_READ = 'read'
+POLICY_CONTROL = 'control'
+POLICY_EDIT = 'edit'
+
+SINGLE_ENTITY_SCHEMA = vol.Any(True, vol.Schema({
+    vol.Optional(POLICY_READ): True,
+    vol.Optional(POLICY_CONTROL): True,
+    vol.Optional(POLICY_EDIT): True,
+}))
+
 ENTITY_DOMAINS = 'domains'
 ENTITY_ENTITY_IDS = 'entity_ids'
 
-VALUES_SCHEMA = vol.Any(True, vol.Schema({
-    str: True
+ENTITY_VALUES_SCHEMA = vol.Any(True, vol.Schema({
+    str: SINGLE_ENTITY_SCHEMA
 }))
 
 ENTITY_POLICY_SCHEMA = vol.Any(True, vol.Schema({
-    vol.Optional(ENTITY_DOMAINS): VALUES_SCHEMA,
-    vol.Optional(ENTITY_ENTITY_IDS): VALUES_SCHEMA,
+    vol.Optional(ENTITY_DOMAINS): ENTITY_VALUES_SCHEMA,
+    vol.Optional(ENTITY_ENTITY_IDS): ENTITY_VALUES_SCHEMA,
 }))
+
+
+def _entity_allowed(schema: Dict[str, bool], keys: Tuple[str]):
+    """Test if an entity is allowed based on the keys."""
+    if schema is None or isinstance(schema, bool):
+        return schema
+    assert isinstance(schema, dict)
+    return schema.get(keys[0])
 
 
 def compile_entities(policy: CategoryType) \
@@ -62,7 +81,8 @@ def compile_entities(policy: CategoryType) \
         def allowed_entity_id(entity_id: str, keys: Tuple[str]) \
                 -> Union[None, bool]:
             """Test if allowed entity_id."""
-            return entity_ids.get(entity_id)  # type: ignore
+            return _entity_allowed(
+                entity_ids.get(entity_id), keys)  # type: ignore
 
         funcs.append(allowed_entity_id)
 
@@ -79,7 +99,7 @@ def compile_entities(policy: CategoryType) \
                 -> Union[None, bool]:
             """Test if allowed domain."""
             domain = entity_id.split(".", 1)[0]
-            return domains.get(domain)  # type: ignore
+            return _entity_allowed(domains.get(domain), keys)  # type: ignore
 
         funcs.append(allowed_domain)
 
@@ -94,6 +114,7 @@ def compile_entities(policy: CategoryType) \
     if len(funcs) == 1:
         func = funcs[0]
 
+        @wraps(func)
         def apply_policy_func(entity_id: str, keys: Tuple[str]) -> bool:
             """Apply a single policy function."""
             return func(entity_id, keys) is True

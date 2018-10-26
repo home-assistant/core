@@ -1,4 +1,5 @@
 """Permissions for Home Assistant."""
+import logging
 from typing import (  # noqa: F401
     cast, Any, Callable, Dict, List, Mapping, Set, Tuple, Union)
 
@@ -22,11 +23,13 @@ POLICY_SCHEMA = vol.Schema({
     vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA
 })
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class AbstractPermissions:
     """Default permissions class."""
 
-    def check_entity(self, entity_id: str, *keys: str) -> bool:
+    def check_entity(self, entity_id: str, key: str) -> bool:
         """Test if we can access entity."""
         raise NotImplementedError
 
@@ -43,10 +46,10 @@ class PolicyPermissions(AbstractPermissions):
         self._policy = policy
         self._compiled = {}  # type: Dict[str, Callable[..., bool]]
 
-    def check_entity(self, entity_id: str, *keys: str) -> bool:
+    def check_entity(self, entity_id: str, key: str) -> bool:
         """Test if we can access entity."""
         func = self._policy_func(CAT_ENTITIES, compile_entities)
-        return func(entity_id, keys)
+        return func(entity_id, (key,))
 
     def filter_states(self, states: List[State]) -> List[State]:
         """Filter a list of states for what the user is allowed to see."""
@@ -65,6 +68,9 @@ class PolicyPermissions(AbstractPermissions):
 
         func = self._compiled[category] = compile_func(
             self._policy.get(category))
+
+        _LOGGER.debug("Compiled %s func: %s", category, func)
+
         return func
 
     def __eq__(self, other: Any) -> bool:
@@ -79,7 +85,7 @@ class _OwnerPermissions(AbstractPermissions):
 
     # pylint: disable=no-self-use
 
-    def check_entity(self, entity_id: str, *keys: str) -> bool:
+    def check_entity(self, entity_id: str, key: str) -> bool:
         """Test if we can access entity."""
         return True
 
