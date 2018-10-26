@@ -36,12 +36,9 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
         """Show the form to the user."""
         data_schema = vol.Schema({
             vol.Required(CONF_API_KEY): str,
-            vol.Optional(CONF_LATITUDE, default=self.hass.config.latitude):
-                cv.latitude,
-            vol.Optional(CONF_LONGITUDE, default=self.hass.config.longitude):
-                cv.longitude,
-            vol.Optional(CONF_ELEVATION, default=self.hass.config.elevation):
-                vol.Coerce(float),
+            vol.Optional(CONF_LATITUDE): cv.latitude,
+            vol.Optional(CONF_LONGITUDE): cv.longitude,
+            vol.Optional(CONF_ELEVATION): vol.Coerce(float),
         })
 
         return self.async_show_form(
@@ -61,9 +58,15 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
         if not user_input:
             return await self._show_form()
 
-        latitude = user_input[CONF_LATITUDE]
-        longitude = user_input[CONF_LONGITUDE]
-        elevation = user_input[CONF_ELEVATION]
+        latitude = user_input.get(CONF_LATITUDE)
+        if latitude is None:
+            latitude = self.hass.config.latitude
+        longitude = user_input.get(CONF_LONGITUDE)
+        if longitude is None:
+            longitude = self.hass.config.longitude
+        elevation = user_input.get(CONF_ELEVATION)
+        if elevation is None:
+            elevation = self.hass.config.elevation
 
         identifier = '{0}, {1}'.format(latitude, longitude)
         if identifier in configured_instances(self.hass):
