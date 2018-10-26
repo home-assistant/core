@@ -8,8 +8,9 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent, template
+from homeassistant.helpers import intent, template, config_entry_flow
 from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ CONF_ACTION = 'action'
 CONF_ASYNC_ACTION = 'async_action'
 
 DEFAULT_CONF_ASYNC_ACTION = False
-DEPENDENCIES = ['http']
+DEPENDENCIES = ['webhook', 'http']
 DOMAIN = 'dialogflow'
 
 INTENTS_API_ENDPOINT = '/api/dialogflow'
@@ -38,52 +39,72 @@ class DialogFlowError(HomeAssistantError):
 
 async def async_setup(hass, config):
     """Set up Dialogflow component."""
-    hass.http.register_view(DialogflowIntentsView)
-
     return True
 
 
-class DialogflowIntentsView(HomeAssistantView):
-    """Handle Dialogflow requests."""
+async def handle_webhook(hass, webhook_id, request):
+    """Handle incoming webhook with Dialogflow requests."""
+    message = await request.json()
 
-    url = INTENTS_API_ENDPOINT
-    name = 'api:dialogflow'
+    _LOGGER.debug("Received Dialogflow request: %s", message)
 
-    async def post(self, request):
-        """Handle Dialogflow."""
-        hass = request.app['hass']
-        message = await request.json()
+    try:
+        response = await async_handle_message(hass, message)
+        return b'' if response is None else HomeAssistantView.json(response)
 
-        _LOGGER.debug("Received Dialogflow request: %s", message)
+    except DialogFlowError as err:
+        _LOGGER.warning(str(err))
+        return HomeAssistantView.json(
+            dialogflow_error_response(message, str(err))
+        )
 
-        try:
-            response = await async_handle_message(hass, message)
-            return b'' if response is None else self.json(response)
+    except intent.UnknownIntent as err:
+        _LOGGER.warning(str(err))
+        return HomeAssistantView.json(
+            dialogflow_error_response(
+                message,
+                "This intent is not yet configured within Home Assistant."
+            )
+        )
 
-        except DialogFlowError as err:
-            _LOGGER.warning(str(err))
-            return self.json(dialogflow_error_response(
-                hass, message, str(err)))
+    except intent.InvalidSlotInfo as err:
+        _LOGGER.warning(str(err))
+        return HomeAssistantView.json(
+            dialogflow_error_response(
+                message,
+                "Invalid slot information received for this intent."
+            )
+        )
 
-        except intent.UnknownIntent as err:
-            _LOGGER.warning(str(err))
-            return self.json(dialogflow_error_response(
-                hass, message,
-                "This intent is not yet configured within Home Assistant."))
-
-        except intent.InvalidSlotInfo as err:
-            _LOGGER.warning(str(err))
-            return self.json(dialogflow_error_response(
-                hass, message,
-                "Invalid slot information received for this intent."))
-
-        except intent.IntentError as err:
-            _LOGGER.warning(str(err))
-            return self.json(dialogflow_error_response(
-                hass, message, "Error handling intent."))
+    except intent.IntentError as err:
+        _LOGGER.warning(str(err))
+        return HomeAssistantView.json(
+            dialogflow_error_response(message, "Error handling intent."))
 
 
-def dialogflow_error_response(hass, message, error):
+async def async_setup_entry(hass, entry):
+    """Configure based on config entry."""
+    hass.components.webhook.async_register(
+        entry.data[CONF_WEBHOOK_ID], handle_webhook)
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    return True
+
+config_entry_flow.register_webhook_flow(
+    DOMAIN,
+    'Dialogflow Webhook',
+    {
+        'dialogflow_url': 'https://dialogflow.com/docs/fulfillment#webhook',
+        'docs_url': 'https://www.home-assistant.io/components/dialogflow/'
+    }
+)
+
+
+def dialogflow_error_response(message, error):
     """Return a response saying the error message."""
     dialogflow_response = DialogflowResponse(message['result']['parameters'])
     dialogflow_response.add_speech(error)
