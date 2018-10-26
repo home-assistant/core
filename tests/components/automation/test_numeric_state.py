@@ -16,11 +16,13 @@ from tests.components.automation import common
 
 @pytest.fixture
 def calls(hass):
+    """Track calls to a mock serivce."""
     return async_mock_service(hass, 'test', 'automation')
 
 
 @pytest.fixture(autouse=True)
 def setup_comp(hass):
+    """Initialize components."""
     mock_component(hass, 'group')
 
 
@@ -384,7 +386,8 @@ async def test_if_fires_on_entity_change_over_to_below_range(hass, calls):
     assert 1 == len(calls)
 
 
-async def test_if_fires_on_entity_change_over_to_below_above_range(hass, calls):
+async def test_if_fires_on_entity_change_over_to_below_above_range(
+        hass, calls):
     """Test the firing with changed entity."""
     hass.states.async_set('test.entity', 11)
     await hass.async_block_till_done()
@@ -449,7 +452,8 @@ async def test_if_fires_on_entity_change_below_with_attribute(hass, calls):
     assert 1 == len(calls)
 
 
-async def test_if_not_fires_on_entity_change_not_below_with_attribute(hass, calls):
+async def test_if_not_fires_on_entity_change_not_below_with_attribute(
+        hass, calls):
     """Test attributes."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -490,7 +494,8 @@ async def test_if_fires_on_attribute_change_with_attribute_below(hass, calls):
     assert 1 == len(calls)
 
 
-async def test_if_not_fires_on_attribute_change_with_attribute_not_below(hass, calls):
+async def test_if_not_fires_on_attribute_change_with_attribute_not_below(
+        hass, calls):
     """Test attributes change."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -532,7 +537,8 @@ async def test_if_not_fires_on_entity_change_with_attribute_below(hass, calls):
     assert 0 == len(calls)
 
 
-async def test_if_not_fires_on_entity_change_with_not_attribute_below(hass, calls):
+async def test_if_not_fires_on_entity_change_with_not_attribute_below(
+        hass, calls):
     """Test attributes change."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -553,7 +559,8 @@ async def test_if_not_fires_on_entity_change_with_not_attribute_below(hass, call
     assert 0 == len(calls)
 
 
-async def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(hass, calls):
+async def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(
+        hass, calls):
     """Test attributes change."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -631,7 +638,8 @@ async def test_template_string(hass, calls):
         calls[0].data['some']
 
 
-async def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(hass, calls):
+async def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(
+        hass, calls):
     """Test if not fired changed attributes."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -759,7 +767,8 @@ async def test_if_not_fires_on_entity_change_with_for(hass, calls):
     assert 0 == len(calls)
 
 
-async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
+async def test_if_not_fires_on_entities_change_with_for_after_stop(hass,
+                                                                   calls):
     """Test for not firing on entities change with for after stop."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -802,7 +811,8 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
     assert 2 == len(calls)
 
 
-async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
+async def test_if_fires_on_entity_change_with_for_attribute_change(hass,
+                                                                   calls):
     """Test for firing on entity change with for and attribute change."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {

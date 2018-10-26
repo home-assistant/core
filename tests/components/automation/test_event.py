@@ -12,11 +12,13 @@ from tests.common import async_mock_service
 
 @pytest.fixture
 def calls(hass):
+    """Track calls to a mock serivce."""
     return async_mock_service(hass, 'test', 'automation')
 
 
 @pytest.fixture(autouse=True)
 def setup_comp(hass):
+    """Initialize components."""
     mock_component(hass, 'group')
 
 

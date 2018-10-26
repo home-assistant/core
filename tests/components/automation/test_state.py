@@ -17,11 +17,13 @@ from tests.common import async_mock_service
 
 @pytest.fixture
 def calls(hass):
+    """Track calls to a mock serivce."""
     return async_mock_service(hass, 'test', 'automation')
 
 
 @pytest.fixture(autouse=True)
 def setup_comp(hass):
+    """Initialize components."""
     mock_component(hass, 'group')
     hass.states.async_set('test.entity', 'hello')
 
@@ -339,7 +341,8 @@ async def test_if_not_fires_on_entity_change_with_for(hass, calls):
     assert 0 == len(calls)
 
 
-async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
+async def test_if_not_fires_on_entities_change_with_for_after_stop(hass,
+                                                                   calls):
     """Test for not firing on entity change with for after stop trigger."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -381,7 +384,8 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
     assert 2 == len(calls)
 
 
-async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
+async def test_if_fires_on_entity_change_with_for_attribute_change(hass,
+                                                                   calls):
     """Test for firing on entity change with for and attribute change."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -416,7 +420,8 @@ async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
         assert 1 == len(calls)
 
 
-async def test_if_fires_on_entity_change_with_for_multiple_force_update(hass, calls):
+async def test_if_fires_on_entity_change_with_for_multiple_force_update(hass,
+                                                                        calls):
     """Test for firing on entity change with for and force update."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {

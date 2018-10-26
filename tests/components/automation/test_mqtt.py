@@ -11,11 +11,13 @@ from tests.components.automation import common
 
 @pytest.fixture
 def calls(hass):
+    """Track calls to a mock serivce."""
     return async_mock_service(hass, 'test', 'automation')
 
 
 @pytest.fixture(autouse=True)
 def setup_comp(hass):
+    """Initialize components."""
     mock_component(hass, 'group')
     hass.loop.run_until_complete(async_mock_mqtt_component(hass))
 

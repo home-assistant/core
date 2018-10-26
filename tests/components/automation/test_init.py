@@ -15,13 +15,13 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component, async_fire_time_changed,
-    mock_restore_cache, async_mock_service,
-    mock_component)
+    mock_restore_cache, async_mock_service)
 from tests.components.automation import common
 
 
 @pytest.fixture
 def calls(hass):
+    """Track calls to a mock serivce."""
     return async_mock_service(hass, 'test', 'automation')
 
 
