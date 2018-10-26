@@ -22,7 +22,7 @@ requests_mock==1.5.2
 HAP-python==2.3.0
 
 # homeassistant.components.sensor.rmvtransport
-PyRMVtransport==0.1.3
+PyRMVtransport==0.2.1
 
 # homeassistant.components.sensor.transport_nsw
 PyTransportNSW==0.0.8

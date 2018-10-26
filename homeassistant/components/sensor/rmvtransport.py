@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['PyRMVtransport==0.1.3']
+REQUIREMENTS = ['PyRMVtransport==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +78,19 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     session = async_get_clientsession(hass)
 
+    async_setup_platform.available = None
+
+    def log_once(available):
+        """Only log once if service is up/down."""
+        if not async_setup_platform.available == available:
+            async_setup_platform.available = available
+        else:
+            return
+        if available:
+            _LOGGER.warning("Data successfully retrieved from rmv.de")
+        else:
+            _LOGGER.warning("Could not retrive data from rmv.de")
+
     sensors = []
     for next_departure in config.get(CONF_NEXT_DEPARTURE):
         sensors.append(
@@ -91,7 +104,8 @@ async def async_setup_platform(hass, config, async_add_entities,
                 next_departure.get(CONF_TIME_OFFSET),
                 next_departure.get(CONF_MAX_JOURNEYS),
                 next_departure.get(CONF_NAME),
-                timeout))
+                timeout,
+                log_once))
 
     tasks = [sensor.async_update() for sensor in sensors]
     if tasks:
@@ -106,14 +120,14 @@ class RMVDepartureSensor(Entity):
     """Implementation of an RMV departure sensor."""
 
     def __init__(self, session, station, destinations, direction, lines,
-                 products, time_offset, max_journeys, name, timeout):
+                 products, time_offset, max_journeys, name, timeout, log_once):
         """Initialize the sensor."""
         self._station = station
         self._name = name
         self._state = None
         self.data = RMVDepartureData(session, station, destinations,
                                      direction, lines, products, time_offset,
-                                     max_journeys, timeout)
+                                     max_journeys, timeout, log_once)
         self._icon = ICONS[None]
 
     @property
@@ -176,7 +190,7 @@ class RMVDepartureData:
     """Pull data from the opendata.rmv.de web page."""
 
     def __init__(self, session, station_id, destinations, direction, lines,
-                 products, time_offset, max_journeys, timeout):
+                 products, time_offset, max_journeys, timeout, log_once):
         """Initialize the sensor."""
         from RMVtransport import RMVtransport
 
@@ -190,21 +204,25 @@ class RMVDepartureData:
         self._max_journeys = max_journeys
         self.rmv = RMVtransport(session, timeout)
         self.departures = []
+        self.log_once = log_once
 
     @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Update the connection data."""
-        from RMVtransport.rmvtransport import RMVtransportApiConnectionError
+        from RMVtransport.errors import RMVtransportApiConnectionError
 
         try:
             _data = await self.rmv.get_departures(self._station_id,
                                                   products=self._products,
-                                                  directionId=self._direction,
-                                                  maxJourneys=50)
+                                                  direction_id=self._direction,
+                                                  max_journeys=50)
         except RMVtransportApiConnectionError:
             self.departures = []
-            _LOGGER.warning("Could not retrive data from rmv.de")
+            self.log_once(False)
             return
+        else:
+            self.log_once(True)
+
         self.station = _data.get('station')
         _deps = []
         for journey in _data['journeys']:
