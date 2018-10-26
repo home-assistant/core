@@ -26,13 +26,13 @@ SUPPORT_AVION_LED = (SUPPORT_BRIGHTNESS)
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_ID, default=None): cv.positive_int,
+    vol.Optional(CONF_ID): cv.positive_int,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-    vol.Optional(CONF_USERNAME, default=None): cv.string,
-    vol.Optional(CONF_PASSWORD, default=None): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
 })
 
 
@@ -49,11 +49,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             lights.append(AvionLight(device))
 
     for address, device_config in config[CONF_DEVICES].items():
-        device = {}
-        device['name'] = device_config[CONF_NAME]
-        device['key'] = device_config[CONF_API_KEY]
-        device['address'] = address
-        device['id'] = device_config[CONF_ID]
+        device = avion.Avion(
+            mac=address,
+            passphrase=device_config[CONF_API_KEY],
+            name=(device_config[CONF_NAME] if CONF_NAME in device_config
+                  else None),
+            object_id=device_config[CONF_ID],
+            connect=False)
         lights.append(AvionLight(device))
 
     add_entities(lights)
