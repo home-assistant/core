@@ -365,7 +365,7 @@ def get_view(fname: str, view_id: str, data_format: str = FORMAT_YAML):
         return view
 
     raise ViewNotFoundError(
-            "View with ID: {} was not found in {}.".format(view_id, fname))
+        "View with ID: {} was not found in {}.".format(view_id, fname))
 
 
 def update_view(fname: str, view_id: str, view_config, data_format:
