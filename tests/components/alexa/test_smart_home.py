@@ -787,13 +787,17 @@ async def test_thermostat(hass):
         'Alexa.TemperatureSensor', 'temperature',
         {'value': 75.0, 'scale': 'FAHRENHEIT'})
 
-    call, _ = await assert_request_calls_service(
+    call, msg = await assert_request_calls_service(
         'Alexa.ThermostatController', 'SetTargetTemperature',
         'climate#test_thermostat', 'climate.set_temperature',
         hass,
         payload={'targetSetpoint': {'value': 69.0, 'scale': 'FAHRENHEIT'}}
     )
     assert call.data['temperature'] == 69.0
+    properties = _ReportedProperties(msg['context']['properties'])
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'targetSetpoint',
+        {'value': 69.0, 'scale': 'FAHRENHEIT'})
 
     msg = await assert_request_fails(
         'Alexa.ThermostatController', 'SetTargetTemperature',
@@ -803,7 +807,7 @@ async def test_thermostat(hass):
     )
     assert msg['event']['payload']['type'] == 'TEMPERATURE_VALUE_OUT_OF_RANGE'
 
-    call, _ = await assert_request_calls_service(
+    call, msg = await assert_request_calls_service(
         'Alexa.ThermostatController', 'SetTargetTemperature',
         'climate#test_thermostat', 'climate.set_temperature',
         hass,
@@ -816,6 +820,16 @@ async def test_thermostat(hass):
     assert call.data['temperature'] == 70.0
     assert call.data['target_temp_low'] == 68.0
     assert call.data['target_temp_high'] == 86.0
+    properties = _ReportedProperties(msg['context']['properties'])
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'targetSetpoint',
+        {'value': 70.0, 'scale': 'FAHRENHEIT'})
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'lowerSetpoint',
+        {'value': 68.0, 'scale': 'FAHRENHEIT'})
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'upperSetpoint',
+        {'value': 86.0, 'scale': 'FAHRENHEIT'})
 
     msg = await assert_request_fails(
         'Alexa.ThermostatController', 'SetTargetTemperature',
@@ -839,13 +853,17 @@ async def test_thermostat(hass):
     )
     assert msg['event']['payload']['type'] == 'TEMPERATURE_VALUE_OUT_OF_RANGE'
 
-    call, _ = await assert_request_calls_service(
+    call, msg = await assert_request_calls_service(
         'Alexa.ThermostatController', 'AdjustTargetTemperature',
         'climate#test_thermostat', 'climate.set_temperature',
         hass,
         payload={'targetSetpointDelta': {'value': -10.0, 'scale': 'KELVIN'}}
     )
     assert call.data['temperature'] == 52.0
+    properties = _ReportedProperties(msg['context']['properties'])
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'targetSetpoint',
+        {'value': 52.0, 'scale': 'FAHRENHEIT'})
 
     msg = await assert_request_fails(
         'Alexa.ThermostatController', 'AdjustTargetTemperature',
