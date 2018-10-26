@@ -289,40 +289,35 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
                     self._battery_level_template:
                 battery_level = self._battery_level_template\
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if battery_level is not None:
                     self._battery_level = int(battery_level)
 
             if topic == self._charging_topic and self._charging_template:
                 charging = self._charging_template\
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if charging is not None:
                     self._charging = cv.boolean(charging)
 
             if topic == self._cleaning_topic and self._cleaning_template:
                 cleaning = self._cleaning_template \
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if cleaning is not None:
                     self._cleaning = cv.boolean(cleaning)
 
             if topic == self._docked_topic and self._docked_template:
                 docked = self._docked_template \
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if docked is not None:
                     self._docked = cv.boolean(docked)
 
             if topic == self._error_topic and self._error_template:
                 error = self._error_template \
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if error is not None:
                     self._error = cv.string(error)
 
@@ -334,15 +329,14 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
             elif self._cleaning:
                 self._status = "Cleaning"
             elif self._error is not None and not self._error:
-                self._status = "Error: " + self._error
+                self._status = "Error: {}".format(self._error)
             else:
                 self._status = "Stopped"
 
             if topic == self._fan_speed_topic and self._fan_speed_template:
                 fan_speed = self._fan_speed_template\
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if fan_speed is not None:
                     self._fan_speed = fan_speed
 
