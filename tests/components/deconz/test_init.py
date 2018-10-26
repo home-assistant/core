@@ -1,10 +1,10 @@
 """Test deCONZ component setup process."""
 from unittest.mock import Mock, patch
 
+from homeassistant.components import deconz
+from homeassistant.components.deconz import DATA_DECONZ_ID
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
-from homeassistant.components import deconz
-
 from tests.common import mock_coro
 
 CONFIG = {
@@ -218,3 +218,54 @@ async def test_do_not_allow_clip_sensor(hass):
     async_dispatcher_send(hass, 'deconz_new_sensor', [remote])
     await hass.async_block_till_done()
     assert len(hass.data[deconz.DATA_DECONZ_EVENT]) == 0
+
+
+async def test_service_configure(hass):
+    """Test that service invokes pydeconz with the correct path and data."""
+    entry = Mock()
+    entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
+    with patch('pydeconz.DeconzSession.async_get_state',
+               return_value=mock_coro(CONFIG)), \
+        patch('pydeconz.DeconzSession.start', return_value=True), \
+        patch('homeassistant.helpers.device_registry.async_get_registry',
+              return_value=mock_coro(Mock())):
+        assert await deconz.async_setup_entry(hass, entry) is True
+
+    hass.data[DATA_DECONZ_ID] = {
+        'light.test': '/light/1'
+    }
+    data = {'on': True, 'attr1': 10, 'attr2': 20}
+
+    # only field
+    with patch('pydeconz.DeconzSession.async_put_state') as async_put_state:
+        await hass.services.async_call('deconz', 'configure', service_data={
+            'field': '/light/42', 'data': data
+        })
+        await hass.async_block_till_done()
+        async_put_state.assert_called_with('/light/42', data)
+    # only entity
+    with patch('pydeconz.DeconzSession.async_put_state') as async_put_state:
+        await hass.services.async_call('deconz', 'configure', service_data={
+            'entity': 'light.test', 'data': data
+        })
+        await hass.async_block_till_done()
+        async_put_state.assert_called_with('/light/1', data)
+    # entity + field
+    with patch('pydeconz.DeconzSession.async_put_state') as async_put_state:
+        await hass.services.async_call('deconz', 'configure', service_data={
+            'entity': 'light.test', 'field': '/state', 'data': data})
+        await hass.async_block_till_done()
+        async_put_state.assert_called_with('/light/1/state', data)
+
+    # non-existing entity (or not from deCONZ)
+    with patch('pydeconz.DeconzSession.async_put_state') as async_put_state:
+        await hass.services.async_call('deconz', 'configure', service_data={
+            'entity': 'light.nonexisting', 'field': '/state', 'data': data})
+        await hass.async_block_till_done()
+        async_put_state.assert_not_called()
+    # field does not start with /
+    with patch('pydeconz.DeconzSession.async_put_state') as async_put_state:
+        await hass.services.async_call('deconz', 'configure', service_data={
+            'entity': 'light.test', 'field': 'state', 'data': data})
+        await hass.async_block_till_done()
+        async_put_state.assert_not_called()
