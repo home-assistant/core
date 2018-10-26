@@ -61,10 +61,8 @@ SCHEMA_ADD_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_MOVE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_MOVE_CARD,
     vol.Required('card_id'): str,
-    vol.Optional('position'): int,
-    vol.Optional('view_id'): str,
-    vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
-                                                         FORMAT_YAML),
+    vol.Optional('new_position'): int,
+    vol.Optional('new_view_id'): str,
 })
 
 
@@ -404,7 +402,7 @@ async def websocket_lovelace_update_card(hass, connection, msg):
             update_card, hass.config.path(LOVELACE_CONFIG_FILE),
             msg['card_id'], msg['card_config'], msg.get('format', FORMAT_YAML))
         message = websocket_api.result_message(
-            msg['id'], True
+            msg['id']
         )
     except FileNotFoundError:
         error = ('file_not_found',
@@ -432,7 +430,7 @@ async def websocket_lovelace_add_card(hass, connection, msg):
             msg['view_id'], msg['card_config'], msg.get('position'),
             msg.get('format', FORMAT_YAML))
         message = websocket_api.result_message(
-            msg['id'], True
+            msg['id']
         )
     except FileNotFoundError:
         error = ('file_not_found',
@@ -455,17 +453,17 @@ async def websocket_lovelace_move_card(hass, connection, msg):
     """Move card to different position over websocket and save."""
     error = None
     try:
-        if 'view_id' in msg:
+        if 'new_view_id' in msg:
             await hass.async_add_executor_job(
                 move_card_view, hass.config.path(LOVELACE_CONFIG_FILE),
-                msg['card_id'], msg['view_id'], msg.get('position'))
+                msg['card_id'], msg['new_view_id'], msg.get('new_position'))
         else:
             await hass.async_add_executor_job(
                 move_card, hass.config.path(LOVELACE_CONFIG_FILE),
-                msg['card_id'], msg.get('position'))
+                msg['card_id'], msg.get('new_position'))
 
         message = websocket_api.result_message(
-            msg['id'], True
+            msg['id']
         )
     except FileNotFoundError:
         error = ('file_not_found',
