@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['antsar-avion==0.9']
+REQUIREMENTS = ['antsar-avion==0.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 

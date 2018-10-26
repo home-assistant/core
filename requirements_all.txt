@@ -143,7 +143,7 @@ anel_pwrctrl-homeassistant==0.0.1.dev2
 anthemav==1.1.8
 
 # homeassistant.components.light.avion
-# antsar-avion==0.9
+# antsar-avion==0.9.1
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.13
