@@ -8,8 +8,11 @@ import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.components.zha.entities import ZhaEntity
-from homeassistant.components.zha import helpers, const
+from homeassistant.components.zha import helpers
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.zha.const import (
+    ZHA_DISCOVERY_NEW, DATA_ZHA, DATA_ZHA_DISPATCHERS
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +31,7 @@ CLASS_MAPPING = {
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the Zigbee Home Automation binary sensors."""
+    """Old way of setting up Zigbee Home Automation binary sensors."""
     pass
 
 
@@ -38,14 +41,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         await _async_setup_entity(hass, config_entry, async_add_entities,
                                   discovery_info)
 
-    async_dispatcher_connect(
-        hass, const.ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+    unsub = async_dispatcher_connect(
+        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+
+    discovery_info = hass.data.get(DATA_ZHA, {})
+    binary_sensors = discovery_info.get('binary_sensor', None)
+    if binary_sensors is None:
+        return
+    for discovery_key in binary_sensors.keys():
+        await _async_setup_entity(hass, config_entry, async_add_entities,
+                                  discovery_key)
 
 
 async def _async_setup_entity(hass, config_entry, async_add_entities,
                               discovery_info=None):
     """Set up the ZHA binary sensor."""
-    discovery_info = helpers.get_discovery_info(hass, discovery_info)
+    discovery_info = helpers.get_discovery_info(hass, 'binary_sensor',
+                                                discovery_info)
     if discovery_info is None:
         return
 

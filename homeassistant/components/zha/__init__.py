@@ -21,7 +21,8 @@ from . import const as zha_const
 from . import config_flow  # noqa  # pylint: disable=unused-import
 from .const import (
     DOMAIN, COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_RADIO_TYPE,
-    CONF_USB_PATH, CONF_DEVICE_CONFIG, ZHA_DISCOVERY_NEW, RadioType
+    CONF_USB_PATH, CONF_DEVICE_CONFIG, ZHA_DISCOVERY_NEW, DATA_ZHA,
+    DATA_ZHA_BRIDGE_ID, DATA_ZHA_RADIO, DATA_ZHA_DISPATCHERS, RadioType
 )
 
 REQUIREMENTS = [
@@ -63,9 +64,6 @@ SERVICE_SCHEMAS = {
 
 # Zigbee definitions
 CENTICELSIUS = 'C-100'
-# Key in hass.data dict containing discovery info
-DISCOVERY_KEY = 'zha_discovery_info'
-BRIDGE_ID_KEY = 'bridge_id'
 
 # Internal definitions
 APPLICATION_CONTROLLER = None
@@ -91,11 +89,8 @@ async def async_setup_entry(hass, config_entry):
     """
     global APPLICATION_CONTROLLER
 
-    for component in COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                config_entry, component)
-        )
+    hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
 
     usb_path = config_entry.data.get(CONF_USB_PATH)
     baudrate = config_entry.data.get(CONF_BAUDRATE)
@@ -112,13 +107,17 @@ async def async_setup_entry(hass, config_entry):
         radio_description = "XBee"
 
     await radio.connect(usb_path, baudrate)
+    hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
 
     database = config_entry.data.get(CONF_DATABASE)
     APPLICATION_CONTROLLER = ControllerApplication(radio, database)
     listener = ApplicationListener(hass, config_entry)
     APPLICATION_CONTROLLER.add_listener(listener)
+    await APPLICATION_CONTROLLER.startup(auto_form=True)
 
-    hass.async_add_job(_startup(hass, APPLICATION_CONTROLLER, listener))
+    for device in APPLICATION_CONTROLLER.devices.values():
+        hass.async_create_task(
+            listener.async_device_initialized(device, False))
 
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
@@ -130,7 +129,25 @@ async def async_setup_entry(hass, config_entry):
         manufacturer="ZHA",
         model=radio_description,
     )
-    hass.data[DISCOVERY_KEY][BRIDGE_ID_KEY] = str(APPLICATION_CONTROLLER.ieee)
+    hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(APPLICATION_CONTROLLER.ieee)
+
+    for component in COMPONENTS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                config_entry, component)
+        )
+
+    device_registry = await \
+        hass.helpers.device_registry.async_get_registry()
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(CONNECTION_ZIGBEE, str(APPLICATION_CONTROLLER.ieee))},
+        identifiers={(DOMAIN, str(APPLICATION_CONTROLLER.ieee))},
+        name="Zigbee Coordinator",
+        manufacturer="ZHA",
+        model=radio_description,
+    )
+    hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(APPLICATION_CONTROLLER.ieee)
 
     async def permit(service):
         """Allow devices to join this network."""
@@ -152,19 +169,16 @@ async def async_setup_entry(hass, config_entry):
     hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
                                  schema=SERVICE_SCHEMAS[SERVICE_REMOVE])
 
+    def zha_shutdown(event):
+        """Close radio."""
+        hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()
+
+    hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, zha_shutdown)
     return True
-
-
-async def _startup(hass, controller, listener):
-    await controller.startup(auto_form=True)
-
-    for device in controller.devices.values():
-        hass.async_add_job(listener.async_device_initialized(device, False))
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload ZHA config entry."""
-    del hass.data[DISCOVERY_KEY]
     hass.services.async_remove(DOMAIN, SERVICE_PERMIT)
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
 
@@ -172,6 +186,14 @@ async def async_unload_entry(hass, config_entry):
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
 
+    dispatchers = hass.data[DATA_ZHA].get(DATA_ZHA_DISPATCHERS, [])
+    for unsub_dispatcher in dispatchers:
+        unsub_dispatcher()
+
+    _LOGGER.debug("Closing zha radio")
+    hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()
+
+    del hass.data[DATA_ZHA]
     return True
 
 
@@ -184,8 +206,12 @@ class ApplicationListener:
         self._config_entry = config_entry
         self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._device_registry = collections.defaultdict(list)
-        hass.data[DISCOVERY_KEY] = hass.data.get(DISCOVERY_KEY, {})
         zha_const.populate_data()
+
+        for component in COMPONENTS:
+            hass.data[DATA_ZHA][component] = (
+                hass.data[DATA_ZHA].get(component, {})
+            )
 
     def device_joined(self, device):
         """Handle device joined.
@@ -247,7 +273,7 @@ class ApplicationListener:
                     profile_clusters = profile.CLUSTERS[endpoint.device_type]
                     profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
                     component = profile_info[endpoint.device_type]
-            
+
             if ha_const.CONF_TYPE in node_config:
                 component = node_config[ha_const.CONF_TYPE]
                 profile_clusters = zha_const.COMPONENT_CLUSTERS[component]
@@ -269,7 +295,9 @@ class ApplicationListener:
                     'new_join': join,
                     'unique_id': device_key,
                 }
-                self._hass.data[DISCOVERY_KEY][device_key] = (discovery_info)
+                self._hass.data[DATA_ZHA][component][device_key] = (
+                    discovery_info
+                )
 
                 async_dispatcher_send(
                     self._hass, ZHA_DISCOVERY_NEW.format(component), device_key
@@ -348,7 +376,7 @@ class ApplicationListener:
         discovery_info[discovery_attr] = {cluster.cluster_id: cluster}
         if sub_component:
             discovery_info.update({'sub_component': sub_component})
-        self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
+        self._hass.data[DATA_ZHA][component][cluster_key] = discovery_info
 
         async_dispatcher_send(
             self._hass, ZHA_DISCOVERY_NEW.format(component), cluster_key

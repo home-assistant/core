@@ -7,6 +7,10 @@ BAUD_RATES = [
     2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 256000
 ]
 
+DATA_ZHA = 'zha'
+DATA_ZHA_BRIDGE_ID = 'zha_bridge_id'
+DATA_ZHA_RADIO = 'zha_radio'
+DATA_ZHA_DISPATCHERS = 'zha_dispatchers'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
 COMPONENTS = [

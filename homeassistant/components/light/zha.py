@@ -7,8 +7,11 @@ at https://home-assistant.io/components/light.zha/
 import logging
 from homeassistant.components import light
 from homeassistant.components.zha.entities import ZhaEntity
-from homeassistant.components.zha import helpers, const
+from homeassistant.components.zha import helpers
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.zha.const import (
+    ZHA_DISCOVERY_NEW, DATA_ZHA, DATA_ZHA_DISPATCHERS
+)
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +28,7 @@ UNSUPPORTED_ATTRIBUTE = 0x86
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the Zigbee Home Automation lights."""
+    """Old way of setting up Zigbee Home Automation lights."""
     pass
 
 
@@ -35,14 +38,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         await _async_setup_entity(hass, config_entry, async_add_entities,
                                   discovery_info)
 
-    async_dispatcher_connect(
-        hass, const.ZHA_DISCOVERY_NEW.format(light.DOMAIN), async_discover)
+    unsub = async_dispatcher_connect(
+        hass, ZHA_DISCOVERY_NEW.format(light.DOMAIN), async_discover)
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+
+    discovery_info = hass.data.get(DATA_ZHA, {})
+    lights = discovery_info.get('light', None)
+    if lights is None:
+        return
+    for discovery_key in lights.keys():
+        await _async_setup_entity(hass, config_entry, async_add_entities,
+                                  discovery_key)
 
 
 async def _async_setup_entity(hass, config_entry, async_add_entities,
                               discovery_info=None):
     """Set up the ZHA light."""
-    discovery_info = helpers.get_discovery_info(hass, discovery_info)
+    discovery_info = helpers.get_discovery_info(hass, 'light', discovery_info)
     if discovery_info is None:
         return
 
