@@ -85,7 +85,7 @@ class UnsupportedYamlError(HomeAssistantError):
 
 
 class DuplicateIdError(HomeAssistantError):
-    """Duplicate ID's"""
+    """Duplicate ID's."""
 
 
 def save_yaml(fname: str, data: JSON_TYPE):
@@ -312,7 +312,6 @@ def move_card_view(fname: str, card_id: str, view_id: str,
         destination.insert(position, card_to_move)
 
     save_yaml(fname, config)
-    return
 
 
 async def async_setup(hass, config):
@@ -456,7 +455,7 @@ async def websocket_lovelace_move_card(hass, connection, msg):
     """Move card to different position over websocket and save."""
     error = None
     try:
-        if ('view_id' in msg):
+        if 'view_id' in msg:
             await hass.async_add_executor_job(
                 move_card_view, hass.config.path(LOVELACE_CONFIG_FILE),
                 msg['card_id'], msg['view_id'], msg.get('position'))
