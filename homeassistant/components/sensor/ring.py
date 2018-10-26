@@ -100,6 +100,7 @@ class RingSensor(Entity):
             self._data.name, SENSOR_TYPES.get(self._sensor_type)[0])
         self._state = STATE_UNKNOWN
         self._tz = str(hass.config.time_zone)
+        self._unique_id = '{}-{}'.format(self._data.id, self._sensor_type)
 
     @property
     def name(self):
@@ -110,6 +111,11 @@ class RingSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def device_state_attributes(self):

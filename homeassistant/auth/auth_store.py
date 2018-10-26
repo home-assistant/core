@@ -10,9 +10,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
+from .permissions import DEFAULT_POLICY
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'
+INITIAL_GROUP_NAME = 'All Access'
 
 
 class AuthStore:
@@ -28,8 +30,17 @@ class AuthStore:
         """Initialize the auth store."""
         self.hass = hass
         self._users = None  # type: Optional[Dict[str, models.User]]
+        self._groups = None  # type: Optional[Dict[str, models.Group]]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY,
                                                  private=True)
+
+    async def async_get_groups(self) -> List[models.Group]:
+        """Retrieve all users."""
+        if self._groups is None:
+            await self._async_load()
+            assert self._groups is not None
+
+        return list(self._groups.values())
 
     async def async_get_users(self) -> List[models.User]:
         """Retrieve all users."""
@@ -51,14 +62,20 @@ class AuthStore:
             self, name: Optional[str], is_owner: Optional[bool] = None,
             is_active: Optional[bool] = None,
             system_generated: Optional[bool] = None,
-            credentials: Optional[models.Credentials] = None) -> models.User:
+            credentials: Optional[models.Credentials] = None,
+            groups: Optional[List[models.Group]] = None) -> models.User:
         """Create a new user."""
         if self._users is None:
             await self._async_load()
-            assert self._users is not None
+
+        assert self._users is not None
+        assert self._groups is not None
 
         kwargs = {
-            'name': name
+            'name': name,
+            # Until we get group management, we just put everyone in the
+            # same group.
+            'groups': groups or [],
         }  # type: Dict[str, Any]
 
         if is_owner is not None:
@@ -219,19 +236,40 @@ class AuthStore:
             return
 
         users = OrderedDict()  # type: Dict[str, models.User]
+        groups = OrderedDict()  # type: Dict[str, models.Group]
 
         # When creating objects we mention each attribute explicetely. This
         # prevents crashing if user rolls back HA version after a new property
         # was added.
 
+        for group_dict in data.get('groups', []):
+            groups[group_dict['id']] = models.Group(
+                name=group_dict['name'],
+                id=group_dict['id'],
+                policy=group_dict.get('policy', DEFAULT_POLICY),
+            )
+
+        migrate_group = None
+
+        if not groups:
+            migrate_group = models.Group(
+                name=INITIAL_GROUP_NAME,
+                policy=DEFAULT_POLICY
+            )
+            groups[migrate_group.id] = migrate_group
+
         for user_dict in data['users']:
             users[user_dict['id']] = models.User(
                 name=user_dict['name'],
+                groups=[groups[group_id] for group_id
+                        in user_dict.get('group_ids', [])],
                 id=user_dict['id'],
                 is_owner=user_dict['is_owner'],
                 is_active=user_dict['is_active'],
                 system_generated=user_dict['system_generated'],
             )
+            if migrate_group is not None and not user_dict['system_generated']:
+                users[user_dict['id']].groups = [migrate_group]
 
         for cred_dict in data['credentials']:
             users[cred_dict['user_id']].credentials.append(models.Credentials(
@@ -286,6 +324,7 @@ class AuthStore:
             )
             users[rt_dict['user_id']].refresh_tokens[token.id] = token
 
+        self._groups = groups
         self._users = users
 
     @callback
@@ -300,10 +339,12 @@ class AuthStore:
     def _data_to_save(self) -> Dict:
         """Return the data to store."""
         assert self._users is not None
+        assert self._groups is not None
 
         users = [
             {
                 'id': user.id,
+                'group_ids': [group.id for group in user.groups],
                 'is_owner': user.is_owner,
                 'is_active': user.is_active,
                 'name': user.name,
@@ -311,6 +352,18 @@ class AuthStore:
             }
             for user in self._users.values()
         ]
+
+        groups = []
+        for group in self._groups.values():
+            g_dict = {
+                'name': group.name,
+                'id': group.id,
+            }  # type: Dict[str, Any]
+
+            if group.policy is not DEFAULT_POLICY:
+                g_dict['policy'] = group.policy
+
+            groups.append(g_dict)
 
         credentials = [
             {
@@ -348,6 +401,7 @@ class AuthStore:
 
         return {
             'users': users,
+            'groups': groups,
             'credentials': credentials,
             'refresh_tokens': refresh_tokens,
         }
@@ -355,3 +409,14 @@ class AuthStore:
     def _set_defaults(self) -> None:
         """Set default values for auth store."""
         self._users = OrderedDict()  # type: Dict[str, models.User]
+
+        # Add default group
+        all_access_group = models.Group(
+            name=INITIAL_GROUP_NAME,
+            policy=DEFAULT_POLICY,
+        )
+
+        groups = OrderedDict()  # type: Dict[str, models.Group]
+        groups[all_access_group.id] = all_access_group
+
+        self._groups = groups

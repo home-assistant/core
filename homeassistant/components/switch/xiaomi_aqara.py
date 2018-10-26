@@ -16,6 +16,7 @@ ATTR_IN_USE = 'in_use'
 
 LOAD_POWER = 'load_power'
 POWER_CONSUMED = 'power_consumed'
+ENERGY_CONSUMED = 'energy_consumed'
 IN_USE = 'inuse'
 
 
@@ -57,8 +58,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                                    'channel_1',
                                                    False, gateway))
             elif model in ['86plug', 'ctrl_86plug', 'ctrl_86plug.aq1']:
+                if 'proto' not in device or int(device['proto'][0:1]) == 1:
+                    data_key = 'status'
+                else:
+                    data_key = 'channel_0'
                 devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
-                                                   'status', True, gateway))
+                                                   data_key, True, gateway))
     add_entities(devices)
 
 
@@ -122,13 +127,17 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             self._in_use = int(data[IN_USE])
             if not self._in_use:
                 self._load_power = 0
-        if POWER_CONSUMED in data:
-            self._power_consumed = round(float(data[POWER_CONSUMED]), 2)
+
+        for key in [POWER_CONSUMED, ENERGY_CONSUMED]:
+            if key in data:
+                self._power_consumed = round(float(data[key]), 2)
+                break
+
         if LOAD_POWER in data:
             self._load_power = round(float(data[LOAD_POWER]), 2)
 
         value = data.get(self._data_key)
-        if value is None:
+        if value not in ['on', 'off']:
             return False
 
         state = value == 'on'

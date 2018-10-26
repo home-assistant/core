@@ -10,6 +10,7 @@ from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
     models as auth_models, auth_store, const as auth_const)
 from homeassistant.auth.const import MFA_SESSION_EXPIRATION
+from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 from tests.common import (
     MockUser, ensure_auth_manager_loaded, flush_store, CLIENT_ID)
@@ -138,6 +139,14 @@ async def test_auth_manager_from_config_auth_modules(mock_hass):
 
 async def test_create_new_user(hass):
     """Test creating new user."""
+    events = []
+
+    @callback
+    def user_added(event):
+        events.append(event)
+
+    hass.bus.async_listen('user_added', user_added)
+
     manager = await auth.auth_manager_from_config(hass, [{
         'type': 'insecure_example',
         'users': [{
@@ -159,6 +168,10 @@ async def test_create_new_user(hass):
     assert user is not None
     assert user.is_owner is False
     assert user.name == 'Test Name'
+
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data['user_id'] == user.id
 
 
 async def test_login_as_existing_user(mock_hass):
@@ -289,6 +302,7 @@ async def test_saving_loading(hass, hass_storage):
     store2 = auth_store.AuthStore(hass)
     users = await store2.async_get_users()
     assert len(users) == 1
+    assert users[0].permissions == user.permissions
     assert users[0] == user
     assert len(users[0].refresh_tokens) == 2
     for r_token in users[0].refresh_tokens.values():
@@ -331,12 +345,24 @@ async def test_cannot_retrieve_expired_access_token(hass):
 
 async def test_generating_system_user(hass):
     """Test that we can add a system user."""
+    events = []
+
+    @callback
+    def user_added(event):
+        events.append(event)
+
+    hass.bus.async_listen('user_added', user_added)
+
     manager = await auth.auth_manager_from_config(hass, [], [])
     user = await manager.async_create_system_user('Hass.io')
     token = await manager.async_create_refresh_token(user)
     assert user.system_generated
     assert token is not None
     assert token.client_id is None
+
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data['user_id'] == user.id
 
 
 async def test_refresh_token_requires_client_for_user(hass):
@@ -797,3 +823,50 @@ async def test_enable_mfa_for_user(hass, hass_storage):
 
     # disable mfa for user don't enabled just silent fail
     await manager.async_disable_user_mfa(user, 'insecure_example')
+
+
+async def test_async_remove_user(hass):
+    """Test removing a user."""
+    events = []
+
+    @callback
+    def user_removed(event):
+        events.append(event)
+
+    hass.bus.async_listen('user_removed', user_removed)
+
+    manager = await auth.auth_manager_from_config(hass, [{
+        'type': 'insecure_example',
+        'users': [{
+            'username': 'test-user',
+            'password': 'test-pass',
+            'name': 'Test Name'
+        }]
+    }], [])
+    hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+
+    # Add fake user with credentials for example auth provider.
+    user = MockUser(
+        id='mock-user',
+        is_owner=False,
+        is_active=False,
+        name='Paulus',
+    ).add_to_auth_manager(manager)
+    user.credentials.append(auth_models.Credentials(
+        id='mock-id',
+        auth_provider_type='insecure_example',
+        auth_provider_id=None,
+        data={'username': 'test-user'},
+        is_new=False,
+    ))
+    assert len(user.credentials) == 1
+
+    await hass.auth.async_remove_user(user)
+
+    assert len(await manager.async_get_users()) == 0
+    assert len(user.credentials) == 0
+
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data['user_id'] == user.id

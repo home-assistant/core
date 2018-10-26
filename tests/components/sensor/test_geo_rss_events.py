@@ -123,6 +123,10 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
                 assert len(all_states) == 1
                 state = self.hass.states.get("sensor.event_service_any")
                 assert int(state.state) == 0
+                assert state.attributes == {
+                    ATTR_FRIENDLY_NAME: "Event Service Any",
+                    ATTR_UNIT_OF_MEASUREMENT: "Events",
+                    ATTR_ICON: "mdi:alert"}
 
     @mock.patch('georss_client.generic_feed.GenericFeed')
     def test_setup_with_categories(self, mock_feed):
