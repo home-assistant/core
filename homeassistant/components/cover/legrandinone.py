@@ -66,13 +66,15 @@ async def async_setup_platform(hass, config, async_add_entities,
         device_id = event[EVENT_KEY_ID]
 
         device_config = config[CONF_DEVICE_DEFAULTS]
-        device = LegrandInOneCover(device_id, initial_event=event, **device_config)
+        device = LegrandInOneCover(device_id, initial_event=event,
+                                   **device_config)
         async_add_entities([device])
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][device_id].append(device)
 
     if config[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND][DEVICE_TYPE_AUTOMATION] = add_new_device
+        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND][
+            DEVICE_TYPE_AUTOMATION] = add_new_device
 
 
 class LegrandInOneCover(LegrandInOneCommand, CoverDevice):
@@ -82,7 +84,6 @@ class LegrandInOneCover(LegrandInOneCommand, CoverDevice):
         """Initialize device type and unit number."""
         self.iobl_type = 'automation'
         self.iobl_unit = '2'
-        # TODO: Fetch initial state from initial event if present
         super().__init__(*args, **kwargs)
 
     def _handle_event(self, event):

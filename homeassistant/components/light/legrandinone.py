@@ -12,8 +12,8 @@ from homeassistant.components.legrandinone import (
     CONF_AUTOMATIC_ADD, CONF_DEVICE_DEFAULTS,
     CONF_DEVICES, CONF_FIRE_EVENT, DATA_DEVICE_REGISTER,
     DEVICE_DEFAULTS_SCHEMA, CONF_MEDIA, CONF_COMM_MODE,
-    EVENT_KEY_COMMAND, EVENT_KEY_ID, DATA_ENTITY_LOOKUP,
-    DEVICE_TYPE_LIGHT, SwitchableLegrandInOneDevice, cv,
+    EVENT_KEY_COMMAND, EVENT_KEY_ID, DEVICE_TYPE_LIGHT,
+    SwitchableLegrandInOneDevice, cv,
     vol)
 from homeassistant.const import (CONF_NAME, CONF_TYPE)
 
@@ -47,10 +47,10 @@ def entity_class_for_type(entity_type):
     Async friendly.
     """
     entity_device_mapping = {
-        # sends 'dim', 'off' and 'on' command to support both dimmers and on/off
-        # switches.
+        # sends 'dim', 'off' and 'on' command to support both
+        # dimmers and on/off switches.
         TYPE_DIMMABLE: DimmableLegrandInOneLight,
-        # sends only 'on/off' commands not advices with dimmers 
+        # sends only 'on/off' commands not advices with dimmers
         TYPE_SWITCHABLE: LegrandInOneLight,
     }
 
@@ -67,7 +67,7 @@ def devices_from_config(domain_config):
             # instantiation
             entity_type = config.pop(CONF_TYPE)
         else:
-        # When no type is specified, defaults to switchable.
+            # When no type is specified, defaults to switchable.
             entity_type = TYPE_SWITCHABLE
 
         entity_class = entity_class_for_type(entity_type)
@@ -99,13 +99,15 @@ async def async_setup_platform(hass, config, async_add_entities,
         async_add_entities([device])
 
     if config[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND][DEVICE_TYPE_LIGHT] = add_new_device
+        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND][
+            DEVICE_TYPE_LIGHT] = add_new_device
 
 
 class LegrandInOneLight(SwitchableLegrandInOneDevice, Light):
     """Representation of an IOBL light."""
 
     pass
+
 
 class DimmableLegrandInOneLight(SwitchableLegrandInOneDevice, Light):
     """IOBL light device that support dimming."""
@@ -121,7 +123,6 @@ class DimmableLegrandInOneLight(SwitchableLegrandInOneDevice, Light):
         else:
             await self._async_handle_command('turn_on')
 
-
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
@@ -131,5 +132,3 @@ class DimmableLegrandInOneLight(SwitchableLegrandInOneDevice, Light):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
-
-
