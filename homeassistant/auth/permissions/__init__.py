@@ -95,5 +95,3 @@ class _OwnerPermissions(AbstractPermissions):
 
 
 OwnerPermissions = _OwnerPermissions()  # pylint: disable=invalid-name
-
-

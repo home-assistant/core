@@ -44,5 +44,3 @@ def test_default_policy_allow_all():
         State('light.balcony', 'on'),
     ]
     assert perm.filter_states(states) == states
-
-
