@@ -21,7 +21,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -179,6 +179,10 @@ class MiroboVacuum(StateVacuumDevice):
     def state(self):
         """Return the status of the vacuum cleaner."""
         if self.vacuum_state is not None:
+            # The vacuum reverts back to an idle state after erroring out.
+            # We want to keep returning an error until it has been cleared.
+            if self.vacuum_state.got_error:
+                return STATE_ERROR
             try:
                 return STATE_CODE_TO_STATE[int(self.vacuum_state.state_code)]
             except KeyError:

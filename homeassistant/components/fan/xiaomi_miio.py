@@ -11,12 +11,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA,
-                                          SUPPORT_SET_SPEED, DOMAIN, )
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
-                                 ATTR_ENTITY_ID, )
+from homeassistant.components.fan import (
+    DOMAIN, PLATFORM_SCHEMA, SUPPORT_SET_SPEED, FanEntity)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'zhimi.humidifier.v1',
          'zhimi.humidifier.ca1']),
 })
-
-REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 ATTR_MODEL = 'model'
 

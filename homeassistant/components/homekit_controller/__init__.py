@@ -65,8 +65,7 @@ def homekit_http_send(self, message_body=None, encode_chunked=False):
 
 def get_serial(accessory):
     """Obtain the serial number of a HomeKit device."""
-    # pylint: disable=import-error
-    import homekit
+    import homekit  # pylint: disable=import-error
     for service in accessory['services']:
         if homekit.ServicesTypes.get_short(service['type']) != \
            'accessory-information':
@@ -85,8 +84,7 @@ class HKDevice():
 
     def __init__(self, hass, host, port, model, hkid, config_num, config):
         """Initialise a generic HomeKit device."""
-        # pylint: disable=import-error
-        import homekit
+        import homekit  # pylint: disable=import-error
 
         _LOGGER.info("Setting up Homekit device %s", model)
         self.hass = hass
@@ -132,8 +130,7 @@ class HKDevice():
 
     def accessory_setup(self):
         """Handle setup of a HomeKit accessory."""
-        # pylint: disable=import-error
-        import homekit
+        import homekit  # pylint: disable=import-error
 
         try:
             data = self.get_json('/accessories')
@@ -185,8 +182,7 @@ class HKDevice():
 
     def device_config_callback(self, callback_data):
         """Handle initial pairing."""
-        # pylint: disable=import-error
-        import homekit
+        import homekit  # pylint: disable=import-error
         pairing_id = str(uuid.uuid4())
         code = callback_data.get('code').strip()
         try:

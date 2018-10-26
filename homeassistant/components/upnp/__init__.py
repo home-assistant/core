@@ -30,7 +30,7 @@ from .config_flow import ensure_domain_data
 from .device import Device
 
 
-REQUIREMENTS = ['async-upnp-client==0.12.6']
+REQUIREMENTS = ['async-upnp-client==0.12.7']
 DEPENDENCIES = ['http']
 
 NOTIFICATION_ID = 'upnp_notification'
@@ -43,8 +43,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
         vol.Optional(CONF_PORTS):
             vol.Schema({
-                vol.Any(CONF_HASS, cv.positive_int):
-                    vol.Any(CONF_HASS, cv.positive_int)
+                vol.Any(CONF_HASS, cv.port):
+                    vol.Any(CONF_HASS, cv.port)
             })
     }),
 }, extra=vol.ALLOW_EXTRA)
