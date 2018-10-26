@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zha']
 
-# ZigBee Cluster Library Zone Type to Home Assistant device class
+# Zigbee Cluster Library Zone Type to Home Assistant device class
 CLASS_MAPPING = {
     0x000d: 'motion',
     0x0015: 'opening',
@@ -145,7 +145,7 @@ class Remote(zha.Entity, BinarySensorDevice):
     _domain = DOMAIN
 
     class OnOffListener:
-        """Listener for the OnOff ZigBee cluster."""
+        """Listener for the OnOff Zigbee cluster."""
 
         def __init__(self, entity):
             """Initialize OnOffListener."""
@@ -170,7 +170,7 @@ class Remote(zha.Entity, BinarySensorDevice):
             pass
 
     class LevelListener:
-        """Listener for the LevelControl ZigBee cluster."""
+        """Listener for the LevelControl Zigbee cluster."""
 
         def __init__(self, entity):
             """Initialize LevelListener."""

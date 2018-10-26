@@ -151,11 +151,11 @@ class SwitchTemplate(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Fire the on action."""
-        await self._on_script.async_run()
+        await self._on_script.async_run(context=self._context)
 
     async def async_turn_off(self, **kwargs):
         """Fire the off action."""
-        await self._off_script.async_run()
+        await self._off_script.async_run(context=self._context)
 
     async def async_update(self):
         """Update the state from the template."""

@@ -5,6 +5,10 @@ DOMAIN = 'homekit'
 HOMEKIT_FILE = '.homekit.state'
 HOMEKIT_NOTIFY_ID = 4663548
 
+# #### Attributes ####
+ATTR_DISPLAY_NAME = 'display_name'
+ATTR_VALUE = 'value'
+
 # #### Config ####
 CONF_AUTO_START = 'auto_start'
 CONF_ENTITY_CONFIG = 'entity_config'
@@ -21,6 +25,9 @@ FEATURE_ON_OFF = 'on_off'
 FEATURE_PLAY_PAUSE = 'play_pause'
 FEATURE_PLAY_STOP = 'play_stop'
 FEATURE_TOGGLE_MUTE = 'toggle_mute'
+
+# #### HomeKit Component Event ####
+EVENT_HOMEKIT_CHANGED = 'homekit_state_change'
 
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = 'start'
@@ -139,3 +146,7 @@ DEVICE_CLASS_WINDOW = 'window'
 # #### Thresholds ####
 THRESHOLD_CO = 25
 THRESHOLD_CO2 = 1000
+
+# #### Default values ####
+DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C
+DEFAULT_MAX_TEMP_WATER_HEATER = 60  # °C

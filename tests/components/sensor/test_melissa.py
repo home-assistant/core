@@ -50,40 +50,40 @@ class TestMelissa(unittest.TestCase):
     def test_name(self):
         """Test name property."""
         device = self.api.fetch_devices()[self._serial]
-        self.assertEqual(self.temp.name, '{0} {1}'.format(
+        assert self.temp.name == '{0} {1}'.format(
             device['name'],
             self.temp._type
-        ))
-        self.assertEqual(self.hum.name, '{0} {1}'.format(
+        )
+        assert self.hum.name == '{0} {1}'.format(
             device['name'],
             self.hum._type
-        ))
+        )
 
     def test_state(self):
         """Test state property."""
         device = self.api.status()[self._serial]
         self.temp.update()
-        self.assertEqual(self.temp.state, device[self.api.TEMP])
+        assert self.temp.state == device[self.api.TEMP]
         self.hum.update()
-        self.assertEqual(self.hum.state, device[self.api.HUMIDITY])
+        assert self.hum.state == device[self.api.HUMIDITY]
 
     def test_unit_of_measurement(self):
         """Test unit of measurement property."""
-        self.assertEqual(self.temp.unit_of_measurement, TEMP_CELSIUS)
-        self.assertEqual(self.hum.unit_of_measurement, '%')
+        assert self.temp.unit_of_measurement == TEMP_CELSIUS
+        assert self.hum.unit_of_measurement == '%'
 
     def test_update(self):
         """Test for update."""
         self.temp.update()
-        self.assertEqual(self.temp.state, 27.4)
+        assert self.temp.state == 27.4
         self.hum.update()
-        self.assertEqual(self.hum.state, 18.7)
+        assert self.hum.state == 18.7
 
     def test_update_keyerror(self):
         """Test for faulty update."""
         self.temp._api.status.return_value = {}
         self.temp.update()
-        self.assertEqual(None, self.temp.state)
+        assert self.temp.state is None
         self.hum._api.status.return_value = {}
         self.hum.update()
-        self.assertEqual(None, self.hum.state)
+        assert self.hum.state is None

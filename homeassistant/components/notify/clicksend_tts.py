@@ -9,15 +9,15 @@ https://home-assistant.io/components/notify.clicksend_tts/
 import json
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
+from aiohttp.hdrs import CONTENT_TYPE
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
     CONF_API_KEY, CONF_USERNAME, CONF_RECIPIENT, CONTENT_TYPE_JSON)
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ CONF_VOICE = 'voice'
 
 DEFAULT_LANGUAGE = 'en-us'
 DEFAULT_VOICE = 'female'
+TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -42,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the ClickSend notification service."""
-    if _authenticate(config) is False:
+    if not _authenticate(config):
         _LOGGER.error("You are not authorized to access ClickSend")
         return None
 
@@ -66,15 +67,19 @@ class ClicksendNotificationService(BaseNotificationService):
                                'to': self.recipient, 'body': message,
                                'lang': self.language, 'voice': self.voice}]})
         api_url = "{}/voice/send".format(BASE_API_URL)
-        resp = requests.post(api_url, data=json.dumps(data), headers=HEADERS,
-                             auth=(self.username, self.api_key), timeout=5)
+        resp = requests.post(api_url,
+                             data=json.dumps(data),
+                             headers=HEADERS,
+                             auth=(self.username, self.api_key),
+                             timeout=TIMEOUT)
 
+        if resp.status_code == 200:
+            return
         obj = json.loads(resp.text)
         response_msg = obj['response_msg']
         response_code = obj['response_code']
-        if resp.status_code != 200:
-            _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
-                          response_msg, response_code)
+        _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
+                      response_msg, response_code)
 
 
 def _authenticate(config):
@@ -82,7 +87,7 @@ def _authenticate(config):
     api_url = '{}/account'.format(BASE_API_URL)
     resp = requests.get(api_url, headers=HEADERS,
                         auth=(config.get(CONF_USERNAME),
-                              config.get(CONF_API_KEY)), timeout=5)
+                              config.get(CONF_API_KEY)), timeout=TIMEOUT)
 
     if resp.status_code != 200:
         return False

@@ -106,7 +106,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
 
     @property
     def should_poll(self):
-        """Return the polling state. Polling needed for zigbee plug only."""
+        """Return the polling state. Polling needed for Zigbee plug only."""
         return self._supports_power_consumption
 
     def turn_on(self, **kwargs):
@@ -137,7 +137,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             self._load_power = round(float(data[LOAD_POWER]), 2)
 
         value = data.get(self._data_key)
-        if value is None:
+        if value not in ['on', 'off']:
             return False
 
         state = value == 'on'

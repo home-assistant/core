@@ -14,7 +14,8 @@ CONF_ROOM_HINT = 'room'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
-    'switch', 'light', 'group', 'media_player', 'fan', 'cover', 'climate'
+    'climate', 'cover', 'fan', 'group', 'input_boolean', 'light',
+    'media_player', 'scene', 'script', 'switch'
 ]
 CLIMATE_MODE_HEATCOOL = 'heatcool'
 CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', CLIMATE_MODE_HEATCOOL}

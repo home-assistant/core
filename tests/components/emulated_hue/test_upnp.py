@@ -83,8 +83,8 @@ class TestEmulatedHue(unittest.TestCase):
         result = requests.get(
             BRIDGE_URL_BASE.format('/description.xml'), timeout=5)
 
-        self.assertEqual(result.status_code, 200)
-        self.assertTrue('text/xml' in result.headers['content-type'])
+        assert result.status_code == 200
+        assert 'text/xml' in result.headers['content-type']
 
         # Make sure the XML is parsable
         try:
@@ -100,14 +100,14 @@ class TestEmulatedHue(unittest.TestCase):
             BRIDGE_URL_BASE.format('/api'), data=json.dumps(request_json),
             timeout=5)
 
-        self.assertEqual(result.status_code, 200)
-        self.assertTrue('application/json' in result.headers['content-type'])
+        assert result.status_code == 200
+        assert 'application/json' in result.headers['content-type']
 
         resp_json = result.json()
         success_json = resp_json[0]
 
-        self.assertTrue('success' in success_json)
-        self.assertTrue('username' in success_json['success'])
+        assert 'success' in success_json
+        assert 'username' in success_json['success']
 
     def test_valid_username_request(self):
         """Test request with a valid username."""
@@ -117,4 +117,4 @@ class TestEmulatedHue(unittest.TestCase):
             BRIDGE_URL_BASE.format('/api'), data=json.dumps(request_json),
             timeout=5)
 
-        self.assertEqual(result.status_code, 400)
+        assert result.status_code == 400
