@@ -106,22 +106,22 @@ class TestAlert(unittest.TestCase):
         """Test is_on method."""
         self.hass.states.set(ENTITY_ID, STATE_ON)
         self.hass.block_till_done()
-        self.assertTrue(alert.is_on(self.hass, ENTITY_ID))
+        assert alert.is_on(self.hass, ENTITY_ID)
         self.hass.states.set(ENTITY_ID, STATE_OFF)
         self.hass.block_till_done()
-        self.assertFalse(alert.is_on(self.hass, ENTITY_ID))
+        assert not alert.is_on(self.hass, ENTITY_ID)
 
     def test_setup(self):
         """Test setup method."""
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        self.assertEqual(STATE_IDLE, self.hass.states.get(ENTITY_ID).state)
+        assert STATE_IDLE == self.hass.states.get(ENTITY_ID).state
 
     def test_fire(self):
         """Test the alert firing."""
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
+        assert STATE_ON == self.hass.states.get(ENTITY_ID).state
 
     def test_silence(self):
         """Test silencing the alert."""
@@ -130,15 +130,15 @@ class TestAlert(unittest.TestCase):
         self.hass.block_till_done()
         turn_off(self.hass, ENTITY_ID)
         self.hass.block_till_done()
-        self.assertEqual(STATE_OFF, self.hass.states.get(ENTITY_ID).state)
+        assert STATE_OFF == self.hass.states.get(ENTITY_ID).state
 
         # alert should not be silenced on next fire
         self.hass.states.set("sensor.test", STATE_OFF)
         self.hass.block_till_done()
-        self.assertEqual(STATE_IDLE, self.hass.states.get(ENTITY_ID).state)
+        assert STATE_IDLE == self.hass.states.get(ENTITY_ID).state
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
+        assert STATE_ON == self.hass.states.get(ENTITY_ID).state
 
     def test_reset(self):
         """Test resetting the alert."""
@@ -147,38 +147,38 @@ class TestAlert(unittest.TestCase):
         self.hass.block_till_done()
         turn_off(self.hass, ENTITY_ID)
         self.hass.block_till_done()
-        self.assertEqual(STATE_OFF, self.hass.states.get(ENTITY_ID).state)
+        assert STATE_OFF == self.hass.states.get(ENTITY_ID).state
         turn_on(self.hass, ENTITY_ID)
         self.hass.block_till_done()
-        self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
+        assert STATE_ON == self.hass.states.get(ENTITY_ID).state
 
     def test_toggle(self):
         """Test toggling alert."""
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
+        assert STATE_ON == self.hass.states.get(ENTITY_ID).state
         toggle(self.hass, ENTITY_ID)
         self.hass.block_till_done()
-        self.assertEqual(STATE_OFF, self.hass.states.get(ENTITY_ID).state)
+        assert STATE_OFF == self.hass.states.get(ENTITY_ID).state
         toggle(self.hass, ENTITY_ID)
         self.hass.block_till_done()
-        self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
+        assert STATE_ON == self.hass.states.get(ENTITY_ID).state
 
     def test_hidden(self):
         """Test entity hiding."""
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
         hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
-        self.assertTrue(hidden)
+        assert hidden
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
         hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
-        self.assertFalse(hidden)
+        assert not hidden
 
         turn_off(self.hass, ENTITY_ID)
         hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
-        self.assertFalse(hidden)
+        assert not hidden
 
     def test_notification_no_done_message(self):
         """Test notifications."""
@@ -195,15 +195,15 @@ class TestAlert(unittest.TestCase):
             notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, config)
-        self.assertEqual(0, len(events))
+        assert 0 == len(events)
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
         self.hass.states.set("sensor.test", STATE_OFF)
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
     def test_notification(self):
         """Test notifications."""
@@ -218,15 +218,15 @@ class TestAlert(unittest.TestCase):
             notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        self.assertEqual(0, len(events))
+        assert 0 == len(events)
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
         self.hass.states.set("sensor.test", STATE_OFF)
         self.hass.block_till_done()
-        self.assertEqual(2, len(events))
+        assert 2 == len(events)
 
     def test_skipfirst(self):
         """Test skipping first notification."""
@@ -243,11 +243,11 @@ class TestAlert(unittest.TestCase):
             notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, config)
-        self.assertEqual(0, len(events))
+        assert 0 == len(events)
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        self.assertEqual(0, len(events))
+        assert 0 == len(events)
 
     def test_noack(self):
         """Test no ack feature."""
@@ -255,7 +255,7 @@ class TestAlert(unittest.TestCase):
         self.hass.add_job(entity.begin_alerting)
         self.hass.block_till_done()
 
-        self.assertEqual(True, entity.hidden)
+        assert entity.hidden is True
 
     def test_done_message_state_tracker_reset_on_cancel(self):
         """Test that the done message is reset when canceled."""

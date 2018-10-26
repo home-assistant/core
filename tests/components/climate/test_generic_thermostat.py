@@ -62,15 +62,13 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
 
     def test_valid_conf(self):
         """Test set up generic_thermostat with valid config values."""
-        self.assertTrue(
-            setup_component(self.hass, 'climate',
-                            {'climate': {
-                                'platform': 'generic_thermostat',
-                                'name': 'test',
-                                'heater': ENT_SWITCH,
-                                'target_sensor': ENT_SENSOR
-                                }})
-        )
+        assert setup_component(self.hass, 'climate', {
+            'climate': {
+                'platform': 'generic_thermostat',
+                'name': 'test',
+                'heater': ENT_SWITCH,
+                'target_sensor': ENT_SENSOR
+            }})
 
 
 class TestGenericThermostatHeaterSwitching(unittest.TestCase):
@@ -83,9 +81,9 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
-        self.assertTrue(run_coroutine_threadsafe(
+        assert run_coroutine_threadsafe(
             comps.async_setup(self.hass, {}), self.hass.loop
-        ).result())
+        ).result()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down everything that was started."""
@@ -104,16 +102,16 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
             'target_sensor': ENT_SENSOR
         }})
 
-        self.assertEqual(STATE_OFF,
-                         self.hass.states.get(heater_switch).state)
+        assert STATE_OFF == \
+            self.hass.states.get(heater_switch).state
 
         self._setup_sensor(18)
         self.hass.block_till_done()
         common.set_temperature(self.hass, 23)
         self.hass.block_till_done()
 
-        self.assertEqual(STATE_ON,
-                         self.hass.states.get(heater_switch).state)
+        assert STATE_ON == \
+            self.hass.states.get(heater_switch).state
 
     def test_heater_switch(self):
         """Test heater switching test switch."""
@@ -131,16 +129,16 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
             'target_sensor': ENT_SENSOR
         }})
 
-        self.assertEqual(STATE_OFF,
-                         self.hass.states.get(heater_switch).state)
+        assert STATE_OFF == \
+            self.hass.states.get(heater_switch).state
 
         self._setup_sensor(18)
         self.hass.block_till_done()
         common.set_temperature(self.hass, 23)
         self.hass.block_till_done()
 
-        self.assertEqual(STATE_ON,
-                         self.hass.states.get(heater_switch).state)
+        assert STATE_ON == \
+            self.hass.states.get(heater_switch).state
 
     def _setup_sensor(self, temp):
         """Set up the test sensor."""
@@ -170,31 +168,31 @@ class TestClimateGenericThermostat(unittest.TestCase):
 
     def test_setup_defaults_to_unknown(self):
         """Test the setting of defaults to unknown."""
-        self.assertEqual(STATE_IDLE, self.hass.states.get(ENTITY).state)
+        assert STATE_IDLE == self.hass.states.get(ENTITY).state
 
     def test_default_setup_params(self):
         """Test the setup with default parameters."""
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(7, state.attributes.get('min_temp'))
-        self.assertEqual(35, state.attributes.get('max_temp'))
-        self.assertEqual(7, state.attributes.get('temperature'))
+        assert 7 == state.attributes.get('min_temp')
+        assert 35 == state.attributes.get('max_temp')
+        assert 7 == state.attributes.get('temperature')
 
     def test_get_operation_modes(self):
         """Test that the operation list returns the correct modes."""
         state = self.hass.states.get(ENTITY)
         modes = state.attributes.get('operation_list')
-        self.assertEqual([climate.STATE_HEAT, STATE_OFF], modes)
+        assert [climate.STATE_HEAT, STATE_OFF] == modes
 
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
         common.set_temperature(self.hass, 30)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(30.0, state.attributes.get('temperature'))
+        assert 30.0 == state.attributes.get('temperature')
         common.set_temperature(self.hass, None)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(30.0, state.attributes.get('temperature'))
+        assert 30.0 == state.attributes.get('temperature')
 
     def test_set_away_mode(self):
         """Test the setting away mode."""
@@ -203,7 +201,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         common.set_away_mode(self.hass, True)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(16, state.attributes.get('temperature'))
+        assert 16 == state.attributes.get('temperature')
 
     def test_set_away_mode_and_restore_prev_temp(self):
         """Test the setting and removing away mode.
@@ -215,11 +213,29 @@ class TestClimateGenericThermostat(unittest.TestCase):
         common.set_away_mode(self.hass, True)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(16, state.attributes.get('temperature'))
+        assert 16 == state.attributes.get('temperature')
         common.set_away_mode(self.hass, False)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(23, state.attributes.get('temperature'))
+        assert 23 == state.attributes.get('temperature')
+
+    def test_set_away_mode_twice_and_restore_prev_temp(self):
+        """Test the setting away mode twice in a row.
+
+        Verify original temperature is restored.
+        """
+        common.set_temperature(self.hass, 23)
+        self.hass.block_till_done()
+        common.set_away_mode(self.hass, True)
+        self.hass.block_till_done()
+        common.set_away_mode(self.hass, True)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY)
+        assert 16 == state.attributes.get('temperature')
+        common.set_away_mode(self.hass, False)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY)
+        assert 23 == state.attributes.get('temperature')
 
     def test_sensor_bad_value(self):
         """Test sensor that have None as state."""
@@ -230,7 +246,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(temp, state.attributes.get('current_temperature'))
+        assert temp == state.attributes.get('current_temperature')
 
     def test_set_target_temp_heater_on(self):
         """Test if target temperature turn heater on."""
@@ -239,11 +255,11 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         common.set_temperature(self.hass, 30)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_set_target_temp_heater_off(self):
         """Test if target temperature turn heater off."""
@@ -252,11 +268,11 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         common.set_temperature(self.hass, 25)
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        assert 2 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_temp_change_heater_on_within_tolerance(self):
         """Test if temperature change doesn't turn on within tolerance."""
@@ -265,7 +281,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(29)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_temp_change_heater_on_outside_tolerance(self):
         """Test if temperature change turn heater on outside cold tolerance."""
@@ -274,11 +290,11 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(27)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_temp_change_heater_off_within_tolerance(self):
         """Test if temperature change doesn't turn off within tolerance."""
@@ -287,7 +303,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(33)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_temp_change_heater_off_outside_tolerance(self):
         """Test if temperature change turn heater off outside hot tolerance."""
@@ -296,11 +312,11 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(35)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_running_when_operating_mode_is_off(self):
         """Test that the switch turns off when enabled is set False."""
@@ -309,11 +325,11 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         common.set_operation_mode(self.hass, STATE_OFF)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_no_state_change_when_operation_mode_off(self):
         """Test that the switch doesn't turn on when enabled is False."""
@@ -324,14 +340,14 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(25)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     @mock.patch('logging.Logger.error')
     def test_invalid_operating_mode(self, log_mock):
         """Test error handling for invalid operation mode."""
         common.set_operation_mode(self.hass, 'invalid mode')
         self.hass.block_till_done()
-        self.assertEqual(log_mock.call_count, 1)
+        assert log_mock.call_count == 1
 
     def test_operating_mode_heat(self):
         """Test change mode from OFF to HEAT.
@@ -345,11 +361,11 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self._setup_switch(False)
         common.set_operation_mode(self.hass, climate.STATE_HEAT)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def _setup_sensor(self, temp):
         """Set up the test sensor."""
@@ -398,11 +414,11 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         common.set_temperature(self.hass, 30)
         self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        assert 2 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_turn_away_mode_on_cooling(self):
         """Test the setting away mode when cooling."""
@@ -413,7 +429,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         common.set_away_mode(self.hass, True)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(30, state.attributes.get('temperature'))
+        assert 30 == state.attributes.get('temperature')
 
     def test_operating_mode_cool(self):
         """Test change mode from OFF to COOL.
@@ -427,11 +443,11 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self._setup_switch(False)
         common.set_operation_mode(self.hass, climate.STATE_COOL)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_set_target_temp_ac_on(self):
         """Test if target temperature turn ac on."""
@@ -440,11 +456,11 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         common.set_temperature(self.hass, 25)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_temp_change_ac_off_within_tolerance(self):
         """Test if temperature change doesn't turn ac off within tolerance."""
@@ -453,7 +469,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(29.8)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_set_temp_change_ac_off_outside_tolerance(self):
         """Test if temperature change turn ac off."""
@@ -462,11 +478,11 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(27)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_temp_change_ac_on_within_tolerance(self):
         """Test if temperature change doesn't turn ac on within tolerance."""
@@ -475,7 +491,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(25.2)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_temp_change_ac_on_outside_tolerance(self):
         """Test if temperature change turn ac on."""
@@ -484,11 +500,11 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(30)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_running_when_operating_mode_is_off(self):
         """Test that the switch turns off when enabled is set False."""
@@ -497,11 +513,11 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         common.set_operation_mode(self.hass, STATE_OFF)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_no_state_change_when_operation_mode_off(self):
         """Test that the switch doesn't turn on when enabled is False."""
@@ -512,7 +528,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(35)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def _setup_sensor(self, temp):
         """Set up the test sensor."""
@@ -561,7 +577,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(30)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_temp_change_ac_trigger_on_long_enough(self):
         """Test if temperature change turn ac on."""
@@ -574,11 +590,11 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(30)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_temp_change_ac_trigger_off_not_long_enough(self):
         """Test if temperature change turn ac on."""
@@ -587,7 +603,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(25)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_temp_change_ac_trigger_off_long_enough(self):
         """Test if temperature change turn ac on."""
@@ -600,11 +616,11 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(25)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def _setup_sensor(self, temp):
         """Set up the test sensor."""
@@ -652,7 +668,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(30)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_temp_change_heater_trigger_on_not_long_enough(self):
         """Test if temp change doesn't turn heater on because of time."""
@@ -661,7 +677,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(25)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
 
     def test_temp_change_heater_trigger_on_long_enough(self):
         """Test if temperature change turn heater on after min cycle."""
@@ -674,11 +690,11 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(25)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_temp_change_heater_trigger_off_long_enough(self):
         """Test if temperature change turn heater off after min cycle."""
@@ -691,11 +707,11 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         self._setup_sensor(30)
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def _setup_sensor(self, temp):
         """Set up the test sensor."""
@@ -749,17 +765,17 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
         test_time = datetime.datetime.now(pytz.UTC)
         self._send_time_changed(test_time)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
         self._send_time_changed(test_time + datetime.timedelta(minutes=5))
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
         self._send_time_changed(test_time + datetime.timedelta(minutes=10))
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_temp_change_ac_trigger_off_long_enough(self):
         """Test if turn on signal is sent at keep-alive intervals."""
@@ -772,17 +788,17 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
         test_time = datetime.datetime.now(pytz.UTC)
         self._send_time_changed(test_time)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
         self._send_time_changed(test_time + datetime.timedelta(minutes=5))
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
         self._send_time_changed(test_time + datetime.timedelta(minutes=10))
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def _send_time_changed(self, now):
         """Send a time changed event."""
@@ -839,17 +855,17 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
         test_time = datetime.datetime.now(pytz.UTC)
         self._send_time_changed(test_time)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
         self._send_time_changed(test_time + datetime.timedelta(minutes=5))
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
         self._send_time_changed(test_time + datetime.timedelta(minutes=10))
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_ON == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def test_temp_change_heater_trigger_off_long_enough(self):
         """Test if turn on signal is sent at keep-alive intervals."""
@@ -862,17 +878,17 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
         test_time = datetime.datetime.now(pytz.UTC)
         self._send_time_changed(test_time)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
         self._send_time_changed(test_time + datetime.timedelta(minutes=5))
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert 0 == len(self.calls)
         self._send_time_changed(test_time + datetime.timedelta(minutes=10))
         self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert 1 == len(self.calls)
         call = self.calls[0]
-        self.assertEqual('homeassistant', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+        assert 'homeassistant' == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert ENT_SWITCH == call.data['entity_id']
 
     def _send_time_changed(self, now):
         """Send a time changed event."""
@@ -933,10 +949,10 @@ class TestClimateGenericThermostatTurnOnOff(unittest.TestCase):
         self.hass.block_till_done()
         state_heat = self.hass.states.get(self.HEAT_ENTITY)
         state_cool = self.hass.states.get(self.COOL_ENTITY)
-        self.assertEqual(STATE_HEAT,
-                         state_heat.attributes.get('operation_mode'))
-        self.assertEqual(STATE_COOL,
-                         state_cool.attributes.get('operation_mode'))
+        assert STATE_HEAT == \
+            state_heat.attributes.get('operation_mode')
+        assert STATE_COOL == \
+            state_cool.attributes.get('operation_mode')
 
     def test_turn_on_when_on(self):
         """Test if climate.turn_on does nothing to a turned on device."""
@@ -947,10 +963,10 @@ class TestClimateGenericThermostatTurnOnOff(unittest.TestCase):
         self.hass.block_till_done()
         state_heat = self.hass.states.get(self.HEAT_ENTITY)
         state_cool = self.hass.states.get(self.COOL_ENTITY)
-        self.assertEqual(STATE_HEAT,
-                         state_heat.attributes.get('operation_mode'))
-        self.assertEqual(STATE_COOL,
-                         state_cool.attributes.get('operation_mode'))
+        assert STATE_HEAT == \
+            state_heat.attributes.get('operation_mode')
+        assert STATE_COOL == \
+            state_cool.attributes.get('operation_mode')
 
     def test_turn_off_when_on(self):
         """Test if climate.turn_off turns off a turned on device."""
@@ -961,10 +977,10 @@ class TestClimateGenericThermostatTurnOnOff(unittest.TestCase):
         self.hass.block_till_done()
         state_heat = self.hass.states.get(self.HEAT_ENTITY)
         state_cool = self.hass.states.get(self.COOL_ENTITY)
-        self.assertEqual(STATE_OFF,
-                         state_heat.attributes.get('operation_mode'))
-        self.assertEqual(STATE_OFF,
-                         state_cool.attributes.get('operation_mode'))
+        assert STATE_OFF == \
+            state_heat.attributes.get('operation_mode')
+        assert STATE_OFF == \
+            state_cool.attributes.get('operation_mode')
 
     def test_turn_off_when_off(self):
         """Test if climate.turn_off does nothing to a turned off device."""
@@ -974,10 +990,10 @@ class TestClimateGenericThermostatTurnOnOff(unittest.TestCase):
         self.hass.block_till_done()
         state_heat = self.hass.states.get(self.HEAT_ENTITY)
         state_cool = self.hass.states.get(self.COOL_ENTITY)
-        self.assertEqual(STATE_OFF,
-                         state_heat.attributes.get('operation_mode'))
-        self.assertEqual(STATE_OFF,
-                         state_cool.attributes.get('operation_mode'))
+        assert STATE_OFF == \
+            state_heat.attributes.get('operation_mode')
+        assert STATE_OFF == \
+            state_cool.attributes.get('operation_mode')
 
 
 @asyncio.coroutine
@@ -1078,18 +1094,18 @@ class TestClimateGenericThermostatRestoreState(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(20, state.attributes[ATTR_TEMPERATURE])
-        self.assertEqual(STATE_OFF,
-                         state.attributes[climate.ATTR_OPERATION_MODE])
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertEqual(0, len(self.calls))
+        assert 20 == state.attributes[ATTR_TEMPERATURE]
+        assert STATE_OFF == \
+            state.attributes[climate.ATTR_OPERATION_MODE]
+        assert STATE_OFF == state.state
+        assert 0 == len(self.calls)
 
         self._setup_switch(False)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(STATE_OFF,
-                         state.attributes[climate.ATTR_OPERATION_MODE])
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == \
+            state.attributes[climate.ATTR_OPERATION_MODE]
+        assert STATE_OFF == state.state
 
     def _setup_climate(self):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {

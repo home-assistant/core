@@ -56,7 +56,7 @@ async def async_call_from_config(hass, config, blocking=False, variables=None,
         except TemplateError as ex:
             _LOGGER.error('Error rendering service name template: %s', ex)
             return
-        except vol.Invalid as ex:
+        except vol.Invalid:
             _LOGGER.error('Template rendered invalid service: %s',
                           domain_service)
             return

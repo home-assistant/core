@@ -30,8 +30,7 @@ class TestLondonTubeSensor(unittest.TestCase):
     def test_setup(self, mock_req):
         """Test for operational tube_state sensor with proper attributes."""
         mock_req.get(URL, text=load_fixture('london_underground.json'))
-        self.assertTrue(
-            setup_component(self.hass, 'sensor', {'sensor': self.config}))
+        assert setup_component(self.hass, 'sensor', {'sensor': self.config})
 
         state = self.hass.states.get('sensor.london_overground')
         assert state.state == 'Minor Delays'

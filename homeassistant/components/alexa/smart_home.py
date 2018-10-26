@@ -5,15 +5,16 @@ from datetime import datetime
 from uuid import uuid4
 
 from homeassistant.components import (
-    alert, automation, cover, climate, fan, group, input_boolean, light, lock,
-    media_player, scene, script, switch, http, sensor)
+    alert, automation, binary_sensor, cover, climate, fan, group,
+    input_boolean, light, lock, media_player, scene, script, switch, http,
+    sensor)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.util.decorator import Registry
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, SERVICE_LOCK,
+    ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, SERVICE_LOCK,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
@@ -70,6 +71,9 @@ class _DisplayCategory:
 
     # Indicates media devices with video or photo capabilities.
     CAMERA = "CAMERA"
+
+    # Indicates an endpoint that detects and reports contact.
+    CONTACT_SENSOR = "CONTACT_SENSOR"
 
     # Indicates a door.
     DOOR = "DOOR"
@@ -414,6 +418,29 @@ class _AlexaTemperatureSensor(_AlexaInterface):
         }
 
 
+class _AlexaContactSensor(_AlexaInterface):
+    def __init__(self, hass, entity):
+        _AlexaInterface.__init__(self, entity)
+        self.hass = hass
+
+    def name(self):
+        return 'Alexa.ContactSensor'
+
+    def properties_supported(self):
+        return [{'name': 'detectionState'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'detectionState':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.state == STATE_ON:
+            return 'DETECTED'
+        return 'NOT_DETECTED'
+
+
 class _AlexaThermostatController(_AlexaInterface):
     def __init__(self, hass, entity):
         _AlexaInterface.__init__(self, entity)
@@ -623,6 +650,32 @@ class _SensorCapabilities(_AlexaEntity):
                 TEMP_CELSIUS,
         ):
             yield _AlexaTemperatureSensor(self.hass, self.entity)
+
+
+@ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
+class _BinarySensorCapabilities(_AlexaEntity):
+    TYPE_CONTACT = 'contact'
+
+    def default_display_categories(self):
+        sensor_type = self.get_type()
+        if sensor_type is self.TYPE_CONTACT:
+            return [_DisplayCategory.CONTACT_SENSOR]
+
+    def interfaces(self):
+        sensor_type = self.get_type()
+        if sensor_type is self.TYPE_CONTACT:
+            yield _AlexaContactSensor(self.hass, self.entity)
+
+    def get_type(self):
+        """Return the type of binary sensor."""
+        attrs = self.entity.attributes
+        if attrs.get(ATTR_DEVICE_CLASS) in (
+                'door',
+                'garage_door',
+                'opening',
+                'window',
+        ):
+            return self.TYPE_CONTACT
 
 
 class _Cause:

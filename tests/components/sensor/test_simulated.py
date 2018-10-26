@@ -28,7 +28,7 @@ class TestSimulatedSensor(unittest.TestCase):
             'sensor': {
                 'platform': 'simulated'}
         }
-        self.assertTrue(setup_component(self.hass, 'sensor', config))
+        assert setup_component(self.hass, 'sensor', config)
         self.hass.block_till_done()
 
         assert len(self.hass.states.entity_ids()) == 1

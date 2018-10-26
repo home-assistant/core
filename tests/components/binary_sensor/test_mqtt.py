@@ -46,17 +46,17 @@ class TestSensorMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
         self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual(STATE_ON, state.state)
+        assert STATE_ON == state.state
 
         fire_mqtt_message(self.hass, 'test-topic', 'OFF')
         self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual(STATE_OFF, state.state)
+        assert STATE_OFF == state.state
 
     def test_valid_device_class(self):
         """Test the setting of a valid sensor class."""
@@ -70,7 +70,7 @@ class TestSensorMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual('motion', state.attributes.get('device_class'))
+        assert 'motion' == state.attributes.get('device_class')
 
     def test_invalid_device_class(self):
         """Test the setting of an invalid sensor class."""
@@ -84,50 +84,50 @@ class TestSensorMQTT(unittest.TestCase):
         })
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertIsNone(state)
+        assert state is None
 
     def test_availability_without_topic(self):
         """Test availability without defined availability topic."""
-        self.assertTrue(setup_component(self.hass, binary_sensor.DOMAIN, {
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
             binary_sensor.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
             }
-        }))
+        })
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
     def test_availability_by_defaults(self):
         """Test availability by defaults with defined topic."""
-        self.assertTrue(setup_component(self.hass, binary_sensor.DOMAIN, {
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
             binary_sensor.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
                 'availability_topic': 'availability-topic'
             }
-        }))
+        })
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'online')
         self.hass.block_till_done()
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'offline')
         self.hass.block_till_done()
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
     def test_availability_by_custom_payload(self):
         """Test availability by custom payload with defined topic."""
-        self.assertTrue(setup_component(self.hass, binary_sensor.DOMAIN, {
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
             binary_sensor.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
@@ -136,22 +136,22 @@ class TestSensorMQTT(unittest.TestCase):
                 'payload_available': 'good',
                 'payload_not_available': 'nogood'
             }
-        }))
+        })
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
         self.hass.block_till_done()
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
     def test_force_update_disabled(self):
         """Test force update option."""
@@ -177,11 +177,11 @@ class TestSensorMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
     def test_force_update_enabled(self):
         """Test force update option."""
@@ -208,11 +208,11 @@ class TestSensorMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
         self.hass.block_till_done()
-        self.assertEqual(2, len(events))
+        assert 2 == len(events)
 
     def test_off_delay(self):
         """Test off_delay option."""
@@ -241,20 +241,20 @@ class TestSensorMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
         self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual(STATE_ON, state.state)
-        self.assertEqual(1, len(events))
+        assert STATE_ON == state.state
+        assert 1 == len(events)
 
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
         self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual(STATE_ON, state.state)
-        self.assertEqual(2, len(events))
+        assert STATE_ON == state.state
+        assert 2 == len(events)
 
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=30))
         self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertEqual(3, len(events))
+        assert STATE_OFF == state.state
+        assert 3 == len(events)
 
 
 async def test_unique_id(hass):
