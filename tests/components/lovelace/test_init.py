@@ -511,7 +511,7 @@ async def test_lovelace_move_card_position(hass, hass_ws_client):
             'id': 5,
             'type': 'lovelace/config/card/move',
             'card_id': 'test',
-            'position': 2,
+            'new_position': 2,
         })
         msg = await client.receive_json()
 
@@ -537,7 +537,7 @@ async def test_lovelace_move_card_view(hass, hass_ws_client):
             'id': 5,
             'type': 'lovelace/config/card/move',
             'card_id': 'test',
-            'view_id': 'example',
+            'new_view_id': 'example',
         })
         msg = await client.receive_json()
 
@@ -563,8 +563,8 @@ async def test_lovelace_move_card_view_position(hass, hass_ws_client):
             'id': 5,
             'type': 'lovelace/config/card/move',
             'card_id': 'test',
-            'view_id': 'example',
-            'position': 1,
+            'new_view_id': 'example',
+            'new_position': 1,
         })
         msg = await client.receive_json()
 
