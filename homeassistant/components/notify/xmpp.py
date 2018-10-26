@@ -142,18 +142,14 @@ async def async_send_message(sender, password, recipient, use_tls,
             HTTP Upload (XEP_0363)
             """
             if room:
-                # self.plugin['xep_0045'].join_muc(room, sender, wait=True)
-                # message = self.Message(sto=room, stype='groupchat')
-                _LOGGER.warning("sorry, sending files to rooms is"
-                                " currently not supported")
-                return
+                self.plugin['xep_0045'].join_muc(room, sender, wait=True)
 
             try:
                 # uploading with XEP_0363
                 _LOGGER.debug("timeout set to %ss", timeout)
                 url = await self.upload_file(timeout=timeout)
-                # if url is None:
-                #     raise FileUploadError("could not upload file")
+                if url is None:
+                    raise FileUploadError("could not upload file")
             except (IqError, IqTimeout, XMPPError) as ex:
                 _LOGGER.error("upload error, could not send message %s", ex)
             except FileTooBig as ex:
@@ -177,12 +173,17 @@ async def async_send_message(sender, password, recipient, use_tls,
                 _LOGGER.error("the server did not respond in time, %s", ex)
             else:
                 _LOGGER.info("Upload success")
-                _LOGGER.info('Sending file to %s', recipient)
-                message = self.Message(sto=recipient, stype='chat')
+
+                if room:
+                    _LOGGER.info('Sending file to %s', room)
+                    message = self.Message(sto=room, stype='groupchat')
+                else:
+                    _LOGGER.info('Sending file to %s', recipient)
+                    message = self.Message(sto=recipient, stype='chat')
+
                 message['body'] = url
                 # pylint: disable=invalid-sequence-index
                 message['oob']['url'] = url
-                _LOGGER.debug("sending image message to %s", recipient)
                 try:
                     message.send()
                 except (IqError, IqTimeout, XMPPError) as ex:
