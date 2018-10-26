@@ -25,7 +25,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 from . import local_auth
 
-REQUIREMENTS = ['python-nest==4.0.3']
+REQUIREMENTS = ['python-nest==4.0.4']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -53,12 +53,20 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
 })
 
-AWAY_SCHEMA = vol.Schema({
-    vol.Required(ATTR_HOME_MODE): vol.In([HOME_MODE_AWAY, HOME_MODE_HOME]),
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
+CANCEL_ETA_SCHEMA = vol.Schema({
+    vol.Required(ATTR_TRIP_ID): cv.string,
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
+})
+
+SET_ETA_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ETA): cv.time_period,
     vol.Optional(ATTR_TRIP_ID): cv.string,
-    vol.Optional(ATTR_ETA): cv.time_period,
-    vol.Optional(ATTR_ETA_WINDOW): cv.time_period
+    vol.Optional(ATTR_ETA_WINDOW): cv.time_period,
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
+})
+SET_MODE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_HOME_MODE): vol.In([HOME_MODE_AWAY, HOME_MODE_HOME]),
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -134,40 +142,74 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             entry, component))
 
-    def set_mode(service):
-        """
-        Set the home/away mode for a Nest structure.
-
-        You can set optional eta information when set mode to away.
-        """
+    def cancel_eta(service):
+        """Cancel ETA for a Nest structure."""
         if ATTR_STRUCTURE in service.data:
-            structures = service.data[ATTR_STRUCTURE]
+            target_structures = service.data[ATTR_STRUCTURE]
         else:
-            structures = hass.data[DATA_NEST].local_structure
+            target_structures = hass.data[DATA_NEST].local_structure
 
         for structure in nest.structures:
-            if structure.name in structures:
-                _LOGGER.info("Setting mode for %s", structure.name)
-                structure.away = service.data[ATTR_HOME_MODE]
-
-                if service.data[ATTR_HOME_MODE] == HOME_MODE_AWAY \
-                        and ATTR_ETA in service.data:
-                    now = datetime.utcnow()
-                    eta_begin = now + service.data[ATTR_ETA]
-                    eta_window = service.data.get(ATTR_ETA_WINDOW,
-                                                  timedelta(minutes=1))
-                    eta_end = eta_begin + eta_window
-                    trip_id = service.data.get(
-                        ATTR_TRIP_ID, "trip_{}".format(int(now.timestamp())))
-                    _LOGGER.info("Setting eta for %s, eta window starts at "
-                                 "%s ends at %s", trip_id, eta_begin, eta_end)
-                    structure.set_eta(trip_id, eta_begin, eta_end)
+            if structure.name in target_structures and structure.thermostats:
+                trip_id = service.data[ATTR_TRIP_ID]
+                _LOGGER.info("Cancelling ETA for trip: %s", trip_id)
+                structure.cancel_eta(trip_id)
             else:
-                _LOGGER.error("Invalid structure %s",
+                _LOGGER.error("Invalid structure: %s",
+                              service.data[ATTR_STRUCTURE])
+
+    def set_eta(service):
+        """Set mode to away and include ETA for a Nest structure."""
+        if ATTR_STRUCTURE in service.data:
+            target_structures = service.data[ATTR_STRUCTURE]
+        else:
+            target_structures = hass.data[DATA_NEST].local_structure
+
+        for structure in nest.structures:
+            if structure.name in target_structures and structure.thermostats:
+                _LOGGER.info("Setting mode for: %s to: %s",
+                             structure.name, HOME_MODE_AWAY)
+                structure.away = HOME_MODE_AWAY
+
+                now = datetime.utcnow()
+                trip_id = service.data.get(
+                    ATTR_TRIP_ID, "trip_{}".format(int(now.timestamp())))
+                eta_begin = now + service.data[ATTR_ETA]
+                eta_window = service.data.get(ATTR_ETA_WINDOW,
+                                              timedelta(minutes=1))
+                eta_end = eta_begin + eta_window
+                _LOGGER.info("Setting ETA for trip: %s, "
+                             "ETA window starts at: %s and ends at: %s",
+                             trip_id, eta_begin, eta_end)
+                structure.set_eta(trip_id, eta_begin, eta_end)
+            else:
+                _LOGGER.error("Invalid structure: %s",
+                              service.data[ATTR_STRUCTURE])
+
+    def set_mode(service):
+        """Set the home/away mode for a Nest structure."""
+        if ATTR_STRUCTURE in service.data:
+            target_structures = service.data[ATTR_STRUCTURE]
+        else:
+            target_structures = hass.data[DATA_NEST].local_structure
+
+        for structure in nest.structures:
+            if structure.name in target_structures:
+                _LOGGER.info("Setting mode for: %s to: %s",
+                             structure.name, service.data[ATTR_HOME_MODE])
+                structure.away = service.data[ATTR_HOME_MODE]
+            else:
+                _LOGGER.error("Invalid structure: %s",
                               service.data[ATTR_STRUCTURE])
 
     hass.services.async_register(
-        DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
+        DOMAIN, 'cancel_eta', cancel_eta, schema=CANCEL_ETA_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, 'set_eta', set_eta, schema=SET_ETA_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, 'set_mode', set_mode, schema=SET_MODE_SCHEMA)
 
     @callback
     def start_up(event):
