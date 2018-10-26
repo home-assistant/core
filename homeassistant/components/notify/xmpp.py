@@ -129,16 +129,16 @@ async def async_send_message(sender, password, recipient, use_tls,
             """Start the communication and sends the message."""
             # sending image and message independently from each other
             if data:
-                await self.send_image(timeout=timeout)
+                await self.send_file(timeout=timeout)
             if message:
                 self.send_text_message()
 
             self.disconnect(wait=True)
 
-        async def send_image(self, timeout=XEP_0363_TIMEOUT):
-            """Send image via XMPP.
+        async def send_file(self, timeout=None):
+            """Send file via XMPP.
 
-            Send XMPP image message using OOB (XEP_0066) and
+            Send XMPP file message using OOB (XEP_0066) and
             HTTP Upload (XEP_0363)
             """
             if room:
@@ -152,8 +152,8 @@ async def async_send_message(sender, password, recipient, use_tls,
                 # uploading with XEP_0363
                 _LOGGER.debug("timeout set to %ss", timeout)
                 url = await self.upload_file(timeout=timeout)
-                if url is None:
-                    raise FileUploadError("could not upload file")
+                # if url is None:
+                #     raise FileUploadError("could not upload file")
             except (IqError, IqTimeout, XMPPError) as ex:
                 _LOGGER.error("upload error, could not send message %s", ex)
             except FileTooBig as ex:
@@ -201,17 +201,18 @@ async def async_send_message(sender, password, recipient, use_tls,
                 url = await self.upload_file_from_path(data.get(ATTR_PATH),
                                                        timeout=timeout)
             else:
-                _LOGGER.error("no path or URL found for image")
+                url = None
 
-            _LOGGER.info('Upload success!')
+            if url is None:
+                _LOGGER.error("no path or URL found for file")
+
             return url
 
         async def upload_file_from_url(self, url, timeout=None):
             """Upload a file from a URL. Returns a URL.
 
-            uploaded via XEP_0363 and HTTPand returns the resulting URL
+            uploaded via XEP_0363 and HTTP and returns the resulting URL
             """
-            # send a file from an URL
             _LOGGER.info('getting file from %s', url)
 
             def get_url(url):
@@ -223,34 +224,27 @@ async def async_send_message(sender, password, recipient, use_tls,
 
             if result.status_code >= 400:
                 _LOGGER.error("could not load file from %s", url)
-                return
+                return None
 
             filesize = len(result.content)
+
             # we need a file extension, the upload server needs a
-            # filename, if none is provided, through the path
-            # we guess the extension
-            if not data.get(ATTR_PATH):
+            # filename, if none is provided, through the path we guess
+            # the extension
+            # also setting random filename for privacy
+            if data.get(ATTR_PATH):
+                # using given path as base for new filename. Don't guess type
+                filename = self.get_random_filename(data.get(ATTR_PATH))
+            else:
                 extension = mimetypes.guess_extension(
                     result.headers['Content-Type']) or ".unknown"
-                # extension = self.get_extension(
-                #     result.headers['Content-Type']) or ".unknown"
                 _LOGGER.debug("got %s extension", extension)
                 filename = self.get_random_filename(extension)
-            else:
-                filename = self.get_random_filename(data.get(ATTR_PATH))
 
             _LOGGER.info('Uploading file from URL, %s', filename)
 
-            # would be call if timeout worked with upload_file
-            # url = await self['xep_0363'].upload_file(
-            #     filename,
-            #     size=filesize,
-            #     input_file=result.content,
-            #     content_type=result.headers['Content-Type'],
-            #     timeout=timeout,
-            #     )
-
-            # current workaround for non-working timeout in slixmpp:
+            # current workaround for non-working timeout in slixmpp
+            # calling asyncio.wait_for to enforce timeout
             try:
                 url = await asyncio.wait_for(self['xep_0363'].upload_file(
                     filename,
@@ -269,7 +263,6 @@ async def async_send_message(sender, password, recipient, use_tls,
 
         async def upload_file_from_path(self, path, timeout=None):
             """Upload a file from a local file path via XEP_0363."""
-            # send message from local path
             _LOGGER.info('Uploading file from path, %s ...', path)
 
             with open(path, 'rb') as upfile:
@@ -282,12 +275,10 @@ async def async_send_message(sender, password, recipient, use_tls,
             if content_type is None:
                 content_type = DEFAULT_CONTENT_TYPE
             _LOGGER.debug("content_type is %s", content_type)
+
             # set random filename for privacy
             filename = self.get_random_filename(data.get(ATTR_PATH))
             _LOGGER.debug("uploading file with random filename %s", filename)
-            # would be call if timeout worked with upload_file
-            # url = await self['xep_0363'].upload_file(filename,
-            #                                      timeout=timeout)
 
             try:
                 url = await asyncio.wait_for(self['xep_0363'].upload_file(
@@ -303,13 +294,6 @@ async def async_send_message(sender, password, recipient, use_tls,
                 _LOGGER.error("could not upload file to server %s", ex)
                 raise
 
-            # current workaround for non-working timeout in slixmpp:
-            # url = await asyncio.wait_for(self['xep_0363'].upload_file(
-            #     filename,
-            #     timeout=timeout,
-            #     ),
-            #                              timeout,
-            #                              loop=self.loop)
             return url
 
         def send_text_message(self):
