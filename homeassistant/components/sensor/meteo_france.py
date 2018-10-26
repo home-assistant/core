@@ -17,13 +17,13 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['meteofrance==0.2.2']
+REQUIREMENTS = ['meteofrance==0.2.5']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by Meteo-France"
 CONF_POSTAL_CODE = 'postal_code'
 
-STATE_ATTR_FORECAST = 'Forecast'
+STATE_ATTR_FORECAST = '1h rain forecast'
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
@@ -60,19 +60,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     client = MeteoFranceUpdater(meteofrance_client)
 
-    add_entities([MeteoFranceSensor('Météo-France', variable, client)
+    add_entities([MeteoFranceSensor(variable, client)
                   for variable in config[CONF_MONITORED_CONDITIONS]])
 
 
 class MeteoFranceSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, name, condition, client):
+    def __init__(self, condition, client):
         """Initialize the sensor."""
-        self._name = name
         self._condition = condition
         self._client = client
         self._data = client.get_data()
+        self._state = None
+        try:
+            self._state = self._data[self._condition]
+        except KeyError:
+            _LOGGER.error("No result for the condition `%s`", self._condition)
 
     @property
     def name(self):
@@ -83,16 +87,12 @@ class MeteoFranceSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        try:
-            return self._data[self._condition]
-        except KeyError:
-            _LOGGER.error("No result for the condition `%s`", self._condition)
-        return None
+        return self._state
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        if self._condition == 'next_rain':
+        if self._condition == 'next_rain' and "rain_forecast" in self._data:
             try:
                 return {
                     **{
@@ -116,6 +116,8 @@ class MeteoFranceSensor(Entity):
     def update(self):
         """Fetch new state data for the sensor."""
         self._client.update()
+        if self._condition in self._data:
+            self._state = self._data[self._condition]
 
 
 class MeteoFranceUpdater:
