@@ -43,11 +43,11 @@ SERVICE_FIELD = 'field'
 SERVICE_ENTITY = 'entity'
 SERVICE_DATA = 'data'
 
-SERVICE_SCHEMA = vol.Schema({
-    vol.Exclusive(SERVICE_FIELD, 'deconz_id'): cv.string,
-    vol.Exclusive(SERVICE_ENTITY, 'deconz_id'): cv.entity_id,
+SERVICE_SCHEMA = vol.All(vol.Schema({
+    vol.Optional(SERVICE_ENTITY): cv.entity_id,
+    vol.Optional(SERVICE_FIELD): cv.matches_regex('/.*'),
     vol.Required(SERVICE_DATA): dict,
-})
+}), cv.has_at_least_one_key(SERVICE_ENTITY, SERVICE_FIELD))
 
 SERVICE_DEVICE_REFRESH = 'device_refresh'
 
@@ -139,9 +139,10 @@ async def async_setup_entry(hass, config_entry):
     async def async_configure(call):
         """Set attribute of device in deCONZ.
 
-        Field is a string representing a specific device in deCONZ
-        e.g. field='/lights/1/state'.
-        Entity_id can be used to retrieve the proper field.
+        Entity is used to resolve to a device path (e.g. '/lights/1').
+        Field is a string representing either a full path
+        (e.g. '/lights/1/state') when entity is not specified, or a
+        subpath (e.g. '/state') when used together with entity.
         Data is a json object with what data you want to alter
         e.g. data={'on': true}.
         {
@@ -151,18 +152,14 @@ async def async_setup_entry(hass, config_entry):
         See Dresden Elektroniks REST API documentation for details:
         http://dresden-elektronik.github.io/deconz-rest-doc/rest/
         """
-        field = call.data.get(SERVICE_FIELD)
+        field = call.data.get(SERVICE_FIELD, '')
         entity_id = call.data.get(SERVICE_ENTITY)
         data = call.data.get(SERVICE_DATA)
         deconz = hass.data[DOMAIN]
         if entity_id:
-
-            entities = hass.data.get(DATA_DECONZ_ID)
-
-            if entities:
-                field = entities.get(entity_id)
-
-            if field is None:
+            try:
+                field = hass.data[DATA_DECONZ_ID][entity_id] + field
+            except KeyError:
                 _LOGGER.error('Could not find the entity %s', entity_id)
                 return
 
