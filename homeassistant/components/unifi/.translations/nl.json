@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Controller site is al geconfigureerd",
             "user_privilege": "Gebruiker moet beheerder zijn"
         },
         "error": {
@@ -13,7 +14,9 @@
                     "host": "Host",
                     "password": "Wachtwoord",
                     "port": "Poort",
-                    "username": "Gebruikersnaam"
+                    "site": "Site ID",
+                    "username": "Gebruikersnaam",
+                    "verify_ssl": "Controller gebruik van het juiste certificaat"
                 },
                 "title": "Stel de UniFi-controller in"
             }
