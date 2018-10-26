@@ -151,6 +151,7 @@ class OpenWeatherMapWeather(WeatherEntity):
         data = []
 
         def calc_precipitation(rain, snow):
+            """Calculate the precipitation."""
             rain_value = 0 if rain is None else rain
             snow_value = 0 if snow is None else snow
             if round(rain_value + snow_value, 1) == 0:
