@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_MODE,
     CONF_PROTOCOL)
 
-REQUIREMENTS = ['aioasuswrt==1.0.0']
+REQUIREMENTS = ['aioasuswrt==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
