@@ -85,15 +85,24 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PASSWORD, default=''): cv.string,
             vol.Optional(CONF_TEMPERATURE_UNIT, default='F'):
                 cv.temperature_unit,
-            vol.Optional(CONF_AREA): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_COUNTER): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_KEYPAD): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_OUTPUT): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_PLC): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_SETTING): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_TASK): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_THERMOSTAT): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_ZONE): CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_AREA, default={CONF_ENABLED: True}):
+                CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_COUNTER, default={CONF_ENABLED: True}):
+                CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_KEYPAD, default={CONF_ENABLED: True}):
+                CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_OUTPUT, default={CONF_ENABLED: True}):
+                CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_PLC, default={CONF_ENABLED: True}):
+                CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_SETTING, default={CONF_ENABLED: True}):
+                CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_TASK, default={CONF_ENABLED: True}):
+                CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_THERMOSTAT, default={CONF_ENABLED: True}):
+                CONFIG_SCHEMA_SUBDOMAIN,
+            vol.Optional(CONF_ZONE, default={CONF_ENABLED: True}):
+                CONFIG_SCHEMA_SUBDOMAIN,
         },
         _host_validator,
     )
