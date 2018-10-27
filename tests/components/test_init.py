@@ -364,7 +364,7 @@ async def test_entity_update(hass):
     with patch('homeassistant.helpers.entity_component.async_update_entity',
                return_value=mock_coro()) as mock_update:
         await hass.services.async_call('homeassistant', 'update_entity', {
-            'entity_id': 'light.kitchen'
+            'entity_id': ['light.kitchen']
         }, blocking=True)
 
     assert len(mock_update.mock_calls) == 1
