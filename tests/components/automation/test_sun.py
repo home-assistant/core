@@ -210,7 +210,7 @@ async def test_if_action_after(hass, calls):
         assert 1 == len(calls)
 
 
-async def test_if_action_before_with_offset(hass, calls):
+async def test_if_action_before_sunrise_with_offset(hass, calls):
     """Test if action was before offset."""
     await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -229,6 +229,8 @@ async def test_if_action_before_with_offset(hass, calls):
         }
     })
 
+    # sunrise: 13:32:43 UTC, sunset: 01:55:24 UTC
+    # now = sunrise + 1s + 1h -> 'before sunrise' with offset +1h not true
     now = datetime(2015, 9, 16, 14, 32, 44, tzinfo=dt_util.UTC)
     with patch('homeassistant.util.dt.utcnow',
                return_value=now):
@@ -236,6 +238,7 @@ async def test_if_action_before_with_offset(hass, calls):
         await hass.async_block_till_done()
         assert 0 == len(calls)
 
+    # now = sunrise + 1h -> 'before sunrise' with offset +1h true
     now = datetime(2015, 9, 16, 14, 32, 43, tzinfo=dt_util.UTC)
     with patch('homeassistant.util.dt.utcnow',
                return_value=now):
@@ -243,8 +246,109 @@ async def test_if_action_before_with_offset(hass, calls):
         await hass.async_block_till_done()
         assert 1 == len(calls)
 
+    # now = UTC midnight -> 'before sunrise' with offset +1h not true
+    now = datetime(2015, 9, 16, 0, 0, 0, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 1 == len(calls)
 
-async def test_if_action_after_with_offset(hass, calls):
+    # now = UTC midnight - 1s -> 'before sunrise' with offset +1h not true
+    now = datetime(2015, 9, 16, 23, 59, 59, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 1 == len(calls)
+
+    # now = sunset -> 'before sunrise' with offset +1h true
+    now = datetime(2015, 9, 16, 1, 55, 24, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
+
+    # now = sunset -1s -> 'before sunrise' with offset +1h not true
+    now = datetime(2015, 9, 16, 1, 55, 23, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
+
+
+async def test_if_action_before_sunset_with_offset(hass, calls):
+    """Test if action was before offset."""
+    await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'condition': {
+                'condition': 'sun',
+                'before': 'sunset',
+                'before_offset': '+1:00:00'
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    # sunrise: 13:32:43 UTC, sunset: 01:55:24 UTC
+    # now = sunset + 1s + 1h -> 'before sunset' with offset +1h not true
+    now = datetime(2015, 9, 16, 2, 55, 25, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 0 == len(calls)
+
+    # now = sunset + 1h -> 'before sunset' with offset +1h true
+    now = datetime(2015, 9, 16, 2, 55, 24, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 1 == len(calls)
+
+    # now = UTC midnight -> 'before sunset' with offset +1h true
+    now = datetime(2015, 9, 16, 0, 0, 0, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
+
+    # now = UTC midnight - 1s -> 'before sunset' with offset +1h true
+    now = datetime(2015, 9, 16, 23, 59, 59, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 3 == len(calls)
+
+    # now = sunrise -> 'before sunset' with offset +1h true
+    now = datetime(2015, 9, 16, 13, 32, 43, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 4 == len(calls)
+
+    # now = sunrise -1s -> 'before sunset' with offset +1h not true
+    now = datetime(2015, 9, 16, 13, 32, 42, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 4 == len(calls)
+
+
+async def test_if_action_after_sunrise_with_offset(hass, calls):
     """Test if action was after offset."""
     await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -263,6 +367,8 @@ async def test_if_action_after_with_offset(hass, calls):
         }
     })
 
+    # sunrise: 13:32:43 UTC, sunset: 01:55:24 UTC
+    # now = sunrise - 1s + 1h -> 'after sunrise' with offset +1h not true
     now = datetime(2015, 9, 16, 14, 32, 42, tzinfo=dt_util.UTC)
     with patch('homeassistant.util.dt.utcnow',
                return_value=now):
@@ -270,12 +376,82 @@ async def test_if_action_after_with_offset(hass, calls):
         await hass.async_block_till_done()
         assert 0 == len(calls)
 
+    # now = sunrise + 1h -> 'after sunrise' with offset +1h true
     now = datetime(2015, 9, 16, 14, 32, 43, tzinfo=dt_util.UTC)
     with patch('homeassistant.util.dt.utcnow',
                return_value=now):
         hass.bus.async_fire('test_event')
         await hass.async_block_till_done()
         assert 1 == len(calls)
+
+    # now = sunset -> 'after sunrise' with offset +1h true
+    now = datetime(2015, 9, 16, 1, 55, 24, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
+
+    # now = sunset + 1s -> 'after sunrise' with offset +1h not true
+    now = datetime(2015, 9, 16, 1, 55, 25, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
+
+
+async def test_if_action_after_sunset_with_offset(hass, calls):
+    """Test if action was after offset."""
+    await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'condition': {
+                'condition': 'sun',
+                'after': 'sunset',
+                'after_offset': '+1:00:00'
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    # sunrise: 13:32:43 UTC, sunset: 01:55:24 UTC
+    # now = sunset - 1s + 1h -> 'after sunset' with offset +1h not true
+    now = datetime(2015, 9, 16, 2, 55, 23, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 0 == len(calls)
+
+    # now = sunset + 1h -> 'after sunset' with offset +1h true
+    now = datetime(2015, 9, 16, 2, 55, 24, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 1 == len(calls)
+
+    # now = sunrise -> 'after sunset' with offset +1h true
+    now = datetime(2015, 9, 16, 13, 32, 43, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
+
+    # now = sunrise + 1s -> 'after sunset' with offset +1h not true
+    now = datetime(2015, 9, 16, 13, 32, 44, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.bus.async_fire('test_event')
+        await hass.async_block_till_done()
+        assert 2 == len(calls)
 
 
 async def test_if_action_before_and_after_during(hass, calls):

@@ -243,6 +243,12 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
+    def is_between(tm, time_range):
+        """Test if tm is within a timerange."""
+        if time_range[1] < time_range[0]:
+            return tm >= time_range[0] or tm <= time_range[1]
+        return time_range[0] <= tm <= time_range[1]
+
     sunrise = get_astral_event_date(hass, 'sunrise', today)
     sunset = get_astral_event_date(hass, 'sunset', today)
 
@@ -254,16 +260,20 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
         # There is no sunset today
         return False
 
-    if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
+    if before == SUN_EVENT_SUNRISE and not is_between(
+            utcnow.time(), [sunset.time(), (sunrise + before_offset).time()]):
         return False
 
-    if before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
+    if before == SUN_EVENT_SUNSET and not is_between(
+            utcnow.time(), [sunrise.time(), (sunset + before_offset).time()]):
         return False
 
-    if after == SUN_EVENT_SUNRISE and utcnow < sunrise + after_offset:
+    if after == SUN_EVENT_SUNRISE and not is_between(
+            utcnow.time(), [(sunrise + after_offset).time(), sunset.time()]):
         return False
 
-    if after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
+    if after == SUN_EVENT_SUNSET and not is_between(
+            utcnow.time(), [(sunset + after_offset).time(), sunrise.time()]):
         return False
 
     return True
