@@ -896,7 +896,7 @@ class TestHelpersTemplate(unittest.TestCase):
 
         assert ['device_tracker.phone_2'] == \
             template.extract_entities("""
-is_state_attr('device_tracker.phone_2', 'battery', 40)
+{{ is_state_attr('device_tracker.phone_2', 'battery', 40) }}
             """)
 
         assert sorted([
