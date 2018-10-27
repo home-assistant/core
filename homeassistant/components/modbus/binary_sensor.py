@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ModbusCoilSensor(
                 coil.get(CONF_HUB_NAME), coil.get(CONF_NAME),
                 coil.get(CONF_SLAVE), coil.get(CONF_COIL)))
-    add_entities(sensors)
+    add_entities(sensors, True)
 
 
 class ModbusCoilSensor(BinarySensorDevice):

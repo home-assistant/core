@@ -142,7 +142,7 @@ def setup_platform(hass: Any,
 
     if not sensors:
         return False
-    add_entities(sensors)
+    add_entities(sensors, True)
     return True
 
 
