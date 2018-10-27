@@ -31,6 +31,7 @@ _RE_GET_ENTITIES = re.compile(
     r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
+_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
 
 
 @bind_hass
@@ -59,7 +60,10 @@ def render_complex(value, variables=None):
 
 def extract_entities(template, variables=None):
     """Extract all entities for state_changed listener from template string."""
-    if template is None or _RE_NONE_ENTITIES.search(template):
+    if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
+        return []
+
+    if _RE_NONE_ENTITIES.search(template):
         return MATCH_ALL
 
     extraction = _RE_GET_ENTITIES.findall(template)

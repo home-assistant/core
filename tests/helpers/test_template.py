@@ -849,7 +849,9 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_extract_entities_none_exclude_stuff(self):
         """Test extract entities function with none or exclude stuff."""
-        assert MATCH_ALL == template.extract_entities(None)
+        assert [] == template.extract_entities(None)
+
+        assert [] == template.extract_entities("mdi:water")
 
         assert MATCH_ALL == \
             template.extract_entities(
