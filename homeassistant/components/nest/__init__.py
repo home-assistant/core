@@ -60,7 +60,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string),
+        vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
         vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA
     })
@@ -68,19 +68,19 @@ CONFIG_SCHEMA = vol.Schema({
 
 SET_AWAY_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_AWAY_MODE): vol.In([AWAY_MODE_AWAY, AWAY_MODE_HOME]),
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string])
 })
 
 SET_ETA_SCHEMA = vol.Schema({
     vol.Required(ATTR_ETA): cv.time_period,
     vol.Optional(ATTR_TRIP_ID): cv.string,
     vol.Optional(ATTR_ETA_WINDOW): cv.time_period,
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string])
 })
 
 CANCEL_ETA_SCHEMA = vol.Schema({
     vol.Required(ATTR_TRIP_ID): cv.string,
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string])
 })
 
 
@@ -146,62 +146,73 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             entry, component))
 
+    def validate_structures(target_structures):
+        all_structures = [structure.name for structure in nest.structures]
+        for target in target_structures:
+            if target not in all_structures:
+                _LOGGER.info("Invalid structure: %s", target)
+
     def set_away_mode(service):
         """Set the away mode for a Nest structure."""
         if ATTR_STRUCTURE in service.data:
             target_structures = service.data[ATTR_STRUCTURE]
+            validate_structures(target_structures)
         else:
             target_structures = hass.data[DATA_NEST].local_structure
 
         for structure in nest.structures:
             if structure.name in target_structures:
                 _LOGGER.info("Setting away mode for: %s to: %s",
-                             structure.name, service.data[AWAY_MODE_HOME])
-                structure.away = service.data[AWAY_MODE_HOME]
+                             structure.name, service.data[ATTR_AWAY_MODE])
+                structure.away = service.data[ATTR_AWAY_MODE]
 
     def set_eta(service):
         """Set away mode to away and include ETA for a Nest structure."""
         if ATTR_STRUCTURE in service.data:
             target_structures = service.data[ATTR_STRUCTURE]
+            validate_structures(target_structures)
         else:
             target_structures = hass.data[DATA_NEST].local_structure
 
         for structure in nest.structures:
-            if structure.name in target_structures and structure.thermostats:
-                _LOGGER.info("Setting mode for: %s to: %s",
-                             structure.name, AWAY_MODE_AWAY)
-                structure.away = AWAY_MODE_AWAY
+            if structure.name in target_structures:
+                if structure.thermostats:
+                    _LOGGER.info("Setting away mode for: %s to: %s",
+                                 structure.name, AWAY_MODE_AWAY)
+                    structure.away = AWAY_MODE_AWAY
 
-                now = datetime.utcnow()
-                trip_id = service.data.get(
-                    ATTR_TRIP_ID, "trip_{}".format(int(now.timestamp())))
-                eta_begin = now + service.data[ATTR_ETA]
-                eta_window = service.data.get(ATTR_ETA_WINDOW,
-                                              timedelta(minutes=1))
-                eta_end = eta_begin + eta_window
-                _LOGGER.info("Setting ETA for trip: %s, "
-                             "ETA window starts at: %s and ends at: %s",
-                             trip_id, eta_begin, eta_end)
-                structure.set_eta(trip_id, eta_begin, eta_end)
-            else:
-                _LOGGER.info("No thermostats found in structure: %s, unable "
-                             "to set ETA", service.data[ATTR_STRUCTURE])
+                    now = datetime.utcnow()
+                    trip_id = service.data.get(
+                        ATTR_TRIP_ID, "trip_{}".format(int(now.timestamp())))
+                    eta_begin = now + service.data[ATTR_ETA]
+                    eta_window = service.data.get(ATTR_ETA_WINDOW,
+                                                  timedelta(minutes=1))
+                    eta_end = eta_begin + eta_window
+                    _LOGGER.info("Setting ETA for trip: %s, "
+                                 "ETA window starts at: %s and ends at: %s",
+                                 trip_id, eta_begin, eta_end)
+                    structure.set_eta(trip_id, eta_begin, eta_end)
+                else:
+                    _LOGGER.info("No thermostats found in structure: %s, "
+                                 "unable to set ETA", structure.name)
 
     def cancel_eta(service):
         """Cancel ETA for a Nest structure."""
         if ATTR_STRUCTURE in service.data:
             target_structures = service.data[ATTR_STRUCTURE]
+            validate_structures(target_structures)
         else:
             target_structures = hass.data[DATA_NEST].local_structure
 
         for structure in nest.structures:
-            if structure.name in target_structures and structure.thermostats:
-                trip_id = service.data[ATTR_TRIP_ID]
-                _LOGGER.info("Cancelling ETA for trip: %s", trip_id)
-                structure.cancel_eta(trip_id)
-            else:
-                _LOGGER.info("No thermostats found in structure: %s, unable "
-                             "to set ETA", service.data[ATTR_STRUCTURE])
+            if structure.name in target_structures:
+                if structure.thermostats:
+                    trip_id = service.data[ATTR_TRIP_ID]
+                    _LOGGER.info("Cancelling ETA for trip: %s", trip_id)
+                    structure.cancel_eta(trip_id)
+                else:
+                    _LOGGER.info("No thermostats found in structure: %s, "
+                                 "unable to cancel ETA", structure.name)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_AWAY_MODE, set_away_mode,
