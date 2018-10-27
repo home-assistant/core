@@ -72,13 +72,6 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
         if not api_key_validation:
             return await self._show_form({CONF_API_KEY: 'invalid_api_key'})
 
-        if user_input.get(CONF_LATITUDE):
-            user_input[CONF_LATITUDE] = user_input[CONF_LATITUDE]
-        if user_input.get(CONF_LONGITUDE):
-            user_input[CONF_LONGITUDE] = user_input[CONF_LONGITUDE]
-        if user_input.get(CONF_ELEVATION):
-            user_input[CONF_ELEVATION] = user_input[CONF_ELEVATION]
-
         scan_interval = user_input.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
