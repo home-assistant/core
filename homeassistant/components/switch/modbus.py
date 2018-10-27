@@ -93,7 +93,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     register.get(CONF_VERIFY_REGISTER),
                     register.get(CONF_REGISTER_TYPE),
                     register.get(CONF_STATE_ON), register.get(CONF_STATE_OFF)))
-    add_entities(switches)
+    add_entities(switches, True)
 
 
 class ModbusCoilSwitch(ToggleEntity):
