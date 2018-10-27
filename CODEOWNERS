@@ -87,6 +87,7 @@ homeassistant/components/notify/mastodon.py @fabaff
 homeassistant/components/notify/smtp.py @fabaff
 homeassistant/components/notify/syslog.py @fabaff
 homeassistant/components/notify/xmpp.py @fabaff
+homeassistant/components/notify/yessssms.py @flowolf
 homeassistant/components/plant.py @ChristianKuehnel
 homeassistant/components/scene/lifx_cloud.py @amelchio
 homeassistant/components/sensor/airvisual.py @bachya
