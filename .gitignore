@@ -110,3 +110,5 @@ desktop.ini
 
 # monkeytype
 monkeytype.sqlite3
+
+.pyc
