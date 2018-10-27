@@ -88,8 +88,8 @@ class MillHeater(ClimateDevice):
             room = self._heater.room.name
         else:
             room = "Independent device"
-        return {"Room": room,
-                "Open_window": self._heater.open_window,
+        return {"room": room,
+                "open_window": self._heater.open_window,
                 "heating": self._heater.is_heating}
 
     @property
