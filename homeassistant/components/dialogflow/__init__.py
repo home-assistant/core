@@ -7,15 +7,14 @@ https://home-assistant.io/components/dialogflow/
 import logging
 
 import voluptuous as vol
+from aiohttp import web
 
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, template, config_entry_flow
-from homeassistant.components.http import HomeAssistantView
-
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['webhook', 'http']
+DEPENDENCIES = ['webhook']
 DOMAIN = 'dialogflow'
 
 SOURCE = "Home Assistant Dialogflow"
@@ -42,17 +41,17 @@ async def handle_webhook(hass, webhook_id, request):
 
     try:
         response = await async_handle_message(hass, message)
-        return b'' if response is None else HomeAssistantView.json(response)
+        return b'' if response is None else web.json_response(response)
 
     except DialogFlowError as err:
         _LOGGER.warning(str(err))
-        return HomeAssistantView.json(
+        return web.json_response(
             dialogflow_error_response(message, str(err))
         )
 
     except intent.UnknownIntent as err:
         _LOGGER.warning(str(err))
-        return HomeAssistantView.json(
+        return web.json_response(
             dialogflow_error_response(
                 message,
                 "This intent is not yet configured within Home Assistant."
@@ -61,7 +60,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     except intent.InvalidSlotInfo as err:
         _LOGGER.warning(str(err))
-        return HomeAssistantView.json(
+        return web.json_response(
             dialogflow_error_response(
                 message,
                 "Invalid slot information received for this intent."
@@ -70,7 +69,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     except intent.IntentError as err:
         _LOGGER.warning(str(err))
-        return HomeAssistantView.json(
+        return web.json_response(
             dialogflow_error_response(message, "Error handling intent."))
 
 
