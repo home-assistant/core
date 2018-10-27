@@ -185,7 +185,7 @@ def load_config(fname: str) -> JSON_TYPE:
             if view_id in seen_view_ids:
                 raise DuplicateIdError(
                     'ID `{}` has multiple occurances in views'.format(view_id))
-            seen_view_ids.add(view_id)
+            seen_view_ids.add(str(view_id))
         for card in view.get('cards', []):
             card_id = card.get('id')
             if card_id is None:
@@ -197,7 +197,7 @@ def load_config(fname: str) -> JSON_TYPE:
                     raise DuplicateIdError(
                         'ID `{}` has multiple occurances in cards'
                         .format(card_id))
-                seen_card_ids.add(card_id)
+                seen_card_ids.add(str(card_id))
         index += 1
     if updated:
         save_yaml(fname, config)
@@ -237,7 +237,7 @@ def get_card(fname: str, card_id: str, data_format: str = FORMAT_YAML):
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
-            if str(card.get('id')) != card_id:
+            if str(card.get('id', '')) != card_id:
                 continue
             if data_format == FORMAT_YAML:
                 return object_to_yaml(card)
@@ -253,7 +253,7 @@ def update_card(fname: str, card_id: str, card_config,
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
-            if str(card.get('id')) != card_id:
+            if str(card.get('id', '')) != card_id:
                 continue
             if data_format == FORMAT_YAML:
                 card_config = yaml_to_object(card_config)
@@ -271,7 +271,7 @@ def add_card(fname: str, view_id: str, card_config,
     """Add a card to a view."""
     config = load_yaml(fname)
     for view in config.get('views', []):
-        if str(view.get('id')) != view_id:
+        if str(view.get('id', '')) != view_id:
             continue
         cards = view.get('cards', [])
         if data_format == FORMAT_YAML:
@@ -295,7 +295,7 @@ def move_card(fname: str, card_id: str, position: int = None):
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
-            if str(card.get('id')) != card_id:
+            if str(card.get('id', '')) != card_id:
                 continue
             cards = view.get('cards')
             cards.insert(position, cards.pop(cards.index(card)))
@@ -311,10 +311,10 @@ def move_card_view(fname: str, card_id: str, view_id: str,
     """Move a card to a different view."""
     config = load_yaml(fname)
     for view in config.get('views', []):
-        if str(view.get('id')) == view_id:
+        if str(view.get('id', '')) == view_id:
             destination = view.get('cards')
         for card in view.get('cards'):
-            if str(card.get('id')) != card_id:
+            if str(card.get('id', '')) != card_id:
                 continue
             origin = view.get('cards')
             card_to_move = card
@@ -341,7 +341,7 @@ def delete_card(fname: str, card_id: str, position: int = None):
     config = load_yaml(fname)
     for view in config.get('views', []):
         for card in view.get('cards', []):
-            if str(card.get('id')) != card_id:
+            if str(card.get('id', '')) != card_id:
                 continue
             cards = view.get('cards')
             cards.pop(cards.index(card))
@@ -355,13 +355,12 @@ def delete_card(fname: str, card_id: str, position: int = None):
 def get_view(fname: str, view_id: str, data_format: str = FORMAT_YAML):
     """Get view without it's cards."""
     config = load_yaml(fname)
-    view = next(
-        (view for view in config.get('views', []) if str(view.get('id')) ==
-         view_id), None)
-    if view:
+    for view in config.get('views', []):
+        if str(view.get('id', '')) != view_id:
+            continue
         del view['cards']
         if data_format == FORMAT_YAML:
-            view = object_to_yaml(view)
+            return object_to_yaml(view)
         return view
 
     raise ViewNotFoundError(
@@ -372,19 +371,19 @@ def update_view(fname: str, view_id: str, view_config, data_format:
                 str = FORMAT_YAML):
     """Update view."""
     config = load_yaml(fname)
-    view = next(
-        (view for view in config.get('views', []) if str(view.get('id')) ==
-         view_id), None)
-    if view:
+    for view in config.get('views', []):
+        if str(view.get('id', '')) != view_id:
+            continue
         if data_format == FORMAT_YAML:
             view_config = yaml_to_object(view_config)
-        view_config['cards'] = view.get('cards')
+        view_config['cards'] = view.get('cards', [])
         view.clear()
         view.update(view_config)
         save_yaml(fname, config)
-    else:
-        raise ViewNotFoundError(
-            "View with ID: {} was not found in {}.".format(view_id, fname))
+        return
+
+    raise ViewNotFoundError(
+        "View with ID: {} was not found in {}.".format(view_id, fname))
 
 
 async def async_setup(hass, config):
