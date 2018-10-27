@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_METHOD)
 
 REQUIREMENTS = ['librouteros==2.1.1']
 
@@ -24,7 +24,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=MTK_DEFAULT_API_PORT): cv.port
+    vol.Optional(CONF_PORT, default=MTK_DEFAULT_API_PORT): cv.port,
+    vol.Optional(CONF_METHOD): cv.string
 })
 
 
@@ -45,6 +46,7 @@ class MikrotikScanner(DeviceScanner):
         self.port = config[CONF_PORT]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.method = config[CONF_METHOD]
 
         self.connected = False
         self.success_init = False
@@ -117,12 +119,18 @@ class MikrotikScanner(DeviceScanner):
                         librouteros.exceptions.ConnectionError):
                     self.wireless_exist = False
 
-                if not self.wireless_exist:
+                if not self.wireless_exist or self.method == 'ip':
                     _LOGGER.info(
                         'Mikrotik %s: Wireless adapters not found. Try to '
                         'use DHCP lease table as presence tracker source. '
                         'Please decrease lease time as much as possible.',
                         self.host
+                    )
+                if self.method:
+                    _LOGGER.info(
+                        'Mikrotik %s: Manually selected polling method "%s"',
+                        self.host,
+                        self.method
                     )
 
         except (librouteros.exceptions.TrapError,
@@ -143,12 +151,15 @@ class MikrotikScanner(DeviceScanner):
 
     def _update_info(self):
         """Retrieve latest information from the Mikrotik box."""
-        if self.capsman_exist:
-            devices_tracker = 'capsman'
-        elif self.wireless_exist:
-            devices_tracker = 'wireless'
+        if self.method:
+            devices_tracker = self.method
         else:
-            devices_tracker = 'ip'
+            if self.capsman_exist:
+                devices_tracker = 'capsman'
+            elif self.wireless_exist:
+                devices_tracker = 'wireless'
+            else:
+                devices_tracker = 'ip'
 
         _LOGGER.info(
             "Loading %s devices from Mikrotik (%s) ...",
@@ -175,7 +186,7 @@ class MikrotikScanner(DeviceScanner):
                      for device in device_names
                      if device.get('mac-address')}
 
-        if self.wireless_exist or self.capsman_exist:
+        if devices_tracker == 'wireless' or devices_tracker == 'capsman':
             self.last_results = {
                 device.get('mac-address'):
                     mac_names.get(device.get('mac-address'))
