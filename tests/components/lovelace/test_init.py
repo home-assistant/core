@@ -9,8 +9,8 @@ from ruamel.yaml import YAML
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.components.lovelace import (load_yaml,
-                                               save_yaml, load_config,
+from homeassistant.components.lovelace import (load_yaml, migrate_config,
+                                               save_yaml,
                                                UnsupportedYamlError)
 
 TEST_YAML_A = """\
@@ -164,7 +164,7 @@ class TestYAML(unittest.TestCase):
         with patch('homeassistant.components.lovelace.load_yaml',
                    return_value=self.yaml.load(TEST_YAML_A)), \
                 patch('homeassistant.components.lovelace.save_yaml'):
-            data = load_config(fname)
+            data = migrate_config(fname)
         assert 'id' in data['views'][0]['cards'][0]
         assert 'id' in data['views'][1]
 
@@ -173,7 +173,7 @@ class TestYAML(unittest.TestCase):
         fname = self._path_for("test7")
         with patch('homeassistant.components.lovelace.load_yaml',
                    return_value=self.yaml.load(TEST_YAML_B)):
-            data = load_config(fname)
+            data = migrate_config(fname)
         assert data == self.yaml.load(TEST_YAML_B)
 
 
