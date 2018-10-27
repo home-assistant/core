@@ -31,7 +31,7 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
         self._state = None
         self.last_changed_time = None
         FibaroDevice.__init__(self, fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.fibaro_id)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @property
     def is_on(self):

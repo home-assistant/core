@@ -37,7 +37,7 @@ class FibaroSensor(FibaroDevice, Entity):
 		self.current_value = None
 		self.last_changed_time = None
 		FibaroDevice.__init__(self, fibaro_device, controller)
-		self.entity_id = ENTITY_ID_FORMAT.format(self.fibaro_id)
+		self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
 	@property
 	def state(self):

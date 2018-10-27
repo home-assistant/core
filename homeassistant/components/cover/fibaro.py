@@ -7,7 +7,7 @@ https://home-assistant.io/components/cover.fibaro/
 import logging
 
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT, \
-    ATTR_POSITION
+    ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.fibaro import (
     FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
 
@@ -29,7 +29,7 @@ class FibaroCover(FibaroDevice, CoverDevice):
     def __init__(self, fibaro_device, controller):
         """Initialize the Vera device."""
         FibaroDevice.__init__(self, fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.fibaro_id)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @property
     def current_cover_position(self):
@@ -67,7 +67,7 @@ class FibaroCover(FibaroDevice, CoverDevice):
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.set_level2(kwargs.get(ATTR_POSITION))
+        self.set_level2(kwargs.get(ATTR_TILT_POSITION))
         self.schedule_update_ha_state()
 
     @property
@@ -84,6 +84,16 @@ class FibaroCover(FibaroDevice, CoverDevice):
     def close_cover(self, **kwargs):
         """Close the cover."""
         self.close()
+        self.schedule_update_ha_state()
+
+    def open_cover_tilt(self, **kwargs):
+        """Open the cover tilt."""
+        self.set_level2(100)
+        self.schedule_update_ha_state()
+
+    def close_cover_tilt(self, **kwargs):
+        """Close the cover."""
+        self.set_level2(0)
         self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs):

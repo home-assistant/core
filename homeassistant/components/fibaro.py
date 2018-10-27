@@ -7,7 +7,8 @@ https://home-assistant.io/components/hive/
 import logging
 from collections import defaultdict
 import voluptuous as vol
-from fiblary.client import Client
+import threading
+from fiblary.client.v4.client import Client as FibaroClient
 from homeassistant.const import (ATTR_ARMED, ATTR_BATTERY_LEVEL,
                                  ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
                                  EVENT_HOMEASSISTANT_STOP, CONF_PASSWORD, CONF_URL, CONF_USERNAME)
@@ -38,6 +39,26 @@ FIBARO_COMPONENTS = [
     # 'scene'
 ]
 
+FIBARO_TYPE_MAPPING = {
+    'com.fibaro.temperatureSensor': 'sensor',
+    'com.fibaro.multilevelSensor': "sensor",
+    'com.fibaro.humiditySensor': 'sensor',
+    'com.fibaro.binarySwitch': 'switch',
+    'com.fibaro.FGRGBW441M': 'light',
+    'com.fibaro.multilevelSwitch': 'switch',
+    'com.fibaro.FGD212': 'light',
+    'com.fibaro.FGRM222': 'cover',
+    'com.fibaro.FGR': 'cover',
+    'com.fibaro.doorSensor': 'binary_sensor',
+    'com.fibaro.FGMS001v2': 'binary_sensor',
+    'com.fibaro.lightSensor': 'sensor',
+    'com.fibaro.seismometer': 'sensor',
+    'com.fibaro.accelerometer': 'sensor',
+    'com.fibaro.FGSS001': 'sensor',
+    'com.fibaro.remoteSwitch': 'switch',
+    'com.fibaro.sensor': 'sensor',
+    'com.fibaro.colorController': 'sensor'
+}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -48,106 +69,136 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-class FibaroController:
+class FibaroController(FibaroClient):
     """Initiate Fibaro Controller Class."""
 
-    entities = []
-    fibaro_hc = None
-    info = None
-    rooms = None
-    devices = None
-    roomlist = None
-    fibaro_devices = None
+    my_rooms = None
+    my_devices = None
+    my_fibaro_devices = None
+    devices_lock = None
+    callbacks = {}
+
+    def __init__(self, hass, username, password, url):
+        """Initialize the communication with the Fibaro controller."""
+        self.devices_lock = threading.Lock()
+        try:
+            FibaroClient.__init__(self, url, username, password)
+            my_info = self.info.get()
+        except (Exception):
+            _LOGGER.error("Failed to connect to Fibaro HC")
+            raise ValueError('Failed to connect to Fibaro HC.')
+
+        my_login = self.login.get()
+        if my_login is None or my_login.status is False:
+            _LOGGER.error("Invaid login for Fibaro HC. Please check username and password.")
+            raise ValueError("Invaid login for Fibaro HC. Please check username and password.")
+
+        self._read_rooms()
+        self._read_devices()
+        self.add_event_handler('value', self.value_change_handler)
+        self.add_event_handler('value2', self.value2_change_handler)
+        self.add_event_handler('Humidity', self.value_change_handler)
+        self.add_event_handler('Pressure', self.value_change_handler)
+        self.add_event_handler('Temperature', self.value_change_handler)
+        self.add_event_handler('Wind', self.value_change_handler)
+        self.add_event_handler('lastUpdated', self.lastUpdated_change_handler)
+        self.add_event_handler('lastOutdoorUpdated', self.lastUpdated_change_handler)
+        self.add_event_handler('log', self.log_handler)
+        self.add_event_handler('ui.Current_Weather_Label.caption', self.log_handler)
+        self.add_event_handler('power', self.power_change_handler)
+        hass.data[FIBARO_CONTROLLER] = self
+        hass.data[FIBARO_DEVICES] = self.my_fibaro_devices
+
+    def value_change_handler(self, **kwargs):
+        try:
+            id = kwargs.get('id',None)
+            v = kwargs.get('value',None)
+            with self.devices_lock:
+                self.my_devices[id].properties.value = v
+            self.callbacks[id]()
+        except:
+            _LOGGER.error("Error updating value data")
+        _LOGGER.info("Updated value: {}({}) to {}".format(self.get_device_name(self.my_devices[id]),id,v))
+
+    def value2_change_handler(self, **kwargs):
+        try:
+            id = kwargs.get('id',None)
+            v = kwargs.get('value',None)
+            with self.devices_lock:
+                self.my_devices[id].properties.value2 = v
+            self.callbacks[id]()
+        except:
+            _LOGGER.error("Error updating value2 data")
+        _LOGGER.info("Updated value2: {}({}) to {}".format(self.get_device_name(self.my_devices[id]),id,v))
+
+    def log_handler(self, **kwargs):
+        id = kwargs.get('id',None)
+        v = kwargs.get('value',None)
+        if v:
+            _LOGGER.info("Fibaro {}: {}({}): {}".format(kwargs.get('property','unknown'),self.get_device_name(self.my_devices[id]),id,v))
+
+    def lastUpdated_change_handler(self, **kwargs):
+        pass
+
+    def power_change_handler(self, **kwargs):
+        pass
 
     def get_device_name(self, device):
         """Get room decorated name for Fibaro device."""
         if device.roomID == 0:
             room_name = 'Unknown'
         else:
-            room_name = self.rooms[device.roomID].name
+            room_name = self.my_rooms[device.roomID].name
         device_name = room_name + '_' + device.name
         return device_name
 
+    def register(self, device_id, callback):
+        self.callbacks[device_id] = callback
+
     def _read_rooms(self):
-        rooms = self.fibaro_hc.rooms.list()
-        self.rooms = {}
+        rooms = self.rooms.list()
+        self.my_rooms = {}
         for room in rooms:
-            self.rooms[room.id] = room
+            self.my_rooms[room.id] = room
         return True
 
     def _read_devices(self):
-        devices = self.fibaro_hc.devices.list()
-        self.devices = {}
-        for device in devices:
-            self.devices[device.id] = device
-        typemapping = {'com.fibaro.temperatureSensor' : 'sensor',
-                       'com.fibaro.multilevelSensor' : "sensor",
-                       'com.fibaro.humiditySensor' : 'sensor',
-                       'com.fibaro.binarySwitch' : 'switch',
-                       'com.fibaro.FGRGBW441M' : 'light',
-                       'com.fibaro.multilevelSwitch' : 'switch',
-                       'com.fibaro.FGD212' : 'light',
-                       'com.fibaro.FGRM222' : 'cover',
-                       'com.fibaro.FGR' : 'cover',
-                       'com.fibaro.doorSensor' : 'binary_sensor',
-                       'com.fibaro.FGMS001v2' : 'binary_sensor',
-                       'com.fibaro.lightSensor' : 'sensor',
-                       'com.fibaro.seismometer' : 'sensor',
-                       'com.fibaro.accelerometer' : 'sensor',
-                       'com.fibaro.FGSS001' : 'sensor',
-                       'com.fibaro.remoteSwitch' : 'switch',
-                       'com.fibaro.sensor': 'sensor',
-                       'com.fibaro.colorController': 'sensor'
-                       }
-        if self.fibaro_devices is None:
-            self.fibaro_devices = defaultdict(list)
-        for _, device in self.devices.items():
-            if (device.enabled is True) and (device.visible is True):
-                if device.type in typemapping:
-                    device_type = typemapping[device.type]
-                elif device.baseType in typemapping:
-                    device_type = typemapping[device.type]
-                else:
-                    continue
-                if device_type is 'switch' and 'isLight' in device.properties and device.properties.isLight == 'true':
-                    device_type = 'light'
-                self.fibaro_devices[device_type].append(device)
+        devices = self.devices.list()
+        with self.devices_lock:
+            self.my_devices = {}
+            for device in devices:
+                device.friendly_name = self.get_device_name(device)
+                self.my_devices[device.id] = device
+            if self.my_fibaro_devices is None:
+                self.my_fibaro_devices = defaultdict(list)
+            for _, device in self.my_devices.items():
+                if (device.enabled is True) and (device.visible is True):
+                    if device.type in FIBARO_TYPE_MAPPING:
+                        device_type = FIBARO_TYPE_MAPPING[device.type]
+                    elif device.baseType in FIBARO_TYPE_MAPPING:
+                        device_type = FIBARO_TYPE_MAPPING[device.type]
+                    else:
+                        continue
+                    if device_type is 'switch' and 'isLight' in device.properties and device.properties.isLight == 'true':
+                        device_type = 'light'
+                    device.mapped_type = device_type
+                    self.my_fibaro_devices[device_type].append(device)
         return True
 
-    def init(self, hass, username, password, url):
-        """Initialize the communication with the Fibaro controller."""
-        try:
-            self.fibaro_hc = Client('v4', url, username, password)
-            self.info = self.fibaro_hc.info.get()
-        except:
-            self.fibaro_hc = None
-
-        if self.fibaro_hc is None:
-            _LOGGER.error("Failed to connect to Fibaro HC")
-            return False
-
-        login = self.fibaro_hc.login.get()
-        if login is None or login.status is False:
-            _LOGGER.error("Invaid login for Fibaro HC. Please check username and password.")
-            return False
-
-        self._read_rooms()
-        self._read_devices()
-        hass.data[FIBARO_CONTROLLER] = self
-        hass.data[FIBARO_DEVICES] = self.fibaro_devices
-        return True
 
 def setup(hass, config):
     """Set up the Fibaro Component."""
 
-    controller = FibaroController()
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
     url = config[DOMAIN][CONF_URL]
-    controller.init(hass, username, password, url)
+
+    controller = FibaroController(hass, username, password, url)
 
     for component in FIBARO_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
+
+    controller.enable_state_handler()
 
     return True
 
@@ -159,14 +210,14 @@ class FibaroDevice(Entity):
         self.fibaro_device = fibaro_device
         self.controller = controller
 
-        self._name = controller.get_device_name(fibaro_device)
+        self._name = fibaro_device.friendly_name
         # Append device id to prevent name clashes in HA.
-        self.fibaro_id = FIBARO_ID_FORMAT.format(
+        self.ha_id = FIBARO_ID_FORMAT.format(
             slugify(self._name), fibaro_device.id)
+        self.fibaro_device.ha_id = self.ha_id
+        self.controller.register(fibaro_device.id, self._update_callback)
 
-#        self.controller.register(fibaro_device, self._update_callback)
-
-    def _update_callback(self, _device):
+    def _update_callback(self):
         """Update the state."""
         self.schedule_update_ha_state(True)
 
@@ -178,7 +229,10 @@ class FibaroDevice(Entity):
 
     def set_level(self, level):
         """Set the level of Fibaro device."""
-        pass
+        if 'setValue' in self.fibaro_device.actions:
+            self.fibaro_device.setValue(level)
+        else:
+            _LOGGER.info("Not sure how to setValue: {} (available actions: {})".format(self.ha_id, self.fibaro_device.actions))
 
     def get_level2(self):
         """Get the tilt level of Fibaro device."""
@@ -188,27 +242,45 @@ class FibaroDevice(Entity):
 
     def set_level2(self, level):
         """Set the tilt level of Fibaro device."""
-        pass
+        if 'setValue2' in self.fibaro_device.actions:
+            self.fibaro_device.setValue2(level)
+        else:
+            _LOGGER.info("Not sure how to setValue2: {} (available actions: {})".format(self.ha_id, self.fibaro_device.actions))
 
     def open(self):
         """Execute open command on Fibaro device."""
-        pass
+        if 'open' in self.fibaro_device.actions:
+            self.fibaro_device.open()
+        else:
+            _LOGGER.info("Not sure how to open: {} (available actions: {})".format(self.ha_id, self.fibaro_device.actions))
 
     def close(self):
         """Execute close command on Fibaro device."""
-        pass
+        if 'close' in self.fibaro_device.actions:
+            self.fibaro_device.close()
+        else:
+            _LOGGER.info("Not sure how to close: {} (available actions: {})".format(self.ha_id, self.fibaro_device.actions))
 
     def stop(self):
         """Execute stop command on Fibaro device."""
-        pass
+        if 'stop' in self.fibaro_device.actions:
+            self.fibaro_device.stop()
+        else:
+            _LOGGER.info("Not sure how to stop: {} (available actions: {})".format(self.ha_id, self.fibaro_device.actions))
 
     def switch_on(self):
         """Switch on Fibaro device."""
-        pass
+        if 'turnOn' in self.fibaro_device.actions:
+            self.fibaro_device.turnOn()
+        else:
+            _LOGGER.info("Not sure how to switch on: {} (available actions: {})".format(self.ha_id, self.fibaro_device.actions))
 
     def switch_off(self):
         """Switch off Fibaro device."""
-        pass
+        if 'turnOff' in self.fibaro_device.actions:
+            self.fibaro_device.turnOff()
+        else:
+            _LOGGER.info("Not sure how to switch off: {} (available actions: {})".format(self.ha_id, self.fibaro_device.actions))
 
     @property
     def current_power_w(self):
@@ -285,5 +357,6 @@ class FibaroDevice(Entity):
             pass
 
         attr['Fibaro Device Id'] = self.fibaro_device.id
+        attr['Id'] = self.ha_id
 
         return attr

@@ -7,7 +7,7 @@ https://home-assistant.io/components/light.fibaro/
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ENTITY_ID_FORMAT,
+    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_HS_COLOR, ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 import homeassistant.util.color as color_util
 from homeassistant.components.fibaro import (
@@ -31,6 +31,7 @@ class FibaroLight(FibaroDevice, Light):
     __supports_dimming = False
     __supports_color = False
     __supported_features_flags = 0
+    _last_brightness = 0
 
     def __init__(self, fibaro_device, controller):
         """Initialize the light."""
@@ -44,7 +45,7 @@ class FibaroLight(FibaroDevice, Light):
             self.__supported_features_flags |= SUPPORT_COLOR
             self.__supports_color = True
         FibaroDevice.__init__(self, fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.fibaro_id)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @property
     def brightness(self):
@@ -70,15 +71,42 @@ class FibaroLight(FibaroDevice, Light):
         #     self.vera_device.set_brightness(kwargs[ATTR_BRIGHTNESS])
         # else:
         #     self.vera_device.switch_on()
-
-        self._state = True
-        self.schedule_update_ha_state(True)
+        if self.__supports_dimming:
+            target_brightness = None
+            if ATTR_BRIGHTNESS_PCT in kwargs:
+                target_brightness = int(kwargs[ATTR_BRIGHTNESS_PCT]*255/100)
+            elif ATTR_BRIGHTNESS in kwargs:
+                target_brightness = kwargs[ATTR_BRIGHTNESS]
+            if target_brightness is None:
+                self._state = True
+                if self._brightness < 4:
+                    if self._last_brightness:
+                        self._brightness = self._last_brightness
+                    else:
+                        self._brightness = 255
+                    self.set_level(int(self._brightness*100/255))
+                else:
+                    self.switch_on()
+            elif target_brightness < 4:
+                self._brightness = 0
+                self.switch_off()
+                self._state = False
+            else:
+                self._state = True
+                self._brightness = target_brightness
+                self.set_level(int(target_brightness*100/255))
+        else:
+            self.switch_on()
+            self._state = True
+#        self.schedule_update_ha_state(True)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
+        if (self._brightness >= 4):
+            self._last_brightness = self._brightness
         self.switch_off()
         self._state = False
-        self.schedule_update_ha_state()
+#        self.schedule_update_ha_state()
 
     @property
     def is_on(self):
@@ -92,9 +120,9 @@ class FibaroLight(FibaroDevice, Light):
             # If it is dimmable, both functions exist. In case color
             # is not supported, it will return None
             if 'brightness' in self.fibaro_device.properties:
-                self._brightness = int(self.fibaro_device.properties.brightness)
+                self._brightness = int(int(self.fibaro_device.properties.brightness)*255/100)
             else:
-                self._brightness = int(self.fibaro_device.properties.value)
+                self._brightness = int(int(self.fibaro_device.properties.value)*255/100)
         if self.__supports_color:
             rgbw_color_str = self.fibaro_device.properties.color
             rgb = [int(i) for i in rgbw_color_str.split(",")][:3]
