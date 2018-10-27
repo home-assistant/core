@@ -102,7 +102,7 @@ class FibaroLight(FibaroDevice, Light):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        if (self._brightness >= 4):
+        if self.__supports_dimming and self._brightness and self._brightness >= 4:
             self._last_brightness = self._brightness
         self.switch_off()
         self._state = False
