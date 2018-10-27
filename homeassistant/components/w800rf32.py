@@ -14,14 +14,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-     ATTR_ENTITY_ID, ATTR_NAME, ATTR_STATE, CONF_DEVICE, CONF_DEVICES,
-     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICE,
+                                 EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyW800rf32']
+REQUIREMENTS = ['pyW800rf32==0.1']
 
 DOMAIN = 'w800rf32'
 
@@ -91,8 +89,7 @@ def apply_received_command(event):
         command
     )
 
-    if command == 'On'\
-            or command == 'Off':
+    if command in ('On', 'Off'):
 
         # Update the w800rf32 device state
         is_on = command == 'On'

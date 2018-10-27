@@ -26,10 +26,8 @@ import voluptuous as vol
 from homeassistant.components import w800rf32
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.components.w800rf32 import (
-    ATTR_NAME, CONF_DEVICES, CONF_FIRE_EVENT, CONF_OFF_DELAY)
-from homeassistant.const import (
-    CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_DEVICE_CLASS, CONF_NAME)
+from homeassistant.components.w800rf32 import (CONF_FIRE_EVENT, CONF_OFF_DELAY)
+from homeassistant.const import (CONF_DEVICE_CLASS, CONF_NAME, ATTR_NAME, CONF_DEVICES)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import event as evt
 from homeassistant.util import dt as dt_util
@@ -46,9 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
             vol.Optional(CONF_OFF_DELAY):
-            vol.Any(cv.time_period, cv.positive_timedelta),
-            vol.Optional(CONF_COMMAND_ON): cv.byte,
-            vol.Optional(CONF_COMMAND_OFF): cv.byte
+            vol.Any(cv.time_period, cv.positive_timedelta)
         })
     },
 }, extra=vol.ALLOW_EXTRA)
@@ -73,7 +69,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             event, entity.get(CONF_NAME), entity.get(CONF_DEVICE_CLASS),
             entity[CONF_FIRE_EVENT], entity.get(CONF_OFF_DELAY))
 
-        device.hass = hass
         sensors.append(device)
         w800rf32.W800_DEVICES[device_id] = device
 
