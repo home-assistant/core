@@ -17,11 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPE_CURRENT_STATUS = 'current_status'
 SENSOR_TYPE_DOWNLOAD_SPEED = 'download_speed'
 SENSOR_TYPE_UPLOAD_SPEED = 'upload_speed'
-ALL_SENSOR_TYPES = [
-    SENSOR_TYPE_CURRENT_STATUS,
-    SENSOR_TYPE_DOWNLOAD_SPEED,
-    SENSOR_TYPE_UPLOAD_SPEED,
-]
 
 DEFAULT_NAME = 'rtorrent'
 SENSOR_TYPES = {
@@ -33,7 +28,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.url,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=ALL_SENSOR_TYPES): vol.All(
+    vol.Optional(CONF_MONITORED_VARIABLES, default=SENSOR_TYPES): vol.All(
         cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
