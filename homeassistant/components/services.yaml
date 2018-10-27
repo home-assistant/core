@@ -527,6 +527,12 @@ homeassistant:
       entity_id:
         description: The entity_id of the device to turn off.
         example: light.living_room
+  update_entity:
+    description: Force one or more entities to update its data
+    fields:
+      entity_id:
+        description: One or multiple entity_ids to update. Can be a list.
+        example: light.living_room
 
 xiaomi_aqara:
   play_ringtone:
