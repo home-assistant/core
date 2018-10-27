@@ -113,7 +113,7 @@ class PilightBinarySensor(BinarySensorDevice):
             if self._variable not in call.data:
                 return
             value = call.data[self._variable]
-            self._state = (value == self._on_value)
+            self._state = (str(value) == self._on_value)
             self.schedule_update_ha_state()
 
 
@@ -178,7 +178,7 @@ class PilightTriggerSensor(BinarySensorDevice):
             if self._variable not in call.data:
                 return
             value = call.data[self._variable]
-            self._state = (value == self._on_value)
+            self._state = (str(value) == self._on_value)
             if self._delay_after is None:
                 self._delay_after = dt_util.utcnow() + datetime.timedelta(
                     seconds=self._reset_delay_sec)
