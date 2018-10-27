@@ -123,11 +123,11 @@ async def async_setup(hass, config):
         CONF_SCAN_INTERVAL: conf[CONF_SCAN_INTERVAL],
     }
 
-    if conf.get(CONF_LATITUDE):
+    if CONF_LATITUDE in conf:
         data[CONF_LATITUDE] = conf[CONF_LATITUDE]
-    if conf.get(CONF_LONGITUDE):
+    if CONF_LONGITUDE in conf:
         data[CONF_LONGITUDE] = conf[CONF_LONGITUDE]
-    if conf.get(CONF_ELEVATION):
+    if CONF_ELEVATION in conf:
         data[CONF_ELEVATION] = conf[CONF_ELEVATION]
 
     hass.async_create_task(
