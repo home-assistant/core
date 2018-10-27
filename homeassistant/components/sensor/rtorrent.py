@@ -28,7 +28,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.url,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=SENSOR_TYPES): vol.All(
+    vol.Optional(CONF_MONITORED_VARIABLES, default=list(SENSOR_TYPES)): vol.All(
         cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
