@@ -80,6 +80,7 @@ def async_setup(hass, config):
     hass.http.register_view(CreateShoppingListItemView)
     hass.http.register_view(UpdateShoppingListItemView)
     hass.http.register_view(ClearCompletedItemsView)
+    hass.http.register_view(DeleteShoppingListItemView)
 
     hass.components.conversation.async_register(INTENT_ADD_ITEM, [
         'Add [the] [a] [an] {item} to my shopping list',
@@ -141,6 +142,17 @@ class ShoppingData:
             return load_json(self.hass.config.path(PERSISTENCE), default=[])
 
         self.items = yield from self.hass.async_add_job(load)
+
+    @callback
+    def async_delete(self, item_id):
+        """Delete a shopping list item."""
+        item = next((itm for itm in self.items if itm['id'] == item_id), None)
+
+        if item is None:
+            raise KeyError
+
+        self.items.remove(item)
+        self.hass.async_add_job(self.save)
 
     def save(self):
         """Save the items."""
@@ -207,7 +219,7 @@ class ShoppingListView(http.HomeAssistantView):
 
 
 class UpdateShoppingListItemView(http.HomeAssistantView):
-    """View to retrieve shopping list content."""
+    """View to update shopping list content."""
 
     url = '/api/shopping_list/item/{item_id}'
     name = "api:shopping_list:item:id"
@@ -227,7 +239,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
 
 
 class CreateShoppingListItemView(http.HomeAssistantView):
-    """View to retrieve shopping list content."""
+    """View to add shopping list content."""
 
     url = '/api/shopping_list/item'
     name = "api:shopping_list:item"
@@ -244,7 +256,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
 
 
 class ClearCompletedItemsView(http.HomeAssistantView):
-    """View to retrieve shopping list content."""
+    """View to clear completed shopping list content."""
 
     url = '/api/shopping_list/clear_completed'
     name = "api:shopping_list:clear_completed"
@@ -256,3 +268,22 @@ class ClearCompletedItemsView(http.HomeAssistantView):
         hass.data[DOMAIN].async_clear_completed()
         hass.bus.async_fire(EVENT)
         return self.json_message('Cleared completed items.')
+
+
+class DeleteShoppingListItemView(http.HomeAssistantView):
+    """View to delete shopping list content."""
+
+    url = '/api/shopping_list/delete/{item_id}'
+    name = "api:shopping_list:delete:id"
+
+    async def get(self, request, item_id):
+        """Delete a shopping list item."""
+        try:
+            hass = request.app['hass']
+            hass.data[DOMAIN].async_delete(item_id)
+            hass.bus.async_fire(EVENT)
+            return self.json('Item deleted')
+        except KeyError:
+            return self.json_message('Item not found', HTTP_NOT_FOUND)
+        except vol.Invalid:
+            return self.json_message('Item not found', HTTP_BAD_REQUEST)
