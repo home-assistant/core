@@ -40,11 +40,11 @@ async def async_setup_entry(hass, config_entry):
         host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
         site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
     )
+    
+    hass.data[DOMAIN][controller_id] = controller
 
     if not await controller.async_setup():
         return False
-
-    hass.data[DOMAIN][controller_id] = controller
 
     if controller.mac is None:
         return True
