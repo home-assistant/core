@@ -1,9 +1,19 @@
 """
-Support for the Fibaro devices.
+Support for the Fibaro devices. (Very beta)
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/hive/
+To enable, add the following section to configuration.yaml:
+[fibaro]
+    url: "http://yourfibarohc/api/"
+    username: "your@superuseremail.com"
+    password: "YourPassword1"
+
+For more detailed debugging, you can enable it in the [logger] section of you
+configuration.yaml, like this:
+[logger]
+    logs:
+        homeassistant.components.fibaro: debug
 """
+
 import logging
 from collections import defaultdict
 import threading
