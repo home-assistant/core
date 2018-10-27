@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (
+    SwitchDevice, PLATFORM_SCHEMA, DEVICE_CLASS_OUTLET)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_SWITCHES, CONF_MAC, CONF_DISCOVERY)
 import homeassistant.helpers.config_validation as cv
@@ -104,3 +105,8 @@ class S20Switch(SwitchDevice):
             self._s20.on = False
         except self._exc:
             _LOGGER.exception("Error while turning off S20")
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

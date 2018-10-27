@@ -4,7 +4,8 @@ Support for the Hive devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.hive/
 """
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_OUTLET)
 from homeassistant.components.hive import DATA_HIVE
 
 DEPENDENCIES = ['hive']
@@ -75,3 +76,8 @@ class HiveDevicePlug(SwitchDevice):
         self.session.core.update_data(self.node_id)
         self.attributes = self.session.attributes.state_attributes(
             self.node_id)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

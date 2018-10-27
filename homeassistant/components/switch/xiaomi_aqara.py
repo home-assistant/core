@@ -1,7 +1,8 @@
 """Support for Xiaomi aqara binary sensors."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_OUTLET)
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
 
@@ -150,3 +151,8 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
         """Get data from hub."""
         _LOGGER.debug("Update data from hub: %s", self._name)
         self._get_from_hub(self._sid)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

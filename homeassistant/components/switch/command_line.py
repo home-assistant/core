@@ -12,10 +12,10 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.switch import (
-    SwitchDevice, PLATFORM_SCHEMA, ENTITY_ID_FORMAT)
+    SwitchDevice, PLATFORM_SCHEMA, ENTITY_ID_FORMAT, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_VALUE_TEMPLATE, CONF_COMMAND_OFF,
-    CONF_COMMAND_ON, CONF_COMMAND_STATE)
+    CONF_COMMAND_ON, CONF_COMMAND_STATE, CONF_DEVICE_CLASS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_STATE): cv.string,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -51,6 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_config.get(CONF_COMMAND_ON),
                 device_config.get(CONF_COMMAND_OFF),
                 device_config.get(CONF_COMMAND_STATE),
+                device_config.get(CONF_DEVICE_CLASS),
                 value_template
             )
         )
@@ -66,7 +68,7 @@ class CommandSwitch(SwitchDevice):
     """Representation a switch that can be toggled using shell commands."""
 
     def __init__(self, hass, object_id, friendly_name, command_on,
-                 command_off, command_state, value_template):
+                 command_off, command_state, value_template, device_class):
         """Initialize the switch."""
         self._hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
@@ -76,6 +78,7 @@ class CommandSwitch(SwitchDevice):
         self._command_off = command_off
         self._command_state = command_state
         self._value_template = value_template
+        self._device_class = device_class
 
     @staticmethod
     def _switch(command):
@@ -125,6 +128,11 @@ class CommandSwitch(SwitchDevice):
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._command_state is None
+
+    @property
+    def device_class(self):
+        """Return the device class of the switch."""
+        return self._device_class
 
     def _query_state(self):
         """Query for state."""

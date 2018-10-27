@@ -9,7 +9,8 @@ from time import time
 
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.verisure import CONF_SMARTPLUGS
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_OUTLET)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,3 +77,8 @@ class VerisureSmartplug(SwitchDevice):
     def update(self):
         """Get the latest date of the smartplug."""
         hub.update_overview()
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

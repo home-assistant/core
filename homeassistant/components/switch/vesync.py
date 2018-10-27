@@ -6,7 +6,8 @@ https://home-assistant.io/components/switch.vesync/
 """
 import logging
 import voluptuous as vol
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (
+    SwitchDevice, PLATFORM_SCHEMA, DEVICE_CLASS_OUTLET)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
@@ -106,3 +107,8 @@ class VeSyncSwitchHA(SwitchDevice):
         self.smartplug.update()
         self._current_power_w = self.smartplug.get_power()
         self._today_energy_kwh = self.smartplug.get_kwh_today()
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

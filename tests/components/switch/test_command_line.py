@@ -107,24 +107,24 @@ class TestCommandSwitch(unittest.TestCase):
                 'switch': {
                     'platform': 'command_line',
                     'switches': {
-                        'test': test_switch
+                        'test2': test_switch
                     }
                 }
             })
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get('switch.test2')
             assert STATE_OFF == state.state
 
-            common.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, 'switch.test2')
             self.hass.block_till_done()
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get('switch.test2')
             assert STATE_ON == state.state
 
-            common.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, 'switch.test2')
             self.hass.block_till_done()
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get('switch.test2')
             assert STATE_OFF == state.state
 
     def test_state_code(self):
@@ -163,7 +163,7 @@ class TestCommandSwitch(unittest.TestCase):
     def test_assumed_state_should_be_true_if_command_state_is_none(self):
         """Test with state value."""
         # args: hass, device_name, friendly_name, command_on, command_off,
-        #       command_state, value_template
+        #       command_state, value_template, device_class
         init_args = [
             self.hass,
             "test_device_name",
@@ -172,13 +172,14 @@ class TestCommandSwitch(unittest.TestCase):
             "echo 'off command'",
             None,
             None,
+            None,
         ]
 
         no_state_device = command_line.CommandSwitch(*init_args)
         assert no_state_device.assumed_state
 
         # Set state command
-        init_args[-2] = 'cat {}'
+        init_args[-3] = 'cat {}'
 
         state_device = command_line.CommandSwitch(*init_args)
         assert not state_device.assumed_state
@@ -192,6 +193,7 @@ class TestCommandSwitch(unittest.TestCase):
             "echo 'on command'",
             "echo 'off command'",
             False,
+            None,
             None,
         ]
 

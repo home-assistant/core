@@ -7,7 +7,7 @@ from homeassistant.util.decorator import Registry
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES)
+    CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES, CONF_DEVICE_CLASS)
 from homeassistant.components import (
     climate,
     cover,
@@ -25,7 +25,7 @@ from homeassistant.components import (
 from . import trait
 from .const import (
     TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_VACUUM,
-    TYPE_THERMOSTAT,
+    TYPE_THERMOSTAT, TYPE_FAN, TYPE_CAMERA, TYPE_OUTLET, TYPE_COFFEE_MAKER,
     CONF_ALIASES, CONF_ROOM_HINT,
     ERR_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
     ERR_UNKNOWN_ERROR
@@ -47,6 +47,14 @@ DOMAIN_TO_GOOGLE_TYPES = {
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
+}
+
+SWITCH_DEVICE_CLASS_TO_GOOGLE_TYPES = {
+    switch.DEVICE_CLASS_OUTLET: TYPE_OUTLET,
+    switch.DEVICE_CLASS_LIGHTS: TYPE_LIGHT,
+    switch.DEVICE_CLASS_CAMERA: TYPE_CAMERA,
+    switch.DEVICE_CLASS_COFFE_MAKER: TYPE_COFFEE_MAKER,
+    switch.DEVICE_CLASS_FAN: TYPE_FAN,
 }
 
 
@@ -110,6 +118,12 @@ class _GoogleEntity:
         if not traits:
             return None
 
+        device_type = DOMAIN_TO_GOOGLE_TYPES[state.domain]
+
+        device_class = state.attributes.get(CONF_DEVICE_CLASS)
+        if state.domain == switch.DOMAIN and device_class:
+            device_type = SWITCH_DEVICE_CLASS_TO_GOOGLE_TYPES[device_class]
+
         device = {
             'id': state.entity_id,
             'name': {
@@ -118,7 +132,7 @@ class _GoogleEntity:
             'attributes': {},
             'traits': [trait.name for trait in traits],
             'willReportState': False,
-            'type': DOMAIN_TO_GOOGLE_TYPES[state.domain],
+            'type': device_type,
         }
 
         # use aliases

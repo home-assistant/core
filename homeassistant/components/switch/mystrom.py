@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (
+    SwitchDevice, PLATFORM_SCHEMA, DEVICE_CLASS_OUTLET)
 from homeassistant.const import (CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
 
@@ -92,3 +93,8 @@ class MyStromSwitch(SwitchDevice):
         except exceptions.MyStromConnectionError:
             self.data = {'power': 0, 'relay': False}
             _LOGGER.error("No route to device: %s", self._resource)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

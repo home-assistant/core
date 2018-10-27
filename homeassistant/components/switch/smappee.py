@@ -7,7 +7,8 @@ https://home-assistant.io/components/switch.smappee/
 import logging
 
 from homeassistant.components.smappee import DATA_SMAPPEE
-from homeassistant.components.switch import (SwitchDevice)
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_OUTLET)
 
 DEPENDENCIES = ['smappee']
 
@@ -90,3 +91,8 @@ class SmappeeSwitch(SwitchDevice):
             attr['Location Name'] = self._smappee.locations[self._location_id]
         attr['Switch Id'] = self._switch_id
         return attr
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

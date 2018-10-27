@@ -5,7 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.android_ip_webcam/
 """
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_LIGHTS, DEVICE_CLASS_CAMERA)
 from homeassistant.components.android_ip_webcam import (
     KEY_MAP, ICON_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST,
     CONF_NAME, CONF_SWITCHES)
@@ -88,3 +89,12 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
     def icon(self):
         """Return the icon for the switch."""
         return ICON_MAP.get(self._setting, 'mdi:flash')
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self._setting == 'torch':
+            return DEVICE_CLASS_LIGHTS
+        if self._setting == 'ffc':
+            return DEVICE_CLASS_CAMERA
+        return None

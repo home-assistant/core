@@ -10,11 +10,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.switch import (
-    ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
+    ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE,
     CONF_ENTITY_PICTURE_TEMPLATE, STATE_OFF, STATE_ON, ATTR_ENTITY_ID,
-    CONF_SWITCHES, EVENT_HOMEASSISTANT_START)
+    CONF_SWITCHES, EVENT_HOMEASSISTANT_START, CONF_DEVICE_CLASS)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -34,6 +34,7 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
@@ -55,6 +56,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             CONF_ENTITY_PICTURE_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
+        device_class = device_config.get(CONF_DEVICE_CLASS)
         entity_ids = (device_config.get(ATTR_ENTITY_ID) or
                       state_template.extract_entities())
 
@@ -70,7 +72,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             SwitchTemplate(
                 hass, device, friendly_name, state_template,
                 icon_template, entity_picture_template, on_action,
-                off_action, entity_ids)
+                off_action, entity_ids, device_class)
             )
     if not switches:
         _LOGGER.error("No switches added")
@@ -85,7 +87,7 @@ class SwitchTemplate(SwitchDevice):
 
     def __init__(self, hass, device_id, friendly_name, state_template,
                  icon_template, entity_picture_template, on_action,
-                 off_action, entity_ids):
+                 off_action, entity_ids, device_class):
         """Initialize the Template switch."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -100,6 +102,7 @@ class SwitchTemplate(SwitchDevice):
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
+        self._device_class = device_class
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -148,6 +151,11 @@ class SwitchTemplate(SwitchDevice):
     def entity_picture(self):
         """Return the entity_picture to use in the frontend, if any."""
         return self._entity_picture
+
+    @property
+    def device_class(self):
+        """Return the device class of the switch."""
+        return self._device_class
 
     async def async_turn_on(self, **kwargs):
         """Fire the on action."""

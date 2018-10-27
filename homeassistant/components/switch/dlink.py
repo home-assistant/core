@@ -10,7 +10,8 @@ import urllib
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA, SwitchDevice, DEVICE_CLASS_OUTLET)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME,
     TEMP_CELSIUS)
@@ -166,3 +167,8 @@ class SmartPlugData:
         self.current_consumption = self.smartplug.current_consumption
         self.total_consumption = self.smartplug.total_consumption
         self._n_tried = 0
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET
