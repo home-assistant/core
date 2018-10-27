@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (
+    SwitchDevice, PLATFORM_SCHEMA, DEVICE_CLASS_OUTLET)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
@@ -92,3 +93,8 @@ class SmartPlugSwitch(SwitchDevice):
             self._now_energy_day = None
 
         self._state = self.smartplug.state == 'ON'
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

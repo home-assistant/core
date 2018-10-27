@@ -11,7 +11,8 @@ import requests
 
 import async_timeout
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_COFFEE_MAKER, DEVICE_CLASS_OUTLET)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import convert
 from homeassistant.const import (
@@ -258,3 +259,10 @@ class WemoSwitch(SwitchDevice):
             _LOGGER.warning("Could not update status for %s (%s)",
                             self.name, err)
             self._available = False
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self._model_name == 'CoffeeMaker':
+            return DEVICE_CLASS_COFFEE_MAKER
+        return DEVICE_CLASS_OUTLET

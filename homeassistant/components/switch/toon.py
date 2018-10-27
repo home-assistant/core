@@ -6,7 +6,8 @@ https://home-assistant.io/components/switch.toon/
 """
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_OUTLET)
 import homeassistant.components.toon as toon_main
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,3 +72,8 @@ class EnecoSmartPlug(SwitchDevice):
     def update(self):
         """Update state."""
         self.toon_data_store.update()
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

@@ -7,7 +7,8 @@ https://home-assistant.io/components/switch.homematic/
 import logging
 
 from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_OUTLET)
 from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,3 +67,8 @@ class HMSwitch(HMDevice, SwitchDevice):
         # Need sensor values for SwitchPowermeter
         for node in self._hmdevice.SENSORNODE:
             self._data.update({node: STATE_UNKNOWN})
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

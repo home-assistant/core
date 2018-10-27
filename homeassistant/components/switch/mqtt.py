@@ -16,10 +16,11 @@ from homeassistant.components.mqtt import (
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, MqttAvailability,
     MqttDiscoveryUpdate, MqttEntityDeviceInfo)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
-    CONF_PAYLOAD_ON, CONF_ICON, STATE_ON, CONF_DEVICE)
+    CONF_PAYLOAD_ON, CONF_ICON, STATE_ON, CONF_DEVICE, CONF_DEVICE_CLASS)
 from homeassistant.components import mqtt, switch
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -47,6 +48,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_OFF): cv.string,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -97,6 +99,7 @@ async def _async_setup_entity(hass, config, async_add_entities,
         value_template,
         config.get(CONF_DEVICE),
         discovery_hash,
+        config.get(CONF_DEVICE_CLASS),
     )
 
     async_add_entities([newswitch])
@@ -112,7 +115,7 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                  state_off, optimistic, payload_available,
                  payload_not_available, unique_id: Optional[str],
                  value_template, device_config: Optional[ConfigType],
-                 discovery_hash):
+                 discovery_hash, device_class):
         """Initialize the MQTT switch."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
@@ -133,6 +136,7 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._template = value_template
         self._unique_id = unique_id
         self._discovery_hash = discovery_hash
+        self._device_class = device_class
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -195,6 +199,11 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
     def icon(self):
         """Return the icon."""
         return self._icon
+
+    @property
+    def device_class(self):
+        """Return the device class of the switch."""
+        return self._device_class
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on.

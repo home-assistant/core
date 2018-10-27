@@ -9,7 +9,8 @@ import logging
 from homeassistant.components.homematicip_cloud import (
     HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_OUTLET)
 
 DEPENDENCIES = ['homematicip_cloud']
 
@@ -67,6 +68,11 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         await self._device.turn_off()
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET
 
 
 class HomematicipSwitchMeasuring(HomematicipSwitch):
