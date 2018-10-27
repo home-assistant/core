@@ -13,13 +13,12 @@ import struct
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_SLAVE, ATTR_TEMPERATURE)
-from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
-
-from homeassistant.components import modbus
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components import modbus
+from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA,
+                                              SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.modbus import CONF_HUB_NAME
+from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, CONF_SLAVE
 
 DEPENDENCIES = ['modbus']
 
@@ -35,14 +34,22 @@ DATA_TYPE_UINT = 'uint'
 DATA_TYPE_FLOAT = 'float'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_SLAVE): cv.positive_int,
-    vol.Required(CONF_TARGET_TEMP): cv.positive_int,
-    vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
+    vol.Required(CONF_HUB_NAME, default="default"):
+        cv.string,
+    vol.Required(CONF_NAME):
+        cv.string,
+    vol.Required(CONF_SLAVE):
+        cv.positive_int,
+    vol.Required(CONF_TARGET_TEMP):
+        cv.positive_int,
+    vol.Required(CONF_CURRENT_TEMP):
+        cv.positive_int,
     vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT):
         vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]),
-    vol.Optional(CONF_COUNT, default=2): cv.positive_int,
-    vol.Optional(CONF_PRECISION, default=1): cv.positive_int
+    vol.Optional(CONF_COUNT, default=2):
+        cv.positive_int,
+    vol.Optional(CONF_PRECISION, default=1):
+        cv.positive_int
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,18 +66,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data_type = config.get(CONF_DATA_TYPE)
     count = config.get(CONF_COUNT)
     precision = config.get(CONF_PRECISION)
+    hub_name = config.get(CONF_HUB_NAME)
 
-    add_entities([ModbusThermostat(name, modbus_slave,
-                                   target_temp_register, current_temp_register,
-                                   data_type, count, precision)], True)
+    add_entities([
+        ModbusThermostat(hub_name, name, modbus_slave, target_temp_register,
+                         current_temp_register, data_type, count, precision)
+    ], True)
 
 
 class ModbusThermostat(ClimateDevice):
     """Representation of a Modbus Thermostat."""
 
-    def __init__(self, name, modbus_slave, target_temp_register,
+    def __init__(self, hub_name, name, modbus_slave, target_temp_register,
                  current_temp_register, data_type, count, precision):
         """Initialize the unit."""
+        self._hub_name = hub_name
         self._name = name
         self._slave = modbus_slave
         self._target_temperature_register = target_temp_register
@@ -82,12 +92,26 @@ class ModbusThermostat(ClimateDevice):
         self._precision = precision
         self._structure = '>f'
 
-        data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'},
-                      DATA_TYPE_UINT: {1: 'H', 2: 'I', 4: 'Q'},
-                      DATA_TYPE_FLOAT: {1: 'e', 2: 'f', 4: 'd'}}
+        data_types = {
+            DATA_TYPE_INT: {
+                1: 'h',
+                2: 'i',
+                4: 'q'
+            },
+            DATA_TYPE_UINT: {
+                1: 'H',
+                2: 'I',
+                4: 'Q'
+            },
+            DATA_TYPE_FLOAT: {
+                1: 'e',
+                2: 'f',
+                4: 'd'
+            }
+        }
 
-        self._structure = '>{}'.format(data_types[self._data_type]
-                                       [self._count])
+        self._structure = '>{}'.format(
+            data_types[self._data_type][self._count])
 
     @property
     def supported_features(self):
@@ -116,6 +140,11 @@ class ModbusThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
+    @property
+    def client(self) -> "BaseModbusClient":
+        """Find and return the client from modbus HUB."""
+        return modbus.HUB[self._hub_name]
+
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -133,8 +162,8 @@ class ModbusThermostat(ClimateDevice):
     def read_register(self, register):
         """Read holding register using the modbus hub slave."""
         try:
-            result = modbus.HUB.read_holding_registers(self._slave, register,
-                                                       self._count)
+            result = self.client.read_holding_registers(
+                self._slave, register, self._count)
         except AttributeError as ex:
             _LOGGER.error(ex)
         byte_string = b''.join(
@@ -145,4 +174,4 @@ class ModbusThermostat(ClimateDevice):
 
     def write_register(self, register, value):
         """Write register using the modbus hub slave."""
-        modbus.HUB.write_registers(self._slave, register, [value, 0])
+        self.client.write_registers(self._slave, register, [value, 0])
