@@ -34,6 +34,6 @@ To sign this CLA you must first submit a pull request to a repository under the 
 
 ## Adoption
 
-This Contributor License Agreement (CLA) was first announced on January 21st, 2017 in [this][cla-blog] blog post and adopted January 28th, 2017.
+This Contributor License Agreement (CLA) was first announced on January 21st, 2017 in [this][cla-blog] blog post and adopted on January 28th, 2017.
 
 [cla-blog]: https://home-assistant.io/blog/2017/01/21/home-assistant-governance/
