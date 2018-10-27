@@ -631,6 +631,8 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
         if (self._topic[CONF_TEMPERATURE_STATE_TOPIC] is not None) or \
            (self._topic[CONF_TEMPERATURE_COMMAND_TOPIC] is not None):
             support |= SUPPORT_TARGET_TEMPERATURE
+            support |= SUPPORT_TARGET_TEMPERATURE_HIGH
+            support |= SUPPORT_TARGET_TEMPERATURE_LOW
 
         if (self._topic[CONF_MODE_COMMAND_TOPIC] is not None) or \
            (self._topic[CONF_MODE_STATE_TOPIC] is not None):
