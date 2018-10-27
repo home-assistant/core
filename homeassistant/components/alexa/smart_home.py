@@ -42,6 +42,7 @@ API_THERMOSTAT_MODES = {
     climate.STATE_COOL: 'COOL',
     climate.STATE_AUTO: 'AUTO',
     climate.STATE_ECO: 'ECO',
+    climate.STATE_OFF: 'OFF',
     climate.STATE_IDLE: 'OFF',
     climate.STATE_FAN_ONLY: 'OFF',
     climate.STATE_DRY: 'OFF',
