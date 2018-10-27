@@ -14,10 +14,11 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DOMAIN, PLATFORM_SCHEMA, SwitchDevice, ENTITY_ID_FORMAT)
+    DOMAIN, PLATFORM_SCHEMA, SwitchDevice, ENTITY_ID_FORMAT,
+    DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME, CONF_HOST, CONF_MAC,
-    CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE)
+    CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, slugify
 from homeassistant.util.dt import utcnow
@@ -48,6 +49,7 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_OFF): cv.string,
     vol.Optional(CONF_COMMAND_ON): cv.string,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
 MP1_SWITCH_SLOT_SCHEMA = vol.Schema({
@@ -154,7 +156,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     device_config.get(CONF_FRIENDLY_NAME, object_id),
                     broadlink_device,
                     device_config.get(CONF_COMMAND_ON),
-                    device_config.get(CONF_COMMAND_OFF)
+                    device_config.get(CONF_COMMAND_OFF),
+                    device_config.get(CONF_DEVICE_CLASS)
                 )
             )
     elif switch_type in SP1_TYPES:
@@ -185,7 +188,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BroadlinkRMSwitch(SwitchDevice):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, name, friendly_name, device, command_on, command_off):
+    def __init__(self, name, friendly_name, device, command_on, command_off,
+                 device_class):
         """Initialize the switch."""
         self.entity_id = ENTITY_ID_FORMAT.format(slugify(name))
         self._name = friendly_name
@@ -193,6 +197,7 @@ class BroadlinkRMSwitch(SwitchDevice):
         self._command_on = b64decode(command_on) if command_on else None
         self._command_off = b64decode(command_off) if command_off else None
         self._device = device
+        self._device_class = device_class
 
     @property
     def name(self):
@@ -213,6 +218,11 @@ class BroadlinkRMSwitch(SwitchDevice):
     def is_on(self):
         """Return true if device is on."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the device class of the switch."""
+        return self._device_class
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

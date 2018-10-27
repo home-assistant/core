@@ -28,6 +28,15 @@ ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+DEVICE_CLASS_OUTLET = 'outlet'
+DEVICE_CLASS_COFFE_MAKER = 'coffee_maker'
+DEVICE_CLASSES = [
+    DEVICE_CLASS_OUTLET,
+    DEVICE_CLASS_COFFE_MAKER,
+]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+
 ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
 ATTR_CURRENT_POWER_W = "current_power_w"
 
@@ -118,3 +127,8 @@ class SwitchDevice(ToggleEntity):
                 data[attr] = value
 
         return data
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return None

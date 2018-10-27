@@ -8,7 +8,8 @@ https://home-assistant.io/components/switch.spider/
 import logging
 
 from homeassistant.components.spider import DOMAIN as SPIDER_DOMAIN
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_OUTLET)
 
 DEPENDENCIES = ['spider']
 
@@ -75,3 +76,8 @@ class SpiderPowerPlug(SwitchDevice):
     def update(self):
         """Get the latest data."""
         self.power_plug = self.api.get_power_plug(self.unique_id)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

@@ -88,3 +88,4 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
     def icon(self):
         """Return the icon for the switch."""
         return ICON_MAP.get(self._setting, 'mdi:flash')
+

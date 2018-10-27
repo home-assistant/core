@@ -10,7 +10,8 @@ import time
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
+    SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W,
+    ATTR_TODAY_ENERGY_KWH, DEVICE_CLASS_OUTLET)
 from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
 import homeassistant.helpers.config_validation as cv
 
@@ -126,3 +127,8 @@ class SmartPlugSwitch(SwitchDevice):
                 _LOGGER.warning(
                     "Could not read state for %s: %s", self.name, ex)
                 self._available = False
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

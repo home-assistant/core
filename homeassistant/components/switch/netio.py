@@ -16,7 +16,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP, STATE_ON)
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (
+    SwitchDevice, PLATFORM_SCHEMA, DEVICE_CLASS_OUTLET)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pynetio==0.1.9.1']
@@ -187,3 +188,8 @@ class NetioSwitch(SwitchDevice):
     def start_date(self):
         """Point in time when the energy accumulation started."""
         return self.netio.start_dates[int(self.outlet) - 1]
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

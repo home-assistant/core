@@ -11,10 +11,11 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (
+    SwitchDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_HEADERS, CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT, CONF_METHOD,
-    CONF_USERNAME, CONF_PASSWORD)
+    CONF_USERNAME, CONF_PASSWORD, CONF_DEVICE_CLASS)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -42,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
 })
@@ -59,6 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     resource = config.get(CONF_RESOURCE)
+    device_class = config.get(CONF_DEVICE_CLASS)
 
     auth = None
     if username:
@@ -74,7 +77,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     try:
         switch = RestSwitch(name, resource, method, headers, auth, body_on,
-                            body_off, is_on_template, timeout)
+                            body_off, is_on_template, timeout, device_class)
 
         req = await switch.get_device_state(hass)
         if req.status >= 400:
@@ -92,7 +95,7 @@ class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
     def __init__(self, name, resource, method, headers, auth, body_on,
-                 body_off, is_on_template, timeout):
+                 body_off, is_on_template, timeout, device_class):
         """Initialize the REST switch."""
         self._state = None
         self._name = name
@@ -104,6 +107,7 @@ class RestSwitch(SwitchDevice):
         self._body_off = body_off
         self._is_on_template = is_on_template
         self._timeout = timeout
+        self._device_class = device_class
 
     @property
     def name(self):
@@ -114,6 +118,11 @@ class RestSwitch(SwitchDevice):
     def is_on(self):
         """Return true if device is on."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the device class of the switch."""
+        return self._device_class
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""

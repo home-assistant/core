@@ -7,7 +7,8 @@ https://home-assistant.io/components/switch.tradfri/
 import logging
 
 from homeassistant.core import callback
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (
+    SwitchDevice, DEVICE_CLASS_OUTLET)
 from homeassistant.components.tradfri import (
     KEY_GATEWAY, KEY_API, DOMAIN as TRADFRI_DOMAIN)
 from homeassistant.components.tradfri.const import (
@@ -135,3 +136,8 @@ class TradfriSwitch(SwitchDevice):
         """Receive new state data for this switch."""
         self._refresh(tradfri_device)
         self.async_schedule_update_ha_state()
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET

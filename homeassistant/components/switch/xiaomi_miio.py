@@ -11,7 +11,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DOMAIN, PLATFORM_SCHEMA, SwitchDevice)
+    DOMAIN, PLATFORM_SCHEMA, SwitchDevice, DEVICE_CLASS_OUTLET)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN)
 from homeassistant.exceptions import PlatformNotReady
@@ -330,6 +330,11 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
         await self._try_command(
             "Setting the power price of the power strip failed.",
             self._plug.set_power_price, price)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET
 
 
 class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):

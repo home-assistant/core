@@ -7,7 +7,8 @@ https://home-assistant.io/components/switch.zwave/
 import logging
 import time
 from homeassistant.core import callback
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import (
+    DOMAIN, SwitchDevice, DEVICE_CLASS_OUTLET)
 from homeassistant.components import zwave
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -67,3 +68,8 @@ class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self.node.set_switch(self.values.primary.value_id, False)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET
