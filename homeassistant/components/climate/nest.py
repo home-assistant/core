@@ -17,8 +17,9 @@ from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
     SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_TEMPERATURE_UNIT, STATE_OFF,
+    STATE_ON, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['nest']
@@ -29,7 +30,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
 
+TEMPERATURE_SCALE_SCHEMA = vol.Schema({
+    vol.Required(CONF_TEMPERATURE_UNIT): vol.In(
+        [TEMP_CELSIUS, TEMP_FAHRENHEIT]),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
 NEST_MODE_HEAT_COOL = 'heat-cool'
+
+TEMPERATURE_SCALE_MAP = {
+    TEMP_CELSIUS: 'c',
+    TEMP_FAHRENHEIT: 'f'
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -47,6 +59,26 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     all_devices = [NestThermostat(structure, device, temp_unit)
                    for structure, device in thermostats]
+
+    def set_temperature_scale(service):
+        """Set the temperature scale for a Nest thermostat."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+
+        target_thermostats = []
+        if entity_id:
+            for device in all_devices:
+                if device.entity_id in entity_id:
+                    target_thermostats.append(device)
+        else:
+            target_thermostats = all_devices
+
+        for thermostat in target_thermostats:
+            thermostat.set_temperature_scale(
+                service.data[CONF_TEMPERATURE_UNIT])
+
+    hass.services.async_register(
+        NEST_DOMAIN, 'set_temperature_scale', set_temperature_scale,
+        schema=TEMPERATURE_SCALE_SCHEMA)
 
     async_add_entities(all_devices, True)
 
@@ -279,6 +311,11 @@ class NestThermostat(ClimateDevice):
     def max_temp(self):
         """Identify max_temp in Nest API or defaults if not available."""
         return self._max_temperature
+
+    def set_temperature_scale(self, temperature_scale):
+        """Return the unit of measurement."""
+        self.device.temperature_scale = \
+            TEMPERATURE_SCALE_MAP[temperature_scale]
 
     def update(self):
         """Cache value from Python-nest."""
