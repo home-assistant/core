@@ -170,6 +170,7 @@ class DirecTvDevice(MediaPlayerDevice):
         """Return the content ID of current playing media."""
         if self._is_standby:
             return None
+
         return self._current['programId']
 
     @property
@@ -180,6 +181,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
         if 'episodeTitle' in self._current:
             return MEDIA_TYPE_TVSHOW
+
         return MEDIA_TYPE_MOVIE
 
     @property
@@ -187,6 +189,7 @@ class DirecTvDevice(MediaPlayerDevice):
         """Return the duration of current playing media in seconds."""
         if self._is_standby:
             return None
+
         return self._current['duration']
 
     @property
@@ -213,6 +216,7 @@ class DirecTvDevice(MediaPlayerDevice):
         """Return the title of current playing media."""
         if self._is_standby:
             return None
+
         return self._current['title']
 
     @property
