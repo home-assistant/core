@@ -40,8 +40,7 @@ class HomeAssistantView:
 
         return Context(user_id=user.id)
 
-    @staticmethod
-    def json(result, status_code=200, headers=None):
+    def json(self, result, status_code=200, headers=None):
         """Return a JSON response."""
         try:
             msg = json.dumps(
@@ -55,14 +54,13 @@ class HomeAssistantView:
         response.enable_compression()
         return response
 
-    @staticmethod
-    def json_message(message, status_code=200, message_code=None,
+    def json_message(self, message, status_code=200, message_code=None,
                      headers=None):
         """Return a JSON message response."""
         data = {'message': message}
         if message_code is not None:
             data['code'] = message_code
-        return HomeAssistantView.json(data, status_code, headers=headers)
+        return self.json(data, status_code, headers=headers)
 
     def register(self, app, router):
         """Register the view with a router."""
