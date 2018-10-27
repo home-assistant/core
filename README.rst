@@ -1,7 +1,7 @@
 Home Assistant |Build Status| |Coverage Status| |Chat Status| |Reviewed by Hound|
 =================================================================================
 
-Home Assistant is a home automation platform running on Python 3. It is able to track and control all devices at home and offer a platform for automating control.
+Home Assistant is a home automation platform running on Python 3. It is able to track and control all devices at home and offer a platform for automated control.
 
 To get started:
 
