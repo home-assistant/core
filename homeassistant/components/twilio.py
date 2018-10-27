@@ -34,9 +34,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Twilio component."""
-    from twilio.rest import TwilioRestClient
+    from twilio.rest import Client
     conf = config[DOMAIN]
-    hass.data[DATA_TWILIO] = TwilioRestClient(
+    hass.data[DATA_TWILIO] = Client(
         conf.get(CONF_ACCOUNT_SID), conf.get(CONF_AUTH_TOKEN))
     hass.http.register_view(TwilioReceiveDataView())
     return True
