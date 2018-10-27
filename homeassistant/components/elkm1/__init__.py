@@ -83,7 +83,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_USERNAME, default=''): cv.string,
             vol.Optional(CONF_PASSWORD, default=''): cv.string,
-            vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT):
+            vol.Optional(CONF_TEMPERATURE_UNIT, default='F'):
                 cv.temperature_unit,
             vol.Optional(CONF_AREA): CONFIG_SCHEMA_SUBDOMAIN,
             vol.Optional(CONF_COUNTER): CONFIG_SCHEMA_SUBDOMAIN,
