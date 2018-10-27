@@ -8,16 +8,18 @@ https://home-assistant.io/components/climate.mill/
 import logging
 
 import voluptuous as vol
+
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE, SUPPORT_ON_OFF)
+    ClimateDevice, PLATFORM_SCHEMA,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
+    SUPPORT_ON_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME,
     STATE_ON, STATE_OFF, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['millheater==0.2.0']
+REQUIREMENTS = ['millheater==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +45,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         _LOGGER.error("Failed to connect to Mill")
         return
 
-    await mill_data_connection.update_rooms()
-    await mill_data_connection.update_heaters()
+    await mill_data_connection.find_all_heaters()
 
     dev = []
     for heater in mill_data_connection.heaters.values():
@@ -79,6 +80,17 @@ class MillHeater(ClimateDevice):
     def name(self):
         """Return the name of the entity."""
         return self._heater.name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._heater.room:
+            room = self._heater.room.name
+        else:
+            room = "Independent device"
+        return {"room": room,
+                "open_window": self._heater.open_window,
+                "heating": self._heater.is_heating}
 
     @property
     def temperature_unit(self):
