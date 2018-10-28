@@ -109,26 +109,30 @@ async def async_setup(hass, config):
         return True
 
     conf = config[DOMAIN]
-    latitude = conf.get(CONF_LATITUDE)
-    longitude = conf.get(CONF_LONGITUDE)
 
-    identifier = '{0}, {1}'.format(latitude, longitude)
+    identifier = '{0}, {1}'.format(
+        conf.get(CONF_LATITUDE, hass.config.latitude),
+        conf.get(CONF_LONGITUDE, hass.config.longitude))
     if identifier in configured_instances(hass):
         return True
 
+    data = {
+        CONF_API_KEY: conf[CONF_API_KEY],
+        CONF_BINARY_SENSORS: conf[CONF_BINARY_SENSORS],
+        CONF_SENSORS: conf[CONF_SENSORS],
+        CONF_SCAN_INTERVAL: conf[CONF_SCAN_INTERVAL],
+    }
+
+    if CONF_LATITUDE in conf:
+        data[CONF_LATITUDE] = conf[CONF_LATITUDE]
+    if CONF_LONGITUDE in conf:
+        data[CONF_LONGITUDE] = conf[CONF_LONGITUDE]
+    if CONF_ELEVATION in conf:
+        data[CONF_ELEVATION] = conf[CONF_ELEVATION]
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={'source': SOURCE_IMPORT},
-            data={
-                CONF_API_KEY: conf[CONF_API_KEY],
-                CONF_LATITUDE: latitude,
-                CONF_LONGITUDE: longitude,
-                CONF_ELEVATION: conf.get(CONF_ELEVATION),
-                CONF_BINARY_SENSORS: conf[CONF_BINARY_SENSORS],
-                CONF_SENSORS: conf[CONF_SENSORS],
-                CONF_SCAN_INTERVAL: conf[CONF_SCAN_INTERVAL],
-            }))
+            DOMAIN, context={'source': SOURCE_IMPORT}, data=data))
 
     return True
 
@@ -143,10 +147,11 @@ async def async_setup_entry(hass, config_entry):
         openuv = OpenUV(
             Client(
                 config_entry.data[CONF_API_KEY],
-                config_entry.data[CONF_LATITUDE],
-                config_entry.data[CONF_LONGITUDE],
+                config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
+                config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
                 websession,
-                altitude=config_entry.data[CONF_ELEVATION]),
+                altitude=config_entry.data.get(
+                    CONF_ELEVATION, hass.config.elevation)),
             config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
                 CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
             config_entry.data.get(CONF_SENSORS, {}).get(
@@ -158,8 +163,9 @@ async def async_setup_entry(hass, config_entry):
         raise ConfigEntryNotReady
 
     for component in ('binary_sensor', 'sensor'):
-        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-            config_entry, component))
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                config_entry, component))
 
     async def refresh(event_time):
         """Refresh OpenUV data."""
