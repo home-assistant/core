@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([
         ModbusThermostat(hub, name, modbus_slave, target_temp_register,
                          current_temp_register, data_type, count, precision)
-    ], True)
+    ])
 
 
 class ModbusThermostat(ClimateDevice):
