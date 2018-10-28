@@ -54,17 +54,6 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
 })
 
-
-def check_base_on_type(value: Any) -> Any:
-    """Check modbus component schema base on "type"."""
-    if value[CONF_TYPE] == "serial":
-        return SERIAL_SCHEMA(value)
-    if value[CONF_TYPE] in ("tcp", "udp", "rtuovertcp"):
-        return ETHERNET_SCHEMA(value)
-
-    raise vol.Invalid("%s %s is not supported" % (CONF_TYPE, value[CONF_TYPE]))
-
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN:
