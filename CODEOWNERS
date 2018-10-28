@@ -68,6 +68,7 @@ homeassistant/components/influx.py @fabaff
 homeassistant/components/light/lifx_legacy.py @amelchio
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
+homeassistant/components/light/yeelightsunflower.py @lindsaymarkward
 homeassistant/components/lock/nello.py @pschmitt
 homeassistant/components/lock/nuki.py @pschmitt
 homeassistant/components/media_player/emby.py @mezz64
