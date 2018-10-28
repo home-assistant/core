@@ -4,6 +4,7 @@ Support for X10 rf switches and keypads via the W800RF32 receivers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.w800rf32/
 
+```yaml
 # Example configuration.yaml entry
 
 switch:
@@ -14,6 +15,7 @@ switch:
       c2:
         name: keypad_1_2
 
+```
 """
 import logging
 
@@ -57,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                       entity[ATTR_NAME])
 
         event = None  # None until an event happens
-        device = w800rf32Switch(event, entity.get(CONF_NAME),entity[CONF_FIRE_EVENT],)
+        device = W800rf32Switch(event, entity.get(CONF_NAME), entity[CONF_FIRE_EVENT],)
 
         switches.append(device)
         w800rf32.W800_DEVICES[device_id] = device
@@ -80,7 +82,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if switch is None:
             return
-        elif not isinstance(switch, w800rf32Switch):
+
+        if not isinstance(switch, W800rf32Switch):
             return
         else:
             _LOGGER.debug(
@@ -95,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         w800rf32.RECEIVED_EVT_SUBSCRIBERS.append(switch_update)
 
 
-class w800rf32Switch(SwitchDevice):
+class W800rf32Switch(SwitchDevice):
     """A representation of a w800rf32 switch."""
 
     def __init__(self, event, name, should_fire=False,):

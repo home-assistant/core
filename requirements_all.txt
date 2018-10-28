@@ -792,6 +792,9 @@ pyTibber==0.7.2
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
 
+# homeassistant.components.w800rf32
+pyW800rf32==0.1
+
 # homeassistant.components.sensor.noaa_tides
 # py_noaa==0.3.0
 
@@ -1255,9 +1258,6 @@ pyvizio==0.0.3
 
 # homeassistant.components.velux
 pyvlx==0.1.3
-
-# homeassistant.components.w800rf32
-pyW800rf32==0.1
 
 # homeassistant.components.notify.html5
 pywebpush==1.6.0
