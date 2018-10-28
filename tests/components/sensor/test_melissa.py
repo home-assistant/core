@@ -16,8 +16,7 @@ _SERIAL = "12345678"
 
 
 def melissa_mock():
-    """Mocked melissa api."""
-
+    """Use this to mock the melissa api."""
     api = Mock()
     api.async_fetch_devices = mock_coro_func(
         return_value=json.loads(load_fixture('melissa_fetch_devices.json')))
