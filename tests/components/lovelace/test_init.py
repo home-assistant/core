@@ -9,8 +9,8 @@ from ruamel.yaml import YAML
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.components.lovelace import (load_yaml,
-                                               save_yaml, migrate_config,
+from homeassistant.components.lovelace import (load_yaml, migrate_config,
+                                               save_yaml,
                                                UnsupportedYamlError)
 
 TEST_YAML_A = """\
