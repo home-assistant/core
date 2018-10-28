@@ -61,6 +61,7 @@ async def handle_webhook(hass, webhook_id, request):
 
 
 async def verify_webhook(hass, token, timestamp, signature):
+    """Verify webhook was signed by Mailgun."""
     if DOMAIN not in hass.data:
         _LOGGER.error('Cannot validate Mailgun webhook, missing API Key')
         return False
@@ -88,8 +89,7 @@ config_entry_flow.register_webhook_flow(
     DOMAIN,
     'Mailgun Webhook',
     {
-        'mailgun_url':
-            'https://documentation.mailgun.com/en/latest/user_manual.html#webhooks', # pylint: disable=line-too-long
+        'mailgun_url': 'https://documentation.mailgun.com/en/latest/user_manual.html#webhooks',  # noqa: E501 pylint: disable=line-too-long
         'docs_url': 'https://www.home-assistant.io/components/mailgun/'
     }
 )

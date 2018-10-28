@@ -1,14 +1,13 @@
 """Test the init file of Mailgun."""
 import hashlib
 import hmac
-from unittest.mock import patch, Mock
+from unittest.mock import Mock
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import mailgun
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN
-
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
@@ -19,7 +18,6 @@ mailgun_events = []
 @pytest.fixture
 async def fixture(hass, aiohttp_client):
     """Initialize a Home Assistant Server for testing this module."""
-
     await async_setup_component(hass, mailgun.DOMAIN, {
         mailgun.DOMAIN: {
             CONF_API_KEY: API_KEY,
@@ -49,6 +47,7 @@ async def fixture(hass, aiohttp_client):
 
 
 async def test_mailgun_webhook_with_missing_signature(fixture):
+    """Test that webhook doesn't trigger an event without a signature."""
     client, webhook_id = fixture
 
     event_count = len(mailgun_events)
@@ -68,6 +67,7 @@ async def test_mailgun_webhook_with_missing_signature(fixture):
 
 
 async def test_mailgun_webhook_with_different_api_key(fixture):
+    """Test that webhook doesn't trigger an event with a wrong signature."""
     client, webhook_id = fixture
 
     timestamp = '1529006854'
@@ -92,6 +92,7 @@ async def test_mailgun_webhook_with_different_api_key(fixture):
 
 
 async def test_mailgun_webhook_with_correct_api_key(fixture):
+    """Test that webhook triggers an event after validating a signature."""
     client, webhook_id = fixture
 
     timestamp = '1529006854'
