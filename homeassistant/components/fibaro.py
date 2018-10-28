@@ -18,7 +18,7 @@ import logging
 from collections import defaultdict
 import threading
 import voluptuous as vol
-from fiblary.client.v4.client import Client as FibaroClient
+from fiblary3.client.v4.client import Client as FibaroClient
 from homeassistant.const import (ATTR_ARMED, ATTR_BATTERY_LEVEL,
                                  CONF_PASSWORD, CONF_URL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +26,7 @@ from homeassistant.util import convert, slugify
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['fiblary3==0.1.4']
+REQUIREMENTS = ['fiblary3==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'fibaro'
