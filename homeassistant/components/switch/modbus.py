@@ -12,9 +12,10 @@ import voluptuous as vol
 from homeassistant.components.modbus import CONF_HUB_NAME, DOMAIN
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_NAME,
-                                 CONF_SLAVE)
+                                 CONF_SLAVE, STATE_ON)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.restore_state import async_get_last_state
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
@@ -115,6 +116,13 @@ class ModbusCoilSwitch(ToggleEntity):
         self._slave = int(slave) if slave else None
         self._coil = int(coil)
         self._is_on = None
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        state = await async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+        self._is_on = state.state == STATE_ON
 
     @property
     def is_on(self):
