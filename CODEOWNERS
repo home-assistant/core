@@ -55,6 +55,7 @@ homeassistant/components/camera/yi.py @bachya
 homeassistant/components/climate/ephember.py @ttroy50
 homeassistant/components/climate/eq3btsmart.py @rytilahti
 homeassistant/components/climate/sensibo.py @andrey-git
+homeassistant/components/cover/brunt.py @eavanvalkenburg
 homeassistant/components/cover/group.py @cdce8p
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
@@ -90,7 +91,6 @@ homeassistant/components/scene/lifx_cloud.py @amelchio
 homeassistant/components/sensor/airvisual.py @bachya
 homeassistant/components/sensor/alpha_vantage.py @fabaff
 homeassistant/components/sensor/bitcoin.py @fabaff
-homeassistant/components/sensor/brunt.py @eavanvalkenburg
 homeassistant/components/sensor/cpuspeed.py @fabaff
 homeassistant/components/sensor/cups.py @fabaff
 homeassistant/components/sensor/darksky.py @fabaff
