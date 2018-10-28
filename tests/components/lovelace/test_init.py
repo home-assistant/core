@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.components.lovelace import (load_yaml,
-                                               save_yaml, load_config,
+                                               save_yaml, migrate_config,
                                                UnsupportedYamlError)
 
 TEST_YAML_A = """\
@@ -138,16 +138,18 @@ class TestYAML(unittest.TestCase):
     def test_save_and_load(self):
         """Test saving and loading back."""
         fname = self._path_for("test1")
+        open(fname,"w+")
         save_yaml(fname, self.yaml.load(TEST_YAML_A))
-        data = load_yaml(fname)
+        data = load_yaml(fname, True)
         assert data == self.yaml.load(TEST_YAML_A)
 
     def test_overwrite_and_reload(self):
         """Test that we can overwrite an existing file and read back."""
         fname = self._path_for("test3")
+        open(fname,"w+")
         save_yaml(fname, self.yaml.load(TEST_YAML_A))
         save_yaml(fname, self.yaml.load(TEST_YAML_B))
-        data = load_yaml(fname)
+        data = load_yaml(fname, True)
         assert data == self.yaml.load(TEST_YAML_B)
 
     def test_load_bad_data(self):
@@ -156,7 +158,7 @@ class TestYAML(unittest.TestCase):
         with open(fname, "w") as fh:
             fh.write(TEST_BAD_YAML)
         with pytest.raises(HomeAssistantError):
-            load_yaml(fname)
+            load_yaml(fname, True)
 
     def test_add_id(self):
         """Test if id is added."""
@@ -164,7 +166,7 @@ class TestYAML(unittest.TestCase):
         with patch('homeassistant.components.lovelace.load_yaml',
                    return_value=self.yaml.load(TEST_YAML_A)), \
                 patch('homeassistant.components.lovelace.save_yaml'):
-            data = load_config(fname)
+            data = migrate_config(fname)
         assert 'id' in data['views'][0]['cards'][0]
         assert 'id' in data['views'][1]
 
@@ -173,7 +175,7 @@ class TestYAML(unittest.TestCase):
         fname = self._path_for("test7")
         with patch('homeassistant.components.lovelace.load_yaml',
                    return_value=self.yaml.load(TEST_YAML_B)):
-            data = load_config(fname)
+            data = migrate_config(fname)
         assert data == self.yaml.load(TEST_YAML_B)
 
 

@@ -3,12 +3,13 @@ import logging
 import uuid
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY
-from stat import *
+from stat import ST_MODE, ST_UID, ST_GID
 from collections import OrderedDict
 from typing import Dict, List, Union
 
 import voluptuous as vol
 
+from homeassistant.util.yaml import _secret_yaml, _include_yaml
 from homeassistant.components import websocket_api
 from homeassistant.exceptions import HomeAssistantError
 
@@ -17,6 +18,7 @@ DOMAIN = 'lovelace'
 REQUIREMENTS = ['ruamel.yaml==0.15.72']
 
 LOVELACE_CONFIG_FILE = 'ui-lovelace.yaml'
+
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 
 FORMAT_YAML = 'yaml'
@@ -25,6 +27,7 @@ FORMAT_JSON = 'json'
 OLD_WS_TYPE_GET_LOVELACE_UI = 'frontend/lovelace_config'
 WS_TYPE_GET_LOVELACE_UI = 'lovelace/config'
 
+WS_TYPE_MIGRATE_CONFIG = 'lovelace/config/migrate'
 WS_TYPE_GET_CARD = 'lovelace/config/card/get'
 WS_TYPE_UPDATE_CARD = 'lovelace/config/card/update'
 WS_TYPE_ADD_CARD = 'lovelace/config/card/add'
@@ -37,6 +40,10 @@ WS_TYPE_UPDATE_VIEW = 'lovelace/config/view/update'
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): vol.Any(WS_TYPE_GET_LOVELACE_UI,
                                   OLD_WS_TYPE_GET_LOVELACE_UI),
+})
+
+SCHEMA_MIGRATE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_MIGRATE_CONFIG,
 })
 
 SCHEMA_GET_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -120,11 +127,15 @@ def save_yaml(fname: str, data: JSON_TYPE):
     tmp_fname = fname + "__TEMP__"
     try:
         file_stat = os.stat(fname)
-        with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC, file_stat[ST_MODE]),
-                  'w', encoding='utf-8') as temp_file:
+        with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC,
+                          file_stat[ST_MODE]), 'w', encoding='utf-8') \
+                as temp_file:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
-        os.chown(fname, file_stat[ST_UID], file_stat[ST_GID])
+        try:
+            os.chown(fname, file_stat[ST_UID], file_stat[ST_GID])
+        except OSError:
+            pass
     except YAMLError as exc:
         _LOGGER.error(str(exc))
         raise HomeAssistantError(exc)
@@ -141,21 +152,27 @@ def save_yaml(fname: str, data: JSON_TYPE):
                 _LOGGER.error("YAML replacement cleanup failed: %s", exc)
 
 
-def _yaml_unsupported(loader, node):
+def _yaml_unsupported(constructor, node):
     raise UnsupportedYamlError(
         'Unsupported YAML, you can not use {} in ui-lovelace.yaml'
         .format(node.tag))
 
 
-def load_yaml(fname: str) -> JSON_TYPE:
+def load_yaml(fname: str, rt: bool) -> JSON_TYPE:
     """Load a YAML file."""
     from ruamel.yaml import YAML
-    from ruamel.yaml.constructor import RoundTripConstructor
+    from ruamel.yaml.constructor import SafeConstructor
     from ruamel.yaml.error import YAMLError
 
-    RoundTripConstructor.add_constructor(None, _yaml_unsupported)
-
-    yaml = YAML(typ='rt')
+    if rt:
+        yaml = YAML(typ='rt')
+        yaml.preserve_quotes = True
+    else:
+        SafeConstructor.add_constructor(u'!secret', _secret_yaml)
+        SafeConstructor.add_constructor(u'!include', _include_yaml)
+        SafeConstructor.add_constructor(None, _yaml_unsupported)
+        SafeConstructor.name = fname
+        yaml = YAML(typ='safe')
 
     try:
         with open(fname, encoding='utf-8') as conf_file:
@@ -172,7 +189,11 @@ def load_yaml(fname: str) -> JSON_TYPE:
 
 def load_config(fname: str) -> JSON_TYPE:
     """Load a YAML file and adds id to views and cards if not present."""
-    config = load_yaml(fname)
+    return load_yaml(fname, False)
+
+
+def migrate_config(fname: str) -> JSON_TYPE:
+    config = load_yaml(fname, True)
     # Check if all views and cards have a unique id or else add one
     updated = False
     seen_card_ids = set()
@@ -237,7 +258,7 @@ def yaml_to_object(data: str) -> JSON_TYPE:
 
 def get_card(fname: str, card_id: str, data_format: str = FORMAT_YAML):
     """Load a specific card config for id."""
-    config = load_yaml(fname)
+    config = load_yaml(fname, True)
     for view in config.get('views', []):
         for card in view.get('cards', []):
             if str(card.get('id', '')) != card_id:
@@ -253,7 +274,7 @@ def get_card(fname: str, card_id: str, data_format: str = FORMAT_YAML):
 def update_card(fname: str, card_id: str, card_config,
                 data_format: str = FORMAT_YAML):
     """Save a specific card config for id."""
-    config = load_yaml(fname)
+    config = load_yaml(fname, True)
     for view in config.get('views', []):
         for card in view.get('cards', []):
             if str(card.get('id', '')) != card_id:
@@ -272,7 +293,7 @@ def update_card(fname: str, card_id: str, card_config,
 def add_card(fname: str, view_id: str, card_config,
              position: int = None, data_format: str = FORMAT_YAML):
     """Add a card to a view."""
-    config = load_yaml(fname)
+    config = load_yaml(fname, True)
     for view in config.get('views', []):
         if str(view.get('id', '')) != view_id:
             continue
@@ -295,7 +316,7 @@ def move_card(fname: str, card_id: str, position: int = None):
     if position is None:
         raise HomeAssistantError('Position is required if view is not\
                                  specified.')
-    config = load_yaml(fname)
+    config = load_yaml(fname, True)
     for view in config.get('views', []):
         for card in view.get('cards', []):
             if str(card.get('id', '')) != card_id:
@@ -312,7 +333,7 @@ def move_card(fname: str, card_id: str, position: int = None):
 def move_card_view(fname: str, card_id: str, view_id: str,
                    position: int = None):
     """Move a card to a different view."""
-    config = load_yaml(fname)
+    config = load_yaml(fname, True)
     for view in config.get('views', []):
         if str(view.get('id', '')) == view_id:
             destination = view.get('cards')
@@ -341,7 +362,7 @@ def move_card_view(fname: str, card_id: str, view_id: str,
 
 def delete_card(fname: str, card_id: str, position: int = None):
     """Delete a card from view."""
-    config = load_yaml(fname)
+    config = load_yaml(fname, True)
     for view in config.get('views', []):
         for card in view.get('cards', []):
             if str(card.get('id', '')) != card_id:
@@ -357,7 +378,7 @@ def delete_card(fname: str, card_id: str, position: int = None):
 
 def get_view(fname: str, view_id: str, data_format: str = FORMAT_YAML):
     """Get view without it's cards."""
-    config = load_yaml(fname)
+    config = load_yaml(fname, True)
     for view in config.get('views', []):
         if str(view.get('id', '')) != view_id:
             continue
@@ -373,7 +394,7 @@ def get_view(fname: str, view_id: str, data_format: str = FORMAT_YAML):
 def update_view(fname: str, view_id: str, view_config, data_format:
                 str = FORMAT_YAML):
     """Update view."""
-    config = load_yaml(fname)
+    config = load_yaml(fname, True)
     for view in config.get('views', []):
         if str(view.get('id', '')) != view_id:
             continue
@@ -399,6 +420,10 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
         SCHEMA_GET_LOVELACE_UI)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_MIGRATE_CONFIG, websocket_lovelace_migrate_config,
+        SCHEMA_MIGRATE_CONFIG)
 
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_CARD, websocket_lovelace_get_card,
@@ -438,6 +463,30 @@ async def websocket_lovelace_config(hass, connection, msg):
     try:
         config = await hass.async_add_executor_job(
             load_config, hass.config.path(LOVELACE_CONFIG_FILE))
+        message = websocket_api.result_message(
+            msg['id'], config
+        )
+    except FileNotFoundError:
+        error = ('file_not_found',
+                 'Could not find ui-lovelace.yaml in your config dir.')
+    except UnsupportedYamlError as err:
+        error = 'unsupported_error', str(err)
+    except HomeAssistantError as err:
+        error = 'load_error', str(err)
+
+    if error is not None:
+        message = websocket_api.error_message(msg['id'], *error)
+
+    connection.send_message(message)
+
+
+@websocket_api.async_response
+async def websocket_lovelace_migrate_config(hass, connection, msg):
+    """Migrate lovelace UI config."""
+    error = None
+    try:
+        config = await hass.async_add_executor_job(
+            migrate_config, hass.config.path(LOVELACE_CONFIG_FILE))
         message = websocket_api.result_message(
             msg['id'], config
         )
