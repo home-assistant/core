@@ -19,6 +19,8 @@ if TYPE_CHECKING:
     # pylint: disable=unused-import
     from pymodbus.client.sync import BaseModbusClient
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = "modbus"
 
 REQUIREMENTS = ["pymodbus==1.3.1"]
@@ -154,6 +156,7 @@ def setup(hass: Any, config: dict) -> bool:
         client = setup_client(client_config)
         client_name = client_config[CONF_HUB_NAME]
         hub_collect[client_name] = ModbusHub(client)
+        _LOGGER.debug("Setting up hub_client: %s", client_config)
 
     def stop_modbus(event: Any) -> None:
         """Stop Modbus service."""
