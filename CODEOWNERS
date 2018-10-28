@@ -56,6 +56,7 @@ homeassistant/components/climate/ephember.py @ttroy50
 homeassistant/components/climate/eq3btsmart.py @rytilahti
 homeassistant/components/climate/mill.py @danielhiversen
 homeassistant/components/climate/sensibo.py @andrey-git
+homeassistant/components/cover/brunt.py @eavanvalkenburg
 homeassistant/components/cover/group.py @cdce8p
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/asuswrt.py @kennedyshead
