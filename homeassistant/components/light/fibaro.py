@@ -4,10 +4,13 @@ Support for Fibaro lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.fibaro/
 """
+
+# pylint: disable=R1715
+
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_HS_COLOR, ENTITY_ID_FORMAT,
+    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 import homeassistant.util.color as color_util
 from homeassistant.components.fibaro import (
@@ -126,5 +129,5 @@ class FibaroLight(FibaroDevice, Light):
         if self.__supports_color:
             rgbw_color_str = self.fibaro_device.properties.color
             rgb = [int(i) for i in rgbw_color_str.split(",")][:3]
-            c = color_util.color_RGB_to_hs(*rgb) if rgb else None
-            self._color = c
+            col = color_util.color_RGB_to_hs(*rgb) if rgb else None
+            self._color = col

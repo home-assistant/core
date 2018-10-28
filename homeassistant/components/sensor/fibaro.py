@@ -56,6 +56,8 @@ class FibaroSensor(FibaroDevice, Entity):
             if self.fibaro_device.properties.unit == 'F':
                 return TEMP_FAHRENHEIT
             return self.fibaro_device.properties.unit
+        except KeyError:
+            pass
         except ValueError:
             pass
         return 'level'
