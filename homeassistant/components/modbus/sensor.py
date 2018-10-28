@@ -16,6 +16,7 @@ from homeassistant.const import (CONF_NAME, CONF_OFFSET, CONF_SLAVE,
                                  CONF_STRUCTURE, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import async_get_last_state
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
@@ -163,6 +164,13 @@ class ModbusRegisterSensor(Entity):
         self._precision = precision
         self._structure = structure
         self._value: str = None
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        state = await async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+        self._value = state.state
 
     @property
     def state(self) -> str:
