@@ -9,24 +9,23 @@ import time
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME, \
-    CONF_USERNAME, CONF_PASSWORD, CONF_ID
-
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light,
-    PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_DEVICES, CONF_ID, CONF_NAME, CONF_PASSWORD,
+    CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['antsar-avion==0.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_AVION_LED = (SUPPORT_BRIGHTNESS)
+SUPPORT_AVION_LED = SUPPORT_BRIGHTNESS
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_ID): cv.positive_int,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -52,8 +51,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device = avion.Avion(
             mac=address,
             passphrase=device_config[CONF_API_KEY],
-            name=device_config.get(CONF_NAME, None),
-            object_id=device_config.get(CONF_ID, None),
+            name=device_config.get(CONF_NAME),
+            object_id=device_config.get(CONF_ID),
             connect=False)
         lights.append(AvionLight(device))
 
