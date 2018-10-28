@@ -25,7 +25,7 @@ from homeassistant.components import (
 from . import trait
 from .const import (
     TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_VACUUM,
-    TYPE_THERMOSTAT,
+    TYPE_THERMOSTAT, TYPE_FAN,
     CONF_ALIASES, CONF_ROOM_HINT,
     ERR_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
     ERR_UNKNOWN_ERROR
@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN_TO_GOOGLE_TYPES = {
     climate.DOMAIN: TYPE_THERMOSTAT,
     cover.DOMAIN: TYPE_SWITCH,
-    fan.DOMAIN: TYPE_SWITCH,
+    fan.DOMAIN: TYPE_FAN,
     group.DOMAIN: TYPE_SWITCH,
     input_boolean.DOMAIN: TYPE_SWITCH,
     light.DOMAIN: TYPE_LIGHT,
