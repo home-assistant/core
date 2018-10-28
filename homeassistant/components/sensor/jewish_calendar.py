@@ -113,6 +113,8 @@ class JewishCalSensor(Entity):
         upcoming_saturday = today + timedelta((12 - today.weekday()) % 7)
         sunset = get_astral_event_date(self.hass, 'sunset', today)
 
+        _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
+
         if now > sunset:
             today += timedelta(1)
 

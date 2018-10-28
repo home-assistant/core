@@ -65,6 +65,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         test_time = dt(2018, 9, 3)
         self.hass.config.latitude = self.TEST_LATITUDE
         self.hass.config.longitude = self.TEST_LONGITUDE
+        self.hass.config.time_zone = get_time_zone("UTC")
         sensor = JewishCalSensor(
             name='test', language='english', sensor_type='date',
             latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
@@ -81,6 +82,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         test_time = dt(2018, 9, 3)
         self.hass.config.latitude = self.TEST_LATITUDE
         self.hass.config.longitude = self.TEST_LONGITUDE
+        self.hass.config.time_zone = get_time_zone("UTC")
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='date',
             latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
@@ -96,6 +98,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         test_time = dt(2018, 9, 10)
         self.hass.config.latitude = self.TEST_LATITUDE
         self.hass.config.longitude = self.TEST_LONGITUDE
+        self.hass.config.time_zone = get_time_zone("UTC")
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='holiday_name',
             latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
@@ -111,6 +114,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         test_time = dt(2018, 9, 10)
         self.hass.config.latitude = self.TEST_LATITUDE
         self.hass.config.longitude = self.TEST_LONGITUDE
+        self.hass.config.time_zone = get_time_zone("UTC")
         sensor = JewishCalSensor(
             name='test', language='english', sensor_type='holiday_name',
             latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
@@ -126,6 +130,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         test_time = dt(2018, 9, 10)
         self.hass.config.latitude = self.TEST_LATITUDE
         self.hass.config.longitude = self.TEST_LONGITUDE
+        self.hass.config.time_zone = get_time_zone("UTC")
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='holyness',
             latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
@@ -141,6 +146,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         test_time = dt(2018, 9, 8)
         self.hass.config.latitude = self.TEST_LATITUDE
         self.hass.config.longitude = self.TEST_LONGITUDE
+        self.hass.config.time_zone = get_time_zone("UTC")
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='weekly_portion',
             latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
@@ -156,6 +162,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         test_time = dt(2018, 9, 8)
         self.hass.config.latitude = 40.7128
         self.hass.config.longitude = -74.0060
+        self.hass.config.time_zone = get_time_zone("America/New_York")
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='first_stars',
             latitude=40.7128, longitude=-74.0060,
@@ -171,6 +178,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         test_time = dt(2018, 9, 8)
         self.hass.config.latitude = self.TEST_LATITUDE
         self.hass.config.longitude = self.TEST_LONGITUDE
+        self.hass.config.time_zone = get_time_zone("Asia/Jerusalem")
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='first_stars',
             latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
@@ -186,6 +194,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         test_time = dt(2018, 10, 14)
         self.hass.config.latitude = self.TEST_LATITUDE
         self.hass.config.longitude = self.TEST_LONGITUDE
+        self.hass.config.time_zone = get_time_zone("Asia/Jerusalem")
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='weekly_portion',
             latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
@@ -198,9 +207,11 @@ class TestJewishCalenderSensor(unittest.TestCase):
 
     def test_jewish_calendar_sensor_date_before_sunset(self):
         """Test the sensor showing the correct date before sunset."""
-        test_time = dt(2018, 10, 14, 17, 0, 0)
+        test_time = dt(2018, 10, 14, 17, 0, 0,
+                       tzinfo=get_time_zone("Asia/Jerusalem"))
         self.hass.config.latitude = self.TEST_LATITUDE
         self.hass.config.longitude = self.TEST_LONGITUDE
+        self.hass.config.time_zone = get_time_zone("Asia/Jerusalem")
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='date',
             latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
@@ -213,9 +224,11 @@ class TestJewishCalenderSensor(unittest.TestCase):
 
     def test_jewish_calendar_sensor_date_after_sunset(self):
         """Test the sensor showing the correct date after sunset."""
-        test_time = dt(2018, 10, 14, 19, 0, 0)
+        test_time = dt(2018, 10, 14, 19, 0, 0,
+                       tzinfo=get_time_zone("Asia/Jerusalem"))
         self.hass.config.latitude = self.TEST_LATITUDE
         self.hass.config.longitude = self.TEST_LONGITUDE
+        self.hass.config.time_zone = get_time_zone("Asia/Jerusalem")
         sensor = JewishCalSensor(
             name='test', language='hebrew', sensor_type='date',
             latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
