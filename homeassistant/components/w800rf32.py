@@ -4,11 +4,13 @@ Support for w800rf32 components.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/w800rf32/
 
+```yaml
 # Example configuration.yaml entry
 
 w800rf32:
   device: PATH_TO_DEVICE
 
+```
 """
 import logging
 

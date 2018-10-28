@@ -4,6 +4,7 @@ Support for w800rf32 binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.w800rf32/
 
+```yaml
 # Example configuration.yaml entry
 
 binary_sensor:
@@ -18,6 +19,7 @@ binary_sensor:
         device_class: Motion
         fire_event: True
 
+```
 """
 import logging
 
@@ -65,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                       entity[ATTR_NAME], entity.get(CONF_DEVICE_CLASS))
 
         event = None  # None until an event happens
-        device = w800rf32BinarySensor(
+        device = W800rf32BinarySensor(
             event, entity.get(CONF_NAME), entity.get(CONF_DEVICE_CLASS),
             entity[CONF_FIRE_EVENT], entity.get(CONF_OFF_DELAY))
 
@@ -90,7 +92,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if sensor is None:
             return
-        elif not isinstance(sensor, w800rf32BinarySensor):
+
+        if not isinstance(sensor, W800rf32BinarySensor):
             return
         else:
             _LOGGER.debug(
@@ -116,7 +119,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         w800rf32.RECEIVED_EVT_SUBSCRIBERS.append(binary_sensor_update)
 
 
-class w800rf32BinarySensor(BinarySensorDevice):
+class W800rf32BinarySensor(BinarySensorDevice):
     """A representation of a w800rf32 binary sensor."""
 
     def __init__(self, event, name, device_class=None,
