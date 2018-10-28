@@ -137,6 +137,7 @@ HANDLERS = Registry()
 FLOWS = [
     'cast',
     'deconz',
+    'device_tracker.geofency',
     'hangouts',
     'homematicip_cloud',
     'hue',
