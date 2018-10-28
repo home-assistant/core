@@ -16,18 +16,6 @@ DEPENDENCIES = ['homekit_controller']
 KOOGEEK_CHARACTERISTICS = {
     '4aaaf931-0dec-11e5-b939-0800200c9a66': 'realtime_energy',
     '4aaaf932-0dec-11e5-b939-0800200c9a66': 'current_hour_data',
-    '4aaaf933-0dec-11e5-b939-0800200c9a66': 'hour_data_today',
-    '4aaaf934-0dec-11e5-b939-0800200c9a66': 'hour_data_yesterday',
-    '4aaaf935-0dec-11e5-b939-0800200c9a66': 'hour_data_2_days_before',
-    '4aaaf936-0dec-11e5-b939-0800200c9a66': 'hour_data_3_days_before',
-    '4aaaf937-0dec-11e5-b939-0800200c9a66': 'hour_data_4_days_before',
-    '4aaaf938-0dec-11e5-b939-0800200c9a66': 'hour_data_5_days_before',
-    '4aaaf939-0dec-11e5-b939-0800200c9a66': 'hour_data_6_days_before',
-    '4aaaf93a-0dec-11e5-b939-0800200c9a66': 'hour_data_7_days_before',
-    '4aaaf93b-0dec-11e5-b939-0800200c9a66': 'day_data_this_month',
-    '4aaaf93c-0dec-11e5-b939-0800200c9a66': 'day_data_last_month',
-    '4aaaf93d-0dec-11e5-b939-0800200c9a66': 'month_data_this_year',
-    '4aaaf93e-0dec-11e5-b939-0800200c9a66': 'month_data_last_year',
     '4aaaf93f-0dec-11e5-b939-0800200c9a66': 'running_time'
 }
 
