@@ -51,7 +51,7 @@ class AxisBinarySensor(BinarySensorDevice):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s called delayed (%s sec) update",
                               self.name, self.delay)
-                self.schedule_update_ha_state()
+                self.async_schedule_update_ha_state()
                 self.remove_timer = None
 
             self.remove_timer = async_track_point_in_utc_time(
