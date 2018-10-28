@@ -8,7 +8,6 @@ import logging
 import mimetypes
 import random
 import string
-import asyncio
 from concurrent.futures import TimeoutError as FutTimeoutError
 
 import requests
@@ -20,7 +19,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import (
     CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM, CONF_RESOURCE)
 
-REQUIREMENTS = ['slixmpp==1.4.0']
+REQUIREMENTS = ['slixmpp==1.4.1']
 
 DEFAULT_CONTENT_TYPE = 'application/octet-stream'
 
@@ -91,6 +90,7 @@ async def async_send_message(sender, password, recipient, use_tls,
     """Send a message over XMPP."""
     import slixmpp
     from slixmpp.exceptions import IqError, IqTimeout, XMPPError
+    from slixmpp.xmlstream.xmlstream import NotConnectedError
     from slixmpp.plugins.xep_0363.http_upload import FileTooBig, \
         FileUploadError, UploadServiceNotFound
 
@@ -152,6 +152,8 @@ async def async_send_message(sender, password, recipient, use_tls,
                     raise FileUploadError("could not upload file")
             except (IqError, IqTimeout, XMPPError) as ex:
                 _LOGGER.error("upload error, could not send message %s", ex)
+            except NotConnectedError as ex:
+                _LOGGER.error("connection error %s", ex)
             except FileTooBig as ex:
                 _LOGGER.error("File too big for server, "
                               "could not upload file %s", ex)
@@ -244,21 +246,13 @@ async def async_send_message(sender, password, recipient, use_tls,
 
             _LOGGER.info('Uploading file from URL, %s', filename)
 
-            # current workaround for non-working timeout in slixmpp
-            # calling asyncio.wait_for to enforce timeout
-            try:
-                url = await asyncio.wait_for(self['xep_0363'].upload_file(
-                    filename,
-                    size=filesize,
-                    input_file=result.content,
-                    content_type=result.headers['Content-Type'],
-                    timeout=timeout,
-                    ),
-                                             timeout,
-                                             loop=self.loop)
-            except (IqError, IqTimeout, XMPPError) as ex:
-                _LOGGER.error("could not upload file to server %s", ex)
-                raise
+            url = await self['xep_0363'].upload_file(
+                filename,
+                size=filesize,
+                input_file=result.content,
+                content_type=result.headers['Content-Type'],
+                timeout=timeout,
+                )
 
             return url
 
@@ -281,19 +275,13 @@ async def async_send_message(sender, password, recipient, use_tls,
             filename = self.get_random_filename(data.get(ATTR_PATH))
             _LOGGER.debug("uploading file with random filename %s", filename)
 
-            try:
-                url = await asyncio.wait_for(self['xep_0363'].upload_file(
-                    filename,
-                    size=filesize,
-                    input_file=input_file,
-                    content_type=content_type,
-                    timeout=timeout,
-                    ),
-                                             timeout,
-                                             loop=self.loop)
-            except (IqError, IqTimeout, XMPPError) as ex:
-                _LOGGER.error("could not upload file to server %s", ex)
-                raise
+            url = await self['xep_0363'].upload_file(
+                filename,
+                size=filesize,
+                input_file=input_file,
+                content_type=content_type,
+                timeout=timeout,
+                )
 
             return url
 
@@ -315,6 +303,8 @@ async def async_send_message(sender, password, recipient, use_tls,
                                       )
             except (IqError, IqTimeout, XMPPError) as ex:
                 _LOGGER.error("could not send text message %s", ex)
+            except NotConnectedError as ex:
+                _LOGGER.error("connection error %s", ex)
 
         # pylint: disable=no-self-use
         def get_random_filename(self, filename):
