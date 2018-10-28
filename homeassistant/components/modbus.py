@@ -6,7 +6,7 @@ https://home-assistant.io/components/modbus/
 """
 import logging
 import threading
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any, List
 
 import voluptuous as vol
 
@@ -16,6 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 if TYPE_CHECKING:
+    # pylint: disable=unused-import
     from pymodbus.client.sync import BaseModbusClient
 
 DOMAIN = "modbus"
@@ -61,6 +62,7 @@ def check_base_on_type(value: Any) -> Any:
 
     raise vol.Invalid("%s %s is not supported" % (CONF_TYPE, value[CONF_TYPE]))
 
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN:
@@ -92,8 +94,6 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema({
     vol.Required(ATTR_ADDRESS): cv.positive_int,
     vol.Required(ATTR_STATE): cv.boolean,
 })
-
-HUB = {}  # type: Dict[str, BaseModbusClient]
 
 
 def setup_client(client_config: dict) -> "BaseModbusClient":
@@ -148,21 +148,21 @@ def setup_client(client_config: dict) -> "BaseModbusClient":
 def setup(hass: Any, config: dict) -> bool:
     """Set up Modbus component."""
     # Modbus connection type
-    global HUB
+    hass.data[DOMAIN] = hub_collect = {}
 
     for client_config in config[DOMAIN]:
         client = setup_client(client_config)
         client_name = client_config[CONF_HUB_NAME]
-        HUB[client_name] = ModbusHub(client)
+        hub_collect[client_name] = ModbusHub(client)
 
     def stop_modbus(event: Any) -> None:
         """Stop Modbus service."""
-        for client in HUB.values():
+        for client in hub_collect.values():
             client.close()
 
     def start_modbus(event: Any) -> None:
         """Start Modbus service."""
-        for client in HUB.values():
+        for client in hub_collect.values():
             client.connect()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
@@ -187,10 +187,11 @@ def setup(hass: Any, config: dict) -> bool:
         value = service.data.get(ATTR_VALUE)
         client_name = service.data.get(CONF_HUB_NAME)
         if isinstance(value, list):
-            HUB[client_name].write_registers(unit, address,
-                                             [int(float(i)) for i in value])
+            hub_collect[client_name].write_registers(
+                unit, address, [int(float(i)) for i in value])
         else:
-            HUB[client_name].write_register(unit, address, int(float(value)))
+            hub_collect[client_name].write_register(unit, address,
+                                                    int(float(value)))
 
     def write_coil(service: Any) -> None:
         """Write modbus coil."""
@@ -198,7 +199,7 @@ def setup(hass: Any, config: dict) -> bool:
         address = service.data.get(ATTR_ADDRESS)
         state = service.data.get(ATTR_STATE)
         client_name = service.data.get(CONF_HUB_NAME)
-        HUB[client_name].write_coil(unit, address, state)
+        hub_collect[client_name].write_coil(unit, address, state)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
 

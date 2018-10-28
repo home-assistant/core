@@ -10,20 +10,15 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.components import modbus
-from homeassistant.components.modbus import CONF_HUB_NAME
+from homeassistant.components.modbus import CONF_HUB_NAME, DOMAIN
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_OFFSET,
-    CONF_SLAVE,
-    CONF_STRUCTURE,
-    CONF_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.const import (CONF_NAME, CONF_OFFSET, CONF_SLAVE,
+                                 CONF_STRUCTURE, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 if TYPE_CHECKING:
+    # pylint: disable=unused-import
     from pymodbus.client.sync import BaseModbusClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +79,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass: Any,
                    config: dict,
-                   add_entities: Any,
+                   add_devices: Any,
                    discovery_info: Any = None) -> bool:
     """Set up the Modbus sensors."""
     sensors = []
@@ -92,7 +87,7 @@ def setup_platform(hass: Any,
     data_types[DATA_TYPE_UINT] = {1: "H", 2: "I", 4: "Q"}
     data_types[DATA_TYPE_FLOAT] = {1: "e", 2: "f", 4: "d"}
 
-    for register in config.get(CONF_REGISTERS):
+    for register in config.get(CONF_REGISTERS, []):
         structure = ">i"
         if register.get(CONF_DATA_TYPE) != DATA_TYPE_CUSTOM:
             try:
@@ -124,9 +119,11 @@ def setup_platform(hass: Any,
             )
             continue
 
+        hub_name = register.get(CONF_HUB_NAME)
+        hub = hass.data[DOMAIN][hub_name]
         sensors.append(
             ModbusRegisterSensor(
-                register.get(CONF_HUB_NAME),
+                hub,
                 register.get(CONF_NAME),
                 register.get(CONF_SLAVE),
                 register.get(CONF_REGISTER),
@@ -142,18 +139,18 @@ def setup_platform(hass: Any,
 
     if not sensors:
         return False
-    add_entities(sensors, True)
+    add_devices(sensors)
     return True
 
 
 class ModbusRegisterSensor(Entity):
     """Modbus register sensor."""
 
-    def __init__(self, hub_name, name, slave, register, register_type,
+    def __init__(self, hub, name, slave, register, register_type,
                  unit_of_measurement, count, reverse_order, scale, offset,
                  structure, precision):
         """Initialize the modbus register sensor."""
-        self._hub_name = hub_name
+        self._hub: "BaseModbusClient" = hub
         self._name = name
         self._slave = int(slave) if slave else None
         self._register = int(register)
@@ -182,18 +179,13 @@ class ModbusRegisterSensor(Entity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
-    @property
-    def client(self) -> "BaseModbusClient":
-        """Find and return the client from modbus HUB."""
-        return modbus.HUB[self._hub_name]
-
     def update(self) -> None:
         """Update the state of the sensor."""
         if self._register_type == REGISTER_TYPE_INPUT:
-            result = self.client.read_input_registers(
+            result = self._hub.read_input_registers(
                 self._slave, self._register, self._count)
         else:
-            result = self.client.read_holding_registers(
+            result = self._hub.read_holding_registers(
                 self._slave, self._register, self._count)
         val = 0
 
