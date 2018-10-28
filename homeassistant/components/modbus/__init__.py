@@ -154,6 +154,7 @@ def setup(hass: Any, config: dict) -> bool:
         client = setup_client(client_config)
         client_name = client_config[CONF_HUB_NAME]
         hub_collect[client_name] = ModbusHub(client)
+        _LOGGER.debug("Setting up hub_client: %s", client_config)
 
     def stop_modbus(event: Any) -> None:
         """Stop Modbus service."""
