@@ -4,7 +4,6 @@ Support for interacting with Snapcast clients.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.snapcast/
 """
-import asyncio
 import logging
 import socket
 
@@ -18,7 +17,7 @@ from homeassistant.const import (
     STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['snapcast==2.0.8']
+REQUIREMENTS = ['snapcast==2.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,17 +45,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Snapcast platform."""
     import snapcast.control
     from snapcast.control.server import CONTROL_PORT
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
 
-    @asyncio.coroutine
-    def _handle_service(service):
+    async def _handle_service(service):
         """Handle services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         devices = [device for device in hass.data[DATA_KEY]
@@ -65,7 +62,7 @@ def async_setup_platform(hass, config, async_add_entities,
             if service.service == SERVICE_SNAPSHOT:
                 device.snapshot()
             elif service.service == SERVICE_RESTORE:
-                yield from device.async_restore()
+                await device.async_restore()
 
     hass.services.async_register(
         DOMAIN, SERVICE_SNAPSHOT, _handle_service, schema=SERVICE_SCHEMA)
@@ -73,7 +70,7 @@ def async_setup_platform(hass, config, async_add_entities,
         DOMAIN, SERVICE_RESTORE, _handle_service, schema=SERVICE_SCHEMA)
 
     try:
-        server = yield from snapcast.control.create_server(
+        server = await snapcast.control.create_server(
             hass.loop, host, port, reconnect=True)
     except socket.gaierror:
         _LOGGER.error("Could not connect to Snapcast server at %s:%d",
@@ -157,34 +154,30 @@ class SnapcastGroupDevice(MediaPlayerDevice):
         """Do not poll for state."""
         return False
 
-    @asyncio.coroutine
-    def async_select_source(self, source):
+    async def async_select_source(self, source):
         """Set input source."""
         streams = self._group.streams_by_name()
         if source in streams:
-            yield from self._group.set_stream(streams[source].identifier)
+            await self._group.set_stream(streams[source].identifier)
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Send the mute command."""
-        yield from self._group.set_muted(mute)
+        await self._group.set_muted(mute)
         self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set the volume level."""
-        yield from self._group.set_volume(round(volume * 100))
+        await self._group.set_volume(round(volume * 100))
         self.async_schedule_update_ha_state()
 
     def snapshot(self):
         """Snapshot the group state."""
         self._group.snapshot()
 
-    @asyncio.coroutine
-    def async_restore(self):
+    async def async_restore(self):
         """Restore the group state."""
-        yield from self._group.restore()
+        await self._group.restore()
 
 
 class SnapcastClientDevice(MediaPlayerDevice):
@@ -246,23 +239,20 @@ class SnapcastClientDevice(MediaPlayerDevice):
         """Do not poll for state."""
         return False
 
-    @asyncio.coroutine
-    def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Send the mute command."""
-        yield from self._client.set_muted(mute)
+        await self._client.set_muted(mute)
         self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set the volume level."""
-        yield from self._client.set_volume(round(volume * 100))
+        await self._client.set_volume(round(volume * 100))
         self.async_schedule_update_ha_state()
 
     def snapshot(self):
         """Snapshot the client state."""
         self._client.snapshot()
 
-    @asyncio.coroutine
-    def async_restore(self):
+    async def async_restore(self):
         """Restore the client state."""
-        yield from self._client.restore()
+        await self._client.restore()

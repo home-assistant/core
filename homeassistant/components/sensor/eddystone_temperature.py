@@ -11,14 +11,14 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START)
+    CONF_NAME, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    STATE_UNKNOWN, TEMP_CELSIUS)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['beacontools[scan]==1.2.3', 'construct==2.9.41']
+REQUIREMENTS = ['beacontools[scan]==1.2.3', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,12 +43,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Validate configuration, create devices and start monitoring thread."""
     bt_device_id = config.get("bt_device_id")
 
-    beacons = config.get("beacons")
+    beacons = config.get(CONF_BEACONS)
     devices = []
 
     for dev_name, properties in beacons.items():
-        namespace = get_from_conf(properties, "namespace", 20)
-        instance = get_from_conf(properties, "instance", 12)
+        namespace = get_from_conf(properties, CONF_NAMESPACE, 20)
+        instance = get_from_conf(properties, CONF_INSTANCE, 12)
         name = properties.get(CONF_NAME, dev_name)
 
         if instance is None or namespace is None:
@@ -138,8 +138,7 @@ class Monitor:
                 additional_info['namespace'], additional_info['instance'],
                 packet.temperature)
 
-        # pylint: disable=import-error
-        from beacontools import (
+        from beacontools import (  # pylint: disable=import-error
             BeaconScanner, EddystoneFilter, EddystoneTLMFrame)
         device_filters = [EddystoneFilter(d.namespace, d.instance)
                           for d in devices]

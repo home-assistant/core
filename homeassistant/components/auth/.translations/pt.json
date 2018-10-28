@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Nenhum servi\u00e7o de notifica\u00e7\u00e3o dispon\u00edvel."
+            },
+            "error": {
+                "invalid_code": "C\u00f3digo inv\u00e1lido, por favor tente novamente."
+            },
+            "step": {
+                "init": {
+                    "description": "Por favor, selecione um dos servi\u00e7os de notifica\u00e7\u00e3o:",
+                    "title": "Configurar uma palavra passe entregue pela componente de notifica\u00e7\u00e3o"
+                },
+                "setup": {
+                    "description": "Foi enviada uma palavra passe atrav\u00e9s de **notify.{notify_service}**. Por favor, insira-a:",
+                    "title": "Verificar a configura\u00e7\u00e3o"
+                }
+            },
+            "title": "Notificar palavra passe de uso \u00fanico"
+        },
         "totp": {
             "error": {
                 "invalid_code": "C\u00f3digo inv\u00e1lido, por favor, tente novamente. Se receber este erro constantemente, por favor, certifique-se de que o rel\u00f3gio do sistema que hospeda o Home Assistent \u00e9 preciso."

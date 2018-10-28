@@ -695,6 +695,68 @@ def test_temp_sensor(hass):
 
 
 @asyncio.coroutine
+def test_contact_sensor(hass):
+    """Test contact sensor discovery."""
+    device = (
+        'binary_sensor.test_contact',
+        'on',
+        {
+            'friendly_name': "Test Contact Sensor",
+            'device_class': 'door',
+        }
+    )
+    appliance = yield from discovery_test(device, hass)
+
+    assert appliance['endpointId'] == 'binary_sensor#test_contact'
+    assert appliance['displayCategories'][0] == 'CONTACT_SENSOR'
+    assert appliance['friendlyName'] == 'Test Contact Sensor'
+
+    (capability,) = assert_endpoint_capabilities(
+        appliance,
+        'Alexa.ContactSensor')
+    assert capability['interface'] == 'Alexa.ContactSensor'
+    properties = capability['properties']
+    assert properties['retrievable'] is True
+    assert {'name': 'detectionState'} in properties['supported']
+
+    properties = yield from reported_properties(hass,
+                                                'binary_sensor#test_contact')
+    properties.assert_equal('Alexa.ContactSensor', 'detectionState',
+                            'DETECTED')
+
+
+@asyncio.coroutine
+def test_motion_sensor(hass):
+    """Test motion sensor discovery."""
+    device = (
+        'binary_sensor.test_motion',
+        'on',
+        {
+            'friendly_name': "Test Motion Sensor",
+            'device_class': 'motion',
+        }
+    )
+    appliance = yield from discovery_test(device, hass)
+
+    assert appliance['endpointId'] == 'binary_sensor#test_motion'
+    assert appliance['displayCategories'][0] == 'MOTION_SENSOR'
+    assert appliance['friendlyName'] == 'Test Motion Sensor'
+
+    (capability,) = assert_endpoint_capabilities(
+        appliance,
+        'Alexa.MotionSensor')
+    assert capability['interface'] == 'Alexa.MotionSensor'
+    properties = capability['properties']
+    assert properties['retrievable'] is True
+    assert {'name': 'detectionState'} in properties['supported']
+
+    properties = yield from reported_properties(hass,
+                                                'binary_sensor#test_motion')
+    properties.assert_equal('Alexa.MotionSensor', 'detectionState',
+                            'DETECTED')
+
+
+@asyncio.coroutine
 def test_unknown_sensor(hass):
     """Test sensors of unknown quantities are not discovered."""
     device = (

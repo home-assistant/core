@@ -183,7 +183,7 @@ async def async_setup(hass, config):
         """Update tokens of the entities."""
         for entity in component.entities:
             entity.async_update_token()
-            hass.async_add_job(entity.async_update_ha_state())
+            hass.async_create_task(entity.async_update_ha_state())
 
     hass.helpers.event.async_track_time_interval(
         update_tokens, TOKEN_CHANGE_INTERVAL)
@@ -452,27 +452,23 @@ class CameraMjpegStream(CameraView):
             raise web.HTTPBadRequest()
 
 
-@callback
-def websocket_camera_thumbnail(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_camera_thumbnail(hass, connection, msg):
     """Handle get camera thumbnail websocket command.
 
     Async friendly.
     """
-    async def send_camera_still():
-        """Send a camera still."""
-        try:
-            image = await async_get_image(hass, msg['entity_id'])
-            connection.send_message_outside(websocket_api.result_message(
-                msg['id'], {
-                    'content_type': image.content_type,
-                    'content': base64.b64encode(image.content).decode('utf-8')
-                }
-            ))
-        except HomeAssistantError:
-            connection.send_message_outside(websocket_api.error_message(
-                msg['id'], 'image_fetch_failed', 'Unable to fetch image'))
-
-    hass.async_add_job(send_camera_still())
+    try:
+        image = await async_get_image(hass, msg['entity_id'])
+        connection.send_message(websocket_api.result_message(
+            msg['id'], {
+                'content_type': image.content_type,
+                'content': base64.b64encode(image.content).decode('utf-8')
+            }
+        ))
+    except HomeAssistantError:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'image_fetch_failed', 'Unable to fetch image'))
 
 
 async def async_handle_snapshot_service(camera, service):

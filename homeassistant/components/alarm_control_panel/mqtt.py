@@ -4,7 +4,6 @@ This platform enables the possibility to control a MQTT alarm.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.mqtt/
 """
-import asyncio
 import logging
 import re
 
@@ -111,11 +110,10 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         self._code = code
         self._discovery_hash = discovery_hash
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe mqtt events."""
-        yield from MqttAvailability.async_added_to_hass(self)
-        yield from MqttDiscoveryUpdate.async_added_to_hass(self)
+        await MqttAvailability.async_added_to_hass(self)
+        await MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
         def message_received(topic, payload, qos):
@@ -128,7 +126,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             self._state = payload
             self.async_schedule_update_ha_state()
 
-        yield from mqtt.async_subscribe(
+        await mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, self._qos)
 
     @property
@@ -155,8 +153,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             return 'Number'
         return 'Any'
 
-    @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command.
 
         This method is a coroutine.
@@ -167,8 +164,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             self.hass, self._command_topic, self._payload_disarm, self._qos,
             self._retain)
 
-    @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code=None):
         """Send arm home command.
 
         This method is a coroutine.
@@ -179,8 +175,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             self.hass, self._command_topic, self._payload_arm_home, self._qos,
             self._retain)
 
-    @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None):
         """Send arm away command.
 
         This method is a coroutine.

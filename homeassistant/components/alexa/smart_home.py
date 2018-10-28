@@ -1,20 +1,20 @@
 """Support for alexa Smart Home Skill API."""
-import asyncio
 import logging
 import math
 from datetime import datetime
 from uuid import uuid4
 
 from homeassistant.components import (
-    alert, automation, cover, climate, fan, group, input_boolean, light, lock,
-    media_player, scene, script, switch, http, sensor)
+    alert, automation, binary_sensor, cover, climate, fan, group,
+    input_boolean, light, lock, media_player, scene, script, switch, http,
+    sensor)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.util.decorator import Registry
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, SERVICE_LOCK,
+    ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, SERVICE_LOCK,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
@@ -42,6 +42,7 @@ API_THERMOSTAT_MODES = {
     climate.STATE_COOL: 'COOL',
     climate.STATE_AUTO: 'AUTO',
     climate.STATE_ECO: 'ECO',
+    climate.STATE_OFF: 'OFF',
     climate.STATE_IDLE: 'OFF',
     climate.STATE_FAN_ONLY: 'OFF',
     climate.STATE_DRY: 'OFF',
@@ -72,11 +73,17 @@ class _DisplayCategory:
     # Indicates media devices with video or photo capabilities.
     CAMERA = "CAMERA"
 
+    # Indicates an endpoint that detects and reports contact.
+    CONTACT_SENSOR = "CONTACT_SENSOR"
+
     # Indicates a door.
     DOOR = "DOOR"
 
     # Indicates light sources or fixtures.
     LIGHT = "LIGHT"
+
+    # Indicates an endpoint that detects and reports motion.
+    MOTION_SENSOR = "MOTION_SENSOR"
 
     # An endpoint that cannot be described in on of the other categories.
     OTHER = "OTHER"
@@ -415,6 +422,52 @@ class _AlexaTemperatureSensor(_AlexaInterface):
         }
 
 
+class _AlexaContactSensor(_AlexaInterface):
+    def __init__(self, hass, entity):
+        _AlexaInterface.__init__(self, entity)
+        self.hass = hass
+
+    def name(self):
+        return 'Alexa.ContactSensor'
+
+    def properties_supported(self):
+        return [{'name': 'detectionState'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'detectionState':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.state == STATE_ON:
+            return 'DETECTED'
+        return 'NOT_DETECTED'
+
+
+class _AlexaMotionSensor(_AlexaInterface):
+    def __init__(self, hass, entity):
+        _AlexaInterface.__init__(self, entity)
+        self.hass = hass
+
+    def name(self):
+        return 'Alexa.MotionSensor'
+
+    def properties_supported(self):
+        return [{'name': 'detectionState'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'detectionState':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.state == STATE_ON:
+            return 'DETECTED'
+        return 'NOT_DETECTED'
+
+
 class _AlexaThermostatController(_AlexaInterface):
     def __init__(self, hass, entity):
         _AlexaInterface.__init__(self, entity)
@@ -626,6 +679,39 @@ class _SensorCapabilities(_AlexaEntity):
             yield _AlexaTemperatureSensor(self.hass, self.entity)
 
 
+@ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
+class _BinarySensorCapabilities(_AlexaEntity):
+    TYPE_CONTACT = 'contact'
+    TYPE_MOTION = 'motion'
+
+    def default_display_categories(self):
+        sensor_type = self.get_type()
+        if sensor_type is self.TYPE_CONTACT:
+            return [_DisplayCategory.CONTACT_SENSOR]
+        if sensor_type is self.TYPE_MOTION:
+            return [_DisplayCategory.MOTION_SENSOR]
+
+    def interfaces(self):
+        sensor_type = self.get_type()
+        if sensor_type is self.TYPE_CONTACT:
+            yield _AlexaContactSensor(self.hass, self.entity)
+        elif sensor_type is self.TYPE_MOTION:
+            yield _AlexaMotionSensor(self.hass, self.entity)
+
+    def get_type(self):
+        """Return the type of binary sensor."""
+        attrs = self.entity.attributes
+        if attrs.get(ATTR_DEVICE_CLASS) in (
+                'door',
+                'garage_door',
+                'opening',
+                'window',
+        ):
+            return self.TYPE_CONTACT
+        if attrs.get(ATTR_DEVICE_CLASS) == 'motion':
+            return self.TYPE_MOTION
+
+
 class _Cause:
     """Possible causes for property changes.
 
@@ -695,8 +781,7 @@ class SmartHomeView(http.HomeAssistantView):
         """Initialize."""
         self.smart_home_config = smart_home_config
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle Alexa Smart Home requests.
 
         The Smart Home API requires the endpoint to be implemented in AWS
@@ -704,11 +789,11 @@ class SmartHomeView(http.HomeAssistantView):
         the response.
         """
         hass = request.app['hass']
-        message = yield from request.json()
+        message = await request.json()
 
         _LOGGER.debug("Received Alexa Smart Home request: %s", message)
 
-        response = yield from async_handle_message(
+        response = await async_handle_message(
             hass, self.smart_home_config, message)
         _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
         return b'' if response is None else self.json(response)

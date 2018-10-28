@@ -39,6 +39,7 @@ SENSOR_TYPES = {
     'clouds': ['Cloud coverage', '%'],
     'rain': ['Rain', 'mm'],
     'snow': ['Snow', 'mm'],
+    'weather_code': ['Weather code', None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -177,6 +178,8 @@ class OpenWeatherMapSensor(Entity):
             if fc_data is None:
                 return
             self._state = fc_data.get_weathers()[0].get_detailed_status()
+        elif self.type == 'weather_code':
+            self._state = data.get_weather_code()
 
 
 class WeatherData:

@@ -4,7 +4,6 @@ Support for exposing a templated binary sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.template/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -46,9 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up template binary sensors."""
     sensors = []
 
@@ -109,8 +107,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._delay_on = delay_on
         self._delay_off = delay_off
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def template_bsensor_state_listener(entity, old_state, new_state):

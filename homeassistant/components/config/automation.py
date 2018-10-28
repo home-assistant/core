@@ -1,5 +1,4 @@
 """Provide configuration end points for Automations."""
-import asyncio
 from collections import OrderedDict
 import uuid
 
@@ -12,8 +11,7 @@ import homeassistant.helpers.config_validation as cv
 CONFIG_PATH = 'automations.yaml'
 
 
-@asyncio.coroutine
-def async_setup(hass):
+async def async_setup(hass):
     """Set up the Automation config API."""
     async def hook(hass):
         """post_write_hook for Config View that reloads automations."""

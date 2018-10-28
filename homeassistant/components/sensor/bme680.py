@@ -7,7 +7,6 @@ Air Quality calculation based on humidity and volatile gas.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bme680/
 """
-import asyncio
 import logging
 
 from time import time, sleep
@@ -97,14 +96,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the BME680 sensor."""
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
 
-    sensor_handler = yield from hass.async_add_job(_setup_bme680, config)
+    sensor_handler = await hass.async_add_job(_setup_bme680, config)
     if sensor_handler is None:
         return
 
@@ -117,15 +115,15 @@ def async_setup_platform(hass, config, async_add_entities,
     return
 
 
-# pylint: disable=import-error, no-member
 def _setup_bme680(config):
     """Set up and configure the BME680 sensor."""
-    from smbus import SMBus
+    from smbus import SMBus  # pylint: disable=import-error
     import bme680
 
     sensor_handler = None
     sensor = None
     try:
+        # pylint: disable=no-member
         i2c_address = config.get(CONF_I2C_ADDRESS)
         bus = SMBus(config.get(CONF_I2C_BUS))
         sensor = bme680.BME680(i2c_address, bus)
@@ -351,10 +349,9 @@ class BME680Sensor(Entity):
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from the BME680 and update the states."""
-        yield from self.hass.async_add_job(self.bme680_client.update)
+        await self.hass.async_add_job(self.bme680_client.update)
         if self.type == SENSOR_TEMP:
             temperature = round(self.bme680_client.sensor_data.temperature, 1)
             if self.temp_unit == TEMP_FAHRENHEIT:

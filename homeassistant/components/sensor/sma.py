@@ -5,33 +5,41 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sma/
 """
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL,
-    CONF_SSL)
-from homeassistant.helpers.event import async_track_time_interval
+    CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_SSL,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['pysma==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_GROUP = 'group'
-CONF_SENSORS = 'sensors'
 CONF_CUSTOM = 'custom'
+CONF_FACTOR = 'factor'
+CONF_GROUP = 'group'
+CONF_KEY = 'key'
+CONF_SENSORS = 'sensors'
+CONF_UNIT = 'unit'
 
 GROUP_INSTALLER = 'installer'
 GROUP_USER = 'user'
 GROUPS = [GROUP_USER, GROUP_INSTALLER]
-SENSOR_OPTIONS = ['current_consumption', 'current_power', 'total_consumption',
-                  'total_yield']
+
+SENSOR_OPTIONS = [
+    'current_consumption',
+    'current_power',
+    'total_consumption',
+    'total_yield',
+]
 
 
 def _check_sensor_schema(conf):
@@ -48,24 +56,26 @@ def _check_sensor_schema(conf):
     return conf
 
 
+CUSTOM_SCHEMA = vol.Any({
+    vol.Required(CONF_KEY):
+    vol.All(cv.string, vol.Length(min=13, max=13)),
+    vol.Required(CONF_UNIT): cv.string,
+    vol.Optional(CONF_FACTOR, default=1): vol.Coerce(float),
+})
+
 PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): str,
+    vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
-    vol.Required(CONF_PASSWORD): str,
+    vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
     vol.Required(CONF_SENSORS): vol.Schema({cv.slug: cv.ensure_list}),
-    vol.Optional(CONF_CUSTOM, default={}): vol.Schema({
-        cv.slug: {
-            vol.Required('key'): vol.All(str, vol.Length(min=13, max=13)),
-            vol.Required('unit'): str,
-            vol.Optional('factor', default=1): vol.Coerce(float),
-        }})
+    vol.Optional(CONF_CUSTOM, default={}):
+        vol.Schema({cv.slug: CUSTOM_SCHEMA}),
 }, extra=vol.PREVENT_EXTRA), _check_sensor_schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up SMA WebConnect sensor."""
     import pysma
 
@@ -107,10 +117,9 @@ def async_setup_platform(hass, config, async_add_entities,
     sma = pysma.SMA(session, url, config[CONF_PASSWORD], group=grp)
 
     # Ensure we logout on shutdown
-    @asyncio.coroutine
-    def async_close_session(event):
+    async def async_close_session(event):
         """Close the session."""
-        yield from sma.close_session()
+        await sma.close_session()
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_close_session)
 
@@ -120,15 +129,14 @@ def async_setup_platform(hass, config, async_add_entities,
 
     backoff = 0
 
-    @asyncio.coroutine
-    def async_sma(event):
+    async def async_sma(event):
         """Update all the SMA sensors."""
         nonlocal backoff
         if backoff > 1:
             backoff -= 1
             return
 
-        values = yield from sma.read(keys_to_query)
+        values = await sma.read(keys_to_query)
         if values is None:
             backoff = 3
             return
@@ -142,14 +150,14 @@ def async_setup_platform(hass, config, async_add_entities,
             if task:
                 tasks.append(task)
         if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks, loop=hass.loop)
 
     interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
     async_track_time_interval(hass, async_sma, interval)
 
 
 class SMAsensor(Entity):
-    """Representation of a Bitcoin sensor."""
+    """Representation of a SMA sensor."""
 
     def __init__(self, sensor_name, attr, sensor_defs):
         """Initialize the sensor."""
