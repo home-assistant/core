@@ -5,21 +5,21 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sma/
 """
 import asyncio
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_SSL,
     CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['pysma==0.2']
+REQUIREMENTS = ['pysma==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,23 +30,16 @@ CONF_KEY = 'key'
 CONF_SENSORS = 'sensors'
 CONF_UNIT = 'unit'
 
-GROUP_INSTALLER = 'installer'
-GROUP_USER = 'user'
-GROUPS = [GROUP_USER, GROUP_INSTALLER]
-
-SENSOR_OPTIONS = [
-    'current_consumption',
-    'current_power',
-    'total_consumption',
-    'total_yield',
-]
+GROUPS = ['user', 'installer']
 
 
 def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
-    valid = list(conf[CONF_CUSTOM].keys())
-    valid.extend(SENSOR_OPTIONS)
-    for sensor, attrs in conf[CONF_SENSORS].items():
+    import pysma
+
+    valid = set(conf[CONF_CUSTOM].keys())
+    valid.extend([s.name for s in pysma.SENSORS])
+    for name, attrs in conf[CONF_SENSORS].items():
         if sensor not in valid:
             raise vol.Invalid("{} does not exist".format(sensor))
         for attr in attrs:
@@ -58,7 +51,7 @@ def _check_sensor_schema(conf):
 
 CUSTOM_SCHEMA = vol.Any({
     vol.Required(CONF_KEY):
-    vol.All(cv.string, vol.Length(min=13, max=13)),
+    vol.All(cv.string, vol.Length(min=13, max=15)),
     vol.Required(CONF_UNIT): cv.string,
     vol.Optional(CONF_FACTOR, default=1): vol.Coerce(float),
 })
@@ -80,18 +73,10 @@ async def async_setup_platform(
     """Set up SMA WebConnect sensor."""
     import pysma
 
-    # Sensor_defs from the library
-    sensor_defs = dict(zip(SENSOR_OPTIONS, [
-        (pysma.KEY_CURRENT_CONSUMPTION_W, 'W', 1),
-        (pysma.KEY_CURRENT_POWER_W, 'W', 1),
-        (pysma.KEY_TOTAL_CONSUMPTION_KWH, 'kWh', 1000),
-        (pysma.KEY_TOTAL_YIELD_KWH, 'kWh', 1000)]))
-
     # Sensor_defs from the custom config
     for name, prop in config[CONF_CUSTOM].items():
-        if name in sensor_defs:
-            _LOGGER.warning("Custom sensor %s replace built-in sensor", name)
-        sensor_defs[name] = (prop['key'], prop['unit'], prop['factor'])
+        n_s = pysma.Sensor(name, prop['key'], prop['factor'], prop['unit'])
+        pysma.add_sensor(n_s)
 
     # Prepare all HASS sensor entities
     hass_sensors = []
