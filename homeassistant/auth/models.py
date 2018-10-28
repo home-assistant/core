@@ -7,11 +7,21 @@ import attr
 
 from homeassistant.util import dt as dt_util
 
+from . import permissions as perm_mdl
 from .util import generate_secret
 
 TOKEN_TYPE_NORMAL = 'normal'
 TOKEN_TYPE_SYSTEM = 'system'
 TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = 'long_lived_access_token'
+
+
+@attr.s(slots=True)
+class Group:
+    """A group."""
+
+    name = attr.ib(type=str)  # type: Optional[str]
+    policy = attr.ib(type=perm_mdl.PolicyType)
+    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
 
 
 @attr.s(slots=True)
@@ -24,6 +34,8 @@ class User:
     is_active = attr.ib(type=bool, default=False)
     system_generated = attr.ib(type=bool, default=False)
 
+    groups = attr.ib(type=List, factory=list, cmp=False)  # type: List[Group]
+
     # List of credentials of a user.
     credentials = attr.ib(
         type=list, factory=list, cmp=False
@@ -33,6 +45,28 @@ class User:
     refresh_tokens = attr.ib(
         type=dict, factory=dict, cmp=False
     )  # type: Dict[str, RefreshToken]
+
+    _permissions = attr.ib(
+        type=perm_mdl.PolicyPermissions,
+        init=False,
+        cmp=False,
+        default=None,
+    )
+
+    @property
+    def permissions(self) -> perm_mdl.AbstractPermissions:
+        """Return permissions object for user."""
+        if self.is_owner:
+            return perm_mdl.OwnerPermissions
+
+        if self._permissions is not None:
+            return self._permissions
+
+        self._permissions = perm_mdl.PolicyPermissions(
+            perm_mdl.merge_policies([
+                group.policy for group in self.groups]))
+
+        return self._permissions
 
 
 @attr.s(slots=True)

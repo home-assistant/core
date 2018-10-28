@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "not_internet_accessible": "A Home Assistant-nek el\u00e9rhet\u0151nek kell lennie az internetr\u0151l az IFTTT \u00fczenetek fogad\u00e1s\u00e1hoz."
+        },
         "step": {
             "user": {
                 "description": "Biztosan be szeretn\u00e9d \u00e1ll\u00edtani az IFTTT-t?",

@@ -39,7 +39,7 @@ class SecuritySystem(HomeAccessory):
         """Initialize a SecuritySystem accessory object."""
         super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
         self._alarm_code = self.config.get(ATTR_CODE)
-        self.flag_target_state = False
+        self._flag_state = False
 
         serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
         self.char_current_state = serv_alarm.configure_char(
@@ -52,14 +52,14 @@ class SecuritySystem(HomeAccessory):
         """Move security state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set security state to %d',
                       self.entity_id, value)
-        self.flag_target_state = True
+        self._flag_state = True
         hass_value = HOMEKIT_TO_HASS[value]
         service = STATE_TO_SERVICE[hass_value]
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._alarm_code:
             params[ATTR_CODE] = self._alarm_code
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update security state after state changed."""
@@ -71,7 +71,7 @@ class SecuritySystem(HomeAccessory):
                           self.entity_id, hass_state, current_security_state)
 
             # SecuritySystemTargetState does not support triggered
-            if not self.flag_target_state and \
+            if not self._flag_state and \
                     hass_state != STATE_ALARM_TRIGGERED:
                 self.char_target_state.set_value(current_security_state)
-            self.flag_target_state = False
+            self._flag_state = False
