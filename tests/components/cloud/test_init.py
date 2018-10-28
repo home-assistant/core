@@ -155,14 +155,14 @@ def test_subscription_expired(hass):
     with patch.object(cl, '_decode_claims', return_value=token_val), \
             patch('homeassistant.util.dt.utcnow',
                   return_value=utcnow().replace(
-                      year=2017, month=11, day=15, hour=23, minute=59,
+                      year=2017, month=11, day=19, hour=23, minute=59,
                       second=59)):
         assert not cl.subscription_expired
 
     with patch.object(cl, '_decode_claims', return_value=token_val), \
             patch('homeassistant.util.dt.utcnow',
                   return_value=utcnow().replace(
-                      year=2017, month=11, day=16, hour=0, minute=0,
+                      year=2017, month=11, day=20, hour=0, minute=0,
                       second=0)):
         assert cl.subscription_expired
 

@@ -2,17 +2,17 @@
 Support for Rheem EcoNet water heaters.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.econet/
+https://home-assistant.io/components/water_heater.econet/
 """
 import datetime
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import (
+from homeassistant.components.water_heater import (
     DOMAIN, PLATFORM_SCHEMA, STATE_ECO, STATE_ELECTRIC, STATE_GAS,
     STATE_HEAT_PUMP, STATE_HIGH_DEMAND, STATE_OFF, STATE_PERFORMANCE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, WaterHeaterDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME,
     TEMP_FAHRENHEIT)
@@ -109,7 +109,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                            schema=DELETE_VACATION_SCHEMA)
 
 
-class EcoNetWaterHeater(ClimateDevice):
+class EcoNetWaterHeater(WaterHeaterDevice):
     """Representation of an EcoNet water heater."""
 
     def __init__(self, water_heater):

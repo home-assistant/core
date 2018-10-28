@@ -11,13 +11,12 @@ from aiohttp import hdrs
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ('webhook',)
 
 _LOGGER = logging.getLogger(__name__)
-CONF_WEBHOOK_ID = 'webhook_id'
 
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'webhook',

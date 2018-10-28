@@ -355,3 +355,17 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
         'light', 'turn_on', {'entity_id': ['light.bla', 'light.test']}, True)
     assert mock_call.call_args_list[1][0] == (
         'sensor', 'turn_on', {'entity_id': ['sensor.bla']}, False)
+
+
+async def test_entity_update(hass):
+    """Test being able to call entity update."""
+    await comps.async_setup(hass, {})
+
+    with patch('homeassistant.helpers.entity_component.async_update_entity',
+               return_value=mock_coro()) as mock_update:
+        await hass.services.async_call('homeassistant', 'update_entity', {
+            'entity_id': ['light.kitchen']
+        }, blocking=True)
+
+    assert len(mock_update.mock_calls) == 1
+    assert mock_update.mock_calls[0][1][1] == 'light.kitchen'

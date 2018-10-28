@@ -19,12 +19,12 @@ from homeassistant.components.cover import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OPTIMISTIC, STATE_OPEN,
-    STATE_CLOSED, STATE_UNKNOWN)
+    STATE_CLOSED, STATE_UNKNOWN, CONF_DEVICE)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
     CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS, CONF_RETAIN, valid_publish_topic, valid_subscribe_topic,
-    MqttAvailability, MqttDiscoveryUpdate)
+    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -96,6 +96,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TILT_INVERT_STATE,
                  default=DEFAULT_TILT_INVERT_STATE): cv.boolean,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -155,11 +156,13 @@ async def _async_setup_entity(hass, config, async_add_entities,
         config.get(CONF_POSITION_TOPIC),
         set_position_template,
         config.get(CONF_UNIQUE_ID),
+        config.get(CONF_DEVICE),
         discovery_hash
     )])
 
 
-class MqttCover(MqttAvailability, MqttDiscoveryUpdate, CoverDevice):
+class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
+                CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
     def __init__(self, name, state_topic, command_topic, availability_topic,
@@ -169,11 +172,13 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, CoverDevice):
                  optimistic, value_template, tilt_open_position,
                  tilt_closed_position, tilt_min, tilt_max, tilt_optimistic,
                  tilt_invert, position_topic, set_position_template,
-                 unique_id: Optional[str], discovery_hash):
+                 unique_id: Optional[str], device_config: Optional[ConfigType],
+                 discovery_hash):
         """Initialize the cover."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash)
+        MqttEntityDeviceInfo.__init__(self, device_config)
         self._position = None
         self._state = None
         self._name = name

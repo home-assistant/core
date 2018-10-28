@@ -105,8 +105,9 @@ map:
 # Track the sun
 sun:
 
-# Weather prediction
+# Sensors
 sensor:
+  # Weather prediction
   - platform: yr
 
 # Text to speech

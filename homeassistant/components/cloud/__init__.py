@@ -162,7 +162,7 @@ class Cloud:
     @property
     def subscription_expired(self):
         """Return a boolean if the subscription has expired."""
-        return dt_util.utcnow() > self.expiration_date + timedelta(days=3)
+        return dt_util.utcnow() > self.expiration_date + timedelta(days=7)
 
     @property
     def expiration_date(self):
