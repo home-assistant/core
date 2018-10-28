@@ -113,6 +113,10 @@ class PilightBinarySensor(BinarySensorDevice):
             if self._variable not in call.data:
                 return
             value = call.data[self._variable]
+            # The following forces string comparison for all types. 
+            # More proper solution ideas can be found in the PR:
+            # https://github.com/home-assistant/home-assistant/pull/17870
+            # The same applies to the PilightTriggerSensor
             self._state = (str(value) == self._on_value)
             self.schedule_update_ha_state()
 
@@ -178,6 +182,8 @@ class PilightTriggerSensor(BinarySensorDevice):
             if self._variable not in call.data:
                 return
             value = call.data[self._variable]
+            # The following forces string comparison for all types. 
+            # See also the note in PilightBinarySensor
             self._state = (str(value) == self._on_value)
             if self._delay_after is None:
                 self._delay_after = dt_util.utcnow() + datetime.timedelta(
