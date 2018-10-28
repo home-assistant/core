@@ -10,6 +10,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import (
     ATTR_LOCATION, CONF_EVENT, CONF_NAME, CONF_TRIGGER_TIME)
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
@@ -47,6 +48,7 @@ class AxisBinarySensor(BinarySensorDevice):
         if self.delay == 0 or self.is_on:
             self.schedule_update_ha_state()
         else:  # Run timer to delay updating the state
+            @callback
             def _delay_update(now):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s called delayed (%s sec) update",
