@@ -6,19 +6,18 @@ https://home-assistant.io/components/fan.wemo/
 """
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 import requests
-
 import async_timeout
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.fan import (
-    DOMAIN, PLATFORM_SCHEMA, SUPPORT_SET_SPEED, FanEntity,
+    DOMAIN, SUPPORT_SET_SPEED, FanEntity,
     SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH)
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.util import convert
-from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 from homeassistant.const import ATTR_ENTITY_ID
+
 
 DEPENDENCIES = ['wemo']
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -102,7 +101,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         mac = discovery_info['mac_address']
 
         try:
-            device = [WemoHumidifier(discovery.device_from_description(location, mac))
+            device = WemoHumidifier(discovery.device_from_description(location, mac))
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as err:
             _LOGGER.error('Unable to access %s (%s)', location, err)
@@ -110,16 +109,16 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
         if device:
             hass.data[DATA_KEY][device.entity_id] = device
-            add_entities_callback(device))
+            add_entities_callback(device)
 
     def service_handle(service):
         """Handle the WeMo humidifier services."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
-        target_humidity = service.data.get(CONF_TARGET_HUMIDITY)
+        target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
 
         if entity_id:
-            humidifiers = [humidifier for device in hass.data[DATA_KEY].values() if
-                       device.entity_id == entity_id]
+            humidifiers = [device for device in hass.data[DATA_KEY].values() if
+                           device.entity_id == entity_id]
 
         if humidifiers is None:
             _LOGGER.warning("Unable to find WeMo humidifier device %s",
@@ -269,7 +268,7 @@ class WemoHumidifier(FanEntity):
         async with self._update_lock:
             await self.hass.async_add_job(self._update, force_update)
 
-    def _update(self, force_update = True):
+    def _update(self, force_update=True):
         """Update the device state."""
         try:
             self._state = self.wemo.get_state(force_update)
