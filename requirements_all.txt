@@ -604,6 +604,9 @@ maxcube-api==0.1.0
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
 
+# homeassistant.components.sensor.meteo_france
+meteofrance==0.2.7
+
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
 mficlient==0.3.0
