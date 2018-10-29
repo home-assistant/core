@@ -8,6 +8,8 @@ https://home-assistant.io/components/alarm_control_panel.lupusec/
 from datetime import timedelta
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.lupusec import DOMAIN as LUPUSEC_DOMAIN
+from homeassistant.components.lupusec import SCAN_INTERVAL as SCAN_INTERVAL
 from homeassistant.components.lupusec import LupusecDevice
 
 import homeassistant.util.dt as dt_util
@@ -17,15 +19,13 @@ from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_DISARMED)
 
 DEPENDENCIES = ['lupusec']
-DOMAIN = 'lupusec'
-ICON = 'mdi:security'
 
-SCAN_INTERVAL = timedelta(seconds=2)
+ICON = 'mdi:security'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an alarm control panel for a Lupusec device."""
-    data = hass.data[DOMAIN]
+    data = hass.data[LUPUSEC_DOMAIN]
 
     alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm(), data.name)]
 
@@ -40,7 +40,6 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanel):
     def __init__(self, data, device, name):
         """Initialize the alarm control panel."""
         super().__init__(data, device)
-        self._name = name
         self._state = STATE_ALARM_DISARMED
         self._previous_state = ''
         self._state_ts = ''
@@ -66,25 +65,11 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._device.set_away()
-        self._update_state(STATE_ALARM_ARMED_AWAY)
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._device.set_standby()
-        self._update_state(STATE_ALARM_DISARMED)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         self._device.set_home()
-        self._update_state(STATE_ALARM_ARMED_HOME)
-
-    def _update_state(self, state):
-        """Update the state."""
-        if self._state == state:
-            return
-        self._previous_state = self._state
-        self._state = state
-        self._state_ts = dt_util.utcnow()
-        self.schedule_update_ha_state()
-
-        # self.async_update_ha_state

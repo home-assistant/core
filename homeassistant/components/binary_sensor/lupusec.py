@@ -5,14 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.lupusec/
 """
 import logging
-from datetime import timedelta
 
 from homeassistant.components.lupusec import (LupusecDevice,
                                               DOMAIN as LUPUSEC_DOMAIN)
+from homeassistant.components.lupusec import SCAN_INTERVAL as SCAN_INTERVAL
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 DEPENDENCIES = ['lupusec']
-SCAN_INTERVAL = timedelta(seconds=2)
 
 _LOGGER = logging.getLogger(__name__)
 

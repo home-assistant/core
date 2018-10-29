@@ -8,6 +8,7 @@ import logging
 
 from homeassistant.components.lupusec import (LupusecDevice,
                                               DOMAIN as LUPUSEC_DOMAIN)
+from homeassistant.components.lupusec import SCAN_INTERVAL as SCAN_INTERVAL
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['lupusec']
@@ -32,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class LupusecSwitch(LupusecDevice, SwitchDevice):
-    """Representation of an Lupusec switch."""
+    """Representation of a Lupusec switch."""
 
     def turn_on(self, **kwargs):
         """Turn on the device."""
