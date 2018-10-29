@@ -55,6 +55,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 TIMEOUT_MESSAGE = 'Timeout waiting for response.'
 
+ATTR_OUTPUT = 'output'
+ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_OUTPUT): vol.In(['no', 'analog', 'yes', 'out', 'out-sub', 'sub', 'hdbaset', 'both', 'up'])})
+DOMAIN = 'media_player'
+SERVICE_SELECT_OUTPUT = 'select_output'
 
 def determine_zones(receiver):
     """Determine what zones are available for the receiver."""
@@ -89,6 +93,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     host = config.get(CONF_HOST)
     hosts = []
+
+    def service_handle(service):
+      """Handle for services."""
+      entity_ids = service.data.get(ATTR_ENTITY_ID)
+      devices = [d for d in hosts if d.entity_id in entity_ids]
+      
+      for device in devices:
+          if service.service == SERVICE_SELECT_OUTPUT:
+              device.select_output(service.data.get(ATTR_OUTPUT))
+    
+    hass.services.register(
+        DOMAIN, SERVICE_SELECT_OUTPUT, service_handle,
+        schema=ONKYO_SELECT_OUTPUT_SCHEMA)
 
     if CONF_HOST in config and host not in KNOWN_HOSTS:
         try:
@@ -144,6 +161,7 @@ class OnkyoDevice(MediaPlayerDevice):
         self._source_list = list(sources.values())
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
+        self._attributes = {}
 
     def command(self, command):
         """Run an eiscp command and catch connection errors."""
@@ -174,6 +192,7 @@ class OnkyoDevice(MediaPlayerDevice):
         volume_raw = self.command('volume query')
         mute_raw = self.command('audio-muting query')
         current_source_raw = self.command('input-selector query')
+        hdmi_out_raw = self.command('hdmi-output-selector query')
 
         if not (volume_raw and mute_raw and current_source_raw):
             return
@@ -194,6 +213,7 @@ class OnkyoDevice(MediaPlayerDevice):
                     [i for i in current_source_tuples[1]])
         self._muted = bool(mute_raw[1] == 'on')
         self._volume = volume_raw[1] / self._max_volume
+        self._attributes["hdmi_out"] = ','.join(hdmi_out_raw[1])
 
     @property
     def name(self):
@@ -229,6 +249,11 @@ class OnkyoDevice(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         return self._source_list
+    
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return self._attributes
 
     def turn_off(self):
         """Turn the media player off."""
@@ -275,6 +300,9 @@ class OnkyoDevice(MediaPlayerDevice):
                 source in DEFAULT_PLAYABLE_SOURCES):
             self.command('preset {}'.format(media_id))
 
+    def select_output(self, output):
+        """Set hdmi-out"""
+        self.command('hdmi-output-selector={}'.format(output))
 
 class OnkyoDeviceZone(OnkyoDevice):
     """Representation of an Onkyo device's extra zone."""
