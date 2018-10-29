@@ -99,7 +99,7 @@ class DirecTvDevice(MediaPlayerDevice):
         self._name = name
         self._is_standby = True
         self._current = None
-        self._lastupdate = None
+        self._last_update = None
         self._paused = None
         self._last_position = None
         self._is_recorded = None
@@ -117,15 +117,15 @@ class DirecTvDevice(MediaPlayerDevice):
             self._paused = None
             self._assumed_state = False
             self._last_position = None
-            self._lastupdate = None
+            self._last_update = None
         else:
             self._current = self.dtv.get_tuned()
             self._is_recorded = self._current.get('uniqueId') is not None
             self._paused = self._last_position == self._current['offset']
             self._assumed_state = self._is_recorded
             self._last_position = self._current['offset']
-            self._lastupdate = dt_util.now() if not self._paused or\
-                self._lastupdate is None else self._lastupdate
+            self._last_update = dt_util.now() if not self._paused or\
+                self._last_update is None else self._last_update
 
     @property
     def device_state_attributes(self):
@@ -209,7 +209,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return self._lastupdate
+        return self._last_update
 
     @property
     def media_title(self):
