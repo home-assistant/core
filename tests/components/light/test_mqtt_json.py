@@ -674,7 +674,7 @@ class TestLightMQTTJSON(unittest.TestCase):
 
 async def test_discovery_removal(hass, mqtt_mock, caplog):
     """Test removal of discovered mqtt_json lights."""
-    await async_start(hass, 'homeassistant', {})
+    await async_start(hass, 'homeassistant', {'mqtt': {}})
     data = (
         '{ "name": "Beer",'
         '  "platform": "mqtt_json",'
