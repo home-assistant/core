@@ -66,7 +66,8 @@ class TestNotifyDemo(unittest.TestCase):
         """Test discovery of notify demo platform."""
         assert notify.DOMAIN not in self.hass.config.components
         discovery.load_platform(
-            self.hass, 'notify', 'demo', {'test_key': 'test_val'}, {})
+            self.hass, 'notify', 'demo', {'test_key': 'test_val'},
+            {'notify': {}})
         self.hass.block_till_done()
         assert notify.DOMAIN in self.hass.config.components
         assert mock_demo_get_service.called
