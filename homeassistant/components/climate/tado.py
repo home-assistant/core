@@ -40,6 +40,12 @@ FAN_MODES_LIST = {
     CONST_MODE_OFF: 'Off',
 }
 
+OPERATION_MANUAL_HOT_WATER_ON = {
+    CONST_OVERLAY_MANUAL: 'Manual (On)',
+    CONST_OVERLAY_TIMER: 'Timer (On)',
+    CONST_OVERLAY_TADO_MODE: 'Tado mode (On)',
+}
+
 OPERATION_MANUAL_COOL = {
     CONST_OVERLAY_MANUAL: 'Manual (Cool)',
     CONST_OVERLAY_TIMER: 'Timer (Cool)',
@@ -90,20 +96,31 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     device_type = capabilities['type']
     min_temp = {}
     max_temp = {}
+    is_device_climate_controllable = False
+    is_manual_temperature = False
 
     if CONST_MODE_COOL in capabilities:
+        is_device_climate_controllable = True
+        is_manual_temperature = True
         temperatures = capabilities[CONST_MODE_COOL]['temperatures']
         min_temp[CONST_MODE_COOL]=hass.config.units.temperature(float(temperatures['celsius']['min']), unit)
         max_temp[CONST_MODE_COOL]=hass.config.units.temperature(float(temperatures['celsius']['max']), unit)
-    elif CONST_MODE_HEAT in capabilities:
+    if CONST_MODE_HEAT in capabilities:
+        is_device_climate_controllable = True
+        is_manual_temperature = True
         temperatures = capabilities[CONST_MODE_HEAT]['temperatures']
         min_temp[CONST_MODE_HEAT]=hass.config.units.temperature(float(temperatures['celsius']['min']), unit)
         max_temp[CONST_MODE_HEAT]=hass.config.units.temperature(float(temperatures['celsius']['max']), unit)
-    elif 'temperatures' in capabilities:
+    if 'temperatures' in capabilities:
+        is_device_climate_controllable = True
+        is_manual_temperature = True
         temperatures = capabilities['temperatures']
         min_temp[CONST_MODE_HEAT]=hass.config.units.temperature(float(temperatures['celsius']['min']), unit)
         max_temp[CONST_MODE_HEAT]=hass.config.units.temperature(float(temperatures['celsius']['max']), unit)
-    else:
+    if device_type == "HOT_WATER" and 'temperatures' not in capabilities:
+        is_device_climate_controllable = True
+        is_manual_temperature = False
+    if not is_device_climate_controllable:
         _LOGGER.debug("Received zone %s has no temperature; not adding", name)
         return
 
@@ -112,7 +129,8 @@ def create_climate_device(tado, hass, zone, name, zone_id):
                          name, zone_id, data_id,
                          min_temp,
                          max_temp,
-                         device_type)
+                         device_type,
+                         is_manual_temperature)
 
     tado.add_sensor(data_id, {
         'id': zone_id,
@@ -127,7 +145,7 @@ class TadoClimate(ClimateDevice):
     """Representation of a tado climate device."""
 
     def __init__(self, store, zone_name, zone_id, data_id,
-                 min_temp, max_temp, device_type,
+                 min_temp, max_temp, device_type, is_manual_temperature,
                  tolerance=0.3):
         """Initialize of Tado climate device."""
         self._store = store
@@ -148,6 +166,7 @@ class TadoClimate(ClimateDevice):
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._target_temp = None
+        self._is_manual_temperature = is_manual_temperature
         self._tolerance = tolerance
         self._mode = None
         self._current_fan = CONST_MODE_OFF
