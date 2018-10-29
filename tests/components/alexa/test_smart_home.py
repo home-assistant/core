@@ -63,7 +63,7 @@ def test_create_api_message_defaults():
     request = get_new_request('Alexa.PowerController', 'TurnOn', 'switch#xy')
     request = request['directive']
 
-    msg = smart_home.api_message(request, payload={'test': 3})
+    msg = smart_home.api_message(None, None, request, payload={'test': 3})
 
     assert 'event' in msg
     msg = msg['event']
@@ -89,7 +89,8 @@ def test_create_api_message_special():
 
     request['header'].pop('correlationToken')
 
-    msg = smart_home.api_message(request, 'testName', 'testNameSpace')
+    msg = smart_home.api_message(
+        None, None, request, 'testName', 'testNameSpace')
 
     assert 'event' in msg
     msg = msg['event']
