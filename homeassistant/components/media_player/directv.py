@@ -23,10 +23,10 @@ REQUIREMENTS = ['directpy==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MEDIA_CURRENTLYRECORDING = 'media_currently_recording'
+ATTR_MEDIA_CURRENTLY_RECORDING = 'media_currently_recording'
 ATTR_MEDIA_RATING = 'media_rating'
 ATTR_MEDIA_RECORDED = 'media_recorded'
-ATTR_MEDIA_STARTTIME = 'media_starttime'
+ATTR_MEDIA_START_TIME = 'media_start_time'
 
 DEFAULT_DEVICE = '0'
 DEFAULT_NAME = "DirecTV Receiver"
@@ -101,8 +101,8 @@ class DirecTvDevice(MediaPlayerDevice):
         self._current = None
         self._lastupdate = None
         self._paused = None
-        self._lastposition = None
-        self._isrecorded = None
+        self._last_position = None
+        self._is_recorded = None
         self._assumed_state = None
 
         _LOGGER.debug("Created DirecTV device for %s", self._name)
@@ -113,17 +113,17 @@ class DirecTvDevice(MediaPlayerDevice):
         self._is_standby = self.dtv.get_standby()
         if self._is_standby:
             self._current = None
-            self._isrecorded = None
+            self._is_recorded = None
             self._paused = None
             self._assumed_state = False
-            self._lastposition = None
+            self._last_position = None
             self._lastupdate = None
         else:
             self._current = self.dtv.get_tuned()
-            self._isrecorded = self._current.get('uniqueId') is not None
-            self._paused = self._lastposition == self._current['offset']
-            self._assumed_state = self._isrecorded
-            self._lastposition = self._current['offset']
+            self._is_recorded = self._current.get('uniqueId') is not None
+            self._paused = self._last_position == self._current['offset']
+            self._assumed_state = self._is_recorded
+            self._last_position = self._current['offset']
             self._lastupdate = dt_util.now() if not self._paused or\
                 self._lastupdate is None else self._lastupdate
 
@@ -132,11 +132,11 @@ class DirecTvDevice(MediaPlayerDevice):
         """Return device specific state attributes."""
         attributes = {}
         if not self._is_standby:
-            attributes[ATTR_MEDIA_CURRENTLYRECORDING] =\
-                self.media_currentlyrecording
+            attributes[ATTR_MEDIA_CURRENTLY_RECORDING] =\
+                self.media_currently_recording
             attributes[ATTR_MEDIA_RATING] = self.media_rating
             attributes[ATTR_MEDIA_RECORDED] = self.media_recorded
-            attributes[ATTR_MEDIA_STARTTIME] = self.media_starttime
+            attributes[ATTR_MEDIA_START_TIME] = self.media_start_time
 
         return attributes
 
@@ -198,7 +198,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return self._lastposition
+        return self._last_position
 
     @property
     def media_position_updated_at(self):
@@ -250,7 +250,7 @@ class DirecTvDevice(MediaPlayerDevice):
         return SUPPORT_DTV
 
     @property
-    def media_currentlyrecording(self):
+    def media_currently_recording(self):
         """If the media is currently being recorded or not."""
         if self._is_standby:
             return None
@@ -271,10 +271,10 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return self._isrecorded
+        return self._is_recorded
 
     @property
-    def media_starttime(self):
+    def media_start_time(self):
         """Start time the program aired."""
         if self._is_standby:
             return None
