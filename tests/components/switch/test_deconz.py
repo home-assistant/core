@@ -55,7 +55,7 @@ ENTRY_CONFIG = {
 }
 
 
-async def setup_bridge(hass, data):
+async def setup_gateway(hass, data):
     """Load the deCONZ switch platform."""
     from pydeconz import DeconzSession
     loop = Mock()
@@ -91,14 +91,14 @@ async def test_platform_manually_configured(hass):
 async def test_no_switches(hass):
     """Test that no switch entities are created."""
     data = {}
-    await setup_bridge(hass, data)
+    await setup_gateway(hass, data)
     assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
 
 async def test_switches(hass):
     """Test that all supported switch entities are created."""
-    await setup_bridge(hass, {"lights": SUPPORTED_SWITCHES})
+    await setup_gateway(hass, {"lights": SUPPORTED_SWITCHES})
     assert "switch.switch_1_name" in hass.data[deconz.DOMAIN].deconz_ids
     assert "switch.switch_2_name" in hass.data[deconz.DOMAIN].deconz_ids
     assert "switch.switch_3_name" in hass.data[deconz.DOMAIN].deconz_ids
@@ -132,7 +132,7 @@ async def test_switches(hass):
 async def test_add_new_switch(hass):
     """Test successful creation of switch entity."""
     data = {}
-    await setup_bridge(hass, data)
+    await setup_gateway(hass, data)
     switch = Mock()
     switch.name = 'name'
     switch.type = "Smart plug"
@@ -144,13 +144,13 @@ async def test_add_new_switch(hass):
 
 async def test_unsupported_switch(hass):
     """Test that unsupported switches are not created."""
-    await setup_bridge(hass, {"lights": UNSUPPORTED_SWITCH})
+    await setup_gateway(hass, {"lights": UNSUPPORTED_SWITCH})
     assert len(hass.states.async_all()) == 0
 
 
 async def test_unload_switch(hass):
     """Test that it works to unload switch entities."""
-    await setup_bridge(hass, {"lights": SUPPORTED_SWITCHES})
+    await setup_gateway(hass, {"lights": SUPPORTED_SWITCHES})
 
     await hass.data[deconz.DOMAIN].async_reset()
 
