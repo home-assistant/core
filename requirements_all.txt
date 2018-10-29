@@ -1084,7 +1084,7 @@ pysesame==0.1.0
 pysher==1.0.4
 
 # homeassistant.components.sensor.sma
-pysma==0.2
+pysma==0.2.2
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp

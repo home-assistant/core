@@ -37,15 +37,15 @@ def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
     import pysma
 
-    valid = set(conf[CONF_CUSTOM].keys())
+    valid = list(conf[CONF_CUSTOM].keys())
     valid.extend([s.name for s in pysma.SENSORS])
-    for name, attrs in conf[CONF_SENSORS].items():
-        if sensor not in valid:
-            raise vol.Invalid("{} does not exist".format(sensor))
+    for sname, attrs in conf[CONF_SENSORS].items():
+        if sname not in valid:
+            raise vol.Invalid("{} does not exist".format(sname))
         for attr in attrs:
             if attr in valid:
                 continue
-            raise vol.Invalid("{} does not exist [{}]".format(attr, sensor))
+            raise vol.Invalid("{} does not exist [{}]".format(attr, sname))
     return conf
 
 
@@ -75,27 +75,24 @@ async def async_setup_platform(
 
     # Sensor_defs from the custom config
     for name, prop in config[CONF_CUSTOM].items():
-        n_s = pysma.Sensor(name, prop['key'], prop['factor'], prop['unit'])
+        n_s = pysma.Sensor(name, prop['key'], prop['unit'], prop['factor'])
         pysma.add_sensor(n_s)
 
     # Prepare all HASS sensor entities
     hass_sensors = []
     used_sensors = []
     for name, attr in config[CONF_SENSORS].items():
-        hass_sensors.append(SMAsensor(name, attr, sensor_defs))
+        sub_sensors = [pysma.get_sensor(s) for s in attr]
+        hass_sensors.append(SMAsensor(pysma.get_sensor(name), sub_sensors))
         used_sensors.append(name)
         used_sensors.extend(attr)
 
-    # Remove sensor_defs not in use
-    sensor_defs = {name: val for name, val in sensor_defs.items()
-                   if name in used_sensors}
-
     async_add_entities(hass_sensors)
+    used_sensors = [pysma.get_sensor(s) for s in set(used_sensors)]
 
     # Init the SMA interface
     session = async_get_clientsession(hass, verify_ssl=config[CONF_VERIFY_SSL])
-    grp = {GROUP_INSTALLER: pysma.GROUP_INSTALLER,
-           GROUP_USER: pysma.GROUP_USER}[config[CONF_GROUP]]
+    grp = config[CONF_GROUP]
 
     url = "http{}://{}".format(
         "s" if config[CONF_SSL] else "", config[CONF_HOST])
@@ -109,10 +106,6 @@ async def async_setup_platform(
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_close_session)
 
-    # Read SMA values periodically & update sensors
-    names_to_query = list(sensor_defs.keys())
-    keys_to_query = [sensor_defs[name][0] for name in names_to_query]
-
     backoff = 0
 
     async def async_sma(event):
@@ -122,17 +115,14 @@ async def async_setup_platform(
             backoff -= 1
             return
 
-        values = await sma.read(keys_to_query)
+        values = await sma.read(used_sensors)
         if values is None:
-            backoff = 3
+            backoff = 10
             return
-        values = [0 if val is None else val for val in values]
-        res = dict(zip(names_to_query, values))
-        res = {key: val // sensor_defs[key][2] for key, val in res.items()}
-        _LOGGER.debug("Update sensors %s %s %s", keys_to_query, values, res)
+
         tasks = []
         for sensor in hass_sensors:
-            task = sensor.async_update_values(res)
+            task = sensor.async_update_values()
             if task:
                 tasks.append(task)
         if tasks:
@@ -145,18 +135,18 @@ async def async_setup_platform(
 class SMAsensor(Entity):
     """Representation of a SMA sensor."""
 
-    def __init__(self, sensor_name, attr, sensor_defs):
+    def __init__(self, pysma_sensor, sub_sensors):
         """Initialize the sensor."""
-        self._name = sensor_name
-        self._key, self._unit_of_measurement, _ = sensor_defs[sensor_name]
-        self._state = None
-        self._sensor_defs = sensor_defs
-        self._attr = {att: "" for att in attr}
+        self._sensor = pysma_sensor
+        self._sub_sensors = sub_sensors
+
+        self._attr = {s.name: "" for s in sub_sensors}
+        self._state = self._sensor.value
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self._sensor.name
 
     @property
     def state(self):
@@ -166,7 +156,7 @@ class SMAsensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        return self._sensor.unit
 
     @property
     def device_state_attributes(self):
@@ -178,19 +168,18 @@ class SMAsensor(Entity):
         """SMA sensors are updated & don't poll."""
         return False
 
-    def async_update_values(self, key_values):
-        """Update this sensor using the data."""
+    def async_update_values(self):
+        """Update this sensor."""
         update = False
 
-        for key, val in self._attr.items():
-            newval = '{} {}'.format(key_values[key], self._sensor_defs[key][1])
-            if val != newval:
+        for sens in self._sub_sensors:
+            newval = '{} {}'.format(sens.value, sens.unit)
+            if self._attr[sens.name] != newval:
                 update = True
-                self._attr[key] = newval
+                self._attr[sens.name] = newval
 
-        new_state = key_values[self._name]
-        if new_state != self._state:
+        if self._sensor.value != self._state:
             update = True
-            self._state = new_state
+            self._state = self._sensor.value
 
         return self.async_update_ha_state() if update else None
