@@ -18,7 +18,6 @@ from homeassistant.components.fan import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import ATTR_ENTITY_ID
 
-
 DEPENDENCIES = ['wemo']
 SCAN_INTERVAL = timedelta(seconds=10)
 DATA_KEY = 'fan.wemo'
@@ -35,6 +34,7 @@ ATTR_WATER_LEVEL = 'water_level'
 SPEED_MINIMUM = 'minimum'
 SPEED_MAXIMUM = 'maximum'
 
+# The WEMO_ constants below come from pywemo itself
 WEMO_ON = 1
 WEMO_OFF = 0
 
