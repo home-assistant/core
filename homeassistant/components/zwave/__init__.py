@@ -12,6 +12,7 @@ from pprint import pprint
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import websocket_api
 from homeassistant.core import callback, CoreState
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
@@ -68,6 +69,12 @@ DEFAULT_CONF_REFRESH_DELAY = 5
 
 SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover', 'fan',
                        'light', 'sensor', 'switch']
+
+WS_TYPE_NETWORK_STATUS = 'zwave/network_status'
+
+NETWORK_STATUS_SCHEMA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_NETWORK_STATUS,
+})
 
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -309,6 +316,17 @@ async def async_setup_entry(hass, config_entry):
             print("")
 
         dispatcher.connect(log_all, weak=False)
+
+    @websocket_api.async_response
+    async def websocket_network_status(hass, connection, msg):
+        message = websocket_api.result_message(
+            msg['id'], [network.state, network.state_str]
+        )
+        connection.send_message(message)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_NETWORK_STATUS, websocket_network_status,
+        NETWORK_STATUS_SCHEMA)
 
     def value_added(node, value):
         """Handle new added value to a node on the network."""
