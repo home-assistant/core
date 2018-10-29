@@ -64,13 +64,12 @@ if [ "$INSTALL_SSOCR" == "yes" ]; then
   virtualization/Docker/scripts/ssocr
 fi
 
-<<<<<<< HEAD
 if [ "$INSTALL_DLIB" == "yes" ]; then
   pip3 install --no-cache-dir "dlib>=19.5"
-=======
+fi
+
 if [ "$INSTALL_TENSORFLOW" == "yes" ]; then
   virtualization/Docker/scripts/tensorflow
->>>>>>> c2050bbf7... initial tensorflow image_processing component
 fi
 
 # Remove packages

@@ -84,6 +84,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         # Verify that the TensorFlow Object Detection API is pre-installed
         # pylint: disable=unused-import,unused-variable
+        import os
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
         import tensorflow as tf # noqa
         from object_detection.utils import label_map_util # noqa
     except ImportError:
@@ -207,7 +209,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: {category: len(values)
-                for category, values in self._matches.items()},
+                           for category, values in self._matches.items()},
             ATTR_TOTAL_MATCHES: self._total_matches
         }
 
