@@ -38,6 +38,9 @@ API_TEMP_UNITS = {
     TEMP_CELSIUS: 'CELSIUS',
 }
 
+# Needs to be ordered dict for `async_api_set_thermostat_mode` which does a
+# reverse mapping of this dict and we want to map the first occurrance of OFF
+# back to HA state.
 API_THERMOSTAT_MODES = OrderedDict(
     [(climate.STATE_HEAT, 'HEAT'),
      (climate.STATE_COOL, 'COOL'),
