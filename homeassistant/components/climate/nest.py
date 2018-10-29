@@ -313,7 +313,7 @@ class NestThermostat(ClimateDevice):
         return self._max_temperature
 
     def set_temperature_scale(self, temperature_scale):
-        """Return the unit of measurement."""
+        """Set the temperature scale for the device."""
         self.device.temperature_scale = \
             TEMPERATURE_SCALE_MAP[temperature_scale]
 
