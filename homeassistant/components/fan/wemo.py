@@ -146,8 +146,6 @@ class WemoHumidifier(FanEntity):
         self._available = True
         self._update_lock = None
 
-        self._name = self.wemo.name
-        self._serialnumber = self.wemo.serialnumber
         self._fan_mode = None
         self._target_humidity = None
         self._current_humidity = None
@@ -156,8 +154,10 @@ class WemoHumidifier(FanEntity):
         self._filter_expired = None
         self._last_fan_on_mode = WEMO_FAN_MEDIUM
 
-        # look up model name once as it incurs network traffic
+        # look up model name, name, and serial number once as it incurs network traffic
         self._model_name = self.wemo.model_name
+        self._name = self.wemo.name
+        self._serialnumber = self.wemo.serialnumber
 
     def _subscription_callback(self, _device, _type, _params):
         """Update the state by the Wemo device."""
