@@ -70,7 +70,8 @@ def setup(hass, base_config):
 
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    hass.data[DOMAIN] = MyChevyHub(mc.MyChevy(email, password), hass)
+    hass.data[DOMAIN] = MyChevyHub(mc.MyChevy(email, password), hass,
+                                   base_config)
     hass.data[DOMAIN].start()
 
     return True
@@ -90,11 +91,12 @@ class MyChevyHub(threading.Thread):
     starts.
     """
 
-    def __init__(self, client, hass):
+    def __init__(self, client, hass, hass_config):
         """Initialize MyChevy Hub."""
         super().__init__()
         self._client = client
         self.hass = hass
+        self.hass_config = hass_config
         self.cars = []
         self.status = None
         self.ready = False
@@ -111,8 +113,10 @@ class MyChevyHub(threading.Thread):
         self._client.get_cars()
         self.cars = self._client.cars
         if self.ready is not True:
-            discovery.load_platform(self.hass, 'sensor', DOMAIN, {}, {})
-            discovery.load_platform(self.hass, 'binary_sensor', DOMAIN, {}, {})
+            discovery.load_platform(self.hass, 'sensor', DOMAIN, {},
+                                    self.hass_config)
+            discovery.load_platform(self.hass, 'binary_sensor', DOMAIN, {},
+                                    self.hass_config)
             self.ready = True
         self.cars = self._client.update_cars()
 
