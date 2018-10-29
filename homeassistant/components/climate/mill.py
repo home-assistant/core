@@ -116,11 +116,11 @@ class MillHeater(ClimateDevice):
         else:
             room = "Independent device"
         return {
-                "room": room,
-                "open_window": self._heater.open_window,
-                "heating": self._heater.is_heating,
-                "controlled_by_tibber": self._heater.tibber_control,
-                }
+            "room": room,
+            "open_window": self._heater.open_window,
+            "heating": self._heater.is_heating,
+            "controlled_by_tibber": self._heater.tibber_control,
+        }
 
     @property
     def temperature_unit(self):
