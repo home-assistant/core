@@ -326,9 +326,9 @@ class EnerBillingApi:
         self.timezone = device['timezone']
         self.type = billing_type
         self.result = {}
-        self.update = Throttle(interval)(self.update)
+        self.update = Throttle(interval)(self._update)
 
-    def update(self):
+    def _update(self):
         """Update function for updating api information."""
         param = ''
         today_date = datetime.now(tz=self.timezone) \
@@ -358,7 +358,7 @@ class EnerTalkRealTimeSensor(EnerTalkSensor):
         self.site_id = self._device['id']
         self.client = client
         self.result = {}
-        self.update = Throttle(interval)(self.update)
+        self.update = Throttle(interval)(self._update)
 
     @property
     def state(self):
@@ -385,7 +385,7 @@ class EnerTalkRealTimeSensor(EnerTalkSensor):
             'negative_energy_reactive': self.result['negativeEnergyReactive']
         }
 
-    def update(self):
+    def _update(self):
         """Update function for updating api information."""
         if self.client is not None:
             self.result = self.client.get(
