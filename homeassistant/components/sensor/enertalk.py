@@ -196,7 +196,7 @@ class EnerTalkOauth2Client:
         self.token = {}
 
     def load_token(self):
-        """Gets the stored token."""
+        """Load the stored token."""
         import os
         if not os.path.isfile(self.config_path):
             raise PlatformNotReady
@@ -204,7 +204,7 @@ class EnerTalkOauth2Client:
         self.token = load_json(self.config_path)
 
     def authorize_token_url(self, redirect_url):
-        """Authorization code grant type of OAuth 2.0 URL."""
+        """Authorize code grant type of OAuth 2.0 URL."""
         return '{}/authorization' \
                '?response_type=code&client_id={}&redirect_uri={}'\
             .format(self.AUTHORIZE_ENDPOINT, self.client_id, redirect_url)
@@ -229,7 +229,7 @@ class EnerTalkOauth2Client:
         self.fetch_token(headers, payload)
 
     def fetch_token(self, add_headers, payload):
-        """The token is imported through the OAuth 2.0 API."""
+        """Token is imported through the OAuth 2.0 API."""
         headers = {'Content-Type': 'application/json'}
         headers.update(add_headers)
         try:
@@ -247,7 +247,7 @@ class EnerTalkOauth2Client:
             raise
 
     def request(self, url):
-        """EnerTalk API request."""
+        """Enertalk API request."""
         headers = {'Authorization': 'Bearer {}'.format(
             self.token[ATTR_ACCESS_TOKEN]), 'accept-version': '2.0.0'}
         try:
