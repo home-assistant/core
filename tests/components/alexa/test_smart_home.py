@@ -406,7 +406,7 @@ def test_variable_fan(hass):
 @asyncio.coroutine
 def test_lock(hass):
     """Test lock discovery."""
-    device = ('lock.test', 'off', {'friendly_name': "Test lock"})
+    device = ('lock.test', 'unlocked', {'friendly_name': "Test lock"})
     appliance = yield from discovery_test(device, hass)
 
     assert appliance['endpointId'] == 'lock#test'
@@ -423,7 +423,7 @@ def test_lock(hass):
     properties = msg['context']['properties'][0]
     assert properties['name'] == 'lockState'
     assert properties['namespace'] == 'Alexa.LockController'
-    assert properties['value'] == 'LOCKED'
+    assert properties['value'] == 'UNLOCKED'
 
 
 @asyncio.coroutine
