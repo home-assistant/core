@@ -12,39 +12,128 @@ import requests
 import async_timeout
 
 from homeassistant.components.fan import (
-    DOMAIN, PLATFORM_SCHEMA, SUPPORT_SET_SPEED, FanEntity)
+    DOMAIN, PLATFORM_SCHEMA, SUPPORT_SET_SPEED, FanEntity,
+    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import convert
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
+from homeassistant.const import ATTR_ENTITY_ID
 
 DEPENDENCIES = ['wemo']
 SCAN_INTERVAL = timedelta(seconds=10)
+DATA_KEY = 'fan.wemo'
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SENSOR_STATE = 'sensor_state'
-ATTR_SWITCH_MODE = 'switch_mode'
-ATTR_CURRENT_STATE_DETAIL = 'state_detail'
+ATTR_CURRENT_HUMIDITY = 'current_humidity'
+ATTR_TARGET_HUMIDITY = 'target_humidity'
+ATTR_FAN_MODE = 'fan_mode'
+ATTR_FILTER_LIFE = 'filter_life'
+ATTR_FILTER_EXPIRED = 'filter_expired'
+ATTR_WATER_LEVEL = 'water_level'
+
+SPEED_MINIMUM = 'minimum'
+SPEED_MAXIMUM = 'maximum'
+
+WEMO_ON = 1
+WEMO_OFF = 0
+
+WEMO_HUMIDITY_45 = 0
+WEMO_HUMIDITY_50 = 1
+WEMO_HUMIDITY_55 = 2
+WEMO_HUMIDITY_60 = 3
+WEMO_HUMIDITY_100 = 4
+
+WEMO_FAN_OFF = 0
+WEMO_FAN_MINIMUM = 1
+WEMO_FAN_LOW = 2
+WEMO_FAN_MEDIUM = 3
+WEMO_FAN_HIGH = 4
+WEMO_FAN_MAXIMUM = 5
+
+WEMO_WATER_EMPTY = 0
+WEMO_WATER_LOW = 1
+WEMO_WATER_GOOD = 2
+
+SUPPORTED_SPEEDS = [
+    SPEED_OFF, SPEED_MINIMUM,
+    SPEED_LOW, SPEED_MEDIUM,
+    SPEED_HIGH, SPEED_MAXIMUM]
+
+SUPPORTED_FEATURES = SUPPORT_SET_SPEED
+
+WEMO_FAN_SPEED_TO_HASS = {
+    WEMO_FAN_OFF: SPEED_OFF,
+    WEMO_FAN_MINIMUM: SPEED_MINIMUM,
+    WEMO_FAN_LOW: SPEED_LOW,
+    WEMO_FAN_MEDIUM: SPEED_MEDIUM,
+    WEMO_FAN_HIGH: SPEED_HIGH,
+    WEMO_FAN_MAXIMUM: SPEED_MAXIMUM
+}
+
+HASS_FAN_SPEED_TO_WEMO = {
+    SPEED_OFF: WEMO_FAN_OFF,
+    SPEED_MINIMUM: WEMO_FAN_MINIMUM,
+    SPEED_LOW: WEMO_FAN_LOW,
+    SPEED_MEDIUM: WEMO_FAN_MEDIUM,
+    SPEED_HIGH: WEMO_FAN_HIGH,
+    SPEED_MAXIMUM: WEMO_FAN_MAXIMUM
+}
+
+SERVICE_SET_HUMIDITY = 'wemo_humidifier_set_humidity'
+
+WEMO_HUMIDIFIER_SET_HUMIDITY_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(ATTR_TARGET_HUMIDITY):
+        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
+})
 
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
-    """Set up discovered WeMo switches."""
+    """Set up discovered WeMo humidifiers."""
     from pywemo import discovery
+
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
 
     if discovery_info is not None:
         location = discovery_info['ssdp_description']
         mac = discovery_info['mac_address']
 
         try:
-            device = discovery.device_from_description(location, mac)
+            device = [WemoHumidifier(discovery.device_from_description(location, mac))
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as err:
             _LOGGER.error('Unable to access %s (%s)', location, err)
             raise PlatformNotReady
 
         if device:
-            add_entities_callback([WemoHumidifier(device)])
+            hass.data[DATA_KEY][device.entity_id] = device
+            add_entities_callback(device))
+
+    def service_handle(service):
+        """Handle the WeMo humidifier services."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        target_humidity = service.data.get(CONF_TARGET_HUMIDITY)
+
+        if entity_id:
+            humidifiers = [humidifier for device in hass.data[DATA_KEY].values() if
+                       device.entity_id == entity_id]
+
+        if humidifiers is None:
+            _LOGGER.warning("Unable to find WeMo humidifier device %s",
+                            str(entity_id))
+            return
+
+        if service.service == SERVICE_SET_HUMIDITY:
+            for humidifier in humidifiers:
+                humidifier.set_humidity(target_humidity)
+
+    # Register dyson service(s)
+    hass.services.register(
+        DOMAIN, SERVICE_SET_HUMIDITY, service_handle,
+        schema=WEMO_HUMIDIFIER_SET_HUMIDITY_SCHEMA)
 
 
 class WemoHumidifier(FanEntity):
@@ -56,6 +145,15 @@ class WemoHumidifier(FanEntity):
         self._state = None
         self._available = True
         self._update_lock = None
+
+        self._fan_mode = None
+        self._target_humidity = None
+        self._current_humidity = None
+        self._water_level = None
+        self._filter_life = None
+        self._filter_expired = None
+        self._last_fan_on_mode = WEMO_FAN_MEDIUM
+
         # look up model name once as it incurs network traffic
         self._model_name = self.wemo.model_name
 
@@ -95,13 +193,6 @@ class WemoHumidifier(FanEntity):
         return self.wemo.name
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {}
-
-        return attr
-
-    @property
     def is_on(self):
         """Return true if switch is on. Standby is on."""
         return self._state
@@ -111,13 +202,37 @@ class WemoHumidifier(FanEntity):
         """Return true if switch is available."""
         return self._available
 
-    def turn_on(self, **kwargs):
-        """Turn the humidifier on."""
-        self.wemo.on()
+    @property
+    def icon(self):
+        """Return the icon of device based on its type."""
+        return 'mdi:water-percent'
 
-    def turn_off(self, **kwargs):
-        """Turn the humidifier off."""
-        self.wemo.off()
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return {
+            ATTR_CURRENT_HUMIDITY: self._current_humidity,
+            ATTR_TARGET_HUMIDITY: self._target_humidity,
+            ATTR_FAN_MODE: self._fan_mode,
+            ATTR_WATER_LEVEL: self._water_level,
+            ATTR_FILTER_LIFE: self._filter_life,
+            ATTR_FILTER_EXPIRED: self._filter_expired
+        }
+
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return WEMO_FAN_SPEED_TO_HASS.get(self.wemo.fan_mode)
+
+    @property
+    def speed_list(self: FanEntity) -> list:
+        """Get the list of available speeds."""
+        return SUPPORTED_SPEEDS
+
+    @property
+    def supported_features(self: FanEntity) -> int:
+        """Flag supported features."""
+        return SUPPORTED_FEATURES
 
     async def async_added_to_hass(self):
         """Wemo humidifier added to HASS."""
@@ -152,10 +267,20 @@ class WemoHumidifier(FanEntity):
         async with self._update_lock:
             await self.hass.async_add_job(self._update, force_update)
 
-    def _update(self, force_update):
+    def _update(self, force_update = True):
         """Update the device state."""
         try:
             self._state = self.wemo.get_state(force_update)
+
+            self._fan_mode = self.wemo.fan_mode_string
+            self._target_humidity = self.wemo.desired_humidity_percent
+            self._current_humidity = self.wemo.current_humidity_percent
+            self._water_level = self.wemo.water_level_string
+            self._filter_life = self.wemo.filter_life_percent
+            self._filter_expired = self.wemo.filter_expired
+
+            if self.wemo.fan_mode != WEMO_FAN_OFF:
+                self._last_fan_on_mode = self.wemo.fan_mode
 
             if not self._available:
                 _LOGGER.info('Reconnected to %s', self.name)
@@ -164,3 +289,31 @@ class WemoHumidifier(FanEntity):
             _LOGGER.warning("Could not update status for %s (%s)",
                             self.name, err)
             self._available = False
+
+    def turn_on(self: FanEntity, speed: str = None, **kwargs) -> None:
+        """Turn the switch on."""
+        if speed is None:
+            self.wemo.set_state(self._last_fan_on_mode)
+        else:
+            self.set_speed(speed)
+
+    def turn_off(self: FanEntity, **kwargs) -> None:
+        """Turn the switch off."""
+        self.wemo.set_state(WEMO_FAN_OFF)
+
+    def set_speed(self: FanEntity, speed: str) -> None:
+        """Set the fan_mode of the Humidifier."""
+        self.wemo.set_state(HASS_FAN_SPEED_TO_WEMO.get(speed))
+
+    def set_humidity(self: FanEntity, humidity: float) -> None:
+        """Set the target humidity level for the Humidifier."""
+        if humidity < 50:
+            self.wemo.set_humidity(WEMO_HUMIDITY_45)
+        elif humidity >= 50 and humidity < 55:
+            self.wemo.set_humidity(WEMO_HUMIDITY_50)
+        elif humidity >= 55 and humidity < 60:
+            self.wemo.set_humidity(WEMO_HUMIDITY_55)
+        elif humidity >= 60 and humidity < 100:
+            self.wemo.set_humidity(WEMO_HUMIDITY_60)
+        elif humidity >= 100:
+            self.wemo.set_humidity(WEMO_HUMIDITY_100)
