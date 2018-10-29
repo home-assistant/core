@@ -77,7 +77,11 @@ omit =
     homeassistant/components/*/daikin.py
 
     homeassistant/components/deconz/*
-    homeassistant/components/*/deconz.py
+    homeassistant/components/binary_sensor/deconz.py
+    homeassistant/components/cover/deconz.py
+    homeassistant/components/light/deconz.py
+    homeassistant/components/scene/deconz.py
+    homeassistant/components/sensor/deconz.py
 
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
