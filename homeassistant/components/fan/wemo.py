@@ -109,7 +109,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
         if device:
             hass.data[DATA_KEY][device.entity_id] = device
-            add_entities_callback(device)
+            add_entities_callback([device])
 
     def service_handle(service):
         """Handle the WeMo humidifier services."""
