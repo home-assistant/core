@@ -146,6 +146,8 @@ class WemoHumidifier(FanEntity):
         self._available = True
         self._update_lock = None
 
+        self._name = self.wemo.name
+        self._serialnumber = self.wemo.serialnumber
         self._fan_mode = None
         self._target_humidity = None
         self._current_humidity = None
@@ -185,12 +187,12 @@ class WemoHumidifier(FanEntity):
     @property
     def unique_id(self):
         """Return the ID of this WeMo humidifier."""
-        return self.wemo.serialnumber
+        return self._serialnumber
 
     @property
     def name(self):
         """Return the name of the humidifier if any."""
-        return self.wemo.name
+        return self._name
 
     @property
     def is_on(self):
@@ -222,7 +224,7 @@ class WemoHumidifier(FanEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        return WEMO_FAN_SPEED_TO_HASS.get(self.wemo.fan_mode)
+        return WEMO_FAN_SPEED_TO_HASS.get(self._fan_mode)
 
     @property
     def speed_list(self: FanEntity) -> list:
