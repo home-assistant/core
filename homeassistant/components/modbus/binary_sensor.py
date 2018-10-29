@@ -52,7 +52,7 @@ class ModbusCoilSensor(BinarySensorDevice):
 
     def __init__(self, hub, name, slave, coil):
         """Initialize the modbus coil sensor."""
-        self._hub: "BaseModbusClient" = hub
+        self._hub = hub  # type: BaseModbusClient
         self._name = name
         self._slave = int(slave) if slave else None
         self._coil = int(coil)

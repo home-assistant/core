@@ -85,7 +85,7 @@ class ModbusThermostat(ClimateDevice):
     def __init__(self, hub, name, modbus_slave, target_temp_register,
                  current_temp_register, data_type, count, precision):
         """Initialize the unit."""
-        self._hub: "BaseModbusClient" = hub
+        self._hub = hub  # type: BaseModbusClient
         self._name = name
         self._slave = modbus_slave
         self._target_temperature_register = target_temp_register

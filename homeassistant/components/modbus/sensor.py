@@ -151,7 +151,7 @@ class ModbusRegisterSensor(Entity):
                  unit_of_measurement, count, reverse_order, scale, offset,
                  structure, precision):
         """Initialize the modbus register sensor."""
-        self._hub: "BaseModbusClient" = hub
+        self._hub = hub  # type: BaseModbusClient
         self._name = name
         self._slave = int(slave) if slave else None
         self._register = int(register)
