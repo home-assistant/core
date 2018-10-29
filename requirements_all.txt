@@ -162,7 +162,7 @@ async-upnp-client==0.12.7
 # avion==0.7
 
 # homeassistant.components.axis
-axis==14
+axis==16
 
 # homeassistant.components.tts.baidu
 baidu-aip==1.6.6
