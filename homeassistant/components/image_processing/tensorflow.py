@@ -206,7 +206,8 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
     def state_attributes(self):
         """Return device specific state attributes."""
         return {
-            ATTR_MATCHES: self._matches,
+            ATTR_MATCHES: {category: len(values)
+                for category, values in self._matches.items()},
             ATTR_TOTAL_MATCHES: self._total_matches
         }
 
