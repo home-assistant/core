@@ -26,7 +26,7 @@ from homeassistant.util import convert, slugify
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['fiblary3==0.1.5']
+REQUIREMENTS = ['fiblary3==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'fibaro'
@@ -132,8 +132,10 @@ class FibaroController(FibaroClient):
         self.add_event_handler('lastOutdoorUpdated', self.dummy_handler)
         self.add_event_handler('logTemp', self.dummy_handler)
         self.add_event_handler('color', self.dummy_handler)
+        self.add_event_handler('batteryLevel', self.dummy_handler)
         self.add_event_handler('lastColorSet', self.dummy_handler)
         self.add_event_handler('power', self.dummy_handler)
+        self.add_event_handler('energy', self.dummy_handler)
         hass.data[FIBARO_CONTROLLER] = self
         hass.data[FIBARO_DEVICES] = self.my_fibaro_devices
 
