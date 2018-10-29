@@ -902,6 +902,14 @@ async def test_thermostat(hass):
     assert msg['event']['payload']['type'] == 'UNSUPPORTED_THERMOSTAT_MODE'
     hass.config.units.temperature_unit = TEMP_CELSIUS
 
+    call, _ = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'SetThermostatMode',
+        'climate#test_thermostat', 'climate.set_operation_mode',
+        hass,
+        payload={'thermostatMode': 'OFF'}
+    )
+    assert call.data['operation_mode'] == 'off'
+
 
 @asyncio.coroutine
 def test_exclude_filters(hass):
