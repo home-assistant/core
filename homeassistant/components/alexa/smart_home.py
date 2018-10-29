@@ -218,6 +218,13 @@ class _AlexaEntity:
         """
         raise NotImplementedError
 
+    def properties(self):
+        """Return a list of all properties of its interfaces."""
+        properties = []
+        for interface in self.interfaces():
+            properties.extend(interface.serialize_properties())
+        return properties
+
 
 class _AlexaInterface:
     def __init__(self, entity):
@@ -1502,36 +1509,6 @@ def temperature_from_object(hass, temp_obj, interval=False):
     return convert_temperature(temp, from_unit, to_unit, interval)
 
 
-def _thermostat_context_from_entity(hass, entity, mode=None, temp=None):
-    unit = hass.config.units.temperature_unit
-    if mode:
-        ha_mode = mode
-    else:
-        ha_mode = entity.attributes.get(climate.ATTR_OPERATION_MODE)
-
-    if temp:
-        target_temp = temp
-    else:
-        target_temp = entity.attributes.get(climate.ATTR_TEMPERATURE)
-
-    ctxt = {
-        "properties": [{
-            "namespace": 'Alexa.ThermostatController',
-            "name": "targetSetPoint",
-            "value": {
-                "value": target_temp,
-                'scale': API_TEMP_UNITS[unit],
-            }
-        }, {
-            "namespace": 'Alexa.ThermostatController',
-            "name": "thermostatMode",
-            "value": API_THERMOSTAT_MODES[ha_mode]
-        }]
-    }
-
-    return ctxt
-
-
 @HANDLERS.register(('Alexa.ThermostatController', 'SetTargetTemperature'))
 @extract_entity
 async def async_api_set_target_temp(hass, config, request, context, entity):
@@ -1567,8 +1544,10 @@ async def async_api_set_target_temp(hass, config, request, context, entity):
         entity.domain, climate.SERVICE_SET_TEMPERATURE, data, blocking=False,
         context=context)
 
-    ctxt = _thermostat_context_from_entity(hass, entity, temp=temp)
-    return api_message(request, context=ctxt)
+    alexa_entity = ENTITY_ADAPTERS[entity.domain](hass, config, entity)
+    return api_message(request, context={
+        'properties': alexa_entity.properties(),
+    })
 
 
 @HANDLERS.register(('Alexa.ThermostatController', 'AdjustTargetTemperature'))
@@ -1595,8 +1574,10 @@ async def async_api_adjust_target_temp(hass, config, request, context, entity):
         entity.domain, climate.SERVICE_SET_TEMPERATURE, data, blocking=False,
         context=context)
 
-    ctxt = _thermostat_context_from_entity(hass, entity)
-    return api_message(request, context=ctxt)
+    alexa_entity = ENTITY_ADAPTERS[entity.domain](hass, config, entity)
+    return api_message(request, context={
+        'properties': alexa_entity.properties(),
+    })
 
 
 @HANDLERS.register(('Alexa.ThermostatController', 'SetThermostatMode'))
@@ -1631,8 +1612,10 @@ async def async_api_set_thermostat_mode(hass, config, request, context,
         entity.domain, climate.SERVICE_SET_OPERATION_MODE, data,
         blocking=False, context=context)
 
-    ctxt = _thermostat_context_from_entity(hass, entity, mode=ha_mode)
-    return api_message(request, context=ctxt)
+    alexa_entity = ENTITY_ADAPTERS[entity.domain](hass, config, entity)
+    return api_message(request, context={
+        'properties': alexa_entity.properties(),
+    })
 
 
 @HANDLERS.register(('Alexa', 'ReportState'))
@@ -1640,14 +1623,11 @@ async def async_api_set_thermostat_mode(hass, config, request, context,
 async def async_api_reportstate(hass, config, request, context, entity):
     """Process a ReportState request."""
     alexa_entity = ENTITY_ADAPTERS[entity.domain](hass, config, entity)
-    properties = []
-    for interface in alexa_entity.interfaces():
-        properties.extend(interface.serialize_properties())
 
     return api_message(
         request,
         name='StateReport',
-        context={'properties': properties}
+        context={'properties': alexa_entity.properties()}
     )
 
 
