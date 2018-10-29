@@ -55,7 +55,7 @@ async def test_async_setup_no_auto_config(hass):
         # no upnp
     }
     with MockDependency('netdisco.discovery'), \
-        patch('homeassistant.components.upnp.get_local_ip',
+        patch('homeassistant.components.upnp.config_flow.get_local_ip',
               return_value='192.168.1.10'):
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
@@ -76,7 +76,7 @@ async def test_async_setup_auto_config(hass):
         'upnp': {},
     }
     with MockDependency('netdisco.discovery'), \
-        patch('homeassistant.components.upnp.get_local_ip',
+        patch('homeassistant.components.upnp.config_flow.get_local_ip',
               return_value='192.168.1.10'):
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
@@ -100,7 +100,7 @@ async def test_async_setup_auto_config_port_mapping(hass):
         },
     }
     with MockDependency('netdisco.discovery'), \
-        patch('homeassistant.components.upnp.get_local_ip',
+        patch('homeassistant.components.upnp.config_flow.get_local_ip',
               return_value='192.168.1.10'):
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
@@ -121,7 +121,7 @@ async def test_async_setup_auto_config_no_sensors(hass):
         'upnp': {'sensors': False},
     }
     with MockDependency('netdisco.discovery'), \
-        patch('homeassistant.components.upnp.get_local_ip',
+        patch('homeassistant.components.upnp.config_flow.get_local_ip',
               return_value='192.168.1.10'):
         await async_setup_component(hass, 'upnp', config)
         await hass.async_block_till_done()
@@ -150,7 +150,7 @@ async def test_async_setup_entry_default(hass):
         # no upnp
     }
     with MockDependency('netdisco.discovery'), \
-        patch('homeassistant.components.upnp.get_local_ip',
+        patch('homeassistant.components.upnp.config_flow.get_local_ip',
               return_value='192.168.1.10'):
         await async_setup_component(hass, 'http', config)
         await async_setup_component(hass, 'upnp', config)
@@ -160,7 +160,7 @@ async def test_async_setup_entry_default(hass):
     mock_device = MockDevice(udn)
     with patch.object(Device, 'async_create_device') as create_device:
         create_device.return_value = mock_coro(return_value=mock_device)
-        with patch('homeassistant.components.upnp.get_local_ip',
+        with patch('homeassistant.components.upnp.config_flow.get_local_ip',
                    return_value='192.168.1.10'):
             assert await upnp.async_setup_entry(hass, entry) is True
 
@@ -194,7 +194,7 @@ async def test_async_setup_entry_port_mapping(hass):
         },
     }
     with MockDependency('netdisco.discovery'), \
-        patch('homeassistant.components.upnp.get_local_ip',
+        patch('homeassistant.components.upnp.config_flow.get_local_ip',
               return_value='192.168.1.10'):
         await async_setup_component(hass, 'http', config)
         await async_setup_component(hass, 'upnp', config)
