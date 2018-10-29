@@ -1,4 +1,5 @@
 """Support for alexa Smart Home Skill API."""
+from collections import OrderedDict
 import logging
 import math
 from datetime import datetime
@@ -37,16 +38,19 @@ API_TEMP_UNITS = {
     TEMP_CELSIUS: 'CELSIUS',
 }
 
-API_THERMOSTAT_MODES = {
-    climate.STATE_HEAT: 'HEAT',
-    climate.STATE_COOL: 'COOL',
-    climate.STATE_AUTO: 'AUTO',
-    climate.STATE_ECO: 'ECO',
-    climate.STATE_OFF: 'OFF',
-    climate.STATE_IDLE: 'OFF',
-    climate.STATE_FAN_ONLY: 'OFF',
-    climate.STATE_DRY: 'OFF',
-}
+# Needs to be ordered dict for `async_api_set_thermostat_mode` which does a
+# reverse mapping of this dict and we want to map the first occurrance of OFF
+# back to HA state.
+API_THERMOSTAT_MODES = OrderedDict([
+    (climate.STATE_HEAT, 'HEAT'),
+    (climate.STATE_COOL, 'COOL'),
+    (climate.STATE_AUTO, 'AUTO'),
+    (climate.STATE_ECO, 'ECO'),
+    (climate.STATE_OFF, 'OFF'),
+    (climate.STATE_IDLE, 'OFF'),
+    (climate.STATE_FAN_ONLY, 'OFF'),
+    (climate.STATE_DRY, 'OFF')
+])
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
 
