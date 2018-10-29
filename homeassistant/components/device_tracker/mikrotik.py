@@ -69,6 +69,8 @@ class MikrotikScanner(DeviceScanner):
     def connect_to_device(self):
         """Connect to Mikrotik method."""
         import librouteros
+        if self.ssl:
+            import ssl
         try:
             if self.ssl:
                 ssl_context = ssl.create_default_context()
