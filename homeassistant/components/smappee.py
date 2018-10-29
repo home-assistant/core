@@ -66,8 +66,8 @@ def setup(hass, config):
         return False
 
     hass.data[DATA_SMAPPEE] = smappee
-    load_platform(hass, 'switch', DOMAIN)
-    load_platform(hass, 'sensor', DOMAIN)
+    load_platform(hass, 'switch', DOMAIN, {}, config)
+    load_platform(hass, 'sensor', DOMAIN, {}, config)
     return True
 
 

@@ -64,9 +64,10 @@ async def async_setup(hass, config):
     hass.async_create_task(connect_and_subscribe(
         hass, conf[CONF_DEVICE], gateway))
     hass.async_create_task(async_load_platform(
-        hass, 'climate', DOMAIN, conf.get(CONF_CLIMATE)))
+        hass, 'climate', DOMAIN, conf.get(CONF_CLIMATE), config))
     if monitored_vars:
-        hass.async_create_task(setup_monitored_vars(hass, monitored_vars))
+        hass.async_create_task(setup_monitored_vars(
+            hass, config, monitored_vars))
     return True
 
 
@@ -82,7 +83,7 @@ async def connect_and_subscribe(hass, device_path, gateway):
     gateway.subscribe(handle_report)
 
 
-async def setup_monitored_vars(hass, monitored_vars):
+async def setup_monitored_vars(hass, config, monitored_vars):
     """Set up requested sensors."""
     gw_vars = hass.data[DATA_OPENTHERM_GW][DATA_GW_VARS]
     sensor_type_map = {
@@ -200,6 +201,6 @@ async def setup_monitored_vars(hass, monitored_vars):
             _LOGGER.error("Monitored variable not supported: %s", var)
     if binary_sensors:
         hass.async_create_task(async_load_platform(
-            hass, COMP_BINARY_SENSOR, DOMAIN, binary_sensors))
+            hass, COMP_BINARY_SENSOR, DOMAIN, binary_sensors, config))
     if sensors:
-        await async_load_platform(hass, COMP_SENSOR, DOMAIN, sensors)
+        await async_load_platform(hass, COMP_SENSOR, DOMAIN, sensors, config)
