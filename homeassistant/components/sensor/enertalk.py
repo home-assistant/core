@@ -4,20 +4,20 @@ Support for EnerTalk Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.enertalk/
 """
+from datetime import datetime, timedelta
 import logging
 import requests
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
-from datetime import datetime, timedelta
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.json import load_json, save_json
 from homeassistant.util import Throttle
+from homeassistant.util.json import load_json, save_json
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -196,6 +196,7 @@ class EnerTalkOauth2Client:
         self.token = {}
 
     def load_token(self):
+        """Gets the stored token."""
         import os
         if not os.path.isfile(self.config_path):
             raise PlatformNotReady
@@ -203,11 +204,13 @@ class EnerTalkOauth2Client:
         self.token = load_json(self.config_path)
 
     def authorize_token_url(self, redirect_url):
+        """Authorization code grant type of OAuth 2.0 URL."""
         return '{}/authorization' \
-               '?response_type=code&client_id={}&redirect_uri={}' \
-                .format(self.AUTHORIZE_ENDPOINT, self.client_id, redirect_url)
+               '?response_type=code&client_id={}&redirect_uri={}'\
+            .format(self.AUTHORIZE_ENDPOINT, self.client_id, redirect_url)
 
     def fetch_access_token(self, code):
+        """Fetch Access Token."""
         payload = {'grant_type': 'authorization_code',
                    'client_id': self.client_id,
                    'client_secret': self.client_secret,
@@ -215,6 +218,7 @@ class EnerTalkOauth2Client:
         self.fetch_token({}, payload)
 
     def renew_refresh_token(self):
+        """Renew Refresh Token."""
         import base64
         basic_auth = base64.standard_b64encode(
             '{}:{}'.format(self.client_id, self.client_secret).encode('utf-8'))
@@ -225,6 +229,7 @@ class EnerTalkOauth2Client:
         self.fetch_token(headers, payload)
 
     def fetch_token(self, add_headers, payload):
+        """The token is imported through the OAuth 2.0 API."""
         headers = {'Content-Type': 'application/json'}
         headers.update(add_headers)
         try:
@@ -242,9 +247,9 @@ class EnerTalkOauth2Client:
             raise
 
     def request(self, url):
+        """EnerTalk API request."""
         headers = {'Authorization': 'Bearer {}'.format(
-            self.token[ATTR_ACCESS_TOKEN]),
-            'accept-version': '2.0.0'}
+            self.token[ATTR_ACCESS_TOKEN]), 'accept-version': '2.0.0'}
         try:
             response = requests.get(
                 '{}/{}'.format(self.API_ENDPOINT, url),
@@ -256,6 +261,7 @@ class EnerTalkOauth2Client:
             raise
 
     def get(self, url):
+        """Get the EnerTalk data."""
         response = self.request(url)
         if response.status_code == 401:
             error_type = response.json()['type']
@@ -399,8 +405,7 @@ class EnerTalkBillingSensor(EnerTalkSensor):
         """Return the state of the sensor."""
         if self.var_type == 'Usage':
             return round(self.api.result['usage'] * 0.000001, 2)
-        else:
-            return round(self.api.result['charge'], 1)
+        return round(self.api.result['charge'], 1)
 
     @property
     def device_state_attributes(self):
