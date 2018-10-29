@@ -183,7 +183,7 @@ class DeconzBattery(Entity):
     @callback
     def async_update_callback(self, reason):
         """Update the battery's state, if needed."""
-        if 'battery' in reason['attr']:
+        if 'reachable' in reason['attr'] or 'battery' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property

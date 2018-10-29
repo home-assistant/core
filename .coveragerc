@@ -80,7 +80,6 @@ omit =
     homeassistant/components/cover/deconz.py
     homeassistant/components/light/deconz.py
     homeassistant/components/scene/deconz.py
-    homeassistant/components/sensor/deconz.py
 
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
