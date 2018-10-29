@@ -105,7 +105,8 @@ class FibaroLight(FibaroDevice, Light):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        if self.__supports_dimming and self._brightness and self._brightness >= 4:
+        if self.__supports_dimming and self._brightness and \
+                self._brightness >= 4:
             self._last_brightness = self._brightness
         self.switch_off()
         self._state = False
@@ -123,9 +124,11 @@ class FibaroLight(FibaroDevice, Light):
             # If it is dimmable, both functions exist. In case color
             # is not supported, it will return None
             if 'brightness' in self.fibaro_device.properties:
-                self._brightness = int(int(self.fibaro_device.properties.brightness)*255/100)
+                self._brightness = \
+                    int(int(self.fibaro_device.properties.brightness)*255/100)
             else:
-                self._brightness = int(int(self.fibaro_device.properties.value)*255/100)
+                self._brightness = \
+                    int(int(self.fibaro_device.properties.value)*255/100)
         if self.__supports_color:
             rgbw_color_str = self.fibaro_device.properties.color
             rgb = [int(i) for i in rgbw_color_str.split(",")][:3]

@@ -50,6 +50,7 @@ class FibaroCover(FibaroDevice, CoverDevice):
 
     @property
     def current_cover_tilt_position(self):
+        """Return the current tilt position for venetian blinds."""
         tilt = self.get_level2()
         if tilt is None:
             return None
