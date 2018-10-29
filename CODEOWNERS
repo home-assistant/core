@@ -238,6 +238,10 @@ homeassistant/components/*/upcloud.py @scop
 homeassistant/components/velux.py @Julius2342
 homeassistant/components/*/velux.py @Julius2342
 
+# W
+homeassistant/components/wemo.py @sqldiablo
+homeassistant/components/*/wemo.py @sqldiablo
+
 # X
 homeassistant/components/*/xiaomi_aqara.py @danielhiversen @syssi
 homeassistant/components/*/xiaomi_miio.py @rytilahti @syssi
