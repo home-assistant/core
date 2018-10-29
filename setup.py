@@ -45,7 +45,7 @@ REQUIRES = [
     'pip>=8.0.3',
     'pytz>=2018.04',
     'pyyaml>=3.13,<4',
-    'requests==2.19.1',
+    'requests==2.20.0',
     'voluptuous==0.11.5',
     'voluptuous-serialize==2.0.0',
 ]
