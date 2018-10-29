@@ -199,6 +199,8 @@ class TadoClimate(ClimateDevice):
         if self._current_operation in OPERATION_MANUAL:
             if self._mode == CONST_MODE_COOL:
                 return OPERATION_MANUAL_COOL.get(self._current_operation)
+            elif self._device_type == "HOT_WATER" and not self._is_manual_temperature:
+                return OPERATION_MANUAL_HOT_WATER_ON.get(self._current_operation)
             return OPERATION_MANUAL.get(self._current_operation)
         return OPERATION_LIST.get(self._current_operation)
 
@@ -210,6 +212,8 @@ class TadoClimate(ClimateDevice):
             operations.extend(list(OPERATION_MANUAL_COOL.values()))
         elif CONST_MODE_HEAT in self._min_temp:
             operations.extend(list(OPERATION_MANUAL.values()))
+        elif self._device_type == "HOT_WATER" and not self._is_manual_temperature:
+            operations.extend(list(OPERATION_MANUAL_HOT_WATER_ON.values()))
         return operations
 
     @property
