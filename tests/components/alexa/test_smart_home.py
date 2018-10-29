@@ -57,13 +57,13 @@ def get_new_request(namespace, name, endpoint=None):
     return raw_msg
 
 
-def test_create_api_message_defaults():
+def test_create_api_message_defaults(hass):
     """Create a API message response of a request with defaults."""
     request = get_new_request('Alexa.PowerController', 'TurnOn', 'switch#xy')
     directive_header = request['directive']['header']
     directive = smart_home._AlexaDirective(request)
 
-    msg = directive.response(payload={'test': 3})
+    msg = directive.response(payload={'test': 3})._response
 
     assert 'event' in msg
     msg = msg['event']
@@ -90,7 +90,7 @@ def test_create_api_message_special():
     directive_header.pop('correlationToken')
     directive = smart_home._AlexaDirective(request)
 
-    msg = directive.response('testName', 'testNameSpace')
+    msg = directive.response('testName', 'testNameSpace')._response
 
     assert 'event' in msg
     msg = msg['event']

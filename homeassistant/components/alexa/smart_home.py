@@ -290,6 +290,12 @@ class _AlexaEntity:
         """
         raise NotImplementedError
 
+    def serialize_properties(self):
+        """Yield each supported property in API format."""
+        for interface in self.interfaces():
+            for prop in interface.serialize_properties():
+                yield prop
+
 
 class _AlexaInterface:
     """Base class for Alexa capability interfaces.
@@ -993,39 +999,19 @@ class _AlexaDirective:
     def response(self,
                  name='Response',
                  namespace='Alexa',
-                 payload=None,
-                 context=None):
+                 payload=None):
         """Create an API formatted response.
 
         Async friendly.
         """
-        payload = payload or {}
+        response = _AlexaResponse(name, namespace, payload)
 
-        response = {
-            API_EVENT: {
-                API_HEADER: {
-                    'namespace': namespace,
-                    'name': name,
-                    'messageId': str(uuid4()),
-                    'payloadVersion': '3',
-                },
-                API_PAYLOAD: payload,
-            }
-        }
-
-        # If a correlation token exists, add it to header / Need by Async
-        # requests
         token = self._directive[API_HEADER].get('correlationToken')
         if token:
-            response[API_EVENT][API_HEADER]['correlationToken'] = token
+            response.set_correlation_token(token)
 
-        # Extend event with endpoint object / needed by Async requests
         if self.has_endpoint:
-            response[API_EVENT][API_ENDPOINT] = \
-                self._directive[API_ENDPOINT].copy()
-
-        if context is not None:
-            response[API_CONTEXT] = context
+            response.set_endpoint(self._directive[API_ENDPOINT].copy())
 
         return response
 
@@ -1166,6 +1152,8 @@ async def async_handle_message(
         funct_ref = HANDLERS.get((directive.namespace, directive.name))
         if funct_ref:
             response = await funct_ref(hass, config, directive, context)
+            if directive.has_endpoint:
+                response.merge_context_properties(directive.endpoint)
         else:
             _LOGGER.warning(
                 "Unsupported API request %s/%s",
@@ -1186,17 +1174,15 @@ async def async_handle_message(
     if directive.has_endpoint:
         request_info['entity_id'] = directive.entity_id
 
-    response_header = response[API_EVENT][API_HEADER]
-
     hass.bus.async_fire(EVENT_ALEXA_SMART_HOME, {
         'request': request_info,
         'response': {
-            'namespace': response_header['namespace'],
-            'name': response_header['name'],
+            'namespace': response.namespace,
+            'name': response.name,
         }
     }, context=context)
 
-    return response
+    return response.serialize()
 
 
 @HANDLERS.register(('Alexa.Discovery', 'Discover'))
@@ -1512,18 +1498,13 @@ async def async_api_lock(hass, config, directive, context):
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False, context=context)
 
-    # Alexa expects a lockState in the response, we don't know the actual
-    # lockState at this point but assume it is locked. It is reported
-    # correctly later when ReportState is called. The alt. to this approach
-    # is to implement DeferredResponse
-    properties = [{
+    response = directive.response()
+    response.add_context_property({
         'name': 'lockState',
         'namespace': 'Alexa.LockController',
         'value': 'LOCKED'
-    }]
-    return directive.response(
-        context={'properties': properties},
-    )
+    })
+    return response
 
 
 # Not supported by Alexa yet
@@ -1844,12 +1825,4 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
 @HANDLERS.register(('Alexa', 'ReportState'))
 async def async_api_reportstate(hass, config, directive, context):
     """Process a ReportState request."""
-    entity = directive.entity
-    alexa_entity = ENTITY_ADAPTERS[entity.domain](hass, config, entity)
-    properties = []
-    for interface in alexa_entity.interfaces():
-        properties.extend(interface.serialize_properties())
-    return directive.response(
-        name='StateReport',
-        context={'properties': properties}
-    )
+    return directive.response(name='StateReport')
