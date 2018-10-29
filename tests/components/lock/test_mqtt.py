@@ -136,7 +136,7 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
 async def test_discovery_removal_lock(hass, mqtt_mock, caplog):
     """Test removal of discovered lock."""
-    await async_start(hass, 'homeassistant', {})
+    await async_start(hass, 'homeassistant', {'mqtt': {}})
     data = (
         '{ "name": "Beer",'
         '  "command_topic": "test_topic" }'
