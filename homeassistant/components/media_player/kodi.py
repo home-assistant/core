@@ -282,6 +282,8 @@ class KodiDevice(MediaPlayerDevice):
         self.hass = hass
         self._name = name
         self._unique_id = unique_id
+        self._media_position_updated_at = None
+        self._media_position = None
 
         kwargs = {
             'timeout': timeout,
@@ -373,6 +375,8 @@ class KodiDevice(MediaPlayerDevice):
         self._players = []
         self._properties = {}
         self._item = {}
+        self._media_position_updated_at = None
+        self._media_position = None
         self.async_schedule_update_ha_state()
 
     @callback
@@ -475,6 +479,11 @@ class KodiDevice(MediaPlayerDevice):
                 ['time', 'totaltime', 'speed', 'live']
             )
 
+            position = self._properties['time']
+            if self._media_position != position:
+                self._media_position_updated_at = dt_util.utcnow()
+                self._media_position = position
+
             self._item = (await self.server.Player.GetItem(
                 player_id,
                 ['title', 'file', 'uniqueid', 'thumbnail', 'artist',
@@ -484,6 +493,8 @@ class KodiDevice(MediaPlayerDevice):
             self._properties = {}
             self._item = {}
             self._app_properties = {}
+            self._media_position = None
+            self._media_position_updated_at = None
 
     @property
     def server(self):
@@ -561,8 +572,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_position_updated_at(self):
         """Last valid time of media position."""
-        if self.state in (STATE_PLAYING, STATE_PAUSED):
-            return dt_util.utcnow()
+        return self._media_position_updated_at
 
     @property
     def media_image_url(self):
