@@ -7,7 +7,7 @@ import pytest
 from ruamel.yaml import YAML
 
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.ruamel_yaml as ruamel_yaml
+import homeassistant.util.ruamel_yaml as util_yaml
 
 
 TEST_YAML_A = """\
@@ -136,17 +136,17 @@ class TestYAML(unittest.TestCase):
         """Test saving and loading back."""
         fname = self._path_for("test1")
         open(fname, "w+")
-        ruamel_yaml.save_yaml(fname, self.yaml.load(TEST_YAML_A))
-        data = ruamel_yaml.load_yaml(fname, True)
+        util_yaml.save_yaml(fname, self.yaml.load(TEST_YAML_A))
+        data = util_yaml.load_yaml(fname, True)
         assert data == self.yaml.load(TEST_YAML_A)
 
     def test_overwrite_and_reload(self):
         """Test that we can overwrite an existing file and read back."""
         fname = self._path_for("test2")
         open(fname, "w+")
-        ruamel_yaml.save_yaml(fname, self.yaml.load(TEST_YAML_A))
-        ruamel_yaml.save_yaml(fname, self.yaml.load(TEST_YAML_B))
-        data = ruamel_yaml.load_yaml(fname, True)
+        util_yaml.save_yaml(fname, self.yaml.load(TEST_YAML_A))
+        util_yaml.save_yaml(fname, self.yaml.load(TEST_YAML_B))
+        data = util_yaml.load_yaml(fname, True)
         assert data == self.yaml.load(TEST_YAML_B)
 
     def test_load_bad_data(self):
@@ -155,4 +155,4 @@ class TestYAML(unittest.TestCase):
         with open(fname, "w") as fh:
             fh.write(TEST_BAD_YAML)
         with pytest.raises(HomeAssistantError):
-            ruamel_yaml.load_yaml(fname, True)
+            util_yaml.load_yaml(fname, True)

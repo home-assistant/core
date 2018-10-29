@@ -3,11 +3,13 @@ import logging
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY
 from stat import ST_MODE, ST_UID, ST_GID
+from collections import OrderedDict
+from typing import Union, List, Dict
+
 from ruamel.yaml import YAML
 from ruamel.yaml.constructor import SafeConstructor
 from ruamel.yaml.error import YAMLError
-from collections import OrderedDict
-from typing import Union, List, Dict
+from ruamel.yaml.compat import StringIO
 
 from homeassistant.util.yaml import _secret_yaml
 from homeassistant.exceptions import HomeAssistantError
@@ -43,9 +45,6 @@ def _yaml_unsupported(constructor, node):
 
 def object_to_yaml(data: JSON_TYPE) -> str:
     """Create yaml string from object."""
-    from ruamel.yaml import YAML
-    from ruamel.yaml.error import YAMLError
-    from ruamel.yaml.compat import StringIO
     yaml = YAML(typ='rt')
     yaml.indent(sequence=4, offset=2)
     stream = StringIO()
@@ -59,8 +58,6 @@ def object_to_yaml(data: JSON_TYPE) -> str:
 
 def yaml_to_object(data: str) -> JSON_TYPE:
     """Create object from yaml string."""
-    from ruamel.yaml import YAML
-    from ruamel.yaml.error import YAMLError
     yaml = YAML(typ='rt')
     try:
         return yaml.load(data)
@@ -93,8 +90,6 @@ def load_yaml(fname: str, rt: bool) -> JSON_TYPE:
 
 def save_yaml(fname: str, data: JSON_TYPE):
     """Save a YAML file."""
-    from ruamel.yaml import YAML
-    from ruamel.yaml.error import YAMLError
     yaml = YAML(typ='rt')
     yaml.indent(sequence=4, offset=2)
     tmp_fname = fname + "__TEMP__"

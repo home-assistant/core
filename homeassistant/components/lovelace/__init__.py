@@ -330,7 +330,7 @@ async def websocket_lovelace_config(hass, connection, msg):
 async def websocket_lovelace_migrate_config(hass, connection, msg):
     """Migrate lovelace UI config."""
     return await hass.async_add_executor_job(
-            migrate_config, hass.config.path(LOVELACE_CONFIG_FILE))
+        migrate_config, hass.config.path(LOVELACE_CONFIG_FILE))
 
 
 @websocket_api.async_response
@@ -369,10 +369,10 @@ async def websocket_lovelace_move_card(hass, connection, msg):
         return await hass.async_add_executor_job(
             move_card_view, hass.config.path(LOVELACE_CONFIG_FILE),
             msg['card_id'], msg['new_view_id'], msg.get('new_position'))
-    else:
-        return await hass.async_add_executor_job(
-            move_card, hass.config.path(LOVELACE_CONFIG_FILE),
-            msg['card_id'], msg.get('new_position'))
+
+    return await hass.async_add_executor_job(
+        move_card, hass.config.path(LOVELACE_CONFIG_FILE),
+        msg['card_id'], msg.get('new_position'))
 
 
 @websocket_api.async_response
