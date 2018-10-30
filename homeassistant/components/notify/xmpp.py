@@ -18,6 +18,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM, CONF_RESOURCE)
+import homeassistant.helpers.template as template_helper
 
 REQUIREMENTS = ['slixmpp==1.4.1']
 
@@ -30,7 +31,9 @@ CONF_VERIFY = 'verify'
 
 ATTR_DATA = 'data'
 ATTR_PATH = 'path'
+ATTR_PATH_TEMPLATE = 'path_template'
 ATTR_URL = 'url'
+ATTR_URL_TEMPLATE = 'url_template'
 ATTR_VERIFY = 'verify'
 ATTR_TIMEOUT = 'timeout'
 XEP_0363_TIMEOUT = 10
@@ -197,9 +200,25 @@ async def async_send_message(sender, password, recipient, use_tls,
             upload a file with Jabber XEP_0363 from a remote URL or a local
             file path and return a URL of that file.
             """
-            if data.get(ATTR_URL):
+            if data.get(ATTR_URL_TEMPLATE):
+                _LOGGER.debug("got url template: %s",
+                              data.get(ATTR_URL_TEMPLATE))
+                templ = template_helper.Template(data.get(ATTR_URL_TEMPLATE),
+                                                 hass)
+                get_url = template_helper.render_complex(templ, None)
+                url = await self.upload_file_from_url(get_url,
+                                                      timeout=timeout)
+            elif data.get(ATTR_URL):
                 url = await self.upload_file_from_url(data.get(ATTR_URL),
                                                       timeout=timeout)
+            elif data.get(ATTR_PATH_TEMPLATE):
+                _LOGGER.debug("got path template: %s",
+                              data.get(ATTR_PATH_TEMPLATE))
+                templ = template_helper.Template(data.get(ATTR_PATH_TEMPLATE),
+                                                 hass)
+                get_path = template_helper.render_complex(templ, None)
+                url = await self.upload_file_from_path(get_path,
+                                                       timeout=timeout)
             elif data.get(ATTR_PATH):
                 url = await self.upload_file_from_path(data.get(ATTR_PATH),
                                                        timeout=timeout)
