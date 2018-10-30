@@ -98,7 +98,6 @@ class SrpEnergy(Entity):
     @property
     def history(self):
         """Return the energy usage history of this entity, if any."""
-
         if self.data is None:
             return None
 
@@ -123,27 +122,9 @@ class SrpEnergy(Entity):
 
         return data
 
-    # @property
-    # def device_state_attributes(self):
-    #     """Return the history array."""
-
-    #     data = None
-
-    #     data = [{
-    #         ATTR_READING_TIME:
-    #             datetime.fromtimestamp(isodate),
-    #         ATTR_READING_USAGE:
-    #             kwh,
-    #         ATTR_READING_COST:
-    #             cost
-    #     } for date, hour, isodate, kwh, cost in self.data]
-
-    #     return data
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from SRP Energy."""
-
         start_date = datetime.now() + timedelta(days=-1)
         end_date = datetime.now()
 

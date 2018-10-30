@@ -1,16 +1,9 @@
 """The tests for the Srp Energy Platform."""
 import unittest
-from unittest.mock import MagicMock, patch
-from datetime import timedelta
-
-import requests_mock
-
-from srpenergy.client import SrpEnergyClient
-
-from homeassistant.components.sensor import srp_energy
+from unittest.mock import patch
 from homeassistant.setup import setup_component
 
-from tests.common import (load_fixture, get_test_home_assistant,
+from tests.common import (get_test_home_assistant,
                           MockDependency)
 
 VALID_CONFIG_MINIMAL = {
