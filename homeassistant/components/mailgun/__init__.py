@@ -60,16 +60,21 @@ async def handle_webhook(hass, webhook_id, request):
     )
 
 
-async def verify_webhook(hass, token, timestamp, signature):
+async def verify_webhook(hass, token=None, timestamp=None, signature=None):
     """Verify webhook was signed by Mailgun."""
     if DOMAIN not in hass.data:
-        _LOGGER.error('Cannot validate Mailgun webhook, missing API Key')
+        _LOGGER.warning('Cannot validate Mailgun webhook, missing API Key')
+        return True
+
+    if not (token and timestamp and signature):
         return False
+
     hmac_digest = hmac.new(
         key=bytes(hass.data[DOMAIN][CONF_API_KEY], 'utf-8'),
         msg=bytes('{}{}'.format(timestamp, token), 'utf-8'),
         digestmod=hashlib.sha256
     ).hexdigest()
+
     return hmac.compare_digest(signature, hmac_digest)
 
 
