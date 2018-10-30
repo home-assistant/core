@@ -93,7 +93,7 @@ class IPMAWeather(WeatherEntity):
         """Update Condition and Forecast."""
         with async_timeout.timeout(10, loop=self.hass.loop):
             self._condition = await self._station.observation()
-            _LOGGER.debug("{}, {}".format(self._station.local, self._condition))
+            _LOGGER.debug("Updating ipma weather condition and forecast: station %s, condition %s", self._station.local, self._condition)
             self._forecast = await self._station.forecast()
             self._description = self._forecast[0].description
 
