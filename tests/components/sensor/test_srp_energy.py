@@ -23,9 +23,11 @@ VALID_CONFIG_MINIMAL = {
     }
 }
 
-def load_createMock(accountid, username, password):  # pylint: disable=invalid-name
+
+def load_createMock(accountid, username, password):
     """Mock srpusage usage."""
     return ''
+
 
 def load_usageMock(startdate, enddate):  # pylint: disable=invalid-name
     """Mock srpusage usage."""
@@ -39,6 +41,7 @@ def load_usageMock(startdate, enddate):  # pylint: disable=invalid-name
         ('9/19/2018', '11:00 PM', '2018-09-19T23:00:00-7:00', '0.4', '0.09')
         ]
     return usage
+
 
 class TestSrpEnergySetup(unittest.TestCase):
     """Test the Srp Energy platform."""
@@ -61,5 +64,5 @@ class TestSrpEnergySetup(unittest.TestCase):
         """Test the platform setup with configuration."""
         setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
 
-        state = self.hass.states.get('sensor.dark_sky_summary')
+        state = self.hass.states.get('sensor.srp')
         assert state is not None
