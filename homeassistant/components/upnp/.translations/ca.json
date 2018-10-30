@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD ja est\u00e0 configurat",
+            "no_devices_discovered": "No s'ha trobat cap UPnP/IGD",
+            "no_sensors_or_port_mapping": "Activa, com a m\u00ednim, els sensors o l'assignaci\u00f3 de ports"
+        },
+        "step": {
+            "init": {
+                "title": "UPnP/IGD"
+            },
+            "user": {
+                "data": {
+                    "enable_port_mapping": "Activa l'assignaci\u00f3 de ports per a Home Assistant",
+                    "enable_sensors": "Afegiu sensors de tr\u00e0nsit",
+                    "igd": "UPnP/IGD"
+                },
+                "title": "Opcions de configuraci\u00f3 per a UPnP/IGD"
+            }
+        },
+        "title": "UPnP/IGD"
+    }
+}

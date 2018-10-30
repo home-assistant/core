@@ -4,7 +4,6 @@ Support for Wink sensors.
 For more details about this platform, please refer to the documentation at
 at https://home-assistant.io/components/sensor.wink/
 """
-import asyncio
 import logging
 
 from homeassistant.components.wink import DOMAIN, WinkDevice
@@ -60,8 +59,7 @@ class WinkSensorDevice(WinkDevice, Entity):
         else:
             self._unit_of_measurement = self.wink.unit()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['sensor'].append(self)
 

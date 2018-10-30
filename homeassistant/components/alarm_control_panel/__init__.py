@@ -4,7 +4,6 @@ Component to interface with an alarm control panel.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel/
 """
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -31,13 +30,12 @@ ALARM_SERVICE_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Track states and offer events for sensors."""
     component = hass.data[DOMAIN] = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
     component.async_register_entity_service(
         SERVICE_ALARM_DISARM, ALARM_SERVICE_SCHEMA,

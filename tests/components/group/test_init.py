@@ -108,6 +108,36 @@ class TestComponentsGroup(unittest.TestCase):
         group_state = self.hass.states.get(test_group.entity_id)
         self.assertEqual(STATE_ON, group_state.state)
 
+    def test_allgroup_stays_off_if_all_are_off_and_one_turns_on(self):
+        """Group with all: true, stay off if one device turns on."""
+        self.hass.states.set('light.Bowl', STATE_OFF)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group.create_group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False,
+            mode=True)
+
+        # Turn one on
+        self.hass.states.set('light.Ceiling', STATE_ON)
+        self.hass.block_till_done()
+
+        group_state = self.hass.states.get(test_group.entity_id)
+        self.assertEqual(STATE_OFF, group_state.state)
+
+    def test_allgroup_turn_on_if_last_turns_on(self):
+        """Group with all: true, turn on if all devices are on."""
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group.create_group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False,
+            mode=True)
+
+        # Turn one on
+        self.hass.states.set('light.Ceiling', STATE_ON)
+        self.hass.block_till_done()
+
+        group_state = self.hass.states.get(test_group.entity_id)
+        self.assertEqual(STATE_ON, group_state.state)
+
     def test_is_on(self):
         """Test is_on method."""
         self.hass.states.set('light.Bowl', STATE_ON)
@@ -368,7 +398,7 @@ class TestComponentsGroup(unittest.TestCase):
                 }}}):
             with patch('homeassistant.config.find_config_file',
                        return_value=''):
-                group.reload(self.hass)
+                common.reload(self.hass)
                 self.hass.block_till_done()
 
         assert sorted(self.hass.states.entity_ids()) == \
@@ -409,7 +439,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         # The old way would create a new group modify_group1 because
         # internally it didn't know anything about those created in the config
-        group.set_group(self.hass, 'modify_group', icon="mdi:play")
+        common.set_group(self.hass, 'modify_group', icon="mdi:play")
         self.hass.block_till_done()
 
         group_state = self.hass.states.get(
@@ -442,7 +472,7 @@ def test_service_group_set_group_remove_group(hass):
             'group': {}
         })
 
-    group.async_set_group(hass, 'user_test_group', name="Test")
+    common.async_set_group(hass, 'user_test_group', name="Test")
     yield from hass.async_block_till_done()
 
     group_state = hass.states.get('group.user_test_group')
@@ -450,7 +480,7 @@ def test_service_group_set_group_remove_group(hass):
     assert group_state.attributes[group.ATTR_AUTO]
     assert group_state.attributes['friendly_name'] == "Test"
 
-    group.async_set_group(
+    common.async_set_group(
         hass, 'user_test_group', view=True, visible=False,
         entity_ids=['test.entity_bla1'])
     yield from hass.async_block_till_done()
@@ -463,7 +493,7 @@ def test_service_group_set_group_remove_group(hass):
     assert group_state.attributes['friendly_name'] == "Test"
     assert list(group_state.attributes['entity_id']) == ['test.entity_bla1']
 
-    group.async_set_group(
+    common.async_set_group(
         hass, 'user_test_group', icon="mdi:camera", name="Test2",
         control="hidden", add=['test.entity_id2'])
     yield from hass.async_block_till_done()
@@ -479,7 +509,7 @@ def test_service_group_set_group_remove_group(hass):
     assert sorted(list(group_state.attributes['entity_id'])) == sorted([
         'test.entity_bla1', 'test.entity_id2'])
 
-    group.async_remove(hass, 'user_test_group')
+    common.async_remove(hass, 'user_test_group')
     yield from hass.async_block_till_done()
 
     group_state = hass.states.get('group.user_test_group')

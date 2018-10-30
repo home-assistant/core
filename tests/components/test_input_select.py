@@ -49,18 +49,6 @@ def select_previous(hass, entity_id):
     })
 
 
-@bind_hass
-def set_options(hass, entity_id, options):
-    """Set options of input_select.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(DOMAIN, SERVICE_SET_OPTIONS, {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_OPTIONS: options,
-    })
-
-
 class TestInputSelect(unittest.TestCase):
     """Test the input select component."""
 

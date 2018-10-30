@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave ja est\u00e0 configurat",
+            "one_instance_only": "El component nom\u00e9s admet una inst\u00e0ncia de Z-Wave"
+        },
+        "error": {
+            "option_error": "Ha fallat la validaci\u00f3 de Z-Wave. \u00c9s correcta la ruta al port on hi ha la mem\u00f2ria USB?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Clau de xarxa (deixeu-ho en blanc per generar-la autom\u00e0ticament)",
+                    "usb_path": "Ruta del port USB"
+                },
+                "description": "Consulteu https://www.home-assistant.io/docs/z-wave/installation/ per obtenir informaci\u00f3 sobre les variables de configuraci\u00f3",
+                "title": "Configureu Z-Wave"
+            }
+        },
+        "title": "Z-Wave"
+    }
+}

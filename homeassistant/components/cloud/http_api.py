@@ -14,7 +14,7 @@ from homeassistant.components import websocket_api
 
 from . import auth_api
 from .const import DOMAIN, REQUEST_TIMEOUT
-from .iot import STATE_DISCONNECTED
+from .iot import STATE_DISCONNECTED, STATE_CONNECTED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -231,7 +231,7 @@ def websocket_cloud_status(hass, connection, msg):
     Async friendly.
     """
     cloud = hass.data[DOMAIN]
-    connection.to_write.put_nowait(
+    connection.send_message(
         websocket_api.result_message(msg['id'], _account_data(cloud)))
 
 
@@ -241,7 +241,7 @@ async def websocket_subscription(hass, connection, msg):
     cloud = hass.data[DOMAIN]
 
     if not cloud.is_logged_in:
-        connection.to_write.put_nowait(websocket_api.error_message(
+        connection.send_message(websocket_api.error_message(
             msg['id'], 'not_logged_in',
             'You need to be logged in to the cloud.'))
         return
@@ -249,12 +249,27 @@ async def websocket_subscription(hass, connection, msg):
     with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
         response = await cloud.fetch_subscription_info()
 
-    if response.status == 200:
-        connection.send_message_outside(websocket_api.result_message(
-            msg['id'], await response.json()))
-    else:
-        connection.send_message_outside(websocket_api.error_message(
+    if response.status != 200:
+        connection.send_message(websocket_api.error_message(
             msg['id'], 'request_failed', 'Failed to request subscription'))
+
+    data = await response.json()
+
+    # Check if a user is subscribed but local info is outdated
+    # In that case, let's refresh and reconnect
+    if data.get('provider') and cloud.iot.state != STATE_CONNECTED:
+        _LOGGER.debug(
+            "Found disconnected account with valid subscriotion, connecting")
+        await hass.async_add_executor_job(
+            auth_api.renew_access_token, cloud)
+
+        # Cancel reconnect in progress
+        if cloud.iot.state != STATE_DISCONNECTED:
+            await cloud.iot.disconnect()
+
+        hass.async_create_task(cloud.iot.connect())
+
+    connection.send_message(websocket_api.result_message(msg['id'], data))
 
 
 @websocket_api.async_response
@@ -263,7 +278,7 @@ async def websocket_update_prefs(hass, connection, msg):
     cloud = hass.data[DOMAIN]
 
     if not cloud.is_logged_in:
-        connection.to_write.put_nowait(websocket_api.error_message(
+        connection.send_message(websocket_api.error_message(
             msg['id'], 'not_logged_in',
             'You need to be logged in to the cloud.'))
         return
@@ -273,7 +288,7 @@ async def websocket_update_prefs(hass, connection, msg):
     changes.pop('type')
     await cloud.update_preferences(**changes)
 
-    connection.send_message_outside(websocket_api.result_message(
+    connection.send_message(websocket_api.result_message(
         msg['id'], {'success': True}))
 
 

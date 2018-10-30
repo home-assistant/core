@@ -7,7 +7,8 @@ import pytest
 
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.components import camera, http, websocket_api
+from homeassistant.components import camera, http
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
@@ -150,7 +151,7 @@ async def test_webocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
     msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == websocket_api.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success']
     assert msg['result']['content_type'] == 'image/jpeg'
     assert msg['result']['content'] == \
