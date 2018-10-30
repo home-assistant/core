@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME, TEMP_CELSIUS)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.util import dt, Throttle
+from homeassistant.util import dt, slugify, Throttle
 
 from homeassistant.components.weather import (
     WeatherEntity, ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP,
@@ -73,11 +73,11 @@ async def async_setup_entry(hass: HomeAssistant,
                             config_entries) -> bool:
     """Add a weather entity from map location."""
     location = config_entry.data
-    name = location[CONF_NAME]
+    name = slugify(location[CONF_NAME])
 
     session = aiohttp_client.async_get_clientsession(hass)
 
-    entity = SmhiWeather(name, location[CONF_LATITUDE],
+    entity = SmhiWeather(location[CONF_NAME], location[CONF_LATITUDE],
                          location[CONF_LONGITUDE],
                          session=session)
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
