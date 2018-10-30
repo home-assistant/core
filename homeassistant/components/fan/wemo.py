@@ -226,7 +226,7 @@ class WemoHumidifier(FanEntity):
         self._update_lock = asyncio.Lock()
 
         registry = self.hass.components.wemo.SUBSCRIPTION_REGISTRY
-        await self.hass.asyn_add_executor_job(registry.register, self.wemo)
+        await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
     async def async_update(self):
