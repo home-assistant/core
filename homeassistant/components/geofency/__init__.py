@@ -52,7 +52,9 @@ async def async_setup(hass, hass_config):
     hass.data[DOMAIN] = [slugify(beacon) for beacon in mobile_beacons]
     hass.http.register_view(GeofencyView(hass.data[DOMAIN]))
 
-    await async_load_platform(hass, 'device_tracker', DOMAIN, {}, hass_config)
+    hass.async_create_task(
+        async_load_platform(hass, 'device_tracker', DOMAIN, {}, hass_config)
+    )
     return True
 
 
