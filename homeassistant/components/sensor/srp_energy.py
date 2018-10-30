@@ -96,6 +96,9 @@ class SrpEnergy(Entity):
     def history(self):
         """Return the energy usage history of this entity, if any."""
 
+        if self.data is None:
+            return None
+            
         data = [{
                 ATTR_READING_TIME:
                     isodate,
