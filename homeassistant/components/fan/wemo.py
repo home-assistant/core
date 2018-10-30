@@ -71,7 +71,7 @@ WEMO_FAN_SPEED_TO_HASS = {
     WEMO_FAN_MAXIMUM: SPEED_MAXIMUM
 }
 
-HASS_FAN_SPEED_TO_WEMO = {v:k for (k, v) in WEMO_FAN_SPEED_TO_HASS.items()}
+HASS_FAN_SPEED_TO_WEMO = {v: k for (k, v) in WEMO_FAN_SPEED_TO_HASS.items()}
 
 SERVICE_SET_HUMIDITY = 'wemo_set_humidity'
 
