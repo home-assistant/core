@@ -180,7 +180,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert device_tracker.DOMAIN not in self.hass.config.components
         discovery.load_platform(
             self.hass, device_tracker.DOMAIN, 'demo', {'test_key': 'test_val'},
-            {})
+            {'demo': {}})
         self.hass.block_till_done()
         assert device_tracker.DOMAIN in self.hass.config.components
         assert mock_demo_setup_scanner.called
