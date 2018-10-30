@@ -44,9 +44,9 @@ WEMO_HUMIDITY_100 = 4
 
 WEMO_FAN_OFF = 0
 WEMO_FAN_MINIMUM = 1
-WEMO_FAN_LOW = 2 # Not used due to limitations of the base fan implementation
+WEMO_FAN_LOW = 2  # Not used due to limitations of the base fan implementation
 WEMO_FAN_MEDIUM = 3
-WEMO_FAN_HIGH = 4 # Not used due to limitations of the base fan implementation
+WEMO_FAN_HIGH = 4  # Not used due to limitations of the base fan implementation
 WEMO_FAN_MAXIMUM = 5
 
 WEMO_WATER_EMPTY = 0
@@ -64,9 +64,9 @@ SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 WEMO_FAN_SPEED_TO_HASS = {
     WEMO_FAN_OFF: SPEED_OFF,
     WEMO_FAN_MINIMUM: SPEED_LOW,
-    WEMO_FAN_LOW: SPEED_LOW, # Reusing SPEED_LOW
+    WEMO_FAN_LOW: SPEED_LOW,  # Reusing SPEED_LOW
     WEMO_FAN_MEDIUM: SPEED_MEDIUM,
-    WEMO_FAN_HIGH: SPEED_HIGH, # Reusing SPEED_HIGH
+    WEMO_FAN_HIGH: SPEED_HIGH,  # Reusing SPEED_HIGH
     WEMO_FAN_MAXIMUM: SPEED_HIGH
 }
 
