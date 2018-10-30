@@ -9,6 +9,7 @@ import re
 import jinja2
 from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
+from jinja2.utils import Namespace
 
 from homeassistant.const import (
     ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
@@ -617,6 +618,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
+
+    def is_safe_attribute(self, obj, attr, value):
+        """Test if attribute is safe."""
+        return isinstance(obj, Namespace) or \
+            super().is_safe_attribute(obj, attr, value)
 
 
 ENV = TemplateEnvironment()
