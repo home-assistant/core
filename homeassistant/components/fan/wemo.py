@@ -101,7 +101,8 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         mac = discovery_info['mac_address']
 
         try:
-            device = WemoHumidifier(discovery.device_from_description(location, mac))
+            device = WemoHumidifier(
+                discovery.device_from_description(location, mac))
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as err:
             _LOGGER.error('Unable to access %s (%s)', location, err)
@@ -153,7 +154,8 @@ class WemoHumidifier(FanEntity):
         self._filter_expired = None
         self._last_fan_on_mode = WEMO_FAN_MEDIUM
 
-        # look up model name, name, and serial number once as it incurs network traffic
+        # look up model name, name, and serial number
+        # once as it incurs network traffic
         self._model_name = self.wemo.model_name
         self._name = self.wemo.name
         self._serialnumber = self.wemo.serialnumber
@@ -310,11 +312,11 @@ class WemoHumidifier(FanEntity):
         """Set the target humidity level for the Humidifier."""
         if humidity < 50:
             self.wemo.set_humidity(WEMO_HUMIDITY_45)
-        elif humidity >= 50 and humidity < 55:
+        elif 50 <= humidity < 55:
             self.wemo.set_humidity(WEMO_HUMIDITY_50)
-        elif humidity >= 55 and humidity < 60:
+        elif 55 <= humidity < 60:
             self.wemo.set_humidity(WEMO_HUMIDITY_55)
-        elif humidity >= 60 and humidity < 100:
+        elif 60 <= humidity < 100:
             self.wemo.set_humidity(WEMO_HUMIDITY_60)
         elif humidity >= 100:
             self.wemo.set_humidity(WEMO_HUMIDITY_100)
