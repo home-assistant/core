@@ -125,7 +125,7 @@ async def async_setup_entry(hass, config_entry):
 
         if entity_id:
             try:
-                field = gateway.deconz_ids.get(entity_id) + field
+                field = gateway.deconz_ids[entity_id] + field
             except KeyError:
                 _LOGGER.error('Could not find the entity %s', entity_id)
                 return
