@@ -1,5 +1,4 @@
-"""Common functions for legrandinone component tests and generic platform
-tests."""
+"""Common functions for legrandinone component and generic platform tests."""
 
 import asyncio
 from unittest.mock import Mock
