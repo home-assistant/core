@@ -360,4 +360,5 @@ async def setup_monitored_vars(hass, config, monitored_vars):
         hass.async_create_task(async_load_platform(
             hass, COMP_BINARY_SENSOR, DOMAIN, binary_sensors, config))
     if sensors:
-        await async_load_platform(hass, COMP_SENSOR, DOMAIN, sensors, config)
+        hass.async_create_task(async_load_platform(
+            hass, COMP_SENSOR, DOMAIN, sensors, config))
