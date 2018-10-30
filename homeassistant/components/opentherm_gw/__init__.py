@@ -177,8 +177,7 @@ async def register_services(hass, gateway):
         """Set the clock on the OpenTherm Gateway."""
         attr_date = call.data[ATTR_DATE]
         attr_time = call.data[ATTR_TIME]
-        hass.async_add_job(gateway.set_clock, datetime.combine(attr_date,
-                                                               attr_time))
+        await gateway.set_clock(datetime.combine(attr_date, attr_time))
     hass.services.async_register(DOMAIN, SERVICE_SET_CLOCK, set_device_clock,
                                  SERVICE_SET_CLOCK_SCHEMA)
 
