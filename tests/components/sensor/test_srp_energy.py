@@ -1,5 +1,4 @@
 """The tests for the Srp Energy Platform."""
-import re
 import unittest
 from unittest.mock import MagicMock, patch
 from datetime import timedelta
@@ -16,7 +15,7 @@ from tests.common import (load_fixture, get_test_home_assistant,
 
 VALID_CONFIG_MINIMAL = {
     'sensor': {
-        'platform': 'srp',
+        'platform': 'srp_energy',
         'username': 'foo',
         'password': 'bar',
         'id': 1234
@@ -24,12 +23,12 @@ VALID_CONFIG_MINIMAL = {
 }
 
 
-def load_createMock(accountid, username, password):
+def mock_init(self, accountid, username, password):
     """Mock srpusage usage."""
-    return ''
+    return None
 
 
-def load_usageMock(startdate, enddate):  # pylint: disable=invalid-name
+def mock_usage(self, startdate, enddate):  # pylint: disable=invalid-name
     """Mock srpusage usage."""
 
     usage = [
@@ -58,11 +57,24 @@ class TestSrpEnergySetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @MockDependency('srpenergy')
-    @patch('srpenergy.load_forecast', new=load_usageMock)
-    def test_setup_with_config(self, mock_forecastio):
+    @MockDependency('srpenergy.client.SrpEnergyClient')
+    @patch('srpenergy.client.SrpEnergyClient.__init__', new=mock_init)
+    @patch('srpenergy.client.SrpEnergyClient.usage', new=mock_usage)
+    def test_setup_with_config(self, mock_client):
         """Test the platform setup with configuration."""
         setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
 
-        state = self.hass.states.get('sensor.srp')
+        state = self.hass.states.get('sensor.srp_energy')
+        print(state)
         assert state is not None
+
+    @MockDependency('srpenergy.client.SrpEnergyClient')
+    @patch('srpenergy.client.SrpEnergyClient.__init__', new=mock_init)
+    @patch('srpenergy.client.SrpEnergyClient.usage', new=mock_usage)
+    def test_daily_usage(self, mock_client):
+        """Test the platform setup with configuration."""
+        setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
+
+        state = self.hass.states.get('sensor.srp_energy')
+
+        assert state.daily_usage == 7.50
