@@ -43,7 +43,7 @@ DEPRECATED_SENSOR_TYPES = {
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
-    'summary': ['Summary', None, None, None, None, None, None, []],
+    'summary': ['Summary', None, None, None, None, None, None, ['daily']],
     'minutely_summary': ['Minutely Summary',
                          None, None, None, None, None, None, []],
     'hourly_summary': ['Hourly Summary', None, None, None, None, None, None,
