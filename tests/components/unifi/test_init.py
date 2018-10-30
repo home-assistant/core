@@ -54,7 +54,7 @@ async def test_successful_config_entry(hass):
 
 
 async def test_controller_fail_setup(hass):
-    """Test that configured options for a host are loaded via config entry."""
+    """Test that a failed setup still stores controller."""
     entry = MockConfigEntry(domain=unifi.DOMAIN, data={
         'controller': {
             'host': '0.0.0.0',
@@ -75,7 +75,7 @@ async def test_controller_fail_setup(hass):
     controller_id = unifi.CONTROLLER_ID.format(
         host='0.0.0.0', site='default'
     )
-    assert controller_id not in hass.data[unifi.DOMAIN]
+    assert controller_id in hass.data[unifi.DOMAIN]
 
 
 async def test_controller_no_mac(hass):

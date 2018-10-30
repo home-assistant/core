@@ -29,7 +29,7 @@ from .const import (
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
-REQUIREMENTS = ['HAP-python==2.2.2']
+REQUIREMENTS = ['HAP-python==2.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ async def async_setup(hass, config):
 
     homekit = HomeKit(hass, name, port, ip_address, entity_filter,
                       entity_config)
-    await hass.async_add_job(homekit.setup)
+    await hass.async_add_executor_job(homekit.setup)
 
     if auto_start:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
@@ -172,6 +172,9 @@ def get_accessory(hass, driver, state, aid, config):
 
     elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
         a_type = 'Switch'
+
+    elif state.domain == 'water_heater':
+        a_type = 'WaterHeater'
 
     if a_type is None:
         return None

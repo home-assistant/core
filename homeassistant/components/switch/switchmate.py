@@ -53,6 +53,11 @@ class Switchmate(SwitchDevice):
         return self._mac.replace(':', '')
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._device.available
+
+    @property
     def name(self) -> str:
         """Return the name of the switch."""
         return self._name

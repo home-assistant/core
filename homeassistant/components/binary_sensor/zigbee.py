@@ -1,5 +1,5 @@
 """
-Contains functionality to use a ZigBee device as a binary sensor.
+Contains functionality to use a Zigbee device as a binary sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.zigbee/
@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the ZigBee binary sensor platform."""
+    """Set up the Zigbee binary sensor platform."""
     add_entities(
         [ZigBeeBinarySensor(hass, ZigBeeDigitalInConfig(config))], True)
 
