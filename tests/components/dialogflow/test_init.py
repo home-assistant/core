@@ -35,7 +35,6 @@ async def calls(hass, fixture):
 @pytest.fixture
 async def fixture(hass, aiohttp_client):
     """Initialize a Home Assistant server for testing this module."""
-
     await async_setup_component(hass, dialogflow.DOMAIN, {
         "dialogflow": {},
     })
