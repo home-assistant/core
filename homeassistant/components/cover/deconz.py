@@ -103,7 +103,6 @@ class DeconzCover(CoverDevice):
             return 'damper'
         if self._cover.type in WINDOW_COVERS:
             return 'window'
-        return None
 
     @property
     def supported_features(self):
