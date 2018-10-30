@@ -34,11 +34,10 @@ FAN_MODES = [
 ]
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Iterate through and add all Melissa devices."""
     api = hass.data[DATA_MELISSA]
-    devices = (await api.async_fetch_devices()).values()
+    devices = api.fetch_devices().values()
 
     all_devices = []
 
@@ -47,7 +46,7 @@ async def async_setup_platform(
             all_devices.append(MelissaClimate(
                 api, device['serial_number'], device))
 
-    async_add_entities(all_devices)
+    add_entities(all_devices)
 
 
 class MelissaClimate(ClimateDevice):
@@ -143,48 +142,48 @@ class MelissaClimate(ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
-    async def async_set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
-        await self.async_send({self._api.TEMP: temp})
+        self.send({self._api.TEMP: temp})
 
-    async def async_set_fan_mode(self, fan_mode):
+    def set_fan_mode(self, fan_mode):
         """Set fan mode."""
         melissa_fan_mode = self.hass_fan_to_melissa(fan_mode)
-        await self.async_send({self._api.FAN: melissa_fan_mode})
+        self.send({self._api.FAN: melissa_fan_mode})
 
-    async def async_set_operation_mode(self, operation_mode):
+    def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         mode = self.hass_mode_to_melissa(operation_mode)
-        await self.async_send({self._api.MODE: mode})
+        self.send({self._api.MODE: mode})
 
-    async def async_turn_on(self):
+    def turn_on(self):
         """Turn on device."""
-        await self.async_send({self._api.STATE: self._api.STATE_ON})
+        self.send({self._api.STATE: self._api.STATE_ON})
 
-    async def async_turn_off(self):
+    def turn_off(self):
         """Turn off device."""
-        await self.async_send({self._api.STATE: self._api.STATE_OFF})
+        self.send({self._api.STATE: self._api.STATE_OFF})
 
-    async def async_send(self, value):
+    def send(self, value):
         """Send action to service."""
         try:
             old_value = self._cur_settings.copy()
             self._cur_settings.update(value)
         except AttributeError:
             old_value = None
-        if not await self._api.async_send(
-                self._serial_number, self._cur_settings):
+        if not self._api.send(self._serial_number, self._cur_settings):
             self._cur_settings = old_value
+            return False
+        return True
 
-    async def async_update(self):
+    def update(self):
         """Get latest data from Melissa."""
         try:
-            self._data = (await self._api.async_status(cached=True))[
-                self._serial_number]
-            self._cur_settings = (await self._api.async_cur_settings(
+            self._data = self._api.status(cached=True)[self._serial_number]
+            self._cur_settings = self._api.cur_settings(
                 self._serial_number
-            ))['controller']['_relation']['command_log']
+            )['controller']['_relation']['command_log']
         except KeyError:
             _LOGGER.warning(
                 'Unable to update entity %s', self.entity_id)

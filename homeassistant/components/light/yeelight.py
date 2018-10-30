@@ -276,9 +276,7 @@ class YeelightLight(Light):
 
     @property
     def _properties(self) -> dict:
-        if self._bulb_device is None:
-            return {}
-        return self._bulb_device.last_properties
+        return self._bulb.last_properties
 
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property

@@ -722,7 +722,6 @@ omit =
     homeassistant/components/sensor/luftdaten.py
     homeassistant/components/sensor/lyft.py
     homeassistant/components/sensor/magicseaweed.py
-    homeassistant/components/sensor/meteo_france.py
     homeassistant/components/sensor/metoffice.py
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/mitemp_bt.py

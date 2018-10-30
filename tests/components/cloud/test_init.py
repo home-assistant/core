@@ -32,7 +32,8 @@ def test_constructor_loads_info_from_constant():
             'google_actions_sync_url': 'test-google_actions_sync_url',
             'subscription_info_url': 'test-subscription-info-url'
         }
-    }):
+    }), patch('homeassistant.components.cloud.Cloud._fetch_jwt_keyset',
+              return_value=mock_coro(True)):
         result = yield from cloud.async_setup(hass, {
             'cloud': {cloud.CONF_MODE: 'beer'}
         })
@@ -53,15 +54,17 @@ def test_constructor_loads_info_from_config():
     """Test non-dev mode loads info from SERVERS constant."""
     hass = MagicMock(data={})
 
-    result = yield from cloud.async_setup(hass, {
-        'cloud': {
-            cloud.CONF_MODE: cloud.MODE_DEV,
-            'cognito_client_id': 'test-cognito_client_id',
-            'user_pool_id': 'test-user_pool_id',
-            'region': 'test-region',
-            'relayer': 'test-relayer',
-        }
-    })
+    with patch('homeassistant.components.cloud.Cloud._fetch_jwt_keyset',
+               return_value=mock_coro(True)):
+        result = yield from cloud.async_setup(hass, {
+            'cloud': {
+                cloud.CONF_MODE: cloud.MODE_DEV,
+                'cognito_client_id': 'test-cognito_client_id',
+                'user_pool_id': 'test-user_pool_id',
+                'region': 'test-region',
+                'relayer': 'test-relayer',
+            }
+        })
     assert result
 
     cl = hass.data['cloud']
@@ -86,6 +89,8 @@ async def test_initialize_loads_info(mock_os, hass):
     cl.iot.connect.return_value = mock_coro()
 
     with patch('homeassistant.components.cloud.open', mopen, create=True), \
+            patch('homeassistant.components.cloud.Cloud._fetch_jwt_keyset',
+                  return_value=mock_coro(True)), \
             patch('homeassistant.components.cloud.Cloud._decode_claims'):
         await cl.async_start(None)
 

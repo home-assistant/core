@@ -114,12 +114,11 @@ def setup(hass, config):
         sensors = printer[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
         load_platform(hass, 'sensor', DOMAIN, {'name': name,
                                                'base_url': base_url,
-                                               'sensors': sensors}, config)
+                                               'sensors': sensors})
         b_sensors = printer[CONF_BINARY_SENSORS][CONF_MONITORED_CONDITIONS]
         load_platform(hass, 'binary_sensor', DOMAIN, {'name': name,
                                                       'base_url': base_url,
-                                                      'sensors': b_sensors},
-                      config)
+                                                      'sensors': b_sensors})
         success = True
 
     return success

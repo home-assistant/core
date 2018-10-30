@@ -146,8 +146,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     hass.data[DOMAIN] = {'elk': elk, 'config': config, 'keypads': {}}
     for component in SUPPORTED_DOMAINS:
         hass.async_create_task(
-            discovery.async_load_platform(hass, component, DOMAIN, {},
-                                          hass_config))
+            discovery.async_load_platform(hass, component, DOMAIN, {}))
 
     return True
 

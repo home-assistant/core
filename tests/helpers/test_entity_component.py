@@ -131,7 +131,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component.setup({})
 
         discovery.load_platform(self.hass, DOMAIN, 'platform_test',
-                                {'msg': 'discovery_info'}, {DOMAIN: {}})
+                                {'msg': 'discovery_info'})
 
         self.hass.block_till_done()
 

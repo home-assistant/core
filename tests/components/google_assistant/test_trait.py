@@ -16,7 +16,6 @@ from homeassistant.components import (
     script,
     switch,
     vacuum,
-    group,
 )
 from homeassistant.components.google_assistant import trait, helpers, const
 from homeassistant.util import color
@@ -107,7 +106,7 @@ async def test_brightness_media_player(hass):
 
 async def test_onoff_group(hass):
     """Test OnOff trait support for group domain."""
-    assert trait.OnOffTrait.supported(group.DOMAIN, 0)
+    assert trait.OnOffTrait.supported(media_player.DOMAIN, 0)
 
     trt_on = trait.OnOffTrait(hass, State('group.bla', STATE_ON))
 
@@ -143,7 +142,7 @@ async def test_onoff_group(hass):
 
 async def test_onoff_input_boolean(hass):
     """Test OnOff trait support for input_boolean domain."""
-    assert trait.OnOffTrait.supported(input_boolean.DOMAIN, 0)
+    assert trait.OnOffTrait.supported(media_player.DOMAIN, 0)
 
     trt_on = trait.OnOffTrait(hass, State('input_boolean.bla', STATE_ON))
 
@@ -180,7 +179,7 @@ async def test_onoff_input_boolean(hass):
 
 async def test_onoff_switch(hass):
     """Test OnOff trait support for switch domain."""
-    assert trait.OnOffTrait.supported(switch.DOMAIN, 0)
+    assert trait.OnOffTrait.supported(media_player.DOMAIN, 0)
 
     trt_on = trait.OnOffTrait(hass, State('switch.bla', STATE_ON))
 
@@ -216,7 +215,7 @@ async def test_onoff_switch(hass):
 
 async def test_onoff_fan(hass):
     """Test OnOff trait support for fan domain."""
-    assert trait.OnOffTrait.supported(fan.DOMAIN, 0)
+    assert trait.OnOffTrait.supported(media_player.DOMAIN, 0)
 
     trt_on = trait.OnOffTrait(hass, State('fan.bla', STATE_ON))
 
@@ -252,7 +251,7 @@ async def test_onoff_fan(hass):
 
 async def test_onoff_light(hass):
     """Test OnOff trait support for light domain."""
-    assert trait.OnOffTrait.supported(light.DOMAIN, 0)
+    assert trait.OnOffTrait.supported(media_player.DOMAIN, 0)
 
     trt_on = trait.OnOffTrait(hass, State('light.bla', STATE_ON))
 
@@ -288,7 +287,7 @@ async def test_onoff_light(hass):
 
 async def test_onoff_cover(hass):
     """Test OnOff trait support for cover domain."""
-    assert trait.OnOffTrait.supported(cover.DOMAIN, 0)
+    assert trait.OnOffTrait.supported(media_player.DOMAIN, 0)
 
     trt_on = trait.OnOffTrait(hass, State('cover.bla', cover.STATE_OPEN))
 

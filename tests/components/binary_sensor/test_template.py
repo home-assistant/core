@@ -106,7 +106,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "{{ states.sensor.xyz.state }}",
+                            'value_template': "State",
                             'icon_template':
                                 "{% if "
                                 "states.binary_sensor.test_state.state == "
@@ -137,7 +137,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "{{ states.sensor.xyz.state }}",
+                            'value_template': "State",
                             'entity_picture_template':
                                 "{% if "
                                 "states.binary_sensor.test_state.state == "
@@ -159,30 +159,6 @@ class TestBinarySensorTemplate(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_template_sensor')
         assert state.attributes['entity_picture'] == '/local/sensor.png'
-
-    @mock.patch('homeassistant.components.binary_sensor.template.'
-                'BinarySensorTemplate._async_render')
-    def test_match_all(self, _async_render):
-        """Test MATCH_ALL in template."""
-        with assert_setup_component(1):
-            assert setup.setup_component(self.hass, 'binary_sensor', {
-                'binary_sensor': {
-                    'platform': 'template',
-                    'sensors': {
-                        'match_all_template_sensor': {
-                            'value_template': "{{ 42 }}",
-                        },
-                    }
-                }
-            })
-
-        self.hass.start()
-        self.hass.block_till_done()
-        init_calls = len(_async_render.mock_calls)
-
-        self.hass.states.set('sensor.any_state', 'update')
-        self.hass.block_till_done()
-        assert len(_async_render.mock_calls) > init_calls
 
     def test_attributes(self):
         """Test the attributes."""

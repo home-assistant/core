@@ -79,15 +79,15 @@ class TestHelpersDiscovery:
                                   platform_callback)
 
         discovery.load_platform(self.hass, 'test_component', 'test_platform',
-                                'discovery info', {'test_component': {}})
+                                'discovery info')
         self.hass.block_till_done()
         assert mock_setup_component.called
         assert mock_setup_component.call_args[0] == \
-            (self.hass, 'test_component', {'test_component': {}})
+            (self.hass, 'test_component', None)
         self.hass.block_till_done()
 
         discovery.load_platform(self.hass, 'test_component_2', 'test_platform',
-                                'discovery info', {'test_component': {}})
+                                'discovery info')
         self.hass.block_till_done()
 
         assert len(calls) == 1
@@ -202,8 +202,7 @@ class TestHelpersDiscovery:
 async def test_load_platform_forbids_config():
     """Test you cannot setup config component with load_platform."""
     with pytest.raises(HomeAssistantError):
-        await discovery.async_load_platform(None, 'config', 'zwave', {},
-                                            {'config': {}})
+        await discovery.async_load_platform(None, 'config', 'zwave')
 
 
 async def test_discover_forbids_config():

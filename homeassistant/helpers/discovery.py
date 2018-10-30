@@ -114,7 +114,8 @@ def async_listen_platform(hass, component, callback):
 
 
 @bind_hass
-def load_platform(hass, component, platform, discovered, hass_config):
+def load_platform(hass, component, platform, discovered=None,
+                  hass_config=None):
     """Load a component and platform dynamically.
 
     Target components will be loaded and an EVENT_PLATFORM_DISCOVERED will be
@@ -131,8 +132,8 @@ def load_platform(hass, component, platform, discovered, hass_config):
 
 
 @bind_hass
-async def async_load_platform(hass, component, platform, discovered,
-                              hass_config):
+async def async_load_platform(hass, component, platform, discovered=None,
+                              hass_config=None):
     """Load a component and platform dynamically.
 
     Target components will be loaded and an EVENT_PLATFORM_DISCOVERED will be
@@ -148,8 +149,6 @@ async def async_load_platform(hass, component, platform, discovered,
 
     This method is a coroutine.
     """
-    assert hass_config, 'You need to pass in the real hass config'
-
     if component in DEPENDENCY_BLACKLIST:
         raise HomeAssistantError(
             'Cannot discover the {} component.'.format(component))
