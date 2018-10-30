@@ -31,8 +31,6 @@ class TestMelissa(unittest.TestCase):
 
         mocked_melissa.Melissa.assert_called_with(
             username="********", password="********")
-        self.assertIn(melissa.DATA_MELISSA, self.hass.data)
-        self.assertIsInstance(
-            self.hass.data[melissa.DATA_MELISSA], type(
-                mocked_melissa.Melissa())
-        )
+        assert melissa.DATA_MELISSA in self.hass.data
+        assert isinstance(self.hass.data[melissa.DATA_MELISSA], type(
+                mocked_melissa.Melissa()))

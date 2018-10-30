@@ -66,20 +66,20 @@ class TestIPMA(unittest.TestCase):
     @patch("pyipma.Station", new=MockStation)
     def test_setup(self, mock_pyipma):
         """Test for successfully setting up the IPMA platform."""
-        self.assertTrue(setup_component(self.hass, weather.DOMAIN, {
+        assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
                 'name': 'HomeTown',
                 'platform': 'ipma',
             }
-        }))
+        })
 
         state = self.hass.states.get('weather.hometown')
-        self.assertEqual(state.state, 'rainy')
+        assert state.state == 'rainy'
 
         data = state.attributes
-        self.assertEqual(data.get(ATTR_WEATHER_TEMPERATURE), 18.0)
-        self.assertEqual(data.get(ATTR_WEATHER_HUMIDITY), 71)
-        self.assertEqual(data.get(ATTR_WEATHER_PRESSURE), 1000.0)
-        self.assertEqual(data.get(ATTR_WEATHER_WIND_SPEED), 3.94)
-        self.assertEqual(data.get(ATTR_WEATHER_WIND_BEARING), 'NW')
-        self.assertEqual(state.attributes.get('friendly_name'), 'HomeTown')
+        assert data.get(ATTR_WEATHER_TEMPERATURE) == 18.0
+        assert data.get(ATTR_WEATHER_HUMIDITY) == 71
+        assert data.get(ATTR_WEATHER_PRESSURE) == 1000.0
+        assert data.get(ATTR_WEATHER_WIND_SPEED) == 3.94
+        assert data.get(ATTR_WEATHER_WIND_BEARING) == 'NW'
+        assert state.attributes.get('friendly_name') == 'HomeTown'

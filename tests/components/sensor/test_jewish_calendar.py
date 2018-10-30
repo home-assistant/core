@@ -71,7 +71,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
             run_coroutine_threadsafe(
                 sensor.async_update(),
                 self.hass.loop).result()
-            self.assertEqual(sensor.state, '23 Elul 5778')
+            assert sensor.state == '23 Elul 5778'
 
     def test_jewish_calendar_sensor_date_output_hebrew(self):
         """Test Jewish calendar sensor date output in hebrew."""
@@ -83,7 +83,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, "כ\"ג באלול ה\' תשע\"ח")
+            assert sensor.state == "כ\"ג באלול ה\' תשע\"ח"
 
     def test_jewish_calendar_sensor_holiday_name(self):
         """Test Jewish calendar sensor holiday name output in hebrew."""
@@ -95,7 +95,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, "א\' ראש השנה")
+            assert sensor.state == "א\' ראש השנה"
 
     def test_jewish_calendar_sensor_holiday_name_english(self):
         """Test Jewish calendar sensor holiday name output in english."""
@@ -107,7 +107,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, "Rosh Hashana I")
+            assert sensor.state == "Rosh Hashana I"
 
     def test_jewish_calendar_sensor_holyness(self):
         """Test Jewish calendar sensor holyness value."""
@@ -119,7 +119,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, 1)
+            assert sensor.state == 1
 
     def test_jewish_calendar_sensor_torah_reading(self):
         """Test Jewish calendar sensor torah reading in hebrew."""
@@ -131,7 +131,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, "פרשת נצבים")
+            assert sensor.state == "פרשת נצבים"
 
     def test_jewish_calendar_sensor_first_stars_ny(self):
         """Test Jewish calendar sensor first stars time in NY, US."""
@@ -143,7 +143,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, time(19, 48))
+            assert sensor.state == time(19, 48)
 
     def test_jewish_calendar_sensor_first_stars_jerusalem(self):
         """Test Jewish calendar sensor first stars time in Jerusalem, IL."""
@@ -155,7 +155,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, time(19, 21))
+            assert sensor.state == time(19, 21)
 
     def test_jewish_calendar_sensor_torah_reading_weekday(self):
         """Test the sensor showing torah reading also on weekdays."""
@@ -167,4 +167,4 @@ class TestJewishCalenderSensor(unittest.TestCase):
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, "פרשת לך לך")
+            assert sensor.state == "פרשת לך לך"

@@ -15,14 +15,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, CONF_DEVICE_CLASS, CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME, STATE_UNKNOWN)
+    CONF_FRIENDLY_NAME, STATE_UNKNOWN, CONF_SENSORS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import utcnow
 
-REQUIREMENTS = ['numpy==1.15.2']
+REQUIREMENTS = ['numpy==1.15.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,6 @@ CONF_INVERT = 'invert'
 CONF_MAX_SAMPLES = 'max_samples'
 CONF_MIN_GRADIENT = 'min_gradient'
 CONF_SAMPLE_DURATION = 'sample_duration'
-CONF_SENSORS = 'sensors'
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
@@ -78,9 +77,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
     if not sensors:
         _LOGGER.error("No sensors added")
-        return False
+        return
     add_entities(sensors)
-    return True
 
 
 class SensorTrend(BinarySensorDevice):

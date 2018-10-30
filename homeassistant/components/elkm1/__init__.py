@@ -35,8 +35,8 @@ CONF_ENABLED = 'enabled'
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ['alarm_control_panel', 'light', 'scene', 'sensor',
-                     'switch']
+SUPPORTED_DOMAINS = ['alarm_control_panel', 'climate', 'light', 'scene',
+                     'sensor', 'switch']
 
 SPEAK_SERVICE_SCHEMA = vol.Schema({
     vol.Required('number'):
@@ -146,7 +146,8 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     hass.data[DOMAIN] = {'elk': elk, 'config': config, 'keypads': {}}
     for component in SUPPORTED_DOMAINS:
         hass.async_create_task(
-            discovery.async_load_platform(hass, component, DOMAIN, {}))
+            discovery.async_load_platform(hass, component, DOMAIN, {},
+                                          hass_config))
 
     return True
 
