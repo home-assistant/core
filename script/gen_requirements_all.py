@@ -104,6 +104,7 @@ TEST_REQUIREMENTS = (
     'smhi-pkg',
     'somecomfort',
     'sqlalchemy',
+    'srpenergy',
     'statsd',
     'uvcclient',
     'warrant',
