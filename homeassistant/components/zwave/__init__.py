@@ -935,7 +935,6 @@ class ZWaveDeviceEntityValues():
 
         async def discover_device(component, device):
             """Put device in a dictionary and call discovery on it."""
-
             if self._hass.data[DATA_DEVICES].get(device.unique_id):
                 return
 
@@ -946,7 +945,8 @@ class ZWaveDeviceEntityValues():
             else:
                 await discovery.async_load_platform(
                     self._hass, component, DOMAIN,
-                    {const.DISCOVERY_DEVICE: device.unique_id}, self._zwave_config)
+                    {const.DISCOVERY_DEVICE: device.unique_id},
+                    self._zwave_config)
 
         if device.unique_id:
             self._hass.add_job(discover_device, component, device)
