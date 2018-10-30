@@ -511,6 +511,9 @@ influxdb==5.0.0
 # homeassistant.components.insteon
 insteonplm==0.15.0
 
+# homeassistant.components.legrandinone
+iobl==0.0.4
+
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
 
