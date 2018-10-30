@@ -18,7 +18,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pypollencom==2.2.1']
+REQUIREMENTS = ['pypollencom==2.2.2']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ALLERGEN_AMOUNT = 'allergen_amount'
