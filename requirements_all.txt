@@ -654,6 +654,9 @@ netdisco==2.2.0
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
 
+# homeassistant.components.light.niko_home_control
+niko-home-control==0.1.8
+
 # homeassistant.components.sensor.nederlandse_spoorwegen
 nsapi==2.7.4
 
