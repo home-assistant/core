@@ -23,7 +23,6 @@ def mock_init(self, accountid, username, password):
 
 def mock_usage(self, startdate, enddate):  # pylint: disable=invalid-name
     """Mock srpusage usage."""
-
     usage = [
         ('9/19/2018', '12:00 AM', '2018-09-19T00:00:00-7:00', '1.2', '0.17'),
         ('9/19/2018', '1:00 AM', '2018-09-19T01:00:00-7:00', '2.1', '0.30'),
