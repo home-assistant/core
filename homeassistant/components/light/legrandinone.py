@@ -90,7 +90,6 @@ async def async_setup_platform(hass, config, async_add_entities,
         device_id = event[EVENT_KEY_ID]
 
     # Added devices from detection defaults to SWITCHABLE.
-    # TODO: Request device description from bus to know the actual class
         entity_type = TYPE_SWITCHABLE
         entity_class = entity_class_for_type(entity_type)
 
