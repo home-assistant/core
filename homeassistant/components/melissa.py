@@ -39,6 +39,6 @@ def setup(hass, config):
     api = melissa.Melissa(username=username, password=password)
     hass.data[DATA_MELISSA] = api
 
-    load_platform(hass, 'sensor', DOMAIN, {})
-    load_platform(hass, 'climate', DOMAIN, {})
+    load_platform(hass, 'sensor', DOMAIN, {}, config)
+    load_platform(hass, 'climate', DOMAIN, {}, config)
     return True

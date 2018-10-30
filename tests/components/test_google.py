@@ -85,8 +85,8 @@ class TestGoogle(unittest.TestCase):
 
         calendar_service = google.GoogleCalendarService(
             self.hass.config.path(google.TOKEN_FILE))
-        self.assertTrue(google.setup_services(self.hass, True,
-                                              calendar_service))
+        assert google.setup_services(
+            self.hass, {'google': {}}, True, calendar_service)
         # self.hass.services.call('google', 'found_calendar', calendar,
         #                         blocking=True)
 
