@@ -13,7 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.sun import get_astral_event_next
+from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['hdate==0.6.5']
@@ -113,8 +113,8 @@ class JewishCalSensor(Entity):
 
         today = now.date()
         upcoming_saturday = today + timedelta((12 - today.weekday()) % 7)
-        sunset = dt_util.as_local(get_astral_event_next(
-            self.hass, 'sunset', dt_util.start_of_local_day(now)))
+        sunset = dt_util.as_local(get_astral_event_date(
+            self.hass, 'sunset', today))
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
