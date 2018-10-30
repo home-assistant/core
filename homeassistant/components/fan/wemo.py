@@ -1,7 +1,7 @@
 """
 Support for WeMo humidifier.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/fan.wemo/
 """
 import asyncio
@@ -80,7 +80,7 @@ HASS_FAN_SPEED_TO_WEMO = {
     SPEED_MAXIMUM: WEMO_FAN_MAXIMUM
 }
 
-SERVICE_SET_HUMIDITY = 'set_humidity'
+SERVICE_SET_HUMIDITY = 'wemo_set_humidity'
 
 SET_HUMIDITY_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
@@ -89,28 +89,30 @@ SET_HUMIDITY_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up discovered WeMo humidifiers."""
     from pywemo import discovery
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    if discovery_info is not None:
-        location = discovery_info['ssdp_description']
-        mac = discovery_info['mac_address']
+    if discovery_info is None:
+        return
 
-        try:
-            device = WemoHumidifier(
-                discovery.device_from_description(location, mac))
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout) as err:
-            _LOGGER.error('Unable to access %s (%s)', location, err)
-            raise PlatformNotReady
+    location = discovery_info['ssdp_description']
+    mac = discovery_info['mac_address']
 
-        if device:
-            hass.data[DATA_KEY][device.entity_id] = device
-            add_entities_callback([device])
+    try:
+        device = WemoHumidifier(
+            discovery.device_from_description(location, mac))
+    except (requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout) as err:
+        _LOGGER.error('Unable to access %s (%s)', location, err)
+        raise PlatformNotReady
+
+    if device:
+        hass.data[DATA_KEY][device.entity_id] = device
+        add_entities([device])
 
     def service_handle(service):
         """Handle the WeMo humidifier services."""
@@ -177,15 +179,6 @@ class WemoHumidifier(FanEntity):
         self.async_schedule_update_ha_state()
 
     @property
-    def should_poll(self):
-        """Device should poll.
-
-        Subscriptions push the state, however it won't detect if a device
-        is no longer available. Use polling to detect if a device is available.
-        """
-        return True
-
-    @property
     def unique_id(self):
         """Return the ID of this WeMo humidifier."""
         return self._serialnumber
@@ -243,7 +236,7 @@ class WemoHumidifier(FanEntity):
         self._update_lock = asyncio.Lock()
 
         registry = self.hass.components.wemo.SUBSCRIPTION_REGISTRY
-        await self.hass.async_add_job(registry.register, self.wemo)
+        await self.hass.asyn_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
     async def async_update(self):
@@ -268,7 +261,7 @@ class WemoHumidifier(FanEntity):
     async def _async_locked_update(self, force_update):
         """Try updating within an async lock."""
         async with self._update_lock:
-            await self.hass.async_add_job(self._update, force_update)
+            await self.hass.asyn_add_executor_job(self._update, force_update)
 
     def _update(self, force_update=True):
         """Update the device state."""
