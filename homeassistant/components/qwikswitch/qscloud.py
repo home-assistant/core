@@ -1,39 +1,67 @@
 """Implementation of a QS Cloud Interface and related config entries."""
+import logging
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import (
-    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
+    CONF_API_KEY, CONF_EMAIL, CONF_NAME)
 from homeassistant.core import callback
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
 
 from .qs import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+QSDOMAIN = '{}.cloud-hub'.format(DOMAIN)
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
+QS_TOKEN_WEBHOOK = "https://qwikswitch.com/api/v1/keys"
+CONF_MASTERKEY = "masterKey"
+
+
+class QSCloud():
+    """QSCloud class."""
+
+    key = None
+    name = None
+    entity_id = None
+
+    def __init__(self, hass, config_entry):
+        """Init QScloud class."""
+        self.key = config_entry[CONF_API_KEY]
+        self.name = config_entry.get(CONF_NAME, 'QS Cloud')
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, self.name, None, hass)
+
+    def unload(self):
+        """Remove this QS cloud instance."""
+        pass
+
+
 async def async_setup_entry(hass, config_entry):
     """Set up config entry."""
-    entry = config_entry.data
-    name = entry[CONF_NAME]
-    zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
-                entry.get(CONF_RADIUS, DEFAULT_RADIUS), entry.get(CONF_ICON),
-                entry.get(CONF_PASSIVE, DEFAULT_PASSIVE))
-    zone.entity_id = async_generate_entity_id(
-        ENTITY_ID_FORMAT, name, None, hass)
-    hass.async_add_job(zone.async_update_ha_state())
-    hass.data[DOMAIN][slugify(name)] = zone
+    qsc = QSCloud(hass, config_entry.data)
+    if QSDOMAIN not in hass.data:
+        hass.data[QSDOMAIN] = {}
+    hass.data[QSDOMAIN][slugify(qsc.name)] = qsc
+    # hass.async_add_job(zone.async_update_ha_state())
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    zones = hass.data[DOMAIN]
     name = slugify(config_entry.data[CONF_NAME])
-    zone = zones.pop(name)
-    await zone.async_remove()
+    qsc = hass.data[QSDOMAIN].pop(name)
+    await qsc.unload()
     return True
 
+
+@callback
+def configured_qscloud(hass):
+    """Return a set of the configured entries."""
+    return set((slugify(entry.data[CONF_NAME])) for
+               entry in hass.config_entries.async_entries(DOMAIN))
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -41,6 +69,7 @@ class QSCloudFlowHandler(data_entry_flow.FlowHandler):
     """Qwikswitch config flow."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize zone configuration flow."""
@@ -55,8 +84,10 @@ class QSCloudFlowHandler(data_entry_flow.FlowHandler):
         errors = {}
 
         if user_input is not None:
-            name = slugify(user_input[CONF_NAME])
-            if name not in configured_zones(self.hass) and name != HOME_ZONE:
+            name = user_input[CONF_NAME]
+            # Try get a token
+
+            if name not in configured_qscloud(self.hass):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input,
@@ -66,12 +97,9 @@ class QSCloudFlowHandler(data_entry_flow.FlowHandler):
         return self.async_show_form(
             step_id='init',
             data_schema=vol.Schema({
-                vol.Required(CONF_NAME): str,
-                vol.Required(CONF_LATITUDE): cv.latitude,
-                vol.Required(CONF_LONGITUDE): cv.longitude,
-                vol.Optional(CONF_RADIUS): vol.Coerce(float),
-                vol.Optional(CONF_ICON): str,
-                vol.Optional(CONF_PASSIVE): bool,
+                vol.Optional(CONF_NAME, default='QS Cloud'): str,
+                vol.Required(CONF_EMAIL): vol.Email,
+                vol.Required(CONF_MASTERKEY): str,
             }),
             errors=errors,
         )

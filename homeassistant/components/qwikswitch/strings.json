@@ -1,20 +1,18 @@
 {
     "config": {
-        "title": "Zone",
+        "title": "QwikSwitch Cloud Hub",
         "step": {
             "init": {
-                "title": "Define zone parameters",
+                "title": "Connect to QS cloud",
                 "data": {
-                    "name": "Name",
-                    "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "radius": "Radius",
-                    "passive": "Passive",
-                    "icon": "Icon"
+                    "name": "Name (default: QS cloud)",
+                    "email": "Email",
+                    "password": "Password"
                 }
             }
         },
         "error": {
+            "no_key": "Couldn't get an API key",
             "name_exists": "Name already exists"
         }
     }
