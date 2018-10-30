@@ -768,7 +768,7 @@ py-canary==0.5.0
 py-cpuinfo==4.0.0
 
 # homeassistant.components.melissa
-py-melissa-climate==1.0.6
+py-melissa-climate==2.0.0
 
 # homeassistant.components.camera.synology
 py-synology==0.2.0
