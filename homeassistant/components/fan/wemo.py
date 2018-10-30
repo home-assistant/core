@@ -83,7 +83,7 @@ HASS_FAN_SPEED_TO_WEMO = {
 SERVICE_SET_HUMIDITY = 'wemo_set_humidity'
 
 SET_HUMIDITY_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_TARGET_HUMIDITY):
         vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
@@ -110,27 +110,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error('Unable to access %s (%s)', location, err)
         raise PlatformNotReady
 
-    if device:
-        hass.data[DATA_KEY][device.entity_id] = device
-        add_entities([device])
+    hass.data[DATA_KEY][device.entity_id] = device
+    add_entities([device])
 
     def service_handle(service):
         """Handle the WeMo humidifier services."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
         target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
 
-        if entity_id:
+        if entity_ids:
             humidifiers = [device for device in hass.data[DATA_KEY].values() if
-                           device.entity_id == entity_id]
+                           device.entity_id in entity_ids]
+        else:
+            humidifiers = hass.data[DATA_KEY].values()
 
-        if humidifiers is None:
-            _LOGGER.warning("Unable to find WeMo humidifier device %s",
-                            str(entity_id))
-            return
-
-        if service.service == SERVICE_SET_HUMIDITY:
-            for humidifier in humidifiers:
-                humidifier.set_humidity(target_humidity)
+        for humidifier in humidifiers:
+            humidifier.set_humidity(target_humidity)
 
     # Register service(s)
     hass.services.register(
