@@ -14,8 +14,9 @@ TPLINK_HOST_SCHEMA = vol.Schema({
 })
 
 TPLINK_SCHEMA = vol.Schema({
-    vol.Optional('light'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
-    vol.Optional('switch'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
+    vol.Optional('light'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA], default=[]),
+    vol.Optional('switch'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA], default=[]),
+    vol.Optional('discovery', default=True): bool,
 })
 
 DOMAIN = 'tplink'
@@ -36,10 +37,10 @@ async def async_setup(hass, config):
     conf = config.get(DOMAIN)
 
     _LOGGER.info("Got config from file: %s" % conf)
-    if conf:
+    if conf is not None:
         hass.data[DOMAIN] = TPLINK_SCHEMA(conf)
     else:
-        hass.data[DOMAIN] = {'light': [], 'switch': []}
+        hass.data[DOMAIN] = {'light': [], 'switch': [], 'discovery': True}
 
     if conf is not None:
         hass.async_create_task(hass.config_entries.flow.async_init(
@@ -50,13 +51,36 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up TPLink from a config entry."""
-    from pyHS100 import SmartBulb, SmartPlug
+    from pyHS100 import SmartBulb, SmartPlug, SmartDeviceException
 
-    _LOGGER.info("async_setup_entry: %s" % entry)
-    devices = await _async_has_devices(hass)
+    devices = dict()
+    for type_ in ['light', 'switch']:
+        for entry in hass.data[DOMAIN][type_]:
+            try:
+                host = entry["host"]
+                if type == 'light':
+                    dev = SmartBulb(host)
+                elif type_ == 'switch':
+                    dev = SmartPlug
+                devices[host] = dev
+                _LOGGER.info("Succesfully added %s %s: %s" % (type_, host, dev))
+            except SmartDeviceException as ex:
+                _LOGGER.error("Unable to initialize %s %s: %s", type_, host, ex)
+
+
+
+    if hass.data[DOMAIN]["discovery"]:
+        _LOGGER.info("Discovering TP-Link smart home devices.")
+        devs = await _async_has_devices(hass)
+        _LOGGER.info("Discovered %s TP-Link smart home devices", len(devs))
+        devices.update(devs)
+
     for dev in devices.values():
         if isinstance(dev, SmartPlug):
-            hass.data[DOMAIN]['switch'].append(dev)
+            if dev.is_dimmable:  # Dimmers act as lights
+                hass.data[DOMAIN]['light'].append(dev)
+            else:
+                hass.data[DOMAIN]['switch'].append(dev)
         elif isinstance(dev, SmartBulb):
             hass.data[DOMAIN]['light'].append(dev)
         else:

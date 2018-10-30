@@ -65,6 +65,20 @@ class SmartPlugSwitch(SwitchDevice):
         return self._name
 
     @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (TPLINK_DOMAIN, self._unique_id)
+            },
+            'name': self._name,
+            'model': self.smartplug.model,
+            'manufacturer': 'TP-Link',
+            'sw_version': self.smartplug.sys_info["sw_ver"],
+            'hw_version': self.smartplug.sys_info["hw_ver"],
+        }
+
+    @property
     def available(self) -> bool:
         """Return if switch is available."""
         return self._available

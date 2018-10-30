@@ -15,6 +15,7 @@ from homeassistant.util.color import \
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
 from homeassistant.components.tplink import DOMAIN as TPLINK_DOMAIN
+from homeassistant.exceptions import PlatformNotReady
 
 DEPENDENCIES = ['tplink']
 
@@ -29,12 +30,19 @@ ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up discovered switches."""
+    from pyHS100 import SmartDeviceException
     devs = []
     for dev in hass.data[TPLINK_DOMAIN]['light']:
-        # fetch MAC and name already now to avoid I/O inside init
-        unique_id = dev.sys_info['mac']
-        name = dev.alias
-        devs.append(TPLinkSmartBulb(dev, unique_id, name))
+        _LOGGER.error("light: %s" % dev)
+        try:
+            # fetch MAC and name already now to avoid I/O inside init
+            _LOGGER.error(dev.sys_info)
+            unique_id = dev.sys_info['mac']
+            name = dev.alias
+            devs.append(TPLinkSmartBulb(dev, unique_id, name))
+        except SmartDeviceException as ex:
+            _LOGGER.error("Unable to fetch data from the device: %s", ex)
+            raise PlatformNotReady
 
     async_add_devices(devs, True)
 
@@ -77,6 +85,18 @@ class TPLinkSmartBulb(Light):
     def name(self):
         """Return the name of the Smart Bulb."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (TPLINK_DOMAIN, self._unique_id)
+            },
+            'name': self._name,
+            'model': self.smartbulb.model,
+            'manufacturer': 'TP-Link',
+        }
 
     @property
     def available(self) -> bool:

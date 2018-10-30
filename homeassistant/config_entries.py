@@ -178,7 +178,7 @@ FLOWS = [
     'upnp',
     'zha',
     'zone',
-    'zwave'
+    'zwave',
     'tplink',
 ]
 
