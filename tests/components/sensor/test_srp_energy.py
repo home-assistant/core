@@ -6,7 +6,7 @@ from datetime import timedelta
 
 import requests_mock
 
-import srpenergy
+from srpenergy.client import SrpEnergyClient
 
 from homeassistant.components.sensor import srp_energy
 from homeassistant.setup import setup_component
