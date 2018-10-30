@@ -77,6 +77,9 @@ class SrpEnergy(Entity):
     @property
     def state(self):
         """Return the current state."""
+        if self._state is None:
+            return None
+
         return "{0:.2f}".format(self._state)
 
     @property
@@ -162,7 +165,7 @@ class SrpEnergy(Entity):
             _LOGGER.error("Value error connecting to SRP. %s", error)
             self.data = None
         except TypeError as error:
-            _LOGGER.error("Type error connecting to SRP. %s", error)
+            _LOGGER.error("Type error connecting to SRP. Check username and password. %s", error)
             self.data = None
         except Exception as error:
             _LOGGER.error("Unknown error connecting to SRP. %s", error)
