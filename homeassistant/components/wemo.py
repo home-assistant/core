@@ -24,6 +24,7 @@ WEMO_MODEL_DISPATCH = {
     'Bridge':  'light',
     'CoffeeMaker': 'switch',
     'Dimmer': 'light',
+    'Humidifier': 'fan',
     'Insight': 'switch',
     'LightSwitch': 'switch',
     'Maker':   'switch',
