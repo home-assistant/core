@@ -280,7 +280,6 @@ class TestCoverMQTT(unittest.TestCase):
                 'platform': 'mqtt',
                 'name': 'test',
                 'position_topic': 'get-position-topic',
-                'set_position_topic': 'set-position-topic',
                 'command_topic': 'command-topic',
                 'position_open': 100,
                 'position_closed': 0,
@@ -342,7 +341,6 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test').attributes
         assert not ('current_position' in state_attributes_dict)
         assert not ('current_tilt_position' in state_attributes_dict)
-
         assert 4 & self.hass.states.get(
             'cover.test').attributes['supported_features'] == 4
 

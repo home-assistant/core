@@ -439,8 +439,8 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             mqtt.async_publish(self.hass, self._set_position_topic,
                                position, self._qos, self._retain)
             if self._optimistic:
-                self._position = percentage_position
                 self._state = False if self._position > 0 else True
+                self._position = percentage_position
                 self.async_schedule_update_ha_state()
 
     def find_percentage_in_range(self, position, range_type=TILT_PAYLOAD):
