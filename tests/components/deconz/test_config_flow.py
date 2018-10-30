@@ -94,7 +94,6 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
 
 async def test_flow_two_bridges_selection(hass, aioclient_mock):
     """Test config flow selection of one of two bridges."""
-    aioclient_mock.post('http://1.2.3.4:80/api', json=[])
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
     flow.bridges = [
