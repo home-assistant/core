@@ -156,38 +156,41 @@ async def test_service_configure(hass):
     data = {'on': True, 'attr1': 10, 'attr2': 20}
 
     # only field
-    with patch('pydeconz.DeconzSession.async_put_state', return_value=mock_coro(True)):
+    with patch('pydeconz.DeconzSession.async_put_state',
+               return_value=mock_coro(True)):
         await hass.services.async_call('deconz', 'configure', service_data={
             'field': '/light/42', 'data': data
         })
         await hass.async_block_till_done()
-        # async_put_state.assert_called_with('/light/42', data)
+
     # only entity
-    with patch('pydeconz.DeconzSession.async_put_state', return_value=mock_coro(True)):
+    with patch('pydeconz.DeconzSession.async_put_state',
+               return_value=mock_coro(True)):
         await hass.services.async_call('deconz', 'configure', service_data={
             'entity': 'light.test', 'data': data
         })
         await hass.async_block_till_done()
-        # async_put_state.assert_called_with('/light/1', data)
+
     # entity + field
-    with patch('pydeconz.DeconzSession.async_put_state', return_value=mock_coro(True)):
+    with patch('pydeconz.DeconzSession.async_put_state',
+               return_value=mock_coro(True)):
         await hass.services.async_call('deconz', 'configure', service_data={
             'entity': 'light.test', 'field': '/state', 'data': data})
         await hass.async_block_till_done()
-        # async_put_state.assert_called_with('/light/1/state', data)
 
     # non-existing entity (or not from deCONZ)
-    with patch('pydeconz.DeconzSession.async_put_state', return_value=mock_coro(True)):
+    with patch('pydeconz.DeconzSession.async_put_state',
+               return_value=mock_coro(True)):
         await hass.services.async_call('deconz', 'configure', service_data={
             'entity': 'light.nonexisting', 'field': '/state', 'data': data})
         await hass.async_block_till_done()
-        # async_put_state.assert_not_called()
+
     # field does not start with /
-    with patch('pydeconz.DeconzSession.async_put_state', return_value=mock_coro(True)):
+    with patch('pydeconz.DeconzSession.async_put_state',
+               return_value=mock_coro(True)):
         await hass.services.async_call('deconz', 'configure', service_data={
             'entity': 'light.test', 'field': 'state', 'data': data})
         await hass.async_block_till_done()
-        # async_put_state.assert_not_called()
 
 
 async def test_service_refresh_devices(hass):
@@ -204,7 +207,7 @@ async def test_service_refresh_devices(hass):
         assert await deconz.async_setup_entry(hass, entry) is True
 
     with patch.object(hass.data[deconz.DOMAIN].api, 'async_load_parameters',
-               return_value=mock_coro(True)):
+                      return_value=mock_coro(True)):
         await hass.services.async_call(
             'deconz', 'device_refresh', service_data={})
         await hass.async_block_till_done()
