@@ -193,7 +193,9 @@ async def async_setup(hass, config):
                             device_type](event))
 
                 else:
-                    _LOGGER.debug('device_id not known and automatic %s add disabled', device_type)
+                    _LOGGER.debug(
+                        'device_id not known and automatic %s add disabled',
+                        device_type)
             else:
                 _LOGGER.debug('device_id not known and automatic add disabled')
 
@@ -280,7 +282,6 @@ class LegrandInOneDevice(Entity):
     iobl_media = None
     iobl_type = None
     iobl_unit = None
-
 
     def __init__(self, device_id, initial_event=None, name=None,
                  fire_event=False, iobl_media='plc', iobl_comm_mode='unicast'):
