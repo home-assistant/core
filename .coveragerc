@@ -76,7 +76,6 @@ omit =
     homeassistant/components/daikin.py
     homeassistant/components/*/daikin.py
 
-    homeassistant/components/deconz/config_flow.py
     homeassistant/components/deconz/gateway.py
 
     homeassistant/components/digital_ocean.py
