@@ -238,10 +238,10 @@ class ConfiguredDevice:
 
         discovery.load_platform(
             self.hass, 'binary_sensor',
-            DOMAIN, {'device_id': self.device_id})
+            DOMAIN, {'device_id': self.device_id}, self.config)
         discovery.load_platform(
             self.hass, 'switch', DOMAIN,
-            {'device_id': self.device_id})
+            {'device_id': self.device_id}, self.config)
 
 
 class DiscoveredDevice:
