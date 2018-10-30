@@ -80,9 +80,9 @@ HASS_FAN_SPEED_TO_WEMO = {
     SPEED_MAXIMUM: WEMO_FAN_MAXIMUM
 }
 
-SERVICE_SET_HUMIDITY = 'wemo_humidifier_set_humidity'
+SERVICE_SET_HUMIDITY = 'set_humidity'
 
-WEMO_HUMIDIFIER_SET_HUMIDITY_SCHEMA = vol.Schema({
+SET_HUMIDITY_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
     vol.Required(ATTR_TARGET_HUMIDITY):
         vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
@@ -129,10 +129,10 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
             for humidifier in humidifiers:
                 humidifier.set_humidity(target_humidity)
 
-    # Register dyson service(s)
+    # Register service(s)
     hass.services.register(
         DOMAIN, SERVICE_SET_HUMIDITY, service_handle,
-        schema=WEMO_HUMIDIFIER_SET_HUMIDITY_SCHEMA)
+        schema=SET_HUMIDITY_SCHEMA)
 
 
 class WemoHumidifier(FanEntity):
