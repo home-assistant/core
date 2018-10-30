@@ -7,6 +7,7 @@ https://home-assistant.io/components/fan.wemo/
 import asyncio
 import logging
 from datetime import timedelta
+
 import requests
 import async_timeout
 import voluptuous as vol
@@ -31,9 +32,6 @@ ATTR_FILTER_LIFE = 'filter_life'
 ATTR_FILTER_EXPIRED = 'filter_expired'
 ATTR_WATER_LEVEL = 'water_level'
 
-SPEED_MINIMUM = 'minimum'
-SPEED_MAXIMUM = 'maximum'
-
 # The WEMO_ constants below come from pywemo itself
 WEMO_ON = 1
 WEMO_OFF = 0
@@ -46,9 +44,9 @@ WEMO_HUMIDITY_100 = 4
 
 WEMO_FAN_OFF = 0
 WEMO_FAN_MINIMUM = 1
-WEMO_FAN_LOW = 2
+WEMO_FAN_LOW = 2 # Not used due to limitations of the base fan implementation
 WEMO_FAN_MEDIUM = 3
-WEMO_FAN_HIGH = 4
+WEMO_FAN_HIGH = 4 # Not used due to limitations of the base fan implementation
 WEMO_FAN_MAXIMUM = 5
 
 WEMO_WATER_EMPTY = 0
@@ -56,22 +54,26 @@ WEMO_WATER_LOW = 1
 WEMO_WATER_GOOD = 2
 
 SUPPORTED_SPEEDS = [
-    SPEED_OFF, SPEED_MINIMUM,
-    SPEED_LOW, SPEED_MEDIUM,
-    SPEED_HIGH, SPEED_MAXIMUM]
+    SPEED_OFF, SPEED_LOW,
+    SPEED_MEDIUM, SPEED_HIGH]
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
+# Since the base fan object supports a set list of fan speeds,
+# we have to reuse some of them when mapping to the 5 WeMo speeds
 WEMO_FAN_SPEED_TO_HASS = {
     WEMO_FAN_OFF: SPEED_OFF,
-    WEMO_FAN_MINIMUM: SPEED_MINIMUM,
-    WEMO_FAN_LOW: SPEED_LOW,
+    WEMO_FAN_MINIMUM: SPEED_LOW,
+    WEMO_FAN_LOW: SPEED_LOW, # Reusing SPEED_LOW
     WEMO_FAN_MEDIUM: SPEED_MEDIUM,
-    WEMO_FAN_HIGH: SPEED_HIGH,
-    WEMO_FAN_MAXIMUM: SPEED_MAXIMUM
+    WEMO_FAN_HIGH: SPEED_HIGH, # Reusing SPEED_HIGH
+    WEMO_FAN_MAXIMUM: SPEED_HIGH
 }
 
-HASS_FAN_SPEED_TO_WEMO = {v: k for (k, v) in WEMO_FAN_SPEED_TO_HASS.items()}
+# Because we reused mappings in the previous dict, we have to filter them
+# back out in this dict, or else we would have duplicate keys
+HASS_FAN_SPEED_TO_WEMO = {v: k for (k, v) in WEMO_FAN_SPEED_TO_HASS.items()
+                          if k not in [WEMO_FAN_LOW, WEMO_FAN_HIGH]}
 
 SERVICE_SET_HUMIDITY = 'wemo_set_humidity'
 
