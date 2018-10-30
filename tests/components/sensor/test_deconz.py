@@ -1,8 +1,6 @@
 """deCONZ sensor platform tests."""
 from unittest.mock import Mock, patch
 
-import pytest
-
 from homeassistant import config_entries
 from homeassistant.components import deconz
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -117,16 +115,14 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_sensors(hass):
     """Test that no sensors in deconz results in no sensor entities."""
-    data = {}
-    await setup_gateway(hass, data)
+    await setup_gateway(hass, {})
     assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
 
 async def test_sensors(hass):
     """Test successful creation of sensor entities."""
-    data = {"sensors": SENSOR}
-    await setup_gateway(hass, data)
+    await setup_gateway(hass, {"sensors": SENSOR})
     assert "sensor.sensor_1_name" in hass.data[deconz.DOMAIN].deconz_ids
     assert "sensor.sensor_2_name" not in hass.data[deconz.DOMAIN].deconz_ids
     assert "sensor.sensor_3_name" not in hass.data[deconz.DOMAIN].deconz_ids
@@ -145,8 +141,7 @@ async def test_sensors(hass):
 
 async def test_add_new_sensor(hass):
     """Test successful creation of sensor entities."""
-    data = {}
-    await setup_gateway(hass, data)
+    await setup_gateway(hass, {})
     sensor = Mock()
     sensor.name = 'name'
     sensor.type = 'ZHATemperature'
@@ -158,8 +153,7 @@ async def test_add_new_sensor(hass):
 
 async def test_do_not_allow_clipsensor(hass):
     """Test that clip sensors can be ignored."""
-    data = {}
-    await setup_gateway(hass, data, allow_clip_sensor=False)
+    await setup_gateway(hass, {}, allow_clip_sensor=False)
     sensor = Mock()
     sensor.name = 'name'
     sensor.type = 'CLIPTemperature'
@@ -169,10 +163,9 @@ async def test_do_not_allow_clipsensor(hass):
     assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
 
 
-async def test_unload_switch(hass):
-    """Test that it works to unload switch entities."""
-    data = {"sensors": SENSOR}
-    await setup_gateway(hass, data)
+async def test_unload_sensor(hass):
+    """Test that it works to unload sensor entities."""
+    await setup_gateway(hass, {"sensors": SENSOR})
 
     await hass.data[deconz.DOMAIN].async_reset()
 

@@ -1,8 +1,6 @@
 """deCONZ binary sensor platform tests."""
 from unittest.mock import Mock, patch
 
-import pytest
-
 from homeassistant import config_entries
 from homeassistant.components import deconz
 from homeassistant.helpers.dispatcher import async_dispatcher_send

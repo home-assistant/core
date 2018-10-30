@@ -1,8 +1,6 @@
 """deCONZ switch platform tests."""
 from unittest.mock import Mock, patch
 
-import pytest
-
 from homeassistant import config_entries
 from homeassistant.components import deconz
 from homeassistant.components.deconz.const import SWITCH_TYPES
@@ -90,15 +88,16 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_switches(hass):
     """Test that no switch entities are created."""
-    data = {}
-    await setup_gateway(hass, data)
+    await setup_gateway(hass, {})
     assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
 
 async def test_switches(hass):
     """Test that all supported switch entities are created."""
-    await setup_gateway(hass, {"lights": SUPPORTED_SWITCHES})
+    with patch('pydeconz.DeconzSession.async_put_state',
+               return_value=mock_coro(True)):
+        await setup_gateway(hass, {"lights": SUPPORTED_SWITCHES})
     assert "switch.switch_1_name" in hass.data[deconz.DOMAIN].deconz_ids
     assert "switch.switch_2_name" in hass.data[deconz.DOMAIN].deconz_ids
     assert "switch.switch_3_name" in hass.data[deconz.DOMAIN].deconz_ids
@@ -131,8 +130,7 @@ async def test_switches(hass):
 
 async def test_add_new_switch(hass):
     """Test successful creation of switch entity."""
-    data = {}
-    await setup_gateway(hass, data)
+    await setup_gateway(hass, {})
     switch = Mock()
     switch.name = 'name'
     switch.type = "Smart plug"

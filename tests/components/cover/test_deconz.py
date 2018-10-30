@@ -50,7 +50,7 @@ ENTRY_CONFIG = {
 
 
 async def setup_gateway(hass, data):
-    """Load the deCONZ switch platform."""
+    """Load the deCONZ cover platform."""
     from pydeconz import DeconzSession
     loop = Mock()
     session = Mock()
@@ -82,17 +82,18 @@ async def test_platform_manually_configured(hass):
     assert deconz.DOMAIN not in hass.data
 
 
-async def test_no_switches(hass):
+async def test_no_covers(hass):
     """Test that no cover entities are created."""
-    data = {}
-    await setup_gateway(hass, data)
+    await setup_gateway(hass, {})
     assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
 
 async def test_cover(hass):
     """Test that all supported cover entities are created."""
-    await setup_gateway(hass, {"lights": SUPPORTED_COVERS})
+    with patch('pydeconz.DeconzSession.async_put_state',
+               return_value=mock_coro(True)):
+        await setup_gateway(hass, {"lights": SUPPORTED_COVERS})
     assert "cover.cover_1_name" in hass.data[deconz.DOMAIN].deconz_ids
     assert len(SUPPORTED_COVERS) == len(COVER_TYPES)
     assert len(hass.states.async_all()) == 3

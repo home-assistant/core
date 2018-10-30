@@ -109,8 +109,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_lights_or_groups(hass):
     """Test that no lights or groups entities are created."""
-    data = {}
-    await setup_gateway(hass, data)
+    await setup_gateway(hass, {})
     assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
@@ -167,8 +166,7 @@ async def test_lights_and_groups(hass):
 
 async def test_add_new_light(hass):
     """Test successful creation of light entities."""
-    data = {}
-    await setup_gateway(hass, data)
+    await setup_gateway(hass, {})
     light = Mock()
     light.name = 'name'
     light.register_async_callback = Mock()
@@ -179,8 +177,7 @@ async def test_add_new_light(hass):
 
 async def test_add_new_group(hass):
     """Test successful creation of group entities."""
-    data = {}
-    await setup_gateway(hass, data)
+    await setup_gateway(hass, {})
     group = Mock()
     group.name = 'name'
     group.register_async_callback = Mock()
@@ -191,8 +188,7 @@ async def test_add_new_group(hass):
 
 async def test_do_not_add_deconz_groups(hass):
     """Test that clip sensors can be ignored."""
-    data = {}
-    await setup_gateway(hass, data, allow_deconz_groups=False)
+    await setup_gateway(hass, {}, allow_deconz_groups=False)
     group = Mock()
     group.name = 'name'
     group.register_async_callback = Mock()
