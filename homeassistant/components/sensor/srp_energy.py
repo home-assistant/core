@@ -11,10 +11,11 @@ from requests.exceptions import (
     ConnectionError as ConnectError, HTTPError, Timeout)
 import voluptuous as vol
 
-from homeassistant.const import (CONF_NAME, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME, CONF_ID)
+from homeassistant.const import (
+    CONF_NAME, CONF_PASSWORD,
+    CONF_USERNAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 
@@ -41,6 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SRP energy."""
     _LOGGER.info("Setting up Srp Energy.")
@@ -55,6 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     srp_client = SrpEnergyClient(account_id, username, password)
 
     add_entities([SrpEnergy(name, srp_client)], True)
+
 
 class SrpEnergy(Entity):
     """Representation of an srp usage."""
@@ -98,7 +101,7 @@ class SrpEnergy(Entity):
 
         if self.data is None:
             return None
-            
+
         data = [{
                 ATTR_READING_TIME:
                     isodate,
@@ -106,7 +109,7 @@ class SrpEnergy(Entity):
                     kwh,
                 ATTR_READING_COST:
                     cost
-            } for date, hour, isodate, kwh, cost in self.data]
+                } for date, hour, isodate, kwh, cost in self.data]
 
         return data
 
@@ -134,9 +137,8 @@ class SrpEnergy(Entity):
     #         ATTR_READING_COST:
     #             cost
     #     } for date, hour, isodate, kwh, cost in self.data]
-        
-    #     return data
 
+    #     return data
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -152,7 +154,7 @@ class SrpEnergy(Entity):
             daily_usage = 0.0
             for date, hour, isodate, kwh, cost in usage:
                 daily_usage = daily_usage + float(kwh)
-            
+
             if(len(usage) > 0):
 
                 self._state = daily_usage
@@ -168,7 +170,8 @@ class SrpEnergy(Entity):
             _LOGGER.error("Value error connecting to SRP. %s", error)
             self.data = None
         except TypeError as error:
-            _LOGGER.error("Type error connecting to SRP. Check username and password. %s", error)
+            _LOGGER.error("Type error connecting to SRP. "
+                          "Check username and password. %s", error)
             self.data = None
         except Exception as error:
             _LOGGER.error("Unknown error connecting to SRP. %s", error)
