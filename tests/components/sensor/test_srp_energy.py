@@ -77,4 +77,5 @@ class TestSrpEnergySetup(unittest.TestCase):
 
         state = self.hass.states.get('sensor.srp_energy')
 
-        assert state.daily_usage == 7.50
+        assert state.attributes is not None
+        assert state.attributes['daily_usage'] == '7.50'
