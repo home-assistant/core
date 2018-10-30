@@ -24,6 +24,8 @@ class TestJewishCalenderSensor(unittest.TestCase):
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
+        # Reset the default timezone, so we don't affect other tests
+        set_default_time_zone(get_time_zone('UTC'))
 
     def test_jewish_calendar_min_config(self):
         """Test minimum jewish calendar configuration."""
