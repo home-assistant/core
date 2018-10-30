@@ -96,10 +96,10 @@ class LuciDeviceScanner(DeviceScanner):
         """Return the IP of the given device."""
         filter_att = next((
             {
-              'ip':     result.ip,
-              'flags':  result.flags,
-              'device': result.device,
-              'host':   result.host
+                'ip':     result.ip,
+                'flags':  result.flags,
+                'device': result.device,
+                'host':   result.host
             } for result in self.last_results
             if result.mac == device), None)
         return filter_att
