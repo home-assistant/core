@@ -1,5 +1,5 @@
 """
-Sensor that can displaying the current Home Assistant versions.
+Sensor that can display the current Home Assistant versions.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.version/
