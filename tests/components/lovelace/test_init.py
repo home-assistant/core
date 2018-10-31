@@ -643,3 +643,54 @@ async def test_lovelace_update_view(hass, hass_ws_client):
     assert msg['id'] == 5
     assert msg['type'] == TYPE_RESULT
     assert msg['success']
+
+
+async def test_lovelace_add_view(hass, hass_ws_client):
+    """Test add_view command."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)), \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
+            as save_yaml_mock:
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/view/add',
+            'view_config': 'id: test\ntitle: added\n',
+        })
+        msg = await client.receive_json()
+
+    result = save_yaml_mock.call_args_list[0][0][1]
+    assert result.mlget(['views', 2, 'title'],
+                        list_ok=True) == 'added'
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+
+
+async def test_lovelace_add_view_position(hass, hass_ws_client):
+    """Test add_view command with position."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)), \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
+            as save_yaml_mock:
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/view/add',
+            'position': 0,
+            'view_config': 'id: test\ntitle: added\n',
+        })
+        msg = await client.receive_json()
+
+    result = save_yaml_mock.call_args_list[0][0][1]
+    assert result.mlget(['views', 0, 'title'],
+                        list_ok=True) == 'added'
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']

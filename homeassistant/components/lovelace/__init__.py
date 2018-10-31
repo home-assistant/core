@@ -31,6 +31,7 @@ WS_TYPE_DELETE_CARD = 'lovelace/config/card/delete'
 
 WS_TYPE_GET_VIEW = 'lovelace/config/view/get'
 WS_TYPE_UPDATE_VIEW = 'lovelace/config/view/update'
+WS_TYPE_ADD_VIEW = 'lovelace/config/view/add'
 
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): vol.Any(WS_TYPE_GET_LOVELACE_UI,
@@ -88,6 +89,14 @@ SCHEMA_UPDATE_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_UPDATE_VIEW,
     vol.Required('view_id'): str,
     vol.Required('view_config'): vol.Any(str, Dict),
+    vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
+                                                         FORMAT_YAML),
+})
+
+SCHEMA_ADD_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_ADD_VIEW,
+    vol.Required('view_config'): vol.Any(str, Dict),
+    vol.Optional('position'): int,
     vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
                                                          FORMAT_YAML),
 })
@@ -280,7 +289,7 @@ def get_view(fname: str, view_id: str, data_format: str = FORMAT_YAML) -> None:
         if data_format == FORMAT_YAML:
             return yaml.object_to_yaml(view)
         return view
-    
+
     raise ViewNotFoundError(
         "View with ID: {} was not found in {}.".format(view_id, fname))
 
@@ -299,9 +308,24 @@ def update_view(fname: str, view_id: str, view_config, data_format:
         view.update(view_config)
         yaml.save_yaml(fname, config)
         return
-    
+
     raise ViewNotFoundError(
         "View with ID: {} was not found in {}.".format(view_id, fname))
+
+
+def add_view(fname: str, view_config: str,
+             position: int = None, data_format: str = FORMAT_YAML) -> None:
+    """Add a view."""
+    config = yaml.load_yaml(fname, True)
+    views = config.get('views', [])
+    if data_format == FORMAT_YAML:
+        view_config = yaml.yaml_to_object(view_config)
+    if position is None:
+        views.append(view_config)
+    else:
+        views.insert(position, view_config)
+    yaml.save_yaml(fname, config)
+    return
 
 
 async def async_setup(hass, config):
@@ -346,6 +370,10 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_UPDATE_VIEW, websocket_lovelace_update_view,
         SCHEMA_UPDATE_VIEW)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_ADD_VIEW, websocket_lovelace_add_view,
+        SCHEMA_ADD_VIEW)
 
     return True
 
@@ -465,3 +493,13 @@ async def websocket_lovelace_update_view(hass, connection, msg):
     return await hass.async_add_executor_job(
         update_view, hass.config.path(LOVELACE_CONFIG_FILE),
         msg['view_id'], msg['view_config'], msg.get('format', FORMAT_YAML))
+
+
+@websocket_api.async_response
+@handle_yaml_errors
+async def websocket_lovelace_add_view(hass, connection, msg):
+    """Add new view over websocket and save."""
+    return await hass.async_add_executor_job(
+        add_view, hass.config.path(LOVELACE_CONFIG_FILE),
+        msg['view_config'], msg.get('position'),
+        msg.get('format', FORMAT_YAML))
