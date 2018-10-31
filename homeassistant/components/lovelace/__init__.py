@@ -32,6 +32,7 @@ WS_TYPE_DELETE_CARD = 'lovelace/config/card/delete'
 WS_TYPE_GET_VIEW = 'lovelace/config/view/get'
 WS_TYPE_UPDATE_VIEW = 'lovelace/config/view/update'
 WS_TYPE_ADD_VIEW = 'lovelace/config/view/add'
+WS_TYPE_MOVE_VIEW = 'lovelace/config/view/move'
 
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): vol.Any(WS_TYPE_GET_LOVELACE_UI,
@@ -99,6 +100,12 @@ SCHEMA_ADD_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Optional('position'): int,
     vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
                                                          FORMAT_YAML),
+})
+
+SCHEMA_MOVE_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_MOVE_VIEW,
+    vol.Required('view_id'): str,
+    vol.Required('new_position'): int,
 })
 
 
@@ -328,6 +335,21 @@ def add_view(fname: str, view_config: str,
     return
 
 
+def move_view(fname: str, view_id: str, position: int) -> None:
+    """Move a view to a different position."""
+    config = yaml.load_yaml(fname, True)
+    views = config.get('views', [])
+    for view in views:
+        if str(view.get('id', '')) != view_id:
+            continue
+        views.insert(position, views.pop(views.index(view)))
+        yaml.save_yaml(fname, config)
+        return
+
+    raise ViewNotFoundError(
+        "View with ID: {} was not found in {}.".format(card_id, fname))
+
+
 async def async_setup(hass, config):
     """Set up the Lovelace commands."""
     # Backwards compat. Added in 0.80. Remove after 0.85
@@ -374,6 +396,10 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_ADD_VIEW, websocket_lovelace_add_view,
         SCHEMA_ADD_VIEW)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_MOVE_VIEW, websocket_lovelace_move_view,
+        SCHEMA_MOVE_VIEW)
 
     return True
 
@@ -503,3 +529,12 @@ async def websocket_lovelace_add_view(hass, connection, msg):
         add_view, hass.config.path(LOVELACE_CONFIG_FILE),
         msg['view_config'], msg.get('position'),
         msg.get('format', FORMAT_YAML))
+
+
+@websocket_api.async_response
+@handle_yaml_errors
+async def websocket_lovelace_move_view(hass, connection, msg):
+    """Move view to different position over websocket and save."""
+    return await hass.async_add_executor_job(
+        move_view, hass.config.path(LOVELACE_CONFIG_FILE),
+        msg['view_id'], msg['new_position'])

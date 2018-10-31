@@ -694,3 +694,29 @@ async def test_lovelace_add_view_position(hass, hass_ws_client):
     assert msg['id'] == 5
     assert msg['type'] == TYPE_RESULT
     assert msg['success']
+
+
+async def test_lovelace_move_view_position(hass, hass_ws_client):
+    """Test move_view command."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)), \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
+            as save_yaml_mock:
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/view/move',
+            'view_id': 'example',
+            'new_position': 1,
+        })
+        msg = await client.receive_json()
+
+    result = save_yaml_mock.call_args_list[0][0][1]
+    assert result.mlget(['views', 1, 'title'],
+                        list_ok=True) == 'Example'
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
