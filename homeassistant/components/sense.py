@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sense/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT)
@@ -34,10 +35,10 @@ def setup(hass, config):
     """Set up the Sense sensor."""
     from sense_energy import Senseable, SenseAuthenticationException
 
-    username = config[DOMAIN].get(CONF_EMAIL)
-    password = config[DOMAIN].get(CONF_PASSWORD)
+    username = config[DOMAIN][CONF_EMAIL]
+    password = config[DOMAIN][CONF_PASSWORD]
 
-    timeout = config[DOMAIN].get(CONF_TIMEOUT)
+    timeout = config[DOMAIN][CONF_TIMEOUT]
     try:
         hass.data[SENSE_DATA] = Senseable(api_timeout=timeout, wss_timeout=timeout)
         hass.data[SENSE_DATA].authenticate(username, password)
@@ -45,4 +46,6 @@ def setup(hass, config):
     except SenseAuthenticationException:
         _LOGGER.error("Could not authenticate with sense server")
         return False
+    load_platform(hass, 'sensor', DOMAIN)
+    load_platform(hass, 'binary_sensor', DOMAIN)
     return True
