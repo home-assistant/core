@@ -7,7 +7,8 @@ https://home-assistant.io/components/sun/
 import logging
 from datetime import timedelta
 
-from homeassistant.const import CONF_ELEVATION
+from homeassistant.const import (
+    CONF_ELEVATION, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
@@ -109,9 +110,9 @@ class Sun(Entity):
         self.next_noon = get_astral_event_next(
             self.hass, 'solar_noon', utc_point_in_time)
         self.next_rising = get_astral_event_next(
-            self.hass, 'sunrise', utc_point_in_time)
+            self.hass, SUN_EVENT_SUNRISE, utc_point_in_time)
         self.next_setting = get_astral_event_next(
-            self.hass, 'sunset', utc_point_in_time)
+            self.hass, SUN_EVENT_SUNSET, utc_point_in_time)
 
     @callback
     def update_sun_position(self, utc_point_in_time):
