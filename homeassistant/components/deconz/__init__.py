@@ -8,21 +8,16 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_API_KEY, CONF_EVENT, CONF_HOST,
-    CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import EventOrigin, callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+    CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
-from homeassistant.util import slugify
 from homeassistant.util.json import load_json
 
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
-from .const import (
-    CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
+from .const import CONFIG_FILE, DOMAIN, _LOGGER
 from .gateway import DeconzGateway
 
 REQUIREMENTS = ['pydeconz==47']
