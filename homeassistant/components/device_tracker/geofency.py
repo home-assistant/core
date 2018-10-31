@@ -18,13 +18,15 @@ DEPENDENCIES = ['geofency']
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the Geofency device tracker."""
     @callback
-    async def _set_location(device, gps, location_name, attributes):
+    def _set_location(device, gps, location_name, attributes):
         """Fire HA event to set location."""
-        await async_see(
-            dev_id=device,
-            gps=gps,
-            location_name=location_name,
-            attributes=attributes
+        hass.async_create_task(
+            async_see(
+                dev_id=device,
+                gps=gps,
+                location_name=location_name,
+                attributes=attributes
+            )
         )
 
     async_dispatcher_connect(hass, TRACKER_UPDATE, _set_location)
