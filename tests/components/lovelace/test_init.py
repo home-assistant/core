@@ -1,17 +1,12 @@
 """Test the Lovelace initialization."""
-import os
-import unittest
 from unittest.mock import patch
-from tempfile import mkdtemp
-import pytest
 from ruamel.yaml import YAML
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.components.lovelace import (load_yaml, migrate_config,
-                                               save_yaml,
-                                               UnsupportedYamlError)
+from homeassistant.components.lovelace import migrate_config
+from homeassistant.util.ruamel_yaml import UnsupportedYamlError
 
 TEST_YAML_A = """\
 title: My Awesome Home
@@ -118,63 +113,33 @@ views:
 """
 
 
-class TestYAML(unittest.TestCase):
-    """Test lovelace.yaml save and load."""
+def test_add_id():
+    """Test if id is added."""
+    yaml = YAML(typ='rt')
 
-    def setUp(self):
-        """Set up for tests."""
-        self.tmp_dir = mkdtemp()
-        self.yaml = YAML(typ='rt')
+    fname = "dummy.yaml"
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)), \
+            patch('homeassistant.util.ruamel_yaml.save_yaml') \
+            as save_yaml_mock:
+        migrate_config(fname)
 
-    def tearDown(self):
-        """Clean up after tests."""
-        for fname in os.listdir(self.tmp_dir):
-            os.remove(os.path.join(self.tmp_dir, fname))
-        os.rmdir(self.tmp_dir)
+    result = save_yaml_mock.call_args_list[0][0][1]
+    assert 'id' in result['views'][0]['cards'][0]
+    assert 'id' in result['views'][1]
 
-    def _path_for(self, leaf_name):
-        return os.path.join(self.tmp_dir, leaf_name+".yaml")
 
-    def test_save_and_load(self):
-        """Test saving and loading back."""
-        fname = self._path_for("test1")
-        save_yaml(fname, self.yaml.load(TEST_YAML_A))
-        data = load_yaml(fname)
-        assert data == self.yaml.load(TEST_YAML_A)
+def test_id_not_changed():
+    """Test if id is not changed if already exists."""
+    yaml = YAML(typ='rt')
 
-    def test_overwrite_and_reload(self):
-        """Test that we can overwrite an existing file and read back."""
-        fname = self._path_for("test3")
-        save_yaml(fname, self.yaml.load(TEST_YAML_A))
-        save_yaml(fname, self.yaml.load(TEST_YAML_B))
-        data = load_yaml(fname)
-        assert data == self.yaml.load(TEST_YAML_B)
-
-    def test_load_bad_data(self):
-        """Test error from trying to load unserialisable data."""
-        fname = self._path_for("test5")
-        with open(fname, "w") as fh:
-            fh.write(TEST_BAD_YAML)
-        with pytest.raises(HomeAssistantError):
-            load_yaml(fname)
-
-    def test_add_id(self):
-        """Test if id is added."""
-        fname = self._path_for("test6")
-        with patch('homeassistant.components.lovelace.load_yaml',
-                   return_value=self.yaml.load(TEST_YAML_A)), \
-                patch('homeassistant.components.lovelace.save_yaml'):
-            data = migrate_config(fname)
-        assert 'id' in data['views'][0]['cards'][0]
-        assert 'id' in data['views'][1]
-
-    def test_id_not_changed(self):
-        """Test if id is not changed if already exists."""
-        fname = self._path_for("test7")
-        with patch('homeassistant.components.lovelace.load_yaml',
-                   return_value=self.yaml.load(TEST_YAML_B)):
-            data = migrate_config(fname)
-        assert data == self.yaml.load(TEST_YAML_B)
+    fname = "dummy.yaml"
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
+               return_value=yaml.load(TEST_YAML_B)), \
+            patch('homeassistant.util.ruamel_yaml.save_yaml') \
+            as save_yaml_mock:
+        migrate_config(fname)
+    assert save_yaml_mock.call_count == 0
 
 
 async def test_deprecated_lovelace_ui(hass, hass_ws_client):
@@ -231,7 +196,7 @@ async def test_deprecated_lovelace_ui_load_err(hass, hass_ws_client):
     assert msg['id'] == 5
     assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
-    assert msg['error']['code'] == 'load_error'
+    assert msg['error']['code'] == 'error'
 
 
 async def test_lovelace_ui(hass, hass_ws_client):
@@ -288,7 +253,7 @@ async def test_lovelace_ui_load_err(hass, hass_ws_client):
     assert msg['id'] == 5
     assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
-    assert msg['error']['code'] == 'load_error'
+    assert msg['error']['code'] == 'error'
 
 
 async def test_lovelace_ui_load_json_err(hass, hass_ws_client):
@@ -316,7 +281,7 @@ async def test_lovelace_get_card(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)):
         await client.send_json({
             'id': 5,
@@ -337,7 +302,7 @@ async def test_lovelace_get_card_not_found(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)):
         await client.send_json({
             'id': 5,
@@ -357,7 +322,7 @@ async def test_lovelace_get_card_bad_yaml(hass, hass_ws_client):
     await async_setup_component(hass, 'lovelace')
     client = await hass_ws_client(hass)
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                side_effect=HomeAssistantError):
         await client.send_json({
             'id': 5,
@@ -369,7 +334,7 @@ async def test_lovelace_get_card_bad_yaml(hass, hass_ws_client):
     assert msg['id'] == 5
     assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
-    assert msg['error']['code'] == 'load_error'
+    assert msg['error']['code'] == 'error'
 
 
 async def test_lovelace_update_card(hass, hass_ws_client):
@@ -378,9 +343,9 @@ async def test_lovelace_update_card(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)), \
-        patch('homeassistant.components.lovelace.save_yaml') \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
             as save_yaml_mock:
         await client.send_json({
             'id': 5,
@@ -404,7 +369,7 @@ async def test_lovelace_update_card_not_found(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)):
         await client.send_json({
             'id': 5,
@@ -426,9 +391,9 @@ async def test_lovelace_update_card_bad_yaml(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)), \
-        patch('homeassistant.components.lovelace.yaml_to_object',
+        patch('homeassistant.util.ruamel_yaml.yaml_to_object',
               side_effect=HomeAssistantError):
         await client.send_json({
             'id': 5,
@@ -441,7 +406,7 @@ async def test_lovelace_update_card_bad_yaml(hass, hass_ws_client):
     assert msg['id'] == 5
     assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
-    assert msg['error']['code'] == 'save_error'
+    assert msg['error']['code'] == 'error'
 
 
 async def test_lovelace_add_card(hass, hass_ws_client):
@@ -450,9 +415,9 @@ async def test_lovelace_add_card(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)), \
-        patch('homeassistant.components.lovelace.save_yaml') \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
             as save_yaml_mock:
         await client.send_json({
             'id': 5,
@@ -476,9 +441,9 @@ async def test_lovelace_add_card_position(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)), \
-        patch('homeassistant.components.lovelace.save_yaml') \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
             as save_yaml_mock:
         await client.send_json({
             'id': 5,
@@ -503,9 +468,9 @@ async def test_lovelace_move_card_position(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)), \
-        patch('homeassistant.components.lovelace.save_yaml') \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
             as save_yaml_mock:
         await client.send_json({
             'id': 5,
@@ -529,9 +494,9 @@ async def test_lovelace_move_card_view(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)), \
-        patch('homeassistant.components.lovelace.save_yaml') \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
             as save_yaml_mock:
         await client.send_json({
             'id': 5,
@@ -555,9 +520,9 @@ async def test_lovelace_move_card_view_position(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)), \
-        patch('homeassistant.components.lovelace.save_yaml') \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
             as save_yaml_mock:
         await client.send_json({
             'id': 5,
@@ -582,9 +547,9 @@ async def test_lovelace_delete_card(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     yaml = YAML(typ='rt')
 
-    with patch('homeassistant.components.lovelace.load_yaml',
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
                return_value=yaml.load(TEST_YAML_A)), \
-        patch('homeassistant.components.lovelace.save_yaml') \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
             as save_yaml_mock:
         await client.send_json({
             'id': 5,
