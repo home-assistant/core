@@ -98,7 +98,7 @@ class GenericThermostat(ClimateDevice):
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp, ac_mode, min_cycle_duration,
                  cold_tolerance, hot_tolerance, keep_alive,
-                 initial_operation_mode, away_temp):
+                 initial_operation_mode, away_temp, boost_temp):
         """Initialize the thermostat."""
         self.hass = hass
         self._name = name
@@ -400,8 +400,7 @@ class GenericThermostat(ClimateDevice):
         self._target_temp = self._saved_target_temp
         await self._async_control_heating()
         await self.async_update_ha_state()
-
-
+        
     @property
     def is_boost_mode_on(self):
         """Return true if boost mode is on."""
