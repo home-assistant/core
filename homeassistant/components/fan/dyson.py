@@ -16,19 +16,26 @@ from homeassistant.const import CONF_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NIGHT_MODE = 'night_mode'
-
-ATTR_IS_NIGHT_MODE = 'night_mode'
-ATTR_IS_AUTO_MODE = 'auto_mode'
+ATTR_NIGHT_MODE = 'night_mode'
+ATTR_AUTO_MODE = 'auto_mode'
+ATTR_ANGLE_LOW = 'angle_low'
+ATTR_ANGLE_HIGH = 'angle_high'
 
 DEPENDENCIES = ['dyson']
 DYSON_FAN_DEVICES = 'dyson_fan_devices'
 
 SERVICE_SET_NIGHT_MODE = 'dyson_set_night_mode'
+SERVICE_SET_ANGLE = 'dyson_set_angle'
 
 DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(CONF_NIGHT_MODE): cv.boolean,
+    vol.Required(ATTR_NIGHT_MODE): cv .boolean,
+})
+
+DYSON_SET_ANGLE_SCHEMA = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Optional(ATTR_ANGLE_LOW): cv.positive_int,
+    vol.Optional(ATTR_ANGLE_HIGH): cv.positive_int
 })
 
 
@@ -55,7 +62,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def service_handle(service):
         """Handle the Dyson services."""
         entity_id = service.data.get(CONF_ENTITY_ID)
-        night_mode = service.data.get(CONF_NIGHT_MODE)
+        night_mode = service.data.get(ATTR_NIGHT_MODE)
+        angle_low = service.data.get(ATTR_ANGLE_LOW)
+        angle_high = service.data.get(ATTR_ANGLE_HIGH)
         fan_device = next([fan for fan in hass.data[DYSON_FAN_DEVICES] if
                            fan.entity_id == entity_id].__iter__(), None)
         if fan_device is None:
@@ -64,12 +73,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             return
 
         if service.service == SERVICE_SET_NIGHT_MODE:
-            fan_device.night_mode(night_mode)
+            fan_device.set_night_mode(night_mode)
+
+        if service.service == SERVICE_SET_NIGHT_MODE:
+            fan_device.set_angle(angle_low, angle_high)
 
     # Register dyson service(s)
     hass.services.register(
         DOMAIN, SERVICE_SET_NIGHT_MODE, service_handle,
         schema=DYSON_SET_NIGHT_MODE_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_ANGLE, service_handle,
+        schema=DYSON_SET_ANGLE_SCHEMA)
 
 
 class DysonPureCoolLinkDevice(FanEntity):
@@ -185,7 +201,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         return None
 
     @property
-    def is_night_mode(self):
+    def night_mode(self):
         """Return Night mode."""
         return self._device.state.night_mode == "ON"
 
@@ -200,11 +216,11 @@ class DysonPureCoolLinkDevice(FanEntity):
             self._device.set_configuration(night_mode=NightMode.NIGHT_MODE_OFF)
 
     @property
-    def is_auto_mode(self):
+    def auto_mode(self):
         """Return auto mode."""
         return self._device.state.fan_mode == "AUTO"
 
-    def auto_mode(self, auto_mode: bool) -> None:
+    def set_auto_mode(self, auto_mode: bool) -> None:
         """Turn fan in auto mode."""
         from libpurecoollink.const import FanMode
 
@@ -244,8 +260,8 @@ class DysonPureCoolLinkDevice(FanEntity):
     def device_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
-            ATTR_IS_NIGHT_MODE: self.is_night_mode,
-            ATTR_IS_AUTO_MODE: self.is_auto_mode
+            ATTR_NIGHT_MODE: self.night_mode,
+            ATTR_AUTO_MODE: self.auto_mode
             }
 
 
@@ -325,6 +341,25 @@ class DysonPureCoolDevice(FanEntity):
             self._device.enable_night_mode()
         else:
             self._device.disable_night_mode()
+    
+    def set_auto_mode(self, auto_mode: bool) -> None:
+        """Turn on/off oscillating."""
+
+        _LOGGER.debug("Turn auto mode %s for device %s", auto_mode,
+                      self.name)
+
+        if auto_mode:
+            self._device.enable_auto_mode()
+        else:
+            self._device.disable_auto_mode()
+
+    def set_angle(self, angle_low: int, angle_high: int) -> None:
+        """Set device angle."""
+
+        _LOGGER.debug("set low %s and high angle %s for device %s", angle_low, angle_high,
+                      self.name)
+
+        self._device.enable_oscillation(angle_low, angle_high)
 
     @property
     def oscillating(self):
@@ -350,14 +385,24 @@ class DysonPureCoolDevice(FanEntity):
         return None
 
     @property
-    def is_night_mode(self):
+    def night_mode(self):
         """Return Night mode."""
         return self._device.state.night_mode == "ON"
 
     @property
-    def is_auto_mode(self):
-        """Return auto mode."""
+    def auto_mode(self):
+        """Return Night mode."""
         return self._device.state.auto_mode == "ON"
+
+    @property
+    def angle_low(self):
+        """Return Night mode."""
+        return self._device.state.oscillation_angle_low
+
+    @property
+    def angle_high(self):
+        """Return Night mode."""
+        return self._device.state.oscillation_angle_high
 
     @property
     def speed_list(self) -> list:
@@ -390,6 +435,8 @@ class DysonPureCoolDevice(FanEntity):
     def device_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
-            ATTR_IS_NIGHT_MODE: self.is_night_mode,
-            ATTR_IS_AUTO_MODE: self.is_auto_mode
+            ATTR_NIGHT_MODE: self.night_mode,
+            ATTR_ANGLE_LOW: self.angle_low,
+            ATTR_ANGLE_HIGH: self.angle_high,
+
         }
