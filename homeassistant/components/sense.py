@@ -32,13 +32,17 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Sense sensor."""
-    from sense_energy import Senseable
+    from sense_energy import Senseable, SenseAuthenticationException
 
     username = config[DOMAIN].get(CONF_EMAIL)
     password = config[DOMAIN].get(CONF_PASSWORD)
 
     timeout = config[DOMAIN].get(CONF_TIMEOUT)
-    hass.data[SENSE_DATA] = Senseable(api_timeout=timeout, wss_timeout=timeout)
-    hass.data[SENSE_DATA].authenticate(username, password)
-    hass.data[SENSE_DATA].rate_limit = ACTIVE_UPDATE_RATE
+    try:
+        hass.data[SENSE_DATA] = Senseable(api_timeout=timeout, wss_timeout=timeout)
+        hass.data[SENSE_DATA].authenticate(username, password)
+        hass.data[SENSE_DATA].rate_limit = ACTIVE_UPDATE_RATE
+    except SenseAuthenticationException:
+        _LOGGER.error("Could not authenticate with sense server")
+        return False
     return True
