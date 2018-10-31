@@ -561,11 +561,11 @@ class TestMQTTClimate(unittest.TestCase):
         assert "cool" == state.attributes.get('operation_mode')
 
         # State
-        self.assertEqual('unknown', state.state)
+        assert "unknown" == state.state
         fire_mqtt_message(self.hass, 'state', '"cool"')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('cool', state.state)
+        assert "cool" == state.state
 
         # Fan Mode
         assert state.attributes.get('fan_mode') is None
