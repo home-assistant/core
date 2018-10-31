@@ -33,20 +33,21 @@ TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BETA, default=False): cv.boolean,
-    vol.Optional(CONF_IMAGE, default=DEFAULT_IMAGE): cv.string,
+    vol.Optional(CONF_IMAGE, default=DEFAULT_IMAGE): vol.All(vol.Lower,
+                                                             cv.string),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SOURCE, default=DEFAULT_SOURCE): cv.string,
+    vol.Optional(CONF_SOURCE, default=DEFAULT_SOURCE): vol.All(vol.Lower,
+                                                               cv.string),
 })
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the Version sensor platform."""
     from pyhaversion import Version
     beta = config.get(CONF_BETA)
-    image = config.get(CONF_IMAGE).lower()
+    image = config.get(CONF_IMAGE)
     name = config.get(CONF_NAME)
-    source = config.get(CONF_SOURCE).lower()
+    source = config.get(CONF_SOURCE)
 
     session = async_get_clientsession(hass)
     if beta:
