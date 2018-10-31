@@ -80,10 +80,10 @@ async def async_setup(hass, config):
         notifiers = cfg.get(CONF_NOTIFIERS)
         can_ack = cfg.get(CONF_CAN_ACK)
 
-        entities.append(Alert(hass, object_id, name, 
+        entities.append(Alert(hass, object_id, name,
                               watched_entity_id, alert_state, repeat,
-                              skip_first, message_template, 
-							  done_message_template, notifiers,
+                              skip_first, message_template,
+                              done_message_template, notifiers,
                               can_ack))
 
     if not entities:
@@ -128,8 +128,8 @@ class Alert(ToggleEntity):
     """Representation of an alert."""
 
     def __init__(self, hass, entity_id, name, watched_entity_id,
-                 state, repeat, skip_first, message_template, 
-				 done_message_template, notifiers, can_ack):
+                 state, repeat, skip_first, message_template,
+                 done_message_template, notifiers, can_ack):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
@@ -143,7 +143,7 @@ class Alert(ToggleEntity):
         self._done_message_template = done_message_template
         if self._done_message_template is not None:
             self._done_message_template.hass = hass
-		
+
         self._notifiers = notifiers
         self._can_ack = can_ack
 
@@ -244,7 +244,7 @@ class Alert(ToggleEntity):
         """Send notification of complete alert."""
         _LOGGER.info("Alerting: %s", self._done_message_template)
         self._send_done_message = False
-		
+
         if self._done_message_template is None:
             return
 
