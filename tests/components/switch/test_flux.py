@@ -4,7 +4,8 @@ from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 from homeassistant.components import switch, light
-from homeassistant.const import CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON
+from homeassistant.const import (
+    CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SUN_EVENT_SUNRISE)
 import homeassistant.loader as loader
 import homeassistant.util.dt as dt_util
 
@@ -91,7 +92,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -131,7 +132,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -176,7 +177,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -222,7 +223,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -269,7 +270,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -314,7 +315,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -364,7 +365,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -415,7 +416,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -465,7 +466,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -514,7 +515,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -564,7 +565,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -611,7 +612,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -660,7 +661,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -720,7 +721,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 print('sunrise {}'.format(sunrise_time))
                 return sunrise_time
             print('sunset {}'.format(sunset_time))
@@ -774,7 +775,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -818,7 +819,7 @@ class TestSwitchFlux(unittest.TestCase):
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
