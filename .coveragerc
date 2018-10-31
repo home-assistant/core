@@ -209,7 +209,6 @@ omit =
     homeassistant/components/lutron_caseta.py
     homeassistant/components/*/lutron_caseta.py
 
-    homeassistant/components/mailgun.py
     homeassistant/components/*/mailgun.py
 
     homeassistant/components/matrix.py
@@ -248,8 +247,8 @@ omit =
     homeassistant/components/opencv.py
     homeassistant/components/*/opencv.py
 
-    homeassistant/components/opentherm_gw.py
-    homeassistant/components/climate/opentherm_gw.py
+    homeassistant/components/opentherm_gw/*
+    homeassistant/components/*/opentherm_gw.py
 
     homeassistant/components/openuv/__init__.py
     homeassistant/components/*/openuv.py
@@ -334,7 +333,6 @@ omit =
     homeassistant/components/tradfri.py
     homeassistant/components/*/tradfri.py
 
-    homeassistant/components/twilio.py
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twilio_call.py
 
@@ -434,7 +432,6 @@ omit =
     homeassistant/components/camera/xeoma.py
     homeassistant/components/camera/xiaomi.py
     homeassistant/components/camera/yi.py
-    homeassistant/components/climate/econet.py
     homeassistant/components/climate/ephember.py
     homeassistant/components/climate/eq3btsmart.py
     homeassistant/components/climate/flexit.py
@@ -442,6 +439,7 @@ omit =
     homeassistant/components/climate/homematic.py
     homeassistant/components/climate/honeywell.py
     homeassistant/components/climate/knx.py
+    homeassistant/components/climate/mill.py
     homeassistant/components/climate/oem.py
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
@@ -458,7 +456,6 @@ omit =
     homeassistant/components/cover/myq.py
     homeassistant/components/cover/opengarage.py
     homeassistant/components/cover/rpi_gpio.py
-    homeassistant/components/cover/ryobi_gdo.py
     homeassistant/components/cover/scsgate.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
@@ -468,6 +465,7 @@ omit =
     homeassistant/components/device_tracker/bluetooth_le_tracker.py
     homeassistant/components/device_tracker/bluetooth_tracker.py
     homeassistant/components/device_tracker/bt_home_hub_5.py
+    homeassistant/components/device_tracker/bt_smarthub.py
     homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/freebox.py
@@ -501,6 +499,7 @@ omit =
     homeassistant/components/emoncms_history.py
     homeassistant/components/emulated_hue/upnp.py
     homeassistant/components/fan/mqtt.py
+    homeassistant/components/fan/wemo.py
     homeassistant/components/folder_watcher.py
     homeassistant/components/foursquare.py
     homeassistant/components/goalfeed.py
@@ -569,6 +568,7 @@ omit =
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/lg_netcast.py
+    homeassistant/components/media_player/lg_soundbar.py    
     homeassistant/components/media_player/liveboxplaytv.py
     homeassistant/components/media_player/mediaroom.py
     homeassistant/components/media_player/mpchc.py
@@ -722,6 +722,7 @@ omit =
     homeassistant/components/sensor/luftdaten.py
     homeassistant/components/sensor/lyft.py
     homeassistant/components/sensor/magicseaweed.py
+    homeassistant/components/sensor/meteo_france.py
     homeassistant/components/sensor/metoffice.py
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/mitemp_bt.py
@@ -757,6 +758,7 @@ omit =
     homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/rainbird.py
     homeassistant/components/sensor/ripple.py
+    homeassistant/components/sensor/rtorrent.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sense.py
     homeassistant/components/sensor/sensehat.py
@@ -844,6 +846,7 @@ omit =
     homeassistant/components/tts/picotts.py
     homeassistant/components/vacuum/mqtt.py
     homeassistant/components/vacuum/roomba.py
+    homeassistant/components/water_heater/econet.py
     homeassistant/components/watson_iot.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py

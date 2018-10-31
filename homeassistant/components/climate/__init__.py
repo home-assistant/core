@@ -48,11 +48,6 @@ STATE_MANUAL = 'manual'
 STATE_DRY = 'dry'
 STATE_FAN_ONLY = 'fan_only'
 STATE_ECO = 'eco'
-STATE_ELECTRIC = 'electric'
-STATE_PERFORMANCE = 'performance'
-STATE_HIGH_DEMAND = 'high_demand'
-STATE_HEAT_PUMP = 'heat_pump'
-STATE_GAS = 'gas'
 
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_TARGET_TEMPERATURE_HIGH = 2

@@ -104,111 +104,105 @@ class TestNuHeat(unittest.TestCase):
 
     def test_name(self):
         """Test name property."""
-        self.assertEqual(self.thermostat.name, "Master bathroom")
+        assert self.thermostat.name == "Master bathroom"
 
     def test_icon(self):
         """Test name property."""
-        self.assertEqual(self.thermostat.icon, "mdi:thermometer")
+        assert self.thermostat.icon == "mdi:thermometer"
 
     def test_supported_features(self):
         """Test name property."""
         features = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
                     SUPPORT_OPERATION_MODE)
-        self.assertEqual(self.thermostat.supported_features, features)
+        assert self.thermostat.supported_features == features
 
     def test_temperature_unit(self):
         """Test temperature unit."""
-        self.assertEqual(self.thermostat.temperature_unit, TEMP_FAHRENHEIT)
+        assert self.thermostat.temperature_unit == TEMP_FAHRENHEIT
         self.thermostat._temperature_unit = "C"
-        self.assertEqual(self.thermostat.temperature_unit, TEMP_CELSIUS)
+        assert self.thermostat.temperature_unit == TEMP_CELSIUS
 
     def test_current_temperature(self):
         """Test current temperature."""
-        self.assertEqual(self.thermostat.current_temperature, 72)
+        assert self.thermostat.current_temperature == 72
         self.thermostat._temperature_unit = "C"
-        self.assertEqual(self.thermostat.current_temperature, 22)
+        assert self.thermostat.current_temperature == 22
 
     def test_current_operation(self):
         """Test current operation."""
-        self.assertEqual(self.thermostat.current_operation, STATE_HEAT)
+        assert self.thermostat.current_operation == STATE_HEAT
         self.thermostat._thermostat.heating = False
-        self.assertEqual(self.thermostat.current_operation, STATE_IDLE)
+        assert self.thermostat.current_operation == STATE_IDLE
 
     def test_min_temp(self):
         """Test min temp."""
-        self.assertEqual(self.thermostat.min_temp, 41)
+        assert self.thermostat.min_temp == 41
         self.thermostat._temperature_unit = "C"
-        self.assertEqual(self.thermostat.min_temp, 5)
+        assert self.thermostat.min_temp == 5
 
     def test_max_temp(self):
         """Test max temp."""
-        self.assertEqual(self.thermostat.max_temp, 157)
+        assert self.thermostat.max_temp == 157
         self.thermostat._temperature_unit = "C"
-        self.assertEqual(self.thermostat.max_temp, 69)
+        assert self.thermostat.max_temp == 69
 
     def test_target_temperature(self):
         """Test target temperature."""
-        self.assertEqual(self.thermostat.target_temperature, 72)
+        assert self.thermostat.target_temperature == 72
         self.thermostat._temperature_unit = "C"
-        self.assertEqual(self.thermostat.target_temperature, 22)
+        assert self.thermostat.target_temperature == 22
 
     def test_current_hold_mode(self):
         """Test current hold mode."""
         self.thermostat._thermostat.schedule_mode = SCHEDULE_RUN
-        self.assertEqual(self.thermostat.current_hold_mode, nuheat.MODE_AUTO)
+        assert self.thermostat.current_hold_mode == nuheat.MODE_AUTO
 
         self.thermostat._thermostat.schedule_mode = SCHEDULE_HOLD
-        self.assertEqual(
-            self.thermostat.current_hold_mode, nuheat.MODE_HOLD_TEMPERATURE)
+        assert self.thermostat.current_hold_mode == \
+            nuheat.MODE_HOLD_TEMPERATURE
 
         self.thermostat._thermostat.schedule_mode = SCHEDULE_TEMPORARY_HOLD
-        self.assertEqual(
-            self.thermostat.current_hold_mode, nuheat.MODE_TEMPORARY_HOLD)
+        assert self.thermostat.current_hold_mode == nuheat.MODE_TEMPORARY_HOLD
 
         self.thermostat._thermostat.schedule_mode = None
-        self.assertEqual(
-            self.thermostat.current_hold_mode, nuheat.MODE_AUTO)
+        assert self.thermostat.current_hold_mode == nuheat.MODE_AUTO
 
     def test_operation_list(self):
         """Test the operation list."""
-        self.assertEqual(
-            self.thermostat.operation_list,
+        assert self.thermostat.operation_list == \
             [STATE_HEAT, STATE_IDLE]
-        )
 
     def test_resume_program(self):
         """Test resume schedule."""
         self.thermostat.resume_program()
         self.thermostat._thermostat.resume_schedule.assert_called_once_with()
-        self.assertTrue(self.thermostat._force_update)
+        assert self.thermostat._force_update
 
     def test_set_hold_mode(self):
         """Test set hold mode."""
         self.thermostat.set_hold_mode("temperature")
-        self.assertEqual(
-            self.thermostat._thermostat.schedule_mode, SCHEDULE_HOLD)
-        self.assertTrue(self.thermostat._force_update)
+        assert self.thermostat._thermostat.schedule_mode == SCHEDULE_HOLD
+        assert self.thermostat._force_update
 
         self.thermostat.set_hold_mode("temporary_temperature")
-        self.assertEqual(
-            self.thermostat._thermostat.schedule_mode, SCHEDULE_TEMPORARY_HOLD)
-        self.assertTrue(self.thermostat._force_update)
+        assert self.thermostat._thermostat.schedule_mode == \
+            SCHEDULE_TEMPORARY_HOLD
+        assert self.thermostat._force_update
 
         self.thermostat.set_hold_mode("auto")
-        self.assertEqual(
-            self.thermostat._thermostat.schedule_mode, SCHEDULE_RUN)
-        self.assertTrue(self.thermostat._force_update)
+        assert self.thermostat._thermostat.schedule_mode == SCHEDULE_RUN
+        assert self.thermostat._force_update
 
     def test_set_temperature(self):
         """Test set temperature."""
         self.thermostat.set_temperature(temperature=85)
-        self.assertEqual(self.thermostat._thermostat.target_fahrenheit, 85)
-        self.assertTrue(self.thermostat._force_update)
+        assert self.thermostat._thermostat.target_fahrenheit == 85
+        assert self.thermostat._force_update
 
         self.thermostat._temperature_unit = "C"
         self.thermostat.set_temperature(temperature=23)
-        self.assertEqual(self.thermostat._thermostat.target_celsius, 23)
-        self.assertTrue(self.thermostat._force_update)
+        assert self.thermostat._thermostat.target_celsius == 23
+        assert self.thermostat._force_update
 
     @patch.object(nuheat.NuHeatThermostat, "_throttled_update")
     def test_update_without_throttle(self, throttled_update):
@@ -216,7 +210,7 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat._force_update = True
         self.thermostat.update()
         throttled_update.assert_called_once_with(no_throttle=True)
-        self.assertFalse(self.thermostat._force_update)
+        assert not self.thermostat._force_update
 
     @patch.object(nuheat.NuHeatThermostat, "_throttled_update")
     def test_update_with_throttle(self, throttled_update):
@@ -224,7 +218,7 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat._force_update = False
         self.thermostat.update()
         throttled_update.assert_called_once_with()
-        self.assertFalse(self.thermostat._force_update)
+        assert not self.thermostat._force_update
 
     def test_throttled_update(self):
         """Test update with throttle."""

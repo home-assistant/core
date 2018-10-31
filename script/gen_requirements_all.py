@@ -40,6 +40,7 @@ TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
     'aiohue',
+    'aiounifi',
     'apns2',
     'caldav',
     'coinmarketcap',
@@ -89,7 +90,7 @@ TEST_REQUIREMENTS = (
     'pyspcwebgw',
     'python-forecastio',
     'python-nest',
-    'pytradfri\[async\]',
+    'pytradfri\\[async\\]',
     'pyunifi',
     'pyupnp-async',
     'pywebpush',
@@ -105,11 +106,11 @@ TEST_REQUIREMENTS = (
     'statsd',
     'uvcclient',
     'warrant',
-    'yahoo-finance',
     'pythonwhois',
     'wakeonlan',
     'vultr',
     'YesssSMS',
+    'ruamel.yaml',
 )
 
 IGNORE_PACKAGES = (

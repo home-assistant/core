@@ -31,8 +31,8 @@ class TestHelpers(unittest.TestCase):
             'zone 100': None,
         }
 
-        self.assertEqual(set(['zone', 'zone Hallo', 'zone 100']),
-                         set(helpers.extract_domain_configs(config, 'zone')))
+        assert set(['zone', 'zone Hallo', 'zone 100']) == \
+            set(helpers.extract_domain_configs(config, 'zone'))
 
     def test_config_per_platform(self):
         """Test config per platform method."""

@@ -1,110 +1,111 @@
 """Test MQTT fans."""
 import json
-import unittest
 
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.components import fan
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 
-from tests.common import (
-    mock_mqtt_component, async_fire_mqtt_message, fire_mqtt_message,
-    get_test_home_assistant, async_mock_mqtt_component, MockConfigEntry)
+from tests.common import async_fire_mqtt_message, MockConfigEntry, \
+    async_mock_mqtt_component
 
 
-class TestMqttFan(unittest.TestCase):
-    """Test the MQTT fan platform."""
+async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
+    """Test if command fails with command topic."""
+    assert await async_setup_component(hass, fan.DOMAIN, {
+        fan.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+        }
+    })
+    assert hass.states.get('fan.test') is None
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.mock_publish = mock_mqtt_component(self.hass)
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
+async def test_default_availability_payload(hass, mqtt_mock):
+    """Test the availability payload."""
+    assert await async_setup_component(hass, fan.DOMAIN, {
+        fan.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'state-topic',
+            'command_topic': 'command-topic',
+            'availability_topic': 'availability_topic'
+        }
+    })
 
-    def test_default_availability_payload(self):
-        """Test the availability payload."""
-        assert setup_component(self.hass, fan.DOMAIN, {
-            fan.DOMAIN: {
-                'platform': 'mqtt',
-                'name': 'test',
-                'state_topic': 'state-topic',
-                'command_topic': 'command-topic',
-                'availability_topic': 'availability_topic'
-            }
-        })
+    state = hass.states.get('fan.test')
+    assert state.state is STATE_UNAVAILABLE
 
-        state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+    async_fire_mqtt_message(hass, 'availability_topic', 'online')
+    await hass.async_block_till_done()
 
-        fire_mqtt_message(self.hass, 'availability_topic', 'online')
-        self.hass.block_till_done()
+    state = hass.states.get('fan.test')
+    assert state.state is not STATE_UNAVAILABLE
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
-        state = self.hass.states.get('fan.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
-        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+    async_fire_mqtt_message(hass, 'availability_topic', 'offline')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        fire_mqtt_message(self.hass, 'availability_topic', 'offline')
-        self.hass.block_till_done()
+    state = hass.states.get('fan.test')
+    assert state.state is STATE_UNAVAILABLE
 
-        state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+    async_fire_mqtt_message(hass, 'state-topic', '1')
+    await hass.async_block_till_done()
 
-        fire_mqtt_message(self.hass, 'state-topic', '1')
-        self.hass.block_till_done()
+    state = hass.states.get('fan.test')
+    assert state.state is STATE_UNAVAILABLE
 
-        state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+    async_fire_mqtt_message(hass, 'availability_topic', 'online')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        fire_mqtt_message(self.hass, 'availability_topic', 'online')
-        self.hass.block_till_done()
+    state = hass.states.get('fan.test')
+    assert state.state is not STATE_UNAVAILABLE
 
-        state = self.hass.states.get('fan.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
 
-    def test_custom_availability_payload(self):
-        """Test the availability payload."""
-        assert setup_component(self.hass, fan.DOMAIN, {
-            fan.DOMAIN: {
-                'platform': 'mqtt',
-                'name': 'test',
-                'state_topic': 'state-topic',
-                'command_topic': 'command-topic',
-                'availability_topic': 'availability_topic',
-                'payload_available': 'good',
-                'payload_not_available': 'nogood'
-            }
-        })
+async def test_custom_availability_payload(hass, mqtt_mock):
+    """Test the availability payload."""
+    assert await async_setup_component(hass, fan.DOMAIN, {
+        fan.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'state-topic',
+            'command_topic': 'command-topic',
+            'availability_topic': 'availability_topic',
+            'payload_available': 'good',
+            'payload_not_available': 'nogood'
+        }
+    })
 
-        state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+    state = hass.states.get('fan.test')
+    assert state.state is STATE_UNAVAILABLE
 
-        fire_mqtt_message(self.hass, 'availability_topic', 'good')
-        self.hass.block_till_done()
+    async_fire_mqtt_message(hass, 'availability_topic', 'good')
+    await hass.async_block_till_done()
 
-        state = self.hass.states.get('fan.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
-        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+    state = hass.states.get('fan.test')
+    assert state.state is not STATE_UNAVAILABLE
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
-        fire_mqtt_message(self.hass, 'availability_topic', 'nogood')
-        self.hass.block_till_done()
+    async_fire_mqtt_message(hass, 'availability_topic', 'nogood')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+    state = hass.states.get('fan.test')
+    assert state.state is STATE_UNAVAILABLE
 
-        fire_mqtt_message(self.hass, 'state-topic', '1')
-        self.hass.block_till_done()
+    async_fire_mqtt_message(hass, 'state-topic', '1')
+    await hass.async_block_till_done()
 
-        state = self.hass.states.get('fan.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+    state = hass.states.get('fan.test')
+    assert state.state is STATE_UNAVAILABLE
 
-        fire_mqtt_message(self.hass, 'availability_topic', 'good')
-        self.hass.block_till_done()
+    async_fire_mqtt_message(hass, 'availability_topic', 'good')
+    await hass.async_block_till_done()
 
-        state = self.hass.states.get('fan.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+    state = hass.states.get('fan.test')
+    assert state.state is not STATE_UNAVAILABLE
 
 
 async def test_discovery_removal_fan(hass, mqtt_mock, caplog):

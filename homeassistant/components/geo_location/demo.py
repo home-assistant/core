@@ -4,10 +4,10 @@ Demo platform for the geo location component.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-import logging
-import random
 from datetime import timedelta
-from math import pi, cos, sin, radians
+import logging
+from math import cos, pi, radians, sin
+import random
 from typing import Optional
 
 from homeassistant.components.geo_location import GeoLocationEvent
@@ -16,7 +16,7 @@ from homeassistant.helpers.event import track_time_interval
 _LOGGER = logging.getLogger(__name__)
 
 AVG_KM_PER_DEGREE = 111.0
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
+DEFAULT_UNIT_OF_MEASUREMENT = 'km'
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 MAX_RADIUS_IN_KM = 50
 NUMBER_OF_DEMO_DEVICES = 5

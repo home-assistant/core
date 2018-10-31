@@ -131,11 +131,11 @@ class TemplateLock(LockDevice):
         if self._optimistic:
             self._state = True
             self.async_schedule_update_ha_state()
-        await self._command_lock.async_run()
+        await self._command_lock.async_run(context=self._context)
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
         if self._optimistic:
             self._state = False
             self.async_schedule_update_ha_state()
-        await self._command_unlock.async_run()
+        await self._command_unlock.async_run(context=self._context)
