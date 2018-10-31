@@ -27,8 +27,8 @@ CONF_UPDATE_INTERVAL = 'update_interval'
 
 DEFAULT_NAME = 'Tautulli'
 DEFAULT_PORT = '8181'
-DEFAULT_MONITORED_CONDITIONS = 'None'
-DEFAULT_MONITORED_USERS = 'None'
+DEFAULT_CONDITIONS = 'None'
+DEFAULT_USERS = 'None'
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
@@ -41,10 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    vol.Optional(CONF_MONITORED_CONDITIONS,
-                 default=DEFAULT_MONITORED_CONDITIONS):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_CONDITIONS):
         vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_MONITORED_USERS, default=DEFAULT_MONITORED_USERS):
+    vol.Optional(CONF_MONITORED_USERS, default=DEFAULT_USERS):
         vol.All(cv.ensure_list, [cv.string]),
     })
 
@@ -134,6 +133,7 @@ class TautulliSensor(Entity):
     def device_state_attributes(self):
         """Return attributes for the sensor."""
         return self._attributes
+
 
 class TautulliData:
     """Get the latest data and update the states."""
