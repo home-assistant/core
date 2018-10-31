@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_SSL,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -66,6 +66,7 @@ CUSTOM_SCHEMA = vol.Any({
 PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
     vol.Required(CONF_SENSORS): vol.Schema({cv.slug: cv.ensure_list}),
@@ -107,7 +108,7 @@ async def async_setup_platform(
     async_add_entities(hass_sensors)
 
     # Init the SMA interface
-    session = async_get_clientsession(hass)
+    session = async_get_clientsession(hass, verify_ssl=config[CONF_VERIFY_SSL])
     grp = {GROUP_INSTALLER: pysma.GROUP_INSTALLER,
            GROUP_USER: pysma.GROUP_USER}[config[CONF_GROUP]]
 
