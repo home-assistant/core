@@ -247,7 +247,7 @@ omit =
     homeassistant/components/opencv.py
     homeassistant/components/*/opencv.py
 
-    homeassistant/components/opentherm_gw.py
+    homeassistant/components/opentherm_gw/*
     homeassistant/components/*/opentherm_gw.py
 
     homeassistant/components/openuv/__init__.py
