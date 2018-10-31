@@ -274,7 +274,7 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                         float(payload), COVER_PAYLOAD)
                 if 0 <= percentage_payload <= 100:
                     self._position = percentage_payload
-                    self._state = False if self._position > 0 else True
+                    self._state = self._position == 0
             else:
                 _LOGGER.warning(
                     "Payload is not integer within range: %s",
@@ -439,7 +439,7 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             mqtt.async_publish(self.hass, self._set_position_topic,
                                position, self._qos, self._retain)
             if self._optimistic:
-                self._state = False if percentage_position > 0 else True
+                self._state = percentage_position == 0
                 self._position = percentage_position
                 self.async_schedule_update_ha_state()
 
