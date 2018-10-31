@@ -148,3 +148,14 @@ sensibo_assume_state:
     state:
       description: State to set.
       example: 'idle'
+
+
+set_boost_mode:
+  description: Turn boost mode on/off for climate device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+    boost_mode:
+      description: New value of away mode.
+      example: true
