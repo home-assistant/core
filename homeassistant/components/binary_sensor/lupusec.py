@@ -8,7 +8,6 @@ import logging
 
 from homeassistant.components.lupusec import (LupusecDevice,
                                               DOMAIN as LUPUSEC_DOMAIN)
-from homeassistant.components.lupusec import SCAN_INTERVAL as SCAN_INTERVAL
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 DEPENDENCIES = ['lupusec']

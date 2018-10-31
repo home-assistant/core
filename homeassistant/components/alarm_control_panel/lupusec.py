@@ -5,14 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.lupusec/
 """
 
-from datetime import timedelta
-
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.components.lupusec import DOMAIN as LUPUSEC_DOMAIN
-from homeassistant.components.lupusec import SCAN_INTERVAL as SCAN_INTERVAL
 from homeassistant.components.lupusec import LupusecDevice
-
-import homeassistant.util.dt as dt_util
 
 from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME,
@@ -29,8 +24,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm(), data.name)]
 
-    # data.devices.extend(alarm_devices)
-
     add_entities(alarm_devices)
 
 
@@ -40,9 +33,6 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanel):
     def __init__(self, data, device, name):
         """Initialize the alarm control panel."""
         super().__init__(data, device)
-        # self._state = STATE_ALARM_DISARMED
-        # self._previous_state = ''
-        # self._state_ts = ''
 
     @property
     def icon(self):

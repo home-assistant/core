@@ -12,15 +12,13 @@ import voluptuous as vol
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_NAME, CONF_IP_ADDRESS,
-                                 CONF_SCAN_INTERVAL)
+                                 CONF_NAME, CONF_IP_ADDRESS)
 from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['lupupy==0.0.10']
 
 DOMAIN = 'lupusec'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=2)
 
 NOTIFICATION_ID = 'lupusec_notification'
 NOTIFICATION_TITLE = 'Lupusec Security Setup'
@@ -30,9 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-            cv.time_period,
+        vol.Optional(CONF_NAME): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -52,13 +48,12 @@ def setup(hass, config):
     password = conf[CONF_PASSWORD]
     ip_address = conf[CONF_IP_ADDRESS]
     name = conf.get(CONF_NAME)
-    SCAN_INTERVAL = conf.get(CONF_SCAN_INTERVAL)
 
     try:
         hass.data[DOMAIN] = LupusecSystem(username, password, ip_address, name)
     except LupusecException as ex:
         _LOGGER.warning(ex)
-        
+
         hass.components.persistent_notification.create(
             'Error: {}<br />'
             'You will need to restart hass after fixing.'
@@ -72,6 +67,7 @@ def setup(hass, config):
 
     return True
 
+
 class LupusecSystem:
     """Lupusec System class."""
 
@@ -81,6 +77,7 @@ class LupusecSystem:
         self.lupusec = lupupy.Lupusec(username, password, ip_address)
         self.name = name
         self.devices = []
+
 
 class LupusecDevice(Entity):
     """Representation of a Lupusec device."""
