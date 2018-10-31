@@ -11,8 +11,6 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.util.json import load_json
 
 # Loading the config flow file will register the flow

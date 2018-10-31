@@ -163,7 +163,6 @@ async def test_lights_and_groups(hass):
     }, blocking=True)
 
 
-
 async def test_add_new_light(hass):
     """Test successful creation of light entities."""
     await setup_gateway(hass, {})

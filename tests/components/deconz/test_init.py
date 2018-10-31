@@ -1,13 +1,6 @@
 """Test deCONZ component setup process."""
 from unittest.mock import Mock, patch
 
-# <<<<<<< HEAD
-# from homeassistant.components import deconz
-# from homeassistant.components.deconz import DATA_DECONZ_ID
-# from homeassistant.helpers.dispatcher import async_dispatcher_send
-# from homeassistant.setup import async_setup_component
-# from tests.common import mock_coro
-
 from homeassistant.setup import async_setup_component
 from homeassistant.components import deconz
 
@@ -212,7 +205,7 @@ async def test_service_refresh_devices(hass):
             'deconz', 'device_refresh', service_data={})
         await hass.async_block_till_done()
     with patch.object(hass.data[deconz.DOMAIN].api, 'async_load_parameters',
-               return_value=mock_coro(False)):
+                      return_value=mock_coro(False)):
         await hass.services.async_call(
             'deconz', 'device_refresh', service_data={})
         await hass.async_block_till_done()
