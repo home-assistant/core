@@ -11,13 +11,16 @@ from ruamel.yaml.constructor import SafeConstructor
 from ruamel.yaml.error import YAMLError
 from ruamel.yaml.compat import StringIO
 
-from homeassistant.util.yaml import _secret_yaml
+from homeassistant.util.yaml import secret_yaml
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 
+
+class ExtSafeConstructor(SafeConstructor):
+    """Extended SafeConstructor."""
 
 class UnsupportedYamlError(HomeAssistantError):
     """Unsupported YAML."""
@@ -72,8 +75,9 @@ def load_yaml(fname: str, rt: bool) -> JSON_TYPE:
         yaml = YAML(typ='rt')
         yaml.preserve_quotes = True
     else:
-        SafeConstructor.name = fname
+        ExtSafeConstructor.name = fname
         yaml = YAML(typ='safe')
+        yaml.Constructor = ExtSafeConstructor
 
     try:
         with open(fname, encoding='utf-8') as conf_file:
@@ -119,6 +123,6 @@ def save_yaml(fname: str, data: JSON_TYPE):
                 _LOGGER.error("YAML replacement cleanup failed: %s", exc)
 
 
-SafeConstructor.add_constructor(u'!secret', _secret_yaml)
-SafeConstructor.add_constructor(u'!include', _include_yaml)
-SafeConstructor.add_constructor(None, _yaml_unsupported)
+ExtSafeConstructor.add_constructor(u'!secret', secret_yaml)
+ExtSafeConstructor.add_constructor(u'!include', _include_yaml)
+ExtSafeConstructor.add_constructor(None, _yaml_unsupported)

@@ -272,7 +272,7 @@ def _load_secret_yaml(secret_path: str) -> JSON_TYPE:
     return secrets
 
 
-def _secret_yaml(loader: SafeLineLoader,
+def secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node) -> JSON_TYPE:
     """Load secrets and embed it into the configuration YAML."""
     secret_path = os.path.dirname(loader.name)
@@ -322,7 +322,7 @@ yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
 yaml.SafeLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
 yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)
-yaml.SafeLoader.add_constructor('!secret', _secret_yaml)
+yaml.SafeLoader.add_constructor('!secret', secret_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_list', _include_dir_list_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_merge_list',
                                 _include_dir_merge_list_yaml)
