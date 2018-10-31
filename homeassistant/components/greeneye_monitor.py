@@ -54,7 +54,8 @@ TEMPERATURE_SENSOR_SCHEMA = vol.Schema({
 
 TEMPERATURE_SENSORS_SCHEMA = vol.Schema({
     vol.Required(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-    vol.Required(CONF_SENSORS): cv.ensure_list(TEMPERATURE_SENSOR_SCHEMA),
+    vol.Required(CONF_SENSORS): vol.All(cv.ensure_list,
+                                        [TEMPERATURE_SENSOR_SCHEMA]),
 })
 
 PULSE_COUNTER_SCHEMA = vol.Schema({
@@ -69,7 +70,7 @@ PULSE_COUNTER_SCHEMA = vol.Schema({
         TIME_UNIT_HOUR),
 })
 
-PULSE_COUNTERS_SCHEMA = vol.Schema(cv.ensure_list(PULSE_COUNTER_SCHEMA))
+PULSE_COUNTERS_SCHEMA = vol.All(cv.ensure_list, [PULSE_COUNTER_SCHEMA])
 
 CHANNEL_SCHEMA = vol.Schema({
     vol.Required(CONF_NUMBER): vol.Range(1, 48),
@@ -77,7 +78,7 @@ CHANNEL_SCHEMA = vol.Schema({
     vol.Optional(CONF_NET_METERING, default=False): cv.boolean,
 })
 
-CHANNELS_SCHEMA = vol.Schema(cv.ensure_list(CHANNEL_SCHEMA))
+CHANNELS_SCHEMA = vol.All(cv.ensure_list, [CHANNEL_SCHEMA])
 
 MONITOR_SCHEMA = vol.Schema({
     vol.Required(CONF_SERIAL_NUMBER): cv.positive_int,
@@ -91,7 +92,7 @@ MONITOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_PULSE_COUNTERS, default=[]): PULSE_COUNTERS_SCHEMA,
 })
 
-MONITORS_SCHEMA = vol.Schema(cv.ensure_list(MONITOR_SCHEMA))
+MONITORS_SCHEMA = vol.All(cv.ensure_list, [MONITOR_SCHEMA])
 
 COMPONENT_SCHEMA = vol.Schema({
     vol.Required(CONF_PORT): cv.port,
@@ -157,7 +158,7 @@ async def async_setup(hass, config):
 
     if not all_sensors:
         _LOGGER.error("Configuration must specify at least one "
-                      "channel, pulse counter or temperature sensor.")
+                      "channel, pulse counter or temperature sensor")
         return False
 
     hass.async_create_task(async_load_platform(
