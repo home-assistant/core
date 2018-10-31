@@ -24,7 +24,7 @@ CONF_BETA = 'beta'
 CONF_IMAGE = 'image'
 
 DEFAULT_IMAGE = 'default'
-DEFAULT_NAME = "Home Assistant Version"
+DEFAULT_NAME = "Current Version"
 DEFAULT_SOURCE = 'local'
 
 ICON = 'mdi:package-up'
