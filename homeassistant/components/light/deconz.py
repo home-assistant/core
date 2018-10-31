@@ -5,8 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
 from homeassistant.components.deconz.const import (
-    CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN,
+    CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DATA_DECONZ, DECONZ_DOMAIN,
     COVER_TYPES, SWITCH_TYPES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
@@ -38,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities.append(DeconzLight(light))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    hass.data[DATA_DECONZ].listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_light))
 
     @callback
@@ -51,11 +50,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities.append(DeconzLight(group))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    hass.data[DATA_DECONZ].listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_group', async_add_group))
 
-    async_add_light(hass.data[DATA_DECONZ].lights.values())
-    async_add_group(hass.data[DATA_DECONZ].groups.values())
+    async_add_light(hass.data[DATA_DECONZ].api.lights.values())
+    async_add_group(hass.data[DATA_DECONZ].api.groups.values())
 
 
 class DeconzLight(Light):
@@ -81,7 +80,8 @@ class DeconzLight(Light):
     async def async_added_to_hass(self):
         """Subscribe to lights events."""
         self._light.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._light.deconz_id
+        self.hass.data[DATA_DECONZ].deconz_ids[self.entity_id] = \
+            self._light.deconz_id
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect light object when removed."""
@@ -214,7 +214,7 @@ class DeconzLight(Light):
                 self._light.uniqueid.count(':') != 7):
             return None
         serial = self._light.uniqueid.split('-', 1)[0]
-        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
+        bridgeid = self.hass.data[DATA_DECONZ].api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
