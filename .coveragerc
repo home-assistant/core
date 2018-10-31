@@ -229,6 +229,8 @@ omit =
     homeassistant/components/mysensors/*
     homeassistant/components/*/mysensors.py
 
+    homeassistant/components/*/youless.py
+
     homeassistant/components/neato.py
     homeassistant/components/*/neato.py
 
