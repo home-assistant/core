@@ -873,22 +873,41 @@ async def test_thermostat(hass):
     )
     assert msg['event']['payload']['type'] == 'TEMPERATURE_VALUE_OUT_OF_RANGE'
 
-    call, _ = await assert_request_calls_service(
+    # Setting mode, the payload can be an object with a value attribute...
+    call, msg = await assert_request_calls_service(
         'Alexa.ThermostatController', 'SetThermostatMode',
         'climate#test_thermostat', 'climate.set_operation_mode',
         hass,
         payload={'thermostatMode': {'value': 'HEAT'}}
     )
     assert call.data['operation_mode'] == 'heat'
+    properties = _ReportedProperties(msg['context']['properties'])
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'thermostatMode', 'HEAT')
 
-    call, _ = await assert_request_calls_service(
+    call, msg = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'SetThermostatMode',
+        'climate#test_thermostat', 'climate.set_operation_mode',
+        hass,
+        payload={'thermostatMode': {'value': 'COOL'}}
+    )
+    assert call.data['operation_mode'] == 'cool'
+    properties = _ReportedProperties(msg['context']['properties'])
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'thermostatMode', 'COOL')
+
+    # ...it can also be just the mode.
+    call, msg = await assert_request_calls_service(
         'Alexa.ThermostatController', 'SetThermostatMode',
         'climate#test_thermostat', 'climate.set_operation_mode',
         hass,
         payload={'thermostatMode': 'HEAT'}
     )
-
     assert call.data['operation_mode'] == 'heat'
+    properties = _ReportedProperties(msg['context']['properties'])
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'thermostatMode', 'HEAT')
+
     msg = await assert_request_fails(
         'Alexa.ThermostatController', 'SetThermostatMode',
         'climate#test_thermostat', 'climate.set_operation_mode',

@@ -1839,11 +1839,17 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
         climate.ATTR_OPERATION_MODE: ha_mode,
     }
 
+    response = directive.response()
     await hass.services.async_call(
         entity.domain, climate.SERVICE_SET_OPERATION_MODE, data,
         blocking=False, context=context)
+    response.add_context_property({
+        'name': 'thermostatMode',
+        'namespace': 'Alexa.ThermostatController',
+        'value': mode,
+    })
 
-    return directive.response()
+    return response
 
 
 @HANDLERS.register(('Alexa', 'ReportState'))
