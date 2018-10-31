@@ -5,17 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sma/
 """
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_SSL,
-    CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_SSL, CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -51,7 +51,7 @@ def _check_sensor_schema(conf):
 
 CUSTOM_SCHEMA = vol.Any({
     vol.Required(CONF_KEY):
-    vol.All(cv.string, vol.Length(min=13, max=15)),
+        vol.All(cv.string, vol.Length(min=13, max=15)),
     vol.Required(CONF_UNIT): cv.string,
     vol.Optional(CONF_FACTOR, default=1): vol.Coerce(float),
 })
