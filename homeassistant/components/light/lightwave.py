@@ -15,8 +15,8 @@ switch:
       R2D1:
         name: Room two Device one
 
-Each device requires an id and a name. THe id takes the from R#D# where R# is the room number 
-and D# is the device number.
+Each device requires an id and a name. THe id takes the from R#D#
+where R# is the room number and D# is the device number.
 
 For more details on the api see: https://api.lightwaverf.com/
 """
@@ -96,7 +96,7 @@ class LRFLight(Light):
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
-        if not self._brightness == 255:
+        if self._brightness != 255:
             self._lwlink.turn_on_with_brightness(
                 self._device_id, self._name, self._brightness)
         else:

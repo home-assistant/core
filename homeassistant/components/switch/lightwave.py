@@ -14,7 +14,7 @@ switch:
       R2D1:
         name: Room two Device one
 
-Each device requires an id and a name. THe id takes the from R#D# 
+Each device requires an id and a name. THe id takes the from R#D#
 where R# is the room number and D# is the device number.
 
 For more details on the api see: https://api.lightwaverf.com/

@@ -1,7 +1,7 @@
 """
 homeassistant.components.lightwave
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Implements communication with LightwaveRF 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Implements communication with LightwaveRF
 
 My understanding of the LightWave Hub is that devices cannot be discovered
 so must be registered manually. This is done in the configuration file
@@ -45,6 +45,7 @@ async def async_setup(hass, config):
 
 
 class LWLink():
+    ''' LWLink provides a communication link with the LightwaveRF hub '''
     SOCKET_TIMEOUT = 2.0
     RX_PORT = 9761
     TX_PORT = 9760
@@ -53,24 +54,24 @@ class LWLink():
     thread = None
     link_ip = ''
 
-    # msg = "100,!F*p."
-
     def __init__(self, link_ip=None):
         if link_ip is not None:
             LWLink.link_ip = link_ip
 
-    # methods
     def _send_message(self, msg):
+        ''' adds message to queue '''
         LWLink.the_queue.put_nowait(msg)
-        if LWLink.thread == None or not self.thread.isAlive():
-            LWLink.thread = threading.Thread(target=self._sendQueue)
+        if LWLink.thread is None or not self.thread.isAlive():
+            LWLink.thread = threading.Thread(target=self._send_queue)
             LWLink.thread.start()
 
     def turn_on_light(self, device_id, name):
+        ''' formats message to turn light on '''
         msg = '321,!%sFdP32|Turn On|%s' % (device_id, name)
         self._send_message(msg)
 
     def turn_on_switch(self, device_id, name):
+        ''' formats message to turn switch on '''
         msg = '321,!%sF1|Turn On|%s' % (device_id, name)
         self._send_message(msg)
 
@@ -84,10 +85,12 @@ class LWLink():
         self._send_message(msg)
 
     def turn_off(self, device_id, name):
+        ''' formats message to turn light or switch off '''
         msg = "321,!%sF0|Turn Off|%s" % (device_id, name)
         self._send_message(msg)
 
-    def _sendQueue(self):
+    def _send_queue(self):
+        ''' starts processing the queue '''
         while not LWLink.the_queue.empty():
             self._send_reliable_message(LWLink.the_queue.get_nowait())
 
@@ -97,9 +100,10 @@ class LWLink():
         result = False
         max_retries = 15
         try:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as
-                write_sock, socket.socket(socket.AF_INET,
-                                          socket.SOCK_DGRAM) as read_sock:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) \
+                    as write_sock, \
+                    socket.socket(socket.AF_INET, socket.SOCK_DGRAM) \
+                    as read_sock:
                 write_sock.setsockopt(
                     socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 read_sock.setsockopt(socket.SOL_SOCKET,
@@ -120,7 +124,7 @@ class LWLink():
                             result = True
                             break
 
-                        response.split(',')[1]
+                        response = response.split(',')[1]
                         if response.startswith('OK'):
                             result = True
                             break
