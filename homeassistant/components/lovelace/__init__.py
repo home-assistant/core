@@ -21,13 +21,16 @@ FORMAT_JSON = 'json'
 
 OLD_WS_TYPE_GET_LOVELACE_UI = 'frontend/lovelace_config'
 WS_TYPE_GET_LOVELACE_UI = 'lovelace/config'
-
 WS_TYPE_MIGRATE_CONFIG = 'lovelace/config/migrate'
+
 WS_TYPE_GET_CARD = 'lovelace/config/card/get'
 WS_TYPE_UPDATE_CARD = 'lovelace/config/card/update'
 WS_TYPE_ADD_CARD = 'lovelace/config/card/add'
 WS_TYPE_MOVE_CARD = 'lovelace/config/card/move'
 WS_TYPE_DELETE_CARD = 'lovelace/config/card/delete'
+
+WS_TYPE_GET_VIEW = 'lovelace/config/view/get'
+WS_TYPE_UPDATE_VIEW = 'lovelace/config/view/update'
 
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): vol.Any(WS_TYPE_GET_LOVELACE_UI,
@@ -72,6 +75,21 @@ SCHEMA_MOVE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_DELETE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_DELETE_CARD,
     vol.Required('card_id'): str,
+})
+
+SCHEMA_GET_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_GET_VIEW,
+    vol.Required('view_id'): str,
+    vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
+                                                         FORMAT_YAML),
+})
+
+SCHEMA_UPDATE_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_UPDATE_VIEW,
+    vol.Required('view_id'): str,
+    vol.Required('view_config'): vol.Any(str, Dict),
+    vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
+                                                         FORMAT_YAML),
 })
 
 
@@ -156,6 +174,7 @@ def update_card(fname: str, card_id: str, card_config: str,
                 continue
             if data_format == FORMAT_YAML:
                 card_config = yaml.yaml_to_object(card_config)
+            card.clear()
             card.update(card_config)
             yaml.save_yaml(fname, config)
             return
@@ -250,6 +269,41 @@ def delete_card(fname: str, card_id: str, position: int = None) -> None:
         "Card with ID: {} was not found in {}.".format(card_id, fname))
 
 
+def get_view(fname: str, view_id: str, data_format: str = FORMAT_YAML) -> None:
+    """Get view without it's cards."""
+    round_trip = data_format == FORMAT_YAML
+    config = yaml.load_yaml(fname, round_trip)
+    for view in config.get('views', []):
+        if str(view.get('id', '')) != view_id:
+            continue
+        del view['cards']
+        if data_format == FORMAT_YAML:
+            return yaml.object_to_yaml(view)
+        return view
+    
+    raise ViewNotFoundError(
+        "View with ID: {} was not found in {}.".format(view_id, fname))
+
+
+def update_view(fname: str, view_id: str, view_config, data_format:
+                str = FORMAT_YAML) -> None:
+    """Update view."""
+    config = yaml.load_yaml(fname, True)
+    for view in config.get('views', []):
+        if str(view.get('id', '')) != view_id:
+            continue
+        if data_format == FORMAT_YAML:
+            view_config = yaml.yaml_to_object(view_config)
+        view_config['cards'] = view.get('cards', [])
+        view.clear()
+        view.update(view_config)
+        yaml.save_yaml(fname, config)
+        return
+    
+    raise ViewNotFoundError(
+        "View with ID: {} was not found in {}.".format(view_id, fname))
+
+
 async def async_setup(hass, config):
     """Set up the Lovelace commands."""
     # Backwards compat. Added in 0.80. Remove after 0.85
@@ -284,6 +338,14 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_DELETE_CARD, websocket_lovelace_delete_card,
         SCHEMA_DELETE_CARD)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_GET_VIEW, websocket_lovelace_get_view,
+        SCHEMA_GET_VIEW)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_UPDATE_VIEW, websocket_lovelace_update_view,
+        SCHEMA_UPDATE_VIEW)
 
     return True
 
@@ -385,3 +447,21 @@ async def websocket_lovelace_delete_card(hass, connection, msg):
     return await hass.async_add_executor_job(
         delete_card, hass.config.path(LOVELACE_CONFIG_FILE),
         msg['card_id'])
+
+
+@websocket_api.async_response
+@handle_yaml_errors
+async def websocket_lovelace_get_view(hass, connection, msg):
+    """Send lovelace view config over websocket config."""
+    return await hass.async_add_executor_job(
+        get_view, hass.config.path(LOVELACE_CONFIG_FILE), msg['view_id'],
+        msg.get('format', FORMAT_YAML))
+
+
+@websocket_api.async_response
+@handle_yaml_errors
+async def websocket_lovelace_update_view(hass, connection, msg):
+    """Receive lovelace card config over websocket and save."""
+    return await hass.async_add_executor_job(
+        update_view, hass.config.path(LOVELACE_CONFIG_FILE),
+        msg['view_id'], msg['view_config'], msg.get('format', FORMAT_YAML))

@@ -565,3 +565,81 @@ async def test_lovelace_delete_card(hass, hass_ws_client):
     assert msg['id'] == 5
     assert msg['type'] == TYPE_RESULT
     assert msg['success']
+
+
+async def test_lovelace_get_view(hass, hass_ws_client):
+    """Test get_view command."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)):
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/view/get',
+            'view_id': 'example',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+    assert "".join(msg['result'].split()) == "".join('title: Example\n # \
+                             Optional unique id for direct\
+                             access /lovelace/${id}\nid: example\n # Optional\
+                             background (overwrites the global background).\n\
+                             background: radial-gradient(crimson, skyblue)\n\
+                             # Each view can have a different theme applied.\n\
+                             theme: dark-mode\n'.split())
+
+
+async def test_lovelace_get_view_not_found(hass, hass_ws_client):
+    """Test get_card command cannot find card."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)):
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/view/get',
+            'view_id': 'not_found',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success'] is False
+    assert msg['error']['code'] == 'view_not_found'
+
+
+async def test_lovelace_update_view(hass, hass_ws_client):
+    """Test update_view command."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+    origyaml = yaml.load(TEST_YAML_A)
+
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
+               return_value=origyaml), \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
+            as save_yaml_mock:
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/view/update',
+            'view_id': 'example',
+            'view_config': 'id: example2\ntitle: New title\n',
+        })
+        msg = await client.receive_json()
+
+    result = save_yaml_mock.call_args_list[0][0][1]
+    orig_view = origyaml.mlget(['views', 0], list_ok=True)
+    new_view = result.mlget(['views', 0], list_ok=True)
+    assert new_view['title'] == 'New title'
+    assert new_view['cards'] == orig_view['cards']
+    assert 'theme' not in new_view
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
