@@ -338,7 +338,6 @@ def add_view(fname: str, view_config: str,
     else:
         views.insert(position, view_config)
     yaml.save_yaml(fname, config)
-    return
 
 
 def move_view(fname: str, view_id: str, position: int) -> None:
