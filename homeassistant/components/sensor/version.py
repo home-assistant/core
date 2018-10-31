@@ -33,11 +33,11 @@ TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BETA, default=False): cv.boolean,
-    vol.Optional(CONF_IMAGE, default=DEFAULT_IMAGE): vol.All(vol.Lower,
-                                                             cv.string),
+    vol.Optional(CONF_IMAGE, default=DEFAULT_IMAGE): vol.All(cv.string,
+                                                             vol.Lower),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SOURCE, default=DEFAULT_SOURCE): vol.All(vol.Lower,
-                                                               cv.string),
+    vol.Optional(CONF_SOURCE, default=DEFAULT_SOURCE): vol.All(cv.string,
+                                                               vol.Lower),
 })
 
 
