@@ -6,7 +6,8 @@ from unittest import mock
 import pytz
 
 import homeassistant.core as ha
-from homeassistant.core import callback, CoreState, State
+from homeassistant.core import (
+    callback, DOMAIN as HASS_DOMAIN, CoreState, State)
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     SERVICE_TURN_OFF,
@@ -257,7 +258,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_ON == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -270,7 +271,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         assert 2 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_OFF == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -292,7 +293,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_ON == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -314,7 +315,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_OFF == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -327,7 +328,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_OFF == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -363,7 +364,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_ON == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -416,7 +417,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         assert 2 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_OFF == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -445,7 +446,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_ON == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -458,7 +459,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_ON == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -480,7 +481,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_OFF == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -502,7 +503,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_ON == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -515,7 +516,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_OFF == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -592,7 +593,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_ON == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -618,7 +619,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_OFF == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -692,7 +693,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_ON == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -709,7 +710,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_OFF == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -773,7 +774,7 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_ON == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -796,7 +797,7 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_OFF == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -863,7 +864,7 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_ON == call.service
         assert ENT_SWITCH == call.data['entity_id']
 
@@ -886,7 +887,7 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(self.calls)
         call = self.calls[0]
-        assert 'homeassistant' == call.domain
+        assert HASS_DOMAIN == call.domain
         assert SERVICE_TURN_OFF == call.service
         assert ENT_SWITCH == call.data['entity_id']
 

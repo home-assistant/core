@@ -345,8 +345,10 @@ class EntityPlatform:
             raise HomeAssistantError(
                 msg)
 
-        self.entities[entity.entity_id] = entity
-        component_entities.add(entity.entity_id)
+        entity_id = entity.entity_id
+        self.entities[entity_id] = entity
+        component_entities.add(entity_id)
+        entity.async_on_remove(lambda: self.entities.pop(entity_id))
 
         if hasattr(entity, 'async_added_to_hass'):
             await entity.async_added_to_hass()
@@ -365,7 +367,7 @@ class EntityPlatform:
         if not self.entities:
             return
 
-        tasks = [self._async_remove_entity(entity_id)
+        tasks = [self.async_remove_entity(entity_id)
                  for entity_id in self.entities]
 
         await asyncio.wait(tasks, loop=self.hass.loop)
@@ -376,7 +378,7 @@ class EntityPlatform:
 
     async def async_remove_entity(self, entity_id):
         """Remove entity id from platform."""
-        await self._async_remove_entity(entity_id)
+        await self.entities[entity_id].async_remove()
 
         # Clean up polling job if no longer needed
         if (self._async_unsub_polling is not None and
@@ -384,15 +386,6 @@ class EntityPlatform:
                         in self.entities.values())):
             self._async_unsub_polling()
             self._async_unsub_polling = None
-
-    async def _async_remove_entity(self, entity_id):
-        """Remove entity id from platform."""
-        entity = self.entities.pop(entity_id)
-
-        if hasattr(entity, 'async_will_remove_from_hass'):
-            await entity.async_will_remove_from_hass()
-
-        self.hass.states.async_remove(entity_id)
 
     async def _update_entity_states(self, now):
         """Update the states of all the polling entities.

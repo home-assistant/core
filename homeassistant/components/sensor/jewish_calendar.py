@@ -10,9 +10,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, SUN_EVENT_SUNSET)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['hdate==0.6.5']
@@ -107,8 +109,18 @@ class JewishCalSensor(Entity):
         """Update the state of the sensor."""
         import hdate
 
-        today = dt_util.now().date()
+        now = dt_util.as_local(dt_util.now())
+        _LOGGER.debug("Now: %s Timezone = %s", now, now.tzinfo)
+
+        today = now.date()
         upcoming_saturday = today + timedelta((12 - today.weekday()) % 7)
+        sunset = dt_util.as_local(get_astral_event_date(
+            self.hass, SUN_EVENT_SUNSET, today))
+
+        _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
+
+        if now > sunset:
+            today += timedelta(1)
 
         date = hdate.HDate(
             today, diaspora=self.diaspora, hebrew=self._hebrew)
