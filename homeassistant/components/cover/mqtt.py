@@ -78,7 +78,19 @@ OPEN_CLOSE_FEATURES = (SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP)
 TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
                  SUPPORT_SET_TILT_POSITION)
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+
+def validate_options(value):
+    """Validate options.
+
+    If set postion topic is set then get position topic is set as well."""
+    if (CONF_SET_POSITION_TOPIC in value and
+            CONF_GET_POSITION_TOPIC not in value):
+        raise vol.Invalid(
+            "Set position topic must be set together with get position topic.")
+    return value
+
+
+PLATFORM_SCHEMA = vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
     vol.Optional(CONF_SET_POSITION_TOPIC): valid_publish_topic,
     vol.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
@@ -111,7 +123,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
                  default=DEFAULT_TILT_INVERT_STATE): cv.boolean,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema), validate_options)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
