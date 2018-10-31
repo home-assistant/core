@@ -4,7 +4,6 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -188,10 +187,9 @@ class LimitlessLEDGroup(Light):
         self._color = None
         self._effect = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Handle entity about to be added to hass event."""
-        last_state = yield from async_get_last_state(self.hass, self.entity_id)
+        last_state = await async_get_last_state(self.hass, self.entity_id)
         if last_state:
             self._is_on = (last_state.state == STATE_ON)
             self._brightness = last_state.attributes.get('brightness')

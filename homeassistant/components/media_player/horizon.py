@@ -92,9 +92,12 @@ class HorizonDevice(MediaPlayerDevice):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update State using the media server running on the Horizon."""
-        if self._client.is_powered_on():
-            self._state = STATE_PLAYING
-        else:
+        try:
+            if self._client.is_powered_on():
+                self._state = STATE_PLAYING
+            else:
+                self._state = STATE_OFF
+        except OSError:
             self._state = STATE_OFF
 
     def turn_on(self):

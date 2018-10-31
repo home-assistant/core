@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Ingen varslingstjenester er tilgjengelig."
+            },
+            "error": {
+                "invalid_code": "Ugyldig kode, vennligst pr\u00f8v igjen."
+            },
+            "step": {
+                "init": {
+                    "description": "Vennligst velg en av varslingstjenestene:",
+                    "title": "Sett opp engangspassord levert av varsel komponent"
+                },
+                "setup": {
+                    "description": "Et engangspassord har blitt sendt via **notify.{notify_service}**. Vennligst skriv det inn nedenfor:",
+                    "title": "Bekreft oppsettet"
+                }
+            },
+            "title": "Varsle engangspassord"
+        },
         "totp": {
             "error": {
                 "invalid_code": "Ugyldig kode, pr\u00f8v igjen. Hvis du f\u00e5r denne feilen konsekvent, m\u00e5 du s\u00f8rge for at klokken p\u00e5 Home Assistant systemet er riktig."

@@ -5,8 +5,10 @@ from unittest import mock
 
 from homeassistant import setup
 from homeassistant.components import litejet
-from tests.common import get_test_home_assistant
 import homeassistant.components.light as light
+
+from tests.common import get_test_home_assistant
+from tests.components.light import common
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +80,7 @@ class TestLiteJetLight(unittest.TestCase):
 
         assert not light.is_on(self.hass, ENTITY_LIGHT)
 
-        light.turn_on(self.hass, ENTITY_LIGHT, brightness=102)
+        common.turn_on(self.hass, ENTITY_LIGHT, brightness=102)
         self.hass.block_till_done()
         self.mock_lj.activate_load_at.assert_called_with(
             ENTITY_LIGHT_NUMBER, 39, 0)
@@ -90,11 +92,11 @@ class TestLiteJetLight(unittest.TestCase):
 
         assert not light.is_on(self.hass, ENTITY_LIGHT)
 
-        light.turn_on(self.hass, ENTITY_LIGHT)
+        common.turn_on(self.hass, ENTITY_LIGHT)
         self.hass.block_till_done()
         self.mock_lj.activate_load.assert_called_with(ENTITY_LIGHT_NUMBER)
 
-        light.turn_off(self.hass, ENTITY_LIGHT)
+        common.turn_off(self.hass, ENTITY_LIGHT)
         self.hass.block_till_done()
         self.mock_lj.deactivate_load.assert_called_with(ENTITY_LIGHT_NUMBER)
 

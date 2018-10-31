@@ -17,7 +17,10 @@ async def test_get_or_create_returns_same_entry(registry):
         config_entry_id='1234',
         connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
         identifiers={('bridgeid', '0123')},
-        manufacturer='manufacturer', model='model')
+        sw_version='sw-version',
+        name='name',
+        manufacturer='manufacturer',
+        model='model')
     entry2 = registry.async_get_or_create(
         config_entry_id='1234',
         connections={('ethernet', '11:22:33:44:55:66:77:88')},
@@ -25,14 +28,18 @@ async def test_get_or_create_returns_same_entry(registry):
         manufacturer='manufacturer', model='model')
     entry3 = registry.async_get_or_create(
         config_entry_id='1234',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
-        identifiers={('bridgeid', '1234')},
-        manufacturer='manufacturer', model='model')
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')}
+    )
 
     assert len(registry.devices) == 1
     assert entry.id == entry2.id
     assert entry.id == entry3.id
     assert entry.identifiers == {('bridgeid', '0123')}
+
+    assert entry3.manufacturer == 'manufacturer'
+    assert entry3.model == 'model'
+    assert entry3.name == 'name'
+    assert entry3.sw_version == 'sw-version'
 
 
 async def test_requirement_for_identifier_or_connection(registry):

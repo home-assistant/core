@@ -10,6 +10,7 @@ import homeassistant.components.switch as switch
 import homeassistant.components.switch.command_line as command_line
 
 from tests.common import get_test_home_assistant
+from tests.components.switch import common
 
 
 # pylint: disable=invalid-name
@@ -44,13 +45,13 @@ class TestCommandSwitch(unittest.TestCase):
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
 
-            switch.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
-            switch.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
@@ -78,13 +79,13 @@ class TestCommandSwitch(unittest.TestCase):
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
 
-            switch.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
-            switch.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
@@ -114,13 +115,13 @@ class TestCommandSwitch(unittest.TestCase):
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
 
-            switch.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
-            switch.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
@@ -147,13 +148,13 @@ class TestCommandSwitch(unittest.TestCase):
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
 
-            switch.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
-            switch.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')

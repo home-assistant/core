@@ -4,7 +4,6 @@ Support the ISY-994 controllers.
 For configuration details please visit the documentation for this component at
 https://home-assistant.io/components/isy994/
 """
-import asyncio
 from collections import namedtuple
 import logging
 from urllib.parse import urlparse
@@ -414,8 +413,7 @@ class ISYDevice(Entity):
         self._change_handler = None
         self._control_handler = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
         self._change_handler = self._node.status.subscribe(
             'changed', self.on_update)

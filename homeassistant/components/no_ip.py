@@ -53,8 +53,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Initialize the NO-IP component."""
     domain = config[DOMAIN].get(CONF_DOMAIN)
     user = config[DOMAIN].get(CONF_USERNAME)
@@ -65,16 +64,15 @@ def async_setup(hass, config):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    result = yield from _update_no_ip(
+    result = await _update_no_ip(
         hass, session, domain, auth_str, timeout)
 
     if not result:
         return False
 
-    @asyncio.coroutine
-    def update_domain_interval(now):
+    async def update_domain_interval(now):
         """Update the NO-IP entry."""
-        yield from _update_no_ip(hass, session, domain, auth_str, timeout)
+        await _update_no_ip(hass, session, domain, auth_str, timeout)
 
     hass.helpers.event.async_track_time_interval(
         update_domain_interval, INTERVAL)
@@ -82,8 +80,7 @@ def async_setup(hass, config):
     return True
 
 
-@asyncio.coroutine
-def _update_no_ip(hass, session, domain, auth_str, timeout):
+async def _update_no_ip(hass, session, domain, auth_str, timeout):
     """Update NO-IP."""
     url = UPDATE_URL
 
@@ -98,8 +95,8 @@ def _update_no_ip(hass, session, domain, auth_str, timeout):
 
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
-            resp = yield from session.get(url, params=params, headers=headers)
-            body = yield from resp.text()
+            resp = await session.get(url, params=params, headers=headers)
+            body = await resp.text()
 
             if body.startswith('good') or body.startswith('nochg'):
                 return True

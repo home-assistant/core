@@ -4,7 +4,6 @@ Get your own public IP address or that of any host.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dnsip/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -42,8 +41,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the DNS IP sensor."""
     hostname = config.get(CONF_HOSTNAME)
     name = config.get(CONF_NAME)
@@ -86,11 +85,15 @@ class WanIpSensor(Entity):
         """Return the current DNS IP address for hostname."""
         return self._state
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the current DNS IP address for hostname."""
-        response = yield from self.resolver.query(self.hostname,
-                                                  self.querytype)
+        from aiodns.error import DNSError
+        try:
+            response = await self.resolver.query(self.hostname,
+                                                 self.querytype)
+        except DNSError as err:
+            _LOGGER.warning("Exception while resolving host: %s", err)
+            response = None
         if response:
             self._state = response[0].host
         else:

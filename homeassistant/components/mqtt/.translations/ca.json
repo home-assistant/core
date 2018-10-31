@@ -10,13 +10,20 @@
             "broker": {
                 "data": {
                     "broker": "Broker",
-                    "discovery": "Activar descobreix automaticament",
+                    "discovery": "Habilita descobriment autom\u00e0tic",
                     "password": "Contrasenya",
                     "port": "Port",
                     "username": "Nom d'usuari"
                 },
                 "description": "Introdu\u00efu la informaci\u00f3 de connexi\u00f3 del vostre broker MQTT.",
                 "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Habilita descobriment autom\u00e0tic"
+                },
+                "description": "Voleu configurar Home Assistant perqu\u00e8 es connecti amb el broker MQTT proporcionat pel complement de hass.io {addon}?",
+                "title": "Broker MQTT a trav\u00e9s del complement de Hass.io"
             }
         },
         "title": "MQTT"

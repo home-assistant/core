@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Biztosan be szeretn\u00e9d \u00e1ll\u00edtani az IFTTT-t?",
+                "title": "IFTTT Webhook Applet be\u00e1ll\u00edt\u00e1sa"
+            }
+        },
+        "title": "IFTTT"
+    }
+}

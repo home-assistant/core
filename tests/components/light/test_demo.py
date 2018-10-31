@@ -4,6 +4,8 @@ import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components import light
 
+from tests.components.light import common
+
 ENTITY_LIGHT = 'light.bed_light'
 
 
@@ -18,7 +20,7 @@ def setup_comp(hass):
 
 async def test_state_attributes(hass):
     """Test light state attributes."""
-    light.async_turn_on(
+    common.async_turn_on(
         hass, ENTITY_LIGHT, xy_color=(.4, .4), brightness=25)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_LIGHT)
@@ -27,7 +29,7 @@ async def test_state_attributes(hass):
     assert 25 == state.attributes.get(light.ATTR_BRIGHTNESS)
     assert (255, 234, 164) == state.attributes.get(light.ATTR_RGB_COLOR)
     assert 'rainbow' == state.attributes.get(light.ATTR_EFFECT)
-    light.async_turn_on(
+    common.async_turn_on(
         hass, ENTITY_LIGHT, rgb_color=(251, 253, 255),
         white_value=254)
     await hass.async_block_till_done()
@@ -35,14 +37,14 @@ async def test_state_attributes(hass):
     assert 254 == state.attributes.get(light.ATTR_WHITE_VALUE)
     assert (250, 252, 255) == state.attributes.get(light.ATTR_RGB_COLOR)
     assert (0.319, 0.326) == state.attributes.get(light.ATTR_XY_COLOR)
-    light.async_turn_on(hass, ENTITY_LIGHT, color_temp=400, effect='none')
+    common.async_turn_on(hass, ENTITY_LIGHT, color_temp=400, effect='none')
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_LIGHT)
     assert 400 == state.attributes.get(light.ATTR_COLOR_TEMP)
     assert 153 == state.attributes.get(light.ATTR_MIN_MIREDS)
     assert 500 == state.attributes.get(light.ATTR_MAX_MIREDS)
     assert 'none' == state.attributes.get(light.ATTR_EFFECT)
-    light.async_turn_on(hass, ENTITY_LIGHT, kelvin=3000, brightness_pct=50)
+    common.async_turn_on(hass, ENTITY_LIGHT, kelvin=3000, brightness_pct=50)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_LIGHT)
     assert 333 == state.attributes.get(light.ATTR_COLOR_TEMP)
