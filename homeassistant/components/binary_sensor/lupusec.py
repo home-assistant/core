@@ -43,4 +43,4 @@ class LupusecBinarySensor(LupusecDevice, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
-        return self._device.type
+        return self._device.generic_type

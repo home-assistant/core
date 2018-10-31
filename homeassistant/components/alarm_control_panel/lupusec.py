@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm(), data.name)]
 
-    data.devices.extend(alarm_devices)
+    # data.devices.extend(alarm_devices)
 
     add_entities(alarm_devices)
 
@@ -40,9 +40,9 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanel):
     def __init__(self, data, device, name):
         """Initialize the alarm control panel."""
         super().__init__(data, device)
-        self._state = STATE_ALARM_DISARMED
-        self._previous_state = ''
-        self._state_ts = ''
+        # self._state = STATE_ALARM_DISARMED
+        # self._previous_state = ''
+        # self._state_ts = ''
 
     @property
     def icon(self):

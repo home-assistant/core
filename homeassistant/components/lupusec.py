@@ -17,10 +17,13 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
 from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['lupupy==0.0.5']
+REQUIREMENTS = ['lupupy==0.0.10']
 
 DOMAIN = 'lupusec'
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=2)
+
+NOTIFICATION_ID = 'lupusec_notification'
+NOTIFICATION_TITLE = 'Lupusec Security Setup'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -40,8 +43,6 @@ LUPUSEC_PLATFORMS = [
 ]
 
 
-
-
 def setup(hass, config):
     """Set up Lupusec component."""
     from lupupy.exceptions import LupusecException
@@ -57,6 +58,14 @@ def setup(hass, config):
         hass.data[DOMAIN] = LupusecSystem(username, password, ip_address, name)
     except LupusecException as ex:
         _LOGGER.warning(ex)
+        
+        hass.components.persistent_notification.create(
+            'Error: {}<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(ex),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
 
     for platform in LUPUSEC_PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
