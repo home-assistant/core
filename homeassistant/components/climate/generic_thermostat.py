@@ -400,7 +400,7 @@ class GenericThermostat(ClimateDevice):
         self._target_temp = self._saved_target_temp
         await self._async_control_heating()
         await self.async_update_ha_state()
-        
+
     @property
     def is_boost_mode_on(self):
         """Return true if boost mode is on."""
