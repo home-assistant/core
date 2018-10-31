@@ -80,6 +80,8 @@ CONF_CLEANING_TOPIC = 'cleaning_topic'
 CONF_CLEANING_TEMPLATE = 'cleaning_template'
 CONF_DOCKED_TOPIC = 'docked_topic'
 CONF_DOCKED_TEMPLATE = 'docked_template'
+CONF_ERROR_TOPIC = 'error_topic'
+CONF_ERROR_TEMPLATE = 'error_template'
 CONF_STATE_TOPIC = 'state_topic'
 CONF_STATE_TEMPLATE = 'state_template'
 CONF_FAN_SPEED_TOPIC = 'fan_speed_topic'
@@ -127,6 +129,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CLEANING_TEMPLATE): cv.template,
     vol.Optional(CONF_DOCKED_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_DOCKED_TEMPLATE): cv.template,
+    vol.Optional(CONF_ERROR_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_ERROR_TEMPLATE): cv.template,
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
@@ -177,6 +181,11 @@ async def async_setup_platform(hass, config, async_add_entities,
     if docked_template:
         docked_template.hass = hass
 
+    error_topic = config.get(CONF_ERROR_TOPIC)
+    error_template = config.get(CONF_ERROR_TEMPLATE)
+    if error_template:
+        error_template.hass = hass
+
     fan_speed_topic = config.get(CONF_FAN_SPEED_TOPIC)
     fan_speed_template = config.get(CONF_FAN_SPEED_TEMPLATE)
     if fan_speed_template:
@@ -198,7 +207,8 @@ async def async_setup_platform(hass, config, async_add_entities,
             payload_stop, payload_clean_spot, payload_locate,
             payload_start_pause, battery_level_topic, battery_level_template,
             charging_topic, charging_template, cleaning_topic,
-            cleaning_template, docked_topic, docked_template, fan_speed_topic,
+            cleaning_template, docked_topic, docked_template,
+            error_topic, error_template, fan_speed_topic,
             fan_speed_template, set_fan_speed_topic, fan_speed_list,
             send_command_topic, availability_topic, payload_available,
             payload_not_available
@@ -215,7 +225,8 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
             payload_stop, payload_clean_spot, payload_locate,
             payload_start_pause, battery_level_topic, battery_level_template,
             charging_topic, charging_template, cleaning_topic,
-            cleaning_template, docked_topic, docked_template, fan_speed_topic,
+            cleaning_template, docked_topic, docked_template,
+            error_topic, error_template, fan_speed_topic,
             fan_speed_template, set_fan_speed_topic, fan_speed_list,
             send_command_topic, availability_topic, payload_available,
             payload_not_available):
@@ -249,6 +260,9 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         self._docked_topic = docked_topic
         self._docked_template = docked_template
 
+        self._error_topic = error_topic
+        self._error_template = error_template
+
         self._fan_speed_topic = fan_speed_topic
         self._fan_speed_template = fan_speed_template
 
@@ -259,6 +273,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         self._cleaning = False
         self._charging = False
         self._docked = False
+        self._error = None
         self._status = 'Unknown'
         self._battery_level = 0
         self._fan_speed = 'unknown'
@@ -274,34 +289,37 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
                     self._battery_level_template:
                 battery_level = self._battery_level_template\
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if battery_level is not None:
                     self._battery_level = int(battery_level)
 
             if topic == self._charging_topic and self._charging_template:
                 charging = self._charging_template\
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if charging is not None:
                     self._charging = cv.boolean(charging)
 
             if topic == self._cleaning_topic and self._cleaning_template:
                 cleaning = self._cleaning_template \
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if cleaning is not None:
                     self._cleaning = cv.boolean(cleaning)
 
             if topic == self._docked_topic and self._docked_template:
                 docked = self._docked_template \
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if docked is not None:
                     self._docked = cv.boolean(docked)
+
+            if topic == self._error_topic and self._error_template:
+                error = self._error_template \
+                    .async_render_with_possible_json_value(
+                        payload, error_value=None)
+                if error is not None:
+                    self._error = cv.string(error)
 
             if self._docked:
                 if self._charging:
@@ -310,14 +328,15 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
                     self._status = "Docked"
             elif self._cleaning:
                 self._status = "Cleaning"
+            elif self._error is not None and not self._error:
+                self._status = "Error: {}".format(self._error)
             else:
                 self._status = "Stopped"
 
             if topic == self._fan_speed_topic and self._fan_speed_template:
                 fan_speed = self._fan_speed_template\
                     .async_render_with_possible_json_value(
-                        payload,
-                        error_value=None)
+                        payload, error_value=None)
                 if fan_speed is not None:
                     self._fan_speed = fan_speed
 

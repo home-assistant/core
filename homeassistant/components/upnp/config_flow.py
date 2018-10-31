@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant import data_entry_flow
+from homeassistant.util import get_local_ip
 
 from .const import (
     CONF_ENABLE_PORT_MAPPING, CONF_ENABLE_SENSORS,
@@ -17,7 +18,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def ensure_domain_data(hass):
+async def async_ensure_domain_data(hass):
     """Ensure hass.data is filled properly."""
     hass.data[DOMAIN] = hass.data.get(DOMAIN, {})
     hass.data[DOMAIN]['devices'] = hass.data[DOMAIN].get('devices', {})
@@ -28,6 +29,9 @@ def ensure_domain_data(hass):
         'enable_port_mapping': False,
         'ports': {'hass': 'hass'},
     })
+    if 'local_ip' not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]['local_ip'] = \
+            await hass.async_add_executor_job(get_local_ip)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -68,7 +72,7 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
         This flow is triggered by the discovery component. It will check if the
         host is already configured and delegate to the import step if not.
         """
-        ensure_domain_data(self.hass)
+        await async_ensure_domain_data(self.hass)
 
         if not discovery_info.get('udn') or not discovery_info.get('host'):
             # Silently ignore incomplete/broken devices to prevent constant
@@ -106,7 +110,7 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_user(self, user_input=None):
         """Manual set up."""
-        ensure_domain_data(self.hass)
+        await async_ensure_domain_data(self.hass)
 
         # if user input given, handle it
         user_input = user_input or {}
@@ -147,13 +151,13 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_import(self, import_info):
         """Import a new UPnP/IGD as a config entry."""
-        ensure_domain_data(self.hass)
+        await async_ensure_domain_data(self.hass)
 
         return await self._async_save_entry(import_info)
 
     async def _async_save_entry(self, import_info):
         """Store UPNP/IGD as new entry."""
-        ensure_domain_data(self.hass)
+        await async_ensure_domain_data(self.hass)
 
         # ensure we know the host
         name = import_info['name']

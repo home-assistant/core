@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 81
+MINOR_VERSION = 82
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -129,6 +129,7 @@ CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
 CONF_SHOW_ON_MAP = 'show_on_map'
 CONF_SLAVE = 'slave'
+CONF_SOURCE = 'source'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
 CONF_STATE_TEMPLATE = 'state_template'
