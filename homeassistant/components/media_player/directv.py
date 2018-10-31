@@ -250,7 +250,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-       return self._last_position
+        return self._last_position
 
     @property
     def media_position_updated_at(self):
@@ -278,23 +278,6 @@ class DirecTvDevice(MediaPlayerDevice):
             return None
 
         return self._current.get('episodeTitle')
-
-    @property
-    def media_channel(self):
-        """Return the channel current playing media."""
-        if self._is_standby:
-            return None
-
-        return "{} ({})".format(
-            self._current['callsign'], self._current['major'])
-
-    @property
-    def source(self):
-        """Name of the current input source."""
-        if self._is_standby:
-            return None
-
-        return self._current['major']
 
     @property
     def media_channel(self):
