@@ -151,4 +151,3 @@ class TautulliData:
         """Test connection to Tautulli."""
         connection_status = await self.api.test_connection()
         return connection_status
-
