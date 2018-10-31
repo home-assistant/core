@@ -43,6 +43,7 @@ CONF_HOT_TOLERANCE = 'hot_tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 CONF_INITIAL_OPERATION_MODE = 'initial_operation_mode'
 CONF_AWAY_TEMP = 'away_temp'
+CONF_BOOST_TEMP = 'BOOST_temp'
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_OPERATION_MODE)
 
@@ -63,7 +64,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_INITIAL_OPERATION_MODE):
         vol.In([STATE_AUTO, STATE_OFF]),
-    vol.Optional(CONF_AWAY_TEMP): vol.Coerce(float)
+    vol.Optional(CONF_AWAY_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_BOOST_TEMP): vol.Coerce(float)
 })
 
 
@@ -131,7 +133,9 @@ class GenericThermostat(ClimateDevice):
         if away_temp is not None:
             self._support_flags = SUPPORT_FLAGS | SUPPORT_AWAY_MODE
         self._away_temp = away_temp
+        self._boost_temp = boost_temp
         self._is_away = False
+        self._is_boost = False
 
         async_track_state_change(
             hass, sensor_entity_id, self._async_sensor_changed)
@@ -393,6 +397,30 @@ class GenericThermostat(ClimateDevice):
         if not self._is_away:
             return
         self._is_away = False
+        self._target_temp = self._saved_target_temp
+        await self._async_control_heating()
+        await self.async_update_ha_state()
+
+
+    @property
+    def is_boost_mode_on(self):
+        """Return true if boost mode is on."""
+        return self._is_boost
+
+    async def async_turn_boost_mode_on(self):
+        if self._is_boost:
+            return
+        self._is_boost = True
+        self._saved_target_temp = self._target_temp
+        self._target_temp = self._boost_temp
+        await self._async_control_heating()
+        await self.async_update_ha_state()
+
+    async def async_turn_boost_mode_off(self):
+        """Turn boost off."""
+        if not self._is_boost:
+            return
+        self._is_boost = False
         self._target_temp = self._saved_target_temp
         await self._async_control_heating()
         await self.async_update_ha_state()
