@@ -51,6 +51,7 @@ PACKAGE_LAUNCHER = "com.amazon.tv.launcher"
 PACKAGE_SETTINGS = "com.amazon.tv.settings"
 
 
+# pylint: disable=protected-access
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the FireTV platform."""
     host = '{0}:{1}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
@@ -112,7 +113,7 @@ class FireTVDevice(MediaPlayerDevice):
 
     def __init__(self, host, name, adbkey, get_source, get_sources):
         """Initialize the FireTV device."""
-        from firetv import FireTV
+        from firetv import FireTV  # pylint: disable=no-name-in-module
         self._host = host
         self._adbkey = adbkey
         self._firetv = FireTV(host, adbkey)
@@ -221,9 +222,10 @@ class FireTVDevice(MediaPlayerDevice):
                     # Assume the devices is on standby.
                     self._state = STATE_STANDBY
 
-        except:
-            _LOGGER.error('Update encountered an exception; will attempt to ' +
-                          're-establish the ADB connection in the next update')
+        except:  # pylint: disable=bare-except
+            _LOGGER.error('%s', 'Update encountered an exception; will ' +
+                          'attempt to re-establish the ADB connection in ' +
+                          'the next update')
             self._firetv._adb = None
 
     @adb_wrapper
