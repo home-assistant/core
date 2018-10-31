@@ -33,6 +33,7 @@ WS_TYPE_GET_VIEW = 'lovelace/config/view/get'
 WS_TYPE_UPDATE_VIEW = 'lovelace/config/view/update'
 WS_TYPE_ADD_VIEW = 'lovelace/config/view/add'
 WS_TYPE_MOVE_VIEW = 'lovelace/config/view/move'
+WS_TYPE_DELETE_VIEW = 'lovelace/config/view/delete'
 
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): vol.Any(WS_TYPE_GET_LOVELACE_UI,
@@ -106,6 +107,11 @@ SCHEMA_MOVE_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_MOVE_VIEW,
     vol.Required('view_id'): str,
     vol.Required('new_position'): int,
+})
+
+SCHEMA_DELETE_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_DELETE_VIEW,
+    vol.Required('view_id'): str,
 })
 
 
@@ -269,7 +275,7 @@ def move_card_view(fname: str, card_id: str, view_id: str,
     yaml.save_yaml(fname, config)
 
 
-def delete_card(fname: str, card_id: str, position: int = None) -> None:
+def delete_card(fname: str, card_id: str) -> None:
     """Delete a card from view."""
     config = yaml.load_yaml(fname, True)
     for view in config.get('views', []):
@@ -347,7 +353,22 @@ def move_view(fname: str, view_id: str, position: int) -> None:
         return
 
     raise ViewNotFoundError(
-        "View with ID: {} was not found in {}.".format(card_id, fname))
+        "View with ID: {} was not found in {}.".format(view_id, fname))
+
+
+def delete_view(fname: str, view_id: str) -> None:
+    """Delete a view."""
+    config = yaml.load_yaml(fname, True)
+    views = config.get('views', [])
+    for view in views:
+        if str(view.get('id', '')) != view_id:
+            continue
+        views.pop(views.index(view))
+        yaml.save_yaml(fname, config)
+        return
+
+    raise ViewNotFoundError(
+        "View with ID: {} was not found in {}.".format(view_id, fname))
 
 
 async def async_setup(hass, config):
@@ -400,6 +421,10 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_MOVE_VIEW, websocket_lovelace_move_view,
         SCHEMA_MOVE_VIEW)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_DELETE_VIEW, websocket_lovelace_delete_view,
+        SCHEMA_DELETE_VIEW)
 
     return True
 
@@ -538,3 +563,12 @@ async def websocket_lovelace_move_view(hass, connection, msg):
     return await hass.async_add_executor_job(
         move_view, hass.config.path(LOVELACE_CONFIG_FILE),
         msg['view_id'], msg['new_position'])
+
+
+@websocket_api.async_response
+@handle_yaml_errors
+async def websocket_lovelace_delete_view(hass, connection, msg):
+    """Delete card from lovelace over websocket and save."""
+    return await hass.async_add_executor_job(
+        delete_view, hass.config.path(LOVELACE_CONFIG_FILE),
+        msg['view_id'])

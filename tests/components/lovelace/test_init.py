@@ -720,3 +720,29 @@ async def test_lovelace_move_view_position(hass, hass_ws_client):
     assert msg['id'] == 5
     assert msg['type'] == TYPE_RESULT
     assert msg['success']
+
+
+async def test_lovelace_delete_view(hass, hass_ws_client):
+    """Test delete_card command."""
+    await async_setup_component(hass, 'lovelace')
+    client = await hass_ws_client(hass)
+    yaml = YAML(typ='rt')
+
+    with patch('homeassistant.util.ruamel_yaml.load_yaml',
+               return_value=yaml.load(TEST_YAML_A)), \
+        patch('homeassistant.util.ruamel_yaml.save_yaml') \
+            as save_yaml_mock:
+        await client.send_json({
+            'id': 5,
+            'type': 'lovelace/config/view/delete',
+            'view_id': 'example',
+        })
+        msg = await client.receive_json()
+
+    result = save_yaml_mock.call_args_list[0][0][1]
+    views = result.get('views', [])
+    assert len(views) == 1
+    assert views[0]['title'] == 'Second view'
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
