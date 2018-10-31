@@ -156,7 +156,7 @@ async def async_setup(hass, config):
 
     # Initialize devices specified in the configuration on boot
     for device in cfg.get(CONF_DEVICES):
-        ConfiguredDevice(hass, device).save_data()
+        ConfiguredDevice(hass, device, config).save_data()
 
     discovery.async_listen(
         hass,
@@ -172,10 +172,11 @@ async def async_setup(hass, config):
 class ConfiguredDevice:
     """A representation of a configured Konnected device."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, config, hass_config):
         """Initialize the Konnected device."""
         self.hass = hass
         self.config = config
+        self.hass_config = hass_config
 
     @property
     def device_id(self):
@@ -237,11 +238,11 @@ class ConfiguredDevice:
         self.hass.data[DOMAIN][CONF_DEVICES][self.device_id] = device_data
 
         discovery.load_platform(
-            self.hass, 'binary_sensor',
-            DOMAIN, {'device_id': self.device_id})
+            self.hass, 'binary_sensor', DOMAIN,
+            {'device_id': self.device_id}, self.hass_config)
         discovery.load_platform(
             self.hass, 'switch', DOMAIN,
-            {'device_id': self.device_id})
+            {'device_id': self.device_id}, self.hass_config)
 
 
 class DiscoveredDevice:
