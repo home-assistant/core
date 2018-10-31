@@ -130,9 +130,9 @@ def migrate_config(fname: str) -> None:
 def get_card(fname: str, card_id: str, data_format: str = FORMAT_YAML)\
         -> JSON_TYPE:
     """Load a specific card config for id."""
-    rt = data_format == FORMAT_YAML
+    round_trip = data_format == FORMAT_YAML
 
-    config = yaml.load_yaml(fname, rt)
+    config = yaml.load_yaml(fname, round_trip)
 
     for view in config.get('views', []):
         for card in view.get('cards', []):

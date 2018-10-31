@@ -73,9 +73,9 @@ def yaml_to_object(data: str) -> JSON_TYPE:
         raise HomeAssistantError(exc)
 
 
-def load_yaml(fname: str, rt: bool = False) -> JSON_TYPE:
+def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
     """Load a YAML file."""
-    if rt:
+    if round_trip:
         yaml = YAML(typ='rt')
         yaml.preserve_quotes = True
     else:
