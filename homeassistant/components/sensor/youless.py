@@ -27,9 +27,11 @@ CONF_HOST = "host"
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=[SENSOR_POWER, SENSOR_POWER_NET]): vol.All(
-            cv.ensure_list, vol.Length(min=1), [vol.In([SENSOR_POWER, SENSOR_POWER_NET, SENSOR_P_LOW,
-                                                        SENSOR_P_HIGH, SENSOR_GAS])])
+        vol.Optional(CONF_MONITORED_VARIABLES,
+                     default=[SENSOR_POWER, SENSOR_POWER_NET]): vol.All(
+            cv.ensure_list, vol.Length(min=1),
+            [vol.In([SENSOR_POWER, SENSOR_POWER_NET, SENSOR_P_LOW,
+                     SENSOR_P_HIGH, SENSOR_GAS])])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -53,8 +55,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for sensor in sensors:
         sensor_config = SENSOR_TYPES[sensor]
-        devices.append(YoulessSensor(data_bridge, sensor_config[0], sensor, sensor_config[1],
-                                     sensor_config[2], sensor_config[3]))
+        devices.append(YoulessSensor(data_bridge, sensor_config[0], sensor,
+                                     sensor_config[1], sensor_config[2],
+                                     sensor_config[3]))
 
     add_devices(devices)
 
