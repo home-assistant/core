@@ -2,7 +2,7 @@
 Platform for retrieving energy data from SRP.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/energy.srp/
+https://home-assistant.io/components/energy.srp_energy/
 """
 from datetime import datetime, timedelta
 import logging
@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.components.sensor import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['srpenergy==1.0.2']
@@ -45,12 +45,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SRP energy."""
-    _LOGGER.info("Setting up Srp Energy.")
-
-    name = config.get(CONF_NAME)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    account_id = config.get(CONF_ID)
+    name = config[CONF_NAME]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    account_id = config[CONF_ID]
 
     from srpenergy.client import SrpEnergyClient
 
