@@ -10,10 +10,10 @@ execute_command:
       example: 'sudo settings get secure android_id'
     entity_id:
       description: Encja do wyświetlenia wyniku komendy
-      example: 'binary_sensor.secure_android_id'
+      example: 'binary_sensor.test'
     friendly_name:
       description: Nazwa encji wyniku komendy
-      example: 'binary_sensor.secure_android_id'
+      example: 'binary_sensor.test'
     icon:
       description: Ikona encji wyniku komendy
       example: 'mdi:android'

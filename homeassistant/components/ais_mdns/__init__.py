@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['api']
 DOMAIN = 'ais_mdns'
-
+ZEROCONF_NAME = 'ais-dom'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({}),
@@ -49,8 +49,7 @@ def setup(hass, config):
     # hass.config.api.base_url
     params = {
         'version': __version__,
-        'host': host_name,
-        'manufacturerURL': "https://ai-speaker.com"
+        'company_url': "https://ai-speaker.com",
     }
 
     # https://ais-dom.local:8123
@@ -58,33 +57,33 @@ def setup(hass, config):
 
     # HTTP
     http_info = ServiceInfo("_http._tcp.local.",
-                            host_name + "._http._tcp.local.",
+                            ZEROCONF_NAME + "._http._tcp.local.",
                             ip, 8180, 0, 0,
-                            params, host_name + ".local")
+                            params, host_name + ".local.")
 
     zero_config.register_service(http_info)
 
     # MQTT
     mqtt_info = ServiceInfo("_mqtt._tcp.local.",
-                            host_name + "._mqtt._tcp.local.",
+                            ZEROCONF_NAME + "._mqtt._tcp.local.",
                             ip, 1883, 0, 0,
-                            params, host_name + ".local")
+                            params, host_name + ".local.")
 
     zero_config.register_service(mqtt_info)
 
     # FTP
     ftp_info = ServiceInfo("_ftp._tcp.local.",
-                           host_name + "._ftp._tcp.local.",
+                           ZEROCONF_NAME + "._ftp._tcp.local.",
                            ip, 1024, 0, 0,
-                           params, host_name + ".local")
+                           params, host_name + ".local.")
 
     zero_config.register_service(ftp_info)
 
     # SSH
     ssh_info = ServiceInfo("_ssh._tcp.local.",
-                           host_name + "._ssh._tcp.local.",
+                           ZEROCONF_NAME + "._ssh._tcp.local.",
                            ip, 8022, 0, 0,
-                           params, host_name + ".local")
+                           params, host_name + ".local.")
 
     zero_config.register_service(ssh_info)
 

@@ -177,3 +177,6 @@ script: !include scripts.yaml
 
 # bookmarks and favorites
 ais_bookmarks:
+
+ais_mdns:
+zeroconf:

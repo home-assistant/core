@@ -5,7 +5,7 @@ group:
     icon: mdi:home-outline
     entities:
       - sensor.time
-      - sensor.date_formated
+      - sensor.date
       - sun.sun
       - group.ais_wyszukiwarka
       - media_player.wbudowany_glosnik
@@ -22,12 +22,6 @@ group:
     icon: mdi:weather-partlycloudy
     entities:
       - weather.pogoda
-      # - group.day_info
-      # - group.ais_pogoda
-      # - group.ais_pogoda_48
-      # - sensor.airly_aqi
-      # - sensor.airly_pm10
-      # - sensor.airly_pm25
 
   audio_player:
     name: Odtwarzacz
@@ -66,7 +60,6 @@ group:
       entities:
         - group.dom_system_version
         - group.ais_rss_help
-        # - group.ais_android_certification
         # - group.dom_cloud
   system:
       name: System

@@ -16,7 +16,7 @@ sun.sun:
   friendly_name: Pozycja słońca
 sensor.time:
   friendly_name: Godzina
-sensor.date_formated:
+sensor.date:
   friendly_name: Dzień
 script.ais_change_host_name:
   icon: mdi:alert
@@ -32,11 +32,6 @@ binary_sensor.selected_entity:
 sensor.current_host_name:
   friendly_name: Aktualna nazwa hosta
   icon: mdi:information-variant
-binary_sensor.secure_android_id:
-  friendly_name: Identyfikator urządzenia
-  icon: mdi:android
-sensor.certification_info:
-  custom_ui_state_card: state-card-text
 sensor.network_devices_info:
   custom_ui_state_card: state-card-text
 sensor.network_devices_info_value:
@@ -138,10 +133,16 @@ input_text.buttons_ais_remote:
       color_on: red
       color_off: green
       icon: mdi:microphone-settings
+weblink.klucz_ssh:
+  friendly_name: 'KLUCZ SSH'
 weblink.ftp_url:
-  friendly_name: Serwer FTP
+  friendly_name: 'FTP://AIS-DOM.LOCAL:1024'
+weblink.http_url:
+  friendly_name: 'HTTP://AIS-DOM.LOCAL:8180'
+weblink.https_url:
+  friendly_name: 'HTTPS://AIS-DOM.LOCAL:8123'
 weblink.https_localhost_cert:
-  friendly_name: Certyfikat HTTPS
+  friendly_name: CERTYFIKAT HTTPS
 weblink.uncertified_android_registration:
   friendly_name: Rejestracja urządzenia w Google Android
 sensor.memory_free:
@@ -234,12 +235,6 @@ sensor.yw_day1_humidity:
   icon: mdi:water-percent
 sensor.yw_day1_visibility:
   friendly_name: Widoczność jutro
-sensor.current_ozone_level:
-  friendly_name: Aktualny poziom ozonu
-sensor.current_uv_level:
-  friendly_name: Aktualny poziom promieniowania UV
-sensor.skin_type_3_safe_exposure_time:
-  friendly_name: Bezpieszny czas ekspozycji dla skóry
 group.dom_system_version:
   context_key_words: wersja,aktualizacja,wersja systemu
   context_answer: OK, wybrano informację o wersji. Możesz nawigować pilotem by sprawdzić

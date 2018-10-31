@@ -81,7 +81,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 entity_ids |= set(template_entity_ids)
 
         if invalid_templates:
-            _LOGGER.warning(
+            _LOGGER.info(
                 'Template sensor %s has no entity ids configured to track nor'
                 ' were we able to extract the entities to track from the %s '
                 'template(s). This entity will only be able to be updated '

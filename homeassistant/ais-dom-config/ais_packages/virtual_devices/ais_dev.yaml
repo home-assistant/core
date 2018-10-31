@@ -8,20 +8,8 @@ binary_sensor:
   - platform: mqtt
     state_topic: ais/button/sensor
     name: selected_entity
-#  - platform: mqtt
-#    state_topic: ais/secure_android_id/sensor
-#    name: secure_android_id
-
 
 sensor:
-  - platform: ais_android_cmd
-    name: current_host_name
-    command: "getprop net.hostname"
-#  - platform: template
-#    sensors:
-#      certification_info:
-#        value_template: To urządzenie do pełnego działania (komendy głosowe, synteza mowy) wymaga usług Google Android.
-#                        Zarejestruj swoje urządzenie, przesyłając jego identyfikator do Google Android by bezpiecznie kożystać z pełnej funkcjonalności urządzenia.
   - platform: template
     sensors:
       network_devices_info:
@@ -32,30 +20,28 @@ sensor:
   - platform: template
     sensors:
       ssh_connection_info:
-        value_template: "Na urządzeniu działa serwer ssh, aby połączyć się do konsoli AIS dom należy:\n
+        value_template: "@SERWER SSH:\n aby połączyć się do konsoli AIS dom należy:\n
                         - pobrać autoryzowany klucz ssh (poniżej)\n
-                        - w swojej konsoli wpisać:\n\n
-                        @ssh ais-dom -p 8022 -i <ścieżka do klucza ssh>\n
-                        $*ais-dom to nazwa hosta systemu AIS dom"
+                        - w swojej konsoli wpisać:\n
+                        $ssh ais-dom.local -p 8022 -i <ścieżka do klucza ssh>\n"
   - platform: template
     sensors:
       ftp_connection_info:
-        value_template: "Na urządzeniu działa też serwer ftp, umożliwiający wymianę plików (np. muzycznych), serwer dostępny jest pod adresem:\n
-                        @ftp://ais-dom:1024\n
-                        $*ais-dom to nazwa hosta systemu AIS dom"
+        value_template: "@SERWER FTP:\n
+                        na urządzeniu działa serwer ftp, umożliwiający wymianę plików (np. muzycznych), serwer dostępny jest pod adresem:"
   - platform: template
     sensors:
       host_name_dev_info:
-        value_template: "ais-dom - z taką domyślną nazwą hosta komunikują się urządzenia w systemie AIS dom.\n
+        value_template: "ais-dom.local - z taką domyślną nazwą hosta komunikują się urządzenia w systemie AIS dom.\n
                         Możesz zmienić nazwę hosta na inną ale pamiętaj, żeby zmienić też konfigurację urządzeń.\n
                         # UWAGA: Żeby zmiana była widoczna wymagany będzie restart!"
 
   - platform: template
     sensors:
       https_connection_info:
-        value_template: "Komunikaja z serwerem WWW AIS dom a Twoją przeglądarką jest szyfrowana - protokół https.\n
-                        @https://ais-dom:8123 lub https://localhost:8123\n
-                        Zainstaluj poniższy certyfikat w swoim systemie/przeglądarce by dodać do zaufanych hosty: localhost i ais-dom."
+        value_template: "Bramka udostępniana jest w sieci lokalnej pod adresem ais-dom.local za pomocą protokołu mDNS\n
+                        @SERWER HTTP:\n
+                        w przypadku protokołu https możesz zainstalować certyfikat(link poniżej) w swoim systemie/przeglądarce by dodać do zaufanych host ais-dom."
 
 input_text:
   new_host_name:
@@ -116,7 +102,7 @@ group:
       - binary_sensor.ais_remote_button
       - binary_sensor.selected_entity
   ais_host_rename:
-    name: Zmiana nazwy hosta
+    name: Zmiana nazwy hosta bramki
     control: hidden
     entities:
       - sensor.host_name_dev_info
@@ -126,14 +112,13 @@ group:
 #  ais_android_certification:
 #    name: Certyfikacja urządzenia
 #    entities:
-#      - sensor.certification_info
-#      - script.ais_getsecure_android_id
-#      - binary_sensor.secure_android_id
 #      - weblink.uncertified_android_registration
   ais_dev_ssh:
-    name: Zdalny dostęp
+    name: Zdalny dostęp do bramki
     entities:
       - sensor.https_connection_info
+      - weblink.http_url
+      - weblink.https_url
       - weblink.https_localhost_cert
       - sensor.ssh_connection_info
       - weblink.klucz_ssh

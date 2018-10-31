@@ -13,19 +13,6 @@ ais_button_click:
       data_template:
         text: '{{ code + " "}}'
 
-#ais_getsecure_android_id:
-#  alias: 'Pobierz identyfikator urządzenia'
-#  sequence:
-#    - service: ais_ai_service.say_it
-#      data:
-#        text: "Pobieram."
-#    - service: ais_shell_command.execute_command
-#      data_template:
-#        command: "sudo settings get secure android_id"
-#        entity_id: "binary_sensor.secure_android_id"
-#        friendly_name: "Identyfikator urządzenia"
-#        icon: "mdi:android"
-
 ais_change_host_name:
   alias: 'Zatwierdz zmianę nazwy hosta'
   sequence:

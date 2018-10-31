@@ -1,9 +1,4 @@
 sensor:
-  # - platform: speedtest
-  #   monitored_conditions:
-  #     - ping
-  #     - download
-  #     - upload
   - platform: template
     sensors:
       ais_connect_iot_device_info:
@@ -27,66 +22,6 @@ sensor:
     name: ais_rss_help_text
     package: homeassistant.components.ais_cloud
     method: get_rss_help_text
-#  - platform: command_line
-#    command: curl ipinfo.io/ip
-#    name: external_ip_address
-#    scan_interval: 360
-#  - platform: command_line
-#    command: grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'
-#    name: uzycie_procesora_val
-#    scan_interval: 360
-#  - platform: command_line
-#    command: df ~ | awk '{ print $5 }' | tail -n 1 | sed 's/.$//'
-#    name: uzycie_dysku_val
-#    scan_interval: 360
-#  - platform: command_line
-#    command: free | grep Mem | awk '{usage=($4/$2)*100} END {print usage}'
-#    name: wolna_pamiec_val
-#    scan_interval: 360
-#  - platform: systemmonitor
-#    resources:
-#      - type: since_last_boot
-
-#  - platform: template
-#    sensors:
-#      uzycie_procesora:
-#        value_template: "{{ states.sensor.uzycie_procesora_val.state | round() }}"
-#        unit_of_measurement: '%'
-#      uzycie_dysku:
-#        value_template: "{{ states.sensor.uzycie_dysku_val.state | round() }}"
-#        unit_of_measurement: '%'
-#      wolna_pamiec:
-#        value_template: "{{ states.sensor.wolna_pamiec_val.state | round() }}"
-#        unit_of_measurement: '%'
-#      since_last_boot_templated:
-#        value_template: >-
-#          {%- set slb = states.sensor.since_last_boot.state.split(' ') -%}
-#          {%- set count = slb | length -%}
-#          {%- set hms = slb[count - 1] -%}
-#          {%- set hms_trimmed = hms.split('.')[0] -%}
-#          {%- set hms_split = hms_trimmed.split(':') -%}
-#          {%- set hours = hms_split[0] | int -%}
-#          {%- set minutes = hms_split[1] | int -%}
-#          {%- set seconds = hms_split[2] | int -%}
-#
-#          {%- if count == 3 -%}
-#            {{ slb[0] ~ ' ' 'd.,' ' ' }}
-#          {%- endif -%}
-#          {%- if hours > 0 -%}
-#              {{ hours }} godz.
-#          {%- endif -%}
-#          {%- if minutes > 0 -%}
-#            {%- if hours > 0 -%}
-#              {{ ', ' }}
-#            {%- endif -%}
-#              {{ minutes }} min.
-#          {%- endif -%}
-#          {%- if seconds > 0 -%}
-#            {%- if hours > 0 or minutes > 0 -%}
-#              {{ ', ' }}
-#            {%- endif -%}
-#              {{ seconds }} sek.
-#          {%- endif -%}
   - platform: rest
     name: ais_android_wifi_current_network_info
     resource: http://localhost:8122/command
@@ -98,15 +33,16 @@ sensor:
       Content-Type: application/json
 weblink:
   entities:
-    - name: klucz ssh
+    - name: http_url
+      url: http://ais-dom.local:8180
+    - name: https_url
+      url: https://ais-dom.local:8123
+    - name: klucz_ssh
       url: /local/id_rsa_ais
       icon: mdi:console-line
     - name: ftp_url
-      url: ftp://ais-dom:1024
+      url: ftp://ais-dom.local:1024
       icon: mdi:play-network
-#    - name: uncertified_android_registration
-#      url: https://www.google.com/android/uncertified/
-#      icon: mdi:certificate
     - name: cloud
       url: https://powiedz.co/ords/f?p=1000:101
       icon: mdi:open-in-new
@@ -164,22 +100,11 @@ input_boolean:
     icon: mdi:voice
 
 group:
-#  System Status:
-#    control: hidden
-#    name: Status systemu
-#    entities:
-#      - sensor.uzycie_procesora
-#      - sensor.uzycie_dysku
-#      - sensor.wolna_pamiec
-#      - sensor.since_last_boot_templated
   Internet Status:
     name: Ustawienia sieci
     control: hidden
     entities:
       - sensor.local_host_name
-      # - sensor.speedtest_download
-      # - sensor.speedtest_upload
-      # - sensor.speedtest_ping
       - sensor.external_ip_address
       - sensor.internal_ip_address
       - sensor.ais_android_wifi_current_network_info
