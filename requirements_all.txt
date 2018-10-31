@@ -1433,7 +1433,7 @@ spotipy-homeassistant==2.4.4.dev1
 sqlalchemy==1.2.13
 
 # homeassistant.components.sensor.srp_energy
-srpenergy==1.0.1
+srpenergy==1.0.2
 
 # homeassistant.components.sensor.starlingbank
 starlingbank==1.2

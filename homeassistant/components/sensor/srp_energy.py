@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['srpenergy==1.0.1']
+REQUIREMENTS = ['srpenergy==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
