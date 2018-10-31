@@ -67,8 +67,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # Attempt to discover additional RVU units
         _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
         try:
-            resp = requests.get(
-                'http://%s:%d/info/getLocations' % (host, DEFAULT_PORT)).json()
+            from DirectPy import DIRECTV
+            dtv = DIRECTV(host, DEFAULT_PORT)
+            resp = dtv.get_locations()
 
             _LOGGER.debug("Known devices: %s", known_devices)
             for loc in resp.get("locations") or []:
