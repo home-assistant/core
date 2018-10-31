@@ -6,7 +6,7 @@ https://home-assistant.io/components/light.ihc/
 import voluptuous as vol
 import logging
 
-from homeassistant.components.ihc import (    
+from homeassistant.components.ihc import (
     validate_name, IHC_DATA, IHC_CONTROLLER, CONTROLLER_ID, IHC_INFO)
 from homeassistant.components.ihc.const import (
     CONF_DIMMABLE, CONF_SECONDARY)
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for light in lights:
             ihc_id = light[CONF_ID]
             # Get controller id
-            ihc_secondary = bool(light[CONF_SECONDARY])     
+            ihc_secondary = bool(light[CONF_SECONDARY])
             ihc_key = IHC_DATA.format(CONTROLLER_ID[ihc_secondary])
             ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
 
