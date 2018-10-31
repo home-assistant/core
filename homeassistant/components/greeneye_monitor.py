@@ -165,6 +165,7 @@ async def async_setup(hass, config):
         hass,
         'sensor',
         DOMAIN,
-        all_sensors))
+        all_sensors,
+        config))
 
     return True
