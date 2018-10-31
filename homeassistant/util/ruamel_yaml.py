@@ -3,7 +3,6 @@ import logging
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY
 from collections import OrderedDict
-from stat import ST_MODE, ST_UID, ST_GID
 from typing import Union, List, Dict
 
 import ruamel.yaml
@@ -57,7 +56,8 @@ def object_to_yaml(data: JSON_TYPE) -> str:
     stream = StringIO()
     try:
         yaml.dump(data, stream)
-        return stream.getvalue()
+        result = stream.getvalue()  # type: str
+        return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
         raise HomeAssistantError(exc)
@@ -67,7 +67,8 @@ def yaml_to_object(data: str) -> JSON_TYPE:
     """Create object from yaml string."""
     yaml = YAML(typ='rt')
     try:
-        return yaml.load(data)
+        result = yaml.load(data)  # type: Union[List, Dict, str]
+        return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
         raise HomeAssistantError(exc)
@@ -104,12 +105,12 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
     try:
         file_stat = os.stat(fname)
         with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC,
-                          file_stat[ST_MODE]), 'w', encoding='utf-8') \
+                          file_stat.st_mode), 'w', encoding='utf-8') \
                 as temp_file:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
         try:
-            os.chown(fname, file_stat[ST_UID], file_stat[ST_GID])
+            os.chown(fname, file_stat.st_uid, file_stat.st_gid)
         except OSError:
             pass
     except YAMLError as exc:
