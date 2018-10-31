@@ -102,7 +102,7 @@ def save_yaml(fname: str, data: JSON_TYPE):
         file_stat = os.stat(fname)
         with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC,
                           file_stat[ST_MODE]), 'w', encoding='utf-8') \
-                          as temp_file:
+                as temp_file:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
         try:
