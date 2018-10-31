@@ -3,6 +3,8 @@ from unittest.mock import patch, PropertyMock
 
 from homeassistant import __main__ as main
 
+def homeass:
+    return 0;
 
 @patch('sys.exit')
 def test_validate_python(mock_exit):
