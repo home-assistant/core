@@ -5,7 +5,7 @@ components. Instead call the service directly.
 """
 from homeassistant.components.remote import (
     ATTR_ACTIVITY, ATTR_COMMAND, ATTR_DELAY_SECS, ATTR_DEVICE,
-    ATTR_NUM_REPEATS, DOMAIN, SERVICE_SEND_COMMAND)
+    ATTR_HOLD_SECS, ATTR_NUM_REPEATS, DOMAIN, SERVICE_SEND_COMMAND)
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.loader import bind_hass
@@ -37,7 +37,7 @@ def turn_off(hass, activity=None, entity_id=None):
 
 @bind_hass
 def send_command(hass, command, entity_id=None, device=None,
-                 num_repeats=None, delay_secs=None):
+                 num_repeats=None, delay_secs=None, hold_secs=None):
     """Send a command to a device."""
     data = {ATTR_COMMAND: command}
     if entity_id:
@@ -51,5 +51,8 @@ def send_command(hass, command, entity_id=None, device=None,
 
     if delay_secs:
         data[ATTR_DELAY_SECS] = delay_secs
+
+    if hold_secs:
+        data[ATTR_HOLD_SECS] = hold_secs
 
     hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
