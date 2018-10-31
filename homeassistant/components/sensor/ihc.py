@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ihc_key = IHC_DATA.format(ctrl_id)
             info = hass.data[ihc_key][IHC_INFO]
             ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
-            
+
             sensor = IHCSensor(ihc_controller, name, ihc_id, info,
                                product_cfg[CONF_UNIT_OF_MEASUREMENT],
                                product)
