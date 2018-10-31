@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.util.dt import utcnow
@@ -24,7 +25,8 @@ UNKNOWN_SERVICE = 'this_service_will_never_be_supported'
 
 BASE_CONFIG = {
     discovery.DOMAIN: {
-        'ignore': []
+        'ignore': [],
+        'enable': []
     }
 }
 
@@ -44,13 +46,12 @@ def netdisco_mock():
         yield
 
 
-@asyncio.coroutine
-def mock_discovery(hass, discoveries, config=BASE_CONFIG):
-    """Helper to mock discoveries."""
-    result = yield from async_setup_component(hass, 'discovery', config)
+async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
+    """Mock discoveries."""
+    result = await async_setup_component(hass, 'discovery', config)
     assert result
 
-    yield from hass.async_start()
+    await hass.async_start()
 
     with patch.object(discovery, '_discover', discoveries), \
             patch('homeassistant.components.discovery.async_discover',
@@ -59,8 +60,8 @@ def mock_discovery(hass, discoveries, config=BASE_CONFIG):
                   return_value=mock_coro()) as mock_platform:
         async_fire_time_changed(hass, utcnow())
         # Work around an issue where our loop.call_soon not get caught
-        yield from hass.async_block_till_done()
-        yield from hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     return mock_discover, mock_platform
 
@@ -154,3 +155,25 @@ def test_load_component_hassio(hass):
         yield from mock_discovery(hass, discover)
 
     assert mock_hassio.called
+
+
+async def test_discover_config_flow(hass):
+    """Test discovery triggering a config flow."""
+    discovery_info = {
+        'hello': 'world'
+    }
+
+    def discover(netdisco):
+        """Fake discovery."""
+        return [('mock-service', discovery_info)]
+
+    with patch.dict(discovery.CONFIG_ENTRY_HANDLERS, {
+        'mock-service': 'mock-component'}), patch(
+            'homeassistant.data_entry_flow.FlowManager.async_init') as m_init:
+        await mock_discovery(hass, discover)
+
+    assert len(m_init.mock_calls) == 1
+    args, kwargs = m_init.mock_calls[0][1:]
+    assert args == ('mock-component',)
+    assert kwargs['context']['source'] == config_entries.SOURCE_DISCOVERY
+    assert kwargs['data'] == discovery_info

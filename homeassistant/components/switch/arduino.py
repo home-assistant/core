@@ -10,7 +10,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.arduino as arduino
+from homeassistant.components import arduino
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arduino platform."""
     # Verify that Arduino board is present
     if arduino.BOARD is None:
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     switches = []
     for pinnum, pin in pins.items():
         switches.append(ArduinoSwitch(pinnum, pin))
-    add_devices(switches)
+    add_entities(switches)
 
 
 class ArduinoSwitch(SwitchDevice):
@@ -83,12 +83,12 @@ class ArduinoSwitch(SwitchDevice):
         """Return true if pin is high/on."""
         return self._state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the pin to high/on."""
         self._state = True
         self.turn_on_handler(self._pin)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the pin to low/off."""
         self._state = False
         self.turn_off_handler(self._pin)

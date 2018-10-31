@@ -10,7 +10,8 @@ import math
 
 import voluptuous as vol
 
-import homeassistant.components.history as history
+from homeassistant.core import callback
+from homeassistant.components import history
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -19,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,13 +50,7 @@ ATTR_VALUE = 'value'
 
 def exactly_two_period_keys(conf):
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
-    provided = 0
-
-    for param in CONF_PERIOD_KEYS:
-        if param in conf and conf[param] is not None:
-            provided += 1
-
-    if provided != 2:
+    if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
         raise vol.Invalid('You must provide exactly 2 of the following:'
                           ' start, end, duration')
     return conf
@@ -64,16 +59,16 @@ def exactly_two_period_keys(conf):
 PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_STATE): cv.string,
-    vol.Optional(CONF_START, default=None): cv.template,
-    vol.Optional(CONF_END, default=None): cv.template,
-    vol.Optional(CONF_DURATION, default=None): cv.time_period,
+    vol.Optional(CONF_START): cv.template,
+    vol.Optional(CONF_END): cv.template,
+    vol.Optional(CONF_DURATION): cv.time_period,
     vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 }), exactly_two_period_keys)
 
 
 # noinspection PyUnusedLocal
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the History Stats sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     entity_state = config.get(CONF_STATE)
@@ -87,8 +82,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if template is not None:
             template.hass = hass
 
-    add_devices([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
-                                    duration, sensor_type, name)])
+    add_entities([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
+                                     duration, sensor_type, name)])
 
     return True
 
@@ -100,8 +95,6 @@ class HistoryStatsSensor(Entity):
             self, hass, entity_id, entity_state, start, end, duration,
             sensor_type, name):
         """Initialize the HistoryStats sensor."""
-        self._hass = hass
-
         self._entity_id = entity_id
         self._entity_state = entity_state
         self._duration = duration
@@ -112,18 +105,22 @@ class HistoryStatsSensor(Entity):
         self._unit_of_measurement = UNITS[sensor_type]
 
         self._period = (datetime.datetime.now(), datetime.datetime.now())
-        self.value = 0
-        self.count = 0
+        self.value = None
+        self.count = None
 
-        def force_refresh(*args):
-            """Force the component to refresh."""
-            self.schedule_update_ha_state(True)
+        @callback
+        def start_refresh(*args):
+            """Register state tracking."""
+            @callback
+            def force_refresh(*args):
+                """Force the component to refresh."""
+                self.async_schedule_update_ha_state(True)
 
-        # Update value when home assistant starts
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, force_refresh)
+            force_refresh()
+            async_track_state_change(self.hass, self._entity_id, force_refresh)
 
-        # Update value when tracked entity changes its state
-        track_state_change(hass, entity_id, force_refresh)
+        # Delay first refresh to keep startup fast
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_refresh)
 
     @property
     def name(self):
@@ -133,6 +130,9 @@ class HistoryStatsSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self.value is None or self.count is None:
+            return None
+
         if self._type == CONF_TYPE_TIME:
             return round(self.value, 2)
 
@@ -155,6 +155,9 @@ class HistoryStatsSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
+        if self.value is None:
+            return {}
+
         hsh = HistoryStatsHelper
         return {
             ATTR_VALUE: hsh.pretty_duration(self.value),
@@ -294,7 +297,7 @@ class HistoryStatsHelper:
         minutes, seconds = divmod(seconds, 60)
         if days > 0:
             return '%dd %dh %dm' % (days, hours, minutes)
-        elif hours > 0:
+        if hours > 0:
             return '%dh %dm' % (hours, minutes)
         return '%dm' % minutes
 

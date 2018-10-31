@@ -20,14 +20,13 @@ DEPENDENCIES = ['usps']
 STATUS_DELIVERED = 'delivered'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the USPS platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the USPS platform."""
     if discovery_info is None:
         return
 
     usps = hass.data[DATA_USPS]
-    add_devices([USPSPackageSensor(usps),
-                 USPSMailSensor(usps)], True)
+    add_entities([USPSPackageSensor(usps), USPSMailSensor(usps)], True)
 
 
 class USPSPackageSensor(Entity):
@@ -73,7 +72,7 @@ class USPSPackageSensor(Entity):
 
     @property
     def icon(self):
-        """Icon to use in the frontend."""
+        """Return the icon to use in the frontend."""
         return 'mdi:package-variant-closed'
 
     @property

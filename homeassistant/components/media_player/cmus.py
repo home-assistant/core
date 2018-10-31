@@ -8,18 +8,17 @@ import logging
 
 import voluptuous as vol
 
-
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_PLAY,
-    SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, SUPPORT_SEEK, PLATFORM_SCHEMA,
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME, CONF_PORT,
-    CONF_PASSWORD)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pycmus==0.1.0']
+REQUIREMENTS = ['pycmus==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discover_info=None):
+def setup_platform(hass, config, add_entities, discover_info=None):
     """Set up the CMUS platform."""
     from pycmus import exceptions
 
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_devices, discover_info=None):
     except exceptions.InvalidPassword:
         _LOGGER.error("The provided password was rejected by cmus")
         return False
-    add_devices([cmus_remote], True)
+    add_entities([cmus_remote], True)
 
 
 class CmusDevice(MediaPlayerDevice):
@@ -77,7 +76,7 @@ class CmusDevice(MediaPlayerDevice):
         """Get the latest data and update the state."""
         status = self.cmus.get_status_dict()
         if not status:
-            _LOGGER.warning("Recieved no status from cmus")
+            _LOGGER.warning("Received no status from cmus")
         else:
             self.status = status
 
@@ -91,7 +90,7 @@ class CmusDevice(MediaPlayerDevice):
         """Return the media state."""
         if self.status.get('status') == 'playing':
             return STATE_PLAYING
-        elif self.status.get('status') == 'paused':
+        if self.status.get('status') == 'paused':
             return STATE_PAUSED
         return STATE_OFF
 

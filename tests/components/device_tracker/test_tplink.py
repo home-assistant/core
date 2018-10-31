@@ -16,7 +16,7 @@ class TestTplink4DeviceScanner(unittest.TestCase):
     """Tests for the Tplink4DeviceScanner class."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -40,8 +40,7 @@ class TestTplink4DeviceScanner(unittest.TestCase):
         # Mock the token retrieval process
         FAKE_TOKEN = 'fake_token'
         fake_auth_token_response = 'window.parent.location.href = ' \
-                                   '"https://a/{}/userRpm/Index.htm";'.format(
-                                       FAKE_TOKEN)
+            '"https://a/{}/userRpm/Index.htm";'.format(FAKE_TOKEN)
 
         m.get('http://{}/userRpm/LoginRpm.htm?Save=Save'.format(
             conf_dict[CONF_HOST]), text=fake_auth_token_response)
@@ -65,4 +64,4 @@ class TestTplink4DeviceScanner(unittest.TestCase):
         expected_mac_results = [mac.replace('-', ':') for mac in
                                 [FAKE_MAC_1, FAKE_MAC_2, FAKE_MAC_3]]
 
-        self.assertEqual(tplink.last_results, expected_mac_results)
+        assert tplink.last_results == expected_mac_results

@@ -7,7 +7,13 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components import demo, device_tracker
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
+
+
+@pytest.fixture(autouse=True)
+def mock_history(hass):
+    """Mock history component loaded."""
+    hass.config.components.add('history')
 
 
 @pytest.fixture

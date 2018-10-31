@@ -4,7 +4,6 @@ Component for interacting with a Lutron Caseta system.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/lutron_caseta/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -14,7 +13,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylutron-caseta==0.3.0']
+REQUIREMENTS = ['pylutron-caseta==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,8 +39,7 @@ LUTRON_CASETA_COMPONENTS = [
 ]
 
 
-@asyncio.coroutine
-def async_setup(hass, base_config):
+async def async_setup(hass, base_config):
     """Set up the Lutron component."""
     from pylutron_caseta.smartbridge import Smartbridge
 
@@ -54,7 +52,7 @@ def async_setup(hass, base_config):
                                     certfile=certfile,
                                     ca_certs=ca_certs)
     hass.data[LUTRON_CASETA_SMARTBRIDGE] = bridge
-    yield from bridge.connect()
+    await bridge.connect()
     if not hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
         _LOGGER.error("Unable to connect to Lutron smartbridge at %s",
                       config[CONF_HOST])
@@ -63,8 +61,8 @@ def async_setup(hass, base_config):
     _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])
 
     for component in LUTRON_CASETA_COMPONENTS:
-        hass.async_add_job(discovery.async_load_platform(hass, component,
-                                                         DOMAIN, {}, config))
+        hass.async_create_task(discovery.async_load_platform(
+            hass, component, DOMAIN, {}, config))
 
     return True
 
@@ -85,8 +83,7 @@ class LutronCasetaDevice(Entity):
         self._state = None
         self._smartbridge = bridge
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self._smartbridge.add_subscriber(self._device_id,
                                          self.async_schedule_update_ha_state)

@@ -23,7 +23,7 @@ class TestVultrSensorSetup(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices, action):
+    def add_entities(self, devices, action):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -70,14 +70,12 @@ class TestVultrSensorSetup(unittest.TestCase):
             base_vultr.setup(self.hass, VALID_CONFIG)
 
         for config in self.configs:
-            setup = vultr.setup_platform(self.hass,
-                                         config,
-                                         self.add_devices,
-                                         None)
+            setup = vultr.setup_platform(
+                self.hass, config, self.add_entities, None)
 
-            self.assertIsNone(setup)
+            assert setup is None
 
-        self.assertEqual(5, len(self.DEVICES))
+        assert 5 == len(self.DEVICES)
 
         tested = 0
 
@@ -85,47 +83,46 @@ class TestVultrSensorSetup(unittest.TestCase):
 
             # Test pre update
             if device.subscription == '576965':
-                self.assertEqual(vultr.DEFAULT_NAME, device.name)
+                assert vultr.DEFAULT_NAME == device.name
 
             device.update()
 
             if device.unit_of_measurement == 'GB':  # Test Bandwidth Used
                 if device.subscription == '576965':
-                    self.assertEqual(
-                        'Vultr my new server Current Bandwidth Used',
-                        device.name)
-                    self.assertEqual('mdi:chart-histogram', device.icon)
-                    self.assertEqual(131.51, device.state)
-                    self.assertEqual('mdi:chart-histogram', device.icon)
+                    assert 'Vultr my new server Current Bandwidth Used' == \
+                        device.name
+                    assert 'mdi:chart-histogram' == device.icon
+                    assert 131.51 == device.state
+                    assert 'mdi:chart-histogram' == device.icon
                     tested += 1
 
                 elif device.subscription == '123456':
-                    self.assertEqual('Server Current Bandwidth Used',
-                                     device.name)
-                    self.assertEqual(957.46, device.state)
+                    assert 'Server Current Bandwidth Used' == \
+                        device.name
+                    assert 957.46 == device.state
                     tested += 1
 
             elif device.unit_of_measurement == 'US$':  # Test Pending Charges
 
                 if device.subscription == '576965':  # Default 'Vultr {} {}'
-                    self.assertEqual('Vultr my new server Pending Charges',
-                                     device.name)
-                    self.assertEqual('mdi:currency-usd', device.icon)
-                    self.assertEqual(46.67, device.state)
-                    self.assertEqual('mdi:currency-usd', device.icon)
+                    assert 'Vultr my new server Pending Charges' == \
+                        device.name
+                    assert 'mdi:currency-usd' == device.icon
+                    assert 46.67 == device.state
+                    assert 'mdi:currency-usd' == device.icon
                     tested += 1
 
                 elif device.subscription == '123456':  # Custom name with 1 {}
-                    self.assertEqual('Server Pending Charges', device.name)
-                    self.assertEqual('not a number', device.state)
+                    assert 'Server Pending Charges' == device.name
+                    assert 'not a number' == device.state
                     tested += 1
 
                 elif device.subscription == '555555':  # No {} in name
-                    self.assertEqual('VPS Charges', device.name)
-                    self.assertEqual(5.45, device.state)
+                    assert 'VPS Charges' == device.name
+                    assert 5.45 == device.state
                     tested += 1
 
-        self.assertEqual(tested, 5)
+        assert tested == 5
 
     def test_invalid_sensor_config(self):
         """Test config type failures."""
@@ -161,10 +158,8 @@ class TestVultrSensorSetup(unittest.TestCase):
             CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS,
         }  # No subs at all
 
-        no_sub_setup = vultr.setup_platform(self.hass,
-                                            bad_conf,
-                                            self.add_devices,
-                                            None)
+        no_sub_setup = vultr.setup_platform(
+            self.hass, bad_conf, self.add_entities, None)
 
-        self.assertIsNotNone(no_sub_setup)
-        self.assertEqual(0, len(self.DEVICES))
+        assert no_sub_setup is None
+        assert 0 == len(self.DEVICES)

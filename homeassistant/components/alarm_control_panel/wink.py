@@ -4,15 +4,13 @@ Interfaces with Wink Cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.wink/
 """
-import asyncio
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.const import (STATE_UNKNOWN,
-                                 STATE_ALARM_DISARMED,
-                                 STATE_ALARM_ARMED_HOME,
-                                 STATE_ALARM_ARMED_AWAY)
-from homeassistant.components.wink import WinkDevice, DOMAIN
+from homeassistant.components.wink import DOMAIN, WinkDevice
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +19,7 @@ DEPENDENCIES = ['wink']
 STATE_ALARM_PRIVACY = 'Private'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
     import pywink
 
@@ -33,15 +31,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         except AttributeError:
             _id = camera.object_id() + camera.name()
             if _id not in hass.data[DOMAIN]['unique_ids']:
-                add_devices([WinkCameraDevice(camera, hass)])
+                add_entities([WinkCameraDevice(camera, hass)])
 
 
 class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
     """Representation a Wink camera alarm."""
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['alarm_control_panel'].append(self)
 
     @property

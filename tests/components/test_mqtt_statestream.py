@@ -12,11 +12,11 @@ from tests.common import (
 )
 
 
-class TestMqttStateStream(object):
+class TestMqttStateStream:
     """Test the MQTT statestream module."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_mqtt = mock_mqtt_component(self.hass)
 
@@ -47,17 +47,17 @@ class TestMqttStateStream(object):
         assert self.add_statestream() is False
 
     def test_setup_succeeds_without_attributes(self):
-        """"Test the success of the setup with a valid base_topic."""
+        """Test the success of the setup with a valid base_topic."""
         assert self.add_statestream(base_topic='pub')
 
     def test_setup_succeeds_with_attributes(self):
-        """"Test setup with a valid base_topic and publish_attributes."""
+        """Test setup with a valid base_topic and publish_attributes."""
         assert self.add_statestream(base_topic='pub', publish_attributes=True)
 
     @patch('homeassistant.components.mqtt.async_publish')
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_sends_message(self, mock_utcnow, mock_pub):
-        """"Test the sending of a new message if event changed."""
+        """Test the sending of a new message if event changed."""
         e_id = 'fake.entity'
         base_topic = 'pub'
 
@@ -84,7 +84,7 @@ class TestMqttStateStream(object):
             self,
             mock_utcnow,
             mock_pub):
-        """"Test the sending of a message and timestamps if event changed."""
+        """Test the sending of a message and timestamps if event changed."""
         e_id = 'another.entity'
         base_topic = 'pub'
 
@@ -118,7 +118,7 @@ class TestMqttStateStream(object):
     @patch('homeassistant.components.mqtt.async_publish')
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_attr_sends_message(self, mock_utcnow, mock_pub):
-        """"Test the sending of a new message if attribute changed."""
+        """Test the sending of a new message if attribute changed."""
         e_id = 'fake.entity'
         base_topic = 'pub'
 
@@ -134,7 +134,7 @@ class TestMqttStateStream(object):
         test_attributes = {
             "testing": "YES",
             "list": ["a", "b", "c"],
-            "bool": True
+            "bool": False
         }
 
         # Set a state of an entity
@@ -150,7 +150,7 @@ class TestMqttStateStream(object):
                                1, True),
             call.async_publish(self.hass, 'pub/fake/entity/list',
                                '["a", "b", "c"]', 1, True),
-            call.async_publish(self.hass, 'pub/fake/entity/bool', "true",
+            call.async_publish(self.hass, 'pub/fake/entity/bool', "false",
                                1, True)
         ]
 
@@ -160,7 +160,7 @@ class TestMqttStateStream(object):
     @patch('homeassistant.components.mqtt.async_publish')
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_include_domain(self, mock_utcnow, mock_pub):
-        """"Test that filtering on included domain works as expected."""
+        """Test that filtering on included domain works as expected."""
         base_topic = 'pub'
 
         incl = {
@@ -198,7 +198,7 @@ class TestMqttStateStream(object):
     @patch('homeassistant.components.mqtt.async_publish')
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_include_entity(self, mock_utcnow, mock_pub):
-        """"Test that filtering on included entity works as expected."""
+        """Test that filtering on included entity works as expected."""
         base_topic = 'pub'
 
         incl = {
@@ -236,7 +236,7 @@ class TestMqttStateStream(object):
     @patch('homeassistant.components.mqtt.async_publish')
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_exclude_domain(self, mock_utcnow, mock_pub):
-        """"Test that filtering on excluded domain works as expected."""
+        """Test that filtering on excluded domain works as expected."""
         base_topic = 'pub'
 
         incl = {}
@@ -274,7 +274,7 @@ class TestMqttStateStream(object):
     @patch('homeassistant.components.mqtt.async_publish')
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_exclude_entity(self, mock_utcnow, mock_pub):
-        """"Test that filtering on excluded entity works as expected."""
+        """Test that filtering on excluded entity works as expected."""
         base_topic = 'pub'
 
         incl = {}
@@ -313,7 +313,7 @@ class TestMqttStateStream(object):
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_exclude_domain_include_entity(
             self, mock_utcnow, mock_pub):
-        """"Test filtering with excluded domain and included entity."""
+        """Test filtering with excluded domain and included entity."""
         base_topic = 'pub'
 
         incl = {
@@ -354,7 +354,7 @@ class TestMqttStateStream(object):
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_include_domain_exclude_entity(
             self, mock_utcnow, mock_pub):
-        """"Test filtering with included domain and excluded entity."""
+        """Test filtering with included domain and excluded entity."""
         base_topic = 'pub'
 
         incl = {

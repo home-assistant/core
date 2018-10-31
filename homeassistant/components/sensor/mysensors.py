@@ -8,14 +8,41 @@ from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
+SENSORS = {
+    'V_TEMP': [None, 'mdi:thermometer'],
+    'V_HUM': ['%', 'mdi:water-percent'],
+    'V_DIMMER': ['%', 'mdi:percent'],
+    'V_LIGHT_LEVEL': ['%', 'white-balance-sunny'],
+    'V_DIRECTION': ['°', 'mdi:compass'],
+    'V_WEIGHT': ['kg', 'mdi:weight-kilogram'],
+    'V_DISTANCE': ['m', 'mdi:ruler'],
+    'V_IMPEDANCE': ['ohm', None],
+    'V_WATT': ['W', None],
+    'V_KWH': ['kWh', None],
+    'V_FLOW': ['m', None],
+    'V_VOLUME': ['m³', None],
+    'V_VOLTAGE': ['V', 'mdi:flash'],
+    'V_CURRENT': ['A', 'mdi:flash-auto'],
+    'V_PERCENTAGE': ['%', 'mdi:percent'],
+    'V_LEVEL': {
+        'S_SOUND': ['dB', 'mdi:volume-high'], 'S_VIBRATION': ['Hz', None],
+        'S_LIGHT_LEVEL': ['lx', 'white-balance-sunny']},
+    'V_ORP': ['mV', None],
+    'V_EC': ['μS/cm', None],
+    'V_VAR': ['var', None],
+    'V_VA': ['VA', None],
+}
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the MySensors platform for sensors."""
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsSensor, add_devices=add_devices)
+        hass, DOMAIN, discovery_info, MySensorsSensor,
+        async_add_entities=async_add_entities)
 
 
-class MySensorsSensor(mysensors.MySensorsEntity):
+class MySensorsSensor(mysensors.device.MySensorsEntity):
     """Representation of a MySensors Sensor child node."""
 
     @property
@@ -33,44 +60,29 @@ class MySensorsSensor(mysensors.MySensorsEntity):
         return self._values.get(self.value_type)
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        _, icon = self._get_sensor_type()
+        return icon
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
+        set_req = self.gateway.const.SetReq
+        if (float(self.gateway.protocol_version) >= 1.5 and
+                set_req.V_UNIT_PREFIX in self._values):
+            return self._values[set_req.V_UNIT_PREFIX]
+        unit, _ = self._get_sensor_type()
+        return unit
+
+    def _get_sensor_type(self):
+        """Return list with unit and icon of sensor type."""
         pres = self.gateway.const.Presentation
         set_req = self.gateway.const.SetReq
-        unit_map = {
-            set_req.V_TEMP: (TEMP_CELSIUS
-                             if self.gateway.metric else TEMP_FAHRENHEIT),
-            set_req.V_HUM: '%',
-            set_req.V_DIMMER: '%',
-            set_req.V_LIGHT_LEVEL: '%',
-            set_req.V_DIRECTION: '°',
-            set_req.V_WEIGHT: 'kg',
-            set_req.V_DISTANCE: 'm',
-            set_req.V_IMPEDANCE: 'ohm',
-            set_req.V_WATT: 'W',
-            set_req.V_KWH: 'kWh',
-            set_req.V_FLOW: 'm',
-            set_req.V_VOLUME: 'm³',
-            set_req.V_VOLTAGE: 'V',
-            set_req.V_CURRENT: 'A',
-        }
-        if float(self.gateway.protocol_version) >= 1.5:
-            if set_req.V_UNIT_PREFIX in self._values:
-                return self._values[
-                    set_req.V_UNIT_PREFIX]
-            unit_map.update({
-                set_req.V_PERCENTAGE: '%',
-                set_req.V_LEVEL: {
-                    pres.S_SOUND: 'dB', pres.S_VIBRATION: 'Hz',
-                    pres.S_LIGHT_LEVEL: 'lux'}})
-        if float(self.gateway.protocol_version) >= 2.0:
-            unit_map.update({
-                set_req.V_ORP: 'mV',
-                set_req.V_EC: 'μS/cm',
-                set_req.V_VAR: 'var',
-                set_req.V_VA: 'VA',
-            })
-        unit = unit_map.get(self.value_type)
-        if isinstance(unit, dict):
-            unit = unit.get(self.child_type)
-        return unit
+        SENSORS[set_req.V_TEMP.name][0] = (
+            TEMP_CELSIUS if self.gateway.metric else TEMP_FAHRENHEIT)
+        sensor_type = SENSORS.get(set_req(self.value_type).name, [None, None])
+        if isinstance(sensor_type, dict):
+            sensor_type = sensor_type.get(
+                pres(self.child_type).name, [None, None])
+        return sensor_type

@@ -4,10 +4,10 @@ Support for manual alarms controllable via MQTT.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.manual_mqtt/
 """
-import asyncio
 import copy
 import datetime
 import logging
+import re
 
 import voluptuous as vol
 
@@ -18,13 +18,15 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED,
     CONF_PLATFORM, CONF_NAME, CONF_CODE, CONF_DELAY_TIME, CONF_PENDING_TIME,
     CONF_TRIGGER_TIME, CONF_DISARM_AFTER_TRIGGER)
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.core import callback
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_CODE_TEMPLATE = 'code_template'
 
@@ -58,6 +60,7 @@ ATTR_POST_PENDING_STATE = 'post_pending_state'
 
 
 def _state_validator(config):
+    """Validate the state."""
     config = copy.deepcopy(config)
     for state in SUPPORTED_PRETRIGGER_STATES:
         if CONF_DELAY_TIME not in config[state]:
@@ -72,6 +75,7 @@ def _state_validator(config):
 
 
 def _state_schema(state):
+    """Validate the state."""
     schema = {}
     if state in SUPPORTED_PRETRIGGER_STATES:
         schema[vol.Optional(CONF_DELAY_TIME)] = vol.All(
@@ -117,12 +121,10 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
 }), _state_validator))
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the manual MQTT alarm platform."""
-    add_devices([ManualMQTTAlarm(
+    add_entities([ManualMQTTAlarm(
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
@@ -150,11 +152,10 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
     A trigger_time of zero disables the alarm_trigger service.
     """
 
-    def __init__(self, hass, name, code, code_template,
-                 disarm_after_trigger,
-                 state_topic, command_topic, qos,
-                 payload_disarm, payload_arm_home, payload_arm_away,
-                 payload_arm_night, config):
+    def __init__(self, hass, name, code, code_template, disarm_after_trigger,
+                 state_topic, command_topic, qos, payload_disarm,
+                 payload_arm_home, payload_arm_away, payload_arm_night,
+                 config):
         """Init the manual MQTT alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
@@ -207,9 +208,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
                     trigger_time) < dt_util.utcnow():
                 if self._disarm_after_trigger:
                     return STATE_ALARM_DISARMED
-                else:
-                    self._state = self._previous_state
-                    return self._state
+                self._state = self._previous_state
+                return self._state
 
         if self._state in SUPPORTED_PENDING_STATES and \
                 self._within_pending_time(self._state):
@@ -219,24 +219,30 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
 
     @property
     def _active_state(self):
+        """Get the current state."""
         if self.state == STATE_ALARM_PENDING:
             return self._previous_state
-        else:
-            return self._state
+        return self._state
 
     def _pending_time(self, state):
+        """Get the pending time."""
         pending_time = self._pending_time_by_state[state]
         if state == STATE_ALARM_TRIGGERED:
             pending_time += self._delay_time_by_state[self._previous_state]
         return pending_time
 
     def _within_pending_time(self, state):
+        """Get if the action is in the pending time window."""
         return self._state_ts + self._pending_time(state) > dt_util.utcnow()
 
     @property
     def code_format(self):
-        """One or more characters."""
-        return None if self._code is None else '.+'
+        """Return one or more digits/characters."""
+        if self._code is None:
+            return None
+        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
+            return 'Number'
+        return 'Any'
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -280,6 +286,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         self._update_state(STATE_ALARM_TRIGGERED)
 
     def _update_state(self, state):
+        """Update the state."""
         if self._state == state:
             return
 
@@ -329,7 +336,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         return state_attr
 
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe to MQTT events.
 
         This method must be run in the event loop and returns a coroutine.
         """
@@ -355,8 +362,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         return mqtt.async_subscribe(
             self.hass, self._command_topic, message_received, self._qos)
 
-    @asyncio.coroutine
-    def _async_state_changed_listener(self, entity_id, old_state, new_state):
+    async def _async_state_changed_listener(self, entity_id, old_state,
+                                            new_state):
         """Publish state change to MQTT."""
-        mqtt.async_publish(self.hass, self._state_topic, new_state.state,
-                           self._qos, True)
+        mqtt.async_publish(
+            self.hass, self._state_topic, new_state.state, self._qos, True)

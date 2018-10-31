@@ -4,17 +4,16 @@ Support for Nederlandse Spoorwegen public transport.
 For more details on this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nederlandse_spoorwegen/
 """
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_EMAIL, CONF_NAME,
-                                 CONF_PASSWORD, ATTR_ATTRIBUTION)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_EMAIL, CONF_NAME, CONF_PASSWORD)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -49,8 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the departure sensor."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the departure sensor."""
     import ns_api
     nsapi = ns_api.NSAPI(
         config.get(CONF_EMAIL), config.get(CONF_PASSWORD))
@@ -72,12 +71,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             NSDepartureSensor(
                 nsapi, departure.get(CONF_NAME), departure.get(CONF_FROM),
                 departure.get(CONF_TO), departure.get(CONF_VIA)))
-    if len(sensors):
-        add_devices(sensors, True)
+    if sensors:
+        add_entities(sensors, True)
 
 
 def valid_stations(stations, given_stations):
-    """Verify the existance of the given station codes."""
+    """Verify the existence of the given station codes."""
     for station in given_stations:
         if station is None:
             continue

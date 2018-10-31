@@ -34,8 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable, too-many-function-args
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dweet sensor."""
     import dweepy
 
@@ -58,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dweet = DweetData(device)
 
-    add_devices([DweetSensor(hass, dweet, name, value_template, unit)], True)
+    add_entities([DweetSensor(hass, dweet, name, value_template, unit)], True)
 
 
 class DweetSensor(Entity):
@@ -100,7 +99,7 @@ class DweetSensor(Entity):
                 values, STATE_UNKNOWN)
 
 
-class DweetData(object):
+class DweetData:
     """The class for handling the data retrieval."""
 
     def __init__(self, device):

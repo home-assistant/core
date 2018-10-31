@@ -15,20 +15,20 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['tesla']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla binary sensor."""
     devices = [
         TeslaBinarySensor(
             device, hass.data[TESLA_DOMAIN]['controller'], 'connectivity')
         for device in hass.data[TESLA_DOMAIN]['devices']['binary_sensor']]
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
     """Implement an Tesla binary sensor for parking and charger."""
 
     def __init__(self, tesla_device, controller, sensor_type):
-        """Initialisation of binary sensor."""
+        """Initialise of a Tesla binary sensor."""
         super().__init__(tesla_device, controller)
         self._state = False
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)

@@ -6,12 +6,12 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 """
 import logging
 
-from homeassistant.components.abode import (
-    AbodeDevice, DOMAIN as ABODE_DOMAIN, CONF_ATTRIBUTION)
-from homeassistant.components.alarm_control_panel import (AlarmControlPanel)
-from homeassistant.const import (ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY,
-                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
-
+from homeassistant.components.abode import CONF_ATTRIBUTION, AbodeDevice
+from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN
+from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED)
 
 DEPENDENCIES = ['abode']
 
@@ -20,15 +20,15 @@ _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:security'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up a sensor for an Abode device."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up an alarm control panel for an Abode device."""
     data = hass.data[ABODE_DOMAIN]
 
     alarm_devices = [AbodeAlarm(data, data.abode.get_alarm(), data.name)]
 
     data.devices.extend(alarm_devices)
 
-    add_devices(alarm_devices)
+    add_entities(alarm_devices)
 
 
 class AbodeAlarm(AbodeDevice, AlarmControlPanel):
@@ -41,7 +41,7 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanel):
 
     @property
     def icon(self):
-        """Return icon."""
+        """Return the icon."""
         return ICON
 
     @property
@@ -81,5 +81,5 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanel):
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             'device_id': self._device.device_id,
             'battery_backup': self._device.battery,
-            'cellular_backup': self._device.is_cellular
+            'cellular_backup': self._device.is_cellular,
         }

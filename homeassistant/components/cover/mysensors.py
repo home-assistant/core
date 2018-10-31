@@ -5,17 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.mysensors/
 """
 from homeassistant.components import mysensors
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION, DOMAIN
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverDevice
+from homeassistant.const import STATE_OFF, STATE_ON
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for covers."""
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the mysensors platform for covers."""
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsCover, add_devices=add_devices)
+        hass, DOMAIN, discovery_info, MySensorsCover,
+        async_add_entities=async_add_entities)
 
 
-class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
+class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
     """Representation of the value of a MySensors Cover child node."""
 
     @property
@@ -40,7 +42,7 @@ class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
         set_req = self.gateway.const.SetReq
         return self._values.get(set_req.V_DIMMER)
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Move the cover up."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
@@ -51,9 +53,9 @@ class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
                 self._values[set_req.V_DIMMER] = 100
             else:
                 self._values[set_req.V_LIGHT] = STATE_ON
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Move the cover down."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
@@ -64,9 +66,9 @@ class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
                 self._values[set_req.V_DIMMER] = 0
             else:
                 self._values[set_req.V_LIGHT] = STATE_OFF
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs.get(ATTR_POSITION)
         set_req = self.gateway.const.SetReq
@@ -75,9 +77,9 @@ class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
             self._values[set_req.V_DIMMER] = position
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Stop the device."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(

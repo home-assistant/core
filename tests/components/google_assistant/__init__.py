@@ -36,7 +36,7 @@ DEMO_DEVICES = [{
     'traits': [
         'action.devices.traits.OnOff'
     ],
-    'type': 'action.devices.types.LIGHT',  # This is used for custom type
+    'type': 'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -184,7 +184,7 @@ DEMO_DEVICES = [{
         'name': 'Living Room Fan'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.SWITCH',
+    'type': 'action.devices.types.FAN',
     'willReportState': False
 }, {
     'id': 'fan.ceiling_fan',
@@ -192,7 +192,7 @@ DEMO_DEVICES = [{
         'name': 'Ceiling Fan'
     },
     'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.SWITCH',
+    'type': 'action.devices.types.FAN',
     'willReportState': False
 }, {
     'id': 'group.all_fans',
@@ -211,7 +211,7 @@ DEMO_DEVICES = [{
     'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False,
     'attributes': {
-        'availableThermostatModes': 'heat,cool,off',
+        'availableThermostatModes': 'heat,cool,heatcool,off',
         'thermostatTemperatureUnit': 'C',
     },
 }, {

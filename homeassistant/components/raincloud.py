@@ -4,23 +4,21 @@ Support for Melnor RainCloud sprinkler water timer.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/raincloud/
 """
-import asyncio
-import logging
 from datetime import timedelta
+import logging
 
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
-from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.entity import Entity
+    ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_time_interval
 
-from requests.exceptions import HTTPError, ConnectTimeout
-
-REQUIREMENTS = ['raincloudy==0.0.4']
+REQUIREMENTS = ['raincloudy==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,7 +113,7 @@ def setup(hass, config):
 
     def hub_refresh(event_time):
         """Call Raincloud hub to refresh information."""
-        _LOGGER.debug("Updating RainCloud Hub component.")
+        _LOGGER.debug("Updating RainCloud Hub component")
         hass.data[DATA_RAINCLOUD].data.update()
         dispatcher_send(hass, SIGNAL_UPDATE_RAINCLOUD)
 
@@ -125,7 +123,7 @@ def setup(hass, config):
     return True
 
 
-class RainCloudHub(object):
+class RainCloudHub:
     """Representation of a base RainCloud device."""
 
     def __init__(self, data):
@@ -149,14 +147,13 @@ class RainCloudEntity(Entity):
         """Return the name of the sensor."""
         return self._name
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback)
 
     def _update_callback(self):
-        """Callback update method."""
+        """Call update method."""
         self.schedule_update_ha_state(True)
 
     @property
@@ -169,11 +166,10 @@ class RainCloudEntity(Entity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'current_time': self.data.current_time,
             'identifier': self.data.serial,
         }
 
     @property
     def icon(self):
-        """Icon to use in the frontend, if any."""
+        """Return the icon to use in the frontend, if any."""
         return ICON_MAP.get(self._sensor_type)

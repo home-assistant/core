@@ -3,30 +3,30 @@ Support for Alexa skill service end point.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
-
 """
-import asyncio
 import enum
 import logging
 
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.core import callback
-from homeassistant.helpers import intent
 from homeassistant.components import http
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import intent
 from homeassistant.util.decorator import Registry
 
 from .const import DOMAIN, SYN_RESOLUTION_MATCH
 
-INTENTS_API_ENDPOINT = '/api/alexa'
-HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
+
+HANDLERS = Registry()
+
+INTENTS_API_ENDPOINT = '/api/alexa'
 
 
 class SpeechType(enum.Enum):
     """The Alexa speech types."""
 
-    plaintext = "PlainText"
-    ssml = "SSML"
+    plaintext = 'PlainText'
+    ssml = 'SSML'
 
 
 SPEECH_MAPPINGS = {
@@ -38,8 +38,8 @@ SPEECH_MAPPINGS = {
 class CardType(enum.Enum):
     """The Alexa card types."""
 
-    simple = "Simple"
-    link_account = "LinkAccount"
+    simple = 'Simple'
+    link_account = 'LinkAccount'
 
 
 @callback
@@ -58,16 +58,15 @@ class AlexaIntentsView(http.HomeAssistantView):
     url = INTENTS_API_ENDPOINT
     name = 'api:alexa'
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle Alexa."""
         hass = request.app['hass']
-        message = yield from request.json()
+        message = await request.json()
 
-        _LOGGER.debug('Received Alexa request: %s', message)
+        _LOGGER.debug("Received Alexa request: %s", message)
 
         try:
-            response = yield from async_handle_message(hass, message)
+            response = await async_handle_message(hass, message)
             return b'' if response is None else self.json(response)
         except UnknownRequest as err:
             _LOGGER.warning(str(err))
@@ -81,7 +80,7 @@ class AlexaIntentsView(http.HomeAssistantView):
                 "This intent is not yet configured within Home Assistant."))
 
         except intent.InvalidSlotInfo as err:
-            _LOGGER.error('Received invalid slot data from Alexa: %s', err)
+            _LOGGER.error("Received invalid slot data from Alexa: %s", err)
             return self.json(intent_error_response(
                 hass, message,
                 "Invalid slot information received for this intent."))
@@ -100,8 +99,7 @@ def intent_error_response(hass, message, error):
     return alexa_response.as_dict()
 
 
-@asyncio.coroutine
-def async_handle_message(hass, message):
+async def async_handle_message(hass, message):
     """Handle an Alexa intent.
 
     Raises:
@@ -109,6 +107,7 @@ def async_handle_message(hass, message):
      - intent.UnknownIntent
      - intent.InvalidSlotInfo
      - intent.IntentError
+
     """
     req = message.get('request')
     req_type = req['type']
@@ -118,26 +117,25 @@ def async_handle_message(hass, message):
     if not handler:
         raise UnknownRequest('Received unknown request {}'.format(req_type))
 
-    return (yield from handler(hass, message))
+    return await handler(hass, message)
 
 
 @HANDLERS.register('SessionEndedRequest')
-@asyncio.coroutine
-def async_handle_session_end(hass, message):
+async def async_handle_session_end(hass, message):
     """Handle a session end request."""
     return None
 
 
 @HANDLERS.register('IntentRequest')
 @HANDLERS.register('LaunchRequest')
-@asyncio.coroutine
-def async_handle_intent(hass, message):
+async def async_handle_intent(hass, message):
     """Handle an intent request.
 
     Raises:
      - intent.UnknownIntent
      - intent.InvalidSlotInfo
      - intent.IntentError
+
     """
     req = message.get('request')
     alexa_intent_info = req.get('intent')
@@ -150,7 +148,7 @@ def async_handle_intent(hass, message):
     else:
         intent_name = alexa_intent_info['name']
 
-    intent_response = yield from intent.async_handle(
+    intent_response = await intent.async_handle(
         hass, DOMAIN, intent_name,
         {key: {'value': value} for key, value
          in alexa_response.variables.items()})
@@ -207,7 +205,7 @@ def resolve_slot_synonyms(key, request):
     return resolved_value
 
 
-class AlexaResponse(object):
+class AlexaResponse:
     """Help generating the response for Alexa."""
 
     def __init__(self, hass, intent_info):

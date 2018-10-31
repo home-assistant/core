@@ -5,11 +5,12 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/datadog/
 """
 import logging
+
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_PREFIX,
-                                 EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED,
-                                 STATE_UNKNOWN)
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_LOGBOOK_ENTRY,
+    EVENT_STATE_CHANGED, STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
@@ -36,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the Datadog component."""
+    """Set up the Datadog component."""
     from datadog import initialize, statsd
 
     conf = config[DOMAIN]
@@ -81,36 +82,19 @@ def setup(hass, config):
             if isinstance(value, (float, int)):
                 attribute = "{}.{}".format(metric, key.replace(' ', '_'))
                 statsd.gauge(
-                    attribute,
-                    value,
-                    sample_rate=sample_rate,
-                    tags=tags
-                )
+                    attribute, value, sample_rate=sample_rate, tags=tags)
 
                 _LOGGER.debug(
-                    'Sent metric %s: %s (tags: %s)',
-                    attribute,
-                    value,
-                    tags
-                )
+                    "Sent metric %s: %s (tags: %s)", attribute, value, tags)
 
         try:
             value = state_helper.state_as_number(state)
         except ValueError:
             _LOGGER.debug(
-                'Error sending %s: %s (tags: %s)',
-                metric,
-                state.state,
-                tags
-            )
+                "Error sending %s: %s (tags: %s)", metric, state.state, tags)
             return
 
-        statsd.gauge(
-            metric,
-            value,
-            sample_rate=sample_rate,
-            tags=tags
-        )
+        statsd.gauge(metric, value, sample_rate=sample_rate, tags=tags)
 
         _LOGGER.debug('Sent metric %s: %s (tags: %s)', metric, value, tags)
 

@@ -28,7 +28,7 @@ DEFAULT_TIMEOUT = 5
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PIN):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=9999)),
+        vol.All(vol.Coerce(str), vol.Match(r'\d{4}')),
     vol.Optional(CONF_ALLOW_UNREACHABLE, default=True): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
@@ -50,12 +50,11 @@ ERROR_STATE = [
 ]
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Worx Landroid sensors."""
     for typ in ('battery', 'state'):
-        async_add_devices([WorxLandroidSensor(typ, config)])
+        async_add_entities([WorxLandroidSensor(typ, config)])
 
 
 class WorxLandroidSensor(Entity):
@@ -88,8 +87,7 @@ class WorxLandroidSensor(Entity):
             return '%'
         return None
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update the sensor data from the mower."""
         connection_error = False
 
@@ -97,7 +95,7 @@ class WorxLandroidSensor(Entity):
             session = async_get_clientsession(self.hass)
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
                 auth = aiohttp.helpers.BasicAuth('admin', self.pin)
-                mower_response = yield from session.get(self.url, auth=auth)
+                mower_response = await session.get(self.url, auth=auth)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             if self.allow_unreachable is False:
                 _LOGGER.error("Error connecting to mower at %s", self.url)
@@ -115,7 +113,7 @@ class WorxLandroidSensor(Entity):
         elif connection_error is False:
             # set the expected content type to be text/html
             # since the mover incorrectly returns it...
-            data = yield from mower_response.json(content_type='text/html')
+            data = await mower_response.json(content_type='text/html')
 
             # sensor battery
             if self.sensor == 'battery':
@@ -152,11 +150,11 @@ class WorxLandroidSensor(Entity):
 
             if state_obj[14] == 1:
                 return 'manual-stop'
-            elif state_obj[5] == 1 and state_obj[13] == 0:
+            if state_obj[5] == 1 and state_obj[13] == 0:
                 return 'charging'
-            elif state_obj[5] == 1 and state_obj[13] == 1:
+            if state_obj[5] == 1 and state_obj[13] == 1:
                 return 'charging-complete'
-            elif state_obj[15] == 1:
+            if state_obj[15] == 1:
                 return 'going-home'
             return 'mowing'
 

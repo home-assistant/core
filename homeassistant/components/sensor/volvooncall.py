@@ -14,11 +14,11 @@ from homeassistant.components.volvooncall import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Volvo sensors."""
     if discovery_info is None:
         return
-    add_devices([VolvoSensor(hass, *discovery_info)])
+    add_entities([VolvoSensor(hass, *discovery_info)])
 
 
 class VolvoSensor(VolvoEntity):
@@ -42,12 +42,10 @@ class VolvoSensor(VolvoEntity):
             val /= 10  # L/1000km -> L/100km
             if 'mil' in self.unit_of_measurement:
                 return round(val, 2)
-            else:
-                return round(val, 1)
-        elif self._attribute == 'distance_to_empty':
+            return round(val, 1)
+        if self._attribute == 'distance_to_empty':
             return int(floor(val))
-        else:
-            return int(round(val))
+        return int(round(val))
 
     @property
     def unit_of_measurement(self):
@@ -56,8 +54,7 @@ class VolvoSensor(VolvoEntity):
         if self._state.config[CONF_SCANDINAVIAN_MILES] and 'km' in unit:
             if self._attribute == 'average_fuel_consumption':
                 return 'L/mil'
-            else:
-                return unit.replace('km', 'mil')
+            return unit.replace('km', 'mil')
         return unit
 
     @property

@@ -9,7 +9,7 @@ from mock_open import MockOpen
 from homeassistant.setup import setup_component
 from homeassistant.const import STATE_UNKNOWN
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_registry
 
 
 class TestFileSensor(unittest.TestCase):
@@ -18,6 +18,9 @@ class TestFileSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        # Patch out 'is_allowed_path' as the mock files aren't allowed
+        self.hass.config.is_allowed_path = Mock(return_value=True)
+        mock_registry(self.hass)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -42,7 +45,7 @@ class TestFileSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.file1')
-        self.assertEqual(state.state, '21')
+        assert state.state == '21'
 
     @patch('os.path.isfile', Mock(return_value=True))
     @patch('os.access', Mock(return_value=True))
@@ -67,7 +70,7 @@ class TestFileSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.file2')
-        self.assertEqual(state.state, '26')
+        assert state.state == '26'
 
     @patch('os.path.isfile', Mock(return_value=True))
     @patch('os.access', Mock(return_value=True))
@@ -88,4 +91,4 @@ class TestFileSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.file3')
-        self.assertEqual(state.state, STATE_UNKNOWN)
+        assert state.state == STATE_UNKNOWN

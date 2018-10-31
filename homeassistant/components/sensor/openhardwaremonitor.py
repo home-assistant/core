@@ -1,16 +1,21 @@
-"""Support for Open Hardware Monitor Sensor Platform."""
+"""
+Support for Open Hardware Monitor Sensor Platform.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.openhardwaremonitor/
+"""
 from datetime import timedelta
 import logging
+
 import requests
 import voluptuous as vol
 
-from homeassistant.util.dt import utcnow
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +41,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Open Hardware Monitor platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Open Hardware Monitor platform."""
     data = OpenHardwareMonitorData(config, hass)
-    add_devices(data.devices, True)
+    add_entities(data.devices, True)
 
 
 class OpenHardwareMonitorDevice(Entity):
@@ -96,14 +101,13 @@ class OpenHardwareMonitorDevice(Entity):
 
                 self.attributes = _attributes
                 return
-            else:
-                array = array[path_number][OHM_CHILDREN]
-                _attributes.update({
-                    'level_%s' % path_index: values[OHM_NAME]
-                })
+            array = array[path_number][OHM_CHILDREN]
+            _attributes.update({
+                'level_%s' % path_index: values[OHM_NAME]
+            })
 
 
-class OpenHardwareMonitorData(object):
+class OpenHardwareMonitorData:
     """Class used to pull data from OHM and create sensors."""
 
     def __init__(self, config, hass):
@@ -124,9 +128,8 @@ class OpenHardwareMonitorData(object):
 
     def refresh(self):
         """Download and parse JSON from OHM."""
-        data_url = "http://%s:%d/data.json" % (
-            self._config.get(CONF_HOST),
-            self._config.get(CONF_PORT))
+        data_url = "http://{}:{}/data.json".format(
+            self._config.get(CONF_HOST), self._config.get(CONF_PORT))
 
         try:
             response = requests.get(data_url, timeout=30)
@@ -135,7 +138,7 @@ class OpenHardwareMonitorData(object):
             _LOGGER.error("ConnectionError: Is OpenHardwareMonitor running?")
 
     def initialize(self, now):
-        """Initial parsing of the sensors and adding of devices."""
+        """Parse of the sensors and adding of devices."""
         self.refresh()
 
         if self.data is None:
@@ -173,11 +176,7 @@ class OpenHardwareMonitorData(object):
         fullname = ' '.join(child_names)
 
         dev = OpenHardwareMonitorDevice(
-            self,
-            fullname,
-            path,
-            unit_of_measurement
-        )
+            self, fullname, path, unit_of_measurement)
 
         result.append(dev)
         return result

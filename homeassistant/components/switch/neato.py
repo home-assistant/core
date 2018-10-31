@@ -1,10 +1,11 @@
 """
-Support for Neato Connected Vaccums switches.
+Support for Neato Connected Vacuums switches.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.neato/
 """
 import logging
+from datetime import timedelta
 import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
@@ -14,6 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
+SCAN_INTERVAL = timedelta(minutes=10)
+
 SWITCH_TYPE_SCHEDULE = 'schedule'
 
 SWITCH_TYPES = {
@@ -21,14 +24,14 @@ SWITCH_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato switches."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
             dev.append(NeatoConnectedSwitch(hass, robot, type_name))
     _LOGGER.debug("Adding switches %s", dev)
-    add_devices(dev)
+    add_entities(dev)
 
 
 class NeatoConnectedSwitch(ToggleEntity):
@@ -49,6 +52,7 @@ class NeatoConnectedSwitch(ToggleEntity):
             self._state = None
         self._schedule_state = None
         self._clean_state = None
+        self._robot_serial = self.robot.serial
 
     def update(self):
         """Update the states of Neato switches."""
@@ -64,11 +68,11 @@ class NeatoConnectedSwitch(ToggleEntity):
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)
-            if self.robot.schedule_enabled:
+            if self._state['details']['isScheduleEnabled']:
                 self._schedule_state = STATE_ON
             else:
                 self._schedule_state = STATE_OFF
-            _LOGGER.debug("Shedule state: %s", self._schedule_state)
+            _LOGGER.debug("Schedule state: %s", self._schedule_state)
 
     @property
     def name(self):
@@ -79,6 +83,11 @@ class NeatoConnectedSwitch(ToggleEntity):
     def available(self):
         """Return True if entity is available."""
         return self._state
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._robot_serial
 
     @property
     def is_on(self):

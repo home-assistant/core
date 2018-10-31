@@ -4,16 +4,16 @@ Support for the Yahoo! Weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.yweather/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA,
-    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN)
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+from homeassistant.const import CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ["yahooweather==0.10"]
 
@@ -21,10 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_CONDITION = 'yahoo_condition'
 
-ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 
-ATTR_FORECAST_TEMP_LOW = 'templow'
 
 CONF_WOEID = 'woeid'
 
@@ -33,31 +31,32 @@ DEFAULT_NAME = 'Yweather'
 SCAN_INTERVAL = timedelta(minutes=10)
 
 CONDITION_CLASSES = {
-    'cloudy': [26, 27, 28, 29, 30],
-    'fog': [19, 20, 21, 22, 23],
-    'hail': [17, 18, 35],
-    'lightning': [37],
-    'lightning-rainy': [3, 4, 38, 39, 47],
-    'partlycloudy': [44],
-    'pouring': [40, 45],
-    'rainy': [9, 11, 12],
-    'snowy': [8, 13, 14, 15, 16, 41, 42, 43],
-    'snowy-rainy': [5, 6, 7, 10, 46],
-    'sunny': [32, 33, 34, 25, 36],
-    'windy': [24],
+    'clear-night': [31, 33],
+    'cloudy': [26, 27, 28],
+    'fog': [20, 21],
+    'hail': [17, 35],
+    'lightning': [],
+    'lightning-rainy': [3, 4, 37, 38, 39, 45, 47],
+    'partlycloudy': [29, 30, 44],
+    'pouring': [],
+    'rainy': [9, 10, 11, 12, 40],
+    'snowy': [8, 13, 14, 15, 16, 41, 42, 43, 46],
+    'snowy-rainy': [5, 6, 7, 18],
+    'sunny': [25, 32, 34, 36],
+    'windy': [23, 24],
     'windy-variant': [],
-    'exceptional': [0, 1, 2],
+    'exceptional': [0, 1, 2, 19, 22],
 }
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_WOEID, default=None): cv.string,
+    vol.Optional(CONF_WOEID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yahoo! weather platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Yahoo! weather platform."""
     from yahooweather import get_woeid, UNIT_C, UNIT_F
 
     unit = hass.config.units.temperature_unit
@@ -86,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for condi in condlst:
                 hass.data[DATA_CONDITION][condi] = cond
 
-    add_devices([YahooWeatherWeather(yahoo_api, name, unit)], True)
+    add_entities([YahooWeatherWeather(yahoo_api, name, unit)], True)
 
 
 class YahooWeatherWeather(WeatherEntity):
@@ -176,7 +175,7 @@ class YahooWeatherWeather(WeatherEntity):
             return
 
 
-class YahooWeatherData(object):
+class YahooWeatherData:
     """Handle the Yahoo! API object and limit updates."""
 
     def __init__(self, woeid, temp_unit):

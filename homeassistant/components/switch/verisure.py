@@ -14,7 +14,7 @@ from homeassistant.components.switch import SwitchDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Verisure switch platform."""
     if not int(hub.config.get(CONF_SMARTPLUGS, 1)):
         return False
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     switches.extend([
         VerisureSmartplug(device_label)
         for device_label in hub.get('$.smartPlugs[*].deviceLabel')])
-    add_devices(switches)
+    add_entities(switches)
 
 
 class VerisureSmartplug(SwitchDevice):
@@ -60,18 +60,19 @@ class VerisureSmartplug(SwitchDevice):
             "$.smartPlugs[?(@.deviceLabel == '%s')]",
             self._device_label) is not None
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Set smartplug status on."""
         hub.session.set_smartplug_state(self._device_label, True)
         self._state = True
         self._change_timestamp = time()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Set smartplug status off."""
         hub.session.set_smartplug_state(self._device_label, False)
         self._state = False
         self._change_timestamp = time()
 
+    # pylint: disable=no-self-use
     def update(self):
         """Get the latest date of the smartplug."""
         hub.update_overview()

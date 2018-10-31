@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3k Sonos eszk\u00f6z\u00f6k a h\u00e1l\u00f3zaton."
+        },
+        "step": {
+            "confirm": {
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a Sonos-t?",
+                "title": "Sonos"
+            }
+        },
+        "title": "Sonos"
+    }
+}

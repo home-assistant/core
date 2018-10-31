@@ -37,8 +37,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Pushbllet Sensor platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Pushbullet Sensor platform."""
     from pushbullet import PushBullet
     from pushbullet import InvalidKeyError
     try:
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         devices.append(PushBulletNotificationSensor(pbprovider, sensor_type))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class PushBulletNotificationSensor(Entity):

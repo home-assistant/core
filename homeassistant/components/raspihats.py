@@ -9,11 +9,9 @@ import threading
 import time
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['raspihats==2.2.3',
-                'smbus-cffi==0.5.1']
+REQUIREMENTS = ['raspihats==2.2.3', 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,9 +33,8 @@ I2C_HAT_NAMES = [
 I2C_HATS_MANAGER = 'I2CH_MNG'
 
 
-# pylint: disable=unused-argument
 def setup(hass, config):
-    """Setup the raspihats component."""
+    """Set up the raspihats component."""
     hass.data[I2C_HATS_MANAGER] = I2CHatsManager()
 
     def start_i2c_hats_keep_alive(event):
@@ -65,7 +62,7 @@ class I2CHatsException(Exception):
     """I2C-HATs exception."""
 
 
-class I2CHatsDIScanner(object):
+class I2CHatsDIScanner:
     """Scan Digital Inputs and fire callbacks."""
 
     _DIGITAL_INPUTS = "di"
@@ -73,13 +70,13 @@ class I2CHatsDIScanner(object):
     _CALLBACKS = "callbacks"
 
     def setup(self, i2c_hat):
-        """Setup I2C-HAT instance for digital inputs scanner."""
+        """Set up the I2C-HAT instance for digital inputs scanner."""
         if hasattr(i2c_hat, self._DIGITAL_INPUTS):
             digital_inputs = getattr(i2c_hat, self._DIGITAL_INPUTS)
             old_value = None
-            # add old value attribute
+            # Add old value attribute
             setattr(digital_inputs, self._OLD_VALUE, old_value)
-            # add callbacks dict attribute {channel: callback}
+            # Add callbacks dict attribute {channel: callback}
             setattr(digital_inputs, self._CALLBACKS, {})
 
     def register_callback(self, i2c_hat, channel, callback):
@@ -127,7 +124,7 @@ class I2CHatsManager(threading.Thread):
         with self._lock:
             i2c_hat = self._i2c_hats.get(address)
             if i2c_hat is None:
-                # pylint: disable=import-error
+                # pylint: disable=import-error,no-name-in-module
                 import raspihats.i2c_hats as module
                 constructor = getattr(module, board)
                 i2c_hat = constructor(address)
@@ -141,17 +138,15 @@ class I2CHatsManager(threading.Thread):
                 self._i2c_hats[address] = i2c_hat
                 status_word = i2c_hat.status  # read status_word to reset bits
                 _LOGGER.info(
-                    log_message(self, i2c_hat, "registered", status_word)
-                )
+                    log_message(self, i2c_hat, "registered", status_word))
 
     def run(self):
         """Keep alive for I2C-HATs."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error,no-name-in-module
         from raspihats.i2c_hats import ResponseException
 
-        _LOGGER.info(
-            log_message(self, "starting")
-        )
+        _LOGGER.info(log_message(self, "starting"))
+
         while self._run:
             with self._lock:
                 for i2c_hat in list(self._i2c_hats.values()):
@@ -176,17 +171,13 @@ class I2CHatsManager(threading.Thread):
                             )
                         setattr(i2c_hat, self._EXCEPTION, ex)
             time.sleep(0.05)
-        _LOGGER.info(
-            log_message(self, "exiting")
-        )
+        _LOGGER.info(log_message(self, "exiting"))
 
     def _read_status(self, i2c_hat):
         """Read I2C-HATs status."""
         status_word = i2c_hat.status
         if status_word.value != 0x00:
-            _LOGGER.error(
-                log_message(self, i2c_hat, status_word)
-            )
+            _LOGGER.error(log_message(self, i2c_hat, status_word))
 
     def start_keep_alive(self):
         """Start keep alive mechanism."""
@@ -214,7 +205,7 @@ class I2CHatsManager(threading.Thread):
 
     def read_di(self, address, channel):
         """Read a value from a I2C-HAT digital input."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error,no-name-in-module
         from raspihats.i2c_hats import ResponseException
 
         with self._lock:
@@ -227,7 +218,7 @@ class I2CHatsManager(threading.Thread):
 
     def write_dq(self, address, channel, value):
         """Write a value to a I2C-HAT digital output."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error,no-name-in-module
         from raspihats.i2c_hats import ResponseException
 
         with self._lock:
@@ -239,7 +230,7 @@ class I2CHatsManager(threading.Thread):
 
     def read_dq(self, address, channel):
         """Read a value from a I2C-HAT digital output."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error,no-name-in-module
         from raspihats.i2c_hats import ResponseException
 
         with self._lock:

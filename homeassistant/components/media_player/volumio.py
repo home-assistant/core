@@ -3,21 +3,28 @@ Volumio Platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.volumio/
-"""
-import logging
-import asyncio
-import aiohttp
 
+Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
+"""
+import asyncio
+from datetime import timedelta
+import logging
+import socket
+
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
-    SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC)
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_PLAYING, STATE_PAUSED, STATE_IDLE, CONF_HOST, CONF_PORT, CONF_NAME)
-import homeassistant.helpers.config_validation as cv
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -26,12 +33,16 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Volumio'
 DEFAULT_PORT = 3000
 
+DATA_VOLUMIO = 'volumio'
+
 TIMEOUT = 10
 
 SUPPORT_VOLUMIO = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY | \
+    SUPPORT_VOLUME_STEP | SUPPORT_SELECT_SOURCE | SUPPORT_CLEAR_PLAYLIST
 
+PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=15)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -40,14 +51,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Volumio platform."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    name = config.get(CONF_NAME)
+    if DATA_VOLUMIO not in hass.data:
+        hass.data[DATA_VOLUMIO] = dict()
 
-    async_add_devices([Volumio(name, host, port, hass)])
+    # This is a manual configuration?
+    if discovery_info is None:
+        name = config.get(CONF_NAME)
+        host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT)
+    else:
+        name = "{} ({})".format(DEFAULT_NAME, discovery_info.get('hostname'))
+        host = discovery_info.get('host')
+        port = discovery_info.get('port')
+
+    # Only add a device once, so discovered devices do not override manual
+    # config.
+    ip_addr = socket.gethostbyname(host)
+    if ip_addr in hass.data[DATA_VOLUMIO]:
+        return
+
+    entity = Volumio(name, host, port, hass)
+
+    hass.data[DATA_VOLUMIO][ip_addr] = entity
+    async_add_entities([entity])
 
 
 class Volumio(MediaPlayerDevice):
@@ -61,11 +90,11 @@ class Volumio(MediaPlayerDevice):
         self._url = '{}:{}'.format(host, str(port))
         self._name = name
         self._state = {}
-        self.async_update()
         self._lastvol = self._state.get('volume', 0)
+        self._playlists = []
+        self._currentplaylist = None
 
-    @asyncio.coroutine
-    def send_volumio_msg(self, method, params=None):
+    async def send_volumio_msg(self, method, params=None):
         """Send message."""
         url = "http://{}:{}/api/v1/{}/".format(self.host, self.port, method)
 
@@ -73,9 +102,9 @@ class Volumio(MediaPlayerDevice):
 
         try:
             websession = async_get_clientsession(self.hass)
-            response = yield from websession.get(url, params=params)
+            response = await websession.get(url, params=params)
             if response.status == 200:
-                data = yield from response.json()
+                data = await response.json()
             else:
                 _LOGGER.error(
                     "Query failed, response code: %s Full message: %s",
@@ -83,7 +112,9 @@ class Volumio(MediaPlayerDevice):
                 return False
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
-            _LOGGER.error("Failed communicating with Volumio: %s", type(error))
+            _LOGGER.error(
+                "Failed communicating with Volumio '%s': %s",
+                self._name, type(error))
             return False
 
         try:
@@ -92,10 +123,10 @@ class Volumio(MediaPlayerDevice):
             _LOGGER.error("Received invalid response: %s", data)
             return False
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update state."""
-        resp = yield from self.send_volumio_msg('getState')
+        resp = await self.send_volumio_msg('getState')
+        await self._async_update_playlists()
         if resp is False:
             return
         self._state = resp.copy()
@@ -111,7 +142,7 @@ class Volumio(MediaPlayerDevice):
         status = self._state.get('status', None)
         if status == 'pause':
             return STATE_PAUSED
-        elif status == 'play':
+        if status == 'play':
             return STATE_PLAYING
 
         return STATE_IDLE
@@ -157,7 +188,7 @@ class Volumio(MediaPlayerDevice):
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         volume = self._state.get('volume', None)
-        if volume is not None:
+        if volume is not None and volume != "":
             volume = volume / 100
         return volume
 
@@ -170,6 +201,16 @@ class Volumio(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def source_list(self):
+        """Return the list of available input sources."""
+        return self._playlists
+
+    @property
+    def source(self):
+        """Name of the current input source."""
+        return self._currentplaylist
 
     @property
     def supported_features(self):
@@ -199,14 +240,41 @@ class Volumio(MediaPlayerDevice):
         return self.send_volumio_msg(
             'commands', params={'cmd': 'volume', 'volume': int(volume * 100)})
 
+    def async_volume_up(self):
+        """Service to send the Volumio the command for volume up."""
+        return self.send_volumio_msg(
+            'commands', params={'cmd': 'volume', 'volume': 'plus'})
+
+    def async_volume_down(self):
+        """Service to send the Volumio the command for volume down."""
+        return self.send_volumio_msg(
+            'commands', params={'cmd': 'volume', 'volume': 'minus'})
+
     def async_mute_volume(self, mute):
         """Send mute command to media player."""
         mutecmd = 'mute' if mute else 'unmute'
         if mute:
-            # mute is implemenhted as 0 volume, do save last volume level
+            # mute is implemented as 0 volume, do save last volume level
             self._lastvol = self._state['volume']
             return self.send_volumio_msg(
                 'commands', params={'cmd': 'volume', 'volume': mutecmd})
 
         return self.send_volumio_msg(
             'commands', params={'cmd': 'volume', 'volume': self._lastvol})
+
+    def async_select_source(self, source):
+        """Choose a different available playlist and play it."""
+        self._currentplaylist = source
+        return self.send_volumio_msg(
+            'commands', params={'cmd': 'playplaylist', 'name': source})
+
+    def async_clear_playlist(self):
+        """Clear players playlist."""
+        self._currentplaylist = None
+        return self.send_volumio_msg('commands',
+                                     params={'cmd': 'clearQueue'})
+
+    @Throttle(PLAYLIST_UPDATE_INTERVAL)
+    async def _async_update_playlists(self, **kwargs):
+        """Update available Volumio playlists."""
+        self._playlists = await self.send_volumio_msg('listplaylists')

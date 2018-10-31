@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
         vol.Optional(CONF_RATE, default=DEFAULT_RATE):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
-        vol.Optional(CONF_VALUE_MAP, default=None): dict,
+        vol.Optional(CONF_VALUE_MAP): dict,
     }),
 }, extra=vol.ALLOW_EXTRA)
 

@@ -6,10 +6,9 @@ set -e
 
 INSTALL_TELLSTICK="${INSTALL_TELLSTICK:-yes}"
 INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
-INSTALL_FFMPEG="${INSTALL_FFMPEG:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
-INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
+INSTALL_DLIB="${INSTALL_DLIB:-yes}"
 
 # Required debian packages for running hass or components
 PACKAGES=(
@@ -22,9 +21,15 @@ PACKAGES=(
   # homeassistant.components.device_tracker.bluetooth_tracker
   bluetooth libglib2.0-dev libbluetooth-dev
   # homeassistant.components.device_tracker.owntracks
-  libsodium13
+  libsodium18
   # homeassistant.components.zwave
   libudev-dev
+  # homeassistant.components.homekit_controller
+  libmpc-dev libmpfr-dev libgmp-dev
+  # homeassistant.components.ffmpeg
+  ffmpeg
+  # homeassistant.components.sensor.iperf3
+  iperf3
 )
 
 # Required debian packages for building dependencies
@@ -38,6 +43,10 @@ PACKAGES_DEV=(
 apt-get update
 apt-get install -y --no-install-recommends ${PACKAGES[@]} ${PACKAGES_DEV[@]}
 
+# This is a list of scripts that install additional dependencies. If you only
+# need to install a package from the official debian repository, just add it
+# to the list above. Only create a script if you need compiling, manually
+# downloading or a 3rd party repository.
 if [ "$INSTALL_TELLSTICK" == "yes" ]; then
   virtualization/Docker/scripts/tellstick
 fi
@@ -46,20 +55,16 @@ if [ "$INSTALL_OPENALPR" == "yes" ]; then
   virtualization/Docker/scripts/openalpr
 fi
 
-if [ "$INSTALL_FFMPEG" == "yes" ]; then
-  virtualization/Docker/scripts/ffmpeg
-fi
-
 if [ "$INSTALL_LIBCEC" == "yes" ]; then
   virtualization/Docker/scripts/libcec
 fi
 
-if [ "$INSTALL_PHANTOMJS" == "yes" ]; then
-  virtualization/Docker/scripts/phantomjs
-fi
-
 if [ "$INSTALL_SSOCR" == "yes" ]; then
   virtualization/Docker/scripts/ssocr
+fi
+
+if [ "$INSTALL_DLIB" == "yes" ]; then
+  pip3 install --no-cache-dir "dlib>=19.5"
 fi
 
 # Remove packages

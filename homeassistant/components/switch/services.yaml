@@ -30,3 +30,34 @@ mysensors_send_ir_code:
     V_IR_SEND:
       description: IR code to send.
       example: '0xC284'
+
+xiaomi_miio_set_wifi_led_on:
+  description: Turn the wifi led on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'switch.xiaomi_miio_device'
+xiaomi_miio_set_wifi_led_off:
+  description: Turn the wifi led off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'switch.xiaomi_miio_device'
+xiaomi_miio_set_power_price:
+  description: Set the power price.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'switch.xiaomi_miio_device'
+    mode:
+      description: Power price, between 0 and 999.
+      example: 31
+xiaomi_miio_set_power_mode:
+  description: Set the power mode.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'switch.xiaomi_miio_device'
+    mode:
+      description: Power mode, valid values are 'normal' and 'green'.
+      example: 'green'

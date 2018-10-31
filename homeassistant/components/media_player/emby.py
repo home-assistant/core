@@ -4,24 +4,23 @@ Support to interface with the Emby API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.emby/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_PREVIOUS_TRACK,
-    MediaPlayerDevice, SUPPORT_PLAY, PLATFORM_SCHEMA)
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK, SUPPORT_STOP, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    CONF_HOST, CONF_PORT, CONF_SSL, CONF_API_KEY, DEVICE_DEFAULT_NAME,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
+    STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==1.4']
+REQUIREMENTS = ['pyemby==1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,16 +41,16 @@ SUPPORT_EMBY = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_STOP | SUPPORT_SEEK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_PORT, default=None): cv.port,
     vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE): cv.boolean,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Emby platform."""
     from pyemby import EmbyServer
 
@@ -94,7 +93,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         if new_devices:
             _LOGGER.debug("Adding new devices: %s", new_devices)
-            async_add_devices(new_devices, update_before_add=True)
+            async_add_entities(new_devices, True)
 
     @callback
     def device_removal_callback(data):
@@ -112,10 +111,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         """Start Emby connection."""
         emby.start()
 
-    @asyncio.coroutine
-    def stop_emby(event):
+    async def stop_emby(event):
         """Stop Emby connection."""
-        yield from emby.stop()
+        await emby.stop()
 
     emby.add_new_devices_callback(device_update_callback)
     emby.add_stale_devices_callback(device_removal_callback)
@@ -140,8 +138,7 @@ class EmbyDevice(MediaPlayerDevice):
         self.media_status_last_position = None
         self.media_status_received = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callback."""
         self.emby.add_update_callback(
             self.async_update_callback, self.device_id)
@@ -182,7 +179,7 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the id of this emby client."""
-        return '{}.{}'.format(self.__class__, self.device_id)
+        return self.device_id
 
     @property
     def supports_remote_control(self):
@@ -192,8 +189,8 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return 'Emby - {} - {}'.format(self.device.client, self.device.name) \
-            or DEVICE_DEFAULT_NAME
+        return ('Emby - {} - {}'.format(self.device.client, self.device.name)
+                or DEVICE_DEFAULT_NAME)
 
     @property
     def should_poll(self):
@@ -206,11 +203,11 @@ class EmbyDevice(MediaPlayerDevice):
         state = self.device.state
         if state == 'Paused':
             return STATE_PAUSED
-        elif state == 'Playing':
+        if state == 'Playing':
             return STATE_PLAYING
-        elif state == 'Idle':
+        if state == 'Idle':
             return STATE_IDLE
-        elif state == 'Off':
+        if state == 'Off':
             return STATE_OFF
 
     @property
@@ -230,15 +227,15 @@ class EmbyDevice(MediaPlayerDevice):
         media_type = self.device.media_type
         if media_type == 'Episode':
             return MEDIA_TYPE_TVSHOW
-        elif media_type == 'Movie':
-            return MEDIA_TYPE_VIDEO
-        elif media_type == 'Trailer':
+        if media_type == 'Movie':
+            return MEDIA_TYPE_MOVIE
+        if media_type == 'Trailer':
             return MEDIA_TYPE_TRAILER
-        elif media_type == 'Music':
+        if media_type == 'Music':
             return MEDIA_TYPE_MUSIC
-        elif media_type == 'Video':
+        if media_type == 'Video':
             return MEDIA_TYPE_GENERIC_VIDEO
-        elif media_type == 'Audio':
+        if media_type == 'Audio':
             return MEDIA_TYPE_MUSIC
         return None
 
@@ -273,7 +270,7 @@ class EmbyDevice(MediaPlayerDevice):
 
     @property
     def media_season(self):
-        """Season of curent playing media (TV Show only)."""
+        """Season of current playing media (TV Show only)."""
         return self.device.media_season
 
     @property

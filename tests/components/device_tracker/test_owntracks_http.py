@@ -10,7 +10,7 @@ from tests.common import mock_coro, mock_component
 
 
 @pytest.fixture
-def mock_client(hass, test_client):
+def mock_client(hass, aiohttp_client):
     """Start the Hass HTTP component."""
     mock_component(hass, 'group')
     mock_component(hass, 'zone')
@@ -22,7 +22,7 @@ def mock_client(hass, test_client):
                     'platform': 'owntracks_http'
                 }
             }))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture

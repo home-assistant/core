@@ -16,34 +16,39 @@ ATTR_IN_USE = 'in_use'
 
 LOAD_POWER = 'load_power'
 POWER_CONSUMED = 'power_consumed'
+ENERGY_CONSUMED = 'energy_consumed'
 IN_USE = 'inuse'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['switch']:
             model = device['model']
             if model == 'plug':
-                devices.append(XiaomiGenericSwitch(device, "Plug", 'status',
+                if 'proto' not in device or int(device['proto'][0:1]) == 1:
+                    data_key = 'status'
+                else:
+                    data_key = 'channel_0'
+                devices.append(XiaomiGenericSwitch(device, "Plug", data_key,
                                                    True, gateway))
-            elif model == 'ctrl_neutral1':
+            elif model in ['ctrl_neutral1', 'ctrl_neutral1.aq1']:
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch',
                                                    'channel_0',
                                                    False, gateway))
-            elif model == 'ctrl_ln1':
+            elif model in ['ctrl_ln1', 'ctrl_ln1.aq1']:
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch LN',
                                                    'channel_0',
                                                    False, gateway))
-            elif model == 'ctrl_neutral2':
+            elif model in ['ctrl_neutral2', 'ctrl_neutral2.aq1']:
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch Left',
                                                    'channel_0',
                                                    False, gateway))
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch Right',
                                                    'channel_1',
                                                    False, gateway))
-            elif model == 'ctrl_ln2':
+            elif model in ['ctrl_ln2', 'ctrl_ln2.aq1']:
                 devices.append(XiaomiGenericSwitch(device,
                                                    'Wall Switch LN Left',
                                                    'channel_0',
@@ -52,10 +57,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                    'Wall Switch LN Right',
                                                    'channel_1',
                                                    False, gateway))
-            elif model == '86plug':
+            elif model in ['86plug', 'ctrl_86plug', 'ctrl_86plug.aq1']:
+                if 'proto' not in device or int(device['proto'][0:1]) == 1:
+                    data_key = 'status'
+                else:
+                    data_key = 'channel_0'
                 devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
-                                                   'status', True, gateway))
-    add_devices(devices)
+                                                   data_key, True, gateway))
+    add_entities(devices)
 
 
 class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
@@ -95,31 +104,40 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
         attrs.update(super().device_state_attributes)
         return attrs
 
+    @property
+    def should_poll(self):
+        """Return the polling state. Polling needed for Zigbee plug only."""
+        return self._supports_power_consumption
+
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         if self._write_to_hub(self._sid, **{self._data_key: 'on'}):
             self._state = True
             self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         if self._write_to_hub(self._sid, **{self._data_key: 'off'}):
             self._state = False
             self.schedule_update_ha_state()
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if IN_USE in data:
             self._in_use = int(data[IN_USE])
             if not self._in_use:
                 self._load_power = 0
-        if POWER_CONSUMED in data:
-            self._power_consumed = round(float(data[POWER_CONSUMED]), 2)
+
+        for key in [POWER_CONSUMED, ENERGY_CONSUMED]:
+            if key in data:
+                self._power_consumed = round(float(data[key]), 2)
+                break
+
         if LOAD_POWER in data:
             self._load_power = round(float(data[LOAD_POWER]), 2)
 
         value = data.get(self._data_key)
-        if value is None:
+        if value not in ['on', 'off']:
             return False
 
         state = value == 'on'
@@ -127,3 +145,8 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             return False
         self._state = state
         return True
+
+    def update(self):
+        """Get data from hub."""
+        _LOGGER.debug("Update data from hub: %s", self._name)
+        self._get_from_hub(self._sid)

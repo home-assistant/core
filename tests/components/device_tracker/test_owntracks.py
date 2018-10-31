@@ -11,7 +11,7 @@ import homeassistant.components.device_tracker.owntracks as owntracks
 from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM, STATE_NOT_HOME
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 USER = 'greg'
 DEVICE = 'phone'
@@ -299,22 +299,27 @@ class BaseMQTT(unittest.TestCase):
     def assert_location_state(self, location):
         """Test the assertion of a location state."""
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
-        self.assertEqual(state.state, location)
+        assert state.state == location
 
     def assert_location_latitude(self, latitude):
         """Test the assertion of a location latitude."""
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
-        self.assertEqual(state.attributes.get('latitude'), latitude)
+        assert state.attributes.get('latitude') == latitude
 
     def assert_location_longitude(self, longitude):
         """Test the assertion of a location longitude."""
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
-        self.assertEqual(state.attributes.get('longitude'), longitude)
+        assert state.attributes.get('longitude') == longitude
 
     def assert_location_accuracy(self, accuracy):
         """Test the assertion of a location accuracy."""
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
-        self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
+        assert state.attributes.get('gps_accuracy') == accuracy
+
+    def assert_location_source_type(self, source_type):
+        """Test the assertion of source_type."""
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        assert state.attributes.get('source_type') == source_type
 
 
 class TestDeviceTrackerOwnTracks(BaseMQTT):
@@ -322,7 +327,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
     # pylint: disable=invalid-name
     def setup_method(self, _):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         mock_component(self.hass, 'group')
@@ -377,19 +382,19 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         """Test the assertion of a mobile beacon tracker state."""
         dev_id = MOBILE_BEACON_FMT.format(beacon)
         state = self.hass.states.get(dev_id)
-        self.assertEqual(state.state, location)
+        assert state.state == location
 
     def assert_mobile_tracker_latitude(self, latitude, beacon=IBEACON_DEVICE):
         """Test the assertion of a mobile beacon tracker latitude."""
         dev_id = MOBILE_BEACON_FMT.format(beacon)
         state = self.hass.states.get(dev_id)
-        self.assertEqual(state.attributes.get('latitude'), latitude)
+        assert state.attributes.get('latitude') == latitude
 
     def assert_mobile_tracker_accuracy(self, accuracy, beacon=IBEACON_DEVICE):
         """Test the assertion of a mobile beacon tracker accuracy."""
         dev_id = MOBILE_BEACON_FMT.format(beacon)
         state = self.hass.states.get(dev_id)
-        self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
+        assert state.attributes.get('gps_accuracy') == accuracy
 
     def test_location_invalid_devid(self):  # pylint: disable=invalid-name
         """Test the update of a location."""
@@ -428,7 +433,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
     def test_event_gps_entry_exit(self):
         """Test the entry event."""
-        # Entering the owntrack circular region named "inner"
+        # Entering the owntracks circular region named "inner"
         self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
 
         # Enter uses the zone's gps co-ords
@@ -442,7 +447,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         #  note that LOCATION_MESSAGE is actually pretty far
         #  from INNER_ZONE and has good accuracy. I haven't
         #  received a transition message though so I'm still
-        #  asssociated with the inner zone regardless of GPS.
+        #  associated with the inner zone regardless of GPS.
         self.assert_location_latitude(INNER_ZONE['latitude'])
         self.assert_location_accuracy(INNER_ZONE['radius'])
         self.assert_location_state('inner')
@@ -455,7 +460,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assert_location_state('outer')
 
         # Left clean zone state
-        self.assertFalse(self.context.regions_entered[USER])
+        assert not self.context.regions_entered[USER]
 
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
 
@@ -475,7 +480,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.send_message(EVENT_TOPIC, message)
 
         # Left clean zone state
-        self.assertFalse(self.context.regions_entered[USER])
+        assert not self.context.regions_entered[USER]
 
     def test_event_gps_entry_inaccurate(self):
         """Test the event for inaccurate entry."""
@@ -506,7 +511,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assert_location_state('inner')
 
         # But does exit region correctly
-        self.assertFalse(self.context.regions_entered[USER])
+        assert not self.context.regions_entered[USER]
 
     def test_event_gps_entry_exit_zero_accuracy(self):
         """Test entry/exit events with accuracy zero."""
@@ -525,7 +530,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assert_location_state('inner')
 
         # But does exit region correctly
-        self.assertFalse(self.context.regions_entered[USER])
+        assert not self.context.regions_entered[USER]
 
     def test_event_gps_exit_outside_zone_sets_away(self):
         """Test the event for exit zone."""
@@ -619,7 +624,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_event_entry_zone_loading_dash(self):
         """Test the event for zone landing."""
         # Make sure the leading - is ignored
-        # Ownracks uses this to switch on hold
+        # Owntracks uses this to switch on hold
         message = build_message(
             {'desc': "-inner"},
             REGION_GPS_ENTER_MESSAGE)
@@ -666,6 +671,32 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         # Location update processed
         self.assert_location_state('outer')
 
+    def test_event_source_type_entry_exit(self):
+        """Test the entry and exit events of source type."""
+        # Entering the owntracks circular region named "inner"
+        self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
+
+        # source_type should be gps when entering using gps.
+        self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_ENTER_MESSAGE))
+
+        # We should be able to enter a beacon zone even inside a gps zone
+        self.assert_location_source_type('bluetooth_le')
+
+        self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE)
+
+        # source_type should be gps when leaving using gps.
+        self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_LEAVE_MESSAGE))
+
+        self.assert_location_source_type('bluetooth_le')
+
     # Region Beacon based event entry / exit testing
 
     def test_event_region_entry_exit(self):
@@ -684,7 +715,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         #  note that LOCATION_MESSAGE is actually pretty far
         #  from INNER_ZONE and has good accuracy. I haven't
         #  received a transition message though so I'm still
-        #  asssociated with the inner zone regardless of GPS.
+        #  associated with the inner zone regardless of GPS.
         self.assert_location_latitude(INNER_ZONE['latitude'])
         self.assert_location_accuracy(INNER_ZONE['radius'])
         self.assert_location_state('inner')
@@ -699,7 +730,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assert_location_state('inner')
 
         # Left clean zone state
-        self.assertFalse(self.context.regions_entered[USER])
+        assert not self.context.regions_entered[USER]
 
         # Now sending a location update moves me again.
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -718,7 +749,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.send_message(EVENT_TOPIC, message)
 
         # Left clean zone state
-        self.assertFalse(self.context.regions_entered[USER])
+        assert not self.context.regions_entered[USER]
 
     def test_event_region_entry_exit_right_order(self):
         """Test the event for ordering."""
@@ -834,7 +865,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_event_beacon_entry_zone_loading_dash(self):
         """Test the event for beacon zone landing."""
         # Make sure the leading - is ignored
-        # Ownracks uses this to switch on hold
+        # Owntracks uses this to switch on hold
 
         message = build_message(
             {'desc': "-inner"},
@@ -928,8 +959,8 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
         self.hass.block_till_done()
         self.send_message(EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
-        self.assertEqual(len(self.context.mobile_beacons_active['greg_phone']),
-                         0)
+        assert len(self.context.mobile_beacons_active['greg_phone']) == \
+            0
 
     def test_mobile_multiple_enter_exit(self):
         """Test the multiple entering."""
@@ -937,8 +968,8 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.send_message(EVENT_TOPIC, MOBILE_BEACON_ENTER_EVENT_MESSAGE)
         self.send_message(EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
 
-        self.assertEqual(len(self.context.mobile_beacons_active['greg_phone']),
-                         0)
+        assert len(self.context.mobile_beacons_active['greg_phone']) == \
+            0
 
     def test_complex_movement(self):
         """Test a complex sequence representative of real-world use."""
@@ -1137,9 +1168,9 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.send_message(WAYPOINTS_TOPIC, waypoints_message)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
-        self.assertTrue(wayp is not None)
+        assert wayp is not None
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[1])
-        self.assertTrue(wayp is not None)
+        assert wayp is not None
 
     def test_waypoint_import_blacklist(self):
         """Test import of list of waypoints for blacklisted user."""
@@ -1147,9 +1178,9 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.send_message(WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
-        self.assertTrue(wayp is None)
+        assert wayp is None
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[3])
-        self.assertTrue(wayp is None)
+        assert wayp is None
 
     def test_waypoint_import_no_whitelist(self):
         """Test import of list of waypoints with no whitelist set."""
@@ -1170,9 +1201,9 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.send_message(WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
-        self.assertTrue(wayp is not None)
+        assert wayp is not None
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[3])
-        self.assertTrue(wayp is not None)
+        assert wayp is not None
 
     def test_waypoint_import_bad_json(self):
         """Test importing a bad JSON payload."""
@@ -1180,9 +1211,9 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.send_message(WAYPOINTS_TOPIC, waypoints_message, True)
         # Check if it made it into states
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
-        self.assertTrue(wayp is None)
+        assert wayp is None
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[3])
-        self.assertTrue(wayp is None)
+        assert wayp is None
 
     def test_waypoint_import_existing(self):
         """Test importing a zone that exists."""
@@ -1194,14 +1225,14 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         waypoints_message = WAYPOINTS_UPDATED_MESSAGE.copy()
         self.send_message(WAYPOINTS_TOPIC, waypoints_message)
         new_wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
-        self.assertTrue(wayp == new_wayp)
+        assert wayp == new_wayp
 
     def test_single_waypoint_import(self):
         """Test single waypoint message."""
         waypoint_message = WAYPOINT_MESSAGE.copy()
         self.send_message(WAYPOINT_TOPIC, waypoint_message)
         wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
-        self.assertTrue(wayp is not None)
+        assert wayp is not None
 
     def test_not_implemented_message(self):
         """Handle not implemented message type."""
@@ -1209,7 +1240,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
                               'owntracks.async_handle_not_impl_msg',
                               return_value=mock_coro(False))
         patch_handler.start()
-        self.assertFalse(self.send_message(LWT_TOPIC, LWT_MESSAGE))
+        assert not self.send_message(LWT_TOPIC, LWT_MESSAGE)
         patch_handler.stop()
 
     def test_unsupported_message(self):
@@ -1218,7 +1249,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
                               'owntracks.async_handle_unsupported_msg',
                               return_value=mock_coro(False))
         patch_handler.start()
-        self.assertFalse(self.send_message(BAD_TOPIC, BAD_MESSAGE))
+        assert not self.send_message(BAD_TOPIC, BAD_MESSAGE)
         patch_handler.stop()
 
 
@@ -1285,7 +1316,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         mock_component(self.hass, 'group')
@@ -1434,7 +1465,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
             'zone.inner', 'zoning', INNER_ZONE)
 
         message = build_message({'desc': 'foo'}, REGION_GPS_ENTER_MESSAGE)
-        self.assertEqual(message['desc'], 'foo')
+        assert message['desc'] == 'foo'
 
         self.send_message(EVENT_TOPIC, message)
         self.assert_location_state('inner')

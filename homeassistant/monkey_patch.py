@@ -20,28 +20,29 @@ Related Python bugs:
  - https://bugs.python.org/issue26617
 """
 import sys
+from typing import Any
 
 
-def patch_weakref_tasks():
+def patch_weakref_tasks() -> None:
     """Replace weakref.WeakSet to address Python 3 bug."""
-    # pylint: disable=no-self-use, protected-access, bare-except
+    # pylint: disable=no-self-use, protected-access
     import asyncio.tasks
 
     class IgnoreCalls:
         """Ignore add calls."""
 
-        def add(self, other):
+        def add(self, other: Any) -> None:
             """No-op add."""
             return
 
-    asyncio.tasks.Task._all_tasks = IgnoreCalls()
+    asyncio.tasks.Task._all_tasks = IgnoreCalls()  # type: ignore
     try:
         del asyncio.tasks.Task.__del__
-    except:
+    except:  # noqa: E722 pylint: disable=bare-except
         pass
 
 
-def disable_c_asyncio():
+def disable_c_asyncio() -> None:
     """Disable using C implementation of asyncio.
 
     Required to be able to apply the weakref monkey patch.
@@ -53,18 +54,16 @@ def disable_c_asyncio():
 
         PATH_TRIGGER = '_asyncio'
 
-        def __init__(self, path_entry):
+        def __init__(self, path_entry: str) -> None:
             if path_entry != self.PATH_TRIGGER:
                 raise ImportError()
-            return
 
-        def find_module(self, fullname, path=None):
+        def find_module(self, fullname: str, path: Any = None) -> None:
             """Find a module."""
             if fullname == self.PATH_TRIGGER:
-                # We lint in Py34, exception is introduced in Py36
+                # We lint in Py35, exception is introduced in Py36
                 # pylint: disable=undefined-variable
-                raise ModuleNotFoundError()  # noqa
-            return None
+                raise ModuleNotFoundError()  # type: ignore # noqa
 
     sys.path_hooks.append(AsyncioImportFinder)
     sys.path.insert(0, AsyncioImportFinder.PATH_TRIGGER)

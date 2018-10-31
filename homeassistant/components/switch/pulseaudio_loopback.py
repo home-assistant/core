@@ -11,7 +11,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.util as util
+from homeassistant import util
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
@@ -54,8 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Read in all of our configuration, and initialize the loopback switch."""
     name = config.get(CONF_NAME)
     sink_name = config.get(CONF_SINK_NAME)
@@ -73,7 +72,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         server = PAServer(host, port, buffer_size, tcp_timeout)
         _PULSEAUDIO_SERVERS[server_id] = server
 
-    add_devices([PALoopbackSwitch(hass, name, server, sink_name, source_name)])
+    add_entities([
+        PALoopbackSwitch(hass, name, server, sink_name, source_name)])
 
 
 class PAServer():
@@ -131,7 +131,7 @@ class PAServer():
         self._send_command(str.format(UNLOAD_CMD, module_idx), False)
 
     def get_module_idx(self, sink_name, source_name):
-        """For a sink/source, return it's module id in our cache, if found."""
+        """For a sink/source, return its module id in our cache, if found."""
         result = re.search(str.format(MOD_REGEX, re.escape(sink_name),
                                       re.escape(source_name)),
                            self._current_module_state)

@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.isy994/
 """
 import logging
-from typing import Callable  # noqa
+from typing import Callable
 
 from homeassistant.components.cover import CoverDevice, DOMAIN
 from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
@@ -25,9 +25,8 @@ VALUE_TO_STATE = {
 }
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+                   add_entities: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 cover platform."""
     devices = []
     for node in hass.data[ISY994_NODES][DOMAIN]:
@@ -36,19 +35,17 @@ def setup_platform(hass, config: ConfigType,
     for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
         devices.append(ISYCoverProgram(name, status, actions))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class ISYCoverDevice(ISYDevice, CoverDevice):
     """Representation of an ISY994 cover device."""
 
-    def __init__(self, node: object):
-        """Initialize the ISY994 cover device."""
-        super().__init__(node)
-
     @property
     def current_cover_position(self) -> int:
         """Return the current cover position."""
+        if self.is_unknown() or self.value is None:
+            return None
         return sorted((0, self.value, 100))[1]
 
     @property
@@ -61,8 +58,7 @@ class ISYCoverDevice(ISYDevice, CoverDevice):
         """Get the state of the ISY994 cover device."""
         if self.is_unknown():
             return None
-        else:
-            return VALUE_TO_STATE.get(self.value, STATE_OPEN)
+        return VALUE_TO_STATE.get(self.value, STATE_OPEN)
 
     def open_cover(self, **kwargs) -> None:
         """Send the open cover command to the ISY994 cover device."""

@@ -4,24 +4,26 @@ A component which allows you to send data to an Influx database.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/influxdb/
 """
-from datetime import timedelta
-from functools import wraps, partial
 import logging
 import re
+import queue
+import threading
+import time
+import math
 
 import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN, CONF_HOST,
-    CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
-    CONF_EXCLUDE, CONF_INCLUDE, CONF_DOMAINS, CONF_ENTITIES)
+    CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_HOST, CONF_INCLUDE,
+    CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_VERIFY_SSL,
+    EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE,
+    STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
-from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.util import utcnow
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_values import EntityValues
 
-REQUIREMENTS = ['influxdb==4.1.1']
+REQUIREMENTS = ['influxdb==5.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,19 +36,24 @@ CONF_COMPONENT_CONFIG = 'component_config'
 CONF_COMPONENT_CONFIG_GLOB = 'component_config_glob'
 CONF_COMPONENT_CONFIG_DOMAIN = 'component_config_domain'
 CONF_RETRY_COUNT = 'max_retries'
-CONF_RETRY_QUEUE = 'retry_queue_limit'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
 DOMAIN = 'influxdb'
+
 TIMEOUT = 5
+RETRY_DELAY = 20
+QUEUE_BACKLOG_SECONDS = 30
+
+BATCH_TIMEOUT = 1
+BATCH_BUFFER_SIZE = 100
 
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.All(vol.Schema({
         vol.Optional(CONF_HOST): cv.string,
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
@@ -64,7 +71,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL): cv.boolean,
         vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
-        vol.Optional(CONF_RETRY_QUEUE, default=20): cv.positive_int,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
@@ -78,7 +84,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}):
             vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
-    }),
+    })),
 }, extra=vol.ALLOW_EXTRA)
 
 RE_DIGIT_TAIL = re.compile(r'^[^\.]*\d+\.?\d+[^\.]*$')
@@ -127,7 +133,6 @@ def setup(hass, config):
         conf[CONF_COMPONENT_CONFIG_DOMAIN],
         conf[CONF_COMPONENT_CONFIG_GLOB])
     max_tries = conf.get(CONF_RETRY_COUNT)
-    queue_limit = conf.get(CONF_RETRY_QUEUE)
 
     try:
         influx = InfluxDBClient(**kwargs)
@@ -137,16 +142,15 @@ def setup(hass, config):
         _LOGGER.error("Database host is not accessible due to '%s', please "
                       "check your entries in the configuration file (host, "
                       "port, etc.) and verify that the database exists and is "
-                      "READ/WRITE.", exc)
+                      "READ/WRITE", exc)
         return False
 
-    def influx_event_listener(event):
-        """Listen for new messages on the bus and sends them to Influx."""
+    def event_to_json(event):
+        """Add an event to the outgoing Influx list."""
         state = event.data.get('new_state')
         if state is None or state.state in (
                 STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
-                state.entity_id in blacklist_e or \
-                state.domain in blacklist_d:
+                state.entity_id in blacklist_e or state.domain in blacklist_d:
             return
 
         try:
@@ -181,133 +185,159 @@ def setup(hass, config):
                 else:
                     include_uom = False
 
-        json_body = [
-            {
-                'measurement': measurement,
-                'tags': {
-                    'domain': state.domain,
-                    'entity_id': state.object_id,
-                },
-                'time': event.time_fired,
-                'fields': {
-                }
-            }
-        ]
+        json = {
+            'measurement': measurement,
+            'tags': {
+                'domain': state.domain,
+                'entity_id': state.object_id,
+            },
+            'time': event.time_fired,
+            'fields': {}
+        }
         if _include_state:
-            json_body[0]['fields']['state'] = state.state
+            json['fields']['state'] = state.state
         if _include_value:
-            json_body[0]['fields']['value'] = _state_as_value
+            json['fields']['value'] = _state_as_value
 
         for key, value in state.attributes.items():
             if key in tags_attributes:
-                json_body[0]['tags'][key] = value
+                json['tags'][key] = value
             elif key != 'unit_of_measurement' or include_uom:
                 # If the key is already in fields
-                if key in json_body[0]['fields']:
+                if key in json['fields']:
                     key = key + "_"
                 # Prevent column data errors in influxDB.
                 # For each value we try to cast it as float
                 # But if we can not do it we store the value
                 # as string add "_str" postfix to the field key
                 try:
-                    json_body[0]['fields'][key] = float(value)
+                    json['fields'][key] = float(value)
                 except (ValueError, TypeError):
                     new_key = "{}_str".format(key)
                     new_value = str(value)
-                    json_body[0]['fields'][new_key] = new_value
+                    json['fields'][new_key] = new_value
 
                     if RE_DIGIT_TAIL.match(new_value):
-                        json_body[0]['fields'][key] = float(
+                        json['fields'][key] = float(
                             RE_DECIMAL.sub('', new_value))
 
-        json_body[0]['tags'].update(tags)
+                # Infinity and NaN are not valid floats in InfluxDB
+                try:
+                    if not math.isfinite(json['fields'][key]):
+                        del json['fields'][key]
+                except (KeyError, TypeError):
+                    pass
 
-        _write_data(json_body)
+        json['tags'].update(tags)
 
-    @RetryOnError(hass, retry_limit=max_tries, retry_delay=20,
-                  queue_limit=queue_limit)
-    def _write_data(json_body):
-        try:
-            influx.write_points(json_body)
-        except exceptions.InfluxDBClientError:
-            _LOGGER.exception("Error saving event %s to InfluxDB", json_body)
+        return json
 
-    hass.bus.listen(EVENT_STATE_CHANGED, influx_event_listener)
+    instance = hass.data[DOMAIN] = InfluxThread(
+        hass, influx, event_to_json, max_tries)
+    instance.start()
+
+    def shutdown(event):
+        """Shut down the thread."""
+        instance.queue.put(None)
+        instance.join()
+        influx.close()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     return True
 
 
-class RetryOnError(object):
-    """A class for retrying a failed task a certain amount of tries.
+class InfluxThread(threading.Thread):
+    """A threaded event handler class."""
 
-    This method decorator makes a method retrying on errors. If there was an
-    uncaught exception, it schedules another try to execute the task after a
-    retry delay. It does this up to the maximum number of retries.
+    def __init__(self, hass, influx, event_to_json, max_tries):
+        """Initialize the listener."""
+        threading.Thread.__init__(self, name='InfluxDB')
+        self.queue = queue.Queue()
+        self.influx = influx
+        self.event_to_json = event_to_json
+        self.max_tries = max_tries
+        self.write_errors = 0
+        self.shutdown = False
+        hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
-    It can be used for all probable "self-healing" problems like network
-    outages. The task will be rescheduled using HAs scheduling mechanism.
+    def _event_listener(self, event):
+        """Listen for new messages on the bus and queue them for Influx."""
+        item = (time.monotonic(), event)
+        self.queue.put(item)
 
-    It takes a Hass instance, a maximum number of retries and a retry delay
-    in seconds as arguments.
+    @staticmethod
+    def batch_timeout():
+        """Return number of seconds to wait for more events."""
+        return BATCH_TIMEOUT
 
-    The queue limit defines the maximum number of calls that are allowed to
-    be queued at a time. If this number is reached, every new call discards
-    an old one.
-    """
+    def get_events_json(self):
+        """Return a batch of events formatted for writing."""
+        queue_seconds = QUEUE_BACKLOG_SECONDS + self.max_tries*RETRY_DELAY
 
-    def __init__(self, hass, retry_limit=0, retry_delay=20, queue_limit=100):
-        """Initialize the decorator."""
-        self.hass = hass
-        self.retry_limit = retry_limit
-        self.retry_delay = timedelta(seconds=retry_delay)
-        self.queue_limit = queue_limit
+        count = 0
+        json = []
 
-    def __call__(self, method):
-        """Decorate the target method."""
-        from homeassistant.helpers.event import track_point_in_utc_time
+        dropped = 0
 
-        @wraps(method)
-        def wrapper(*args, **kwargs):
-            """Wrapped method."""
-            # pylint: disable=protected-access
-            if not hasattr(wrapper, "_retry_queue"):
-                wrapper._retry_queue = []
+        try:
+            while len(json) < BATCH_BUFFER_SIZE and not self.shutdown:
+                timeout = None if count == 0 else self.batch_timeout()
+                item = self.queue.get(timeout=timeout)
+                count += 1
 
-            def scheduled(retry=0, untrack=None, event=None):
-                """Call the target method.
+                if item is None:
+                    self.shutdown = True
+                else:
+                    timestamp, event = item
+                    age = time.monotonic() - timestamp
 
-                It is called directly at the first time and then called
-                scheduled within the Hass mainloop.
-                """
-                if untrack is not None:
-                    wrapper._retry_queue.remove(untrack)
+                    if age < queue_seconds:
+                        event_json = self.event_to_json(event)
+                        if event_json:
+                            json.append(event_json)
+                    else:
+                        dropped += 1
 
-                # pylint: disable=broad-except
-                try:
-                    method(*args, **kwargs)
-                except Exception as ex:
-                    if retry == self.retry_limit:
-                        raise
-                    if len(wrapper._retry_queue) >= self.queue_limit:
-                        last = wrapper._retry_queue.pop(0)
-                        if 'remove' in last:
-                            func = last['remove']
-                            func()
-                        if 'exc' in last:
-                            _LOGGER.error(
-                                "Retry queue overflow, drop oldest entry: %s",
-                                str(last['exc']))
+        except queue.Empty:
+            pass
 
-                    target = utcnow() + self.retry_delay
-                    tracking = {'target': target}
-                    remove = track_point_in_utc_time(self.hass,
-                                                     partial(scheduled,
-                                                             retry + 1,
-                                                             tracking),
-                                                     target)
-                    tracking['remove'] = remove
-                    tracking["exc"] = ex
-                    wrapper._retry_queue.append(tracking)
+        if dropped:
+            _LOGGER.warning("Catching up, dropped %d old events", dropped)
 
-            scheduled()
-        return wrapper
+        return count, json
+
+    def write_to_influxdb(self, json):
+        """Write preprocessed events to influxdb, with retry."""
+        from influxdb import exceptions
+
+        for retry in range(self.max_tries+1):
+            try:
+                self.influx.write_points(json)
+
+                if self.write_errors:
+                    _LOGGER.error("Resumed, lost %d events", self.write_errors)
+                    self.write_errors = 0
+
+                _LOGGER.debug("Wrote %d events", len(json))
+                break
+            except (exceptions.InfluxDBClientError, IOError):
+                if retry < self.max_tries:
+                    time.sleep(RETRY_DELAY)
+                else:
+                    if not self.write_errors:
+                        _LOGGER.exception("Write error")
+                    self.write_errors += len(json)
+
+    def run(self):
+        """Process incoming events."""
+        while not self.shutdown:
+            count, json = self.get_events_json()
+            if json:
+                self.write_to_influxdb(json)
+            for _ in range(count):
+                self.queue.task_done()
+
+    def block_till_done(self):
+        """Block till all events processed."""
+        self.queue.join()

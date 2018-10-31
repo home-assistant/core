@@ -1,23 +1,26 @@
 """
-Support for getting statistical data from a Pi-Hole system.
+Support for getting statistical data from a Pi-hole system.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.pi_hole/
 """
-import logging
-import json
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS)
+    CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_SSL, CONF_VERIFY_SSL)
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+
+REQUIREMENTS = ['hole==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
-_ENDPOINT = '/api.php'
 
 ATTR_BLOCKED_DOMAINS = 'domains_blocked'
 ATTR_PERCENTAGE_TODAY = 'percentage_today'
@@ -32,25 +35,27 @@ DEFAULT_NAME = 'Pi-Hole'
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-SCAN_INTERVAL = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 MONITORED_CONDITIONS = {
-    'dns_queries_today': ['DNS Queries Today',
-                          'queries', 'mdi:comment-question-outline'],
-    'ads_blocked_today': ['Ads Blocked Today',
-                          'ads', 'mdi:close-octagon-outline'],
-    'ads_percentage_today': ['Ads Percentage Blocked Today',
-                             '%', 'mdi:close-octagon-outline'],
-    'domains_being_blocked': ['Domains Blocked',
-                              'domains', 'mdi:block-helper'],
-    'queries_cached': ['DNS Queries Cached',
-                       'queries', 'mdi:comment-question-outline'],
-    'queries_forwarded': ['DNS Queries Forwarded',
-                          'queries', 'mdi:comment-question-outline'],
-    'unique_clients': ['DNS Unique Clients',
-                       'clients', 'mdi:account-outline'],
-    'unique_domains': ['DNS Unique Domains',
-                       'domains', 'mdi:domain'],
+    'ads_blocked_today':
+        ['Ads Blocked Today', 'ads', 'mdi:close-octagon-outline'],
+    'ads_percentage_today':
+        ['Ads Percentage Blocked Today', '%', 'mdi:close-octagon-outline'],
+    'clients_ever_seen':
+        ['Seen Clients', 'clients', 'mdi:account-outline'],
+    'dns_queries_today':
+        ['DNS Queries Today', 'queries', 'mdi:comment-question-outline'],
+    'domains_being_blocked':
+        ['Domains Blocked', 'domains', 'mdi:block-helper'],
+    'queries_cached':
+        ['DNS Queries Cached', 'queries', 'mdi:comment-question-outline'],
+    'queries_forwarded':
+        ['DNS Queries Forwarded', 'queries', 'mdi:comment-question-outline'],
+    'unique_clients':
+        ['DNS Unique Clients', 'clients', 'mdi:account-outline'],
+    'unique_domains':
+        ['DNS Unique Domains', 'domains', 'mdi:domain'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -59,105 +64,110 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=['ads_blocked_today']):
+    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Pi-Hole sensor."""
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the Pi-hole sensor."""
+    from hole import Hole
+
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
-    use_ssl = config.get(CONF_SSL)
+    use_tls = config.get(CONF_SSL)
     location = config.get(CONF_LOCATION)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
+    verify_tls = config.get(CONF_VERIFY_SSL)
 
-    api = PiHoleAPI('{}/{}'.format(host, location), use_ssl, verify_ssl)
+    session = async_get_clientsession(hass, verify_tls)
+    pi_hole = PiHoleData(Hole(
+        host, hass.loop, session, location=location, tls=use_tls))
 
-    sensors = [PiHoleSensor(hass, api, name, condition)
+    await pi_hole.async_update()
+
+    if pi_hole.api.data is None:
+        raise PlatformNotReady
+
+    sensors = [PiHoleSensor(pi_hole, name, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
 
-    add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class PiHoleSensor(Entity):
-    """Representation of a Pi-Hole sensor."""
+    """Representation of a Pi-hole sensor."""
 
-    def __init__(self, hass, api, name, variable):
-        """Initialize a Pi-Hole sensor."""
-        self._hass = hass
-        self._api = api
+    def __init__(self, pi_hole, name, condition):
+        """Initialize a Pi-hole sensor."""
+        self.pi_hole = pi_hole
         self._name = name
-        self._var_id = variable
+        self._condition = condition
 
-        variable_info = MONITORED_CONDITIONS[variable]
-        self._var_name = variable_info[0]
-        self._var_units = variable_info[1]
-        self._var_icon = variable_info[2]
+        variable_info = MONITORED_CONDITIONS[condition]
+        self._condition_name = variable_info[0]
+        self._unit_of_measurement = variable_info[1]
+        self._icon = variable_info[2]
+        self.data = {}
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, self._var_name)
+        return "{} {}".format(self._name, self._condition_name)
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return self._var_icon
+        return self._icon
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._var_units
+        return self._unit_of_measurement
 
-    # pylint: disable=no-member
     @property
     def state(self):
         """Return the state of the device."""
         try:
-            return round(self._api.data[self._var_id], 2)
+            return round(self.data[self._condition], 2)
         except TypeError:
-            return self._api.data[self._var_id]
+            return self.data[self._condition]
 
-    # pylint: disable=no-member
     @property
     def device_state_attributes(self):
         """Return the state attributes of the Pi-Hole."""
         return {
-            ATTR_BLOCKED_DOMAINS: self._api.data['domains_being_blocked'],
+            ATTR_BLOCKED_DOMAINS: self.data['domains_being_blocked'],
         }
 
     @property
     def available(self):
         """Could the device be accessed during the last update call."""
-        return self._api.available
+        return self.pi_hole.available
 
-    def update(self):
-        """Get the latest data from the Pi-Hole API."""
-        self._api.update()
+    async def async_update(self):
+        """Get the latest data from the Pi-hole API."""
+        await self.pi_hole.async_update()
+        self.data = self.pi_hole.api.data
 
 
-class PiHoleAPI(object):
+class PiHoleData:
     """Get the latest data and update the states."""
 
-    def __init__(self, host, use_ssl, verify_ssl):
+    def __init__(self, api):
         """Initialize the data object."""
-        from homeassistant.components.sensor.rest import RestData
-
-        uri_scheme = 'https://' if use_ssl else 'http://'
-        resource = "{}{}{}".format(uri_scheme, host, _ENDPOINT)
-
-        self._rest = RestData('GET', resource, None, None, None, verify_ssl)
-        self.data = None
+        self.api = api
         self.available = True
-        self.update()
 
-    def update(self):
-        """Get the latest data from the Pi-Hole."""
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def async_update(self):
+        """Get the latest data from the Pi-hole."""
+        from hole.exceptions import HoleError
+
         try:
-            self._rest.update()
-            self.data = json.loads(self._rest.data)
+            await self.api.get_data()
             self.available = True
-        except TypeError:
-            _LOGGER.error("Unable to fetch data from Pi-Hole")
+        except HoleError:
+            _LOGGER.error("Unable to fetch data from Pi-hole")
             self.available = False

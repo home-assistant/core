@@ -19,16 +19,19 @@ DEFAULT_ICON_LEVEL = 'mdi:battery'
 DEFAULT_ICON_STATE = 'mdi:power-plug'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the iOS sensor."""
-    if discovery_info is None:
-        return
+    # Leave here for if someone accidentally adds platform: ios to config
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up iOS from a config entry."""
     dev = list()
-    for device_name, device in ios.devices().items():
+    for device_name, device in ios.devices(hass).items():
         for sensor_type in ('level', 'state'):
             dev.append(IOSSensor(sensor_type, device_name, device))
 
-    add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class IOSSensor(Entity):
@@ -42,6 +45,21 @@ class IOSSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (ios.DOMAIN,
+                 self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_PERMANENT_ID]),
+            },
+            'name': self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME],
+            'manufacturer': 'Apple',
+            'model': self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_TYPE],
+            'sw_version':
+            self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_SYSTEM_VERSION],
+        }
 
     @property
     def name(self):
@@ -58,7 +76,7 @@ class IOSSensor(Entity):
     def unique_id(self):
         """Return the unique ID of this sensor."""
         device_id = self._device[ios.ATTR_DEVICE_ID]
-        return "sensor_ios_battery_{}_{}".format(self.type, device_id)
+        return "{}_{}".format(self.type, device_id)
 
     @property
     def unit_of_measurement(self):
@@ -86,8 +104,8 @@ class IOSSensor(Entity):
         battery_level = device_battery[ios.ATTR_BATTERY_LEVEL]
         charging = True
         icon_state = DEFAULT_ICON_STATE
-        if (battery_state == ios.ATTR_BATTERY_STATE_FULL or
-                battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED):
+        if battery_state in (ios.ATTR_BATTERY_STATE_FULL,
+                             ios.ATTR_BATTERY_STATE_UNPLUGGED):
             charging = False
             icon_state = "{}-off".format(DEFAULT_ICON_STATE)
         elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:
@@ -102,5 +120,5 @@ class IOSSensor(Entity):
 
     def update(self):
         """Get the latest state of the sensor."""
-        self._device = ios.devices().get(self._device_name)
+        self._device = ios.devices(self.hass).get(self._device_name)
         self._state = self._device[ios.ATTR_BATTERY][self.type]

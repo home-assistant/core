@@ -51,16 +51,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Required(CONF_NAME): cv.string,
             vol.Required(CONF_SENSOR_TYPE):
                 vol.All(cv.string, vol.In(SENSOR_TYPES)),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE, default=None): cv.template
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template
         })]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HP ILO sensor."""
     hostname = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -85,11 +84,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensor_name='{} {}'.format(
                 config.get(CONF_NAME), monitored_variable[CONF_NAME]),
             sensor_type=monitored_variable[CONF_SENSOR_TYPE],
-            sensor_value_template=monitored_variable[CONF_VALUE_TEMPLATE],
-            unit_of_measurement=monitored_variable[CONF_UNIT_OF_MEASUREMENT])
+            sensor_value_template=monitored_variable.get(CONF_VALUE_TEMPLATE),
+            unit_of_measurement=monitored_variable.get(
+                CONF_UNIT_OF_MEASUREMENT))
         devices.append(new_device)
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class HpIloSensor(Entity):
@@ -147,7 +147,7 @@ class HpIloSensor(Entity):
         self._state = ilo_data
 
 
-class HpIloData(object):
+class HpIloData:
     """Gets the latest data from HP ILO."""
 
     def __init__(self, host, port, login, password):
@@ -172,4 +172,4 @@ class HpIloData(object):
                 password=self._password, port=self._port)
         except (hpilo.IloError, hpilo.IloCommunicationError,
                 hpilo.IloLoginFailed) as error:
-            raise ValueError("Unable to init HP ILO, %s", error)
+            raise ValueError("Unable to init HP ILO, {}".format(error))

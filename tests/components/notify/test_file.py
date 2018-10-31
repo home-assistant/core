@@ -16,11 +16,11 @@ class TestNotifyFile(unittest.TestCase):
     """Test the file notify."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """"Stop down everything that was started."""
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_bad_config(self):
@@ -35,28 +35,30 @@ class TestNotifyFile(unittest.TestCase):
             assert setup_component(self.hass, notify.DOMAIN, config)
         assert not handle_config[notify.DOMAIN]
 
-    def _test_notify_file(self, timestamp, mock_utcnow, mock_stat):
+    def _test_notify_file(self, timestamp):
         """Test the notify file output."""
-        mock_utcnow.return_value = dt_util.as_utc(dt_util.now())
-        mock_stat.return_value.st_size = 0
+        filename = 'mock_file'
+        message = 'one, two, testing, testing'
+        with assert_setup_component(1) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, {
+                'notify': {
+                    'name': 'test',
+                    'platform': 'file',
+                    'filename': filename,
+                    'timestamp': timestamp,
+                }
+            })
+        assert handle_config[notify.DOMAIN]
 
         m_open = mock_open()
         with patch(
             'homeassistant.components.notify.file.open',
             m_open, create=True
-        ):
-            filename = 'mock_file'
-            message = 'one, two, testing, testing'
-            with assert_setup_component(1) as handle_config:
-                self.assertTrue(setup_component(self.hass, notify.DOMAIN, {
-                    'notify': {
-                        'name': 'test',
-                        'platform': 'file',
-                        'filename': filename,
-                        'timestamp': timestamp,
-                    }
-                }))
-            assert handle_config[notify.DOMAIN]
+        ), patch('homeassistant.components.notify.file.os.stat') as mock_st, \
+            patch('homeassistant.util.dt.utcnow',
+                  return_value=dt_util.utcnow()):
+
+            mock_st.return_value.st_size = 0
             title = '{} notifications (Log started: {})\n{}\n'.format(
                 ATTR_TITLE_DEFAULT,
                 dt_util.utcnow().isoformat(),
@@ -66,30 +68,22 @@ class TestNotifyFile(unittest.TestCase):
                                     blocking=True)
 
             full_filename = os.path.join(self.hass.config.path(), filename)
-            self.assertEqual(m_open.call_count, 1)
-            self.assertEqual(m_open.call_args, call(full_filename, 'a'))
+            assert m_open.call_count == 1
+            assert m_open.call_args == call(full_filename, 'a')
 
-            self.assertEqual(m_open.return_value.write.call_count, 2)
+            assert m_open.return_value.write.call_count == 2
             if not timestamp:
-                self.assertEqual(
-                    m_open.return_value.write.call_args_list,
+                assert m_open.return_value.write.call_args_list == \
                     [call(title), call('{}\n'.format(message))]
-                )
             else:
-                self.assertEqual(
-                    m_open.return_value.write.call_args_list,
+                assert m_open.return_value.write.call_args_list == \
                     [call(title), call('{} {}\n'.format(
                         dt_util.utcnow().isoformat(), message))]
-                )
 
-    @patch('homeassistant.components.notify.file.os.stat')
-    @patch('homeassistant.util.dt.utcnow')
-    def test_notify_file(self, mock_utcnow, mock_stat):
+    def test_notify_file(self):
         """Test the notify file output without timestamp."""
-        self._test_notify_file(False, mock_utcnow, mock_stat)
+        self._test_notify_file(False)
 
-    @patch('homeassistant.components.notify.file.os.stat')
-    @patch('homeassistant.util.dt.utcnow')
-    def test_notify_file_timestamp(self, mock_utcnow, mock_stat):
+    def test_notify_file_timestamp(self):
         """Test the notify file output with timestamp."""
-        self._test_notify_file(True, mock_utcnow, mock_stat)
+        self._test_notify_file(True)

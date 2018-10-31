@@ -41,13 +41,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-# pylint: disable=unused-argument
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up a MJPEG IP Camera."""
+    # Filter header errors from urllib3 due to a urllib3 bug
+    urllib3_logger = logging.getLogger("urllib3.connectionpool")
+    if not any(isinstance(x, NoHeaderErrorFilter)
+               for x in urllib3_logger.filters):
+        urllib3_logger.addFilter(
+            NoHeaderErrorFilter()
+        )
+
     if discovery_info:
         config = PLATFORM_SCHEMA(discovery_info)
-    async_add_devices([MjpegCamera(hass, config)])
+    async_add_entities([MjpegCamera(config)])
 
 
 def extract_image_from_mjpeg(stream):
@@ -65,7 +72,7 @@ def extract_image_from_mjpeg(stream):
 class MjpegCamera(Camera):
     """An implementation of an IP camera that is reachable over a URL."""
 
-    def __init__(self, hass, device_info):
+    def __init__(self, device_info):
         """Initialize a MJPEG camera."""
         super().__init__()
         self._name = device_info.get(CONF_NAME)
@@ -82,23 +89,22 @@ class MjpegCamera(Camera):
                     self._username, password=self._password
                 )
 
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response from the camera."""
         # DigestAuth is not supported
         if self._authentication == HTTP_DIGEST_AUTHENTICATION or \
            self._still_image_url is None:
-            image = yield from self.hass.async_add_job(
+            image = await self.hass.async_add_job(
                 self.camera_image)
             return image
 
         websession = async_get_clientsession(self.hass)
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                response = yield from websession.get(
+                response = await websession.get(
                     self._still_image_url, auth=self._auth)
 
-                image = yield from response.read()
+                image = await response.read()
                 return image
 
         except asyncio.TimeoutError:
@@ -119,24 +125,33 @@ class MjpegCamera(Camera):
         else:
             req = requests.get(self._mjpeg_url, stream=True, timeout=10)
 
+        # https://github.com/PyCQA/pylint/issues/1437
+        # pylint: disable=no-member
         with closing(req) as response:
             return extract_image_from_mjpeg(response.iter_content(102400))
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         # aiohttp don't support DigestAuth -> Fallback
         if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-            yield from super().handle_async_mjpeg_stream(request)
+            await super().handle_async_mjpeg_stream(request)
             return
 
         # connect to stream
         websession = async_get_clientsession(self.hass)
         stream_coro = websession.get(self._mjpeg_url, auth=self._auth)
 
-        yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
+        return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
     @property
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+
+class NoHeaderErrorFilter(logging.Filter):
+    """Filter out urllib3 Header Parsing Errors due to a urllib3 bug."""
+
+    def filter(self, record):
+        """Filter out Header Parsing Errors."""
+        return "Failed to parse headers" not in record.getMessage()

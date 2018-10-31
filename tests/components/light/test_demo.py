@@ -1,78 +1,79 @@
 """The tests for the demo light component."""
-# pylint: disable=protected-access
-import unittest
+import pytest
 
-from homeassistant.setup import setup_component
-import homeassistant.components.light as light
+from homeassistant.setup import async_setup_component
+from homeassistant.components import light
 
-from tests.common import get_test_home_assistant
+from tests.components.light import common
 
 ENTITY_LIGHT = 'light.bed_light'
 
 
-class TestDemoLight(unittest.TestCase):
-    """Test the demo light."""
-
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.assertTrue(setup_component(self.hass, light.DOMAIN, {'light': {
+@pytest.fixture(autouse=True)
+def setup_comp(hass):
+    """Set up demo component."""
+    hass.loop.run_until_complete(async_setup_component(hass, light.DOMAIN, {
+        'light': {
             'platform': 'demo',
         }}))
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop down everything that was started."""
-        self.hass.stop()
 
-    def test_state_attributes(self):
-        """Test light state attributes."""
-        light.turn_on(
-            self.hass, ENTITY_LIGHT, xy_color=(.4, .6), brightness=25)
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_LIGHT)
-        self.assertTrue(light.is_on(self.hass, ENTITY_LIGHT))
-        self.assertEqual((.4, .6), state.attributes.get(light.ATTR_XY_COLOR))
-        self.assertEqual(25, state.attributes.get(light.ATTR_BRIGHTNESS))
-        self.assertEqual(
-            (76, 95, 0), state.attributes.get(light.ATTR_RGB_COLOR))
-        self.assertEqual('rainbow', state.attributes.get(light.ATTR_EFFECT))
-        light.turn_on(
-            self.hass, ENTITY_LIGHT, rgb_color=(251, 252, 253),
-            white_value=254)
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_LIGHT)
-        self.assertEqual(254, state.attributes.get(light.ATTR_WHITE_VALUE))
-        self.assertEqual(
-            (251, 252, 253), state.attributes.get(light.ATTR_RGB_COLOR))
-        light.turn_on(self.hass, ENTITY_LIGHT, color_temp=400, effect='none')
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_LIGHT)
-        self.assertEqual(400, state.attributes.get(light.ATTR_COLOR_TEMP))
-        self.assertEqual(154, state.attributes.get(light.ATTR_MIN_MIREDS))
-        self.assertEqual(500, state.attributes.get(light.ATTR_MAX_MIREDS))
-        self.assertEqual('none', state.attributes.get(light.ATTR_EFFECT))
-        light.turn_on(self.hass, ENTITY_LIGHT, kelvin=3000, brightness_pct=50)
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_LIGHT)
-        self.assertEqual(333, state.attributes.get(light.ATTR_COLOR_TEMP))
-        self.assertEqual(127, state.attributes.get(light.ATTR_BRIGHTNESS))
+async def test_state_attributes(hass):
+    """Test light state attributes."""
+    common.async_turn_on(
+        hass, ENTITY_LIGHT, xy_color=(.4, .4), brightness=25)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_LIGHT)
+    assert light.is_on(hass, ENTITY_LIGHT)
+    assert (0.4, 0.4) == state.attributes.get(light.ATTR_XY_COLOR)
+    assert 25 == state.attributes.get(light.ATTR_BRIGHTNESS)
+    assert (255, 234, 164) == state.attributes.get(light.ATTR_RGB_COLOR)
+    assert 'rainbow' == state.attributes.get(light.ATTR_EFFECT)
+    common.async_turn_on(
+        hass, ENTITY_LIGHT, rgb_color=(251, 253, 255),
+        white_value=254)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_LIGHT)
+    assert 254 == state.attributes.get(light.ATTR_WHITE_VALUE)
+    assert (250, 252, 255) == state.attributes.get(light.ATTR_RGB_COLOR)
+    assert (0.319, 0.326) == state.attributes.get(light.ATTR_XY_COLOR)
+    common.async_turn_on(hass, ENTITY_LIGHT, color_temp=400, effect='none')
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_LIGHT)
+    assert 400 == state.attributes.get(light.ATTR_COLOR_TEMP)
+    assert 153 == state.attributes.get(light.ATTR_MIN_MIREDS)
+    assert 500 == state.attributes.get(light.ATTR_MAX_MIREDS)
+    assert 'none' == state.attributes.get(light.ATTR_EFFECT)
+    common.async_turn_on(hass, ENTITY_LIGHT, kelvin=3000, brightness_pct=50)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_LIGHT)
+    assert 333 == state.attributes.get(light.ATTR_COLOR_TEMP)
+    assert 127 == state.attributes.get(light.ATTR_BRIGHTNESS)
 
-    def test_turn_off(self):
-        """Test light turn off method."""
-        light.turn_on(self.hass, ENTITY_LIGHT)
-        self.hass.block_till_done()
-        self.assertTrue(light.is_on(self.hass, ENTITY_LIGHT))
-        light.turn_off(self.hass, ENTITY_LIGHT)
-        self.hass.block_till_done()
-        self.assertFalse(light.is_on(self.hass, ENTITY_LIGHT))
 
-    def test_turn_off_without_entity_id(self):
-        """Test light turn off all lights."""
-        light.turn_on(self.hass, ENTITY_LIGHT)
-        self.hass.block_till_done()
-        self.assertTrue(light.is_on(self.hass, ENTITY_LIGHT))
-        light.turn_off(self.hass)
-        self.hass.block_till_done()
-        self.assertFalse(light.is_on(self.hass, ENTITY_LIGHT))
+async def test_turn_off(hass):
+    """Test light turn off method."""
+    await hass.services.async_call('light', 'turn_on', {
+        'entity_id': ENTITY_LIGHT
+    }, blocking=True)
+
+    assert light.is_on(hass, ENTITY_LIGHT)
+
+    await hass.services.async_call('light', 'turn_off', {
+        'entity_id': ENTITY_LIGHT
+    }, blocking=True)
+
+    assert not light.is_on(hass, ENTITY_LIGHT)
+
+
+async def test_turn_off_without_entity_id(hass):
+    """Test light turn off all lights."""
+    await hass.services.async_call('light', 'turn_on', {
+    }, blocking=True)
+
+    assert light.is_on(hass, ENTITY_LIGHT)
+
+    await hass.services.async_call('light', 'turn_off', {
+    }, blocking=True)
+
+    assert not light.is_on(hass, ENTITY_LIGHT)

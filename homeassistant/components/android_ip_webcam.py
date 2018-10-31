@@ -140,34 +140,32 @@ CONFIG_SCHEMA = vol.Schema({
             cv.time_period,
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-        vol.Optional(CONF_SWITCHES, default=None):
+        vol.Optional(CONF_SWITCHES):
             vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-        vol.Optional(CONF_SENSORS, default=None):
+        vol.Optional(CONF_SENSORS):
             vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-        vol.Optional(CONF_MOTION_SENSOR, default=None): cv.boolean,
+        vol.Optional(CONF_MOTION_SENSOR): cv.boolean,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the IP Webcam component."""
     from pydroid_ipcam import PyDroidIPCam
 
     webcams = hass.data[DATA_IP_WEBCAM] = {}
     websession = async_get_clientsession(hass)
 
-    @asyncio.coroutine
-    def async_setup_ipcamera(cam_config):
+    async def async_setup_ipcamera(cam_config):
         """Set up an IP camera."""
         host = cam_config[CONF_HOST]
         username = cam_config.get(CONF_USERNAME)
         password = cam_config.get(CONF_PASSWORD)
         name = cam_config[CONF_NAME]
         interval = cam_config[CONF_SCAN_INTERVAL]
-        switches = cam_config[CONF_SWITCHES]
-        sensors = cam_config[CONF_SENSORS]
-        motion = cam_config[CONF_MOTION_SENSOR]
+        switches = cam_config.get(CONF_SWITCHES)
+        sensors = cam_config.get(CONF_SENSORS)
+        motion = cam_config.get(CONF_MOTION_SENSOR)
 
         # Init ip webcam
         cam = PyDroidIPCam(
@@ -188,16 +186,15 @@ def async_setup(hass, config):
         if motion is None:
             motion = 'motion_active' in cam.enabled_sensors
 
-        @asyncio.coroutine
-        def async_update_data(now):
+        async def async_update_data(now):
             """Update data from IP camera in SCAN_INTERVAL."""
-            yield from cam.update()
+            await cam.update()
             async_dispatcher_send(hass, SIGNAL_UPDATE_DATA, host)
 
             async_track_point_in_utc_time(
                 hass, async_update_data, utcnow() + interval)
 
-        yield from async_update_data(None)
+        await async_update_data(None)
 
         # Load platforms
         webcams[host] = cam
@@ -214,11 +211,11 @@ def async_setup(hass, config):
                 CONF_PASSWORD: password
             })
 
-        hass.async_add_job(discovery.async_load_platform(
+        hass.async_create_task(discovery.async_load_platform(
             hass, 'camera', 'mjpeg', mjpeg_camera, config))
 
         if sensors:
-            hass.async_add_job(discovery.async_load_platform(
+            hass.async_create_task(discovery.async_load_platform(
                 hass, 'sensor', DOMAIN, {
                     CONF_NAME: name,
                     CONF_HOST: host,
@@ -226,7 +223,7 @@ def async_setup(hass, config):
                 }, config))
 
         if switches:
-            hass.async_add_job(discovery.async_load_platform(
+            hass.async_create_task(discovery.async_load_platform(
                 hass, 'switch', DOMAIN, {
                     CONF_NAME: name,
                     CONF_HOST: host,
@@ -234,7 +231,7 @@ def async_setup(hass, config):
                 }, config))
 
         if motion:
-            hass.async_add_job(discovery.async_load_platform(
+            hass.async_create_task(discovery.async_load_platform(
                 hass, 'binary_sensor', DOMAIN, {
                     CONF_HOST: host,
                     CONF_NAME: name,
@@ -242,7 +239,7 @@ def async_setup(hass, config):
 
     tasks = [async_setup_ipcamera(conf) for conf in config[DOMAIN]]
     if tasks:
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks, loop=hass.loop)
 
     return True
 
@@ -251,12 +248,11 @@ class AndroidIPCamEntity(Entity):
     """The Android device running IP Webcam."""
 
     def __init__(self, host, ipcam):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         self._host = host
         self._ipcam = ipcam
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register update dispatcher."""
         @callback
         def async_ipcam_update(host):

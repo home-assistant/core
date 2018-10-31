@@ -1,335 +1,248 @@
 """Support for Google Assistant Smart Home API."""
-import asyncio
+from collections.abc import Mapping
+from itertools import product
 import logging
 
-# Typing imports
-# pylint: disable=using-constant-test,unused-import,ungrouped-imports
-# if False:
-from aiohttp.web import Request, Response  # NOQA
-from typing import Dict, Tuple, Any, Optional  # NOQA
-from homeassistant.helpers.entity import Entity  # NOQA
-from homeassistant.core import HomeAssistant  # NOQA
-from homeassistant.util import color
-from homeassistant.util.unit_system import UnitSystem  # NOQA
 from homeassistant.util.decorator import Registry
 
+from homeassistant.core import callback
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
-    STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    CONF_NAME, CONF_TYPE
-)
+    CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES)
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan, scene, script, climate
+    climate,
+    cover,
+    fan,
+    group,
+    input_boolean,
+    light,
+    media_player,
+    scene,
+    script,
+    switch,
+    vacuum,
 )
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from . import trait
 from .const import (
-    COMMAND_COLOR,
-    COMMAND_BRIGHTNESS, COMMAND_ONOFF, COMMAND_ACTIVATESCENE,
-    COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
-    COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE, COMMAND_THERMOSTAT_SET_MODE,
-    TRAIT_ONOFF, TRAIT_BRIGHTNESS, TRAIT_COLOR_TEMP,
-    TRAIT_RGB_COLOR, TRAIT_SCENE, TRAIT_TEMPERATURE_SETTING,
-    TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_THERMOSTAT,
-    CONF_ALIASES, CLIMATE_SUPPORTED_MODES
+    TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_VACUUM,
+    TYPE_THERMOSTAT, TYPE_FAN,
+    CONF_ALIASES, CONF_ROOM_HINT,
+    ERR_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
+    ERR_UNKNOWN_ERROR
 )
+from .helpers import SmartHomeError
 
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-# Mapping is [actions schema, primary trait, optional features]
-# optional is SUPPORT_* = (trait, command)
-MAPPING_COMPONENT = {
-    group.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
-    scene.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
-    script.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
-    switch.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
-    fan.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
-    light.DOMAIN: [
-        TYPE_LIGHT, TRAIT_ONOFF, {
-            light.SUPPORT_BRIGHTNESS: TRAIT_BRIGHTNESS,
-            light.SUPPORT_RGB_COLOR: TRAIT_RGB_COLOR,
-            light.SUPPORT_COLOR_TEMP: TRAIT_COLOR_TEMP,
-        }
-    ],
-    cover.DOMAIN: [
-        TYPE_SWITCH, TRAIT_ONOFF, {
-            cover.SUPPORT_SET_POSITION: TRAIT_BRIGHTNESS
-        }
-    ],
-    media_player.DOMAIN: [
-        TYPE_SWITCH, TRAIT_ONOFF, {
-            media_player.SUPPORT_VOLUME_SET: TRAIT_BRIGHTNESS
-        }
-    ],
-    climate.DOMAIN: [TYPE_THERMOSTAT, TRAIT_TEMPERATURE_SETTING, None],
-}  # type: Dict[str, list]
+DOMAIN_TO_GOOGLE_TYPES = {
+    climate.DOMAIN: TYPE_THERMOSTAT,
+    cover.DOMAIN: TYPE_SWITCH,
+    fan.DOMAIN: TYPE_FAN,
+    group.DOMAIN: TYPE_SWITCH,
+    input_boolean.DOMAIN: TYPE_SWITCH,
+    light.DOMAIN: TYPE_LIGHT,
+    media_player.DOMAIN: TYPE_SWITCH,
+    scene.DOMAIN: TYPE_SCENE,
+    script.DOMAIN: TYPE_SCENE,
+    switch.DOMAIN: TYPE_SWITCH,
+    vacuum.DOMAIN: TYPE_VACUUM,
+}
 
 
-class Config:
-    """Hold the configuration for Google Assistant."""
-
-    def __init__(self, should_expose, agent_user_id, entity_config=None):
-        """Initialize the configuration."""
-        self.should_expose = should_expose
-        self.agent_user_id = agent_user_id
-        self.entity_config = entity_config or {}
-
-
-def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
-    """Convert a hass entity into an google actions device."""
-    entity_config = config.entity_config.get(entity.entity_id, {})
-    class_data = MAPPING_COMPONENT.get(
-        entity_config.get(CONF_TYPE) or entity.domain)
-
-    if class_data is None:
-        return None
-
-    device = {
-        'id': entity.entity_id,
-        'name': {},
-        'attributes': {},
-        'traits': [],
-        'willReportState': False,
-    }
-    device['type'] = class_data[0]
-    device['traits'].append(class_data[1])
-
-    # handle custom names
-    device['name']['name'] = entity_config.get(CONF_NAME) or entity.name
-
-    # use aliases
-    aliases = entity_config.get(CONF_ALIASES)
-    if aliases:
-        device['name']['nicknames'] = aliases
-
-    # add trait if entity supports feature
-    if class_data[2]:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        for feature, trait in class_data[2].items():
-            if feature & supported > 0:
-                device['traits'].append(trait)
-
-                # Actions require this attributes for a device
-                # supporting temperature
-                # For IKEA trådfri, these attributes only seem to
-                # be set only if the device is on?
-                if trait == TRAIT_COLOR_TEMP:
-                    if entity.attributes.get(
-                            light.ATTR_MAX_MIREDS) is not None:
-                        device['attributes']['temperatureMinK'] =  \
-                            int(round(color.color_temperature_mired_to_kelvin(
-                                entity.attributes.get(light.ATTR_MAX_MIREDS))))
-                    if entity.attributes.get(
-                            light.ATTR_MIN_MIREDS) is not None:
-                        device['attributes']['temperatureMaxK'] =  \
-                            int(round(color.color_temperature_mired_to_kelvin(
-                                entity.attributes.get(light.ATTR_MIN_MIREDS))))
-
-    if entity.domain == climate.DOMAIN:
-        modes = ','.join(
-            m.lower() for m in entity.attributes.get(
-                climate.ATTR_OPERATION_LIST, [])
-            if m.lower() in CLIMATE_SUPPORTED_MODES)
-        device['attributes'] = {
-            'availableThermostatModes': modes,
-            'thermostatTemperatureUnit':
-            'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
-        }
-        _LOGGER.debug('Thermostat attributes %s', device['attributes'])
-    return device
+def deep_update(target, source):
+    """Update a nested dictionary with another nested dictionary."""
+    for key, value in source.items():
+        if isinstance(value, Mapping):
+            target[key] = deep_update(target.get(key, {}), value)
+        else:
+            target[key] = value
+    return target
 
 
-def query_device(entity: Entity, units: UnitSystem) -> dict:
-    """Take an entity and return a properly formatted device object."""
-    def celsius(deg: Optional[float]) -> Optional[float]:
-        """Convert a float to Celsius and rounds to one decimal place."""
-        if deg is None:
+class _GoogleEntity:
+    """Adaptation of Entity expressed in Google's terms."""
+
+    def __init__(self, hass, config, state):
+        self.hass = hass
+        self.config = config
+        self.state = state
+
+    @property
+    def entity_id(self):
+        """Return entity ID."""
+        return self.state.entity_id
+
+    @callback
+    def traits(self):
+        """Return traits for entity."""
+        state = self.state
+        domain = state.domain
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        return [Trait(self.hass, state) for Trait in trait.TRAITS
+                if Trait.supported(domain, features)]
+
+    @callback
+    def sync_serialize(self):
+        """Serialize entity for a SYNC response.
+
+        https://developers.google.com/actions/smarthome/create-app#actiondevicessync
+        """
+        state = self.state
+
+        # When a state is unavailable, the attributes that describe
+        # capabilities will be stripped. For example, a light entity will miss
+        # the min/max mireds. Therefore they will be excluded from a sync.
+        if state.state == STATE_UNAVAILABLE:
             return None
-        return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
-    if entity.domain == climate.DOMAIN:
-        mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
-        if mode not in CLIMATE_SUPPORTED_MODES:
-            mode = 'on'
-        response = {
-            'thermostatMode': mode,
-            'thermostatTemperatureSetpoint':
-            celsius(entity.attributes.get(climate.ATTR_TEMPERATURE)),
-            'thermostatTemperatureAmbient':
-            celsius(entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)),
-            'thermostatTemperatureSetpointHigh':
-            celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)),
-            'thermostatTemperatureSetpointLow':
-            celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)),
-            'thermostatHumidityAmbient':
-            entity.attributes.get(climate.ATTR_CURRENT_HUMIDITY),
+
+        entity_config = self.config.entity_config.get(state.entity_id, {})
+        name = (entity_config.get(CONF_NAME) or state.name).strip()
+
+        # If an empty string
+        if not name:
+            return None
+
+        traits = self.traits()
+
+        # Found no supported traits for this entity
+        if not traits:
+            return None
+
+        device = {
+            'id': state.entity_id,
+            'name': {
+                'name': name
+            },
+            'attributes': {},
+            'traits': [trait.name for trait in traits],
+            'willReportState': False,
+            'type': DOMAIN_TO_GOOGLE_TYPES[state.domain],
         }
-        return {k: v for k, v in response.items() if v is not None}
 
-    final_state = entity.state != STATE_OFF
-    final_brightness = entity.attributes.get(light.ATTR_BRIGHTNESS, 255
-                                             if final_state else 0)
+        # use aliases
+        aliases = entity_config.get(CONF_ALIASES)
+        if aliases:
+            device['name']['nicknames'] = aliases
 
-    if entity.domain == media_player.DOMAIN:
-        level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL, 1.0
-                                      if final_state else 0.0)
-        # Convert 0.0-1.0 to 0-255
-        final_brightness = round(min(1.0, level) * 255)
+        # add room hint if annotated
+        room = entity_config.get(CONF_ROOM_HINT)
+        if room:
+            device['roomHint'] = room
 
-    if final_brightness is None:
-        final_brightness = 255 if final_state else 0
+        for trt in traits:
+            device['attributes'].update(trt.sync_attributes())
 
-    final_brightness = 100 * (final_brightness / 255)
+        return device
 
-    query_response = {
-        "on": final_state,
-        "online": True,
-        "brightness": int(final_brightness)
-    }
+    @callback
+    def query_serialize(self):
+        """Serialize entity for a QUERY response.
 
-    supported_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    if supported_features & \
-       (light.SUPPORT_COLOR_TEMP | light.SUPPORT_RGB_COLOR):
-        query_response["color"] = {}
+        https://developers.google.com/actions/smarthome/create-app#actiondevicesquery
+        """
+        state = self.state
 
-        if entity.attributes.get(light.ATTR_COLOR_TEMP) is not None:
-            query_response["color"]["temperature"] = \
-                int(round(color.color_temperature_mired_to_kelvin(
-                    entity.attributes.get(light.ATTR_COLOR_TEMP))))
+        if state.state == STATE_UNAVAILABLE:
+            return {'online': False}
 
-        if entity.attributes.get(light.ATTR_COLOR_NAME) is not None:
-            query_response["color"]["name"] = \
-                entity.attributes.get(light.ATTR_COLOR_NAME)
+        attrs = {'online': True}
 
-        if entity.attributes.get(light.ATTR_RGB_COLOR) is not None:
-            color_rgb = entity.attributes.get(light.ATTR_RGB_COLOR)
-            if color_rgb is not None:
-                query_response["color"]["spectrumRGB"] = \
-                    int(color.color_rgb_to_hex(
-                        color_rgb[0], color_rgb[1], color_rgb[2]), 16)
+        for trt in self.traits():
+            deep_update(attrs, trt.query_attributes())
 
-    return query_response
+        return attrs
 
+    async def execute(self, command, params):
+        """Execute a command.
 
-# erroneous bug on old pythons and pylint
-# https://github.com/PyCQA/pylint/issues/1212
-# pylint: disable=invalid-sequence-index
-def determine_service(
-        entity_id: str, command: str, params: dict,
-        units: UnitSystem) -> Tuple[str, dict]:
-    """
-    Determine service and service_data.
+        https://developers.google.com/actions/smarthome/create-app#actiondevicesexecute
+        """
+        executed = False
+        for trt in self.traits():
+            if trt.can_execute(command, params):
+                await trt.execute(command, params)
+                executed = True
+                break
 
-    Attempt to return a tuple of service and service_data based on the entity
-    and action requested.
-    """
-    _LOGGER.debug("Handling command %s with data %s", command, params)
-    domain = entity_id.split('.')[0]
-    service_data = {ATTR_ENTITY_ID: entity_id}  # type: Dict[str, Any]
-    # special media_player handling
-    if domain == media_player.DOMAIN and command == COMMAND_BRIGHTNESS:
-        brightness = params.get('brightness', 0)
-        service_data[media_player.ATTR_MEDIA_VOLUME_LEVEL] = brightness / 100
-        return (media_player.SERVICE_VOLUME_SET, service_data)
+        if not executed:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED,
+                'Unable to execute {} for {}'.format(command,
+                                                     self.state.entity_id))
 
-    # special cover handling
-    if domain == cover.DOMAIN:
-        if command == COMMAND_BRIGHTNESS:
-            service_data['position'] = params.get('brightness', 0)
-            return (cover.SERVICE_SET_COVER_POSITION, service_data)
-        if command == COMMAND_ONOFF and params.get('on') is True:
-            return (cover.SERVICE_OPEN_COVER, service_data)
-        return (cover.SERVICE_CLOSE_COVER, service_data)
-
-    # special climate handling
-    if domain == climate.DOMAIN:
-        if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
-            service_data['temperature'] = units.temperature(
-                params.get('thermostatTemperatureSetpoint', 25),
-                TEMP_CELSIUS)
-            return (climate.SERVICE_SET_TEMPERATURE, service_data)
-        if command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
-            service_data['target_temp_high'] = units.temperature(
-                params.get('thermostatTemperatureSetpointHigh', 25),
-                TEMP_CELSIUS)
-            service_data['target_temp_low'] = units.temperature(
-                params.get('thermostatTemperatureSetpointLow', 18),
-                TEMP_CELSIUS)
-            return (climate.SERVICE_SET_TEMPERATURE, service_data)
-        if command == COMMAND_THERMOSTAT_SET_MODE:
-            service_data['operation_mode'] = params.get(
-                'thermostatMode', 'off')
-            return (climate.SERVICE_SET_OPERATION_MODE, service_data)
-
-    if command == COMMAND_BRIGHTNESS:
-        brightness = params.get('brightness')
-        service_data['brightness'] = int(brightness / 100 * 255)
-        return (SERVICE_TURN_ON, service_data)
-
-    if command == COMMAND_COLOR:
-        color_data = params.get('color')
-        if color_data is not None:
-            if color_data.get('temperature', 0) > 0:
-                service_data[light.ATTR_KELVIN] = color_data.get('temperature')
-                return (SERVICE_TURN_ON, service_data)
-            if color_data.get('spectrumRGB', 0) > 0:
-                # blue is 255 so pad up to 6 chars
-                hex_value = \
-                    ('%0x' % int(color_data.get('spectrumRGB'))).zfill(6)
-                service_data[light.ATTR_RGB_COLOR] = \
-                    color.rgb_hex_to_rgb_list(hex_value)
-                return (SERVICE_TURN_ON, service_data)
-
-    if command == COMMAND_ACTIVATESCENE:
-        return (SERVICE_TURN_ON, service_data)
-
-    if COMMAND_ONOFF == command:
-        if params.get('on') is True:
-            return (SERVICE_TURN_ON, service_data)
-        return (SERVICE_TURN_OFF, service_data)
-
-    return (None, service_data)
+    @callback
+    def async_update(self):
+        """Update the entity with latest info from Home Assistant."""
+        self.state = self.hass.states.get(self.entity_id)
 
 
-@asyncio.coroutine
-def async_handle_message(hass, config, message):
+async def async_handle_message(hass, config, message):
     """Handle incoming API messages."""
+    response = await _process(hass, config, message)
+
+    if 'errorCode' in response['payload']:
+        _LOGGER.error('Error handling message %s: %s',
+                      message, response['payload'])
+
+    return response
+
+
+async def _process(hass, config, message):
+    """Process a message."""
     request_id = message.get('requestId')  # type: str
     inputs = message.get('inputs')  # type: list
 
-    if len(inputs) > 1:
-        _LOGGER.warning('Got unexpected more than 1 input. %s', message)
+    if len(inputs) != 1:
+        return {
+            'requestId': request_id,
+            'payload': {'errorCode': ERR_PROTOCOL_ERROR}
+        }
 
-    # Only use first input
-    intent = inputs[0].get('intent')
-    payload = inputs[0].get('payload')
+    handler = HANDLERS.get(inputs[0].get('intent'))
 
-    handler = HANDLERS.get(intent)
+    if handler is None:
+        return {
+            'requestId': request_id,
+            'payload': {'errorCode': ERR_PROTOCOL_ERROR}
+        }
 
-    if handler:
-        result = yield from handler(hass, config, payload)
-    else:
-        result = {'errorCode': 'protocolError'}
-
-    return {'requestId': request_id, 'payload': result}
+    try:
+        result = await handler(hass, config, inputs[0].get('payload'))
+        return {'requestId': request_id, 'payload': result}
+    except SmartHomeError as err:
+        return {
+            'requestId': request_id,
+            'payload': {'errorCode': err.code}
+        }
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception('Unexpected error')
+        return {
+            'requestId': request_id,
+            'payload': {'errorCode': ERR_UNKNOWN_ERROR}
+        }
 
 
 @HANDLERS.register('action.devices.SYNC')
-@asyncio.coroutine
-def async_devices_sync(hass, config, payload):
-    """Handle action.devices.SYNC request."""
+async def async_devices_sync(hass, config, payload):
+    """Handle action.devices.SYNC request.
+
+    https://developers.google.com/actions/smarthome/create-app#actiondevicessync
+    """
     devices = []
-    for entity in hass.states.async_all():
-        if not config.should_expose(entity):
+    for state in hass.states.async_all():
+        if not config.should_expose(state):
             continue
 
-        device = entity_to_device(entity, config, hass.config.units)
-        if device is None:
-            _LOGGER.warning("No mapping for %s domain", entity.domain)
+        entity = _GoogleEntity(hass, config, state)
+        serialized = entity.sync_serialize()
+
+        if serialized is None:
+            _LOGGER.debug("No mapping for %s domain", entity.state)
             continue
 
-        devices.append(device)
+        devices.append(serialized)
 
     return {
         'agentUserId': config.agent_user_id,
@@ -338,50 +251,87 @@ def async_devices_sync(hass, config, payload):
 
 
 @HANDLERS.register('action.devices.QUERY')
-@asyncio.coroutine
-def async_devices_query(hass, config, payload):
-    """Handle action.devices.QUERY request."""
+async def async_devices_query(hass, config, payload):
+    """Handle action.devices.QUERY request.
+
+    https://developers.google.com/actions/smarthome/create-app#actiondevicesquery
+    """
     devices = {}
     for device in payload.get('devices', []):
-        devid = device.get('id')
-        # In theory this should never happpen
-        if not devid:
-            _LOGGER.error('Device missing ID: %s', device)
-            continue
-
+        devid = device['id']
         state = hass.states.get(devid)
+
         if not state:
             # If we can't find a state, the device is offline
             devices[devid] = {'online': False}
+            continue
 
-        devices[devid] = query_device(state, hass.config.units)
+        devices[devid] = _GoogleEntity(hass, config, state).query_serialize()
 
     return {'devices': devices}
 
 
 @HANDLERS.register('action.devices.EXECUTE')
-@asyncio.coroutine
-def handle_devices_execute(hass, config, payload):
-    """Handle action.devices.EXECUTE request."""
-    commands = []
-    for command in payload.get('commands', []):
-        ent_ids = [ent.get('id') for ent in command.get('devices', [])]
-        for execution in command.get('execution'):
-            for eid in ent_ids:
-                success = False
-                domain = eid.split('.')[0]
-                (service, service_data) = determine_service(
-                    eid, execution.get('command'), execution.get('params'),
-                    hass.config.units)
-                if domain == "group":
-                    domain = "homeassistant"
-                success = yield from hass.services.async_call(
-                    domain, service, service_data, blocking=True)
-                result = {"ids": [eid], "states": {}}
-                if success:
-                    result['status'] = 'SUCCESS'
-                else:
-                    result['status'] = 'ERROR'
-                commands.append(result)
+async def handle_devices_execute(hass, config, payload):
+    """Handle action.devices.EXECUTE request.
 
-    return {'commands': commands}
+    https://developers.google.com/actions/smarthome/create-app#actiondevicesexecute
+    """
+    entities = {}
+    results = {}
+
+    for command in payload['commands']:
+        for device, execution in product(command['devices'],
+                                         command['execution']):
+            entity_id = device['id']
+
+            # Happens if error occurred. Skip entity for further processing
+            if entity_id in results:
+                continue
+
+            if entity_id not in entities:
+                state = hass.states.get(entity_id)
+
+                if state is None:
+                    results[entity_id] = {
+                        'ids': [entity_id],
+                        'status': 'ERROR',
+                        'errorCode': ERR_DEVICE_OFFLINE
+                    }
+                    continue
+
+                entities[entity_id] = _GoogleEntity(hass, config, state)
+
+            try:
+                await entities[entity_id].execute(execution['command'],
+                                                  execution.get('params', {}))
+            except SmartHomeError as err:
+                results[entity_id] = {
+                    'ids': [entity_id],
+                    'status': 'ERROR',
+                    'errorCode': err.code
+                }
+
+    final_results = list(results.values())
+
+    for entity in entities.values():
+        if entity.entity_id in results:
+            continue
+
+        entity.async_update()
+
+        final_results.append({
+            'ids': [entity.entity_id],
+            'status': 'SUCCESS',
+            'states': entity.query_serialize(),
+        })
+
+    return {'commands': final_results}
+
+
+def turned_off_response(message):
+    """Return a device turned off response."""
+    return {
+        'requestId': message.get('requestId'),
+        'payload': {'errorCode': 'deviceTurnedOff'}
+    }

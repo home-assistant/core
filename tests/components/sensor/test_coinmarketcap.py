@@ -11,8 +11,9 @@ from tests.common import (
 
 VALID_CONFIG = {
     'platform': 'coinmarketcap',
-    'currency': 'ethereum',
+    'currency_id': 1027,
     'display_currency': 'EUR',
+    'display_currency_decimals': 3
 }
 
 
@@ -39,6 +40,6 @@ class TestCoinMarketCapSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.ethereum')
         assert state is not None
 
-        assert state.state == '240.47'
+        assert state.state == '493.455'
         assert state.attributes.get('symbol') == 'ETH'
         assert state.attributes.get('unit_of_measurement') == 'EUR'

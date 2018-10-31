@@ -5,16 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.anthemav/
 """
 import logging
-import asyncio
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE,
+    PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON, STATE_UNKNOWN,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_OFF,
+    STATE_ON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['anthemav==1.1.8']
@@ -32,11 +31,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    })
+})
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up our socket to the AVR."""
     import anthemav
 
@@ -49,10 +48,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     def async_anthemav_update_callback(message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info("Received update calback from AVR: %s", message)
-        hass.async_add_job(device.async_update_ha_state())
+        _LOGGER.info("Received update callback from AVR: %s", message)
+        hass.async_create_task(device.async_update_ha_state())
 
-    avr = yield from anthemav.Connection.create(
+    avr = await anthemav.Connection.create(
         host=host, port=port, loop=hass.loop,
         update_callback=async_anthemav_update_callback)
 
@@ -63,7 +62,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.debug("dump_rawdata: %s", avr.protocol.dump_rawdata)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.avr.close)
-    async_add_devices([device])
+    async_add_entities([device])
 
 
 class AnthemAVR(MediaPlayerDevice):
@@ -100,7 +99,7 @@ class AnthemAVR(MediaPlayerDevice):
 
         if pwrstate is True:
             return STATE_ON
-        elif pwrstate is False:
+        if pwrstate is False:
             return STATE_OFF
         return STATE_UNKNOWN
 
@@ -135,28 +134,23 @@ class AnthemAVR(MediaPlayerDevice):
         """Return all active, configured inputs."""
         return self._lookup('input_list', ["Unknown"])
 
-    @asyncio.coroutine
-    def async_select_source(self, source):
+    async def async_select_source(self, source):
         """Change AVR to the designated source (by name)."""
         self._update_avr('input_name', source)
 
-    @asyncio.coroutine
-    def async_turn_off(self):
+    async def async_turn_off(self):
         """Turn AVR power off."""
         self._update_avr('power', False)
 
-    @asyncio.coroutine
-    def async_turn_on(self):
+    async def async_turn_on(self):
         """Turn AVR power on."""
         self._update_avr('power', True)
 
-    @asyncio.coroutine
-    def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set AVR volume (0 to 1)."""
         self._update_avr('volume_as_percentage', volume)
 
-    @asyncio.coroutine
-    def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Engage AVR mute."""
         self._update_avr('mute', mute)
 

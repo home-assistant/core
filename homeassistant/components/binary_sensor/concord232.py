@@ -27,7 +27,7 @@ DEFAULT_NAME = 'Alarm'
 DEFAULT_PORT = '5007'
 DEFAULT_SSL = False
 
-SCAN_INTERVAL = datetime.timedelta(seconds=1)
+SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
 ZONE_TYPES_SCHEMA = vol.Schema({
     cv.positive_int: vol.In(DEVICE_CLASSES),
@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 binary sensor platform."""
     from concord232 import client as concord232_client
 
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
 
     try:
-        _LOGGER.debug("Initializing Client")
+        _LOGGER.debug("Initializing client")
         client = concord232_client.Client('http://{}:{}'.format(host, port))
         client.zones = client.list_zones()
         client.last_zone_update = datetime.datetime.now()
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 )
             )
 
-        add_devices(sensors, True)
+        add_entities(sensors, True)
 
 
 def get_opening_type(zone):

@@ -10,18 +10,18 @@ import logging
 from requests import RequestException
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant import util
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
+    MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MEDIA_TYPE_CHANNEL, MediaPlayerDevice)
+    MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_ACCESS_TOKEN,
-    STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
-import homeassistant.util as util
+    CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING, STATE_UNKNOWN)
+import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/wokar/pylgnetcast/archive/'
-                'v0.2.0.zip#pylgnetcast==0.2.0']
+REQUIREMENTS = ['pylgnetcast-homeassistant==0.2.0.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,24 +36,23 @@ SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN, default=None):
-        vol.All(cv.string, vol.Length(max=6)),
+    vol.Optional(CONF_ACCESS_TOKEN): vol.All(cv.string, vol.Length(max=6)),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG TV platform."""
     from pylgnetcast import LgNetCastClient
+
     host = config.get(CONF_HOST)
     access_token = config.get(CONF_ACCESS_TOKEN)
     name = config.get(CONF_NAME)
 
     client = LgNetCastClient(host, access_token)
 
-    add_devices([LgTVDevice(client, name)], True)
+    add_entities([LgTVDevice(client, name)], True)
 
 
 class LgTVDevice(MediaPlayerDevice):

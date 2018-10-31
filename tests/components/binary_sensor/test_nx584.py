@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import nx584
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
+import pytest
 
 
 class StopMe(Exception):
@@ -21,7 +22,7 @@ class TestNX584SensorSetup(unittest.TestCase):
     """Test the NX584 sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self._mock_client = mock.patch.object(nx584_client, 'Client')
         self._mock_client.start()
@@ -45,21 +46,20 @@ class TestNX584SensorSetup(unittest.TestCase):
     @mock.patch('homeassistant.components.binary_sensor.nx584.NX584ZoneSensor')
     def test_setup_defaults(self, mock_nx, mock_watcher):
         """Test the setup with no configuration."""
-        add_devices = mock.MagicMock()
+        add_entities = mock.MagicMock()
         config = {
             'host': nx584.DEFAULT_HOST,
             'port': nx584.DEFAULT_PORT,
             'exclude_zones': [],
             'zone_types': {},
             }
-        self.assertTrue(nx584.setup_platform(self.hass, config, add_devices))
+        assert nx584.setup_platform(self.hass, config, add_entities)
         mock_nx.assert_has_calls(
              [mock.call(zone, 'opening') for zone in self.fake_zones])
-        self.assertTrue(add_devices.called)
-        self.assertEqual(nx584_client.Client.call_count, 1)
-        self.assertEqual(
-            nx584_client.Client.call_args, mock.call('http://localhost:5007')
-        )
+        assert add_entities.called
+        assert nx584_client.Client.call_count == 1
+        assert nx584_client.Client.call_args == \
+            mock.call('http://localhost:5007')
 
     @mock.patch('homeassistant.components.binary_sensor.nx584.NX584Watcher')
     @mock.patch('homeassistant.components.binary_sensor.nx584.NX584ZoneSensor')
@@ -71,23 +71,21 @@ class TestNX584SensorSetup(unittest.TestCase):
             'exclude_zones': [2],
             'zone_types': {3: 'motion'},
             }
-        add_devices = mock.MagicMock()
-        self.assertTrue(nx584.setup_platform(self.hass, config, add_devices))
+        add_entities = mock.MagicMock()
+        assert nx584.setup_platform(self.hass, config, add_entities)
         mock_nx.assert_has_calls([
             mock.call(self.fake_zones[0], 'opening'),
             mock.call(self.fake_zones[2], 'motion'),
             ])
-        self.assertTrue(add_devices.called)
-        self.assertEqual(nx584_client.Client.call_count, 1)
-        self.assertEqual(
-            nx584_client.Client.call_args, mock.call('http://foo:123')
-        )
-        self.assertTrue(mock_watcher.called)
+        assert add_entities.called
+        assert nx584_client.Client.call_count == 1
+        assert nx584_client.Client.call_args == mock.call('http://foo:123')
+        assert mock_watcher.called
 
     def _test_assert_graceful_fail(self, config):
         """Test the failing."""
-        self.assertFalse(setup_component(
-            self.hass, 'binary_sensor.nx584', config))
+        assert not setup_component(
+            self.hass, 'binary_sensor.nx584', config)
 
     def test_setup_bad_config(self):
         """Test the setup with bad configuration."""
@@ -113,16 +111,16 @@ class TestNX584SensorSetup(unittest.TestCase):
         self._test_assert_graceful_fail({})
 
     def test_setup_version_too_old(self):
-        """"Test if version is too old."""
+        """Test if version is too old."""
         nx584_client.Client.return_value.get_version.return_value = '1.0'
         self._test_assert_graceful_fail({})
 
     def test_setup_no_zones(self):
         """Test the setup with no zones."""
         nx584_client.Client.return_value.list_zones.return_value = []
-        add_devices = mock.MagicMock()
-        self.assertTrue(nx584.setup_platform(self.hass, {}, add_devices))
-        self.assertFalse(add_devices.called)
+        add_entities = mock.MagicMock()
+        assert nx584.setup_platform(self.hass, {}, add_entities)
+        assert not add_entities.called
 
 
 class TestNX584ZoneSensor(unittest.TestCase):
@@ -132,12 +130,12 @@ class TestNX584ZoneSensor(unittest.TestCase):
         """Test the sensor."""
         zone = {'number': 1, 'name': 'foo', 'state': True}
         sensor = nx584.NX584ZoneSensor(zone, 'motion')
-        self.assertEqual('foo', sensor.name)
-        self.assertFalse(sensor.should_poll)
-        self.assertTrue(sensor.is_on)
+        assert 'foo' == sensor.name
+        assert not sensor.should_poll
+        assert sensor.is_on
 
         zone['state'] = False
-        self.assertFalse(sensor.is_on)
+        assert not sensor.is_on
 
 
 class TestNX584Watcher(unittest.TestCase):
@@ -154,15 +152,15 @@ class TestNX584Watcher(unittest.TestCase):
         }
         watcher = nx584.NX584Watcher(None, zones)
         watcher._process_zone_event({'zone': 1, 'zone_state': False})
-        self.assertFalse(zone1['state'])
-        self.assertEqual(1, mock_update.call_count)
+        assert not zone1['state']
+        assert 1 == mock_update.call_count
 
     @mock.patch.object(nx584.NX584ZoneSensor, 'schedule_update_ha_state')
     def test_process_zone_event_missing_zone(self, mock_update):
         """Test the processing of zone events with missing zones."""
         watcher = nx584.NX584Watcher(None, {})
         watcher._process_zone_event({'zone': 1, 'zone_state': False})
-        self.assertFalse(mock_update.called)
+        assert not mock_update.called
 
     def test_run_with_zone_events(self):
         """Test the zone events."""
@@ -187,12 +185,13 @@ class TestNX584Watcher(unittest.TestCase):
         def run(fake_process):
             """Run a fake process."""
             fake_process.side_effect = StopMe
-            self.assertRaises(StopMe, watcher._run)
-            self.assertEqual(fake_process.call_count, 1)
-            self.assertEqual(fake_process.call_args, mock.call(fake_events[0]))
+            with pytest.raises(StopMe):
+                watcher._run()
+            assert fake_process.call_count == 1
+            assert fake_process.call_args == mock.call(fake_events[0])
 
         run()
-        self.assertEqual(3, client.get_events.call_count)
+        assert 3 == client.get_events.call_count
 
     @mock.patch('time.sleep')
     def test_run_retries_failures(self, mock_sleep):
@@ -210,6 +209,7 @@ class TestNX584Watcher(unittest.TestCase):
         watcher = nx584.NX584Watcher(None, {})
         with mock.patch.object(watcher, '_run') as mock_inner:
             mock_inner.side_effect = fake_run
-            self.assertRaises(StopMe, watcher.run)
-            self.assertEqual(3, mock_inner.call_count)
+            with pytest.raises(StopMe):
+                watcher.run()
+            assert 3 == mock_inner.call_count
         mock_sleep.assert_has_calls([mock.call(10), mock.call(10)])

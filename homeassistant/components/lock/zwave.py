@@ -4,9 +4,6 @@ Z-Wave platform that handles simple door locks.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.zwave/
 """
-# Because we do not compile openzwave on CI
-# pylint: disable=import-error
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -49,6 +46,7 @@ LOCK_NOTIFICATION = {
 
 LOCK_ALARM_TYPE = {
     '9': 'Deadbolt Jammed',
+    '16': 'Unlocked by Bluetooth ',
     '18': 'Locked with Keypad by user ',
     '19': 'Unlocked with Keypad by user ',
     '21': 'Manually Locked ',
@@ -60,6 +58,7 @@ LOCK_ALARM_TYPE = {
     '112': 'Master code changed or User added: ',
     '113': 'Duplicate Pin-code: ',
     '130': 'RF module, power restored',
+    '144': 'Unlocked by NFC Tag or Card by user ',
     '161': 'Tamper Alarm: ',
     '167': 'Low Battery',
     '168': 'Critical Battery Level',
@@ -98,7 +97,8 @@ ALARM_TYPE_STD = [
     '19',
     '33',
     '112',
-    '113'
+    '113',
+    '144'
 ]
 
 SET_USERCODE_SCHEMA = vol.Schema({
@@ -118,11 +118,11 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Z-Wave Lock platform."""
-    yield from zwave.async_setup_platform(
-        hass, config, async_add_devices, discovery_info)
+    await zwave.async_setup_platform(
+        hass, config, async_add_entities, discovery_info)
 
     network = hass.data[zwave.const.DATA_NETWORK]
 

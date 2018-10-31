@@ -8,6 +8,7 @@ import os
 import subprocess
 import logging
 import shutil
+from tempfile import NamedTemporaryFile
 
 import voluptuous as vol
 
@@ -28,7 +29,7 @@ CONF_VERTICAL_FLIP = 'vertical_flip'
 
 DEFAULT_HORIZONTAL_FLIP = 0
 DEFAULT_IMAGE_HEIGHT = 480
-DEFAULT_IMAGE_QUALITIY = 7
+DEFAULT_IMAGE_QUALITY = 7
 DEFAULT_IMAGE_ROTATION = 0
 DEFAULT_IMAGE_WIDTH = 640
 DEFAULT_NAME = 'Raspberry Pi Camera'
@@ -36,12 +37,12 @@ DEFAULT_TIMELAPSE = 1000
 DEFAULT_VERTICAL_FLIP = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FILE_PATH): cv.string,
+    vol.Optional(CONF_FILE_PATH): cv.isfile,
     vol.Optional(CONF_HORIZONTAL_FLIP, default=DEFAULT_HORIZONTAL_FLIP):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=1)),
     vol.Optional(CONF_IMAGE_HEIGHT, default=DEFAULT_IMAGE_HEIGHT):
         vol.Coerce(int),
-    vol.Optional(CONF_IMAGE_QUALITY, default=DEFAULT_IMAGE_QUALITIY):
+    vol.Optional(CONF_IMAGE_QUALITY, default=DEFAULT_IMAGE_QUALITY):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
     vol.Optional(CONF_IMAGE_ROTATION, default=DEFAULT_IMAGE_ROTATION):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=359)),
@@ -61,7 +62,7 @@ def kill_raspistill(*args):
                      stderr=subprocess.STDOUT)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry Camera."""
     if shutil.which("raspistill") is None:
         _LOGGER.error("'raspistill' was not found")
@@ -77,26 +78,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_TIMELAPSE: config.get(CONF_TIMELAPSE),
             CONF_HORIZONTAL_FLIP: config.get(CONF_HORIZONTAL_FLIP),
             CONF_VERTICAL_FLIP: config.get(CONF_VERTICAL_FLIP),
-            CONF_FILE_PATH: config.get(CONF_FILE_PATH,
-                                       os.path.join(os.path.dirname(__file__),
-                                                    'image.jpg'))
+            CONF_FILE_PATH: config.get(CONF_FILE_PATH)
         }
     )
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, kill_raspistill)
 
-    try:
-        # Try to create an empty file (or open existing) to ensure we have
-        # proper permissions.
-        open(setup_config[CONF_FILE_PATH], 'a').close()
+    file_path = setup_config[CONF_FILE_PATH]
 
-        add_devices([RaspberryCamera(setup_config)])
-    except PermissionError:
-        _LOGGER.error("File path is not writable")
+    def delete_temp_file(*args):
+        """Delete the temporary file to prevent saving multiple temp images.
+
+        Only used when no path is defined
+        """
+        os.remove(file_path)
+
+    # If no file path is defined, use a temporary file
+    if file_path is None:
+        temp_file = NamedTemporaryFile(suffix='.jpg', delete=False)
+        temp_file.close()
+        file_path = temp_file.name
+        setup_config[CONF_FILE_PATH] = file_path
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, delete_temp_file)
+
+    # Check whether the file path has been whitelisted
+    elif not hass.config.is_allowed_path(file_path):
+        _LOGGER.error("'%s' is not a whitelisted directory", file_path)
         return False
-    except FileNotFoundError:
-        _LOGGER.error("Could not create output file (missing directory?)")
-        return False
+
+    add_entities([RaspberryCamera(setup_config)])
 
 
 class RaspberryCamera(Camera):
@@ -131,7 +141,7 @@ class RaspberryCamera(Camera):
                          stderr=subprocess.STDOUT)
 
     def camera_image(self):
-        """Return raspstill image response."""
+        """Return raspistill image response."""
         with open(self._config[CONF_FILE_PATH], 'rb') as file:
             return file.read()
 

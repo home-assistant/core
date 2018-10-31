@@ -15,14 +15,14 @@ from tests.common import (
 from .test_init import mutagen_mock  # noqa
 
 
-class TestTTSGooglePlatform(object):
+class TestTTSGooglePlatform:
     """Test the Google speech component."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-        self.url = "http://translate.google.com/translate_tts"
+        self.url = "https://translate.google.com/translate_tts"
         self.url_param = {
             'tl': 'en',
             'q':

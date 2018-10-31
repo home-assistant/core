@@ -14,7 +14,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyHS100==0.3.0']
+REQUIREMENTS = ['pyHS100==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,15 +32,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TPLink switch platform."""
     from pyHS100 import SmartPlug
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     leds_on = config.get(CONF_LEDS)
 
-    add_devices([SmartPlugSwitch(SmartPlug(host), name, leds_on)], True)
+    add_entities([SmartPlugSwitch(SmartPlug(host), name, leds_on)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
@@ -50,8 +49,7 @@ class SmartPlugSwitch(SwitchDevice):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
-        if leds_on is not None:
-            self.smartplug.led = leds_on
+        self._leds_on = leds_on
         self._state = None
         self._available = True
         # Set up emeter cache
@@ -76,7 +74,7 @@ class SmartPlugSwitch(SwitchDevice):
         """Turn the switch on."""
         self.smartplug.turn_on()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.smartplug.turn_off()
 
@@ -89,10 +87,12 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the TP-Link switch's state."""
         from pyHS100 import SmartDeviceException
         try:
-            self._available = True
-
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON
+
+            if self._leds_on is not None:
+                self.smartplug.led = self._leds_on
+                self._leds_on = None
 
             # Pull the name from the device if a name was not specified
             if self._name == DEFAULT_NAME:
@@ -119,6 +119,10 @@ class SmartPlugSwitch(SwitchDevice):
                     # Device returned no daily history
                     pass
 
+            self._available = True
+
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning("Could not read state for %s: %s", self.name, ex)
-            self._available = False
+            if self._available:
+                _LOGGER.warning(
+                    "Could not read state for %s: %s", self.name, ex)
+                self._available = False

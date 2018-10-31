@@ -4,18 +4,16 @@ Support for AlarmDecoder-based alarm control panels (Honeywell/DSC).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.alarmdecoder/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.alarmdecoder import (
-    DATA_AD, SIGNAL_PANEL_MESSAGE)
+from homeassistant.components.alarmdecoder import DATA_AD, SIGNAL_PANEL_MESSAGE
 from homeassistant.const import (
     ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,10 +25,10 @@ ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
     device = AlarmDecoderAlarmPanel()
-    add_devices([device])
+    add_entities([device])
 
     def alarm_toggle_chime_handler(service):
         """Register toggle chime handler."""
@@ -60,13 +58,13 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         self._ready = None
         self._zone_bypassed = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             SIGNAL_PANEL_MESSAGE, self._message_callback)
 
     def _message_callback(self, message):
+        """Handle received messages."""
         if message.alarm_sounding or message.fire_alarm:
             self._state = STATE_ALARM_TRIGGERED
         elif message.armed_away:
@@ -100,8 +98,8 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """Return the regex for code format or None if no code is required."""
-        return '^\\d{4,6}$'
+        """Return one or more digits/characters."""
+        return 'Number'
 
     @property
     def state(self):
@@ -120,7 +118,7 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
             'entry_delay_off': self._entry_delay_off,
             'programming_mode': self._programming_mode,
             'ready': self._ready,
-            'zone_bypassed': self._zone_bypassed
+            'zone_bypassed': self._zone_bypassed,
         }
 
     def alarm_disarm(self, code=None):

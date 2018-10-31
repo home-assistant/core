@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
 from homeassistant.const import (CONF_COMMAND_ON, CONF_COMMAND_OFF)
-import homeassistant.components.zoneminder as zoneminder
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,25 +23,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder switch platform."""
-    on_state = config.get(CONF_COMMAND_ON)
-    off_state = config.get(CONF_COMMAND_OFF)
+    from zoneminder.monitor import MonitorState
+    on_state = MonitorState(config.get(CONF_COMMAND_ON))
+    off_state = MonitorState(config.get(CONF_COMMAND_OFF))
+
+    zm_client = hass.data[ZONEMINDER_DOMAIN]
+
+    monitors = zm_client.get_monitors()
+    if not monitors:
+        _LOGGER.warning('Could not fetch monitors from ZoneMinder')
+        return
 
     switches = []
-
-    monitors = zoneminder.get_state('api/monitors.json')
-    for i in monitors['monitors']:
-        switches.append(
-            ZMSwitchMonitors(
-                int(i['Monitor']['Id']),
-                i['Monitor']['Name'],
-                on_state,
-                off_state
-            )
-        )
-
-    add_devices(switches)
+    for monitor in monitors:
+        switches.append(ZMSwitchMonitors(monitor, on_state, off_state))
+    add_entities(switches)
 
 
 class ZMSwitchMonitors(SwitchDevice):
@@ -49,10 +47,9 @@ class ZMSwitchMonitors(SwitchDevice):
 
     icon = 'mdi:record-rec'
 
-    def __init__(self, monitor_id, monitor_name, on_state, off_state):
+    def __init__(self, monitor, on_state, off_state):
         """Initialize the switch."""
-        self._monitor_id = monitor_id
-        self._monitor_name = monitor_name
+        self._monitor = monitor
         self._on_state = on_state
         self._off_state = off_state
         self._state = None
@@ -60,31 +57,21 @@ class ZMSwitchMonitors(SwitchDevice):
     @property
     def name(self):
         """Return the name of the switch."""
-        return "%s State" % self._monitor_name
+        return '{} State'.format(self._monitor.name)
 
     def update(self):
         """Update the switch value."""
-        monitor = zoneminder.get_state(
-            'api/monitors/%i.json' % self._monitor_id
-        )
-        current_state = monitor['monitor']['Monitor']['Function']
-        self._state = True if current_state == self._on_state else False
+        self._state = self._monitor.function == self._on_state
 
     @property
     def is_on(self):
         """Return True if entity is on."""
         return self._state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the entity on."""
-        zoneminder.change_state(
-            'api/monitors/%i.json' % self._monitor_id,
-            {'Monitor[Function]': self._on_state}
-        )
+        self._monitor.function = self._on_state
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the entity off."""
-        zoneminder.change_state(
-            'api/monitors/%i.json' % self._monitor_id,
-            {'Monitor[Function]': self._off_state}
-        )
+        self._monitor.function = self._off_state

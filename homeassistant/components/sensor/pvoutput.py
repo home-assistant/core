@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PVOutput sensor."""
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
@@ -61,10 +61,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to fetch data from PVOutput")
         return False
 
-    add_devices([PvoutputSensor(rest, name)], True)
+    add_entities([PvoutputSensor(rest, name)], True)
 
 
-# pylint: disable=no-member
 class PvoutputSensor(Entity):
     """Representation of a PVOutput sensor."""
 

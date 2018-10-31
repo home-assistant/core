@@ -4,17 +4,17 @@ Support for switch controlled using a telnet connection.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.telnet/
 """
+from datetime import timedelta
 import logging
 import telnetlib
-from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA,
-                                             ENTITY_ID_FORMAT)
+from homeassistant.components.switch import (
+    ENTITY_ID_FORMAT, PLATFORM_SCHEMA, SwitchDevice)
 from homeassistant.const import (
-    CONF_RESOURCE, CONF_NAME, CONF_SWITCHES, CONF_VALUE_TEMPLATE,
-    CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_COMMAND_STATE, CONF_PORT)
+    CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_COMMAND_STATE, CONF_NAME,
+    CONF_PORT, CONF_RESOURCE, CONF_SWITCHES, CONF_VALUE_TEMPLATE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,13 +22,13 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 23
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Required(CONF_COMMAND_ON): cv.string,
     vol.Required(CONF_COMMAND_OFF): cv.string,
+    vol.Required(CONF_COMMAND_ON): cv.string,
+    vol.Required(CONF_RESOURCE): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_COMMAND_STATE): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_RESOURCE): cv.string,
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -38,8 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return switches controlled by telnet commands."""
     devices = config.get(CONF_SWITCHES, {})
     switches = []
@@ -66,9 +65,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if not switches:
         _LOGGER.error("No switches added")
-        return False
+        return
 
-    add_devices(switches)
+    add_entities(switches)
 
 
 class TelnetSwitch(SwitchDevice):
@@ -117,7 +116,7 @@ class TelnetSwitch(SwitchDevice):
 
     @property
     def assumed_state(self):
-        """Default ist true if no state command is defined, false otherwise."""
+        """Return true if no state command is defined, false otherwise."""
         return self._command_state is None
 
     def update(self):

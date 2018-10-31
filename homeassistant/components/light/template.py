@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.template/
 """
 import logging
-import asyncio
 
 import voluptuous as vol
 
@@ -35,40 +34,35 @@ CONF_LEVEL_TEMPLATE = 'level_template'
 LIGHT_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_ICON_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_LEVEL_ACTION, default=None): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_LEVEL_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+    vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
-
-LIGHT_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    LIGHT_SCHEMA,
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LIGHTS): vol.Schema({cv.slug: LIGHT_SCHEMA}),
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Template Lights."""
     lights = []
 
     for device, device_config in config[CONF_LIGHTS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
-        state_template = device_config[CONF_VALUE_TEMPLATE]
+        state_template = device_config.get(CONF_VALUE_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
         level_action = device_config.get(CONF_LEVEL_ACTION)
-        level_template = device_config[CONF_LEVEL_TEMPLATE]
+        level_template = device_config.get(CONF_LEVEL_TEMPLATE)
 
         template_entity_ids = set()
 
@@ -108,7 +102,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No lights added")
         return False
 
-    async_add_devices(lights)
+    async_add_entities(lights)
     return True
 
 
@@ -186,8 +180,7 @@ class LightTemplate(Light):
         """Return the entity picture to use in the frontend, if any."""
         return self._entity_picture
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def template_light_state_listener(entity, old_state, new_state):
@@ -207,8 +200,7 @@ class LightTemplate(Light):
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_light_startup)
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         optimistic_set = False
         # set optimistic states
@@ -223,26 +215,23 @@ class LightTemplate(Light):
             optimistic_set = True
 
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
-            self.hass.async_add_job(self._level_script.async_run(
-                {"brightness": kwargs[ATTR_BRIGHTNESS]}))
+            await self._level_script.async_run(
+                {"brightness": kwargs[ATTR_BRIGHTNESS]}, context=self._context)
         else:
-            yield from self._on_script.async_run()
+            await self._on_script.async_run()
 
         if optimistic_set:
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        yield from self._off_script.async_run()
+        await self._off_script.async_run(context=self._context)
         if self._template is None:
             self._state = False
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update the state from the template."""
-        print("ASYNC UPDATE")
         if self._template is not None:
             try:
                 state = self._template.async_render().lower()
@@ -254,8 +243,7 @@ class LightTemplate(Light):
                 self._state = state in ('true', STATE_ON)
             else:
                 _LOGGER.error(
-                    'Received invalid light is_on state: %s. ' +
-                    'Expected: %s',
+                    'Received invalid light is_on state: %s. Expected: %s',
                     state, ', '.join(_VALID_STATES))
                 self._state = None
 
@@ -267,11 +255,10 @@ class LightTemplate(Light):
                 self._state = None
 
             if 0 <= int(brightness) <= 255:
-                self._brightness = brightness
+                self._brightness = int(brightness)
             else:
                 _LOGGER.error(
-                    'Received invalid brightness : %s' +
-                    'Expected: 0-255',
+                    'Received invalid brightness : %s. Expected: 0-255',
                     brightness)
                 self._brightness = None
 

@@ -32,7 +32,7 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_TYPES):
+    vol.Required(CONF_DISPLAY_OPTIONS, default=list(SENSOR_TYPES)):
         [vol.In(SENSOR_TYPES)],
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_IS_HAT_ATTACHED, default=True): cv.boolean
@@ -58,14 +58,14 @@ def get_average(temp_base):
     return temp_avg
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense HAT sensor platform."""
     data = SenseHatData(config.get(CONF_IS_HAT_ATTACHED))
     dev = []
     for variable in config[CONF_DISPLAY_OPTIONS]:
         dev.append(SenseHatSensor(data, variable))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class SenseHatSensor(Entity):
@@ -109,7 +109,7 @@ class SenseHatSensor(Entity):
             self._state = self.data.pressure
 
 
-class SenseHatData(object):
+class SenseHatData:
     """Get the latest data and update."""
 
     def __init__(self, is_hat_attached):

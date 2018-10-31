@@ -1,8 +1,6 @@
-"""Component to manage a shoppling list."""
+"""Component to manage a shopping list."""
 import asyncio
-import json
 import logging
-import os
 import uuid
 
 import voluptuous as vol
@@ -10,9 +8,13 @@ import voluptuous as vol
 from homeassistant.const import HTTP_NOT_FOUND, HTTP_BAD_REQUEST
 from homeassistant.core import callback
 from homeassistant.components import http
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import load_json, save_json
 
+ATTR_NAME = 'name'
 
 DOMAIN = 'shopping_list'
 DEPENDENCIES = ['http']
@@ -23,19 +25,56 @@ INTENT_ADD_ITEM = 'HassShoppingListAddItem'
 INTENT_LAST_ITEMS = 'HassShoppingListLastItems'
 ITEM_UPDATE_SCHEMA = vol.Schema({
     'complete': bool,
-    'name': str,
+    ATTR_NAME: str,
 })
 PERSISTENCE = '.shopping_list.json'
+
+SERVICE_ADD_ITEM = 'add_item'
+SERVICE_COMPLETE_ITEM = 'complete_item'
+
+SERVICE_ITEM_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NAME): vol.Any(None, cv.string)
+})
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Initialize the shopping list."""
+    @asyncio.coroutine
+    def add_item_service(call):
+        """Add an item with `name`."""
+        data = hass.data[DOMAIN]
+        name = call.data.get(ATTR_NAME)
+        if name is not None:
+            data.async_add(name)
+
+    @asyncio.coroutine
+    def complete_item_service(call):
+        """Mark the item provided via `name` as completed."""
+        data = hass.data[DOMAIN]
+        name = call.data.get(ATTR_NAME)
+        if name is None:
+            return
+        try:
+            item = [item for item in data.items if item['name'] == name][0]
+        except IndexError:
+            _LOGGER.error("Removing of item failed: %s cannot be found", name)
+        else:
+            data.async_update(item['id'], {'name': name, 'complete': True})
+
     data = hass.data[DOMAIN] = ShoppingData(hass)
     yield from data.async_load()
 
     intent.async_register(hass, AddItemIntent())
     intent.async_register(hass, ListTopItemsIntent())
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_ITEM, add_item_service, schema=SERVICE_ITEM_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_COMPLETE_ITEM, complete_item_service,
+        schema=SERVICE_ITEM_SCHEMA
+    )
 
     hass.http.register_view(ShoppingListView)
     hass.http.register_view(CreateShoppingListItemView)
@@ -43,7 +82,7 @@ def async_setup(hass, config):
     hass.http.register_view(ClearCompletedItemsView)
 
     hass.components.conversation.async_register(INTENT_ADD_ITEM, [
-        'Add {item} to my shopping list',
+        'Add [the] [a] [an] {item} to my shopping list',
     ])
     hass.components.conversation.async_register(INTENT_LAST_ITEMS, [
         'What is on my shopping list'
@@ -99,18 +138,13 @@ class ShoppingData:
         """Load items."""
         def load():
             """Load the items synchronously."""
-            path = self.hass.config.path(PERSISTENCE)
-            if not os.path.isfile(path):
-                return []
-            with open(path) as file:
-                return json.loads(file.read())
+            return load_json(self.hass.config.path(PERSISTENCE), default=[])
 
         self.items = yield from self.hass.async_add_job(load)
 
     def save(self):
         """Save the items."""
-        with open(self.hass.config.path(PERSISTENCE), 'wt') as file:
-            file.write(json.dumps(self.items, sort_keys=True, indent=4))
+        save_json(self.hass.config.path(PERSISTENCE), self.items)
 
 
 class AddItemIntent(intent.IntentHandler):
@@ -178,10 +212,9 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
     url = '/api/shopping_list/item/{item_id}'
     name = "api:shopping_list:item:id"
 
-    @callback
-    def post(self, request, item_id):
+    async def post(self, request, item_id):
         """Update a shopping list item."""
-        data = yield from request.json()
+        data = await request.json()
 
         try:
             item = request.app['hass'].data[DOMAIN].async_update(item_id, data)
@@ -199,7 +232,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     url = '/api/shopping_list/item'
     name = "api:shopping_list:item"
 
-    @http.RequestDataValidator(vol.Schema({
+    @RequestDataValidator(vol.Schema({
         vol.Required('name'): str,
     }))
     @asyncio.coroutine

@@ -3,23 +3,21 @@ Support for ADS binary sensors.
 
 For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/binary_sensor.ads/
-
 """
-import asyncio
 import logging
-import voluptuous as vol
-from homeassistant.components.binary_sensor import BinarySensorDevice, \
-    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
-from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR
-from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
-import homeassistant.helpers.config_validation as cv
 
+import voluptuous as vol
+
+from homeassistant.components.ads import CONF_ADS_VAR, DATA_ADS
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['ads']
 DEFAULT_NAME = 'ADS binary sensor'
-
+DEPENDENCIES = ['ads']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
@@ -28,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
@@ -37,34 +35,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     device_class = config.get(CONF_DEVICE_CLASS)
 
     ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class)
-    add_devices([ads_sensor])
+    add_entities([ads_sensor])
 
 
 class AdsBinarySensor(BinarySensorDevice):
     """Representation of ADS binary sensors."""
 
     def __init__(self, ads_hub, name, ads_var, device_class):
-        """Initialize AdsBinarySensor entity."""
+        """Initialize ADS binary sensor."""
         self._name = name
         self._state = False
         self._device_class = device_class or 'moving'
         self._ads_hub = ads_hub
         self.ads_var = ads_var
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register device notification."""
         def update(name, value):
             """Handle device notifications."""
-            _LOGGER.debug('Variable %s changed its value to %d',
-                          name, value)
+            _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._state = value
             self.schedule_update_ha_state()
 
         self.hass.async_add_job(
             self._ads_hub.add_device_notification,
-            self.ads_var, self._ads_hub.PLCTYPE_BOOL, update
-        )
+            self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
 
     @property
     def name(self):

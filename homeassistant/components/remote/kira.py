@@ -4,14 +4,12 @@ Support for Keene Electronics IR-IP devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.kira/
 """
-import logging
 import functools as ft
+import logging
 
-import homeassistant.components.remote as remote
+from homeassistant.components import remote
+from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.helpers.entity import Entity
-
-from homeassistant.const import (
-    CONF_DEVICE, CONF_NAME)
 
 DOMAIN = 'kira'
 
@@ -20,14 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 CONF_REMOTE = "remote"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Kira platform."""
     if discovery_info:
         name = discovery_info.get(CONF_NAME)
         device = discovery_info.get(CONF_DEVICE)
 
         kira = hass.data[DOMAIN][CONF_REMOTE][name]
-        add_devices([KiraRemote(device, kira)])
+        add_entities([KiraRemote(device, kira)])
     return True
 
 
@@ -50,8 +48,8 @@ class KiraRemote(Entity):
 
     def send_command(self, command, **kwargs):
         """Send a command to one device."""
-        for singel_command in command:
-            code_tuple = (singel_command,
+        for single_command in command:
+            code_tuple = (single_command,
                           kwargs.get(remote.ATTR_DEVICE))
             _LOGGER.info("Sending Command: %s to %s", *code_tuple)
             self._kira.sendCode(code_tuple)

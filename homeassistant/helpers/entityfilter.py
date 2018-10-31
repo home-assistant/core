@@ -74,8 +74,7 @@ def generate_filter(include_domains, include_entities,
             domain = split_entity_id(entity_id)[0]
             if domain in include_d:
                 return entity_id not in exclude_e
-            else:
-                return entity_id in include_e
+            return entity_id in include_e
 
         return entity_filter_4a
 
@@ -88,8 +87,7 @@ def generate_filter(include_domains, include_entities,
             domain = split_entity_id(entity_id)[0]
             if domain in exclude_d:
                 return entity_id in include_e
-            else:
-                return entity_id not in exclude_e
+            return entity_id not in exclude_e
 
         return entity_filter_4b
 

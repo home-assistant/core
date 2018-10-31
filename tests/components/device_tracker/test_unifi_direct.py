@@ -31,7 +31,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
         'unifi_direct.UnifiDeviceScanner'
 
     def setup_method(self, _):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'zone')
 
@@ -45,8 +45,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
 
     @mock.patch(scanner_path,
                 return_value=mock.MagicMock())
-    def test_get_scanner(self, unifi_mock):  \
-            # pylint: disable=invalid-name
+    def test_get_scanner(self, unifi_mock):
         """Test creating an Unifi direct scanner with a password."""
         conf_dict = {
             DOMAIN: {
@@ -67,11 +66,11 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
             assert setup_component(self.hass, DOMAIN, conf_dict)
 
         conf_dict[DOMAIN][CONF_PORT] = 22
-        self.assertEqual(unifi_mock.call_args, mock.call(conf_dict[DOMAIN]))
+        assert unifi_mock.call_args == mock.call(conf_dict[DOMAIN])
 
     @patch('pexpect.pxssh.pxssh')
     def test_get_device_name(self, mock_ssh):
-        """"Testing MAC matching."""
+        """Testing MAC matching."""
         conf_dict = {
             DOMAIN: {
                 CONF_PLATFORM: 'unifi_direct',
@@ -86,16 +85,16 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
         mock_ssh.return_value.before = load_fixture('unifi_direct.txt')
         scanner = get_scanner(self.hass, conf_dict)
         devices = scanner.scan_devices()
-        self.assertEqual(23, len(devices))
-        self.assertEqual("iPhone",
-                         scanner.get_device_name("98:00:c6:56:34:12"))
-        self.assertEqual("iPhone",
-                         scanner.get_device_name("98:00:C6:56:34:12"))
+        assert 23 == len(devices)
+        assert "iPhone" == \
+            scanner.get_device_name("98:00:c6:56:34:12")
+        assert "iPhone" == \
+            scanner.get_device_name("98:00:C6:56:34:12")
 
     @patch('pexpect.pxssh.pxssh.logout')
     @patch('pexpect.pxssh.pxssh.login')
     def test_failed_to_log_in(self, mock_login, mock_logout):
-        """"Testing exception at login results in False."""
+        """Testing exception at login results in False."""
         from pexpect import exceptions
 
         conf_dict = {
@@ -112,7 +111,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
 
         mock_login.side_effect = exceptions.EOF("Test")
         scanner = get_scanner(self.hass, conf_dict)
-        self.assertFalse(scanner)
+        assert not scanner
 
     @patch('pexpect.pxssh.pxssh.logout')
     @patch('pexpect.pxssh.pxssh.login', autospec=True)
@@ -120,7 +119,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
     @patch('pexpect.pxssh.pxssh.sendline')
     def test_to_get_update(self, mock_sendline, mock_prompt, mock_login,
                            mock_logout):
-        """"Testing exception in get_update matching."""
+        """Testing exception in get_update matching."""
         conf_dict = {
             DOMAIN: {
                 CONF_PLATFORM: 'unifi_direct',
@@ -137,16 +136,16 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
         # mock_sendline.side_effect = AssertionError("Test")
         mock_prompt.side_effect = AssertionError("Test")
         devices = scanner._get_update()  # pylint: disable=protected-access
-        self.assertTrue(devices is None)
+        assert devices is None
 
-    def test_good_reponse_parses(self):
+    def test_good_response_parses(self):
         """Test that the response form the AP parses to JSON correctly."""
         response = _response_to_json(load_fixture('unifi_direct.txt'))
-        self.assertTrue(response != {})
+        assert response != {}
 
-    def test_bad_reponse_returns_none(self):
+    def test_bad_response_returns_none(self):
         """Test that a bad response form the AP parses to JSON correctly."""
-        self.assertTrue(_response_to_json("{(}") == {})
+        assert _response_to_json("{(}") == {}
 
 
 def test_config_error():

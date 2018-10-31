@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Nom\u00e9s cal una sola configuraci\u00f3 de Home Assistant iOS."
+        },
+        "step": {
+            "confirm": {
+                "description": "Voleu configurar el component Home Assistant iOS?",
+                "title": "Home Assistant iOS"
+            }
+        },
+        "title": "Home Assistant iOS"
+    }
+}

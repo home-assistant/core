@@ -7,12 +7,12 @@ https://home-assistant.io/components/media_player.openhome/
 import logging
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP, SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_SELECT_SOURCE,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
     MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF)
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 
 REQUIREMENTS = ['openhomedevice==0.4.2']
 
@@ -25,8 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 DEVICES = []
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Openhome platform."""
     from openhomedevice.Device import Device
 
@@ -44,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     device = OpenhomeDevice(hass, device)
 
-    add_devices([device], True)
+    add_entities([device], True)
     DEVICES.append(device)
 
     return True
@@ -156,7 +155,7 @@ class OpenhomeDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._device.Uuid()
 
     @property

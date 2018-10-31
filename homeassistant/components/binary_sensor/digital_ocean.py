@@ -14,7 +14,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.digital_ocean import (
     CONF_DROPLETS, ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME,
     ATTR_FEATURES, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
-    ATTR_REGION, ATTR_VCPUS, DATA_DIGITAL_OCEAN)
+    ATTR_REGION, ATTR_VCPUS, CONF_ATTRIBUTION, DATA_DIGITAL_OCEAN)
+from homeassistant.const import ATTR_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Digital Ocean droplet sensor."""
     digital = hass.data.get(DATA_DIGITAL_OCEAN)
     if not digital:
@@ -43,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             return False
         dev.append(DigitalOceanBinarySensor(digital, droplet_id))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class DigitalOceanBinarySensor(BinarySensorDevice):
@@ -75,6 +76,7 @@ class DigitalOceanBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the Digital Ocean droplet."""
         return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_CREATED_AT: self.data.created_at,
             ATTR_DROPLET_ID: self.data.id,
             ATTR_DROPLET_NAME: self.data.name,

@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, CONF_PAYLOAD)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-import homeassistant.components.pilight as pilight
+from homeassistant.components import pilight
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,14 +26,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_VARIABLE): cv.string,
     vol.Required(CONF_PAYLOAD): vol.Schema(dict),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Pilight Sensor."""
-    add_devices([PilightSensor(
+    add_entities([PilightSensor(
         hass=hass,
         name=config.get(CONF_NAME),
         variable=config.get(CONF_VARIABLE),
@@ -79,10 +78,10 @@ class PilightSensor(Entity):
     def _handle_code(self, call):
         """Handle received code by the pilight-daemon.
 
-        If the code matches the defined playload
+        If the code matches the defined payload
         of this sensor the sensor state is changed accordingly.
         """
-        # Check if received code matches defined playoad
+        # Check if received code matches defined payload
         # True if payload is contained in received code dict, not
         # all items have to match
         if self._payload.items() <= call.data.items():

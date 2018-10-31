@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Non sono presenti dispositivi Sonos in rete.",
+            "single_instance_allowed": "\u00c8 necessaria una sola configurazione di Sonos."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vuoi installare Sonos",
+                "title": "Sonos"
+            }
+        },
+        "title": "Sonos"
+    }
+}

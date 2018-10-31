@@ -4,7 +4,6 @@ Support for Satel Integra zone states- represented as binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.satel_integra/
 """
-import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -20,8 +19,8 @@ DEPENDENCIES = ['satel_integra']
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Satel Integra binary sensor devices."""
     if not discovery_info:
         return
@@ -36,7 +35,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         device = SatelIntegraBinarySensor(zone_num, zone_name, zone_type)
         devices.append(device)
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
 
 class SatelIntegraBinarySensor(BinarySensorDevice):
@@ -49,8 +48,7 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
         self._zone_type = zone_type
         self._state = 0
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_ZONES_UPDATED, self._zones_updated)

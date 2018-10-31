@@ -4,20 +4,35 @@ Support for Z-Wave cover components.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.zwave/
 """
-# Because we do not compile openzwave on CI
-# pylint: disable=import-error
 import logging
+from homeassistant.core import callback
 from homeassistant.components.cover import (
-    DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE)
-from homeassistant.components.zwave import ZWaveDeviceEntity
+    DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION)
 from homeassistant.components import zwave
-from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
-from homeassistant.components.zwave import workaround
+from homeassistant.components.zwave import (
+    ZWaveDeviceEntity, workaround)
 from homeassistant.components.cover import CoverDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
+
+
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old method of setting up Z-Wave covers."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave Cover from Config Entry."""
+    @callback
+    def async_add_cover(cover):
+        """Add Z-Wave Cover."""
+        async_add_entities([cover])
+
+    async_dispatcher_connect(hass, 'zwave_new_cover', async_add_cover)
 
 
 def get_device(hass, values, node_config, **kwargs):
@@ -27,11 +42,10 @@ def get_device(hass, values, node_config, **kwargs):
             zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
             and values.primary.index == 0):
         return ZwaveRollershutter(hass, values, invert_buttons)
-    elif (values.primary.command_class ==
-          zwave.const.COMMAND_CLASS_SWITCH_BINARY):
+    if values.primary.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY:
         return ZwaveGarageDoorSwitch(values)
-    elif (values.primary.command_class ==
-          zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
+    if values.primary.command_class == \
+       zwave.const.COMMAND_CLASS_BARRIER_OPERATOR:
         return ZwaveGarageDoorBarrier(values)
     return None
 
@@ -42,7 +56,6 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     def __init__(self, hass, values, invert_buttons):
         """Initialize the Z-Wave rollershutter."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
-        # pylint: disable=no-member
         self._network = hass.data[zwave.const.DATA_NETWORK]
         self._open_id = None
         self._close_id = None
@@ -85,7 +98,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         if self._current_position is not None:
             if self._current_position <= 5:
                 return 0
-            elif self._current_position >= 95:
+            if self._current_position >= 95:
                 return 100
             return self._current_position
 
@@ -97,9 +110,10 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         """Move the roller shutter down."""
         self._network.manager.pressButton(self._close_id)
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, **kwargs):
         """Move the roller shutter to a specific position."""
-        self.node.set_dimmer(self.values.primary.value_id, position)
+        self.node.set_dimmer(self.values.primary.value_id,
+                             kwargs.get(ATTR_POSITION))
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
@@ -139,11 +153,11 @@ class ZwaveGarageDoorSwitch(ZwaveGarageDoorBase):
         """Return the current position of Zwave garage door."""
         return not self._state
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Close the garage door."""
         self.values.primary.data = False
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Open the garage door."""
         self.values.primary.data = True
 
@@ -158,7 +172,7 @@ class ZwaveGarageDoorBarrier(ZwaveGarageDoorBase):
 
     @property
     def is_closing(self):
-        """Return true if cover is in an closing state."""
+        """Return true if cover is in a closing state."""
         return self._state == "Closing"
 
     @property
@@ -166,10 +180,10 @@ class ZwaveGarageDoorBarrier(ZwaveGarageDoorBase):
         """Return the current position of Zwave garage door."""
         return self._state == "Closed"
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Close the garage door."""
         self.values.primary.data = "Closed"
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Open the garage door."""
         self.values.primary.data = "Opened"

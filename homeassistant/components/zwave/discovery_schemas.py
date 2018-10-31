@@ -16,6 +16,7 @@ DEFAULT_VALUES_SCHEMA = {
 DISCOVERY_SCHEMAS = [
     {const.DISC_COMPONENT: 'binary_sensor',
      const.DISC_GENERIC_DEVICE_CLASS: [
+         const.GENERIC_TYPE_ENTRY_CONTROL,
          const.GENERIC_TYPE_SENSOR_ALARM,
          const.GENERIC_TYPE_SENSOR_BINARY,
          const.GENERIC_TYPE_SWITCH_BINARY,
@@ -36,7 +37,9 @@ DISCOVERY_SCHEMAS = [
              const.DISC_OPTIONAL: True,
          }})},
     {const.DISC_COMPONENT: 'climate',
-     const.DISC_GENERIC_DEVICE_CLASS: [const.GENERIC_TYPE_THERMOSTAT],
+     const.DISC_GENERIC_DEVICE_CLASS: [
+         const.GENERIC_TYPE_THERMOSTAT,
+         const.GENERIC_TYPE_SENSOR_MULTILEVEL],
      const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [
@@ -172,8 +175,10 @@ DISCOVERY_SCHEMAS = [
     {const.DISC_COMPONENT: 'lock',
      const.DISC_GENERIC_DEVICE_CLASS: [const.GENERIC_TYPE_ENTRY_CONTROL],
      const.DISC_SPECIFIC_DEVICE_CLASS: [
+         const.SPECIFIC_TYPE_DOOR_LOCK,
          const.SPECIFIC_TYPE_ADVANCED_DOOR_LOCK,
-         const.SPECIFIC_TYPE_SECURE_KEYPAD_DOOR_LOCK],
+         const.SPECIFIC_TYPE_SECURE_KEYPAD_DOOR_LOCK,
+         const.SPECIFIC_TYPE_SECURE_LOCKBOX],
      const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_DOOR_LOCK],
@@ -206,11 +211,13 @@ DISCOVERY_SCHEMAS = [
                  const.COMMAND_CLASS_SENSOR_MULTILEVEL,
                  const.COMMAND_CLASS_METER,
                  const.COMMAND_CLASS_ALARM,
-                 const.COMMAND_CLASS_SENSOR_ALARM],
+                 const.COMMAND_CLASS_SENSOR_ALARM,
+                 const.COMMAND_CLASS_INDICATOR],
              const.DISC_GENRE: const.GENRE_USER,
          }})},
     {const.DISC_COMPONENT: 'switch',
      const.DISC_GENERIC_DEVICE_CLASS: [
+         const.GENERIC_TYPE_METER,
          const.GENERIC_TYPE_SENSOR_ALARM,
          const.GENERIC_TYPE_SENSOR_BINARY,
          const.GENERIC_TYPE_SWITCH_BINARY,

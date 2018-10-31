@@ -26,16 +26,16 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'CONCORD232'
 DEFAULT_PORT = 5007
 
-SCAN_INTERVAL = timedelta(seconds=1)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 alarm control panel platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -44,10 +44,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     url = 'http://{}:{}'.format(host, port)
 
     try:
-        add_devices([Concord232Alarm(hass, url, name)])
+        add_entities([Concord232Alarm(hass, url, name)])
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
-        return False
+        return
 
 
 class Concord232Alarm(alarm.AlarmControlPanel):
@@ -80,7 +80,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return the characters if code is defined."""
-        return '[0-9]{4}([0-9]{2})?'
+        return 'Number'
 
     @property
     def state(self):
@@ -107,7 +107,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
             newstate = STATE_ALARM_ARMED_AWAY
 
         if not newstate == self._state:
-            _LOGGER.info("State Change from %s to %s", self._state, newstate)
+            _LOGGER.info("State change from %s to %s", self._state, newstate)
             self._state = newstate
         return self._state
 

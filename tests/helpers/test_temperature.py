@@ -8,15 +8,16 @@ from homeassistant.const import (
     PRECISION_TENTHS)
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.util.unit_system import METRIC_SYSTEM
+import pytest
 
 TEMP = 24.636626
 
 
 class TestHelpersTemperature(unittest.TestCase):
-    """Setup the temperature tests."""
+    """Set up the temperature tests."""
 
     def setUp(self):
-        """Setup the tests."""
+        """Set up the tests."""
         self.hass = get_test_home_assistant()
         self.hass.config.unit_system = METRIC_SYSTEM
 
@@ -27,23 +28,23 @@ class TestHelpersTemperature(unittest.TestCase):
     def test_temperature_not_a_number(self):
         """Test that temperature is a number."""
         temp = "Temperature"
-        with self.assertRaises(Exception) as context:
+        with pytest.raises(Exception) as exception:
             display_temp(self.hass, temp, TEMP_CELSIUS, PRECISION_HALVES)
 
-        self.assertTrue("Temperature is not a number: {}".format(temp)
-                        in str(context.exception))
+        assert "Temperature is not a number: {}".format(temp) \
+            in str(exception)
 
     def test_celsius_halves(self):
         """Test temperature to celsius rounding to halves."""
-        self.assertEqual(24.5, display_temp(
-            self.hass, TEMP, TEMP_CELSIUS, PRECISION_HALVES))
+        assert 24.5 == display_temp(
+            self.hass, TEMP, TEMP_CELSIUS, PRECISION_HALVES)
 
     def test_celsius_tenths(self):
         """Test temperature to celsius rounding to tenths."""
-        self.assertEqual(24.6, display_temp(
-            self.hass, TEMP, TEMP_CELSIUS, PRECISION_TENTHS))
+        assert 24.6 == display_temp(
+            self.hass, TEMP, TEMP_CELSIUS, PRECISION_TENTHS)
 
     def test_fahrenheit_wholes(self):
         """Test temperature to fahrenheit rounding to wholes."""
-        self.assertEqual(-4, display_temp(
-            self.hass, TEMP, TEMP_FAHRENHEIT, PRECISION_WHOLE))
+        assert -4 == display_temp(
+            self.hass, TEMP, TEMP_FAHRENHEIT, PRECISION_WHOLE)

@@ -4,7 +4,6 @@ Support for displaying the minimal and the maximal value.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.min_max/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -23,12 +22,14 @@ ATTR_MIN_VALUE = 'min_value'
 ATTR_MAX_VALUE = 'max_value'
 ATTR_COUNT_SENSORS = 'count_sensors'
 ATTR_MEAN = 'mean'
+ATTR_LAST = 'last'
 
 ATTR_TO_PROPERTY = [
     ATTR_COUNT_SENSORS,
     ATTR_MAX_VALUE,
     ATTR_MEAN,
     ATTR_MIN_VALUE,
+    ATTR_LAST,
 ]
 
 CONF_ENTITY_IDS = 'entity_ids'
@@ -40,6 +41,7 @@ SENSOR_TYPES = {
     ATTR_MIN_VALUE: 'min',
     ATTR_MAX_VALUE: 'max',
     ATTR_MEAN: 'mean',
+    ATTR_LAST: 'last',
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -51,15 +53,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the min/max/mean sensor."""
     entity_ids = config.get(CONF_ENTITY_IDS)
     name = config.get(CONF_NAME)
     sensor_type = config.get(CONF_TYPE)
     round_digits = config.get(CONF_ROUND_DIGITS)
 
-    async_add_devices(
+    async_add_entities(
         [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)],
         True)
     return True
@@ -116,12 +118,11 @@ class MinMaxSensor(Entity):
                      if self._sensor_type == v)).capitalize()
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
-        self.min_value = self.max_value = self.mean = STATE_UNKNOWN
+        self.min_value = self.max_value = self.mean = self.last = STATE_UNKNOWN
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
         @callback
-        # pylint: disable=invalid-name
         def async_min_max_sensor_state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
             if new_state.state is None or new_state.state in STATE_UNKNOWN:
@@ -142,6 +143,7 @@ class MinMaxSensor(Entity):
 
             try:
                 self.states[entity] = float(new_state.state)
+                self.last = float(new_state.state)
             except ValueError:
                 _LOGGER.warning("Unable to store state. "
                                 "Only numerical states are supported")
@@ -190,8 +192,7 @@ class MinMaxSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data and updates the states."""
         sensor_values = [self.states[k] for k in self._entity_ids
                          if k in self.states]

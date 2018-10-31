@@ -1,6 +1,7 @@
 """Helpers for sun events."""
 import datetime
 
+from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 from homeassistant.loader import bind_hass
@@ -86,7 +87,9 @@ def is_up(hass, utc_point_in_time=None):
     if utc_point_in_time is None:
         utc_point_in_time = dt_util.utcnow()
 
-    next_sunrise = get_astral_event_next(hass, 'sunrise', utc_point_in_time)
-    next_sunset = get_astral_event_next(hass, 'sunset', utc_point_in_time)
+    next_sunrise = get_astral_event_next(hass, SUN_EVENT_SUNRISE,
+                                         utc_point_in_time)
+    next_sunset = get_astral_event_next(hass, SUN_EVENT_SUNSET,
+                                        utc_point_in_time)
 
     return next_sunrise > next_sunset

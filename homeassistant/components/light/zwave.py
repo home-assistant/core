@@ -6,17 +6,16 @@ https://home-assistant.io/components/light.zwave/
 """
 import logging
 
-# Because we do not compile openzwave on CI
-# pylint: disable=import-error
 from threading import Timer
-from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
-    ATTR_RGB_COLOR, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, DOMAIN, Light
+from homeassistant.core import callback
+from homeassistant.components.light import (
+    ATTR_WHITE_VALUE, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
+    ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR,
+    SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, DOMAIN, Light)
 from homeassistant.components import zwave
-from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.util.color import color_temperature_mired_to_kelvin, \
-    color_temperature_to_rgb, color_rgb_to_rgbw, color_rgbw_to_rgb
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +44,22 @@ TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
 TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Old method of setting up Z-Wave lights."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave Light from Config Entry."""
+    @callback
+    def async_add_light(light):
+        """Add Z-Wave Light."""
+        async_add_entities([light])
+
+    async_dispatcher_connect(hass, 'zwave_new_light', async_add_light)
+
+
 def get_device(node, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
@@ -61,14 +76,25 @@ def get_device(node, values, node_config, **kwargs):
 def brightness_state(value):
     """Return the brightness and state."""
     if value.data > 0:
-        return round((value.data / 99) * 255, 0), STATE_ON
+        return round((value.data / 99) * 255), STATE_ON
     return 0, STATE_OFF
 
 
-def ct_to_rgb(temp):
-    """Convert color temperature (mireds) to RGB."""
+def byte_to_zwave_brightness(value):
+    """Convert brightness in 0-255 scale to 0-99 scale.
+
+    `value` -- (int) Brightness byte value from 0-255.
+    """
+    if value > 0:
+        return max(1, int((value / 255) * 99))
+    return 0
+
+
+def ct_to_hs(temp):
+    """Convert color temperature (mireds) to hs."""
     colorlist = list(
-        color_temperature_to_rgb(color_temperature_mired_to_kelvin(temp)))
+        color_util.color_temperature_to_hs(
+            color_util.color_temperature_mired_to_kelvin(temp)))
     return [int(val) for val in colorlist]
 
 
@@ -188,7 +214,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         # brightness. Level 255 means to set it to previous value.
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            brightness = int((self._brightness / 255) * 99)
+            brightness = byte_to_zwave_brightness(self._brightness)
         else:
             brightness = 255
 
@@ -209,8 +235,9 @@ class ZwaveColorLight(ZwaveDimmer):
     def __init__(self, values, refresh, delay):
         """Initialize the light."""
         self._color_channels = None
-        self._rgb = None
+        self._hs = None
         self._ct = None
+        self._white = None
 
         super().__init__(values, refresh, delay)
 
@@ -218,9 +245,12 @@ class ZwaveColorLight(ZwaveDimmer):
         """Call when a new value is added to this entity."""
         super().value_added()
 
-        self._supported_features |= SUPPORT_RGB_COLOR
+        self._supported_features |= SUPPORT_COLOR
         if self._zw098:
             self._supported_features |= SUPPORT_COLOR_TEMP
+        elif self._color_channels is not None and self._color_channels & (
+                COLOR_CHANNEL_WARM_WHITE | COLOR_CHANNEL_COLD_WHITE):
+            self._supported_features |= SUPPORT_WHITE_VALUE
 
     def update_properties(self):
         """Update internal properties based on zwave values."""
@@ -238,10 +268,11 @@ class ZwaveColorLight(ZwaveDimmer):
         data = self.values.color.data
 
         # RGB is always present in the openzwave color data string.
-        self._rgb = [
+        rgb = [
             int(data[1:3], 16),
             int(data[3:5], 16),
             int(data[5:7], 16)]
+        self._hs = color_util.color_RGB_to_hs(*rgb)
 
         # Parse remaining color channels. Openzwave appends white channels
         # that are present.
@@ -267,30 +298,35 @@ class ZwaveColorLight(ZwaveDimmer):
         if self._zw098:
             if warm_white > 0:
                 self._ct = TEMP_WARM_HASS
-                self._rgb = ct_to_rgb(self._ct)
+                self._hs = ct_to_hs(self._ct)
             elif cold_white > 0:
                 self._ct = TEMP_COLD_HASS
-                self._rgb = ct_to_rgb(self._ct)
+                self._hs = ct_to_hs(self._ct)
             else:
                 # RGB color is being used. Just report midpoint.
                 self._ct = TEMP_MID_HASS
 
         elif self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-            self._rgb = list(color_rgbw_to_rgb(*self._rgb, w=warm_white))
+            self._white = warm_white
 
         elif self._color_channels & COLOR_CHANNEL_COLD_WHITE:
-            self._rgb = list(color_rgbw_to_rgb(*self._rgb, w=cold_white))
+            self._white = cold_white
 
         # If no rgb channels supported, report None.
         if not (self._color_channels & COLOR_CHANNEL_RED or
                 self._color_channels & COLOR_CHANNEL_GREEN or
                 self._color_channels & COLOR_CHANNEL_BLUE):
-            self._rgb = None
+            self._hs = None
 
     @property
-    def rgb_color(self):
-        """Return the rgb color."""
-        return self._rgb
+    def hs_color(self):
+        """Return the hs color."""
+        return self._hs
+
+    @property
+    def white_value(self):
+        """Return the white value of this light between 0..255."""
+        return self._white
 
     @property
     def color_temp(self):
@@ -300,6 +336,9 @@ class ZwaveColorLight(ZwaveDimmer):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         rgbw = None
+
+        if ATTR_WHITE_VALUE in kwargs:
+            self._white = kwargs[ATTR_WHITE_VALUE]
 
         if ATTR_COLOR_TEMP in kwargs:
             # Color temperature. With the AEOTEC ZW098 bulb, only two color
@@ -312,20 +351,19 @@ class ZwaveColorLight(ZwaveDimmer):
                 else:
                     self._ct = TEMP_COLD_HASS
                     rgbw = '#00000000ff'
+        elif ATTR_HS_COLOR in kwargs:
+            self._hs = kwargs[ATTR_HS_COLOR]
+            if ATTR_WHITE_VALUE not in kwargs:
+                # white LED must be off in order for color to work
+                self._white = 0
 
-        elif ATTR_RGB_COLOR in kwargs:
-            self._rgb = kwargs[ATTR_RGB_COLOR]
-            if (not self._zw098 and (
-                    self._color_channels & COLOR_CHANNEL_WARM_WHITE or
-                    self._color_channels & COLOR_CHANNEL_COLD_WHITE)):
-                rgbw = '#'
-                for colorval in color_rgb_to_rgbw(*self._rgb):
-                    rgbw += format(colorval, '02x')
-                rgbw += '00'
+        if ATTR_WHITE_VALUE in kwargs or ATTR_HS_COLOR in kwargs:
+            rgbw = '#'
+            for colorval in color_util.color_hs_to_RGB(*self._hs):
+                rgbw += format(colorval, '02x')
+            if self._white is not None:
+                rgbw += format(self._white, '02x') + '00'
             else:
-                rgbw = '#'
-                for colorval in self._rgb:
-                    rgbw += format(colorval, '02x')
                 rgbw += '0000'
 
         if rgbw and self.values.color:

@@ -1,7 +1,7 @@
 """
 Support for Volvo heater.
 
-This platform uses the Telldus Live online service.
+This platform uses the Volvo online service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.volvooncall/
@@ -14,11 +14,11 @@ from homeassistant.helpers.entity import ToggleEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Tellstick switches."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up a Volvo switch."""
     if discovery_info is None:
         return
-    add_devices([VolvoSwitch(hass, *discovery_info)])
+    add_entities([VolvoSwitch(hass, *discovery_info)])
 
 
 class VolvoSwitch(VolvoEntity, ToggleEntity):

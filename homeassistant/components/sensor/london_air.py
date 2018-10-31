@@ -4,22 +4,24 @@ Sensor for checking the status of London air.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.london_air/
 """
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import STATE_UNKNOWN
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_LOCATIONS = 'locations'
+
 SCAN_INTERVAL = timedelta(minutes=30)
+
 AUTHORITIES = [
     'Barking and Dagenham',
     'Bexley',
@@ -48,6 +50,7 @@ AUTHORITIES = [
     'Tower Hamlets',
     'Wandsworth',
     'Westminster']
+
 URL = ('http://api.erg.kcl.ac.uk/AirQuality/Hourly/'
        'MonitoringIndex/GroupName=London/Json')
 
@@ -57,18 +60,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Tube sensor."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the London Air sensor."""
     data = APIData()
     data.update()
     sensors = []
     for name in config.get(CONF_LOCATIONS):
         sensors.append(AirSensor(name, data))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
-class APIData(object):
+class APIData:
     """Get the latest data for all authorities."""
 
     def __init__(self):
@@ -199,7 +202,7 @@ def parse_site(entry_sites_data):
 
 
 def parse_api_response(response):
-    """API can return dict or list of data so need to check."""
+    """Parse return dict or list of data from API."""
     data = dict.fromkeys(AUTHORITIES)
     for authority in AUTHORITIES:
         for entry in response['HourlyAirQualityIndex']['LocalAuthority']:

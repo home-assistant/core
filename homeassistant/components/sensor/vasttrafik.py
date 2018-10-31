@@ -30,6 +30,7 @@ CONF_DELAY = 'delay'
 CONF_DEPARTURES = 'departures'
 CONF_FROM = 'from'
 CONF_HEADING = 'heading'
+CONF_LINES = 'lines'
 CONF_KEY = 'key'
 CONF_SECRET = 'secret'
 
@@ -46,11 +47,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Required(CONF_FROM): cv.string,
         vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
         vol.Optional(CONF_HEADING): cv.string,
+        vol.Optional(CONF_LINES, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_NAME): cv.string}]
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
     import vasttrafik
     planner = vasttrafik.JournyPlanner(
@@ -61,14 +64,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             VasttrafikDepartureSensor(
                 vasttrafik, planner, departure.get(CONF_NAME),
                 departure.get(CONF_FROM), departure.get(CONF_HEADING),
-                departure.get(CONF_DELAY)))
-    add_devices(sensors, True)
+                departure.get(CONF_LINES), departure.get(CONF_DELAY)))
+    add_entities(sensors, True)
 
 
 class VasttrafikDepartureSensor(Entity):
     """Implementation of a Vasttrafik Departure Sensor."""
 
-    def __init__(self, vasttrafik, planner, name, departure, heading, delay):
+    def __init__(self, vasttrafik, planner, name, departure, heading,
+                 lines, delay):
         """Initialize the sensor."""
         self._vasttrafik = vasttrafik
         self._planner = planner
@@ -76,6 +80,7 @@ class VasttrafikDepartureSensor(Entity):
         self._departure = planner.location_name(departure)[0]
         self._heading = (planner.location_name(heading)[0]
                          if heading else None)
+        self._lines = lines if lines else None
         self._delay = timedelta(minutes=delay)
         self._departureboard = None
 
@@ -94,15 +99,18 @@ class VasttrafikDepartureSensor(Entity):
         """Return the state attributes."""
         if not self._departureboard:
             return
-        departure = self._departureboard[0]
-        params = {
-            ATTR_ACCESSIBILITY: departure.get('accessibility', None),
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_DIRECTION: departure.get('direction', None),
-            ATTR_LINE: departure.get('sname', None),
-            ATTR_TRACK: departure.get('track', None),
-            }
-        return {k: v for k, v in params.items() if v}
+
+        for departure in self._departureboard:
+            line = departure.get('sname')
+            if not self._lines or line in self._lines:
+                params = {
+                    ATTR_ACCESSIBILITY: departure.get('accessibility'),
+                    ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                    ATTR_DIRECTION: departure.get('direction'),
+                    ATTR_LINE: departure.get('sname'),
+                    ATTR_TRACK: departure.get('track'),
+                    }
+                return {k: v for k, v in params.items() if v}
 
     @property
     def state(self):
@@ -113,9 +121,18 @@ class VasttrafikDepartureSensor(Entity):
                 self._departure['name'],
                 self._heading['name'] if self._heading else 'ANY')
             return
-        if 'rtTime' in self._departureboard[0]:
-            return self._departureboard[0]['rtTime']
-        return self._departureboard[0]['time']
+        for departure in self._departureboard:
+            line = departure.get('sname')
+            if not self._lines or line in self._lines:
+                if 'rtTime' in self._departureboard[0]:
+                    return self._departureboard[0]['rtTime']
+                return self._departureboard[0]['time']
+        # No departures of given lines found
+        _LOGGER.debug(
+            "No departures from %s heading %s on line(s) %s",
+            self._departure['name'],
+            self._heading['name'] if self._heading else 'ANY',
+            ', '.join((str(line) for line in self._lines)))
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

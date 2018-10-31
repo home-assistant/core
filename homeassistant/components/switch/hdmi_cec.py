@@ -18,19 +18,19 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return HDMI devices as switches."""
     if ATTR_NEW in discovery_info:
         _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
-        add_devices(CecSwitchDevice(hass, hass.data.get(device),
-                                    hass.data.get(device).logical_address) for
-                    device in discovery_info[ATTR_NEW])
+        add_entities(CecSwitchDevice(hass, hass.data.get(device),
+                                     hass.data.get(device).logical_address) for
+                     device in discovery_info[ATTR_NEW])
 
 
 class CecSwitchDevice(CecDevice, SwitchDevice):
     """Representation of a HDMI device as a Switch."""
 
-    def __init__(self, hass: HomeAssistant, device, logical):
+    def __init__(self, hass: HomeAssistant, device, logical) -> None:
         """Initialize the HDMI device."""
         CecDevice.__init__(self, hass, device, logical)
         self.entity_id = "%s.%s_%s" % (
@@ -47,7 +47,7 @@ class CecSwitchDevice(CecDevice, SwitchDevice):
         self._device.turn_off()
         self._state = STATE_ON
 
-    def toggle(self):
+    def toggle(self, **kwargs):
         """Toggle the entity."""
         self._device.toggle()
         if self._state == STATE_ON:

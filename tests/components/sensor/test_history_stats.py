@@ -4,6 +4,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import setup_component
 from homeassistant.components.sensor.history_stats import HistoryStatsSensor
 import homeassistant.core as ha
@@ -11,6 +12,7 @@ from homeassistant.helpers.template import Template
 import homeassistant.util.dt as dt_util
 
 from tests.common import init_recorder_component, get_test_home_assistant
+import pytest
 
 
 class TestHistoryStatsSensor(unittest.TestCase):
@@ -41,10 +43,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, 'sensor', config))
+        assert setup_component(self.hass, 'sensor', config)
 
-        state = self.hass.states.get('sensor.test').as_dict()
-        self.assertEqual(state['state'], '0')
+        state = self.hass.states.get('sensor.test')
+        assert state.state == STATE_UNKNOWN
 
     def test_period_parsing(self):
         """Test the conversion from templates to period."""
@@ -63,24 +65,24 @@ class TestHistoryStatsSensor(unittest.TestCase):
         sensor2_start, sensor2_end = sensor2._period
 
         # Start = 00:00:00
-        self.assertEqual(sensor1_start.hour, 0)
-        self.assertEqual(sensor1_start.minute, 0)
-        self.assertEqual(sensor1_start.second, 0)
+        assert sensor1_start.hour == 0
+        assert sensor1_start.minute == 0
+        assert sensor1_start.second == 0
 
         # End = 02:01:00
-        self.assertEqual(sensor1_end.hour, 2)
-        self.assertEqual(sensor1_end.minute, 1)
-        self.assertEqual(sensor1_end.second, 0)
+        assert sensor1_end.hour == 2
+        assert sensor1_end.minute == 1
+        assert sensor1_end.second == 0
 
         # Start = 21:59:00
-        self.assertEqual(sensor2_start.hour, 21)
-        self.assertEqual(sensor2_start.minute, 59)
-        self.assertEqual(sensor2_start.second, 0)
+        assert sensor2_start.hour == 21
+        assert sensor2_start.minute == 59
+        assert sensor2_start.second == 0
 
         # End = 00:00:00
-        self.assertEqual(sensor2_end.hour, 0)
-        self.assertEqual(sensor2_end.minute, 0)
-        self.assertEqual(sensor2_end.second, 0)
+        assert sensor2_end.hour == 0
+        assert sensor2_end.minute == 0
+        assert sensor2_end.second == 0
 
     def test_measure(self):
         """Test the history statistics sensor measure."""
@@ -118,9 +120,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
             self.hass, 'binary_sensor.test_id', 'on', start, end, None,
             'ratio', 'test')
 
-        self.assertEqual(sensor1._type, 'time')
-        self.assertEqual(sensor3._type, 'count')
-        self.assertEqual(sensor4._type, 'ratio')
+        assert sensor1._type == 'time'
+        assert sensor3._type == 'count'
+        assert sensor4._type == 'ratio'
 
         with patch('homeassistant.components.history.'
                    'state_changes_during_period', return_value=fake_states):
@@ -131,10 +133,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 sensor3.update()
                 sensor4.update()
 
-        self.assertEqual(sensor1.state, 0.5)
-        self.assertEqual(sensor2.state, 0)
-        self.assertEqual(sensor3.state, 2)
-        self.assertEqual(sensor4.state, 50)
+        assert sensor1.state == 0.5
+        assert sensor2.state is None
+        assert sensor3.state == 2
+        assert sensor4.state == 50
 
     def test_wrong_date(self):
         """Test when start or end value is not a timestamp or a date."""
@@ -152,8 +154,8 @@ class TestHistoryStatsSensor(unittest.TestCase):
         sensor1.update_period()
         sensor2.update_period()
 
-        self.assertEqual(before_update1, sensor1._period)
-        self.assertEqual(before_update2, sensor2._period)
+        assert before_update1 == sensor1._period
+        assert before_update2 == sensor2._period
 
     def test_wrong_duration(self):
         """Test when duration value is not a timedelta."""
@@ -172,9 +174,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
         }
 
         setup_component(self.hass, 'sensor', config)
-        self.assertEqual(self.hass.states.get('sensor.test'), None)
-        self.assertRaises(TypeError,
-                          setup_component(self.hass, 'sensor', config))
+        assert self.hass.states.get('sensor.test')is None
+        with pytest.raises(TypeError):
+            setup_component(self.hass, 'sensor', config)()
 
     def test_bad_template(self):
         """Test Exception when the template cannot be parsed."""
@@ -192,8 +194,8 @@ class TestHistoryStatsSensor(unittest.TestCase):
         sensor1.update_period()
         sensor2.update_period()
 
-        self.assertEqual(before_update1, sensor1._period)
-        self.assertEqual(before_update2, sensor2._period)
+        assert before_update1 == sensor1._period
+        assert before_update2 == sensor2._period
 
     def test_not_enough_arguments(self):
         """Test config when not enough arguments provided."""
@@ -211,9 +213,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
         }
 
         setup_component(self.hass, 'sensor', config)
-        self.assertEqual(self.hass.states.get('sensor.test'), None)
-        self.assertRaises(TypeError,
-                          setup_component(self.hass, 'sensor', config))
+        assert self.hass.states.get('sensor.test')is None
+        with pytest.raises(TypeError):
+            setup_component(self.hass, 'sensor', config)()
 
     def test_too_many_arguments(self):
         """Test config when too many arguments provided."""
@@ -233,9 +235,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
         }
 
         setup_component(self.hass, 'sensor', config)
-        self.assertEqual(self.hass.states.get('sensor.test'), None)
-        self.assertRaises(TypeError,
-                          setup_component(self.hass, 'sensor', config))
+        assert self.hass.states.get('sensor.test')is None
+        with pytest.raises(TypeError):
+            setup_component(self.hass, 'sensor', config)()
 
     def init_recorder(self):
         """Initialize the recorder."""

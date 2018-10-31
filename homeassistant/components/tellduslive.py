@@ -7,6 +7,8 @@ https://home-assistant.io/components/tellduslive/
 from datetime import datetime, timedelta
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME,
     CONF_TOKEN, CONF_HOST,
@@ -18,7 +20,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.util.json import load_json, save_json
-import voluptuous as vol
 
 APPLICATION_NAME = 'Home Assistant'
 
@@ -205,7 +206,7 @@ def setup(hass, config, session=None):
     return True
 
 
-class TelldusLiveClient(object):
+class TelldusLiveClient:
     """Get the latest data and update the states."""
 
     def __init__(self, hass, config, session):
@@ -239,11 +240,11 @@ class TelldusLiveClient(object):
             from tellduslive import (DIM, UP, TURNON)
             if device.methods & DIM:
                 return 'light'
-            elif device.methods & UP:
+            if device.methods & UP:
                 return 'cover'
-            elif device.methods & TURNON:
+            if device.methods & TURNON:
                 return 'switch'
-            elif device.methods == 0:
+            if device.methods == 0:
                 return 'binary_sensor'
             _LOGGER.warning(
                 "Unidentified device type (methods: %d)", device.methods)
@@ -348,12 +349,11 @@ class TelldusLiveEntity(Entity):
                                  BATTERY_OK)
         if self.device.battery == BATTERY_LOW:
             return 1
-        elif self.device.battery == BATTERY_UNKNOWN:
+        if self.device.battery == BATTERY_UNKNOWN:
             return None
-        elif self.device.battery == BATTERY_OK:
+        if self.device.battery == BATTERY_OK:
             return 100
-        else:
-            return self.device.battery  # Percentage
+        return self.device.battery  # Percentage
 
     @property
     def _last_updated(self):

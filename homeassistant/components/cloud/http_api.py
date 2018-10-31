@@ -3,29 +3,62 @@ import asyncio
 from functools import wraps
 import logging
 
-import voluptuous as vol
 import async_timeout
+import voluptuous as vol
 
-from homeassistant.components.http import (
-    HomeAssistantView, RequestDataValidator)
+from homeassistant.core import callback
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
+from homeassistant.components import websocket_api
 
 from . import auth_api
 from .const import DOMAIN, REQUEST_TIMEOUT
+from .iot import STATE_DISCONNECTED, STATE_CONNECTED
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup(hass):
-    """Initialize the HTTP api."""
+WS_TYPE_STATUS = 'cloud/status'
+SCHEMA_WS_STATUS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_STATUS,
+})
+
+
+WS_TYPE_UPDATE_PREFS = 'cloud/update_prefs'
+SCHEMA_WS_UPDATE_PREFS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_UPDATE_PREFS,
+    vol.Optional('google_enabled'): bool,
+    vol.Optional('alexa_enabled'): bool,
+})
+
+
+WS_TYPE_SUBSCRIPTION = 'cloud/subscription'
+SCHEMA_WS_SUBSCRIPTION = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_SUBSCRIPTION,
+})
+
+
+async def async_setup(hass):
+    """Initialize the HTTP API."""
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_STATUS, websocket_cloud_status,
+        SCHEMA_WS_STATUS
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_SUBSCRIPTION, websocket_subscription,
+        SCHEMA_WS_SUBSCRIPTION
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_UPDATE_PREFS, websocket_update_prefs,
+        SCHEMA_WS_UPDATE_PREFS
+    )
+    hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
-    hass.http.register_view(CloudAccountView)
     hass.http.register_view(CloudRegisterView)
-    hass.http.register_view(CloudConfirmRegisterView)
     hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
-    hass.http.register_view(CloudConfirmForgotPasswordView)
 
 
 _CLOUD_ERRORS = {
@@ -33,20 +66,17 @@ _CLOUD_ERRORS = {
     auth_api.UserNotConfirmed: (400, 'Email not confirmed.'),
     auth_api.Unauthenticated: (401, 'Authentication failed.'),
     auth_api.PasswordChangeRequired: (400, 'Password change required.'),
-    auth_api.ExpiredCode: (400, 'Confirmation code has expired.'),
-    auth_api.InvalidCode: (400, 'Invalid confirmation code.'),
     asyncio.TimeoutError: (502, 'Unable to reach the Home Assistant cloud.')
 }
 
 
 def _handle_cloud_errors(handler):
-    """Helper method to handle auth errors."""
-    @asyncio.coroutine
+    """Handle auth errors."""
     @wraps(handler)
-    def error_handler(view, request, *args, **kwargs):
+    async def error_handler(view, request, *args, **kwargs):
         """Handle exceptions that raise from the wrapped request handler."""
         try:
-            result = yield from handler(view, request, *args, **kwargs)
+            result = await handler(view, request, *args, **kwargs)
             return result
 
         except (auth_api.CloudError, asyncio.TimeoutError) as err:
@@ -60,6 +90,31 @@ def _handle_cloud_errors(handler):
     return error_handler
 
 
+class GoogleActionsSyncView(HomeAssistantView):
+    """Trigger a Google Actions Smart Home Sync."""
+
+    url = '/api/cloud/google_actions/sync'
+    name = 'api:cloud:google_actions/sync'
+
+    @_handle_cloud_errors
+    async def post(self, request):
+        """Trigger a Google Actions sync."""
+        hass = request.app['hass']
+        cloud = hass.data[DOMAIN]
+        websession = hass.helpers.aiohttp_client.async_get_clientsession()
+
+        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+            await hass.async_add_job(auth_api.check_token, cloud)
+
+        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+            req = await websession.post(
+                cloud.google_actions_sync_url, headers={
+                    'authorization': cloud.id_token
+                })
+
+        return self.json({}, status_code=req.status)
+
+
 class CloudLoginView(HomeAssistantView):
     """Login to Home Assistant cloud."""
 
@@ -71,20 +126,17 @@ class CloudLoginView(HomeAssistantView):
         vol.Required('email'): str,
         vol.Required('password'): str,
     }))
-    @asyncio.coroutine
-    def post(self, request, data):
+    async def post(self, request, data):
         """Handle login request."""
         hass = request.app['hass']
         cloud = hass.data[DOMAIN]
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(auth_api.login, cloud, data['email'],
-                                          data['password'])
+            await hass.async_add_job(auth_api.login, cloud, data['email'],
+                                     data['password'])
 
         hass.async_add_job(cloud.iot.connect)
-        # Allow cloud to start connecting.
-        yield from asyncio.sleep(0, loop=hass.loop)
-        return self.json(_account_data(cloud))
+        return self.json({'success': True})
 
 
 class CloudLogoutView(HomeAssistantView):
@@ -94,34 +146,15 @@ class CloudLogoutView(HomeAssistantView):
     name = 'api:cloud:logout'
 
     @_handle_cloud_errors
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle logout request."""
         hass = request.app['hass']
         cloud = hass.data[DOMAIN]
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from cloud.logout()
+            await cloud.logout()
 
         return self.json_message('ok')
-
-
-class CloudAccountView(HomeAssistantView):
-    """View to retrieve account info."""
-
-    url = '/api/cloud/account'
-    name = 'api:cloud:account'
-
-    @asyncio.coroutine
-    def get(self, request):
-        """Get account info."""
-        hass = request.app['hass']
-        cloud = hass.data[DOMAIN]
-
-        if not cloud.is_logged_in:
-            return self.json_message('Not logged in', 400)
-
-        return self.json(_account_data(cloud))
 
 
 class CloudRegisterView(HomeAssistantView):
@@ -135,40 +168,14 @@ class CloudRegisterView(HomeAssistantView):
         vol.Required('email'): str,
         vol.Required('password'): vol.All(str, vol.Length(min=6)),
     }))
-    @asyncio.coroutine
-    def post(self, request, data):
+    async def post(self, request, data):
         """Handle registration request."""
         hass = request.app['hass']
         cloud = hass.data[DOMAIN]
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 auth_api.register, cloud, data['email'], data['password'])
-
-        return self.json_message('ok')
-
-
-class CloudConfirmRegisterView(HomeAssistantView):
-    """Confirm registration on the Home Assistant cloud."""
-
-    url = '/api/cloud/confirm_register'
-    name = 'api:cloud:confirm_register'
-
-    @_handle_cloud_errors
-    @RequestDataValidator(vol.Schema({
-        vol.Required('confirmation_code'): str,
-        vol.Required('email'): str,
-    }))
-    @asyncio.coroutine
-    def post(self, request, data):
-        """Handle registration confirmation request."""
-        hass = request.app['hass']
-        cloud = hass.data[DOMAIN]
-
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
-                auth_api.confirm_register, cloud, data['confirmation_code'],
-                data['email'])
 
         return self.json_message('ok')
 
@@ -183,14 +190,13 @@ class CloudResendConfirmView(HomeAssistantView):
     @RequestDataValidator(vol.Schema({
         vol.Required('email'): str,
     }))
-    @asyncio.coroutine
-    def post(self, request, data):
+    async def post(self, request, data):
         """Handle resending confirm email code request."""
         hass = request.app['hass']
         cloud = hass.data[DOMAIN]
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 auth_api.resend_email_confirm, cloud, data['email'])
 
         return self.json_message('ok')
@@ -206,52 +212,100 @@ class CloudForgotPasswordView(HomeAssistantView):
     @RequestDataValidator(vol.Schema({
         vol.Required('email'): str,
     }))
-    @asyncio.coroutine
-    def post(self, request, data):
+    async def post(self, request, data):
         """Handle forgot password request."""
         hass = request.app['hass']
         cloud = hass.data[DOMAIN]
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 auth_api.forgot_password, cloud, data['email'])
 
         return self.json_message('ok')
 
 
-class CloudConfirmForgotPasswordView(HomeAssistantView):
-    """View to finish Forgot Password flow.."""
+@callback
+def websocket_cloud_status(hass, connection, msg):
+    """Handle request for account info.
 
-    url = '/api/cloud/confirm_forgot_password'
-    name = 'api:cloud:confirm_forgot_password'
+    Async friendly.
+    """
+    cloud = hass.data[DOMAIN]
+    connection.send_message(
+        websocket_api.result_message(msg['id'], _account_data(cloud)))
 
-    @_handle_cloud_errors
-    @RequestDataValidator(vol.Schema({
-        vol.Required('confirmation_code'): str,
-        vol.Required('email'): str,
-        vol.Required('new_password'): vol.All(str, vol.Length(min=6))
-    }))
-    @asyncio.coroutine
-    def post(self, request, data):
-        """Handle forgot password confirm request."""
-        hass = request.app['hass']
-        cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
-                auth_api.confirm_forgot_password, cloud,
-                data['confirmation_code'], data['email'],
-                data['new_password'])
+@websocket_api.async_response
+async def websocket_subscription(hass, connection, msg):
+    """Handle request for account info."""
+    cloud = hass.data[DOMAIN]
 
-        return self.json_message('ok')
+    if not cloud.is_logged_in:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'not_logged_in',
+            'You need to be logged in to the cloud.'))
+        return
+
+    with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        response = await cloud.fetch_subscription_info()
+
+    if response.status != 200:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'request_failed', 'Failed to request subscription'))
+
+    data = await response.json()
+
+    # Check if a user is subscribed but local info is outdated
+    # In that case, let's refresh and reconnect
+    if data.get('provider') and cloud.iot.state != STATE_CONNECTED:
+        _LOGGER.debug(
+            "Found disconnected account with valid subscriotion, connecting")
+        await hass.async_add_executor_job(
+            auth_api.renew_access_token, cloud)
+
+        # Cancel reconnect in progress
+        if cloud.iot.state != STATE_DISCONNECTED:
+            await cloud.iot.disconnect()
+
+        hass.async_create_task(cloud.iot.connect())
+
+    connection.send_message(websocket_api.result_message(msg['id'], data))
+
+
+@websocket_api.async_response
+async def websocket_update_prefs(hass, connection, msg):
+    """Handle request for account info."""
+    cloud = hass.data[DOMAIN]
+
+    if not cloud.is_logged_in:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'not_logged_in',
+            'You need to be logged in to the cloud.'))
+        return
+
+    changes = dict(msg)
+    changes.pop('id')
+    changes.pop('type')
+    await cloud.update_preferences(**changes)
+
+    connection.send_message(websocket_api.result_message(
+        msg['id'], {'success': True}))
 
 
 def _account_data(cloud):
     """Generate the auth data JSON response."""
+    if not cloud.is_logged_in:
+        return {
+            'logged_in': False,
+            'cloud': STATE_DISCONNECTED,
+        }
+
     claims = cloud.claims
 
     return {
+        'logged_in': True,
         'email': claims['email'],
-        'sub_exp': claims['custom:sub-exp'],
         'cloud': cloud.iot.state,
+        'google_enabled': cloud.google_enabled,
+        'alexa_enabled': cloud.alexa_enabled,
     }

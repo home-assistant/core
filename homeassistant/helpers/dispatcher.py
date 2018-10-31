@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 
 _LOGGER = logging.getLogger(__name__)

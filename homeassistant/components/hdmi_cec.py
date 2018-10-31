@@ -35,7 +35,7 @@ CONF_TYPES = 'types'
 ICON_UNKNOWN = 'mdi:help'
 ICON_AUDIO = 'mdi:speaker'
 ICON_PLAYER = 'mdi:play'
-ICON_TUNER = 'mdi:nest-thermostat'
+ICON_TUNER = 'mdi:radio'
 ICON_RECORDER = 'mdi:microphone'
 ICON_TV = 'mdi:television'
 ICONS_BY_TYPE = {
@@ -320,7 +320,7 @@ def setup(hass: HomeAssistant, base_config):
 class CecDevice(Entity):
     """Representation of a HDMI CEC device entity."""
 
-    def __init__(self, hass: HomeAssistant, device, logical):
+    def __init__(self, hass: HomeAssistant, device, logical) -> None:
         """Initialize the device."""
         self._device = device
         self.hass = hass

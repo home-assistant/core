@@ -1,12 +1,12 @@
-"""KIRA interface to receive UDP packets from an IR-IP bridge."""
-# pylint: disable=import-error
+"""
+KIRA interface to receive UDP packets from an IR-IP bridge.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.kira/
+"""
 import logging
 
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_NAME,
-    STATE_UNKNOWN)
-
+from homeassistant.const import CONF_DEVICE, CONF_NAME, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'kira'
@@ -15,17 +15,17 @@ _LOGGER = logging.getLogger(__name__)
 
 ICON = 'mdi:remote'
 
-CONF_SENSOR = "sensor"
+CONF_SENSOR = 'sensor'
 
 
-# pylint: disable=unused-argument, too-many-function-args
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup Kira sensor."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up a Kira sensor."""
     if discovery_info is not None:
         name = discovery_info.get(CONF_NAME)
         device = discovery_info.get(CONF_DEVICE)
         kira = hass.data[DOMAIN][CONF_SENSOR][name]
-        add_devices_callback([KiraReceiver(device, kira)])
+
+        add_entities([KiraReceiver(device, kira)])
 
 
 class KiraReceiver(Entity):
@@ -34,14 +34,14 @@ class KiraReceiver(Entity):
     def __init__(self, name, kira):
         """Initialize the sensor."""
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._device = STATE_UNKNOWN
 
         kira.registerCallback(self._update_callback)
 
     def _update_callback(self, code):
         code_name, device = code
-        _LOGGER.info("Kira Code: %s", code_name)
+        _LOGGER.debug("Kira Code: %s", code_name)
         self._state = code_name
         self._device = device
         self.schedule_update_ha_state()
@@ -64,9 +64,7 @@ class KiraReceiver(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {}
-        attr[CONF_DEVICE] = self._device
-        return attr
+        return {CONF_DEVICE: self._device}
 
     @property
     def should_poll(self) -> bool:

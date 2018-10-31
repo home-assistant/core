@@ -28,7 +28,8 @@ DEVICE_SENSORS = {'10': {'temperature': 'temperature'},
                   '22': {'temperature': 'temperature'},
                   '26': {'temperature': 'temperature',
                          'humidity': 'humidity',
-                         'pressure': 'B1-R1-A/pressure'},
+                         'pressure': 'B1-R1-A/pressure',
+                         'illuminance': 'S3-R1-A/illuminance'},
                   '28': {'temperature': 'temperature'},
                   '3B': {'temperature': 'temperature'},
                   '42': {'temperature': 'temperature'}}
@@ -37,6 +38,7 @@ SENSOR_TYPES = {
     'temperature': ['temperature', TEMP_CELSIUS],
     'humidity': ['humidity', '%'],
     'pressure': ['pressure', 'mb'],
+    'illuminance': ['illuminance', 'lux'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -45,8 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the one wire Sensors."""
     base_dir = config.get(CONF_MOUNT_DIR)
     devs = []
@@ -66,8 +67,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                           device_file, 'temperature'))
     else:
         for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
-            family_file = open(family_file_path, "r")
-            family = family_file.read()
+            with open(family_file_path, "r") as family_file:
+                family = family_file.read()
             if family in DEVICE_SENSORS:
                 for sensor_key, sensor_value in DEVICE_SENSORS[family].items():
                     sensor_id = os.path.split(
@@ -84,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       "Check the mount_dir parameter if it's defined")
         return
 
-    add_devices(devs, True)
+    add_entities(devs, True)
 
 
 class OneWire(Entity):

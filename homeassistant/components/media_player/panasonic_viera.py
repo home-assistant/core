@@ -9,20 +9,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice, PLATFORM_SCHEMA)
+    MEDIA_TYPE_URL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
+    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON,
+    STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['panasonic_viera==0.2',
-                'wakeonlan==0.2.2']
+REQUIREMENTS = ['panasonic_viera==0.3.1', 'wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_MAC = 'mac'
 
 DEFAULT_NAME = 'Panasonic Viera TV'
 DEFAULT_PORT = 55000
@@ -30,7 +28,8 @@ DEFAULT_PORT = 55000
 SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_TURN_OFF | SUPPORT_PLAY
+    SUPPORT_TURN_OFF | SUPPORT_PLAY | \
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -40,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Panasonic Viera TV platform."""
     from panasonic_viera import RemoteControl
 
@@ -51,34 +49,46 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info:
         _LOGGER.debug('%s', discovery_info)
+        name = discovery_info.get('name')
         host = discovery_info.get('host')
         port = discovery_info.get('port')
+        udn = discovery_info.get('udn')
+        if udn and udn.startswith('uuid:'):
+            uuid = udn[len('uuid:'):]
+        else:
+            uuid = None
         remote = RemoteControl(host, port)
-        add_devices([PanasonicVieraTVDevice(mac, name, remote)])
+        add_entities([PanasonicVieraTVDevice(mac, name, remote, uuid)])
         return True
 
     host = config.get(CONF_HOST)
     remote = RemoteControl(host, port)
 
-    add_devices([PanasonicVieraTVDevice(mac, name, remote)])
+    add_entities([PanasonicVieraTVDevice(mac, name, remote)])
     return True
 
 
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(self, mac, name, remote):
+    def __init__(self, mac, name, remote, uuid=None):
         """Initialize the Panasonic device."""
-        from wakeonlan import wol
+        import wakeonlan
         # Save a reference to the imported class
-        self._wol = wol
+        self._wol = wakeonlan
         self._mac = mac
         self._name = name
+        self._uuid = uuid
         self._muted = False
         self._playing = True
         self._state = STATE_UNKNOWN
         self._remote = remote
         self._volume = 0
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of this Viera TV."""
+        return self._uuid
 
     def update(self):
         """Retrieve the latest data."""
@@ -135,20 +145,20 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn off media player."""
         if self._state != STATE_OFF:
-            self.send_key('NRC_POWER-ONOFF')
+            self._remote.turn_off()
             self._state = STATE_OFF
 
     def volume_up(self):
         """Volume up the media player."""
-        self.send_key('NRC_VOLUP-ONOFF')
+        self._remote.volume_up()
 
     def volume_down(self):
         """Volume down media player."""
-        self.send_key('NRC_VOLDOWN-ONOFF')
+        self._remote.volume_down()
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self.send_key('NRC_MUTE-ONOFF')
+        self._remote.set_mute(mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -169,17 +179,33 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def media_play(self):
         """Send play command."""
         self._playing = True
-        self.send_key('NRC_PLAY-ONOFF')
+        self._remote.media_play()
 
     def media_pause(self):
         """Send media pause command to media player."""
         self._playing = False
-        self.send_key('NRC_PAUSE-ONOFF')
+        self._remote.media_pause()
 
     def media_next_track(self):
         """Send next track command."""
-        self.send_key('NRC_FF-ONOFF')
+        self._remote.media_next_track()
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self.send_key('NRC_REW-ONOFF')
+        self._remote.media_previous_track()
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play media."""
+        _LOGGER.debug("Play media: %s (%s)", media_id, media_type)
+
+        if media_type == MEDIA_TYPE_URL:
+            try:
+                self._remote.open_webpage(media_id)
+            except (TimeoutError, OSError):
+                self._state = STATE_OFF
+        else:
+            _LOGGER.warning("Unsupported media_type: %s", media_type)
+
+    def media_stop(self):
+        """Stop playback."""
+        self.send_key('NRC_CANCEL-ONOFF')

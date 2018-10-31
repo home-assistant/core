@@ -16,13 +16,15 @@ from homeassistant.components.vacuum.xiaomi_miio import (
     ATTR_DO_NOT_DISTURB_START, ATTR_DO_NOT_DISTURB_END, ATTR_ERROR,
     ATTR_MAIN_BRUSH_LEFT, ATTR_SIDE_BRUSH_LEFT, ATTR_FILTER_LEFT,
     ATTR_CLEANING_COUNT, ATTR_CLEANED_TOTAL_AREA, ATTR_CLEANING_TOTAL_TIME,
-    CONF_HOST, CONF_NAME, CONF_TOKEN, PLATFORM,
+    CONF_HOST, CONF_NAME, CONF_TOKEN,
     SERVICE_MOVE_REMOTE_CONTROL, SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL, SERVICE_STOP_REMOTE_CONTROL)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF,
     STATE_ON)
 from homeassistant.setup import async_setup_component
+
+PLATFORM = 'xiaomi_miio'
 
 # calls made when device status is requested
 status_calls = [mock.call.Vacuum().status(),

@@ -4,7 +4,6 @@ Offer state listening automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/docs/automation/trigger/#state-trigger
 """
-import asyncio
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -27,8 +26,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
 }), cv.key_dependency(CONF_FOR, CONF_TO))
 
 
-@asyncio.coroutine
-def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     from_state = config.get(CONF_FROM, MATCH_ALL)
@@ -43,7 +41,7 @@ def async_trigger(hass, config, action):
         @callback
         def call_action():
             """Call action with right context."""
-            hass.async_run_job(action, {
+            hass.async_run_job(action({
                 'trigger': {
                     'platform': 'state',
                     'entity_id': entity,
@@ -51,7 +49,7 @@ def async_trigger(hass, config, action):
                     'to_state': to_s,
                     'for': time_delta,
                 }
-            })
+            }, context=to_s.context))
 
         # Ignore changes to state attributes if from/to is in use
         if (not match_all and from_s is not None and to_s is not None and
