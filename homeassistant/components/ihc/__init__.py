@@ -138,7 +138,7 @@ def ihc_setup(hass, config, conf, controller_id):
         return False
 
     if (conf[CONF_AUTOSETUP] and
-            not autosetup_ihc_products(hass, config, ihc_controller, 
+            not autosetup_ihc_products(hass, config, ihc_controller,
                                        controller_id)):
         return False
 
@@ -151,7 +151,7 @@ def ihc_setup(hass, config, conf, controller_id):
     return True
 
 
-def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller, 
+def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller,
                            controller_id):
     """Auto setup of IHC products from the IHC project file."""
     project_xml = ihc_controller.get_project()
@@ -173,7 +173,7 @@ def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller,
     groups = project.findall('.//group')
     for component in IHC_PLATFORMS:
         component_setup = auto_setup_conf[component]
-        discovery_info = get_discovery_info(component_setup, groups, 
+        discovery_info = get_discovery_info(component_setup, groups,
                                             controller_id)
         if discovery_info:
             discovery.load_platform(hass, component, DOMAIN, discovery_info,
