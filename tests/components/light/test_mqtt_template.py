@@ -34,11 +34,9 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
 import homeassistant.components.light as light
 import homeassistant.core as ha
-
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message,
     assert_setup_component, mock_coro)
-from tests.components.light import common
 
 
 class TestLightMQTTTemplate(unittest.TestCase):
@@ -246,7 +244,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         # turn on the light
-        common.turn_on(self.hass, 'light.test')
+        light.turn_on(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -256,7 +254,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
 
         # turn the light off
-        common.turn_off(self.hass, 'light.test')
+        light.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -266,8 +264,8 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         # turn on the light with brightness, color
-        common.turn_on(self.hass, 'light.test', brightness=50,
-                       rgb_color=[75, 75, 75])
+        light.turn_on(self.hass, 'light.test', brightness=50,
+                      rgb_color=[75, 75, 75])
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -275,8 +273,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # turn on the light with color temp and white val
-        common.turn_on(self.hass, 'light.test',
-                       color_temp=200, white_value=139)
+        light.turn_on(self.hass, 'light.test', color_temp=200, white_value=139)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -308,7 +305,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         # short flash
-        common.turn_on(self.hass, 'light.test', flash='short')
+        light.turn_on(self.hass, 'light.test', flash='short')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -316,7 +313,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # long flash
-        common.turn_on(self.hass, 'light.test', flash='long')
+        light.turn_on(self.hass, 'light.test', flash='long')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -339,7 +336,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         # transition on
-        common.turn_on(self.hass, 'light.test', transition=10)
+        light.turn_on(self.hass, 'light.test', transition=10)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -347,7 +344,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # transition off
-        common.turn_off(self.hass, 'light.test', transition=4)
+        light.turn_off(self.hass, 'light.test', transition=4)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(

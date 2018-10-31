@@ -4,6 +4,7 @@ Support for reading data from a serial port.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.serial/
 """
+import asyncio
 import logging
 import json
 
@@ -34,8 +35,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Serial sensor platform."""
     name = config.get(CONF_NAME)
     port = config.get(CONF_SERIAL_PORT)
@@ -65,18 +67,20 @@ class SerialSensor(Entity):
         self._template = value_template
         self._attributes = []
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
         self._serial_loop_task = self.hass.loop.create_task(
             self.serial_read(self._port, self._baudrate))
 
-    async def serial_read(self, device, rate, **kwargs):
+    @asyncio.coroutine
+    def serial_read(self, device, rate, **kwargs):
         """Read the data from the port."""
         import serial_asyncio
-        reader, _ = await serial_asyncio.open_serial_connection(
+        reader, _ = yield from serial_asyncio.open_serial_connection(
             url=device, baudrate=rate, **kwargs)
         while True:
-            line = await reader.readline()
+            line = yield from reader.readline()
             line = line.decode('utf-8').strip()
 
             try:
@@ -94,7 +98,8 @@ class SerialSensor(Entity):
             self._state = line
             self.async_schedule_update_ha_state()
 
-    async def stop_serial_read(self):
+    @asyncio.coroutine
+    def stop_serial_read(self):
         """Close resources."""
         if self._serial_loop_task:
             self._serial_loop_task.cancel()

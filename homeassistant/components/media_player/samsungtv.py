@@ -8,6 +8,8 @@ import asyncio
 from datetime import timedelta
 import logging
 import socket
+import subprocess
+import sys
 
 import voluptuous as vol
 
@@ -17,7 +19,8 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF)
+    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF,
+    STATE_ON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
@@ -27,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Samsung TV Remote'
 DEFAULT_PORT = 55000
-DEFAULT_TIMEOUT = 1
+DEFAULT_TIMEOUT = 0
 
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = 'samsungtv_known_devices'
@@ -99,7 +102,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._muted = False
         # Assume that the TV is in Play mode
         self._playing = True
-        self._state = None
+        self._state = STATE_UNKNOWN
         self._remote = None
         # Mark the end of a shutdown command (need to wait 15 seconds before
         # sending the next command to avoid turning the TV back ON).
@@ -121,7 +124,20 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
-        self.send_key("KEY")
+        if sys.platform == 'win32':
+            _ping_cmd = ['ping', '-n 1', '-w', '1000', self._config['host']]
+        else:
+            _ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
+                         self._config['host']]
+
+        ping = subprocess.Popen(
+            _ping_cmd,
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        try:
+            ping.communicate()
+            self._state = STATE_ON if ping.returncode == 0 else STATE_OFF
+        except subprocess.CalledProcessError:
+            self._state = STATE_OFF
 
     def get_remote(self):
         """Create or return a remote control instance."""
@@ -148,11 +164,11 @@ class SamsungTVDevice(MediaPlayerDevice):
                         BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
                     self._remote = None
-            self._state = None
+            self._state = STATE_ON
         except (self._exceptions_class.UnhandledResponse,
                 self._exceptions_class.AccessDenied):
             # We got a response so it's on.
-            self._state = None
+            self._state = STATE_ON
             self._remote = None
             _LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return

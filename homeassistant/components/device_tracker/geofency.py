@@ -4,6 +4,7 @@ Support for the Geofency platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.geofency/
 """
+import asyncio
 from functools import partial
 import logging
 
@@ -57,9 +58,10 @@ class GeofencyView(HomeAssistantView):
         self.see = see
         self.mobile_beacons = [slugify(beacon) for beacon in mobile_beacons]
 
-    async def post(self, request):
+    @asyncio.coroutine
+    def post(self, request):
         """Handle Geofency requests."""
-        data = await request.post()
+        data = yield from request.post()
         hass = request.app['hass']
 
         data = self._validate_data(data)
@@ -67,7 +69,7 @@ class GeofencyView(HomeAssistantView):
             return ("Invalid data", HTTP_UNPROCESSABLE_ENTITY)
 
         if self._is_mobile_beacon(data):
-            return await self._set_location(hass, data, None)
+            return (yield from self._set_location(hass, data, None))
         if data['entry'] == LOCATION_ENTRY:
             location_name = data['name']
         else:
@@ -76,7 +78,7 @@ class GeofencyView(HomeAssistantView):
                 data[ATTR_LATITUDE] = data[ATTR_CURRENT_LATITUDE]
                 data[ATTR_LONGITUDE] = data[ATTR_CURRENT_LONGITUDE]
 
-        return await self._set_location(hass, data, location_name)
+        return (yield from self._set_location(hass, data, location_name))
 
     @staticmethod
     def _validate_data(data):
@@ -119,11 +121,12 @@ class GeofencyView(HomeAssistantView):
             return "{}_{}".format(BEACON_DEV_PREFIX, data['name'])
         return data['device']
 
-    async def _set_location(self, hass, data, location_name):
+    @asyncio.coroutine
+    def _set_location(self, hass, data, location_name):
         """Fire HA event to set location."""
         device = self._device_name(data)
 
-        await hass.async_add_job(
+        yield from hass.async_add_job(
             partial(self.see, dev_id=device,
                     gps=(data[ATTR_LATITUDE], data[ATTR_LONGITUDE]),
                     location_name=location_name,

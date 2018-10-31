@@ -8,8 +8,6 @@ from homeassistant.components import light, scene
 from homeassistant.util import yaml
 
 from tests.common import get_test_home_assistant
-from tests.components.light import common as common_light
-from tests.components.scene import common
 
 
 class TestScene(unittest.TestCase):
@@ -27,7 +25,7 @@ class TestScene(unittest.TestCase):
 
         self.light_1, self.light_2 = test_light.DEVICES[0:2]
 
-        common_light.turn_off(
+        light.turn_off(
             self.hass, [self.light_1.entity_id, self.light_2.entity_id])
 
         self.hass.block_till_done()
@@ -70,7 +68,7 @@ class TestScene(unittest.TestCase):
             }]
         }))
 
-        common.activate(self.hass, 'scene.test')
+        scene.activate(self.hass, 'scene.test')
         self.hass.block_till_done()
 
         self.assertTrue(self.light_1.is_on)
@@ -96,7 +94,7 @@ class TestScene(unittest.TestCase):
             doc = yaml.yaml.safe_load(file)
 
         self.assertTrue(setup_component(self.hass, scene.DOMAIN, doc))
-        common.activate(self.hass, 'scene.test')
+        scene.activate(self.hass, 'scene.test')
         self.hass.block_till_done()
 
         self.assertTrue(self.light_1.is_on)
@@ -119,7 +117,7 @@ class TestScene(unittest.TestCase):
             }]
         }))
 
-        common.activate(self.hass, 'scene.test')
+        scene.activate(self.hass, 'scene.test')
         self.hass.block_till_done()
 
         self.assertTrue(self.light_1.is_on)

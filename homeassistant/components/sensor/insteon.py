@@ -4,6 +4,7 @@ Support for INSTEON dimmers via PowerLinc Modem.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.insteon/
 """
+import asyncio
 import logging
 
 from homeassistant.components.insteon import InsteonEntity
@@ -14,8 +15,9 @@ DEPENDENCIES = ['insteon']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the INSTEON device class for the hass platform."""
     insteon_modem = hass.data['insteon'].get('modem')
 

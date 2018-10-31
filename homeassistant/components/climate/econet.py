@@ -1,0 +1,222 @@
+"""
+Support for Rheem EcoNet water heaters.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/climate.econet/
+"""
+import datetime
+import logging
+
+import voluptuous as vol
+
+from homeassistant.components.climate import (
+    DOMAIN, PLATFORM_SCHEMA, STATE_ECO, STATE_ELECTRIC, STATE_GAS,
+    STATE_HEAT_PUMP, STATE_HIGH_DEMAND, STATE_OFF, STATE_PERFORMANCE,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME,
+    TEMP_FAHRENHEIT)
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['pyeconet==0.0.6']
+
+_LOGGER = logging.getLogger(__name__)
+
+ATTR_VACATION_START = 'next_vacation_start_date'
+ATTR_VACATION_END = 'next_vacation_end_date'
+ATTR_ON_VACATION = 'on_vacation'
+ATTR_TODAYS_ENERGY_USAGE = 'todays_energy_usage'
+ATTR_IN_USE = 'in_use'
+
+ATTR_START_DATE = 'start_date'
+ATTR_END_DATE = 'end_date'
+
+SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
+
+SERVICE_ADD_VACATION = 'econet_add_vacation'
+SERVICE_DELETE_VACATION = 'econet_delete_vacation'
+
+ADD_VACATION_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_START_DATE): cv.positive_int,
+    vol.Required(ATTR_END_DATE): cv.positive_int,
+})
+
+DELETE_VACATION_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+ECONET_DATA = 'econet'
+
+HA_STATE_TO_ECONET = {
+    STATE_ECO: 'Energy Saver',
+    STATE_ELECTRIC: 'Electric',
+    STATE_HEAT_PUMP: 'Heat Pump',
+    STATE_GAS: 'gas',
+    STATE_HIGH_DEMAND: 'High Demand',
+    STATE_OFF: 'Off',
+    STATE_PERFORMANCE: 'Performance'
+}
+
+ECONET_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_ECONET.items()}
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+})
+
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the EcoNet water heaters."""
+    from pyeconet.api import PyEcoNet
+
+    hass.data[ECONET_DATA] = {}
+    hass.data[ECONET_DATA]['water_heaters'] = []
+
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+
+    econet = PyEcoNet(username, password)
+    water_heaters = econet.get_water_heaters()
+    hass_water_heaters = [
+        EcoNetWaterHeater(water_heater) for water_heater in water_heaters]
+    add_entities(hass_water_heaters)
+    hass.data[ECONET_DATA]['water_heaters'].extend(hass_water_heaters)
+
+    def service_handle(service):
+        """Handle the service calls."""
+        entity_ids = service.data.get('entity_id')
+        all_heaters = hass.data[ECONET_DATA]['water_heaters']
+        _heaters = [
+            x for x in all_heaters
+            if not entity_ids or x.entity_id in entity_ids]
+
+        for _water_heater in _heaters:
+            if service.service == SERVICE_ADD_VACATION:
+                start = service.data.get(ATTR_START_DATE)
+                end = service.data.get(ATTR_END_DATE)
+                _water_heater.add_vacation(start, end)
+            if service.service == SERVICE_DELETE_VACATION:
+                for vacation in _water_heater.water_heater.vacations:
+                    vacation.delete()
+
+            _water_heater.schedule_update_ha_state(True)
+
+    hass.services.register(DOMAIN, SERVICE_ADD_VACATION, service_handle,
+                           schema=ADD_VACATION_SCHEMA)
+
+    hass.services.register(DOMAIN, SERVICE_DELETE_VACATION, service_handle,
+                           schema=DELETE_VACATION_SCHEMA)
+
+
+class EcoNetWaterHeater(ClimateDevice):
+    """Representation of an EcoNet water heater."""
+
+    def __init__(self, water_heater):
+        """Initialize the water heater."""
+        self.water_heater = water_heater
+
+    @property
+    def name(self):
+        """Return the device name."""
+        return self.water_heater.name
+
+    @property
+    def available(self):
+        """Return if the the device is online or not."""
+        return self.water_heater.is_connected
+
+    @property
+    def temperature_unit(self):
+        """Return the unit of measurement."""
+        return TEMP_FAHRENHEIT
+
+    @property
+    def device_state_attributes(self):
+        """Return the optional device state attributes."""
+        data = {}
+        vacations = self.water_heater.get_vacations()
+        if vacations:
+            data[ATTR_VACATION_START] = vacations[0].start_date
+            data[ATTR_VACATION_END] = vacations[0].end_date
+        data[ATTR_ON_VACATION] = self.water_heater.is_on_vacation
+        todays_usage = self.water_heater.total_usage_for_today
+        if todays_usage:
+            data[ATTR_TODAYS_ENERGY_USAGE] = todays_usage
+        data[ATTR_IN_USE] = self.water_heater.in_use
+
+        return data
+
+    @property
+    def current_operation(self):
+        """
+        Return current operation as one of the following.
+
+        ["eco", "heat_pump", "high_demand", "electric_only"]
+        """
+        current_op = ECONET_STATE_TO_HA.get(self.water_heater.mode)
+        return current_op
+
+    @property
+    def operation_list(self):
+        """List of available operation modes."""
+        op_list = []
+        modes = self.water_heater.supported_modes
+        for mode in modes:
+            ha_mode = ECONET_STATE_TO_HA.get(mode)
+            if ha_mode is not None:
+                op_list.append(ha_mode)
+            else:
+                error = "Invalid operation mode mapping. " + mode + \
+                    " doesn't map. Please report this."
+                _LOGGER.error(error)
+        return op_list
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS_HEATER
+
+    def set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        target_temp = kwargs.get(ATTR_TEMPERATURE)
+        if target_temp is not None:
+            self.water_heater.set_target_set_point(target_temp)
+        else:
+            _LOGGER.error("A target temperature must be provided")
+
+    def set_operation_mode(self, operation_mode):
+        """Set operation mode."""
+        op_mode_to_set = HA_STATE_TO_ECONET.get(operation_mode)
+        if op_mode_to_set is not None:
+            self.water_heater.set_mode(op_mode_to_set)
+        else:
+            _LOGGER.error("An operation mode must be provided")
+
+    def add_vacation(self, start, end):
+        """Add a vacation to this water heater."""
+        if not start:
+            start = datetime.datetime.now()
+        else:
+            start = datetime.datetime.fromtimestamp(start)
+        end = datetime.datetime.fromtimestamp(end)
+        self.water_heater.set_vacation_mode(start, end)
+
+    def update(self):
+        """Get the latest date."""
+        self.water_heater.update_state()
+
+    @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        return self.water_heater.set_point
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        return self.water_heater.min_set_point
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        return self.water_heater.max_set_point

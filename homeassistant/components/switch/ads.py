@@ -4,6 +4,7 @@ Support for ADS switch platform.
 For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/switch.ads/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -46,7 +47,8 @@ class AdsSwitch(ToggleEntity):
         self._name = name
         self.ads_var = ads_var
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Register device notification."""
         def update(name, value):
             """Handle device notification."""

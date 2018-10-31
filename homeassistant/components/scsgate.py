@@ -42,10 +42,11 @@ def setup(hass, config):
     device = config[DOMAIN][CONF_DEVICE]
     global SCSGATE
 
+    # pylint: disable=broad-except
     try:
         SCSGATE = SCSGate(device=device, logger=_LOGGER)
         SCSGATE.start()
-    except Exception as exception:  # pylint: disable=broad-except
+    except Exception as exception:
         _LOGGER.error("Cannot setup SCSGate component: %s", exception)
         return False
 
@@ -100,9 +101,10 @@ class SCSGate:
             if new_device_activated:
                 self._activate_next_device()
 
+            # pylint: disable=broad-except
             try:
                 self._devices[message.entity].process_event(message)
-            except Exception as exception:  # pylint: disable=broad-except
+            except Exception as exception:
                 msg = "Exception while processing event: {}".format(exception)
                 self._logger.error(msg)
         else:

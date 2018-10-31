@@ -27,8 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 10  # seconds
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the DoorBird camera platform."""
     for doorstation in hass.data[DOORBIRD_DOMAIN]:
         device = doorstation.device
@@ -65,7 +66,8 @@ class DoorBirdCamera(Camera):
         """Get the name of the camera."""
         return self._name
 
-    async def async_camera_image(self):
+    @asyncio.coroutine
+    def async_camera_image(self):
         """Pull a still image from the camera."""
         now = datetime.datetime.now()
 
@@ -75,9 +77,9 @@ class DoorBirdCamera(Camera):
         try:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):
-                response = await websession.get(self._url)
+                response = yield from websession.get(self._url)
 
-            self._last_image = await response.read()
+            self._last_image = yield from response.read()
             self._last_update = now
             return self._last_image
         except asyncio.TimeoutError:

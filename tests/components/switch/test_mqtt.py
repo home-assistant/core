@@ -1,5 +1,4 @@
 """The tests for the MQTT switch platform."""
-import json
 import unittest
 from unittest.mock import patch
 
@@ -7,13 +6,11 @@ from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE,\
     ATTR_ASSUMED_STATE
 import homeassistant.core as ha
-from homeassistant.components import switch, mqtt
+import homeassistant.components.switch as switch
 from homeassistant.components.mqtt.discovery import async_start
-
 from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant, mock_coro,
-    async_mock_mqtt_component, async_fire_mqtt_message, MockConfigEntry)
-from tests.components.switch import common
+    async_mock_mqtt_component, async_fire_mqtt_message)
 
 
 class TestSwitchMQTT(unittest.TestCase):
@@ -78,7 +75,7 @@ class TestSwitchMQTT(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
-        common.turn_on(self.hass, 'switch.test')
+        switch.turn_on(self.hass, 'switch.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -87,7 +84,7 @@ class TestSwitchMQTT(unittest.TestCase):
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_ON, state.state)
 
-        common.turn_off(self.hass, 'switch.test')
+        switch.turn_off(self.hass, 'switch.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -314,8 +311,7 @@ async def test_unique_id(hass):
 
 async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
     """Test expansion of discovered switch."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, 'homeassistant', {}, entry)
+    await async_start(hass, 'homeassistant', {})
 
     data = (
         '{ "name": "Beer",'
@@ -338,42 +334,3 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
 
     state = hass.states.get('switch.beer')
     assert state is None
-
-
-async def test_entity_device_info_with_identifier(hass, mqtt_mock):
-    """Test MQTT switch device registry integration."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, 'homeassistant', {}, entry)
-    registry = await hass.helpers.device_registry.async_get_registry()
-
-    data = json.dumps({
-        'platform': 'mqtt',
-        'name': 'Test 1',
-        'state_topic': 'test-topic',
-        'command_topic': 'test-command-topic',
-        'device': {
-            'identifiers': ['helloworld'],
-            'connections': [
-                ["mac", "02:5b:26:a8:dc:12"],
-            ],
-            'manufacturer': 'Whatever',
-            'name': 'Beer',
-            'model': 'Glass',
-            'sw_version': '0.1-beta',
-        },
-        'unique_id': 'veryunique'
-    })
-    async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
-                            data)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
-    assert device is not None
-    assert device.identifiers == {('mqtt', 'helloworld')}
-    assert device.connections == {('mac', "02:5b:26:a8:dc:12")}
-    assert device.manufacturer == 'Whatever'
-    assert device.name == 'Beer'
-    assert device.model == 'Glass'
-    assert device.sw_version == '0.1-beta'

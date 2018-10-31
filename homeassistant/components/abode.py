@@ -4,6 +4,7 @@ This component provides basic support for Abode Home Security system.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/abode/
 """
+import asyncio
 import logging
 from functools import partial
 from requests.exceptions import HTTPError, ConnectTimeout
@@ -18,7 +19,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['abodepy==0.14.0']
+REQUIREMENTS = ['abodepy==0.13.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -260,7 +261,8 @@ class AbodeDevice(Entity):
         self._data = data
         self._device = device
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Subscribe Abode events."""
         self.hass.async_add_job(
             self._data.abode.events.add_device_callback,
@@ -306,7 +308,8 @@ class AbodeAutomation(Entity):
         self._automation = automation
         self._event = event
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Subscribe Abode events."""
         if self._event:
             self.hass.async_add_job(

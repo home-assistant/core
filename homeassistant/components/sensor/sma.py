@@ -63,8 +63,9 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA), _check_sensor_schema)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up SMA WebConnect sensor."""
     import pysma
 
@@ -106,9 +107,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     sma = pysma.SMA(session, url, config[CONF_PASSWORD], group=grp)
 
     # Ensure we logout on shutdown
-    async def async_close_session(event):
+    @asyncio.coroutine
+    def async_close_session(event):
         """Close the session."""
-        await sma.close_session()
+        yield from sma.close_session()
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_close_session)
 
@@ -118,14 +120,15 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     backoff = 0
 
-    async def async_sma(event):
+    @asyncio.coroutine
+    def async_sma(event):
         """Update all the SMA sensors."""
         nonlocal backoff
         if backoff > 1:
             backoff -= 1
             return
 
-        values = await sma.read(keys_to_query)
+        values = yield from sma.read(keys_to_query)
         if values is None:
             backoff = 3
             return
@@ -139,7 +142,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             if task:
                 tasks.append(task)
         if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
+            yield from asyncio.wait(tasks, loop=hass.loop)
 
     interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
     async_track_time_interval(hass, async_sma, interval)

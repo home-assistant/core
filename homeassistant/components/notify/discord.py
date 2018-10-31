@@ -4,6 +4,7 @@ Discord platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.discord/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -38,7 +39,8 @@ class DiscordNotificationService(BaseNotificationService):
         self.token = token
         self.hass = hass
 
-    async def async_send_message(self, message, **kwargs):
+    @asyncio.coroutine
+    def async_send_message(self, message, **kwargs):
         """Login to Discord, send message to channel(s) and log out."""
         import discord
         discord_bot = discord.Client(loop=self.hass.loop)
@@ -49,7 +51,8 @@ class DiscordNotificationService(BaseNotificationService):
 
         # pylint: disable=unused-variable
         @discord_bot.event
-        async def on_ready():
+        @asyncio.coroutine
+        def on_ready():
             """Send the messages when the bot is ready."""
             try:
                 data = kwargs.get(ATTR_DATA)
@@ -57,14 +60,14 @@ class DiscordNotificationService(BaseNotificationService):
                     images = data.get(ATTR_IMAGES)
                 for channelid in kwargs[ATTR_TARGET]:
                     channel = discord.Object(id=channelid)
-                    await discord_bot.send_message(channel, message)
+                    yield from discord_bot.send_message(channel, message)
                     if images:
                         for anum, f_name in enumerate(images):
-                            await discord_bot.send_file(channel, f_name)
+                            yield from discord_bot.send_file(channel, f_name)
             except (discord.errors.HTTPException,
                     discord.errors.NotFound) as error:
                 _LOGGER.warning("Communication error: %s", error)
-            await discord_bot.logout()
-            await discord_bot.close()
+            yield from discord_bot.logout()
+            yield from discord_bot.close()
 
-        await discord_bot.start(self.token)
+        yield from discord_bot.start(self.token)

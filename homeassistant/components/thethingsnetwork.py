@@ -4,6 +4,7 @@ Support for The Things network.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/thethingsnetwork/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -31,7 +32,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Initialize of The Things Network component."""
     conf = config[DOMAIN]
     app_id = conf.get(CONF_APP_ID)

@@ -1,4 +1,5 @@
 """Handle intents with scripts."""
+import asyncio
 import copy
 import logging
 
@@ -44,7 +45,8 @@ CONFIG_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Activate Alexa component."""
     intents = copy.deepcopy(config[DOMAIN])
     template.attach(hass, intents)
@@ -67,7 +69,8 @@ class ScriptIntentHandler(intent.IntentHandler):
         self.intent_type = intent_type
         self.config = config
 
-    async def async_handle(self, intent_obj):
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
         """Handle the intent."""
         speech = self.config.get(CONF_SPEECH)
         card = self.config.get(CONF_CARD)
@@ -78,9 +81,9 @@ class ScriptIntentHandler(intent.IntentHandler):
 
         if action is not None:
             if is_async_action:
-                intent_obj.hass.async_create_task(action.async_run(slots))
+                intent_obj.hass.async_add_job(action.async_run(slots))
             else:
-                await action.async_run(slots)
+                yield from action.async_run(slots)
 
         response = intent_obj.create_response()
 

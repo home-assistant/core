@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a Volvo switch."""
+    """Set up Tellstick switches."""
     if discovery_info is None:
         return
     add_entities([VolvoSwitch(hass, *discovery_info)])

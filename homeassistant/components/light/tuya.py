@@ -40,17 +40,17 @@ class TuyaLight(TuyaDevice, Light):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return int(self.tuya.brightness())
+        return self.tuya.brightness()
 
     @property
     def hs_color(self):
         """Return the hs_color of the light."""
-        return tuple(map(int, self.tuya.hs_color()))
+        return self.tuya.hs_color()
 
     @property
     def color_temp(self):
         """Return the color_temp of the light."""
-        color_temp = int(self.tuya.color_temp())
+        color_temp = self.tuya.color_temp()
         if color_temp is None:
             return None
         return colorutil.color_temperature_kelvin_to_mired(color_temp)

@@ -4,6 +4,7 @@ Integrate with DuckDNS.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/duckdns/
 """
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -38,24 +39,27 @@ SERVICE_TXT_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Initialize the DuckDNS component."""
     domain = config[DOMAIN][CONF_DOMAIN]
     token = config[DOMAIN][CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
-    result = await _update_duckdns(session, domain, token)
+    result = yield from _update_duckdns(session, domain, token)
 
     if not result:
         return False
 
-    async def update_domain_interval(now):
+    @asyncio.coroutine
+    def update_domain_interval(now):
         """Update the DuckDNS entry."""
-        await _update_duckdns(session, domain, token)
+        yield from _update_duckdns(session, domain, token)
 
-    async def update_domain_service(call):
+    @asyncio.coroutine
+    def update_domain_service(call):
         """Update the DuckDNS entry."""
-        await _update_duckdns(
+        yield from _update_duckdns(
             session, domain, token, txt=call.data[ATTR_TXT])
 
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
@@ -69,8 +73,8 @@ async def async_setup(hass, config):
 _SENTINEL = object()
 
 
-async def _update_duckdns(session, domain, token, *, txt=_SENTINEL,
-                          clear=False):
+@asyncio.coroutine
+def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False):
     """Update DuckDNS."""
     params = {
         'domains': domain,
@@ -88,8 +92,8 @@ async def _update_duckdns(session, domain, token, *, txt=_SENTINEL,
     if clear:
         params['clear'] = 'true'
 
-    resp = await session.get(UPDATE_URL, params=params)
-    body = await resp.text()
+    resp = yield from session.get(UPDATE_URL, params=params)
+    body = yield from resp.text()
 
     if body != 'OK':
         _LOGGER.warning("Updating DuckDNS domain failed: %s", domain)

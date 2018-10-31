@@ -68,8 +68,9 @@ SUPPORT_ROOMBA = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
 SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the iRobot Roomba vacuum cleaner platform."""
     from roomba import Roomba
     if PLATFORM not in hass.data:
@@ -95,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     try:
         with async_timeout.timeout(9):
-            await hass.async_add_job(roomba.connect)
+            yield from hass.async_add_job(roomba.connect)
     except asyncio.TimeoutError:
         raise PlatformNotReady
 
@@ -169,46 +170,54 @@ class RoombaVacuum(VacuumDevice):
         """Return the state attributes of the device."""
         return self._state_attrs
 
-    async def async_turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the vacuum on."""
-        await self.hass.async_add_job(self.vacuum.send_command, 'start')
+        yield from self.hass.async_add_job(self.vacuum.send_command, 'start')
         self._is_on = True
 
-    async def async_turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the vacuum off and return to home."""
-        await self.async_stop()
-        await self.async_return_to_base()
+        yield from self.async_stop()
+        yield from self.async_return_to_base()
 
-    async def async_stop(self, **kwargs):
+    @asyncio.coroutine
+    def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
-        await self.hass.async_add_job(self.vacuum.send_command, 'stop')
+        yield from self.hass.async_add_job(self.vacuum.send_command, 'stop')
         self._is_on = False
 
-    async def async_resume(self, **kwargs):
+    @asyncio.coroutine
+    def async_resume(self, **kwargs):
         """Resume the cleaning cycle."""
-        await self.hass.async_add_job(self.vacuum.send_command, 'resume')
+        yield from self.hass.async_add_job(self.vacuum.send_command, 'resume')
         self._is_on = True
 
-    async def async_pause(self, **kwargs):
+    @asyncio.coroutine
+    def async_pause(self, **kwargs):
         """Pause the cleaning cycle."""
-        await self.hass.async_add_job(self.vacuum.send_command, 'pause')
+        yield from self.hass.async_add_job(self.vacuum.send_command, 'pause')
         self._is_on = False
 
-    async def async_start_pause(self, **kwargs):
+    @asyncio.coroutine
+    def async_start_pause(self, **kwargs):
         """Pause the cleaning task or resume it."""
         if self.vacuum_state and self.is_on:  # vacuum is running
-            await self.async_pause()
+            yield from self.async_pause()
         elif self._status == 'Stopped':  # vacuum is stopped
-            await self.async_resume()
+            yield from self.async_resume()
         else:  # vacuum is off
-            await self.async_turn_on()
+            yield from self.async_turn_on()
 
-    async def async_return_to_base(self, **kwargs):
+    @asyncio.coroutine
+    def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        await self.hass.async_add_job(self.vacuum.send_command, 'dock')
+        yield from self.hass.async_add_job(self.vacuum.send_command, 'dock')
         self._is_on = False
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    @asyncio.coroutine
+    def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
         if fan_speed.capitalize() in FAN_SPEEDS:
             fan_speed = fan_speed.capitalize()
@@ -231,20 +240,22 @@ class RoombaVacuum(VacuumDevice):
             _LOGGER.error("No such fan speed available: %s", fan_speed)
             return
         # The set_preference method does only accept string values
-        await self.hass.async_add_job(
+        yield from self.hass.async_add_job(
             self.vacuum.set_preference, 'carpetBoost', str(carpet_boost))
-        await self.hass.async_add_job(
+        yield from self.hass.async_add_job(
             self.vacuum.set_preference, 'vacHigh', str(high_perf))
 
-    async def async_send_command(self, command, params=None, **kwargs):
+    @asyncio.coroutine
+    def async_send_command(self, command, params=None, **kwargs):
         """Send raw command."""
         _LOGGER.debug("async_send_command %s (%s), %s",
                       command, params, kwargs)
-        await self.hass.async_add_job(
+        yield from self.hass.async_add_job(
             self.vacuum.send_command, command, params)
         return True
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Fetch state from the device."""
         # No data, no update
         if not self.vacuum.master_state:

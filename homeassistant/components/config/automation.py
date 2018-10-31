@@ -1,25 +1,24 @@
 """Provide configuration end points for Automations."""
+import asyncio
 from collections import OrderedDict
 import uuid
 
+from homeassistant.const import CONF_ID
 from homeassistant.components.config import EditIdBasedConfigView
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
-from homeassistant.components.automation import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.automation import (
+    PLATFORM_SCHEMA, DOMAIN, async_reload)
 import homeassistant.helpers.config_validation as cv
 
 
 CONFIG_PATH = 'automations.yaml'
 
 
-async def async_setup(hass):
+@asyncio.coroutine
+def async_setup(hass):
     """Set up the Automation config API."""
-    async def hook(hass):
-        """post_write_hook for Config View that reloads automations."""
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
-
     hass.http.register_view(EditAutomationConfigView(
         DOMAIN, 'config', CONFIG_PATH, cv.string,
-        PLATFORM_SCHEMA, post_write_hook=hook
+        PLATFORM_SCHEMA, post_write_hook=async_reload
     ))
     return True
 

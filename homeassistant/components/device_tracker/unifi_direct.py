@@ -86,9 +86,10 @@ class UnifiDeviceScanner(DeviceScanner):
 
     def _disconnect(self):
         """Disconnect the current SSH connection."""
+        # pylint: disable=broad-except
         try:
             self.ssh.logout()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             pass
         finally:
             self.ssh = None

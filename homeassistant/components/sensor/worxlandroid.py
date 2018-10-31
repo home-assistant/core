@@ -50,8 +50,9 @@ ERROR_STATE = [
 ]
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Worx Landroid sensors."""
     for typ in ('battery', 'state'):
         async_add_entities([WorxLandroidSensor(typ, config)])
@@ -87,7 +88,8 @@ class WorxLandroidSensor(Entity):
             return '%'
         return None
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update the sensor data from the mower."""
         connection_error = False
 
@@ -95,7 +97,7 @@ class WorxLandroidSensor(Entity):
             session = async_get_clientsession(self.hass)
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
                 auth = aiohttp.helpers.BasicAuth('admin', self.pin)
-                mower_response = await session.get(self.url, auth=auth)
+                mower_response = yield from session.get(self.url, auth=auth)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             if self.allow_unreachable is False:
                 _LOGGER.error("Error connecting to mower at %s", self.url)
@@ -113,7 +115,7 @@ class WorxLandroidSensor(Entity):
         elif connection_error is False:
             # set the expected content type to be text/html
             # since the mover incorrectly returns it...
-            data = await mower_response.json(content_type='text/html')
+            data = yield from mower_response.json(content_type='text/html')
 
             # sensor battery
             if self.sensor == 'battery':

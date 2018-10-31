@@ -10,26 +10,20 @@ import re
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME, CONF_VERIFY_SSL)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 _DDWRT_DATA_REGEX = re.compile(r'\{(\w+)::([^\}]*)\}')
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Required(CONF_USERNAME): cv.string
 })
 
 
@@ -45,9 +39,7 @@ class DdWrtDeviceScanner(DeviceScanner):
     """This class queries a wireless router running DD-WRT firmware."""
 
     def __init__(self, config):
-        """Initialize the DD-WRT scanner."""
-        self.protocol = 'https' if config[CONF_SSL] else 'http'
-        self.verify_ssl = config[CONF_VERIFY_SSL]
+        """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
@@ -56,8 +48,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         self.mac2name = {}
 
         # Test the router is accessible
-        url = '{}://{}/Status_Wireless.live.asp'.format(
-            self.protocol, self.host)
+        url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
         data = self.get_ddwrt_data(url)
         if not data:
             raise ConnectionError('Cannot connect to DD-Wrt router')
@@ -72,8 +63,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         # If not initialised and not already scanned and not found.
         if device not in self.mac2name:
-            url = '{}://{}/Status_Lan.live.asp'.format(
-                self.protocol, self.host)
+            url = 'http://{}/Status_Lan.live.asp'.format(self.host)
             data = self.get_ddwrt_data(url)
 
             if not data:
@@ -108,8 +98,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         """
         _LOGGER.info("Checking ARP")
 
-        url = '{}://{}/Status_Wireless.live.asp'.format(
-            self.protocol, self.host)
+        url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
         data = self.get_ddwrt_data(url)
 
         if not data:
@@ -136,8 +125,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         """Retrieve data from DD-WRT and return parsed result."""
         try:
             response = requests.get(
-                url, auth=(self.username, self.password),
-                timeout=4, verify=self.verify_ssl)
+                url, auth=(self.username, self.password), timeout=4)
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
             return
@@ -154,4 +142,5 @@ class DdWrtDeviceScanner(DeviceScanner):
 def _parse_ddwrt_response(data_str):
     """Parse the DD-WRT data format."""
     return {
-        key: val for key, val in _DDWRT_DATA_REGEX.findall(data_str)}
+        key: val for key, val in _DDWRT_DATA_REGEX
+        .findall(data_str)}

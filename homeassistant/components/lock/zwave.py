@@ -4,6 +4,7 @@ Z-Wave platform that handles simple door locks.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.zwave/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -118,10 +119,11 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Z-Wave Lock platform."""
-    await zwave.async_setup_platform(
+    yield from zwave.async_setup_platform(
         hass, config, async_add_entities, discovery_info)
 
     network = hass.data[zwave.const.DATA_NETWORK]

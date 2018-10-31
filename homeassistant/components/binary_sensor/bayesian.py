@@ -4,6 +4,7 @@ Use Bayesian Inference to trigger a binary sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.bayesian/
 """
+import asyncio
 import logging
 from collections import OrderedDict
 
@@ -73,8 +74,9 @@ def update_probability(prior, prob_true, prob_false):
     return probability
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Bayesian Binary sensor."""
     name = config.get(CONF_NAME)
     observations = config.get(CONF_OBSERVATIONS)
@@ -117,7 +119,8 @@ class BayesianBinarySensor(BinarySensorDevice):
             'state': self._process_state
         }
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Call when entity about to be added."""
         @callback
         def async_threshold_sensor_state_listener(entity, old_state,
@@ -211,6 +214,7 @@ class BayesianBinarySensor(BinarySensorDevice):
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
         }
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and update the states."""
         self._deviation = bool(self.probability >= self._probability_threshold)

@@ -4,6 +4,7 @@ Support for Prometheus metrics export.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/prometheus/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -264,7 +265,8 @@ class PrometheusView(HomeAssistantView):
         """Initialize Prometheus view."""
         self.prometheus_client = prometheus_client
 
-    async def get(self, request):
+    @asyncio.coroutine
+    def get(self, request):
         """Handle request for Prometheus metrics."""
         _LOGGER.debug("Received Prometheus metrics request")
 

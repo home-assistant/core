@@ -4,6 +4,7 @@ A sensor that monitors trends in other components.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.trend/
 """
+import asyncio
 from collections import deque
 import logging
 import math
@@ -22,7 +23,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import utcnow
 
-REQUIREMENTS = ['numpy==1.15.2']
+REQUIREMENTS = ['numpy==1.15.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +138,8 @@ class SensorTrend(BinarySensorDevice):
         """No polling needed."""
         return False
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Complete device setup after being added to hass."""
         @callback
         def trend_sensor_state_listener(entity, old_state, new_state):
@@ -158,7 +160,8 @@ class SensorTrend(BinarySensorDevice):
             self.hass, self._entity_id,
             trend_sensor_state_listener)
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and update the states."""
         # Remove outdated samples
         if self._sample_duration > 0:
@@ -170,7 +173,7 @@ class SensorTrend(BinarySensorDevice):
             return
 
         # Calculate gradient of linear trend
-        await self.hass.async_add_job(self._calculate_gradient)
+        yield from self.hass.async_add_job(self._calculate_gradient)
 
         # Update state
         self._state = (

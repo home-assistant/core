@@ -13,7 +13,6 @@ from homeassistant.const import (
     TEMPERATURE, UNIT_NOT_RECOGNIZED_TEMPLATE)
 from homeassistant.util import temperature as temperature_util
 from homeassistant.util import distance as distance_util
-from homeassistant.util import volume as volume_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,13 +107,6 @@ class UnitSystem:
 
         return distance_util.convert(length, from_unit,
                                      self.length_unit)
-
-    def volume(self, volume: Optional[float], from_unit: str) -> float:
-        """Convert the given volume to this unit system."""
-        if not isinstance(volume, Number):
-            raise TypeError('{} is not a numeric value.'.format(str(volume)))
-
-        return volume_util.convert(volume, from_unit, self.volume_unit)
 
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""

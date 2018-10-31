@@ -4,6 +4,7 @@ Support for Alexa skill service end point.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -52,7 +53,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Activate Alexa component."""
     config = config.get(DOMAIN, {})
     flash_briefings_config = config.get(CONF_FLASH_BRIEFINGS)

@@ -4,6 +4,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mychevy/
 """
 
+import asyncio
 import logging
 
 from homeassistant.components.mychevy import (
@@ -54,7 +55,8 @@ class MyChevyStatus(Entity):
         """Initialize sensor with car connection."""
         self._state = None
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             UPDATE_TOPIC, self.success)
@@ -127,7 +129,8 @@ class EVSensor(Entity):
                               slugify(self._car.name),
                               slugify(self._name)))
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             UPDATE_TOPIC, self.async_update_callback)

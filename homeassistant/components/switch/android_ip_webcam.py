@@ -4,6 +4,7 @@ Support for IP Webcam settings.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.android_ip_webcam/
 """
+import asyncio
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.android_ip_webcam import (
@@ -13,8 +14,9 @@ from homeassistant.components.android_ip_webcam import (
 DEPENDENCIES = ['android_ip_webcam']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the IP Webcam switch platform."""
     if discovery_info is None:
         return
@@ -49,7 +51,8 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
         """Return the name of the node."""
         return self._name
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the updated status of the switch."""
         self._state = bool(self._ipcam.current_settings.get(self._setting))
 
@@ -58,29 +61,31 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
         """Return the boolean response if the node is on."""
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn device on."""
         if self._setting == 'torch':
-            await self._ipcam.torch(activate=True)
+            yield from self._ipcam.torch(activate=True)
         elif self._setting == 'focus':
-            await self._ipcam.focus(activate=True)
+            yield from self._ipcam.focus(activate=True)
         elif self._setting == 'video_recording':
-            await self._ipcam.record(record=True)
+            yield from self._ipcam.record(record=True)
         else:
-            await self._ipcam.change_setting(self._setting, True)
+            yield from self._ipcam.change_setting(self._setting, True)
         self._state = True
         self.async_schedule_update_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn device off."""
         if self._setting == 'torch':
-            await self._ipcam.torch(activate=False)
+            yield from self._ipcam.torch(activate=False)
         elif self._setting == 'focus':
-            await self._ipcam.focus(activate=False)
+            yield from self._ipcam.focus(activate=False)
         elif self._setting == 'video_recording':
-            await self._ipcam.record(record=False)
+            yield from self._ipcam.record(record=False)
         else:
-            await self._ipcam.change_setting(self._setting, False)
+            yield from self._ipcam.change_setting(self._setting, False)
         self._state = False
         self.async_schedule_update_ha_state()
 

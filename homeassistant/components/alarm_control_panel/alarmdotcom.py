@@ -4,6 +4,7 @@ Interfaces with Alarm.com alarm control panels.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
 """
+import asyncio
 import logging
 import re
 
@@ -31,8 +32,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up a Alarm.com control panel."""
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
@@ -40,7 +42,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     password = config.get(CONF_PASSWORD)
 
     alarmdotcom = AlarmDotCom(hass, name, code, username, password)
-    await alarmdotcom.async_login()
+    yield from alarmdotcom.async_login()
     async_add_entities([alarmdotcom])
 
 
@@ -61,13 +63,15 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self._alarm = Alarmdotcom(
             username, password, self._websession, hass.loop)
 
-    async def async_login(self):
+    @asyncio.coroutine
+    def async_login(self):
         """Login to Alarm.com."""
-        await self._alarm.async_login()
+        yield from self._alarm.async_login()
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Fetch the latest state."""
-        await self._alarm.async_update()
+        yield from self._alarm.async_update()
         return self._alarm.state
 
     @property
@@ -102,20 +106,23 @@ class AlarmDotCom(alarm.AlarmControlPanel):
             'sensor_status': self._alarm.sensor_status
         }
 
-    async def async_alarm_disarm(self, code=None):
+    @asyncio.coroutine
+    def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         if self._validate_code(code):
-            await self._alarm.async_alarm_disarm()
+            yield from self._alarm.async_alarm_disarm()
 
-    async def async_alarm_arm_home(self, code=None):
+    @asyncio.coroutine
+    def async_alarm_arm_home(self, code=None):
         """Send arm hom command."""
         if self._validate_code(code):
-            await self._alarm.async_alarm_arm_home()
+            yield from self._alarm.async_alarm_arm_home()
 
-    async def async_alarm_arm_away(self, code=None):
+    @asyncio.coroutine
+    def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         if self._validate_code(code):
-            await self._alarm.async_alarm_arm_away()
+            yield from self._alarm.async_alarm_arm_away()
 
     def _validate_code(self, code):
         """Validate given code."""

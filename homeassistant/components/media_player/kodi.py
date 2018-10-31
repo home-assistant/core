@@ -156,8 +156,9 @@ def _check_deprecated_turn_off(hass, turn_off_action):
     return turn_off_action
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Kodi platform."""
     if DATA_KODI not in hass.data:
         hass.data[DATA_KODI] = dict()
@@ -210,7 +211,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     hass.data[DATA_KODI][ip_addr] = entity
     async_add_entities([entity], update_before_add=True)
 
-    async def async_service_handler(service):
+    @asyncio.coroutine
+    def async_service_handler(service):
         """Map services to methods on MediaPlayerDevice."""
         method = SERVICE_TO_METHOD.get(service.service)
         if not method:
@@ -228,7 +230,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
         update_tasks = []
         for player in target_players:
-            await getattr(player, method['method'])(**params)
+            yield from getattr(player, method['method'])(**params)
 
         for player in target_players:
             if player.should_poll:
@@ -236,7 +238,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 update_tasks.append(update_coro)
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     if hass.services.has_service(DOMAIN, SERVICE_ADD_MEDIA):
         return
@@ -251,11 +253,12 @@ async def async_setup_platform(hass, config, async_add_entities,
 def cmd(func):
     """Catch command exceptions."""
     @wraps(func)
-    async def wrapper(obj, *args, **kwargs):
+    @asyncio.coroutine
+    def wrapper(obj, *args, **kwargs):
         """Wrap all command methods."""
         import jsonrpc_base
         try:
-            await func(obj, *args, **kwargs)
+            yield from func(obj, *args, **kwargs)
         except jsonrpc_base.jsonrpc.TransportError as exc:
             # If Kodi is off, we expect calls to fail.
             if obj.state == STATE_OFF:
@@ -322,7 +325,7 @@ class KodiDevice(MediaPlayerDevice):
 
             def on_hass_stop(event):
                 """Close websocket connection when hass stops."""
-                self.hass.async_create_task(self._ws_server.close())
+                self.hass.async_add_job(self._ws_server.close())
 
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, on_hass_stop)
@@ -387,13 +390,14 @@ class KodiDevice(MediaPlayerDevice):
         self._properties = {}
         self._item = {}
         self._app_properties = {}
-        self.hass.async_create_task(self._ws_server.close())
+        self.hass.async_add_job(self._ws_server.close())
 
-    async def _get_players(self):
+    @asyncio.coroutine
+    def _get_players(self):
         """Return the active player objects or None."""
         import jsonrpc_base
         try:
-            return await self.server.Player.GetActivePlayers()
+            return (yield from self.server.Player.GetActivePlayers())
         except jsonrpc_base.jsonrpc.TransportError:
             if self._players is not None:
                 _LOGGER.info("Unable to fetch kodi data")
@@ -419,21 +423,23 @@ class KodiDevice(MediaPlayerDevice):
 
         return STATE_PLAYING
 
-    async def async_ws_connect(self):
+    @asyncio.coroutine
+    def async_ws_connect(self):
         """Connect to Kodi via websocket protocol."""
         import jsonrpc_base
         try:
-            ws_loop_future = await self._ws_server.ws_connect()
+            ws_loop_future = yield from self._ws_server.ws_connect()
         except jsonrpc_base.jsonrpc.TransportError:
             _LOGGER.info("Unable to connect to Kodi via websocket")
             _LOGGER.debug(
                 "Unable to connect to Kodi via websocket", exc_info=True)
             return
 
-        async def ws_loop_wrapper():
+        @asyncio.coroutine
+        def ws_loop_wrapper():
             """Catch exceptions from the websocket loop task."""
             try:
-                await ws_loop_future
+                yield from ws_loop_future
             except jsonrpc_base.TransportError:
                 # Kodi abruptly ends ws connection when exiting. We will try
                 # to reconnect on the next poll.
@@ -445,9 +451,10 @@ class KodiDevice(MediaPlayerDevice):
         # run until the websocket connection is closed.
         self.hass.loop.create_task(ws_loop_wrapper())
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Retrieve latest state."""
-        self._players = await self._get_players()
+        self._players = yield from self._get_players()
 
         if self._players is None:
             self._properties = {}
@@ -456,10 +463,10 @@ class KodiDevice(MediaPlayerDevice):
             return
 
         if self._enable_websocket and not self._ws_server.connected:
-            self.hass.async_create_task(self.async_ws_connect())
+            self.hass.async_add_job(self.async_ws_connect())
 
         self._app_properties = \
-            await self.server.Application.GetProperties(
+            yield from self.server.Application.GetProperties(
                 ['volume', 'muted']
             )
 
@@ -468,12 +475,12 @@ class KodiDevice(MediaPlayerDevice):
 
             assert isinstance(player_id, int)
 
-            self._properties = await self.server.Player.GetProperties(
+            self._properties = yield from self.server.Player.GetProperties(
                 player_id,
                 ['time', 'totaltime', 'speed', 'live']
             )
 
-            self._item = (await self.server.Player.GetItem(
+            self._item = (yield from self.server.Player.GetItem(
                 player_id,
                 ['title', 'file', 'uniqueid', 'thumbnail', 'artist',
                  'albumartist', 'showtitle', 'album', 'season', 'episode']
@@ -615,34 +622,38 @@ class KodiDevice(MediaPlayerDevice):
         return supported_features
 
     @cmd
-    async def async_turn_on(self):
+    @asyncio.coroutine
+    def async_turn_on(self):
         """Execute turn_on_action to turn on media player."""
         if self._turn_on_action is not None:
-            await self._turn_on_action.async_run(
+            yield from self._turn_on_action.async_run(
                 variables={"entity_id": self.entity_id})
         else:
             _LOGGER.warning("turn_on requested but turn_on_action is none")
 
     @cmd
-    async def async_turn_off(self):
+    @asyncio.coroutine
+    def async_turn_off(self):
         """Execute turn_off_action to turn off media player."""
         if self._turn_off_action is not None:
-            await self._turn_off_action.async_run(
+            yield from self._turn_off_action.async_run(
                 variables={"entity_id": self.entity_id})
         else:
             _LOGGER.warning("turn_off requested but turn_off_action is none")
 
     @cmd
-    async def async_volume_up(self):
+    @asyncio.coroutine
+    def async_volume_up(self):
         """Volume up the media player."""
         assert (
-            await self.server.Input.ExecuteAction('volumeup')) == 'OK'
+            yield from self.server.Input.ExecuteAction('volumeup')) == 'OK'
 
     @cmd
-    async def async_volume_down(self):
+    @asyncio.coroutine
+    def async_volume_down(self):
         """Volume down the media player."""
         assert (
-            await self.server.Input.ExecuteAction('volumedown')) == 'OK'
+            yield from self.server.Input.ExecuteAction('volumedown')) == 'OK'
 
     @cmd
     def async_set_volume_level(self, volume):
@@ -660,12 +671,13 @@ class KodiDevice(MediaPlayerDevice):
         """
         return self.server.Application.SetMute(mute)
 
-    async def async_set_play_state(self, state):
+    @asyncio.coroutine
+    def async_set_play_state(self, state):
         """Handle play/pause/toggle."""
-        players = await self._get_players()
+        players = yield from self._get_players()
 
         if players is not None and players:
-            await self.server.Player.PlayPause(
+            yield from self.server.Player.PlayPause(
                 players[0]['playerid'], state)
 
     @cmd
@@ -693,24 +705,26 @@ class KodiDevice(MediaPlayerDevice):
         return self.async_set_play_state(False)
 
     @cmd
-    async def async_media_stop(self):
+    @asyncio.coroutine
+    def async_media_stop(self):
         """Stop the media player."""
-        players = await self._get_players()
+        players = yield from self._get_players()
 
         if players:
-            await self.server.Player.Stop(players[0]['playerid'])
+            yield from self.server.Player.Stop(players[0]['playerid'])
 
-    async def _goto(self, direction):
+    @asyncio.coroutine
+    def _goto(self, direction):
         """Handle for previous/next track."""
-        players = await self._get_players()
+        players = yield from self._get_players()
 
         if players:
             if direction == 'previous':
                 # First seek to position 0. Kodi goes to the beginning of the
                 # current track if the current track is not at the beginning.
-                await self.server.Player.Seek(players[0]['playerid'], 0)
+                yield from self.server.Player.Seek(players[0]['playerid'], 0)
 
-            await self.server.Player.GoTo(
+            yield from self.server.Player.GoTo(
                 players[0]['playerid'], direction)
 
     @cmd
@@ -730,9 +744,10 @@ class KodiDevice(MediaPlayerDevice):
         return self._goto('previous')
 
     @cmd
-    async def async_media_seek(self, position):
+    @asyncio.coroutine
+    def async_media_seek(self, position):
         """Send seek command."""
-        players = await self._get_players()
+        players = yield from self._get_players()
 
         time = {}
 
@@ -748,7 +763,7 @@ class KodiDevice(MediaPlayerDevice):
         time['hours'] = int(position)
 
         if players:
-            await self.server.Player.Seek(players[0]['playerid'], time)
+            yield from self.server.Player.Seek(players[0]['playerid'], time)
 
     @cmd
     def async_play_media(self, media_type, media_id, **kwargs):
@@ -766,20 +781,22 @@ class KodiDevice(MediaPlayerDevice):
         return self.server.Player.Open(
             {"item": {"file": str(media_id)}})
 
-    async def async_set_shuffle(self, shuffle):
+    @asyncio.coroutine
+    def async_set_shuffle(self, shuffle):
         """Set shuffle mode, for the first player."""
         if not self._players:
             raise RuntimeError("Error: No active player.")
-        await self.server.Player.SetShuffle(
+        yield from self.server.Player.SetShuffle(
             {"playerid": self._players[0]['playerid'], "shuffle": shuffle})
 
-    async def async_call_method(self, method, **kwargs):
+    @asyncio.coroutine
+    def async_call_method(self, method, **kwargs):
         """Run Kodi JSONRPC API method with params."""
         import jsonrpc_base
         _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
-            result = await getattr(self.server, method)(**kwargs)
+            result = yield from getattr(self.server, method)(**kwargs)
             result_ok = True
         except jsonrpc_base.jsonrpc.ProtocolError as exc:
             result = exc.args[2]['error']
@@ -800,7 +817,8 @@ class KodiDevice(MediaPlayerDevice):
                                      event_data=event_data)
         return result
 
-    async def async_add_media_to_playlist(
+    @asyncio.coroutine
+    def async_add_media_to_playlist(
             self, media_type, media_id=None, media_name='ALL', artist_name=''):
         """Add a media to default playlist (i.e. playlistid=0).
 
@@ -814,7 +832,7 @@ class KodiDevice(MediaPlayerDevice):
         params = {"playlistid": 0}
         if media_type == "SONG":
             if media_id is None:
-                media_id = await self.async_find_song(
+                media_id = yield from self.async_find_song(
                     media_name, artist_name)
             if media_id:
                 params["item"] = {"songid": int(media_id)}
@@ -822,10 +840,10 @@ class KodiDevice(MediaPlayerDevice):
         elif media_type == "ALBUM":
             if media_id is None:
                 if media_name == "ALL":
-                    await self.async_add_all_albums(artist_name)
+                    yield from self.async_add_all_albums(artist_name)
                     return
 
-                media_id = await self.async_find_album(
+                media_id = yield from self.async_find_album(
                     media_name, artist_name)
             if media_id:
                 params["item"] = {"albumid": int(media_id)}
@@ -835,7 +853,7 @@ class KodiDevice(MediaPlayerDevice):
 
         if media_id is not None:
             try:
-                await self.server.Playlist.Add(params)
+                yield from self.server.Playlist.Add(params)
             except jsonrpc_base.jsonrpc.ProtocolError as exc:
                 result = exc.args[2]['error']
                 _LOGGER.error("Run API method %s.Playlist.Add(%s) error: %s",
@@ -846,38 +864,43 @@ class KodiDevice(MediaPlayerDevice):
         else:
             _LOGGER.warning("No media detected for Playlist.Add")
 
-    async def async_add_all_albums(self, artist_name):
+    @asyncio.coroutine
+    def async_add_all_albums(self, artist_name):
         """Add all albums of an artist to default playlist (i.e. playlistid=0).
 
         The artist is specified in terms of name.
         """
-        artist_id = await self.async_find_artist(artist_name)
+        artist_id = yield from self.async_find_artist(artist_name)
 
-        albums = await self.async_get_albums(artist_id)
+        albums = yield from self.async_get_albums(artist_id)
 
         for alb in albums['albums']:
-            await self.server.Playlist.Add(
+            yield from self.server.Playlist.Add(
                 {"playlistid": 0, "item": {"albumid": int(alb['albumid'])}})
 
-    async def async_clear_playlist(self):
+    @asyncio.coroutine
+    def async_clear_playlist(self):
         """Clear default playlist (i.e. playlistid=0)."""
         return self.server.Playlist.Clear({"playlistid": 0})
 
-    async def async_get_artists(self):
+    @asyncio.coroutine
+    def async_get_artists(self):
         """Get artists list."""
-        return await self.server.AudioLibrary.GetArtists()
+        return (yield from self.server.AudioLibrary.GetArtists())
 
-    async def async_get_albums(self, artist_id=None):
+    @asyncio.coroutine
+    def async_get_albums(self, artist_id=None):
         """Get albums list."""
         if artist_id is None:
-            return await self.server.AudioLibrary.GetAlbums()
+            return (yield from self.server.AudioLibrary.GetAlbums())
 
-        return (await self.server.AudioLibrary.GetAlbums(
+        return (yield from self.server.AudioLibrary.GetAlbums(
             {"filter": {"artistid": int(artist_id)}}))
 
-    async def async_find_artist(self, artist_name):
+    @asyncio.coroutine
+    def async_find_artist(self, artist_name):
         """Find artist by name."""
-        artists = await self.async_get_artists()
+        artists = yield from self.async_get_artists()
         try:
             out = self._find(
                 artist_name, [a['artist'] for a in artists['artists']])
@@ -886,34 +909,37 @@ class KodiDevice(MediaPlayerDevice):
             _LOGGER.warning("No artists were found: %s", artist_name)
             return None
 
-    async def async_get_songs(self, artist_id=None):
+    @asyncio.coroutine
+    def async_get_songs(self, artist_id=None):
         """Get songs list."""
         if artist_id is None:
-            return await self.server.AudioLibrary.GetSongs()
+            return (yield from self.server.AudioLibrary.GetSongs())
 
-        return (await self.server.AudioLibrary.GetSongs(
+        return (yield from self.server.AudioLibrary.GetSongs(
             {"filter": {"artistid": int(artist_id)}}))
 
-    async def async_find_song(self, song_name, artist_name=''):
+    @asyncio.coroutine
+    def async_find_song(self, song_name, artist_name=''):
         """Find song by name and optionally artist name."""
         artist_id = None
         if artist_name != '':
-            artist_id = await self.async_find_artist(artist_name)
+            artist_id = yield from self.async_find_artist(artist_name)
 
-        songs = await self.async_get_songs(artist_id)
+        songs = yield from self.async_get_songs(artist_id)
         if songs['limits']['total'] == 0:
             return None
 
         out = self._find(song_name, [a['label'] for a in songs['songs']])
         return songs['songs'][out[0][0]]['songid']
 
-    async def async_find_album(self, album_name, artist_name=''):
+    @asyncio.coroutine
+    def async_find_album(self, album_name, artist_name=''):
         """Find album by name and optionally artist name."""
         artist_id = None
         if artist_name != '':
-            artist_id = await self.async_find_artist(artist_name)
+            artist_id = yield from self.async_find_artist(artist_name)
 
-        albums = await self.async_get_albums(artist_id)
+        albums = yield from self.async_get_albums(artist_id)
         try:
             out = self._find(
                 album_name, [a['label'] for a in albums['albums']])

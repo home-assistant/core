@@ -98,11 +98,6 @@ class RingCam(Camera):
         return self._name
 
     @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._camera.id
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
@@ -115,7 +110,8 @@ class RingCam(Camera):
             'video_url': self._video_url,
         }
 
-    async def async_camera_image(self):
+    @asyncio.coroutine
+    def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg import ImageFrame, IMAGE_JPEG
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
@@ -123,12 +119,13 @@ class RingCam(Camera):
         if self._video_url is None:
             return
 
-        image = await asyncio.shield(ffmpeg.get_image(
+        image = yield from asyncio.shield(ffmpeg.get_image(
             self._video_url, output_format=IMAGE_JPEG,
             extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
         return image
 
-    async def handle_async_mjpeg_stream(self, request):
+    @asyncio.coroutine
+    def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
 
@@ -136,13 +133,13 @@ class RingCam(Camera):
             return
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
-        await stream.open_camera(
+        yield from stream.open_camera(
             self._video_url, extra_cmd=self._ffmpeg_arguments)
 
-        await async_aiohttp_proxy_stream(
+        yield from async_aiohttp_proxy_stream(
             self.hass, request, stream,
             'multipart/x-mixed-replace;boundary=ffserver')
-        await stream.close()
+        yield from stream.close()
 
     @property
     def should_poll(self):

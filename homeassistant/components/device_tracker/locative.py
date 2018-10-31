@@ -4,6 +4,7 @@ Support for the Locative platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.locative/
 """
+import asyncio
 from functools import partial
 import logging
 
@@ -37,18 +38,21 @@ class LocativeView(HomeAssistantView):
         """Initialize Locative URL endpoints."""
         self.see = see
 
-    async def get(self, request):
+    @asyncio.coroutine
+    def get(self, request):
         """Locative message received as GET."""
-        res = await self._handle(request.app['hass'], request.query)
+        res = yield from self._handle(request.app['hass'], request.query)
         return res
 
-    async def post(self, request):
+    @asyncio.coroutine
+    def post(self, request):
         """Locative message received."""
-        data = await request.post()
-        res = await self._handle(request.app['hass'], data)
+        data = yield from request.post()
+        res = yield from self._handle(request.app['hass'], data)
         return res
 
-    async def _handle(self, hass, data):
+    @asyncio.coroutine
+    def _handle(self, hass, data):
         """Handle locative request."""
         if 'latitude' not in data or 'longitude' not in data:
             return ('Latitude and longitude not specified.',
@@ -75,7 +79,7 @@ class LocativeView(HomeAssistantView):
         gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
         if direction == 'enter':
-            await hass.async_add_job(
+            yield from hass.async_add_job(
                 partial(self.see, dev_id=device, location_name=location_name,
                         gps=gps_location))
             return 'Setting location to {}'.format(location_name)
@@ -86,7 +90,7 @@ class LocativeView(HomeAssistantView):
 
             if current_state is None or current_state.state == location_name:
                 location_name = STATE_NOT_HOME
-                await hass.async_add_job(
+                yield from hass.async_add_job(
                     partial(self.see, dev_id=device,
                             location_name=location_name, gps=gps_location))
                 return 'Setting location to not home'

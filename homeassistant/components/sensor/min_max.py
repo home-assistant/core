@@ -4,6 +4,7 @@ Support for displaying the minimal and the maximal value.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.min_max/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -53,8 +54,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the min/max/mean sensor."""
     entity_ids = config.get(CONF_ENTITY_IDS)
     name = config.get(CONF_NAME)
@@ -192,7 +194,8 @@ class MinMaxSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and updates the states."""
         sensor_values = [self.states[k] for k in self._entity_ids
                          if k in self.states]

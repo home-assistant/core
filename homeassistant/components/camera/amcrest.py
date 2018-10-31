@@ -4,6 +4,7 @@ This component provides basic support for Amcrest IP cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.amcrest/
 """
+import asyncio
 import logging
 
 from homeassistant.components.amcrest import (
@@ -20,8 +21,9 @@ DEPENDENCIES = ['amcrest', 'ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up an Amcrest IP Camera."""
     if discovery_info is None:
         return
@@ -55,11 +57,12 @@ class AmcrestCam(Camera):
         response = self._camera.snapshot(channel=self._resolution)
         return response.data
 
-    async def handle_async_mjpeg_stream(self, request):
+    @asyncio.coroutine
+    def handle_async_mjpeg_stream(self, request):
         """Return an MJPEG stream."""
         # The snapshot implementation is handled by the parent class
         if self._stream_source == STREAM_SOURCE_LIST['snapshot']:
-            await super().handle_async_mjpeg_stream(request)
+            yield from super().handle_async_mjpeg_stream(request)
             return
 
         if self._stream_source == STREAM_SOURCE_LIST['mjpeg']:
@@ -69,7 +72,7 @@ class AmcrestCam(Camera):
             stream_coro = websession.get(
                 streaming_url, auth=self._token, timeout=TIMEOUT)
 
-            await async_aiohttp_proxy_web(self.hass, request, stream_coro)
+            yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
         else:
             # streaming via fmpeg
@@ -77,13 +80,13 @@ class AmcrestCam(Camera):
 
             streaming_url = self._camera.rtsp_url(typeno=self._resolution)
             stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
-            await stream.open_camera(
+            yield from stream.open_camera(
                 streaming_url, extra_cmd=self._ffmpeg_arguments)
 
-            await async_aiohttp_proxy_stream(
+            yield from async_aiohttp_proxy_stream(
                 self.hass, request, stream,
                 'multipart/x-mixed-replace;boundary=ffserver')
-            await stream.close()
+            yield from stream.close()
 
     @property
     def name(self):

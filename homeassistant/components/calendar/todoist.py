@@ -518,8 +518,6 @@ class TodoistProjectData:
     def update(self):
         """Get the latest data."""
         if self._id is None:
-            self._api.reset_state()
-            self._api.sync()
             project_task_data = [
                 task for task in self._api.state[TASKS]
                 if not self._project_id_whitelist or
@@ -529,7 +527,6 @@ class TodoistProjectData:
 
         # If we have no data, we can just return right away.
         if not project_task_data:
-            _LOGGER.debug("No data for %s", self._name)
             self.event = None
             return True
 
@@ -544,8 +541,6 @@ class TodoistProjectData:
 
         if not project_tasks:
             # We had no valid tasks
-            _LOGGER.debug("No valid tasks for %s", self._name)
-            self.event = None
             return True
 
         # Make sure the task collection is reset to prevent an

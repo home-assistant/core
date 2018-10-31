@@ -1,4 +1,5 @@
 """Support for alexa Smart Home Skill API."""
+import asyncio
 import logging
 import math
 from datetime import datetime
@@ -694,7 +695,8 @@ class SmartHomeView(http.HomeAssistantView):
         """Initialize."""
         self.smart_home_config = smart_home_config
 
-    async def post(self, request):
+    @asyncio.coroutine
+    def post(self, request):
         """Handle Alexa Smart Home requests.
 
         The Smart Home API requires the endpoint to be implemented in AWS
@@ -702,11 +704,11 @@ class SmartHomeView(http.HomeAssistantView):
         the response.
         """
         hass = request.app['hass']
-        message = await request.json()
+        message = yield from request.json()
 
         _LOGGER.debug("Received Alexa Smart Home request: %s", message)
 
-        response = await async_handle_message(
+        response = yield from async_handle_message(
             hass, self.smart_home_config, message)
         _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
         return b'' if response is None else self.json(response)

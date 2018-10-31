@@ -8,7 +8,6 @@ from homeassistant.components import switch
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 
 from tests.common import get_test_home_assistant
-from tests.components.switch import common
 
 
 class TestSwitch(unittest.TestCase):
@@ -42,8 +41,8 @@ class TestSwitch(unittest.TestCase):
         self.assertFalse(switch.is_on(self.hass, self.switch_2.entity_id))
         self.assertFalse(switch.is_on(self.hass, self.switch_3.entity_id))
 
-        common.turn_off(self.hass, self.switch_1.entity_id)
-        common.turn_on(self.hass, self.switch_2.entity_id)
+        switch.turn_off(self.hass, self.switch_1.entity_id)
+        switch.turn_on(self.hass, self.switch_2.entity_id)
 
         self.hass.block_till_done()
 
@@ -52,7 +51,7 @@ class TestSwitch(unittest.TestCase):
         self.assertTrue(switch.is_on(self.hass, self.switch_2.entity_id))
 
         # Turn all off
-        common.turn_off(self.hass)
+        switch.turn_off(self.hass)
 
         self.hass.block_till_done()
 
@@ -65,7 +64,7 @@ class TestSwitch(unittest.TestCase):
         self.assertFalse(switch.is_on(self.hass, self.switch_3.entity_id))
 
         # Turn all on
-        common.turn_on(self.hass)
+        switch.turn_on(self.hass)
 
         self.hass.block_till_done()
 

@@ -34,7 +34,6 @@ class FlowHandler(config_entries.ConfigFlow):
     def __init__(self):
         """Initialize flow."""
         self._host = None
-        self._import_groups = False
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -53,8 +52,7 @@ class FlowHandler(config_entries.ConfigFlow):
 
                 # We don't ask for import group anymore as group state
                 # is not reliable, don't want to show that to the user.
-                # But we still allow specifying import group via config yaml.
-                auth[CONF_IMPORT_GROUPS] = self._import_groups
+                auth[CONF_IMPORT_GROUPS] = False
 
                 return await self._entry_from_data(auth)
 
@@ -79,12 +77,6 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_discovery(self, user_input):
         """Handle discovery."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == user_input['host']:
-                return self.async_abort(
-                    reason='already_configured'
-                )
-
         self._host = user_input['host']
         return await self.async_step_auth()
 
@@ -99,7 +91,6 @@ class FlowHandler(config_entries.ConfigFlow):
         # Happens if user has host directly in configuration.yaml
         if 'key' not in user_input:
             self._host = user_input['host']
-            self._import_groups = user_input[CONF_IMPORT_GROUPS]
             return await self.async_step_auth()
 
         try:
@@ -169,15 +160,10 @@ async def get_gateway_info(hass, host, identity, key):
             psk=key,
             loop=hass.loop
         )
-
         api = factory.request
         gateway = Gateway()
         gateway_info_result = await api(gateway.get_gateway_info())
-
-        await factory.shutdown()
-    except (OSError, RequestError):
-        # We're also catching OSError as PyTradfri doesn't catch that one yet
-        # Upstream PR: https://github.com/ggravlingen/pytradfri/pull/189
+    except RequestError:
         raise AuthError('cannot_connect')
 
     return {

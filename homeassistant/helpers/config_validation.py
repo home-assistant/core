@@ -335,12 +335,9 @@ def slugify(value):
 
 def string(value: Any) -> str:
     """Coerce value to string, except for None."""
-    if value is None:
-        raise vol.Invalid('string value is None')
-    if isinstance(value, (list, dict)):
-        raise vol.Invalid('value should be a string')
-
-    return str(value)
+    if value is not None:
+        return str(value)
+    raise vol.Invalid('string value is None')
 
 
 def temperature_unit(value) -> str:

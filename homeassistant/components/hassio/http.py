@@ -18,10 +18,9 @@ from aiohttp.web_exceptions import HTTPBadGateway
 from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 
-from .const import X_HASSIO
-
 _LOGGER = logging.getLogger(__name__)
 
+X_HASSIO = 'X-HASSIO-KEY'
 
 NO_TIMEOUT = re.compile(
     r'^(?:'
@@ -55,14 +54,15 @@ class HassIOView(HomeAssistantView):
         self._host = host
         self._websession = websession
 
-    async def _handle(self, request, path):
+    @asyncio.coroutine
+    def _handle(self, request, path):
         """Route data to Hass.io."""
         if _need_auth(path) and not request[KEY_AUTHENTICATED]:
             return web.Response(status=401)
 
-        client = await self._command_proxy(path, request)
+        client = yield from self._command_proxy(path, request)
 
-        data = await client.read()
+        data = yield from client.read()
         if path.endswith('/logs'):
             return _create_response_log(client, data)
         return _create_response(client, data)
@@ -70,7 +70,8 @@ class HassIOView(HomeAssistantView):
     get = _handle
     post = _handle
 
-    async def _command_proxy(self, path, request):
+    @asyncio.coroutine
+    def _command_proxy(self, path, request):
         """Return a client request with proxy origin for Hass.io supervisor.
 
         This method is a coroutine.
@@ -82,14 +83,14 @@ class HassIOView(HomeAssistantView):
             data = None
             headers = {X_HASSIO: os.environ.get('HASSIO_TOKEN', "")}
             with async_timeout.timeout(10, loop=hass.loop):
-                data = await request.read()
+                data = yield from request.read()
                 if data:
                     headers[CONTENT_TYPE] = request.content_type
                 else:
                     data = None
 
             method = getattr(self._websession, request.method.lower())
-            client = await method(
+            client = yield from method(
                 "http://{}/{}".format(self._host, path), data=data,
                 headers=headers, timeout=read_timeout
             )

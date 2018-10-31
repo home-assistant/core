@@ -80,10 +80,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config.get(CONF_MAC).encode().replace(b':', b''))
     switch_type = config.get(CONF_TYPE)
 
-    async def _learn_command(call):
+    @asyncio.coroutine
+    def _learn_command(call):
         """Handle a learn command."""
         try:
-            auth = await hass.async_add_job(broadlink_device.auth)
+            auth = yield from hass.async_add_job(broadlink_device.auth)
         except socket.timeout:
             _LOGGER.error("Failed to connect to device, timeout")
             return
@@ -91,12 +92,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error("Failed to connect to device")
             return
 
-        await hass.async_add_job(broadlink_device.enter_learning)
+        yield from hass.async_add_job(broadlink_device.enter_learning)
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=20):
-            packet = await hass.async_add_job(
+            packet = yield from hass.async_add_job(
                 broadlink_device.check_data)
             if packet:
                 log_msg = "Received packet is: {}".\
@@ -105,12 +106,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 hass.components.persistent_notification.async_create(
                     log_msg, title='Broadlink switch')
                 return
-            await asyncio.sleep(1, loop=hass.loop)
+            yield from asyncio.sleep(1, loop=hass.loop)
         _LOGGER.error("Did not received any signal")
         hass.components.persistent_notification.async_create(
             "Did not received any signal", title='Broadlink switch')
 
-    async def _send_packet(call):
+    @asyncio.coroutine
+    def _send_packet(call):
         """Send a packet."""
         packets = call.data.get('packet', [])
         for packet in packets:
@@ -120,12 +122,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     if extra > 0:
                         packet = packet + ('=' * (4 - extra))
                     payload = b64decode(packet)
-                    await hass.async_add_job(
+                    yield from hass.async_add_job(
                         broadlink_device.send_data, payload)
                     break
                 except (socket.timeout, ValueError):
                     try:
-                        await hass.async_add_job(
+                        yield from hass.async_add_job(
                             broadlink_device.auth)
                     except socket.timeout:
                         if retry == DEFAULT_RETRY-1:
@@ -260,7 +262,6 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
         super().__init__(friendly_name, friendly_name, device, None, None)
         self._command_on = 1
         self._command_off = 0
-        self._load_power = None
 
     def _sendpacket(self, packet, retry=2):
         """Send packet to device."""
@@ -289,14 +290,6 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         """Return the polling state."""
         return True
 
-    @property
-    def current_power_w(self):
-        """Return the current power usage in Watt."""
-        try:
-            return round(self._load_power, 2)
-        except (ValueError, TypeError):
-            return None
-
     def update(self):
         """Synchronize state with switch."""
         self._update()
@@ -305,7 +298,6 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         """Update the state of the device."""
         try:
             state = self._device.check_power()
-            load_power = self._device.get_energy()
         except (socket.timeout, ValueError) as error:
             if retry < 1:
                 _LOGGER.error(error)
@@ -316,7 +308,6 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         if state is None and retry > 0:
             return self._update(retry-1)
         self._state = state
-        self._load_power = load_power
 
 
 class BroadlinkMP1Slot(BroadlinkRMSwitch):

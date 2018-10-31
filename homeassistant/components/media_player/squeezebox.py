@@ -64,8 +64,9 @@ SERVICE_TO_METHOD = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the squeezebox platform."""
     import socket
 
@@ -105,12 +106,13 @@ async def async_setup_platform(hass, config, async_add_entities,
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
 
-    players = await lms.create_players()
+    players = yield from lms.create_players()
 
     hass.data[DATA_SQUEEZEBOX].extend(players)
     async_add_entities(players)
 
-    async def async_service_handler(service):
+    @asyncio.coroutine
+    def async_service_handler(service):
         """Map services to methods on MediaPlayerDevice."""
         method = SERVICE_TO_METHOD.get(service.service)
         if not method:
@@ -127,11 +129,11 @@ async def async_setup_platform(hass, config, async_add_entities,
 
         update_tasks = []
         for player in target_players:
-            await getattr(player, method['method'])(**params)
+            yield from getattr(player, method['method'])(**params)
             update_tasks.append(player.async_update_ha_state(True))
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service]['schema']
@@ -153,20 +155,22 @@ class LogitechMediaServer:
         self._username = username
         self._password = password
 
-    async def create_players(self):
+    @asyncio.coroutine
+    def create_players(self):
         """Create a list of devices connected to LMS."""
         result = []
-        data = await self.async_query('players', 'status')
+        data = yield from self.async_query('players', 'status')
         if data is False:
             return result
         for players in data.get('players_loop', []):
             player = SqueezeBoxDevice(
                 self, players['playerid'], players['name'])
-            await player.async_update()
+            yield from player.async_update()
             result.append(player)
         return result
 
-    async def async_query(self, *command, player=""):
+    @asyncio.coroutine
+    def async_query(self, *command, player=""):
         """Abstract out the JSON-RPC connection."""
         auth = None if self._username is None else aiohttp.BasicAuth(
             self._username, self._password)
@@ -183,7 +187,7 @@ class LogitechMediaServer:
         try:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
-                response = await websession.post(
+                response = yield from websession.post(
                     url,
                     data=data,
                     auth=auth)
@@ -194,7 +198,7 @@ class LogitechMediaServer:
                         response.status, response)
                     return False
 
-                data = await response.json()
+                data = yield from response.json()
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed communicating with LMS: %s", type(error))
@@ -252,10 +256,11 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         return self._lms.async_query(
             *parameters, player=self._id)
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Retrieve the current state of the player."""
         tags = 'adKl'
-        response = await self.async_query(
+        response = yield from self.async_query(
             "status", "-", "1", "tags:{tags}"
             .format(tags=tags))
 

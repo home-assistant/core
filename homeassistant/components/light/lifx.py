@@ -17,31 +17,35 @@ from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME, ATTR_COLOR_TEMP,
     ATTR_EFFECT, ATTR_HS_COLOR, ATTR_KELVIN, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    ATTR_XY_COLOR, COLOR_GROUP, DOMAIN, LIGHT_TURN_ON_SCHEMA,
+    ATTR_XY_COLOR, COLOR_GROUP, DOMAIN, LIGHT_TURN_ON_SCHEMA, PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_TRANSITION, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
     preprocess_turn_on_alternatives)
-from homeassistant.components.lifx import (
-    DOMAIN as LIFX_DOMAIN, CONF_SERVER, CONF_BROADCAST)
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['lifx']
-REQUIREMENTS = ['aiolifx_effects==0.2.1']
+REQUIREMENTS = ['aiolifx==0.6.3', 'aiolifx_effects==0.1.2']
 
-SCAN_INTERVAL = timedelta(seconds=10)
+UDP_BROADCAST_PORT = 56700
 
 DISCOVERY_INTERVAL = 60
 MESSAGE_TIMEOUT = 1.0
 MESSAGE_RETRIES = 8
 UNAVAILABLE_GRACE = 90
+
+CONF_SERVER = 'server'
+CONF_BROADCAST = 'broadcast'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
+    vol.Optional(CONF_BROADCAST, default='255.255.255.255'): cv.string,
+})
 
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
@@ -134,41 +138,24 @@ async def async_setup_platform(hass,
                                config,
                                async_add_entities,
                                discovery_info=None):
-    """Set up the LIFX light platform. Obsolete."""
-    _LOGGER.warning('LIFX no longer works with light platform configuration.')
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up LIFX from a config entry."""
+    """Set up the LIFX platform."""
     if sys.platform == 'win32':
         _LOGGER.warning("The lifx platform is known to not work on Windows. "
                         "Consider using the lifx_legacy platform instead")
 
-    # Priority 1: manual config
-    interfaces = hass.data[LIFX_DOMAIN].get(DOMAIN)
-    if not interfaces:
-        # Priority 2: scanned interfaces
-        lifx_ip_addresses = await aiolifx().LifxScan(hass.loop).scan()
-        interfaces = [{CONF_SERVER: ip} for ip in lifx_ip_addresses]
-        if not interfaces:
-            # Priority 3: default interface
-            interfaces = [{}]
+    server_addr = config.get(CONF_SERVER)
 
     lifx_manager = LIFXManager(hass, async_add_entities)
+    lifx_discovery = aiolifx().LifxDiscovery(
+        hass.loop,
+        lifx_manager,
+        discovery_interval=DISCOVERY_INTERVAL,
+        broadcast_ip=config.get(CONF_BROADCAST))
 
-    for interface in interfaces:
-        kwargs = {'discovery_interval': DISCOVERY_INTERVAL}
-        broadcast_ip = interface.get(CONF_BROADCAST)
-        if broadcast_ip:
-            kwargs['broadcast_ip'] = broadcast_ip
-        lifx_discovery = aiolifx().LifxDiscovery(
-            hass.loop, lifx_manager, **kwargs)
+    coro = hass.loop.create_datagram_endpoint(
+        lambda: lifx_discovery, local_addr=(server_addr, UDP_BROADCAST_PORT))
 
-        kwargs = {}
-        listen_ip = interface.get(CONF_SERVER)
-        if listen_ip:
-            kwargs['listen_ip'] = listen_ip
-        lifx_discovery.start(**kwargs)
+    hass.async_add_job(coro)
 
     @callback
     def cleanup(event):
@@ -238,7 +225,7 @@ class LIFXManager:
             for light in self.service_to_entities(service):
                 if service.service == SERVICE_LIFX_SET_STATE:
                     task = light.set_state(**service.data)
-                tasks.append(self.hass.async_create_task(task))
+                tasks.append(self.hass.async_add_job(task))
             if tasks:
                 await asyncio.wait(tasks, loop=self.hass.loop)
 
@@ -313,7 +300,7 @@ class LIFXManager:
     @callback
     def register(self, bulb):
         """Handle aiolifx detected bulb."""
-        self.hass.async_create_task(self.register_new_bulb(bulb))
+        self.hass.async_add_job(self.register_new_bulb(bulb))
 
     async def register_new_bulb(self, bulb):
         """Handle newly detected bulb."""
@@ -357,7 +344,7 @@ class LIFXManager:
             entity = self.entities[bulb.mac_addr]
             _LOGGER.debug("%s unregister", entity.who)
             entity.registered = False
-            self.hass.async_create_task(entity.async_update_ha_state())
+            self.hass.async_add_job(entity.async_update_ha_state())
 
 
 class AwaitAioLIFX:
@@ -404,26 +391,6 @@ class LIFXLight(Light):
         self.registered = True
         self.postponed_update = None
         self.lock = asyncio.Lock()
-
-    @property
-    def device_info(self):
-        """Return information about the device."""
-        info = {
-            'identifiers': {
-                (LIFX_DOMAIN, self.unique_id)
-            },
-            'name': self.name,
-            'connections': {
-                (dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)
-            },
-            'manufacturer': 'LIFX',
-        }
-
-        model = aiolifx().products.product_map.get(self.bulb.product)
-        if model is not None:
-            info['model'] = model
-
-        return info
 
     @property
     def available(self):
@@ -517,12 +484,12 @@ class LIFXLight(Light):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         kwargs[ATTR_POWER] = True
-        self.hass.async_create_task(self.set_state(**kwargs))
+        self.hass.async_add_job(self.set_state(**kwargs))
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         kwargs[ATTR_POWER] = False
-        self.hass.async_create_task(self.set_state(**kwargs))
+        self.hass.async_add_job(self.set_state(**kwargs))
 
     async def set_state(self, **kwargs):
         """Set a color on the light and turn it on/off."""

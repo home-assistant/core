@@ -27,13 +27,15 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+@asyncio.coroutine
+def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the shell_command component."""
     conf = config.get(DOMAIN, {})
 
     cache = {}
 
-    async def async_service_handler(service: ServiceCall) -> None:
+    @asyncio.coroutine
+    def async_service_handler(service: ServiceCall) -> None:
         """Execute a shell command service."""
         cmd = conf[service.service]
 
@@ -83,8 +85,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 stderr=asyncio.subprocess.PIPE,
                 )
 
-        process = await create_process
-        stdout_data, stderr_data = await process.communicate()
+        process = yield from create_process
+        stdout_data, stderr_data = yield from process.communicate()
 
         if stdout_data:
             _LOGGER.debug("Stdout of command: `%s`, return code: %s:\n%s",

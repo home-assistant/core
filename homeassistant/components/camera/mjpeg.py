@@ -41,17 +41,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up a MJPEG IP Camera."""
-    # Filter header errors from urllib3 due to a urllib3 bug
-    urllib3_logger = logging.getLogger("urllib3.connectionpool")
-    if not any(isinstance(x, NoHeaderErrorFilter)
-               for x in urllib3_logger.filters):
-        urllib3_logger.addFilter(
-            NoHeaderErrorFilter()
-        )
-
     if discovery_info:
         config = PLATFORM_SCHEMA(discovery_info)
     async_add_entities([MjpegCamera(config)])
@@ -89,22 +82,23 @@ class MjpegCamera(Camera):
                     self._username, password=self._password
                 )
 
-    async def async_camera_image(self):
+    @asyncio.coroutine
+    def async_camera_image(self):
         """Return a still image response from the camera."""
         # DigestAuth is not supported
         if self._authentication == HTTP_DIGEST_AUTHENTICATION or \
            self._still_image_url is None:
-            image = await self.hass.async_add_job(
+            image = yield from self.hass.async_add_job(
                 self.camera_image)
             return image
 
         websession = async_get_clientsession(self.hass)
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                response = await websession.get(
+                response = yield from websession.get(
                     self._still_image_url, auth=self._auth)
 
-                image = await response.read()
+                image = yield from response.read()
                 return image
 
         except asyncio.TimeoutError:
@@ -147,11 +141,3 @@ class MjpegCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
-
-
-class NoHeaderErrorFilter(logging.Filter):
-    """Filter out urllib3 Header Parsing Errors due to a urllib3 bug."""
-
-    def filter(self, record):
-        """Filter out Header Parsing Errors."""
-        return "Failed to parse headers" not in record.getMessage()

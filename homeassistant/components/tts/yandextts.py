@@ -71,7 +71,8 @@ SUPPORTED_OPTIONS = [
 ]
 
 
-async def async_get_engine(hass, config):
+@asyncio.coroutine
+def async_get_engine(hass, config):
     """Set up VoiceRSS speech component."""
     return YandexSpeechKitProvider(hass, config)
 
@@ -105,7 +106,8 @@ class YandexSpeechKitProvider(Provider):
         """Return list of supported options."""
         return SUPPORTED_OPTIONS
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    @asyncio.coroutine
+    def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
         actual_language = language
@@ -123,14 +125,14 @@ class YandexSpeechKitProvider(Provider):
                     'speed': options.get(CONF_SPEED, self._speed)
                 }
 
-                request = await websession.get(
+                request = yield from websession.get(
                     YANDEX_API_URL, params=url_param)
 
                 if request.status != 200:
                     _LOGGER.error("Error %d on load URL %s",
                                   request.status, request.url)
                     return (None, None)
-                data = await request.read()
+                data = yield from request.read()
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for yandex speech kit API")

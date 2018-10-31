@@ -69,7 +69,45 @@ SCHEMA_TRAIN_SERVICE = vol.Schema({
 })
 
 
-async def async_setup(hass, config):
+def create_group(hass, name):
+    """Create a new person group."""
+    data = {ATTR_NAME: name}
+    hass.services.call(DOMAIN, SERVICE_CREATE_GROUP, data)
+
+
+def delete_group(hass, name):
+    """Delete a person group."""
+    data = {ATTR_NAME: name}
+    hass.services.call(DOMAIN, SERVICE_DELETE_GROUP, data)
+
+
+def train_group(hass, group):
+    """Train a person group."""
+    data = {ATTR_GROUP: group}
+    hass.services.call(DOMAIN, SERVICE_TRAIN_GROUP, data)
+
+
+def create_person(hass, group, name):
+    """Create a person in a group."""
+    data = {ATTR_GROUP: group, ATTR_NAME: name}
+    hass.services.call(DOMAIN, SERVICE_CREATE_PERSON, data)
+
+
+def delete_person(hass, group, name):
+    """Delete a person in a group."""
+    data = {ATTR_GROUP: group, ATTR_NAME: name}
+    hass.services.call(DOMAIN, SERVICE_DELETE_PERSON, data)
+
+
+def face_person(hass, group, person, camera_entity):
+    """Add a new face picture to a person."""
+    data = {ATTR_GROUP: group, ATTR_PERSON: person,
+            ATTR_CAMERA_ENTITY: camera_entity}
+    hass.services.call(DOMAIN, SERVICE_FACE_PERSON, data)
+
+
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up Microsoft Face."""
     entities = {}
     face = MicrosoftFace(
@@ -82,25 +120,26 @@ async def async_setup(hass, config):
 
     try:
         # read exists group/person from cloud and create entities
-        await face.update_store()
+        yield from face.update_store()
     except HomeAssistantError as err:
         _LOGGER.error("Can't load data from face api: %s", err)
         return False
 
     hass.data[DATA_MICROSOFT_FACE] = face
 
-    async def async_create_group(service):
+    @asyncio.coroutine
+    def async_create_group(service):
         """Create a new person group."""
         name = service.data[ATTR_NAME]
         g_id = slugify(name)
 
         try:
-            await face.call_api(
+            yield from face.call_api(
                 'put', "persongroups/{0}".format(g_id), {'name': name})
             face.store[g_id] = {}
 
             entities[g_id] = MicrosoftFaceGroupEntity(hass, face, g_id, name)
-            await entities[g_id].async_update_ha_state()
+            yield from entities[g_id].async_update_ha_state()
         except HomeAssistantError as err:
             _LOGGER.error("Can't create group '%s' with error: %s", g_id, err)
 
@@ -108,12 +147,13 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_CREATE_GROUP, async_create_group,
         schema=SCHEMA_GROUP_SERVICE)
 
-    async def async_delete_group(service):
+    @asyncio.coroutine
+    def async_delete_group(service):
         """Delete a person group."""
         g_id = slugify(service.data[ATTR_NAME])
 
         try:
-            await face.call_api('delete', "persongroups/{0}".format(g_id))
+            yield from face.call_api('delete', "persongroups/{0}".format(g_id))
             face.store.pop(g_id)
 
             entity = entities.pop(g_id)
@@ -125,12 +165,13 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_DELETE_GROUP, async_delete_group,
         schema=SCHEMA_GROUP_SERVICE)
 
-    async def async_train_group(service):
+    @asyncio.coroutine
+    def async_train_group(service):
         """Train a person group."""
         g_id = service.data[ATTR_GROUP]
 
         try:
-            await face.call_api(
+            yield from face.call_api(
                 'post', "persongroups/{0}/train".format(g_id))
         except HomeAssistantError as err:
             _LOGGER.error("Can't train group '%s' with error: %s", g_id, err)
@@ -139,18 +180,19 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_TRAIN_GROUP, async_train_group,
         schema=SCHEMA_TRAIN_SERVICE)
 
-    async def async_create_person(service):
+    @asyncio.coroutine
+    def async_create_person(service):
         """Create a person in a group."""
         name = service.data[ATTR_NAME]
         g_id = service.data[ATTR_GROUP]
 
         try:
-            user_data = await face.call_api(
+            user_data = yield from face.call_api(
                 'post', "persongroups/{0}/persons".format(g_id), {'name': name}
             )
 
             face.store[g_id][name] = user_data['personId']
-            await entities[g_id].async_update_ha_state()
+            yield from entities[g_id].async_update_ha_state()
         except HomeAssistantError as err:
             _LOGGER.error("Can't create person '%s' with error: %s", name, err)
 
@@ -158,18 +200,19 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_CREATE_PERSON, async_create_person,
         schema=SCHEMA_PERSON_SERVICE)
 
-    async def async_delete_person(service):
+    @asyncio.coroutine
+    def async_delete_person(service):
         """Delete a person in a group."""
         name = service.data[ATTR_NAME]
         g_id = service.data[ATTR_GROUP]
         p_id = face.store[g_id].get(name)
 
         try:
-            await face.call_api(
+            yield from face.call_api(
                 'delete', "persongroups/{0}/persons/{1}".format(g_id, p_id))
 
             face.store[g_id].pop(name)
-            await entities[g_id].async_update_ha_state()
+            yield from entities[g_id].async_update_ha_state()
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete person '%s' with error: %s", p_id, err)
 
@@ -177,7 +220,8 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_DELETE_PERSON, async_delete_person,
         schema=SCHEMA_PERSON_SERVICE)
 
-    async def async_face_person(service):
+    @asyncio.coroutine
+    def async_face_person(service):
         """Add a new face picture to a person."""
         g_id = service.data[ATTR_GROUP]
         p_id = face.store[g_id].get(service.data[ATTR_PERSON])
@@ -186,9 +230,9 @@ async def async_setup(hass, config):
         camera = hass.components.camera
 
         try:
-            image = await camera.async_get_image(hass, camera_entity)
+            image = yield from camera.async_get_image(hass, camera_entity)
 
-            await face.call_api(
+            yield from face.call_api(
                 'post',
                 "persongroups/{0}/persons/{1}/persistedFaces".format(
                     g_id, p_id),
@@ -263,9 +307,10 @@ class MicrosoftFace:
         """Store group/person data and IDs."""
         return self._store
 
-    async def update_store(self):
+    @asyncio.coroutine
+    def update_store(self):
         """Load all group/person data into local store."""
-        groups = await self.call_api('get', 'persongroups')
+        groups = yield from self.call_api('get', 'persongroups')
 
         tasks = []
         for group in groups:
@@ -274,7 +319,7 @@ class MicrosoftFace:
             self._entities[g_id] = MicrosoftFaceGroupEntity(
                 self.hass, self, g_id, group['name'])
 
-            persons = await self.call_api(
+            persons = yield from self.call_api(
                 'get', "persongroups/{0}/persons".format(g_id))
 
             for person in persons:
@@ -283,10 +328,11 @@ class MicrosoftFace:
             tasks.append(self._entities[g_id].async_update_ha_state())
 
         if tasks:
-            await asyncio.wait(tasks, loop=self.hass.loop)
+            yield from asyncio.wait(tasks, loop=self.hass.loop)
 
-    async def call_api(self, method, function, data=None, binary=False,
-                       params=None):
+    @asyncio.coroutine
+    def call_api(self, method, function, data=None, binary=False,
+                 params=None):
         """Make an api call."""
         headers = {"Ocp-Apim-Subscription-Key": self._api_key}
         url = self._server_url.format(function)
@@ -304,10 +350,10 @@ class MicrosoftFace:
 
         try:
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
-                response = await getattr(self.websession, method)(
+                response = yield from getattr(self.websession, method)(
                     url, data=payload, headers=headers, params=params)
 
-                answer = await response.json()
+                answer = yield from response.json()
 
             _LOGGER.debug("Read from microsoft face api: %s", answer)
             if response.status < 300:

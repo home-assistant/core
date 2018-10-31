@@ -191,19 +191,16 @@ class HangoutsBot:
         self._connected = True
         dispatcher.async_dispatcher_send(self.hass, EVENT_HANGOUTS_CONNECTED)
 
-    async def _on_disconnect(self):
+    def _on_disconnect(self):
         """Handle disconnecting."""
-        if self._connected:
-            _LOGGER.debug('Connection lost! Reconnect...')
-            await self.async_connect()
-        else:
-            dispatcher.async_dispatcher_send(self.hass,
-                                             EVENT_HANGOUTS_DISCONNECTED)
+        _LOGGER.debug('Connection lost!')
+        self._connected = False
+        dispatcher.async_dispatcher_send(self.hass,
+                                         EVENT_HANGOUTS_DISCONNECTED)
 
     async def async_disconnect(self):
         """Disconnect the client if it is connected."""
         if self._connected:
-            self._connected = False
             await self._client.disconnect()
 
     async def async_handle_hass_stop(self, _):
@@ -307,7 +304,7 @@ class HangoutsBot:
         """Handle the send_message service."""
         await self._async_send_message(service.data[ATTR_MESSAGE],
                                        service.data[ATTR_TARGET],
-                                       service.data.get(ATTR_DATA, {}))
+                                       service.data[ATTR_DATA])
 
     async def async_handle_update_users_and_conversations(self, _=None):
         """Handle the update_users_and_conversations service."""

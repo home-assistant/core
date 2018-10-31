@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/light.ads/
 
 """
+import asyncio
 import logging
 import voluptuous as vol
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
@@ -49,7 +50,8 @@ class AdsLight(Light):
         self.ads_var_enable = ads_var_enable
         self.ads_var_brightness = ads_var_brightness
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Register device notification."""
         def update_on_state(name, value):
             """Handle device notifications for state."""

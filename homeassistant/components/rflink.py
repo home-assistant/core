@@ -6,6 +6,7 @@ https://home-assistant.io/components/rflink/
 """
 import asyncio
 from collections import defaultdict
+import functools as ft
 import logging
 import async_timeout
 
@@ -13,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -67,9 +68,6 @@ DOMAIN = 'rflink'
 SERVICE_SEND_COMMAND = 'send_command'
 
 SIGNAL_AVAILABILITY = 'rflink_device_available'
-SIGNAL_HANDLE_EVENT = 'rflink_handle_event_{}'
-
-TMP_ENTITY = 'tmp.{}'
 
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -107,7 +105,8 @@ def identify_event_type(event):
     return 'unknown'
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the Rflink component."""
     from rflink.protocol import create_rflink_connection
     import serial
@@ -120,15 +119,17 @@ async def async_setup(hass, config):
     }
     hass.data[DATA_ENTITY_GROUP_LOOKUP] = {
         EVENT_KEY_COMMAND: defaultdict(list),
+        EVENT_KEY_SENSOR: defaultdict(list),
     }
 
     # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
 
-    async def async_send_command(call):
+    @asyncio.coroutine
+    def async_send_command(call):
         """Send Rflink command."""
         _LOGGER.debug('Rflink command for %s', str(call.data))
-        if not (await RflinkCommand.send_command(
+        if not (yield from RflinkCommand.send_command(
                 call.data.get(CONF_DEVICE_ID),
                 call.data.get(CONF_COMMAND))):
             _LOGGER.error('Failed Rflink command for %s', str(call.data))
@@ -154,38 +155,28 @@ async def async_setup(hass, config):
             return
 
         # Lookup entities who registered this device id as device id or alias
-        event_id = event.get(EVENT_KEY_ID, None)
+        event_id = event.get('id', None)
 
         is_group_event = (event_type == EVENT_KEY_COMMAND and
                           event[EVENT_KEY_COMMAND] in RFLINK_GROUP_COMMANDS)
         if is_group_event:
-            entity_ids = hass.data[DATA_ENTITY_GROUP_LOOKUP][event_type].get(
+            entities = hass.data[DATA_ENTITY_GROUP_LOOKUP][event_type].get(
                 event_id, [])
         else:
-            entity_ids = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
+            entities = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
 
-        _LOGGER.debug('entity_ids: %s', entity_ids)
-        if entity_ids:
+        if entities:
             # Propagate event to every entity matching the device id
-            for entity in entity_ids:
-                _LOGGER.debug('passing event to %s', entity)
-                async_dispatcher_send(hass,
-                                      SIGNAL_HANDLE_EVENT.format(entity),
-                                      event)
-        elif not is_group_event:
+            for entity in entities:
+                _LOGGER.debug('passing event to %s', entities)
+                entity.handle_event(event)
+        else:
+            _LOGGER.debug('device_id not known, adding new device')
+
             # If device is not yet known, register with platform (if loaded)
             if event_type in hass.data[DATA_DEVICE_REGISTER]:
-                _LOGGER.debug('device_id not known, adding new device')
-                # Add bogus event_id first to avoid race if we get another
-                # event before the device is created
-                # Any additional events recevied before the device has been
-                # created will thus be ignored.
-                hass.data[DATA_ENTITY_LOOKUP][event_type][
-                    event_id].append(TMP_ENTITY.format(event_id))
-                hass.async_create_task(
-                    hass.data[DATA_DEVICE_REGISTER][event_type](event))
-            else:
-                _LOGGER.debug('device_id not known and automatic add disabled')
+                hass.async_run_job(
+                    hass.data[DATA_DEVICE_REGISTER][event_type], event)
 
     # When connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN].get(CONF_HOST)
@@ -203,9 +194,10 @@ async def async_setup(hass, config):
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
             _LOGGER.warning('disconnected from Rflink, reconnecting')
-            hass.async_create_task(connect())
+            hass.async_add_job(connect)
 
-    async def connect():
+    @asyncio.coroutine
+    def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
         _LOGGER.info('Initiating Rflink connection')
 
@@ -225,7 +217,7 @@ async def async_setup(hass, config):
         try:
             with async_timeout.timeout(CONNECTION_TIMEOUT,
                                        loop=hass.loop):
-                transport, protocol = await connection
+                transport, protocol = yield from connection
 
         except (serial.serialutil.SerialException, ConnectionRefusedError,
                 TimeoutError, OSError, asyncio.TimeoutError) as exc:
@@ -253,7 +245,7 @@ async def async_setup(hass, config):
 
         _LOGGER.info('Connected to Rflink')
 
-    hass.async_create_task(connect())
+    hass.async_add_job(connect)
     return True
 
 
@@ -264,31 +256,26 @@ class RflinkDevice(Entity):
     """
 
     platform = None
-    _state = None
+    _state = STATE_UNKNOWN
     _available = True
 
-    def __init__(self, device_id, initial_event=None, name=None, aliases=None,
-                 group=True, group_aliases=None, nogroup_aliases=None,
-                 fire_event=False,
+    def __init__(self, device_id, hass, name=None, aliases=None, group=True,
+                 group_aliases=None, nogroup_aliases=None, fire_event=False,
                  signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
         """Initialize the device."""
+        self.hass = hass
+
         # Rflink specific attributes for every component type
-        self._initial_event = initial_event
         self._device_id = device_id
         if name:
             self._name = name
         else:
             self._name = device_id
 
-        self._aliases = aliases
-        self._group = group
-        self._group_aliases = group_aliases
-        self._nogroup_aliases = nogroup_aliases
         self._should_fire_event = fire_event
         self._signal_repetitions = signal_repetitions
 
-    @callback
-    def handle_event_callback(self, event):
+    def handle_event(self, event):
         """Handle incoming event for device type."""
         # Call platform specific event handler
         self._handle_event(event)
@@ -299,7 +286,7 @@ class RflinkDevice(Entity):
         # Put command onto bus for user to subscribe to
         if self._should_fire_event and identify_event_type(
                 event) == EVENT_KEY_COMMAND:
-            self.hass.bus.async_fire(EVENT_BUTTON_PRESSED, {
+            self.hass.bus.fire(EVENT_BUTTON_PRESSED, {
                 ATTR_ENTITY_ID: self.entity_id,
                 ATTR_STATE: event[EVENT_KEY_COMMAND],
             })
@@ -330,7 +317,7 @@ class RflinkDevice(Entity):
     @property
     def assumed_state(self):
         """Assume device state until first device event sets state."""
-        return self._state is None
+        return self._state is STATE_UNKNOWN
 
     @property
     def available(self):
@@ -338,52 +325,16 @@ class RflinkDevice(Entity):
         return self._available
 
     @callback
-    def _availability_callback(self, availability):
+    def set_availability(self, availability):
         """Update availability state."""
         self._available = availability
         self.async_schedule_update_ha_state()
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Register update callback."""
-        # Remove temporary bogus entity_id if added
-        tmp_entity = TMP_ENTITY.format(self._device_id)
-        if tmp_entity in self.hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_SENSOR][self._device_id]:
-            self.hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_SENSOR][self._device_id].remove(tmp_entity)
-
-        # Register id and aliases
-        self.hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][self._device_id].append(self.entity_id)
-        if self._group:
-            self.hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][self._device_id].append(self.entity_id)
-        # aliases respond to both normal and group commands (allon/alloff)
-        if self._aliases:
-            for _id in self._aliases:
-                self.hass.data[DATA_ENTITY_LOOKUP][
-                    EVENT_KEY_COMMAND][_id].append(self.entity_id)
-                self.hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                    EVENT_KEY_COMMAND][_id].append(self.entity_id)
-        # group_aliases only respond to group commands (allon/alloff)
-        if self._group_aliases:
-            for _id in self._group_aliases:
-                self.hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                    EVENT_KEY_COMMAND][_id].append(self.entity_id)
-        # nogroup_aliases only respond to normal commands
-        if self._nogroup_aliases:
-            for _id in self._nogroup_aliases:
-                self.hass.data[DATA_ENTITY_LOOKUP][
-                    EVENT_KEY_COMMAND][_id].append(self.entity_id)
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
-                                 self._availability_callback)
-        async_dispatcher_connect(self.hass,
-                                 SIGNAL_HANDLE_EVENT.format(self.entity_id),
-                                 self.handle_event_callback)
-
-        # Process the initial event now that the entity is created
-        if self._initial_event:
-            self.handle_event_callback(self._initial_event)
+                                 self.set_availability)
 
 
 class RflinkCommand(RflinkDevice):
@@ -416,11 +367,13 @@ class RflinkCommand(RflinkDevice):
         return bool(cls._protocol)
 
     @classmethod
-    async def send_command(cls, device_id, action):
+    @asyncio.coroutine
+    def send_command(cls, device_id, action):
         """Send device command to Rflink and wait for acknowledgement."""
-        return await cls._protocol.send_command_ack(device_id, action)
+        return (yield from cls._protocol.send_command_ack(device_id, action))
 
-    async def _async_handle_command(self, command, *args):
+    @asyncio.coroutine
+    def _async_handle_command(self, command, *args):
         """Do bookkeeping for command, send it to rflink and update state."""
         self.cancel_queued_send_commands()
 
@@ -441,7 +394,7 @@ class RflinkCommand(RflinkDevice):
             cmd = 'on'
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
-            self._state = self._state in [None, False]
+            self._state = self._state in [STATE_UNKNOWN, False]
 
         # Cover options for RFlink
         elif command == 'close_cover':
@@ -459,10 +412,10 @@ class RflinkCommand(RflinkDevice):
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
-        await self._async_send_command(cmd, self._signal_repetitions)
+        yield from self._async_send_command(cmd, self._signal_repetitions)
 
         # Update state of entity
-        await self.async_update_ha_state()
+        yield from self.async_update_ha_state()
 
     def cancel_queued_send_commands(self):
         """Cancel queued signal repetition commands.
@@ -475,7 +428,8 @@ class RflinkCommand(RflinkDevice):
         if self._repetition_task:
             self._repetition_task.cancel()
 
-    async def _async_send_command(self, cmd, repetitions):
+    @asyncio.coroutine
+    def _async_send_command(self, cmd, repetitions):
         """Send a command for device to Rflink gateway."""
         _LOGGER.debug(
             "Sending command: %s to Rflink device: %s", cmd, self._device_id)
@@ -486,17 +440,17 @@ class RflinkCommand(RflinkDevice):
         if self._wait_ack:
             # Puts command on outgoing buffer then waits for Rflink to confirm
             # the command has been send out in the ether.
-            await self._protocol.send_command_ack(self._device_id, cmd)
+            yield from self._protocol.send_command_ack(self._device_id, cmd)
         else:
             # Puts command on outgoing buffer and returns straight away.
             # Rflink protocol/transport handles asynchronous writing of buffer
             # to serial/tcp device. Does not wait for command send
             # confirmation.
-            self.hass.async_create_task(self._protocol.send_command(
-                self._device_id, cmd))
+            self.hass.async_add_job(ft.partial(
+                self._protocol.send_command, self._device_id, cmd))
 
         if repetitions > 1:
-            self._repetition_task = self.hass.async_create_task(
+            self._repetition_task = self.hass.async_add_job(
                 self._async_send_command(cmd, repetitions - 1))
 
 

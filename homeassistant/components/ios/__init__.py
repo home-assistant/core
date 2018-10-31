@@ -4,6 +4,7 @@ Native Home Assistant iOS app component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/ecosystem/ios/
 """
+import asyncio
 import logging
 import datetime
 
@@ -258,10 +259,11 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         """Initiliaze the view."""
         self._config_path = config_path
 
-    async def post(self, request):
+    @asyncio.coroutine
+    def post(self, request):
         """Handle the POST request for device identification."""
         try:
-            data = await request.json()
+            data = yield from request.json()
         except ValueError:
             return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 

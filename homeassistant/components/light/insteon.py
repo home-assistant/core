@@ -4,6 +4,7 @@ Support for Insteon lights via PowerLinc Modem.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.insteon/
 """
+import asyncio
 import logging
 
 from homeassistant.components.insteon import InsteonEntity
@@ -17,8 +18,9 @@ DEPENDENCIES = ['insteon']
 MAX_BRIGHTNESS = 255
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Insteon component."""
     insteon_modem = hass.data['insteon'].get('modem')
 
@@ -53,7 +55,8 @@ class InsteonDimmerDevice(InsteonEntity, Light):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
 
-    async def async_turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
@@ -61,6 +64,7 @@ class InsteonDimmerDevice(InsteonEntity, Light):
         else:
             self._insteon_device_state.on()
 
-    async def async_turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn device off."""
         self._insteon_device_state.off()

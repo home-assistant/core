@@ -41,7 +41,8 @@ def update(input_dict, update_source):
     return input_dict
 
 
-async def async_get_service(hass, config, discovery_info=None):
+@asyncio.coroutine
+def async_get_service(hass, config, discovery_info=None):
     """Get the Group notification service."""
     return GroupNotifyPlatform(hass, config.get(CONF_SERVICES))
 
@@ -54,7 +55,8 @@ class GroupNotifyPlatform(BaseNotificationService):
         self.hass = hass
         self.entities = entities
 
-    async def async_send_message(self, message="", **kwargs):
+    @asyncio.coroutine
+    def async_send_message(self, message="", **kwargs):
         """Send message to all entities in the group."""
         payload = {ATTR_MESSAGE: message}
         payload.update({key: val for key, val in kwargs.items() if val})
@@ -68,4 +70,4 @@ class GroupNotifyPlatform(BaseNotificationService):
                 DOMAIN, entity.get(ATTR_SERVICE), sending_payload))
 
         if tasks:
-            await asyncio.wait(tasks, loop=self.hass.loop)
+            yield from asyncio.wait(tasks, loop=self.hass.loop)

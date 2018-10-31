@@ -1,6 +1,4 @@
 """The tests for the geo location component."""
-import pytest
-
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import GeoLocationEvent
 from homeassistant.setup import async_setup_component
@@ -20,5 +18,3 @@ async def test_event(hass):
     assert entity.distance is None
     assert entity.latitude is None
     assert entity.longitude is None
-    with pytest.raises(NotImplementedError):
-        assert entity.source is None

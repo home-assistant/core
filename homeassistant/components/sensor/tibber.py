@@ -10,14 +10,24 @@ import logging
 
 from datetime import timedelta
 import aiohttp
+import voluptuous as vol
 
-from homeassistant.components.tibber import DOMAIN as TIBBER_DOMAIN
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['pyTibber==0.6.0']
+
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_ACCESS_TOKEN): cv.string
+})
 
 ICON = 'mdi:currency-usd'
 ICON_RT = 'mdi:power-plug'
@@ -28,14 +38,16 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Tibber sensor."""
-    if discovery_info is None:
-        _LOGGER.error("Tibber sensor configuration has changed."
-                      " Check https://home-assistant.io/components/tibber/")
-        return
+    import tibber
+    tibber_connection = tibber.Tibber(config[CONF_ACCESS_TOKEN],
+                                      websession=async_get_clientsession(hass))
 
-    tibber_connection = hass.data.get(TIBBER_DOMAIN)
+    async def _close(*_):
+        await tibber_connection.rt_disconnect()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
     try:
+        await tibber_connection.update_info()
         dev = []
         for home in tibber_connection.get_homes():
             await home.update_info()

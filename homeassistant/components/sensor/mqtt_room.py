@@ -4,6 +4,7 @@ Support for MQTT room presence detection.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt_room/
 """
+import asyncio
 import logging
 import json
 from datetime import timedelta
@@ -51,8 +52,9 @@ MQTT_PAYLOAD = vol.Schema(vol.All(json.loads, vol.Schema({
 }, extra=vol.ALLOW_EXTRA)))
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up MQTT room Sensor."""
     async_add_entities([MQTTRoomSensor(
         config.get(CONF_NAME),
@@ -79,7 +81,8 @@ class MQTTRoomSensor(Entity):
         self._distance = None
         self._updated = None
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Subscribe to MQTT events."""
         @callback
         def update_state(device_id, room, distance):
@@ -115,7 +118,7 @@ class MQTTRoomSensor(Entity):
                             or timediff.seconds >= self._timeout:
                         update_state(**device)
 
-        return await mqtt.async_subscribe(
+        return mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, 1)
 
     @property

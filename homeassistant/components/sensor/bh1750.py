@@ -4,6 +4,7 @@ Support for BH1750 light sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bh1750/
 """
+import asyncio
 from functools import partial
 import logging
 
@@ -64,11 +65,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+# pylint: disable=import-error
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the BH1750 sensor."""
-    import smbus  # pylint: disable=import-error
-    from i2csense.bh1750 import BH1750  # pylint: disable=import-error
+    import smbus
+    from i2csense.bh1750 import BH1750
 
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)
@@ -77,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     bus = smbus.SMBus(bus_number)
 
-    sensor = await hass.async_add_job(
+    sensor = yield from hass.async_add_job(
         partial(BH1750, bus, i2c_address,
                 operation_mode=operation_mode,
                 measurement_delay=config.get(CONF_DELAY),
@@ -130,9 +133,10 @@ class BH1750Sensor(Entity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_ILLUMINANCE
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data from the BH1750 and update the states."""
-        await self.hass.async_add_job(self.bh1750_sensor.update)
+        yield from self.hass.async_add_job(self.bh1750_sensor.update)
         if self.bh1750_sensor.sample_ok \
                 and self.bh1750_sensor.light_level >= 0:
             self._state = int(round(self.bh1750_sensor.light_level

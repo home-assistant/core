@@ -10,8 +10,6 @@ from homeassistant.const import (
 import homeassistant.components.remote as remote
 
 from tests.common import mock_service, get_test_home_assistant
-from tests.components.remote import common
-
 TEST_PLATFORM = {remote.DOMAIN: {CONF_PLATFORM: 'test'}}
 SERVICE_SEND_COMMAND = 'send_command'
 
@@ -48,7 +46,7 @@ class TestRemote(unittest.TestCase):
         turn_on_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_TURN_ON)
 
-        common.turn_on(
+        remote.turn_on(
             self.hass,
             entity_id='entity_id_val')
 
@@ -64,7 +62,7 @@ class TestRemote(unittest.TestCase):
         turn_off_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_TURN_OFF)
 
-        common.turn_off(
+        remote.turn_off(
             self.hass, entity_id='entity_id_val')
 
         self.hass.block_till_done()
@@ -81,7 +79,7 @@ class TestRemote(unittest.TestCase):
         send_command_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_SEND_COMMAND)
 
-        common.send_command(
+        remote.send_command(
             self.hass, entity_id='entity_id_val',
             device='test_device', command=['test_command'],
             num_repeats='4', delay_secs='0.6')

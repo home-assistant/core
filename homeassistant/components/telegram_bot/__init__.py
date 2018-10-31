@@ -4,6 +4,7 @@ Component to send and receive Telegram messages.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/telegram_bot/
 """
+import asyncio
 import io
 from functools import partial
 import logging
@@ -21,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==11.1.0']
+REQUIREMENTS = ['python-telegram-bot==11.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -209,7 +210,8 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
     return None
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the Telegram bot component."""
     if not config[DOMAIN]:
         return False
@@ -218,7 +220,7 @@ async def async_setup(hass, config):
 
     p_type = p_config.get(CONF_PLATFORM)
 
-    platform = await async_prepare_setup_platform(
+    platform = yield from async_prepare_setup_platform(
         hass, config, DOMAIN, p_type)
 
     if platform is None:
@@ -226,7 +228,7 @@ async def async_setup(hass, config):
 
     _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
     try:
-        receiver_service = await \
+        receiver_service = yield from \
             platform.async_setup_platform(hass, p_config)
         if receiver_service is False:
             _LOGGER.error(
@@ -245,7 +247,8 @@ async def async_setup(hass, config):
         p_config.get(ATTR_PARSER)
     )
 
-    async def async_send_telegram_message(service):
+    @asyncio.coroutine
+    def async_send_telegram_message(service):
         """Handle sending Telegram Bot message service calls."""
         def _render_template_attr(data, attribute):
             attribute_templ = data.get(attribute)
@@ -271,23 +274,23 @@ async def async_setup(hass, config):
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
         if msgtype == SERVICE_SEND_MESSAGE:
-            await hass.async_add_job(
+            yield from hass.async_add_job(
                 partial(notify_service.send_message, **kwargs))
         elif msgtype in [SERVICE_SEND_PHOTO, SERVICE_SEND_STICKER,
                          SERVICE_SEND_VIDEO, SERVICE_SEND_DOCUMENT]:
-            await hass.async_add_job(
+            yield from hass.async_add_job(
                 partial(notify_service.send_file, msgtype, **kwargs))
         elif msgtype == SERVICE_SEND_LOCATION:
-            await hass.async_add_job(
+            yield from hass.async_add_job(
                 partial(notify_service.send_location, **kwargs))
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
-            await hass.async_add_job(
+            yield from hass.async_add_job(
                 partial(notify_service.answer_callback_query, **kwargs))
         elif msgtype == SERVICE_DELETE_MESSAGE:
-            await hass.async_add_job(
+            yield from hass.async_add_job(
                 partial(notify_service.delete_message, **kwargs))
         else:
-            await hass.async_add_job(
+            yield from hass.async_add_job(
                 partial(notify_service.edit_message, msgtype, **kwargs))
 
     # Register notification services
@@ -309,10 +312,10 @@ def initialize_bot(p_config):
     proxy_params = p_config.get(CONF_PROXY_PARAMS)
 
     if proxy_url is not None:
-        request = Request(con_pool_size=8, proxy_url=proxy_url,
+        request = Request(con_pool_size=4, proxy_url=proxy_url,
                           urllib3_proxy_kwargs=proxy_params)
     else:
-        request = Request(con_pool_size=8)
+        request = Request(con_pool_size=4)
     return Bot(token=api_key, request=request)
 
 

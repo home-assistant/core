@@ -59,8 +59,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the requested World Air Quality Index locations."""
     import waqiasync
 
@@ -73,7 +74,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     dev = []
     try:
         for location_name in locations:
-            stations = await client.search(location_name)
+            stations = yield from client.search(location_name)
             _LOGGER.debug("The following stations were returned: %s", stations)
             for station in stations:
                 waqi_sensor = WaqiSensor(client, station)
@@ -160,12 +161,13 @@ class WaqiSensor(Entity):
             except (IndexError, KeyError):
                 return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and updates the states."""
         if self.uid:
-            result = await self._client.get_station_by_number(self.uid)
+            result = yield from self._client.get_station_by_number(self.uid)
         elif self.url:
-            result = await self._client.get_station_by_name(self.url)
+            result = yield from self._client.get_station_by_name(self.url)
         else:
             result = None
         self._data = result

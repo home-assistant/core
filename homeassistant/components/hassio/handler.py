@@ -16,24 +16,17 @@ from homeassistant.components.http import (
     CONF_SSL_CERTIFICATE)
 from homeassistant.const import CONF_TIME_ZONE, SERVER_PORT
 
-from .const import X_HASSIO
-
 _LOGGER = logging.getLogger(__name__)
 
-
-class HassioAPIError(RuntimeError):
-    """Return if a API trow a error."""
+X_HASSIO = 'X-HASSIO-KEY'
 
 
 def _api_bool(funct):
     """Return a boolean."""
     async def _wrapper(*argv, **kwargs):
         """Wrap function."""
-        try:
-            data = await funct(*argv, **kwargs)
-            return data['result'] == "ok"
-        except HassioAPIError:
-            return False
+        data = await funct(*argv, **kwargs)
+        return data and data['result'] == "ok"
 
     return _wrapper
 
@@ -43,9 +36,9 @@ def _api_data(funct):
     async def _wrapper(*argv, **kwargs):
         """Wrap function."""
         data = await funct(*argv, **kwargs)
-        if data['result'] == "ok":
+        if data and data['result'] == "ok":
             return data['data']
-        raise HassioAPIError(data['message'])
+        return None
 
     return _wrapper
 
@@ -75,15 +68,6 @@ class HassIO:
         """
         return self.send_command("/homeassistant/info", method="get")
 
-    @_api_data
-    def get_addon_info(self, addon):
-        """Return data for a Add-on.
-
-        This method return a coroutine.
-        """
-        return self.send_command(
-            "/addons/{}/info".format(addon), method="get")
-
     @_api_bool
     def restart_homeassistant(self):
         """Restart Home-Assistant container.
@@ -106,22 +90,6 @@ class HassIO:
         This method return a coroutine.
         """
         return self.send_command("/homeassistant/check", timeout=300)
-
-    @_api_data
-    def retrieve_discovery_messages(self):
-        """Return all discovery data from Hass.io API.
-
-        This method return a coroutine.
-        """
-        return self.send_command("/discovery", method="get")
-
-    @_api_data
-    def get_discovery_message(self, uuid):
-        """Return a single discovery data message.
-
-        This method return a coroutine.
-        """
-        return self.send_command("/discovery/{}".format(uuid), method="get")
 
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
@@ -152,15 +120,15 @@ class HassIO:
             'timezone': core_config.get(CONF_TIME_ZONE)
         })
 
-    async def send_command(self, command, method="post", payload=None,
-                           timeout=10):
+    @asyncio.coroutine
+    def send_command(self, command, method="post", payload=None, timeout=10):
         """Send API command to Hass.io.
 
         This method is a coroutine.
         """
         try:
             with async_timeout.timeout(timeout, loop=self.loop):
-                request = await self.websession.request(
+                request = yield from self.websession.request(
                     method, "http://{}{}".format(self._ip, command),
                     json=payload, headers={
                         X_HASSIO: os.environ.get('HASSIO_TOKEN', "")
@@ -169,9 +137,9 @@ class HassIO:
                 if request.status not in (200, 400):
                     _LOGGER.error(
                         "%s return code %d.", command, request.status)
-                    raise HassioAPIError()
+                    return None
 
-                answer = await request.json()
+                answer = yield from request.json()
                 return answer
 
         except asyncio.TimeoutError:
@@ -180,4 +148,4 @@ class HassIO:
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on %s request %s", command, err)
 
-        raise HassioAPIError()
+        return None

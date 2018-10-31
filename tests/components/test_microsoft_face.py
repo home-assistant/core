@@ -3,70 +3,10 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant.components import camera, microsoft_face as mf
-from homeassistant.components.microsoft_face import (
-    ATTR_CAMERA_ENTITY, ATTR_GROUP, ATTR_PERSON, DOMAIN, SERVICE_CREATE_GROUP,
-    SERVICE_CREATE_PERSON, SERVICE_DELETE_GROUP, SERVICE_DELETE_PERSON,
-    SERVICE_FACE_PERSON, SERVICE_TRAIN_GROUP)
-from homeassistant.const import ATTR_NAME
 from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro, load_fixture)
-
-
-def create_group(hass, name):
-    """Create a new person group.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    data = {ATTR_NAME: name}
-    hass.services.call(DOMAIN, SERVICE_CREATE_GROUP, data)
-
-
-def delete_group(hass, name):
-    """Delete a person group.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    data = {ATTR_NAME: name}
-    hass.services.call(DOMAIN, SERVICE_DELETE_GROUP, data)
-
-
-def train_group(hass, group):
-    """Train a person group.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    data = {ATTR_GROUP: group}
-    hass.services.call(DOMAIN, SERVICE_TRAIN_GROUP, data)
-
-
-def create_person(hass, group, name):
-    """Create a person in a group.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    data = {ATTR_GROUP: group, ATTR_NAME: name}
-    hass.services.call(DOMAIN, SERVICE_CREATE_PERSON, data)
-
-
-def delete_person(hass, group, name):
-    """Delete a person in a group.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    data = {ATTR_GROUP: group, ATTR_NAME: name}
-    hass.services.call(DOMAIN, SERVICE_DELETE_PERSON, data)
-
-
-def face_person(hass, group, person, camera_entity):
-    """Add a new face picture to a person.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    data = {ATTR_GROUP: group, ATTR_PERSON: person,
-            ATTR_CAMERA_ENTITY: camera_entity}
-    hass.services.call(DOMAIN, SERVICE_FACE_PERSON, data)
 
 
 class TestMicrosoftFaceSetup:
@@ -168,14 +108,14 @@ class TestMicrosoftFaceSetup:
         with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
-        create_group(self.hass, 'Service Group')
+        mf.create_group(self.hass, 'Service Group')
         self.hass.block_till_done()
 
         entity = self.hass.states.get('microsoft_face.service_group')
         assert entity is not None
         assert len(aioclient_mock.mock_calls) == 1
 
-        delete_group(self.hass, 'Service Group')
+        mf.delete_group(self.hass, 'Service Group')
         self.hass.block_till_done()
 
         entity = self.hass.states.get('microsoft_face.service_group')
@@ -213,7 +153,7 @@ class TestMicrosoftFaceSetup:
             status=200, text="{}"
         )
 
-        create_person(self.hass, 'test group1', 'Hans')
+        mf.create_person(self.hass, 'test group1', 'Hans')
         self.hass.block_till_done()
 
         entity_group1 = self.hass.states.get('microsoft_face.test_group1')
@@ -223,7 +163,7 @@ class TestMicrosoftFaceSetup:
         assert entity_group1.attributes['Hans'] == \
             '25985303-c537-4467-b41d-bdb45cd95ca1'
 
-        delete_person(self.hass, 'test group1', 'Hans')
+        mf.delete_person(self.hass, 'test group1', 'Hans')
         self.hass.block_till_done()
 
         entity_group1 = self.hass.states.get('microsoft_face.test_group1')
@@ -244,7 +184,7 @@ class TestMicrosoftFaceSetup:
             status=200, text="{}"
         )
 
-        train_group(self.hass, 'Service Group')
+        mf.train_group(self.hass, 'Service Group')
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
@@ -279,7 +219,7 @@ class TestMicrosoftFaceSetup:
             status=200, text="{}"
         )
 
-        face_person(
+        mf.face_person(
             self.hass, 'test_group2', 'David', 'camera.demo_camera')
         self.hass.block_till_done()
 
@@ -298,7 +238,7 @@ class TestMicrosoftFaceSetup:
         with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
-        create_group(self.hass, 'Service Group')
+        mf.create_group(self.hass, 'Service Group')
         self.hass.block_till_done()
 
         entity = self.hass.states.get('microsoft_face.service_group')
@@ -317,7 +257,7 @@ class TestMicrosoftFaceSetup:
         with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
-        create_group(self.hass, 'Service Group')
+        mf.create_group(self.hass, 'Service Group')
         self.hass.block_till_done()
 
         entity = self.hass.states.get('microsoft_face.service_group')

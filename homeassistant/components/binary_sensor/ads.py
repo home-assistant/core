@@ -4,6 +4,7 @@ Support for ADS binary sensors.
 For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/binary_sensor.ads/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -49,7 +50,8 @@ class AdsBinarySensor(BinarySensorDevice):
         self._ads_hub = ads_hub
         self.ads_var = ads_var
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Register device notification."""
         def update(name, value):
             """Handle device notifications."""

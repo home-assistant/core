@@ -16,18 +16,15 @@ from homeassistant.helpers import discovery
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyfritzhome==0.4.0']
+REQUIREMENTS = ['pyfritzhome==0.3.7']
 
-SUPPORTED_DOMAINS = ['binary_sensor', 'climate', 'switch']
+SUPPORTED_DOMAINS = ['climate', 'switch']
 
 DOMAIN = 'fritzbox'
 
-ATTR_STATE_BATTERY_LOW = 'battery_low'
 ATTR_STATE_DEVICE_LOCKED = 'device_locked'
-ATTR_STATE_HOLIDAY_MODE = 'holiday_mode'
 ATTR_STATE_LOCKED = 'locked'
-ATTR_STATE_SUMMER_MODE = 'summer_mode'
-ATTR_STATE_WINDOW_OPEN = 'window_open'
+ATTR_STATE_BATTERY_LOW = 'battery_low'
 
 
 CONFIG_SCHEMA = vol.Schema({

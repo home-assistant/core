@@ -14,7 +14,6 @@
                 "data": {
                     "2fa": "2FA pin"
                 },
-                "description": "Leeg",
                 "title": "Twee-factor-authenticatie"
             },
             "user": {
@@ -22,7 +21,6 @@
                     "email": "E-mailadres",
                     "password": "Wachtwoord"
                 },
-                "description": "Leeg",
                 "title": "Google Hangouts inlog"
             }
         },

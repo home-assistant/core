@@ -4,6 +4,7 @@ Offer zone automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/docs/automation/trigger/#zone-trigger
 """
+import asyncio
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -26,7 +27,8 @@ TRIGGER_SCHEMA = vol.Schema({
 })
 
 
-async def async_trigger(hass, config, action):
+@asyncio.coroutine
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)

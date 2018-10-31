@@ -12,9 +12,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 from homeassistant.helpers import (
-    config_validation as cv, device_registry as dr)
+    aiohttp_client, config_validation as cv, device_registry as dr)
 
-from .const import DOMAIN
+from .const import DOMAIN, API_NUPNP
 from .bridge import HueBridge
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
@@ -62,10 +62,36 @@ async def async_setup(hass, config):
     configured = configured_hosts(hass)
 
     # User has configured bridges
-    if CONF_BRIDGES not in conf:
-        return True
+    if CONF_BRIDGES in conf:
+        bridges = conf[CONF_BRIDGES]
 
-    bridges = conf[CONF_BRIDGES]
+    # Component is part of config but no bridges specified, discover.
+    elif DOMAIN in config:
+        # discover from nupnp
+        websession = aiohttp_client.async_get_clientsession(hass)
+
+        async with websession.get(API_NUPNP) as req:
+            hosts = await req.json()
+
+        bridges = []
+        for entry in hosts:
+            # Filter out already configured hosts
+            if entry['internalipaddress'] in configured:
+                continue
+
+            # Run through config schema to populate defaults
+            bridges.append(BRIDGE_CONFIG_SCHEMA({
+                CONF_HOST: entry['internalipaddress'],
+                # Careful with using entry['id'] for other reasons. The
+                # value is in lowercase but is returned uppercase from hub.
+                CONF_FILENAME: '.hue_{}.conf'.format(entry['id']),
+            }))
+    else:
+        # Component not specified in config, we're loaded via discovery
+        bridges = []
+
+    if not bridges:
+        return True
 
     for bridge_conf in bridges:
         host = bridge_conf[CONF_HOST]
@@ -82,7 +108,7 @@ async def async_setup(hass, config):
         # this component we'll have to use hass.async_add_job to avoid a
         # deadlock: creating a config entry will set up the component but the
         # setup would block till the entry is created!
-        hass.async_create_task(hass.config_entries.flow.async_init(
+        hass.async_add_job(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
                 'host': bridge_conf[CONF_HOST],

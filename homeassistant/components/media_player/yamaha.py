@@ -12,10 +12,9 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     DOMAIN, MEDIA_PLAYER_SCHEMA, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOUND_MODE, MediaPlayerDevice)
-
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOUND_MODE, SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PLAYING)
@@ -185,12 +184,8 @@ class YamahaDevice(MediaPlayerDevice):
         self._playback_support = self.receiver.get_playback_support()
         self._is_playback_supported = self.receiver.is_playback_supported(
             self._current_source)
-        if self._zone == "Main_Zone":
-            self._sound_mode = self.receiver.surround_program
-            self._sound_mode_list = self.receiver.surround_programs()
-        else:
-            self._sound_mode = None
-            self._sound_mode_list = None
+        self._sound_mode = self.receiver.surround_program
+        self._sound_mode_list = self.receiver.surround_programs()
 
     def build_source_list(self):
         """Build the source list."""

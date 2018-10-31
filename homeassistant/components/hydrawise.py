@@ -4,6 +4,7 @@ Support for Hydrawise cloud.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/hydrawise/
 """
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -126,7 +127,8 @@ class HydrawiseEntity(Entity):
         """Return the name of the sensor."""
         return self._name
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_HYDRAWISE, self._update_callback)

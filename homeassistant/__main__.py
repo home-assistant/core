@@ -22,31 +22,16 @@ from homeassistant.const import (
 def set_loop() -> None:
     """Attempt to use uvloop."""
     import asyncio
-    from asyncio.events import BaseDefaultEventLoopPolicy
-
-    policy = None
 
     if sys.platform == 'win32':
-        if hasattr(asyncio, 'WindowsProactorEventLoopPolicy'):
-            # pylint: disable=no-member
-            policy = asyncio.WindowsProactorEventLoopPolicy()
-        else:
-            class ProactorPolicy(BaseDefaultEventLoopPolicy):
-                """Event loop policy to create proactor loops."""
-
-                _loop_factory = asyncio.ProactorEventLoop
-
-            policy = ProactorPolicy()
+        asyncio.set_event_loop(asyncio.ProactorEventLoop())
     else:
         try:
             import uvloop
         except ImportError:
             pass
         else:
-            policy = uvloop.EventLoopPolicy()
-
-    if policy is not None:
-        asyncio.set_event_loop_policy(policy)
+            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 def validate_python() -> None:

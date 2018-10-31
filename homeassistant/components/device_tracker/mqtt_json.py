@@ -4,6 +4,7 @@ Support for GPS tracking MQTT enabled devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.mqtt_json/
 """
+import asyncio
 import json
 import logging
 
@@ -34,7 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend({
 })
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+@asyncio.coroutine
+def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the MQTT JSON tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
@@ -55,9 +57,9 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
                 return
 
             kwargs = _parse_see_args(dev_id, data)
-            hass.async_create_task(async_see(**kwargs))
+            hass.async_add_job(async_see(**kwargs))
 
-        await mqtt.async_subscribe(
+        yield from mqtt.async_subscribe(
             hass, topic, async_message_received, qos)
 
     return True

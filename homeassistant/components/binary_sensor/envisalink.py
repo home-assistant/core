@@ -4,6 +4,7 @@ Support for Envisalink zone states- represented as binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.envisalink/
 """
+import asyncio
 import logging
 import datetime
 
@@ -21,8 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['envisalink']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Envisalink binary sensor devices."""
     configured_zones = discovery_info['zones']
 
@@ -54,7 +56,8 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         _LOGGER.debug('Setting up zone: %s', zone_name)
         super().__init__(zone_name, info, controller)
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_ZONE_UPDATE, self._update_callback)

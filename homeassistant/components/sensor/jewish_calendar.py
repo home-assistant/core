@@ -4,7 +4,6 @@ Platform to retrieve Jewish calendar information for Home Assistant.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.jewish_calendar/
 """
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -15,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['hdate==0.6.5']
+REQUIREMENTS = ['hdate==0.6.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +64,7 @@ async def async_setup_platform(
     dev = []
     for sensor_type in config[CONF_SENSORS]:
         dev.append(JewishCalSensor(
-            name, language, sensor_type, latitude, longitude,
-            hass.config.time_zone, diaspora))
+            name, language, sensor_type, latitude, longitude, diaspora))
     async_add_entities(dev, True)
 
 
@@ -74,8 +72,7 @@ class JewishCalSensor(Entity):
     """Representation of an Jewish calendar sensor."""
 
     def __init__(
-            self, name, language, sensor_type, latitude, longitude, timezone,
-            diaspora):
+            self, name, language, sensor_type, latitude, longitude, diaspora):
         """Initialize the Jewish calendar sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -84,7 +81,6 @@ class JewishCalSensor(Entity):
         self._state = None
         self.latitude = latitude
         self.longitude = longitude
-        self.timezone = timezone
         self.diaspora = diaspora
         _LOGGER.debug("Sensor %s initialized", self.type)
 
@@ -108,30 +104,22 @@ class JewishCalSensor(Entity):
         import hdate
 
         today = dt_util.now().date()
-        upcoming_saturday = today + timedelta((12 - today.weekday()) % 7)
 
         date = hdate.HDate(
             today, diaspora=self.diaspora, hebrew=self._hebrew)
-        upcoming_shabbat = hdate.HDate(
-            upcoming_saturday, diaspora=self.diaspora, hebrew=self._hebrew)
 
         if self.type == 'date':
             self._state = hdate.date.get_hebrew_date(
                 date.h_day, date.h_month, date.h_year, hebrew=self._hebrew)
         elif self.type == 'weekly_portion':
             self._state = hdate.date.get_parashe(
-                upcoming_shabbat.get_reading(self.diaspora),
-                hebrew=self._hebrew)
+                date.get_reading(self.diaspora), hebrew=self._hebrew)
         elif self.type == 'holiday_name':
             try:
-                description = next(
-                    x.description[self._hebrew]
+                self._state = next(
+                    x.description[self._hebrew].long
                     for x in hdate.htables.HOLIDAYS
                     if x.index == date.get_holyday())
-                if not self._hebrew:
-                    self._state = description
-                else:
-                    self._state = description.long
             except StopIteration:
                 self._state = None
         elif self.type == 'holyness':
@@ -139,7 +127,7 @@ class JewishCalSensor(Entity):
         else:
             times = hdate.Zmanim(
                 date=today, latitude=self.latitude, longitude=self.longitude,
-                timezone=self.timezone, hebrew=self._hebrew).zmanim
+                hebrew=self._hebrew).zmanim
             self._state = times[self.type].time()
 
         _LOGGER.debug("New value: %s", self._state)

@@ -93,11 +93,6 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
         return "{} online".format(self._controller.name)
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique id for this entity."""
-        return "{}-online".format(self._controller.controller_id)
-
-    @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return 'connectivity'

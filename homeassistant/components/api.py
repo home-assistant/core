@@ -141,8 +141,6 @@ class APIEventStream(HomeAssistantView):
             _LOGGER.debug("STREAM %s RESPONSE CLOSED", id(stop_obj))
             unsub_stream()
 
-        return response
-
 
 class APIConfigView(HomeAssistantView):
     """View to handle Configuration requests."""

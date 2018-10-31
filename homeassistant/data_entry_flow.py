@@ -153,10 +153,7 @@ class FlowHandler:
         }
 
     @callback
-    def async_create_entry(self, *, title: str, data: Dict,
-                           description: Optional[str] = None,
-                           description_placeholders: Optional[Dict] = None) \
-            -> Dict:
+    def async_create_entry(self, *, title: str, data: Dict) -> Dict:
         """Finish config flow and create a config entry."""
         return {
             'version': self.VERSION,
@@ -165,8 +162,6 @@ class FlowHandler:
             'handler': self.handler,
             'title': title,
             'data': data,
-            'description': description,
-            'description_placeholders': description_placeholders,
         }
 
     @callback

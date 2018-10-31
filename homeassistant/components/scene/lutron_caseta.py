@@ -4,6 +4,7 @@ Support for Lutron Caseta scenes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.lutron_caseta/
 """
+import asyncio
 import logging
 
 from homeassistant.components.lutron_caseta import LUTRON_CASETA_SMARTBRIDGE
@@ -14,8 +15,9 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['lutron_caseta']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Lutron Caseta lights."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
@@ -41,6 +43,7 @@ class LutronCasetaScene(Scene):
         """Return the name of the scene."""
         return self._scene_name
 
-    async def async_activate(self):
+    @asyncio.coroutine
+    def async_activate(self):
         """Activate the scene."""
         self._bridge.activate_scene(self._scene_id)

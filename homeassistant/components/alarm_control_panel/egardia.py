@@ -4,6 +4,7 @@ Interfaces with Egardia/Woonveilig alarm control panel.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.egardia/
 """
+import asyncio
 import logging
 
 import requests
@@ -60,7 +61,8 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         self._rs_codes = rs_codes
         self._rs_port = rs_port
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Add Egardiaserver callback if enabled."""
         if self._rs_enabled:
             _LOGGER.debug("Registering callback to Egardiaserver")

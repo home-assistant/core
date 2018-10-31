@@ -4,6 +4,7 @@ Component to offer a way to set a numeric value from a slider or text box.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_number/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -80,7 +81,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up an input slider."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -118,7 +120,7 @@ async def async_setup(hass, config):
         'async_decrement'
     )
 
-    await component.async_add_entities(entities)
+    yield from component.async_add_entities(entities)
     return True
 
 
@@ -173,12 +175,13 @@ class InputNumber(Entity):
             ATTR_MODE: self._mode,
         }
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         if self._current_value is not None:
             return
 
-        state = await async_get_last_state(self.hass, self.entity_id)
+        state = yield from async_get_last_state(self.hass, self.entity_id)
         value = state and float(state.state)
 
         # Check against None because value can be 0
@@ -187,7 +190,8 @@ class InputNumber(Entity):
         else:
             self._current_value = self._minimum
 
-    async def async_set_value(self, value):
+    @asyncio.coroutine
+    def async_set_value(self, value):
         """Set new value."""
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
@@ -195,9 +199,10 @@ class InputNumber(Entity):
                             num_value, self._minimum, self._maximum)
             return
         self._current_value = num_value
-        await self.async_update_ha_state()
+        yield from self.async_update_ha_state()
 
-    async def async_increment(self):
+    @asyncio.coroutine
+    def async_increment(self):
         """Increment value."""
         new_value = self._current_value + self._step
         if new_value > self._maximum:
@@ -205,9 +210,10 @@ class InputNumber(Entity):
                             new_value, self._minimum, self._maximum)
             return
         self._current_value = new_value
-        await self.async_update_ha_state()
+        yield from self.async_update_ha_state()
 
-    async def async_decrement(self):
+    @asyncio.coroutine
+    def async_decrement(self):
         """Decrement value."""
         new_value = self._current_value - self._step
         if new_value < self._minimum:
@@ -215,4 +221,4 @@ class InputNumber(Entity):
                             new_value, self._minimum, self._maximum)
             return
         self._current_value = new_value
-        await self.async_update_ha_state()
+        yield from self.async_update_ha_state()

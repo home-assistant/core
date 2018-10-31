@@ -4,6 +4,7 @@ Support for HomeMatic devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematic/
 """
+import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -18,7 +19,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyhomematic==0.1.51']
+REQUIREMENTS = ['pyhomematic==0.1.49']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ HM_DEVICE_TYPES = {
         'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
         'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
-        'IPWeatherSensorBasic', 'IPBrightnessSensor'],
+        'IPWeatherSensorBasic'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
@@ -97,21 +98,17 @@ HM_IGNORE_DISCOVERY_NODE = [
 ]
 
 HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
-    'ACTUAL_TEMPERATURE': [
-        'IPAreaThermostat', 'IPWeatherSensor',
-        'IPWeatherSensorPlus', 'IPWeatherSensorBasic'],
+    'ACTUAL_TEMPERATURE': ['IPAreaThermostat', 'IPWeatherSensor'],
 }
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
-    'ERROR_SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_PEER': ['rssi', {}],
     'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
-    'LEVEL': ['level', {}],
     'BATTERY_STATE': ['battery', {}],
     'CONTROL_MODE': ['mode', {
         0: 'Auto',
@@ -718,9 +715,10 @@ class HMDevice(Entity):
         if self._state:
             self._state = self._state.upper()
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Load data init callbacks."""
-        await self.hass.async_add_job(self.link_homematic)
+        yield from self.hass.async_add_job(self.link_homematic)
 
     @property
     def unique_id(self):
@@ -779,7 +777,8 @@ class HMDevice(Entity):
             # Link events from pyhomematic
             self._subscribe_homematic_events()
             self._available = not self._hmdevice.UNREACH
-        except Exception as err:  # pylint: disable=broad-except
+        # pylint: disable=broad-except
+        except Exception as err:
             self._connected = False
             _LOGGER.error("Exception while linking %s: %s",
                           self._address, str(err))
@@ -798,8 +797,11 @@ class HMDevice(Entity):
                 has_changed = True
 
         # Availability has changed
-        if self.available != (not self._hmdevice.UNREACH):
-            self._available = not self._hmdevice.UNREACH
+        if attribute == 'UNREACH':
+            self._available = not bool(value)
+            has_changed = True
+        elif not self.available:
+            self._available = False
             has_changed = True
 
         # If it has changed data point, update HASS
@@ -809,6 +811,7 @@ class HMDevice(Entity):
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""
         channels_to_sub = set()
+        channels_to_sub.add(0)  # Add channel 0 for UNREACH
 
         # Push data to channels_to_sub from hmdevice metadata
         for metadata in (self._hmdevice.SENSORNODE, self._hmdevice.BINARYNODE,

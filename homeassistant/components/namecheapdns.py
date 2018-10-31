@@ -4,6 +4,7 @@ Integrate with namecheap DNS services.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/namecheapdns/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -31,7 +32,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Initialize the namecheap DNS component."""
     host = config[DOMAIN][CONF_HOST]
     domain = config[DOMAIN][CONF_DOMAIN]
@@ -39,21 +41,23 @@ async def async_setup(hass, config):
 
     session = async_get_clientsession(hass)
 
-    result = await _update_namecheapdns(session, host, domain, password)
+    result = yield from _update_namecheapdns(session, host, domain, password)
 
     if not result:
         return False
 
-    async def update_domain_interval(now):
+    @asyncio.coroutine
+    def update_domain_interval(now):
         """Update the namecheap DNS entry."""
-        await _update_namecheapdns(session, host, domain, password)
+        yield from _update_namecheapdns(session, host, domain, password)
 
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
 
     return result
 
 
-async def _update_namecheapdns(session, host, domain, password):
+@asyncio.coroutine
+def _update_namecheapdns(session, host, domain, password):
     """Update namecheap DNS entry."""
     import xml.etree.ElementTree as ET
 
@@ -63,8 +67,8 @@ async def _update_namecheapdns(session, host, domain, password):
         'password': password,
     }
 
-    resp = await session.get(UPDATE_URL, params=params)
-    xml_string = await resp.text()
+    resp = yield from session.get(UPDATE_URL, params=params)
+    xml_string = yield from resp.text()
     root = ET.fromstring(xml_string)
     err_count = root.find('ErrCount').text
 

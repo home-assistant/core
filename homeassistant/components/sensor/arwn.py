@@ -4,6 +4,7 @@ Support for collecting data from the ARWN project.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.arwn/
 """
+import asyncio
 import json
 import logging
 
@@ -57,8 +58,9 @@ def _slug(name):
     return 'sensor.arwn_{}'.format(slugify(name))
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the ARWN platform."""
     @callback
     def async_sensor_event_received(topic, payload, qos):
@@ -100,7 +102,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             else:
                 store[sensor.name].set_event(event)
 
-    await mqtt.async_subscribe(
+    yield from mqtt.async_subscribe(
         hass, TOPIC, async_sensor_event_received, 0)
     return True
 

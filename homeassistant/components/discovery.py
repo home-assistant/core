@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==2.2.0']
+REQUIREMENTS = ['netdisco==2.1.0']
 
 DOMAIN = 'discovery'
 
@@ -43,7 +43,6 @@ SERVICE_DAIKIN = 'daikin'
 SERVICE_SABNZBD = 'sabnzbd'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 SERVICE_HOMEKIT = 'homekit'
-SERVICE_OCTOPRINT = 'octoprint'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
@@ -51,7 +50,6 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_HUE: 'hue',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
-    'igd': 'upnp',
 }
 
 SERVICE_HANDLERS = {
@@ -68,7 +66,6 @@ SERVICE_HANDLERS = {
     SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     SERVICE_KONNECTED: ('konnected', None),
-    SERVICE_OCTOPRINT: ('octoprint', None),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
     'roku': ('media_player', 'roku'),
@@ -86,7 +83,6 @@ SERVICE_HANDLERS = {
     'songpal': ('media_player', 'songpal'),
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
-    'lg_smart_device': ('media_player', 'lg_soundbar'),
     'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
     'freebox': ('device_tracker', 'freebox'),
 }
@@ -172,7 +168,7 @@ async def async_setup(hass, config):
         results = await hass.async_add_job(_discover, netdisco)
 
         for result in results:
-            hass.async_create_task(new_service_found(*result))
+            hass.async_add_job(new_service_found(*result))
 
         async_track_point_in_utc_time(hass, scan_devices,
                                       dt_util.utcnow() + SCAN_INTERVAL)
@@ -184,7 +180,7 @@ async def async_setup(hass, config):
 
         # discovery local services
         if 'HASSIO' in os.environ:
-            hass.async_create_task(new_service_found(SERVICE_HASSIO, {}))
+            hass.async_add_job(new_service_found(SERVICE_HASSIO, {}))
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
 

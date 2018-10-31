@@ -36,7 +36,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Initialize the Google Domains component."""
     domain = config[DOMAIN].get(CONF_DOMAIN)
     user = config[DOMAIN].get(CONF_USERNAME)
@@ -45,15 +46,16 @@ async def async_setup(hass, config):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    result = await _update_google_domains(
+    result = yield from _update_google_domains(
         hass, session, domain, user, password, timeout)
 
     if not result:
         return False
 
-    async def update_domain_interval(now):
+    @asyncio.coroutine
+    def update_domain_interval(now):
         """Update the Google Domains entry."""
-        await _update_google_domains(
+        yield from _update_google_domains(
             hass, session, domain, user, password, timeout)
 
     hass.helpers.event.async_track_time_interval(
@@ -62,8 +64,8 @@ async def async_setup(hass, config):
     return True
 
 
-async def _update_google_domains(hass, session, domain, user, password,
-                                 timeout):
+@asyncio.coroutine
+def _update_google_domains(hass, session, domain, user, password, timeout):
     """Update Google Domains."""
     url = UPDATE_URL.format(user, password)
 
@@ -73,8 +75,8 @@ async def _update_google_domains(hass, session, domain, user, password,
 
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
-            resp = await session.get(url, params=params)
-            body = await resp.text()
+            resp = yield from session.get(url, params=params)
+            body = yield from resp.text()
 
             if body.startswith('good') or body.startswith('nochg'):
                 return True

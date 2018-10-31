@@ -4,6 +4,7 @@ Allow users to set and activate scenes.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
 """
+import asyncio
 from collections import namedtuple
 
 import voluptuous as vol
@@ -34,8 +35,9 @@ PLATFORM_SCHEMA = vol.Schema({
 SCENECONFIG = namedtuple('SceneConfig', [CONF_NAME, STATES])
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up home assistant scene entries."""
     scene_config = config.get(STATES)
 
@@ -95,7 +97,8 @@ class HomeAssistantScene(Scene):
             ATTR_ENTITY_ID: list(self.scene_config.states.keys()),
         }
 
-    async def async_activate(self):
+    @asyncio.coroutine
+    def async_activate(self):
         """Activate scene. Try to get entities into requested state."""
-        await async_reproduce_state(
+        yield from async_reproduce_state(
             self.hass, self.scene_config.states.values(), True)

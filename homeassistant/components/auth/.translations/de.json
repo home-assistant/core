@@ -9,15 +9,13 @@
             },
             "step": {
                 "init": {
-                    "description": "Bitte w\u00e4hle einen der Benachrichtigungsdienste:",
-                    "title": "Einmal Passwort f\u00fcr Notify einrichten"
+                    "description": "Bitte w\u00e4hle einen der Benachrichtigungsdienste:"
                 },
                 "setup": {
                     "description": "Ein Einmal-Passwort wurde per ** notify gesendet. {notify_service} **. Bitte gebe es unten ein:",
                     "title": "\u00dcberpr\u00fcfe das Setup"
                 }
-            },
-            "title": "Benachrichtig f\u00fcr One-Time Password"
+            }
         },
         "totp": {
             "error": {

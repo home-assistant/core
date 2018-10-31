@@ -4,6 +4,7 @@ Publish simple item state changes via MQTT.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt_statestream/
 """
+import asyncio
 import json
 
 import voluptuous as vol
@@ -42,7 +43,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the MQTT state feed."""
     conf = config.get(DOMAIN, {})
     base_topic = conf.get(CONF_BASE_TOPIC)

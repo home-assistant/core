@@ -4,6 +4,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/plant/
 """
 import logging
+import asyncio
 from datetime import datetime, timedelta
 from collections import deque
 import voluptuous as vol
@@ -96,7 +97,8 @@ CONFIG_SCHEMA = vol.Schema({
 ENABLE_LOAD_HISTORY = False
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the Plant component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_ALL_PLANTS)
@@ -110,7 +112,7 @@ async def async_setup(hass, config):
         async_track_state_change(hass, sensor_entity_ids, entity.state_changed)
         entities.append(entity)
 
-    await component.async_add_entities(entities)
+    yield from component.async_add_entities(entities)
     return True
 
 
@@ -244,13 +246,15 @@ class Plant(Entity):
                 return '{} high'.format(sensor_name)
         return None
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """After being added to hass, load from history."""
         if ENABLE_LOAD_HISTORY and 'recorder' in self.hass.config.components:
             # only use the database if it's configured
             self.hass.async_add_job(self._load_history_from_db)
 
-    async def _load_history_from_db(self):
+    @asyncio.coroutine
+    def _load_history_from_db(self):
         """Load the history of the brightness values from the database.
 
         This only needs to be done once during startup.

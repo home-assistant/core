@@ -1,7 +1,6 @@
 """Test different accessory types: Locks."""
 import pytest
 
-from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_locks import Lock
 from homeassistant.components.lock import DOMAIN
 from homeassistant.const import (
@@ -10,7 +9,7 @@ from homeassistant.const import (
 from tests.common import async_mock_service
 
 
-async def test_lock_unlock(hass, hk_driver, events):
+async def test_lock_unlock(hass, hk_driver):
     """Test if accessory and HA are updated accordingly."""
     code = '1234'
     config = {ATTR_CODE: code}
@@ -57,8 +56,6 @@ async def test_lock_unlock(hass, hk_driver, events):
     assert call_lock[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_lock[0].data[ATTR_CODE] == code
     assert acc.char_target_state.value == 1
-    assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()
@@ -66,12 +63,10 @@ async def test_lock_unlock(hass, hk_driver, events):
     assert call_unlock[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_unlock[0].data[ATTR_CODE] == code
     assert acc.char_target_state.value == 0
-    assert len(events) == 2
-    assert events[-1].data[ATTR_VALUE] is None
 
 
 @pytest.mark.parametrize('config', [{}, {ATTR_CODE: None}])
-async def test_no_code(hass, hk_driver, config, events):
+async def test_no_code(hass, hk_driver, config):
     """Test accessory if lock doesn't require a code."""
     entity_id = 'lock.kitchen_door'
 
@@ -88,5 +83,3 @@ async def test_no_code(hass, hk_driver, config, events):
     assert call_lock[0].data[ATTR_ENTITY_ID] == entity_id
     assert ATTR_CODE not in call_lock[0].data
     assert acc.char_target_state.value == 1
-    assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] is None

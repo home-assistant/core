@@ -4,6 +4,7 @@ Support for IP Webcam sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.android_ip_webcam/
 """
+import asyncio
 
 from homeassistant.components.android_ip_webcam import (
     KEY_MAP, ICON_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST,
@@ -13,8 +14,9 @@ from homeassistant.helpers.icon import icon_for_battery_level
 DEPENDENCIES = ['android_ip_webcam']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the IP Webcam Sensor."""
     if discovery_info is None:
         return
@@ -60,7 +62,8 @@ class IPWebcamSensor(AndroidIPCamEntity):
         """Return the state of the sensor."""
         return self._state
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Retrieve latest state."""
         if self._sensor in ('audio_connections', 'video_connections'):
             if not self._ipcam.status_data:

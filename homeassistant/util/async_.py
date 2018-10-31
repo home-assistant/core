@@ -145,7 +145,8 @@ def run_coroutine_threadsafe(
         """Handle the call to the coroutine."""
         try:
             _chain_future(ensure_future(coro, loop=loop), future)
-        except Exception as exc:  # pylint: disable=broad-except
+        # pylint: disable=broad-except
+        except Exception as exc:
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
             else:
@@ -193,7 +194,8 @@ def run_callback_threadsafe(loop: AbstractEventLoop, callback: Callable,
         """Run callback and store result."""
         try:
             future.set_result(callback(*args))
-        except Exception as exc:  # pylint: disable=broad-except
+        # pylint: disable=broad-except
+        except Exception as exc:
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
             else:

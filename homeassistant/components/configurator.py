@@ -6,6 +6,7 @@ This will return a request id that has to be used for future calls.
 A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
+import asyncio
 import functools as ft
 import logging
 
@@ -121,7 +122,8 @@ def request_done(hass, request_id):
     ).result()
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the configurator component."""
     return True
 
@@ -205,7 +207,8 @@ class Configurator:
 
         self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
-    async def async_handle_service_call(self, call):
+    @asyncio.coroutine
+    def async_handle_service_call(self, call):
         """Handle a configure service call."""
         request_id = call.data.get(ATTR_CONFIGURE_ID)
 
@@ -217,8 +220,8 @@ class Configurator:
 
         # field validation goes here?
         if callback:
-            await self.hass.async_add_job(callback,
-                                          call.data.get(ATTR_FIELDS, {}))
+            yield from self.hass.async_add_job(callback,
+                                               call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""

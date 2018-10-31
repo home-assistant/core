@@ -4,6 +4,7 @@ Support for RFXtrx components.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
+import asyncio
 from collections import OrderedDict
 import logging
 
@@ -315,7 +316,8 @@ class RfxtrxDevice(Entity):
         self._brightness = 0
         self.added_to_hass = False
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Subscribe RFXtrx events."""
         self.added_to_hass = True
 

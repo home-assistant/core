@@ -35,12 +35,6 @@ class PlatformNotReady(HomeAssistantError):
     pass
 
 
-class ConfigEntryNotReady(HomeAssistantError):
-    """Error to indicate that config entry is not ready."""
-
-    pass
-
-
 class InvalidStateError(HomeAssistantError):
     """When an invalid state is encountered."""
 

@@ -4,6 +4,7 @@ Remote control support for Apple TV.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.apple_tv/
 """
+import asyncio
 
 from homeassistant.components.apple_tv import (
     ATTR_ATV, ATTR_POWER, DATA_APPLE_TV)
@@ -14,8 +15,9 @@ from homeassistant.const import (CONF_NAME, CONF_HOST)
 DEPENDENCIES = ['apple_tv']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Apple TV remote platform."""
     if not discovery_info:
         return
@@ -57,14 +59,16 @@ class AppleTVRemote(remote.RemoteDevice):
         """No polling needed for Apple TV."""
         return False
 
-    async def async_turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the device on.
 
         This method is a coroutine.
         """
         self._power.set_power_on(True)
 
-    async def async_turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the device off.
 
         This method is a coroutine.
@@ -77,11 +81,12 @@ class AppleTVRemote(remote.RemoteDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         # Send commands in specified order but schedule only one coroutine
-        async def _send_commands():
+        @asyncio.coroutine
+        def _send_commands():
             for single_command in command:
                 if not hasattr(self._atv.remote_control, single_command):
                     continue
 
-                await getattr(self._atv.remote_control, single_command)()
+                yield from getattr(self._atv.remote_control, single_command)()
 
         return _send_commands()

@@ -9,10 +9,8 @@ from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
 from homeassistant.const import (
     CONF_PLATFORM, STATE_OFF, STATE_ON, STATE_UNAVAILABLE, CONF_NAME)
 from homeassistant.setup import setup_component
-
 from tests.common import (
     fire_mqtt_message, get_test_home_assistant, mock_mqtt_component)
-from tests.components.vacuum import common
 
 
 class TestVacuumMQTT(unittest.TestCase):
@@ -71,55 +69,55 @@ class TestVacuumMQTT(unittest.TestCase):
             vacuum.DOMAIN: self.default_config,
         }))
 
-        common.turn_on(self.hass, 'vacuum.mqtttest')
+        vacuum.turn_on(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'turn_on', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        common.turn_off(self.hass, 'vacuum.mqtttest')
+        vacuum.turn_off(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'turn_off', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        common.stop(self.hass, 'vacuum.mqtttest')
+        vacuum.stop(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'stop', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        common.clean_spot(self.hass, 'vacuum.mqtttest')
+        vacuum.clean_spot(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'clean_spot', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        common.locate(self.hass, 'vacuum.mqtttest')
+        vacuum.locate(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'locate', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        common.start_pause(self.hass, 'vacuum.mqtttest')
+        vacuum.start_pause(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'start_pause', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        common.return_to_base(self.hass, 'vacuum.mqtttest')
+        vacuum.return_to_base(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/command', 'return_to_base', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        common.set_fan_speed(self.hass, 'high', 'vacuum.mqtttest')
+        vacuum.set_fan_speed(self.hass, 'high', 'vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/set_fan_speed', 'high', 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        common.send_command(self.hass, '44 FE 93', entity_id='vacuum.mqtttest')
+        vacuum.send_command(self.hass, '44 FE 93', entity_id='vacuum.mqtttest')
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'vacuum/send_command', '44 FE 93', 0, False)

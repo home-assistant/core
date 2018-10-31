@@ -44,15 +44,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ring = hass.data[DATA_RING]
 
     sensors = []
-    for device in ring.doorbells:  # ring.doorbells is doing I/O
-        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
+    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+        for device in ring.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass,
                                                 device,
                                                 sensor_type))
 
-    for device in ring.stickup_cams:  # ring.stickup_cams is doing I/O
-        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
+        for device in ring.stickup_cams:
             if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass,
                                                 device,
@@ -73,7 +72,6 @@ class RingBinarySensor(BinarySensorDevice):
                                       SENSOR_TYPES.get(self._sensor_type)[0])
         self._device_class = SENSOR_TYPES.get(self._sensor_type)[2]
         self._state = None
-        self._unique_id = '{}-{}'.format(self._data.id, self._sensor_type)
 
     @property
     def name(self):
@@ -89,11 +87,6 @@ class RingBinarySensor(BinarySensorDevice):
     def device_class(self):
         """Return the class of the binary sensor."""
         return self._device_class
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def device_state_attributes(self):

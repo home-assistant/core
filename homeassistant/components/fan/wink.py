@@ -4,6 +4,7 @@ Support for Wink fans.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/fan.wink/
 """
+import asyncio
 import logging
 
 from homeassistant.components.fan import (
@@ -32,7 +33,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class WinkFanDevice(WinkDevice, FanEntity):
     """Representation of a Wink fan."""
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['fan'].append(self)
 

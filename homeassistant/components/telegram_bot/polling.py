@@ -4,6 +4,7 @@ Telegram bot polling implementation.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/telegram_bot.polling/
 """
+import asyncio
 import logging
 
 from homeassistant.components.telegram_bot import (
@@ -19,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = TELEGRAM_PLATFORM_SCHEMA
 
 
-async def async_setup_platform(hass, config):
+@asyncio.coroutine
+def async_setup_platform(hass, config):
     """Set up the Telegram polling platform."""
     bot = initialize_bot(config)
     pol = TelegramPoll(bot, hass, config[CONF_ALLOWED_CHAT_IDS])

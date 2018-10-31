@@ -6,24 +6,34 @@ https://home-assistant.io/components/sensor.blink/
 """
 import logging
 
-from homeassistant.components.blink import BLINK_DATA, SENSORS
+from homeassistant.components.blink import DOMAIN
+from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['blink']
+
+SENSOR_TYPES = {
+    'temperature': ['Temperature', TEMP_FAHRENHEIT],
+    'battery': ['Battery', ''],
+    'notifications': ['Notifications', '']
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Blink sensor."""
     if discovery_info is None:
         return
-    data = hass.data[BLINK_DATA]
-    devs = []
-    for camera in data.sync.cameras:
-        for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
-            devs.append(BlinkSensor(data, camera, sensor_type))
+
+    data = hass.data[DOMAIN].blink
+    devs = list()
+    index = 0
+    for name in data.cameras:
+        devs.append(BlinkSensor(name, 'temperature', index, data))
+        devs.append(BlinkSensor(name, 'battery', index, data))
+        devs.append(BlinkSensor(name, 'notifications', index, data))
+        index += 1
 
     add_entities(devs, True)
 
@@ -31,34 +41,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BlinkSensor(Entity):
     """A Blink camera sensor."""
 
-    def __init__(self, data, camera, sensor_type):
+    def __init__(self, name, sensor_type, index, data):
         """Initialize sensors from Blink camera."""
-        name, units, icon = SENSORS[sensor_type]
-        self._name = "{} {} {}".format(
-            BLINK_DATA, camera, name)
+        self._name = 'blink_' + name + '_' + SENSOR_TYPES[sensor_type][0]
         self._camera_name = name
         self._type = sensor_type
         self.data = data
-        self._camera = data.sync.cameras[camera]
+        self.index = index
         self._state = None
-        self._unit_of_measurement = units
-        self._icon = icon
-        self._unique_id = "{}-{}".format(self._camera.serial, self._type)
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
     def name(self):
         """Return the name of the camera."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id for the camera sensor."""
-        return self._unique_id
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
 
     @property
     def state(self):
@@ -72,11 +68,13 @@ class BlinkSensor(Entity):
 
     def update(self):
         """Retrieve sensor data from the camera."""
-        self.data.refresh()
-        try:
-            self._state = self._camera.attributes[self._type]
-        except KeyError:
+        camera = self.data.cameras[self._camera_name]
+        if self._type == 'temperature':
+            self._state = camera.temperature
+        elif self._type == 'battery':
+            self._state = camera.battery_string
+        elif self._type == 'notifications':
+            self._state = camera.notifications
+        else:
             self._state = None
-            _LOGGER.error(
-                "%s not a valid camera attribute. Did the API change?",
-                self._type)
+            _LOGGER.warning("Could not retrieve state from %s", self.name)

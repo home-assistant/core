@@ -4,6 +4,7 @@ Support for monitoring if a sensor value is below/above a threshold.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.threshold/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -53,8 +54,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Threshold sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
@@ -145,7 +147,8 @@ class ThresholdSensor(BinarySensorDevice):
             ATTR_UPPER: self._threshold_upper,
         }
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and updates the states."""
         def below(threshold):
             """Determine if the sensor value is below a threshold."""

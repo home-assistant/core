@@ -77,13 +77,14 @@ def request_configuration(hass, config, atv, credentials):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
 
-    async def configuration_callback(callback_data):
+    @asyncio.coroutine
+    def configuration_callback(callback_data):
         """Handle the submitted configuration."""
         from pyatv import exceptions
         pin = callback_data.get('pin')
 
         try:
-            await atv.airplay.finish_authentication(pin)
+            yield from atv.airplay.finish_authentication(pin)
             hass.components.persistent_notification.async_create(
                 'Authentication succeeded!<br /><br />Add the following '
                 'to credentials: in your apple_tv configuration:<br /><br />'
@@ -107,10 +108,11 @@ def request_configuration(hass, config, atv, credentials):
     )
 
 
-async def scan_for_apple_tvs(hass):
+@asyncio.coroutine
+def scan_for_apple_tvs(hass):
     """Scan for devices and present a notification of the ones found."""
     import pyatv
-    atvs = await pyatv.scan_for_apple_tvs(hass.loop, timeout=3)
+    atvs = yield from pyatv.scan_for_apple_tvs(hass.loop, timeout=3)
 
     devices = []
     for atv in atvs:
@@ -130,12 +132,14 @@ async def scan_for_apple_tvs(hass):
         notification_id=NOTIFICATION_SCAN_ID)
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the Apple TV component."""
     if DATA_APPLE_TV not in hass.data:
         hass.data[DATA_APPLE_TV] = {}
 
-    async def async_service_handler(service):
+    @asyncio.coroutine
+    def async_service_handler(service):
         """Handle service calls."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
@@ -154,16 +158,17 @@ async def async_setup(hass, config):
                 continue
 
             atv = device.atv
-            credentials = await atv.airplay.generate_credentials()
-            await atv.airplay.load_credentials(credentials)
+            credentials = yield from atv.airplay.generate_credentials()
+            yield from atv.airplay.load_credentials(credentials)
             _LOGGER.debug('Generated new credentials: %s', credentials)
-            await atv.airplay.start_authentication()
+            yield from atv.airplay.start_authentication()
             hass.async_add_job(request_configuration,
                                hass, config, atv, credentials)
 
-    async def atv_discovered(service, info):
+    @asyncio.coroutine
+    def atv_discovered(service, info):
         """Set up an Apple TV that was auto discovered."""
-        await _setup_atv(hass, {
+        yield from _setup_atv(hass, {
             CONF_NAME: info['name'],
             CONF_HOST: info['host'],
             CONF_LOGIN_ID: info['properties']['hG'],
@@ -174,7 +179,7 @@ async def async_setup(hass, config):
 
     tasks = [_setup_atv(hass, conf) for conf in config.get(DOMAIN, [])]
     if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_service_handler,
@@ -187,7 +192,8 @@ async def async_setup(hass, config):
     return True
 
 
-async def _setup_atv(hass, atv_config):
+@asyncio.coroutine
+def _setup_atv(hass, atv_config):
     """Set up an Apple TV."""
     import pyatv
     name = atv_config.get(CONF_NAME)
@@ -203,7 +209,7 @@ async def _setup_atv(hass, atv_config):
     session = async_get_clientsession(hass)
     atv = pyatv.connect_to_apple_tv(details, hass.loop, session=session)
     if credentials:
-        await atv.airplay.load_credentials(credentials)
+        yield from atv.airplay.load_credentials(credentials)
 
     power = AppleTVPowerManager(hass, atv, start_off)
     hass.data[DATA_APPLE_TV][host] = {
@@ -252,4 +258,4 @@ class AppleTVPowerManager:
                 self.atv.push_updater.start()
 
             for listener in self.listeners:
-                self.hass.async_create_task(listener.async_update_ha_state())
+                self.hass.async_add_job(listener.async_update_ha_state())

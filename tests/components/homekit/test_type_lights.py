@@ -3,7 +3,6 @@ from collections import namedtuple
 
 import pytest
 
-from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
     DOMAIN, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
@@ -27,7 +26,7 @@ def cls():
     patcher.stop()
 
 
-async def test_light_basic(hass, hk_driver, cls, events):
+async def test_light_basic(hass, hk_driver, cls):
     """Test light with char state."""
     entity_id = 'light.demo'
 
@@ -63,8 +62,6 @@ async def test_light_basic(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
-    assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] is None
 
     hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
@@ -73,11 +70,9 @@ async def test_light_basic(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
-    assert len(events) == 2
-    assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_light_brightness(hass, hk_driver, cls, events):
+async def test_light_brightness(hass, hk_driver, cls):
     """Test light with brightness."""
     entity_id = 'light.demo'
 
@@ -106,8 +101,6 @@ async def test_light_brightness(hass, hk_driver, cls, events):
     assert call_turn_on[0]
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
-    assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == 'brightness at 20%'
 
     await hass.async_add_job(acc.char_on.client_update_value, 1)
     await hass.async_add_job(acc.char_brightness.client_update_value, 40)
@@ -115,19 +108,15 @@ async def test_light_brightness(hass, hk_driver, cls, events):
     assert call_turn_on[1]
     assert call_turn_on[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[1].data[ATTR_BRIGHTNESS_PCT] == 40
-    assert len(events) == 2
-    assert events[-1].data[ATTR_VALUE] == 'brightness at 40%'
 
     await hass.async_add_job(acc.char_on.client_update_value, 1)
     await hass.async_add_job(acc.char_brightness.client_update_value, 0)
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
-    assert len(events) == 3
-    assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_light_color_temperature(hass, hk_driver, cls, events):
+async def test_light_color_temperature(hass, hk_driver, cls):
     """Test light with color temperature."""
     entity_id = 'light.demo'
 
@@ -152,11 +141,9 @@ async def test_light_color_temperature(hass, hk_driver, cls, events):
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_COLOR_TEMP] == 250
-    assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == 'color temperature at 250'
 
 
-async def test_light_rgb_color(hass, hk_driver, cls, events):
+async def test_light_rgb_color(hass, hk_driver, cls):
     """Test light with rgb_color."""
     entity_id = 'light.demo'
 
@@ -183,5 +170,3 @@ async def test_light_rgb_color(hass, hk_driver, cls, events):
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_HS_COLOR] == (145, 75)
-    assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == 'set color at (145, 75)'

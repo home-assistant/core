@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.buienradar/
 """
 import logging
+import asyncio
 
 import voluptuous as vol
 
@@ -54,8 +55,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the buienradar platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -84,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities([BrWeather(data, config)])
 
     # schedule the first update in 1 minute from now:
-    await data.schedule_update(1)
+    yield from data.schedule_update(1)
 
 
 class BrWeather(WeatherEntity):

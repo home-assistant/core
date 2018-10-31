@@ -9,7 +9,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
     DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
     CONF_EXTRA_HTML_URL_ES5)
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components import websocket_api as wapi
 
 from tests.common import mock_coro
 
@@ -213,7 +213,7 @@ async def test_missing_themes(hass, hass_ws_client):
     msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == TYPE_RESULT
+    assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
     assert msg['result']['default_theme'] == 'default'
     assert msg['result']['themes'] == {}
@@ -252,7 +252,7 @@ async def test_get_panels(hass, hass_ws_client):
     msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == TYPE_RESULT
+    assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
     assert msg['result']['map']['component_name'] == 'map'
     assert msg['result']['map']['url_path'] == 'map'
@@ -275,7 +275,7 @@ async def test_get_translations(hass, hass_ws_client):
         msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == TYPE_RESULT
+    assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
     assert msg['result'] == {'resources': {'lang': 'nl'}}
 
@@ -294,18 +294,10 @@ async def test_onboarding_load(mock_http_client):
 
 async def test_auth_authorize(mock_http_client):
     """Test the authorize endpoint works."""
-    resp = await mock_http_client.get(
-        '/auth/authorize?response_type=code&client_id=https://localhost/&'
-        'redirect_uri=https://localhost/&state=123%23456')
+    resp = await mock_http_client.get('/auth/authorize?hello=world')
+    assert resp.url.query_string == 'hello=world'
+    assert resp.url.path == '/frontend_es5/authorize.html'
 
-    assert str(resp.url.relative()) == (
-        '/frontend_es5/authorize.html?response_type=code&client_id='
-        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
-
-    resp = await mock_http_client.get(
-        '/auth/authorize?latest&response_type=code&client_id='
-        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
-
-    assert str(resp.url.relative()) == (
-        '/frontend_latest/authorize.html?latest&response_type=code&client_id='
-        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
+    resp = await mock_http_client.get('/auth/authorize?latest&hello=world')
+    assert resp.url.query_string == 'latest&hello=world'
+    assert resp.url.path == '/frontend_latest/authorize.html'

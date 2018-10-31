@@ -4,11 +4,11 @@ Reads vehicle status from BMW connected drive portal.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.bmw_connected_drive/
 """
+import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
-from homeassistant.const import LENGTH_KILOMETERS
 
 DEPENDENCIES = ['bmw_connected_drive']
 
@@ -118,8 +118,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['lights_parking'] = vehicle_state.parking_lights.value
         elif self._attribute == 'condition_based_services':
             for report in vehicle_state.condition_based_services:
-                result.update(
-                    self._format_cbs_report(report))
+                result.update(self._format_cbs_report(report))
         elif self._attribute == 'check_control_messages':
             check_control_messages = vehicle_state.check_control_messages
             if not check_control_messages:
@@ -177,7 +176,8 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             self._state = (vehicle_state._attributes['connectionStatus'] ==
                            'CONNECTED')
 
-    def _format_cbs_report(self, report):
+    @staticmethod
+    def _format_cbs_report(report):
         result = {}
         service_type = report.service_type.lower().replace('_', ' ')
         result['{} status'.format(service_type)] = report.state.value
@@ -185,17 +185,16 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['{} date'.format(service_type)] = \
                 report.due_date.strftime('%Y-%m-%d')
         if report.due_distance is not None:
-            distance = round(self.hass.config.units.length(
-                report.due_distance, LENGTH_KILOMETERS))
-            result['{} distance'.format(service_type)] = '{} {}'.format(
-                distance, self.hass.config.units.length_unit)
+            result['{} distance'.format(service_type)] = \
+                '{} km'.format(report.due_distance)
         return result
 
     def update_callback(self):
         """Schedule a state update."""
         self.schedule_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Add callback after being added to hass.
 
         Show latest data after startup.

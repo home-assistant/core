@@ -4,6 +4,7 @@ Support for functionality to keep track of the sun.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sun/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -35,7 +36,8 @@ STATE_ATTR_NEXT_RISING = 'next_rising'
 STATE_ATTR_NEXT_SETTING = 'next_setting'
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Track the state of the sun."""
     if config.get(CONF_ELEVATION) is not None:
         _LOGGER.warning(

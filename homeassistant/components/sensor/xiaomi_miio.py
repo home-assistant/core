@@ -8,13 +8,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN)
+from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +24,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
+
+REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_CHARGING = 'charging'

@@ -38,7 +38,6 @@ AXIS_INCLUDE = EVENT_TYPES + PLATFORMS
 AXIS_DEFAULT_HOST = '192.168.0.90'
 AXIS_DEFAULT_USERNAME = 'root'
 AXIS_DEFAULT_PASSWORD = 'pass'
-DEFAULT_PORT = 80
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_INCLUDE):
@@ -48,7 +47,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_TRIGGER_TIME, default=0): cv.positive_int,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PORT, default=80): cv.positive_int,
     vol.Optional(ATTR_LOCATION, default=''): cv.string,
 })
 

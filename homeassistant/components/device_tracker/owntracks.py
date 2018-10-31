@@ -4,6 +4,7 @@ Device tracker platform that adds support for OwnTracks over MQTT.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.owntracks/
 """
+import asyncio
 import base64
 import json
 import logging
@@ -72,11 +73,13 @@ def get_cipher():
     return (KEYLEN, decrypt)
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+@asyncio.coroutine
+def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up an OwnTracks tracker."""
     context = context_from_config(async_see, config)
 
-    async def async_handle_mqtt_message(topic, payload, qos):
+    @asyncio.coroutine
+    def async_handle_mqtt_message(topic, payload, qos):
         """Handle incoming OwnTracks message."""
         try:
             message = json.loads(payload)
@@ -87,9 +90,9 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
         message['topic'] = topic
 
-        await async_handle_message(hass, context, message)
+        yield from async_handle_message(hass, context, message)
 
-    await mqtt.async_subscribe(
+    yield from mqtt.async_subscribe(
         hass, context.mqtt_topic, async_handle_mqtt_message, 1)
 
     return True
@@ -263,7 +266,8 @@ class OwnTracksContext:
 
         return True
 
-    async def async_see_beacons(self, hass, dev_id, kwargs_param):
+    @asyncio.coroutine
+    def async_see_beacons(self, hass, dev_id, kwargs_param):
         """Set active beacons to the current location."""
         kwargs = kwargs_param.copy()
 
@@ -286,11 +290,12 @@ class OwnTracksContext:
         for beacon in self.mobile_beacons_active[dev_id]:
             kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
             kwargs['host_name'] = beacon
-            await self.async_see(**kwargs)
+            yield from self.async_see(**kwargs)
 
 
 @HANDLERS.register('location')
-async def async_handle_location_message(hass, context, message):
+@asyncio.coroutine
+def async_handle_location_message(hass, context, message):
     """Handle a location message."""
     if not context.async_valid_accuracy(message):
         return
@@ -307,11 +312,12 @@ async def async_handle_location_message(hass, context, message):
             context.regions_entered[-1])
         return
 
-    await context.async_see(**kwargs)
-    await context.async_see_beacons(hass, dev_id, kwargs)
+    yield from context.async_see(**kwargs)
+    yield from context.async_see_beacons(hass, dev_id, kwargs)
 
 
-async def _async_transition_message_enter(hass, context, message, location):
+@asyncio.coroutine
+def _async_transition_message_enter(hass, context, message, location):
     """Execute enter event."""
     zone = hass.states.get("zone.{}".format(slugify(location)))
     dev_id, kwargs = _parse_see_args(message, context.mqtt_topic)
@@ -325,7 +331,7 @@ async def _async_transition_message_enter(hass, context, message, location):
         if location not in beacons:
             beacons.add(location)
         _LOGGER.info("Added beacon %s", location)
-        await context.async_see_beacons(hass, dev_id, kwargs)
+        yield from context.async_see_beacons(hass, dev_id, kwargs)
     else:
         # Normal region
         regions = context.regions_entered[dev_id]
@@ -333,11 +339,12 @@ async def _async_transition_message_enter(hass, context, message, location):
             regions.append(location)
         _LOGGER.info("Enter region %s", location)
         _set_gps_from_zone(kwargs, location, zone)
-        await context.async_see(**kwargs)
-        await context.async_see_beacons(hass, dev_id, kwargs)
+        yield from context.async_see(**kwargs)
+        yield from context.async_see_beacons(hass, dev_id, kwargs)
 
 
-async def _async_transition_message_leave(hass, context, message, location):
+@asyncio.coroutine
+def _async_transition_message_leave(hass, context, message, location):
     """Execute leave event."""
     dev_id, kwargs = _parse_see_args(message, context.mqtt_topic)
     regions = context.regions_entered[dev_id]
@@ -349,7 +356,7 @@ async def _async_transition_message_leave(hass, context, message, location):
     if location in beacons:
         beacons.remove(location)
         _LOGGER.info("Remove beacon %s", location)
-        await context.async_see_beacons(hass, dev_id, kwargs)
+        yield from context.async_see_beacons(hass, dev_id, kwargs)
     else:
         new_region = regions[-1] if regions else None
         if new_region:
@@ -358,20 +365,21 @@ async def _async_transition_message_leave(hass, context, message, location):
                 "zone.{}".format(slugify(new_region)))
             _set_gps_from_zone(kwargs, new_region, zone)
             _LOGGER.info("Exit to %s", new_region)
-            await context.async_see(**kwargs)
-            await context.async_see_beacons(hass, dev_id, kwargs)
+            yield from context.async_see(**kwargs)
+            yield from context.async_see_beacons(hass, dev_id, kwargs)
             return
 
         _LOGGER.info("Exit to GPS")
 
         # Check for GPS accuracy
         if context.async_valid_accuracy(message):
-            await context.async_see(**kwargs)
-            await context.async_see_beacons(hass, dev_id, kwargs)
+            yield from context.async_see(**kwargs)
+            yield from context.async_see_beacons(hass, dev_id, kwargs)
 
 
 @HANDLERS.register('transition')
-async def async_handle_transition_message(hass, context, message):
+@asyncio.coroutine
+def async_handle_transition_message(hass, context, message):
     """Handle a transition message."""
     if message.get('desc') is None:
         _LOGGER.error(
@@ -391,10 +399,10 @@ async def async_handle_transition_message(hass, context, message):
         location = STATE_HOME
 
     if message['event'] == 'enter':
-        await _async_transition_message_enter(
+        yield from _async_transition_message_enter(
             hass, context, message, location)
     elif message['event'] == 'leave':
-        await _async_transition_message_leave(
+        yield from _async_transition_message_leave(
             hass, context, message, location)
     else:
         _LOGGER.error(
@@ -402,7 +410,8 @@ async def async_handle_transition_message(hass, context, message):
             message['event'])
 
 
-async def async_handle_waypoint(hass, name_base, waypoint):
+@asyncio.coroutine
+def async_handle_waypoint(hass, name_base, waypoint):
     """Handle a waypoint."""
     name = waypoint['desc']
     pretty_name = '{} - {}'.format(name_base, name)
@@ -420,12 +429,13 @@ async def async_handle_waypoint(hass, name_base, waypoint):
     zone = zone_comp.Zone(hass, pretty_name, lat, lon, rad,
                           zone_comp.ICON_IMPORT, False)
     zone.entity_id = entity_id
-    await zone.async_update_ha_state()
+    yield from zone.async_update_ha_state()
 
 
 @HANDLERS.register('waypoint')
 @HANDLERS.register('waypoints')
-async def async_handle_waypoints_message(hass, context, message):
+@asyncio.coroutine
+def async_handle_waypoints_message(hass, context, message):
     """Handle a waypoints message."""
     if not context.import_waypoints:
         return
@@ -446,11 +456,12 @@ async def async_handle_waypoints_message(hass, context, message):
     name_base = ' '.join(_parse_topic(message['topic'], context.mqtt_topic))
 
     for wayp in wayps:
-        await async_handle_waypoint(hass, name_base, wayp)
+        yield from async_handle_waypoint(hass, name_base, wayp)
 
 
 @HANDLERS.register('encrypted')
-async def async_handle_encrypted_message(hass, context, message):
+@asyncio.coroutine
+def async_handle_encrypted_message(hass, context, message):
     """Handle an encrypted message."""
     plaintext_payload = _decrypt_payload(context.secret, message['topic'],
                                          message['data'])
@@ -461,7 +472,7 @@ async def async_handle_encrypted_message(hass, context, message):
     decrypted = json.loads(plaintext_payload)
     decrypted['topic'] = message['topic']
 
-    await async_handle_message(hass, context, decrypted)
+    yield from async_handle_message(hass, context, decrypted)
 
 
 @HANDLERS.register('lwt')
@@ -470,21 +481,24 @@ async def async_handle_encrypted_message(hass, context, message):
 @HANDLERS.register('cmd')
 @HANDLERS.register('steps')
 @HANDLERS.register('card')
-async def async_handle_not_impl_msg(hass, context, message):
+@asyncio.coroutine
+def async_handle_not_impl_msg(hass, context, message):
     """Handle valid but not implemented message types."""
     _LOGGER.debug('Not handling %s message: %s', message.get("_type"), message)
 
 
-async def async_handle_unsupported_msg(hass, context, message):
+@asyncio.coroutine
+def async_handle_unsupported_msg(hass, context, message):
     """Handle an unsupported or invalid message type."""
     _LOGGER.warning('Received unsupported message type: %s.',
                     message.get('_type'))
 
 
-async def async_handle_message(hass, context, message):
+@asyncio.coroutine
+def async_handle_message(hass, context, message):
     """Handle an OwnTracks message."""
     msgtype = message.get('_type')
 
     handler = HANDLERS.get(msgtype, async_handle_unsupported_msg)
 
-    await handler(hass, context, message)
+    yield from handler(hass, context, message)

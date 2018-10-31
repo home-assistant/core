@@ -3,7 +3,7 @@ import base64
 from unittest.mock import patch
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components import websocket_api
 
 from tests.common import mock_coro
 
@@ -30,7 +30,7 @@ async def test_get_panels(hass, hass_ws_client):
         msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == TYPE_RESULT
+    assert msg['type'] == websocket_api.TYPE_RESULT
     assert msg['success']
     assert msg['result']['content_type'] == 'image/jpeg'
     assert msg['result']['content'] == \

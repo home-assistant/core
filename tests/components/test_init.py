@@ -8,12 +8,8 @@ import yaml
 import homeassistant.core as ha
 from homeassistant import config
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, SERVICE_HOMEASSISTANT_RESTART,
-    SERVICE_HOMEASSISTANT_STOP, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE)
+    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components as comps
-from homeassistant.components import (
-    SERVICE_CHECK_CONFIG, SERVICE_RELOAD_CORE_CONFIG)
 import homeassistant.helpers.intent as intent
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
@@ -22,71 +18,6 @@ from homeassistant.util.async_ import run_coroutine_threadsafe
 from tests.common import (
     get_test_home_assistant, mock_service, patch_yaml_files, mock_coro,
     async_mock_service)
-
-
-def turn_on(hass, entity_id=None, **service_data):
-    """Turn specified entity on if possible.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    if entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(ha.DOMAIN, SERVICE_TURN_ON, service_data)
-
-
-def turn_off(hass, entity_id=None, **service_data):
-    """Turn specified entity off.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    if entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
-
-
-def toggle(hass, entity_id=None, **service_data):
-    """Toggle specified entity.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    if entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(ha.DOMAIN, SERVICE_TOGGLE, service_data)
-
-
-def stop(hass):
-    """Stop Home Assistant.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP)
-
-
-def restart(hass):
-    """Stop Home Assistant.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
-
-
-def check_config(hass):
-    """Check the config files.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(ha.DOMAIN, SERVICE_CHECK_CONFIG)
-
-
-def reload_core_config(hass):
-    """Reload the core config.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
 
 
 class TestComponentsCore(unittest.TestCase):
@@ -118,28 +49,28 @@ class TestComponentsCore(unittest.TestCase):
     def test_turn_on_without_entities(self):
         """Test turn_on method without entities."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
-        turn_on(self.hass)
+        comps.turn_on(self.hass)
         self.hass.block_till_done()
         self.assertEqual(0, len(calls))
 
     def test_turn_on(self):
         """Test turn_on method."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
-        turn_on(self.hass, 'light.Ceiling')
+        comps.turn_on(self.hass, 'light.Ceiling')
         self.hass.block_till_done()
         self.assertEqual(1, len(calls))
 
     def test_turn_off(self):
         """Test turn_off method."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_OFF)
-        turn_off(self.hass, 'light.Bowl')
+        comps.turn_off(self.hass, 'light.Bowl')
         self.hass.block_till_done()
         self.assertEqual(1, len(calls))
 
     def test_toggle(self):
         """Test toggle method."""
         calls = mock_service(self.hass, 'light', SERVICE_TOGGLE)
-        toggle(self.hass, 'light.Bowl')
+        comps.toggle(self.hass, 'light.Bowl')
         self.hass.block_till_done()
         self.assertEqual(1, len(calls))
 
@@ -171,7 +102,7 @@ class TestComponentsCore(unittest.TestCase):
             })
         }
         with patch_yaml_files(files, True):
-            reload_core_config(self.hass)
+            comps.reload_core_config(self.hass)
             self.hass.block_till_done()
 
         assert self.hass.config.latitude == 10
@@ -194,7 +125,7 @@ class TestComponentsCore(unittest.TestCase):
             config.YAML_CONFIG_FILE: yaml.dump(['invalid', 'config'])
         }
         with patch_yaml_files(files, True):
-            reload_core_config(self.hass)
+            comps.reload_core_config(self.hass)
             self.hass.block_till_done()
 
         assert mock_error.called
@@ -204,7 +135,7 @@ class TestComponentsCore(unittest.TestCase):
            return_value=mock_coro())
     def test_stop_homeassistant(self, mock_stop):
         """Test stop service."""
-        stop(self.hass)
+        comps.stop(self.hass)
         self.hass.block_till_done()
         assert mock_stop.called
 
@@ -214,7 +145,7 @@ class TestComponentsCore(unittest.TestCase):
            return_value=mock_coro())
     def test_restart_homeassistant(self, mock_check, mock_restart):
         """Test stop service."""
-        restart(self.hass)
+        comps.restart(self.hass)
         self.hass.block_till_done()
         assert mock_restart.called
         assert mock_check.called
@@ -225,7 +156,7 @@ class TestComponentsCore(unittest.TestCase):
            side_effect=HomeAssistantError("Test error"))
     def test_restart_homeassistant_wrong_conf(self, mock_check, mock_restart):
         """Test stop service."""
-        restart(self.hass)
+        comps.restart(self.hass)
         self.hass.block_till_done()
         assert mock_check.called
         assert not mock_restart.called
@@ -236,7 +167,7 @@ class TestComponentsCore(unittest.TestCase):
            return_value=mock_coro())
     def test_check_config(self, mock_check, mock_stop):
         """Test stop service."""
-        check_config(self.hass)
+        comps.check_config(self.hass)
         self.hass.block_till_done()
         assert mock_check.called
         assert not mock_stop.called
@@ -355,17 +286,3 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
         'light', 'turn_on', {'entity_id': ['light.bla', 'light.test']}, True)
     assert mock_call.call_args_list[1][0] == (
         'sensor', 'turn_on', {'entity_id': ['sensor.bla']}, False)
-
-
-async def test_entity_update(hass):
-    """Test being able to call entity update."""
-    await comps.async_setup(hass, {})
-
-    with patch('homeassistant.helpers.entity_component.async_update_entity',
-               return_value=mock_coro()) as mock_update:
-        await hass.services.async_call('homeassistant', 'update_entity', {
-            'entity_id': 'light.kitchen'
-        }, blocking=True)
-
-    assert len(mock_update.mock_calls) == 1
-    assert mock_update.mock_calls[0][1][1] == 'light.kitchen'

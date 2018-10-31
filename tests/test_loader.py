@@ -79,10 +79,10 @@ def test_component_loader_non_existing(hass):
 @asyncio.coroutine
 def test_component_wrapper(hass):
     """Test component wrapper."""
-    calls = async_mock_service(hass, 'persistent_notification', 'create')
+    calls = async_mock_service(hass, 'light', 'turn_on')
 
     components = loader.Components(hass)
-    components.persistent_notification.async_create('message')
+    components.light.async_turn_on('light.test')
     yield from hass.async_block_till_done()
 
     assert len(calls) == 1

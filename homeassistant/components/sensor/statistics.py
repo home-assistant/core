@@ -4,6 +4,7 @@ Support for statistics for sensor values.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.statistics/
 """
+import asyncio
 import logging
 import statistics
 from collections import deque
@@ -57,8 +58,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Statistics sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
@@ -177,7 +179,8 @@ class StatisticsSensor(Entity):
             self.ages.popleft()
             self.states.popleft()
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and updates the states."""
         if self._max_age is not None:
             self._purge_old()
@@ -233,7 +236,8 @@ class StatisticsSensor(Entity):
                 self.change = self.average_change = STATE_UNKNOWN
                 self.change_rate = STATE_UNKNOWN
 
-    async def _initialize_from_database(self):
+    @asyncio.coroutine
+    def _initialize_from_database(self):
         """Initialize the list of states from the database.
 
         The query will get the list of states in DESCENDING order so that we

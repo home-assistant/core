@@ -4,6 +4,7 @@ Kodi notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.kodi/
 """
+import asyncio
 import logging
 
 import aiohttp
@@ -37,7 +38,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 ATTR_DISPLAYTIME = 'displaytime'
 
 
-async def async_get_service(hass, config, discovery_info=None):
+@asyncio.coroutine
+def async_get_service(hass, config, discovery_info=None):
     """Return the notify service."""
     url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
 
@@ -84,7 +86,8 @@ class KodiNotificationService(BaseNotificationService):
 
         self._server = jsonrpc_async.Server(self._url, **kwargs)
 
-    async def async_send_message(self, message="", **kwargs):
+    @asyncio.coroutine
+    def async_send_message(self, message="", **kwargs):
         """Send a message to Kodi."""
         import jsonrpc_async
         try:
@@ -93,7 +96,7 @@ class KodiNotificationService(BaseNotificationService):
             displaytime = data.get(ATTR_DISPLAYTIME, 10000)
             icon = data.get(ATTR_ICON, "info")
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-            await self._server.GUI.ShowNotification(
+            yield from self._server.GUI.ShowNotification(
                 title, message, icon, displaytime)
 
         except jsonrpc_async.TransportError:

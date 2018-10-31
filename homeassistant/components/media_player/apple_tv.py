@@ -4,6 +4,7 @@ Support for Apple TV.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.apple_tv/
 """
+import asyncio
 import logging
 
 from homeassistant.components.apple_tv import (
@@ -28,7 +29,8 @@ SUPPORT_APPLE_TV = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
                    SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
 
 
-async def async_setup_platform(
+@asyncio.coroutine
+def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the Apple TV platform."""
     if not discovery_info:
@@ -69,7 +71,8 @@ class AppleTvDevice(MediaPlayerDevice):
         self._power.listeners.append(self)
         self.atv.push_updater.listener = self
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
         self._power.init()
 
@@ -161,9 +164,10 @@ class AppleTvDevice(MediaPlayerDevice):
         if state in (STATE_PLAYING, STATE_PAUSED):
             return dt_util.utcnow()
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    @asyncio.coroutine
+    def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        await self.atv.airplay.play_url(media_id)
+        yield from self.atv.airplay.play_url(media_id)
 
     @property
     def media_image_hash(self):
@@ -172,11 +176,12 @@ class AppleTvDevice(MediaPlayerDevice):
         if self._playing and state not in [STATE_OFF, STATE_IDLE]:
             return self._playing.hash
 
-    async def async_get_media_image(self):
+    @asyncio.coroutine
+    def async_get_media_image(self):
         """Fetch media image of current playing image."""
         state = self.state
         if self._playing and state not in [STATE_OFF, STATE_IDLE]:
-            return (await self.atv.metadata.artwork()), 'image/png'
+            return (yield from self.atv.metadata.artwork()), 'image/png'
 
         return None, None
 
@@ -196,11 +201,13 @@ class AppleTvDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         return SUPPORT_APPLE_TV
 
-    async def async_turn_on(self):
+    @asyncio.coroutine
+    def async_turn_on(self):
         """Turn the media player on."""
         self._power.set_power_on(True)
 
-    async def async_turn_off(self):
+    @asyncio.coroutine
+    def async_turn_off(self):
         """Turn the media player off."""
         self._playing = None
         self._power.set_power_on(False)

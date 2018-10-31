@@ -51,8 +51,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Volumio platform."""
     if DATA_VOLUMIO not in hass.data:
         hass.data[DATA_VOLUMIO] = dict()
@@ -90,11 +91,13 @@ class Volumio(MediaPlayerDevice):
         self._url = '{}:{}'.format(host, str(port))
         self._name = name
         self._state = {}
+        self.async_update()
         self._lastvol = self._state.get('volume', 0)
         self._playlists = []
         self._currentplaylist = None
 
-    async def send_volumio_msg(self, method, params=None):
+    @asyncio.coroutine
+    def send_volumio_msg(self, method, params=None):
         """Send message."""
         url = "http://{}:{}/api/v1/{}/".format(self.host, self.port, method)
 
@@ -102,9 +105,9 @@ class Volumio(MediaPlayerDevice):
 
         try:
             websession = async_get_clientsession(self.hass)
-            response = await websession.get(url, params=params)
+            response = yield from websession.get(url, params=params)
             if response.status == 200:
-                data = await response.json()
+                data = yield from response.json()
             else:
                 _LOGGER.error(
                     "Query failed, response code: %s Full message: %s",
@@ -112,9 +115,7 @@ class Volumio(MediaPlayerDevice):
                 return False
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
-            _LOGGER.error(
-                "Failed communicating with Volumio '%s': %s",
-                self._name, type(error))
+            _LOGGER.error("Failed communicating with Volumio: %s", type(error))
             return False
 
         try:
@@ -123,10 +124,11 @@ class Volumio(MediaPlayerDevice):
             _LOGGER.error("Received invalid response: %s", data)
             return False
 
-    async def async_update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update state."""
-        resp = await self.send_volumio_msg('getState')
-        await self._async_update_playlists()
+        resp = yield from self.send_volumio_msg('getState')
+        yield from self._async_update_playlists()
         if resp is False:
             return
         self._state = resp.copy()

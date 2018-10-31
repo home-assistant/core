@@ -7,7 +7,6 @@ from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.components.switch as switch
 
 from tests.common import get_test_home_assistant, mock_service
-from tests.components.switch import common
 
 
 TEST_STATE = None
@@ -60,13 +59,13 @@ class TestWOLSwitch(unittest.TestCase):
 
         TEST_STATE = True
 
-        common.turn_on(self.hass, 'switch.wake_on_lan')
+        switch.turn_on(self.hass, 'switch.wake_on_lan')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_ON, state.state)
 
-        common.turn_off(self.hass, 'switch.wake_on_lan')
+        switch.turn_off(self.hass, 'switch.wake_on_lan')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
@@ -92,7 +91,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         TEST_STATE = True
 
-        common.turn_on(self.hass, 'switch.wake_on_lan')
+        switch.turn_on(self.hass, 'switch.wake_on_lan')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
@@ -124,7 +123,7 @@ class TestWOLSwitch(unittest.TestCase):
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_OFF, state.state)
 
-        common.turn_on(self.hass, 'switch.wake_on_lan')
+        switch.turn_on(self.hass, 'switch.wake_on_lan')
         self.hass.block_till_done()
 
     @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
@@ -150,7 +149,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         TEST_STATE = True
 
-        common.turn_on(self.hass, 'switch.wake_on_lan')
+        switch.turn_on(self.hass, 'switch.wake_on_lan')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
@@ -159,7 +158,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         TEST_STATE = False
 
-        common.turn_off(self.hass, 'switch.wake_on_lan')
+        switch.turn_off(self.hass, 'switch.wake_on_lan')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')
@@ -186,7 +185,7 @@ class TestWOLSwitch(unittest.TestCase):
 
         TEST_STATE = True
 
-        common.turn_on(self.hass, 'switch.wake_on_lan')
+        switch.turn_on(self.hass, 'switch.wake_on_lan')
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.wake_on_lan')

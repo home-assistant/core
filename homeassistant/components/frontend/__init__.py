@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20181018.0']
+REQUIREMENTS = ['home-assistant-frontend==20180926.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
@@ -145,7 +145,7 @@ class Panel:
             index_view.get)
 
     @callback
-    def to_response(self):
+    def to_response(self, hass, request):
         """Panel as dictionary."""
         return {
             'component_name': self.component_name,
@@ -344,12 +344,11 @@ class AuthorizeView(HomeAssistantView):
             _is_latest(self.js_option, request)
 
         if latest:
-            base = 'frontend_latest'
+            location = '/frontend_latest/authorize.html'
         else:
-            base = 'frontend_es5'
+            location = '/frontend_es5/authorize.html'
 
-        location = "/{}/authorize.html{}".format(
-            base, str(request.url.relative())[15:])
+        location += '?{}'.format(request.query_string)
 
         return web.Response(status=302, headers={
             'location': location
@@ -485,10 +484,12 @@ def websocket_get_panels(hass, connection, msg):
     Async friendly.
     """
     panels = {
-        panel: connection.hass.data[DATA_PANELS][panel].to_response()
+        panel:
+        connection.hass.data[DATA_PANELS][panel].to_response(
+            connection.hass, connection.request)
         for panel in connection.hass.data[DATA_PANELS]}
 
-    connection.send_message(websocket_api.result_message(
+    connection.to_write.put_nowait(websocket_api.result_message(
         msg['id'], panels))
 
 
@@ -498,21 +499,25 @@ def websocket_get_themes(hass, connection, msg):
 
     Async friendly.
     """
-    connection.send_message(websocket_api.result_message(msg['id'], {
+    connection.to_write.put_nowait(websocket_api.result_message(msg['id'], {
         'themes': hass.data[DATA_THEMES],
         'default_theme': hass.data[DATA_DEFAULT_THEME],
     }))
 
 
-@websocket_api.async_response
-async def websocket_get_translations(hass, connection, msg):
+@callback
+def websocket_get_translations(hass, connection, msg):
     """Handle get translations command.
 
     Async friendly.
     """
-    resources = await async_get_translations(hass, msg['language'])
-    connection.send_message(websocket_api.result_message(
-        msg['id'], {
-            'resources': resources,
-        }
-    ))
+    async def send_translations():
+        """Send a translation."""
+        resources = await async_get_translations(hass, msg['language'])
+        connection.send_message_outside(websocket_api.result_message(
+            msg['id'], {
+                'resources': resources,
+            }
+        ))
+
+    hass.async_add_job(send_translations())

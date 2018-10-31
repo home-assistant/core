@@ -4,6 +4,7 @@ Component to offer a way to select an option from a list.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_select/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -76,7 +77,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -112,7 +114,7 @@ async def async_setup(hass, config):
         'async_set_options'
     )
 
-    await component.async_add_entities(entities)
+    yield from component.async_add_entities(entities)
     return True
 
 
@@ -127,12 +129,13 @@ class InputSelect(Entity):
         self._options = options
         self._icon = icon
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Run when entity about to be added."""
         if self._current_option is not None:
             return
 
-        state = await async_get_last_state(self.hass, self.entity_id)
+        state = yield from async_get_last_state(self.hass, self.entity_id)
         if not state or state.state not in self._options:
             self._current_option = self._options[0]
         else:
@@ -165,24 +168,27 @@ class InputSelect(Entity):
             ATTR_OPTIONS: self._options,
         }
 
-    async def async_select_option(self, option):
+    @asyncio.coroutine
+    def async_select_option(self, option):
         """Select new option."""
         if option not in self._options:
             _LOGGER.warning('Invalid option: %s (possible options: %s)',
                             option, ', '.join(self._options))
             return
         self._current_option = option
-        await self.async_update_ha_state()
+        yield from self.async_update_ha_state()
 
-    async def async_offset_index(self, offset):
+    @asyncio.coroutine
+    def async_offset_index(self, offset):
         """Offset current index."""
         current_index = self._options.index(self._current_option)
         new_index = (current_index + offset) % len(self._options)
         self._current_option = self._options[new_index]
-        await self.async_update_ha_state()
+        yield from self.async_update_ha_state()
 
-    async def async_set_options(self, options):
+    @asyncio.coroutine
+    def async_set_options(self, options):
         """Set options."""
         self._current_option = options[0]
         self._options = options
-        await self.async_update_ha_state()
+        yield from self.async_update_ha_state()

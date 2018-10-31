@@ -4,6 +4,7 @@ Support for Harmony Hub devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.harmony/
 """
+import asyncio
 import logging
 import time
 
@@ -151,7 +152,8 @@ class HarmonyRemote(remote.RemoteDevice):
             pyharmony.ha_write_config_file(self._config, self._config_path)
         self._delay_secs = delay_secs
 
-    async def async_added_to_hass(self):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
         """Complete the initialization."""
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP,

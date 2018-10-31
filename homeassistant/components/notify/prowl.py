@@ -25,7 +25,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_get_service(hass, config, discovery_info=None):
+@asyncio.coroutine
+def async_get_service(hass, config, discovery_info=None):
     """Get the Prowl notification service."""
     return ProwlNotificationService(hass, config[CONF_API_KEY])
 
@@ -38,7 +39,8 @@ class ProwlNotificationService(BaseNotificationService):
         self._hass = hass
         self._api_key = api_key
 
-    async def async_send_message(self, message, **kwargs):
+    @asyncio.coroutine
+    def async_send_message(self, message, **kwargs):
         """Send the message to the user."""
         response = None
         session = None
@@ -57,8 +59,8 @@ class ProwlNotificationService(BaseNotificationService):
 
         try:
             with async_timeout.timeout(10, loop=self._hass.loop):
-                response = await session.post(url, data=payload)
-                result = await response.text()
+                response = yield from session.post(url, data=payload)
+                result = yield from response.text()
 
             if response.status != 200 or 'error' in result:
                 _LOGGER.error("Prowl service returned http "

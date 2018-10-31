@@ -1,4 +1,5 @@
 """Component to interact with Hassbian tools."""
+import asyncio
 import json
 import os
 
@@ -29,7 +30,8 @@ _TEST_OUTPUT = """
 """  # noqa
 
 
-async def async_setup(hass):
+@asyncio.coroutine
+def async_setup(hass):
     """Set up the Hassbian config."""
     # Test if is Hassbian
     test_mode = 'FORCE_HASSBIAN' in os.environ
@@ -44,7 +46,8 @@ async def async_setup(hass):
     return True
 
 
-async def hassbian_status(hass, test_mode=False):
+@asyncio.coroutine
+def hassbian_status(hass, test_mode=False):
     """Query for the Hassbian status."""
     # Fetch real output when not in test mode
     if test_mode:
@@ -63,9 +66,10 @@ class HassbianSuitesView(HomeAssistantView):
         """Initialize suites view."""
         self._test_mode = test_mode
 
-    async def get(self, request):
+    @asyncio.coroutine
+    def get(self, request):
         """Request suite status."""
-        inp = await hassbian_status(request.app['hass'], self._test_mode)
+        inp = yield from hassbian_status(request.app['hass'], self._test_mode)
 
         return self.json(inp['suites'])
 
@@ -80,7 +84,8 @@ class HassbianSuiteInstallView(HomeAssistantView):
         """Initialize suite view."""
         self._test_mode = test_mode
 
-    async def post(self, request, suite):
+    @asyncio.coroutine
+    def post(self, request, suite):
         """Request suite status."""
         # do real install if not in test mode
         return self.json({"status": "ok"})
