@@ -2,10 +2,11 @@
 import logging
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY
-from stat import ST_MODE, ST_UID, ST_GID
 from collections import OrderedDict
+from stat import ST_MODE, ST_UID, ST_GID
 from typing import Union, List, Dict
 
+import ruamel.yaml
 from ruamel.yaml import YAML
 from ruamel.yaml.constructor import SafeConstructor
 from ruamel.yaml.error import YAMLError
@@ -31,7 +32,8 @@ class WriteError(HomeAssistantError):
     """Error writing the data."""
 
 
-def _include_yaml(constructor, node) -> JSON_TYPE:
+def _include_yaml(constructor: SafeConstructor, node: ruamel.yaml.nodes.Node) \
+        -> JSON_TYPE:
     """Load another YAML file and embeds it using the !include tag.
 
     Example:
@@ -41,7 +43,8 @@ def _include_yaml(constructor, node) -> JSON_TYPE:
     return load_yaml(fname, False)
 
 
-def _yaml_unsupported(constructor, node):
+def _yaml_unsupported(constructor: SafeConstructor, node:
+                      ruamel.yaml.nodes.Node) -> None:
     raise UnsupportedYamlError(
         'Unsupported YAML, you can not use {} in {}'
         .format(node.tag, os.path.basename(constructor.name)))
@@ -70,7 +73,7 @@ def yaml_to_object(data: str) -> JSON_TYPE:
         raise HomeAssistantError(exc)
 
 
-def load_yaml(fname: str, rt: bool) -> JSON_TYPE:
+def load_yaml(fname: str, rt: bool = False) -> JSON_TYPE:
     """Load a YAML file."""
     if rt:
         yaml = YAML(typ='rt')
@@ -93,7 +96,7 @@ def load_yaml(fname: str, rt: bool) -> JSON_TYPE:
         raise HomeAssistantError(exc)
 
 
-def save_yaml(fname: str, data: JSON_TYPE):
+def save_yaml(fname: str, data: JSON_TYPE) -> None:
     """Save a YAML file."""
     yaml = YAML(typ='rt')
     yaml.indent(sequence=4, offset=2)

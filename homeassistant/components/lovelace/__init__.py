@@ -92,7 +92,7 @@ def load_config(fname: str) -> JSON_TYPE:
     return yaml.load_yaml(fname, False)
 
 
-def migrate_config(fname: str):
+def migrate_config(fname: str) -> None:
     """Add id to views and cards if not present and check duplicates."""
     config = yaml.load_yaml(fname, True)
     updated = False
@@ -130,7 +130,10 @@ def migrate_config(fname: str):
 def get_card(fname: str, card_id: str, data_format: str = FORMAT_YAML)\
         -> JSON_TYPE:
     """Load a specific card config for id."""
-    config = yaml.load_yaml(fname, True)
+    rt = data_format == FORMAT_YAML
+
+    config = yaml.load_yaml(fname, rt)
+
     for view in config.get('views', []):
         for card in view.get('cards', []):
             if str(card.get('id', '')) != card_id:
@@ -144,7 +147,7 @@ def get_card(fname: str, card_id: str, data_format: str = FORMAT_YAML)\
 
 
 def update_card(fname: str, card_id: str, card_config: str,
-                data_format: str = FORMAT_YAML):
+                data_format: str = FORMAT_YAML) -> None:
     """Save a specific card config for id."""
     config = yaml.load_yaml(fname, True)
     for view in config.get('views', []):
@@ -162,7 +165,7 @@ def update_card(fname: str, card_id: str, card_config: str,
 
 
 def add_card(fname: str, view_id: str, card_config: str,
-             position: int = None, data_format: str = FORMAT_YAML):
+             position: int = None, data_format: str = FORMAT_YAML) -> None:
     """Add a card to a view."""
     config = yaml.load_yaml(fname, True)
     for view in config.get('views', []):
@@ -182,7 +185,7 @@ def add_card(fname: str, view_id: str, card_config: str,
         "View with ID: {} was not found in {}.".format(view_id, fname))
 
 
-def move_card(fname: str, card_id: str, position: int = None):
+def move_card(fname: str, card_id: str, position: int = None) -> None:
     """Move a card to a different position."""
     if position is None:
         raise HomeAssistantError('Position is required if view is not\
@@ -202,7 +205,7 @@ def move_card(fname: str, card_id: str, position: int = None):
 
 
 def move_card_view(fname: str, card_id: str, view_id: str,
-                   position: int = None):
+                   position: int = None) -> None:
     """Move a card to a different view."""
     config = yaml.load_yaml(fname, True)
     for view in config.get('views', []):
@@ -231,7 +234,7 @@ def move_card_view(fname: str, card_id: str, view_id: str,
     yaml.save_yaml(fname, config)
 
 
-def delete_card(fname: str, card_id: str, position: int = None):
+def delete_card(fname: str, card_id: str, position: int = None) -> None:
     """Delete a card from view."""
     config = yaml.load_yaml(fname, True)
     for view in config.get('views', []):
