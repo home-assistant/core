@@ -3,8 +3,7 @@ homeassistant.components.switch.lightwave
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Implements LightwaveRF switches.
 
-
-My understanding of the LightWave Hub is that devices cannot be discovered 
+My understanding of the LightWave Hub is that devices cannot be discovered
 so must be registered manually. This is done in the configuration file
 
 switch:
@@ -15,21 +14,11 @@ switch:
       R2D1:
         name: Room two Device one
 
-Each device requires an id and a name. THe id takes the from R#D# where R# is the room number 
-and D# is the device number.
-
-If devices are missing the default is to generate 15 rooms with 8 lights. From this you will
-be able to determine the room and device number for each light.
-
-TODO: 
-Add a registration button. Until then the following command needs to be sent to the LightwaveRF hub:
-    echo -ne "100,\!F*p." | nc -u -w1 LW_HUB_IP_ADDRESS 9760
-
-When this is sent you have 12 seconds to acknowledge the message on the hub.
+Each device requires an id and a name. THe id takes the from R#D# 
+where R# is the room number and D# is the device number.
 
 For more details on the api see: https://api.lightwaverf.com/
 """
-import asyncio
 import logging
 import voluptuous as vol
 from homeassistant.const import CONF_DEVICES, CONF_NAME
@@ -50,7 +39,8 @@ LIGHTWAVE_LINK = 'lightwave_link'
 DEPENDENCIES = ['lightwave']
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """ Find and return LightWave switches """
     switches = []
     lwlink = hass.data[LIGHTWAVE_LINK]

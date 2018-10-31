@@ -1,11 +1,18 @@
 """
-Support for MQTT message handling.
+homeassistant.components.lightwave
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Implements communication with LightwaveRF 
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt/
+My understanding of the LightWave Hub is that devices cannot be discovered
+so must be registered manually. This is done in the configuration file
+
+lightwave:
+    host: ip_address
+
+Where ip_address is the ip address of your LightwaveRF hub
+
+For more details on the api see: https://api.lightwaverf.com/
 """
-
-import asyncio
 import queue
 import threading
 import socket
@@ -49,7 +56,7 @@ class LWLink():
     # msg = "100,!F*p."
 
     def __init__(self, link_ip=None):
-        if link_ip != None:
+        if link_ip is not None:
             LWLink.link_ip = link_ip
 
     # methods
@@ -90,10 +97,13 @@ class LWLink():
         result = False
         max_retries = 15
         try:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as write_sock, socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as read_sock:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as
+                write_sock, socket.socket(socket.AF_INET,
+                                          socket.SOCK_DGRAM) as read_sock:
                 write_sock.setsockopt(
                     socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                read_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                read_sock.setsockopt(socket.SOL_SOCKET,
+                                     socket.SO_BROADCAST, 1)
                 read_sock.settimeout(LWLink.SOCKET_TIMEOUT)
                 read_sock.bind(('0.0.0.0', LWLink.RX_PORT))
                 while max_retries:
@@ -128,6 +138,7 @@ class LWLink():
 
         except:
             _LOGGER.error("LW broker something went wrong!")
+            raise
 
         if result:
             _LOGGER.info("LW broker OK!")
