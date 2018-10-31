@@ -65,8 +65,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not device._firetv._adb:
         _LOGGER.warning("Could not connect to Fire TV at %s%s", host, adb_log)
 
-        # Debugging
-        if adbkey != "":
+        # Configuration troubleshooting for `adbkey`
+        if adbkey:
             # Check whether the key files exist
             if not os.path.exists(adbkey):
                 raise FileNotFoundError(
@@ -102,8 +102,7 @@ def adb_wrapper(func):
         returns = func(self, *args, **kwargs)
         self._adb_lock = False
 
-        if returns:
-            return returns
+        return returns
 
     return _adb_wrapper
 
@@ -223,9 +222,8 @@ class FireTVDevice(MediaPlayerDevice):
                     self._state = STATE_STANDBY
 
         except:  # pylint: disable=bare-except
-            _LOGGER.error('%s', 'Update encountered an exception; will ' +
-                          'attempt to re-establish the ADB connection in ' +
-                          'the next update')
+            _LOGGER.error('Update encountered an exception; will attempt to '
+                          're-establish the ADB connection in the next update')
             self._firetv._adb = None
 
     @adb_wrapper
