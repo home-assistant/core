@@ -3,8 +3,8 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.ihc/
 """
-import voluptuous as vol
 import logging
+import voluptuous as vol
 
 from homeassistant.components.ihc import (
     validate_name, IHC_DATA, IHC_CONTROLLER, CONTROLLER_ID, IHC_INFO)
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
 
             light = IhcLight(ihc_controller, name, ihc_id, info,
-                                product_cfg[CONF_DIMMABLE], product)
+                             product_cfg[CONF_DIMMABLE], product)
             devices.append(light)
     else:
         lights = config[CONF_LIGHTS]
