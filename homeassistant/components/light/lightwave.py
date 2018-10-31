@@ -96,7 +96,7 @@ class LRFLight(Light):
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
-        if not self._brightness == 255:
+        if self._brightness != 255:
             self._lwlink.turn_on_with_brightness(
                 self._device_id, self._name, self._brightness)
         else:
