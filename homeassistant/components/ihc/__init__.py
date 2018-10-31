@@ -31,7 +31,7 @@ IHC_CONTROLLER = 'controller'
 IHC_INFO = 'info'
 AUTO_SETUP_YAML = 'ihc_auto_setup.yaml'
 CONF_CONTROLLER2 = 'secondary'
-CONTROLLER_ID = [2,1]
+CONTROLLER_ID = [2, 1]
 PRIMARY = True
 SECONDARY = False
 
@@ -41,7 +41,7 @@ IHC_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
-    vol.Optional(CONF_INFO, default=True): cv.boolean,    
+    vol.Optional(CONF_INFO, default=True): cv.boolean,
     vol.Optional(CONF_CONTROLLER2):
         vol.All({
             vol.Required(CONF_URL): cv.string,
