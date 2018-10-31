@@ -10,7 +10,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, SUN_EVENT_SUNSET)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
@@ -114,7 +115,7 @@ class JewishCalSensor(Entity):
         today = now.date()
         upcoming_saturday = today + timedelta((12 - today.weekday()) % 7)
         sunset = dt_util.as_local(get_astral_event_date(
-            self.hass, 'sunset', today))
+            self.hass, SUN_EVENT_SUNSET, today))
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
