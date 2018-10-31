@@ -62,7 +62,7 @@ class LWLink():
         ''' adds message to queue '''
         LWLink.the_queue.put_nowait(msg)
         if LWLink.thread is None or not self.thread.isAlive():
-            LWLink.thread = threading.Thread(target=self._send_queue)
+            LWLink.thread = threading.Thread(target=self._sendQueue)
             LWLink.thread.start()
 
     def turn_on_light(self, device_id, name):
@@ -89,7 +89,7 @@ class LWLink():
         msg = "321,!%sF0|Turn Off|%s" % (device_id, name)
         self._send_message(msg)
 
-    def _send_queue(self):
+    def _sendQueue(self):
         ''' starts processing the queue '''
         while not LWLink.the_queue.empty():
             self._send_reliable_message(LWLink.the_queue.get_nowait())
@@ -124,7 +124,7 @@ class LWLink():
                             result = True
                             break
 
-                        response = response.split(',')[1]
+                        response.split(',')[1]
                         if response.startswith('OK'):
                             result = True
                             break
