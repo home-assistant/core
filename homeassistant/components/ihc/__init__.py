@@ -117,28 +117,29 @@ def setup(hass, config):
     """Set up the IHC component."""
     conf = config[DOMAIN]
     ihc_status = ihc_setup(hass, config, conf, CONTROLLER_ID[PRIMARY])
-    
+
     """Setup optional secondary controller."""
     if ihc_status and CONF_CONTROLLER2 in conf:
         conf2 = conf[CONF_CONTROLLER2]
-        ihc_status = ihc_setup(hass, config, conf2, CONTROLLER_ID[SECONDARY]) 
+        ihc_status = ihc_setup(hass, config, conf2, CONTROLLER_ID[SECONDARY])
     return ihc_status
-    
+
 
 def ihc_setup(hass, config, conf, controller_id):
     from ihcsdk.ihccontroller import IHCController
-    
+
     url = conf[CONF_URL]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
-    
+
     ihc_controller = IHCController(url, username, password)
     if not ihc_controller.authenticate():
         _LOGGER.error("Unable to authenticate on IHC controller")
         return False
 
     if (conf[CONF_AUTOSETUP] and
-            not autosetup_ihc_products(hass, config, ihc_controller,controller_id)):
+            not autosetup_ihc_products(hass, config, ihc_controller, 
+                                       controller_id)):
         return False
 
     ihc_key = IHC_DATA.format(controller_id)
@@ -149,7 +150,9 @@ def ihc_setup(hass, config, conf, controller_id):
 
     return True
 
-def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller, controller_id):
+
+def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller, 
+                           controller_id):
     """Auto setup of IHC products from the IHC project file."""
     project_xml = ihc_controller.get_project()
     if not project_xml:
@@ -170,7 +173,8 @@ def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller, cont
     groups = project.findall('.//group')
     for component in IHC_PLATFORMS:
         component_setup = auto_setup_conf[component]
-        discovery_info = get_discovery_info(component_setup, groups, controller_id)
+        discovery_info = get_discovery_info(component_setup, groups, 
+                                            controller_id)
         if discovery_info:
             discovery.load_platform(hass, component, DOMAIN, discovery_info,
                                     config)
