@@ -5,7 +5,7 @@ https://home-assistant.io/components/switch.ihc/
 """
 import voluptuous as vol
 
-from homeassistant.components.ihc import (    
+from homeassistant.components.ihc import (
     validate_name, IHC_DATA, IHC_CONTROLLER, CONTROLLER_ID, IHC_INFO)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.ihc.const import (
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ihc_key = IHC_DATA.format(ctrl_id)
             info = hass.data[ihc_key][IHC_INFO]
             ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
-            
+
             switch = IHCSwitch(ihc_controller, name, ihc_id, info, product)
             devices.append(switch)
     else:
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for switch in switches:
             ihc_id = switch[CONF_ID]
             # Get controller id
-            ihc_secondary = bool(switch[CONF_SECONDARY])            
+            ihc_secondary = bool(switch[CONF_SECONDARY])
             ihc_key = IHC_DATA.format(CONTROLLER_ID[ihc_secondary])
             ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
 
