@@ -48,9 +48,9 @@ IHC_SCHEMA = vol.Schema({
             vol.Required(CONF_USERNAME): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
-            vol.Optional(CONF_INFO, default=True): cv.boolean,    
+            vol.Optional(CONF_INFO, default=True): cv.boolean,
         }),
-}, extra=vol.ALLOW_EXTRA)    
+}, extra=vol.ALLOW_EXTRA)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: IHC_SCHEMA
