@@ -54,10 +54,6 @@ MDI_ICONS = {'ac': 'air-conditioner',
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
-    if SENSE_DATA not in hass.data:
-        _LOGGER.error("Requires Sense component loaded")
-        return False
-
     data = hass.data[SENSE_DATA]
 
     sense_devices = data.get_discovered_device_data()
@@ -67,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def sense_to_mdi(sense_icon):
     """Convert sense icon to mdi icon."""
-    return 'mdi-' + MDI_ICONS.get(sense_icon, 'power-plug')
+    return 'mdi:' + MDI_ICONS.get(sense_icon, 'power-plug')
 
 
 class SenseDevice(BinarySensorDevice):
