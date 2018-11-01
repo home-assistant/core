@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['aioasuswrt==1.1.0']
+REQUIREMENTS = ['aioasuswrt==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,8 @@ async def async_setup(hass, config):
                   conf[CONF_MODE], conf[CONF_REQUIRE_IP])
     hass.data[DATA_ASUSWRT] = api
 
-    hass.async_create_task(async_load_platform(hass, 'sensor', DOMAIN, {}))
     hass.async_create_task(async_load_platform(
-        hass, 'device_tracker', DOMAIN, {}))
+        hass, 'sensor', DOMAIN, {}, config))
+    hass.async_create_task(async_load_platform(
+        hass, 'device_tracker', DOMAIN, {}, config))
     return True
