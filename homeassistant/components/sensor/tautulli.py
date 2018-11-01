@@ -52,9 +52,9 @@ async def async_setup_platform(
     from pytautulli import Tautulli
 
     name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
     port = config.get(CONF_PORT)
-    api_key = config.get(CONF_API_KEY)
+    api_key = config[CONF_API_KEY]
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
     user = config.get(CONF_MONITORED_USERS)
     use_ssl = config.get(CONF_SSL)
