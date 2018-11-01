@@ -308,7 +308,7 @@ class OnkyoDevice(MediaPlayerDevice):
             self.command('preset {}'.format(media_id))
 
     def select_output(self, output):
-        """Set hdmi-out"""
+        """Set hdmi-out."""
         self.command('hdmi-output-selector={}'.format(output))
 
 
