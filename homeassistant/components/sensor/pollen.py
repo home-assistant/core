@@ -18,7 +18,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pypollencom==2.2.2']
+REQUIREMENTS = ['numpy==1.15.3', 'pypollencom==2.2.2']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ALLERGEN_AMOUNT = 'allergen_amount'
@@ -97,7 +97,6 @@ RATING_MAPPING = [{
     'maximum': 12
 }]
 
-TREND_FLAT = 'Flat'
 TREND_INCREASING = 'Increasing'
 TREND_SUBSIDING = 'Subsiding'
 
@@ -138,6 +137,22 @@ def calculate_average_rating(indices):
         r['label'] for n in indices for r in RATING_MAPPING
         if r['minimum'] <= n <= r['maximum'])
     return max(set(ratings), key=ratings.count)
+
+def calculate_trend(indices):
+    """Calculate the "moving average" of a set of indices."""
+    import numpy as np
+
+    def moving_average(a, n=3):
+        """Determine the "moving average" (http://tinyurl.com/yaereb3c)."""
+        ret = np.cumsum(a, dtype=float)
+        ret[n:] = ret[n:] - ret[:-n]
+        return ret[n - 1:] / n
+
+    increasing = np.all(np.diff(moving_average(np.array(indices), n=4)) > 0)
+
+    if increasing:
+        return TREND_INCREASING
+    return TREND_SUBSIDING
 
 
 class BaseSensor(Entity):
@@ -202,6 +217,8 @@ class ForecastSensor(BaseSensor):
 
     async def async_update(self):
         """Update the sensor."""
+        import numpy as np
+
         await self.pollen.async_update()
         if not self.pollen.data:
             return
@@ -217,19 +234,11 @@ class ForecastSensor(BaseSensor):
             if i['minimum'] <= average <= i['maximum']
         ]
 
-        slope = (data['periods'][-1]['Index'] - data['periods'][-2]['Index'])
-        if slope > 0:
-            trend = TREND_INCREASING
-        elif slope < 0:
-            trend = TREND_SUBSIDING
-        else:
-            trend = TREND_FLAT
-
         self._attrs.update({
             ATTR_CITY: data['City'].title(),
             ATTR_RATING: rating,
             ATTR_STATE: data['State'],
-            ATTR_TREND: trend,
+            ATTR_TREND: calculate_trend(indices),
             ATTR_ZIP_CODE: data['ZIP']
         })
 
@@ -256,19 +265,11 @@ class HistoricalSensor(BaseSensor):
         indices = [p['Index'] for p in data['periods']]
         average = round(mean(indices), 1)
 
-        slope = (data['periods'][-1]['Index'] - data['periods'][-2]['Index'])
-        if slope > 0:
-            trend = TREND_INCREASING
-        elif slope < 0:
-            trend = TREND_SUBSIDING
-        else:
-            trend = TREND_FLAT
-
         self._attrs.update({
             ATTR_CITY: data['City'].title(),
             ATTR_RATING: calculate_average_rating(indices),
             ATTR_STATE: data['State'],
-            ATTR_TREND: trend,
+            ATTR_TREND: calculate_trend(indices),
             ATTR_ZIP_CODE: data['ZIP']
         })
 
