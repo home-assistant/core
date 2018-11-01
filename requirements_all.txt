@@ -376,6 +376,9 @@ feedparser==5.2.1
 # homeassistant.components.sensor.fints
 fints==1.0.1
 
+# homeassistant.components.media_player.firetv
+firetv==1.0.6
+
 # homeassistant.components.sensor.fitbit
 fitbit==0.3.0
 
@@ -1084,7 +1087,7 @@ pysesame==0.1.0
 pysher==1.0.4
 
 # homeassistant.components.sensor.sma
-pysma==0.2.2
+pysma==0.2
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
