@@ -55,13 +55,9 @@ async def async_setup(hass, config):
                   conf.get('ssh_key', conf.get('pub_key', '')),
                   conf[CONF_MODE], conf[CONF_REQUIRE_IP])
 
-    try:
-        await api.connection.async_connect()
-        if not api.is_connected:
-            _LOGGER.error("Unable to setup asuswrt component")
-            return False
-    except Exception as e:
-        _LOGGER.exception("Unable to setup asuswrt component", e)
+    await api.connection.async_connect()
+    if not api.is_connected:
+        _LOGGER.error("Unable to setup asuswrt component")
         return False
 
     hass.data[DATA_ASUSWRT] = api
