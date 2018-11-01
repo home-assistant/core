@@ -46,8 +46,7 @@ class LupusecBinarySensor(LupusecDevice, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
-        if self._device.generic_type in DEVICE_CLASSES:
-            return self._device.generic_type
-        else:
+        if self._device.generic_type not in DEVICE_CLASSES:
             _LOGGER.error('Binary sensor device class not known')
-            return False
+        else:
+            return self._device.generic_type
