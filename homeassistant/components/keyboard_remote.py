@@ -135,11 +135,12 @@ class KeyboardRemoteThread(threading.Thread):
                 self.dev = self._get_keyboard_device()
                 if self.dev is not None:
                     self.dev.grab()
-                    self.hass.bus.fire(KEYBOARD_REMOTE_CONNECTED,
-                      {
-                        DEVICE_DESCRIPTOR: self.device_descriptor,
-                        DEVICE_NAME: self.device_name
-                      }
+                    self.hass.bus.fire(
+                        KEYBOARD_REMOTE_CONNECTED,
+                        {
+                            DEVICE_DESCRIPTOR: self.device_descriptor,
+                            DEVICE_NAME: self.device_name
+                        }
                     )
                     _LOGGER.debug("Keyboard re-connected, %s", self.device_id)
                 else:
@@ -149,12 +150,13 @@ class KeyboardRemoteThread(threading.Thread):
                 event = self.dev.read_one()
             except IOError:  # Keyboard Disconnected
                 self.dev = None
-                self.hass.bus.fire(KEYBOARD_REMOTE_DISCONNECTED,
-                      {
+                self.hass.bus.fire(
+                    KEYBOARD_REMOTE_DISCONNECTED,
+                    {
                         DEVICE_DESCRIPTOR: self.device_descriptor,
                         DEVICE_NAME: self.device_name
-                      }
-                    )
+                    }
+                )
                 _LOGGER.debug("Keyboard disconnected, %s", self.device_id)
                 continue
 
