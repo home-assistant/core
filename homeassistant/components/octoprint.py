@@ -13,8 +13,8 @@ from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant.components.discovery import SERVICE_OCTOPRINT
 from homeassistant.const import (
-    CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON, CONF_NAME, CONF_PORT,
-    CONF_SSL, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
+    CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON, CONF_NAME, CONF_PATH,
+    CONF_PORT, CONF_SSL, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
     CONF_BINARY_SENSORS)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -33,6 +33,16 @@ def has_all_unique_names(value):
     """Validate that printers have an unique name."""
     names = [util_slugify(printer['name']) for printer in value]
     vol.Schema(vol.Unique())(names)
+    return value
+
+
+def ensure_valid_path(value):
+    """Validate the path, ensuring it starts and ends with a /."""
+    vol.Schema(cv.string)(value)
+    if value[0] != "/":
+        value = "/" + value
+    if value[-1] != "/":
+        value += "/"
     return value
 
 
@@ -72,6 +82,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
         vol.Optional(CONF_BED, default=False): cv.boolean,
@@ -95,9 +106,10 @@ def setup(hass, config):
     for printer in config[DOMAIN]:
         name = printer[CONF_NAME]
         ssl = 's' if printer[CONF_SSL] else ''
-        base_url = 'http{}://{}:{}/api/'.format(ssl,
-                                                printer[CONF_HOST],
-                                                printer[CONF_PORT])
+        base_url = 'http{}://{}:{}{}api/'.format(ssl,
+                                                 printer[CONF_HOST],
+                                                 printer[CONF_PORT],
+                                                 printer[CONF_PATH])
         api_key = printer[CONF_API_KEY]
         number_of_tools = printer[CONF_NUMBER_OF_TOOLS]
         bed = printer[CONF_BED]
