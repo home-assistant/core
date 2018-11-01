@@ -22,6 +22,7 @@ TPLINK_SCHEMA = vol.Schema({
 DOMAIN = 'tplink'
 REQUIREMENTS = ['pyHS100==0.3.3']
 
+
 async def _async_has_devices(hass):
     """Return if there are devices that can be discovered."""
     from pyHS100 import Discover
@@ -54,6 +55,13 @@ async def async_setup_entry(hass, entry):
     from pyHS100 import SmartBulb, SmartPlug, SmartDeviceException
 
     devices = dict()
+
+    if hass.data[DOMAIN]["discovery"]:
+        _LOGGER.info("Discovering TP-Link smart home devices.")
+        devs = await _async_has_devices(hass)
+        _LOGGER.info("Discovered %s TP-Link smart home devices", len(devs))
+        devices.update(devs)
+
     for type_ in ['light', 'switch']:
         for entry in hass.data[DOMAIN][type_]:
             try:
@@ -66,14 +74,6 @@ async def async_setup_entry(hass, entry):
                 _LOGGER.info("Succesfully added %s %s: %s" % (type_, host, dev))
             except SmartDeviceException as ex:
                 _LOGGER.error("Unable to initialize %s %s: %s", type_, host, ex)
-
-
-
-    if hass.data[DOMAIN]["discovery"]:
-        _LOGGER.info("Discovering TP-Link smart home devices.")
-        devs = await _async_has_devices(hass)
-        _LOGGER.info("Discovered %s TP-Link smart home devices", len(devs))
-        devices.update(devs)
 
     for dev in devices.values():
         if isinstance(dev, SmartPlug):
