@@ -37,7 +37,6 @@ async def async_setup(hass, config):
     """Set up the TP-Link component."""
     conf = config.get(DOMAIN)
 
-    _LOGGER.info("Got config from file: %s" % conf)
     if conf is not None:
         hass.data[DOMAIN] = TPLINK_SCHEMA(conf)
     else:
@@ -57,7 +56,6 @@ async def async_setup_entry(hass, entry):
     devices = dict()
 
     if hass.data[DOMAIN]["discovery"]:
-        _LOGGER.info("Discovering TP-Link smart home devices.")
         devs = await _async_has_devices(hass)
         _LOGGER.info("Discovered %s TP-Link smart home devices", len(devs))
         devices.update(devs)

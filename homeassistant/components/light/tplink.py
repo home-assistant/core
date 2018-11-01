@@ -33,7 +33,6 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     from pyHS100 import SmartDeviceException
     devs = []
     for dev in hass.data[TPLINK_DOMAIN]['light']:
-        _LOGGER.error("light: %s" % dev)
         try:
             # fetch MAC and name already now to avoid I/O inside init
             _LOGGER.error(dev.sys_info)
