@@ -1,4 +1,5 @@
 """Config flow for UPNP."""
+import logging
 from collections import OrderedDict
 
 import voluptuous as vol
@@ -12,6 +13,9 @@ from .const import (
     CONF_SSDP_DESCRIPTION, CONF_UDN
 )
 from .const import DOMAIN
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_ensure_domain_data(hass):
@@ -70,14 +74,25 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
         """
         await async_ensure_domain_data(self.hass)
 
+        if not discovery_info.get('udn') or not discovery_info.get('host'):
+            # Silently ignore incomplete/broken devices to prevent constant
+            # errors/warnings
+            _LOGGER.debug('UPnP device is missing the udn. Provided info: %r',
+                          discovery_info)
+            return self.async_abort(reason='incomplete_device')
+
         # store discovered device
-        discovery_info['friendly_name'] = \
-            '{} ({})'.format(discovery_info['host'], discovery_info['name'])
+        discovery_info['friendly_name'] = discovery_info.get('host', '')
+
+        # add name if available
+        if discovery_info.get('name'):
+            discovery_info['friendly_name'] += ' ({name})'.format(
+                **discovery_info)
+
         self._store_discovery_info(discovery_info)
 
         # ensure not already discovered/configured
-        udn = discovery_info['udn']
-        if udn in self._configured_upnp_igds:
+        if discovery_info.get('udn') in self._configured_upnp_igds:
             return self.async_abort(reason='already_configured')
 
         # auto config?
