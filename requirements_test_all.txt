@@ -79,7 +79,7 @@ gTTS-token==1.1.2
 geojson_client==0.1
 
 # homeassistant.components.sensor.geo_rss_events
-georss_client==0.3
+georss_client==0.4
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.9
