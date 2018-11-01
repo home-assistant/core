@@ -60,7 +60,7 @@ class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
     # F821: https://github.com/PyCQA/pyflakes/issues/373
-    def __init__(self, smartbulb: 'SmartBulb', unique_id, name) -> None:  # noqa: F821
+    def __init__(self, smartbulb, unique_id, name) -> None:  # noqa: F821
         """Initialize the bulb."""
         self.smartbulb = smartbulb
         self._unique_id = unique_id

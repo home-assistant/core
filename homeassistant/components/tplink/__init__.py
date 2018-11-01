@@ -14,8 +14,8 @@ TPLINK_HOST_SCHEMA = vol.Schema({
 })
 
 TPLINK_SCHEMA = vol.Schema({
-    vol.Optional('light'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA], default=[]),
-    vol.Optional('switch'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA], default=[]),
+    vol.Optional('light'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
+    vol.Optional('switch'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
     vol.Optional('discovery', default=True): bool,
 })
 
@@ -69,9 +69,11 @@ async def async_setup_entry(hass, entry):
                 elif type_ == 'switch':
                     dev = SmartPlug
                 devices[host] = dev
-                _LOGGER.info("Succesfully added %s %s: %s" % (type_, host, dev))
+                _LOGGER.info("Succesfully added %s %s: %s",
+                             type_, host, dev)
             except SmartDeviceException as ex:
-                _LOGGER.error("Unable to initialize %s %s: %s", type_, host, ex)
+                _LOGGER.error("Unable to initialize %s %s: %s",
+                              type_, host, ex)
 
     for dev in devices.values():
         if isinstance(dev, SmartPlug):
