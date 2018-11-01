@@ -16,6 +16,7 @@
         },
         "abort": {
             "no_devices_discovered": "No UPnP/IGDs discovered",
+            "incomplete_device": "Ignoring incomplete UPnP device",
             "already_configured": "UPnP/IGD is already configured",
             "no_sensors_or_port_mapping": "Enable at least sensors or port mapping"
         }
