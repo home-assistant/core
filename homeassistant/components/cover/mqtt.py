@@ -82,7 +82,8 @@ TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
 def validate_options(value):
     """Validate options.
 
-    If set postion topic is set then get position topic is set as well."""
+    If set postion topic is set then get position topic is set as well.
+    """
     if (CONF_SET_POSITION_TOPIC in value and
             CONF_GET_POSITION_TOPIC not in value):
         raise vol.Invalid(
