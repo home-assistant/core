@@ -92,6 +92,11 @@ virtualization/vagrant/config
 # Visual Studio Code
 .vscode
 
+# Eric6 IDE
+.eric6project
+*.e4p
+
+
 # Built docs
 docs/build
 

@@ -190,8 +190,15 @@ omit =
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
 
+    homeassistant/components/rpi_i2c_chips/*.py
+
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
+    
+    homeassistant/components/rpi_i2c_expanders.py
+    homeassistant/components/*/rpi_i2c_expanders.py
+
+    homeassistant/components/rpi_i2c_ha_expanders.py
 
     homeassistant/components/rpi_pfio.py
     homeassistant/components/*/rpi_pfio.py
