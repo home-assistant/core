@@ -92,10 +92,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     hosts.append([str.title(loc["locationName"]), host,
                                   DEFAULT_PORT, loc["clientAddr"]])
                 else:
-                    _LOGGER.debug("Discovered device %s with client "
-                                  "address %s is already configured",
+                    _LOGGER.debug("Discovered device %s on host %s with "
+                                  "client address %s is already configured",
                                   str.title(loc["locationName"]),
-                                  loc["clientAddr"])
+                                  host, loc["clientAddr"])
 
         except requests.exceptions.RequestException:
             # Bail out and just go forward with uPnP data
@@ -155,16 +155,17 @@ class DirecTvDevice(MediaPlayerDevice):
                 self._last_update = None
             else:
                 self._current = self.dtv.get_tuned()
-                self._current.raise_for_status()
-
-                self._is_recorded = self._current.get('uniqueId')\
-                    is not None
-                self._paused = self._last_position == \
-                    self._current['offset']
-                self._assumed_state = self._is_recorded
-                self._last_position = self._current['offset']
-                self._last_update = dt_util.now() if not self._paused or\
-                    self._last_update is None else self._last_update
+                if self._current['status']['code'] == 200:
+                    self._is_recorded = self._current.get('uniqueId')\
+                        is not None
+                    self._paused = self._last_position == \
+                        self._current['offset']
+                    self._assumed_state = self._is_recorded
+                    self._last_position = self._current['offset']
+                    self._last_update = dt_util.now() if not self._paused or\
+                        self._last_update is None else self._last_update
+                else:
+                    self._available = False
         except requests.RequestException as ex:
             _LOGGER.error("Request error trying to update current status for"
                           " %s. %s", self._name, ex)
