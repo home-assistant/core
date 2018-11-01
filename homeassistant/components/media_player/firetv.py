@@ -221,7 +221,7 @@ class FireTVDevice(MediaPlayerDevice):
                     # Assume the devices is on standby.
                     self._state = STATE_STANDBY
 
-        except:  # noqa: E722 # pylint: disable=bare-except
+        except:  # noqa: E722 pylint: disable=bare-except
             _LOGGER.error('Update encountered an exception; will attempt to '
                           're-establish the ADB connection in the next update')
             self._firetv._adb = None
@@ -278,7 +278,11 @@ class FireTVDevice(MediaPlayerDevice):
 
     @adb_wrapper
     def select_source(self, source):
-        """Select input source."""
+        """Select input source.
+
+        If the source starts with a '!', then it will close the app instead of
+        opening it.
+        """
         if isinstance(source, str):
             if not source.startswith('!'):
                 self._firetv.launch_app(source)
