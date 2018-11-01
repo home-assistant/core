@@ -40,10 +40,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_REDIRECT_URI): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=270): cv.positive_int,
-        vol.Optional(CONF_LOCATIONS): vol.All(cv.ensure_list, cv.string),
-        vol.Optional(CONF_FAN, default=DEFAULT_FAN): vol.Boolean,
+        vol.Optional(CONF_LOCATIONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_FAN, default=DEFAULT_FAN): cv.boolean,
         vol.Optional(CONF_AWAY_PERIODS):
-            vol.All(cv.ensure_list, cv.string)
+            vol.All(cv.ensure_list, [cv.string])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -145,11 +145,11 @@ class LyricDevice(object):
         """Init Lyric devices."""
         self.hass = hass
         self.lyric = lyric
-        
+
         if not lyric.locations:
             _LOGGER.error("No locations found.")
             return
-        
+
         if CONF_LOCATIONS not in conf:
             self._location = [location.name for location in lyric.locations]
         else:
