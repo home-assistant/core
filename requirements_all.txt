@@ -85,7 +85,7 @@ abodepy==0.14.0
 # homeassistant.components.media_player.frontier_silicon
 afsapi==0.0.4
 
-# homeassistant.components.device_tracker.asuswrt
+# homeassistant.components.asuswrt
 aioasuswrt==1.1.4
 
 # homeassistant.components.device_tracker.automatic
