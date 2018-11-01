@@ -353,8 +353,7 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         if self._command_topic is not None:
             supported_features = OPEN_CLOSE_FEATURES
 
-        if (self._set_position_topic is not None and
-                self._get_position_topic is not None):
+        if self._set_position_topic is not None:
             supported_features |= SUPPORT_SET_POSITION
 
         if self._tilt_command_topic is not None:
