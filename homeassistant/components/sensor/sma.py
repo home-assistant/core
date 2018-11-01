@@ -35,7 +35,10 @@ GROUPS = ['user', 'installer']
 
 def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
-    import pysma
+    try:
+        import pysma
+    except ImportError:
+        return conf
 
     valid = list(conf[CONF_CUSTOM].keys())
     valid.extend([s.name for s in pysma.SENSORS])
@@ -73,6 +76,9 @@ async def async_setup_platform(
     """Set up SMA WebConnect sensor."""
     import pysma
 
+    # Check config again during load - dependancy available
+    config = _check_sensor_schema(config)
+
     # Sensor_defs from the custom config
     for name, prop in config[CONF_CUSTOM].items():
         n_s = pysma.Sensor(name, prop['key'], prop['unit'], prop['factor'])
@@ -107,18 +113,24 @@ async def async_setup_platform(
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_close_session)
 
     backoff = 0
+    backoff_step = 0
 
     async def async_sma(event):
         """Update all the SMA sensors."""
-        nonlocal backoff
+        nonlocal backoff, backoff_step
         if backoff > 1:
             backoff -= 1
             return
 
         values = await sma.read(used_sensors)
-        if values is None:
-            backoff = 10
+        if not values:
+            try:
+                backoff = [1, 1, 1, 6, 6, 6, 30, 30][backoff_step]
+                backoff_step += 1
+            except IndexError:
+                backoff = 60
             return
+        backoff_step = 0
 
         tasks = []
         for sensor in hass_sensors:
