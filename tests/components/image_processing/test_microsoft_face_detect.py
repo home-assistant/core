@@ -166,7 +166,7 @@ class TestMicrosoftFaceDetect:
         aioclient_mock.clear_requests()
         aioclient_mock.post(
             self.endpoint_url.format("detect"),
-            text=load_fixture('microsoft_face_detect_no_face_detected.json'),
+            text="[]",
             params={'returnFaceAttributes': "age,gender"}
         )
 

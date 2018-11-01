@@ -170,7 +170,7 @@ class TestMicrosoftFaceIdentify:
         aioclient_mock.clear_requests()
         aioclient_mock.post(
             self.endpoint_url.format("detect"),
-            text=load_fixture('microsoft_face_detect_no_face_detected.json')
+            text="[]"
         )
 
         common.scan(self.hass, entity_id='image_processing.test_local')
