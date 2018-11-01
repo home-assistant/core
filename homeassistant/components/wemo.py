@@ -144,7 +144,7 @@ def setup(hass, config):
     disable_discovery = config.get(DOMAIN, {}).get(CONF_DISABLE_DISCOVERY)
 
     if not disable_discovery:
-        _LOGGER.info("Scanning for WeMo devices.")
+        _LOGGER.debug("Scanning for WeMo devices.")
         devices.extend(
             (setup_url_for_device(device), device)
             for device in pywemo.discover_devices())
