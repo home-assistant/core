@@ -21,6 +21,7 @@ ICON = 'mdi:security'
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an alarm control panel for a Lupusec device."""
     data = hass.data[LUPUSEC_DOMAIN]

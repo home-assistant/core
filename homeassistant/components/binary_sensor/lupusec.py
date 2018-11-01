@@ -10,7 +10,8 @@ from datetime import timedelta
 
 from homeassistant.components.lupusec import (LupusecDevice,
                                               DOMAIN as LUPUSEC_DOMAIN)
-from homeassistant.components.binary_sensor import BinarySensorDevice, DEVICE_CLASSES
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    DEVICE_CLASSES)
 
 DEPENDENCIES = ['lupusec']
 
