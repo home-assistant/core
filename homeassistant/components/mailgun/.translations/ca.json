@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "La vostra inst\u00e0ncia de Home Assistant ha de ser accessible des d'Internet per rebre missatges de Mailgun.",
+            "one_instance_allowed": "Nom\u00e9s cal una sola inst\u00e0ncia."
+        },
+        "create_entry": {
+            "default": "Per enviar esdeveniments a Home Assistant, haureu de configurar [Webhooks amb Mailgun] ({mailgun_url}). \n\n Ompliu la informaci\u00f3 seg\u00fcent: \n\n - URL: `{webhook_url}` \n - M\u00e8tode: POST \n - Tipus de contingut: application/x-www-form-urlencoded\n\nConsulteu [la documentaci\u00f3]({docs_url}) sobre com configurar els automatismes per gestionar les dades entrants."
+        },
+        "step": {
+            "user": {
+                "description": "Esteu segur que voleu configurar Mailgun?",
+                "title": "Configureu el Webhook de Mailgun"
+            }
+        },
+        "title": "Mailgun"
+    }
+}

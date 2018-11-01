@@ -13,7 +13,15 @@ SUPPORTED_COVERS = {
         "id": "Cover 1 id",
         "name": "Cover 1 name",
         "type": "Level controllable output",
-        "state": {}
+        "state": {},
+        "modelid": "Not zigbee spec"
+    },
+    "2": {
+        "id": "Cover 2 id",
+        "name": "Cover 2 name",
+        "type": "Window covering device",
+        "state": {},
+        "modelid": "lumi.curtain"
     }
 }
 
@@ -62,7 +70,7 @@ async def test_cover(hass):
     await setup_bridge(hass, {"lights": SUPPORTED_COVERS})
     assert "cover.cover_1_name" in hass.data[deconz.DATA_DECONZ_ID]
     assert len(SUPPORTED_COVERS) == len(COVER_TYPES)
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
 
 async def test_add_new_cover(hass):

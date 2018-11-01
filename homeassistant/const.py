@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 80
-PATCH_VERSION = '3'
+MINOR_VERSION = 81
+PATCH_VERSION = '2'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
@@ -82,6 +82,7 @@ CONF_FRIENDLY_NAME_TEMPLATE = 'friendly_name_template'
 CONF_HEADERS = 'headers'
 CONF_HOST = 'host'
 CONF_HOSTS = 'hosts'
+CONF_HS = 'hs'
 CONF_ICON = 'icon'
 CONF_ICON_TEMPLATE = 'icon_template'
 CONF_INCLUDE = 'include'
@@ -128,6 +129,7 @@ CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
 CONF_SHOW_ON_MAP = 'show_on_map'
 CONF_SLAVE = 'slave'
+CONF_SOURCE = 'source'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
 CONF_STATE_TEMPLATE = 'state_template'
@@ -145,6 +147,7 @@ CONF_URL = 'url'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
+CONF_WEBHOOK_ID = 'webhook_id'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
 CONF_WHITELIST_EXTERNAL_DIRS = 'whitelist_external_dirs'
@@ -166,6 +169,7 @@ EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
+EVENT_TIMER_OUT_OF_SYNC = 'timer_out_of_sync'
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = 'battery'
@@ -214,6 +218,7 @@ ATTR_CREDENTIALS = 'credentials'
 ATTR_NOW = 'now'
 ATTR_DATE = 'date'
 ATTR_TIME = 'time'
+ATTR_SECONDS = 'seconds'
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = 'domain'

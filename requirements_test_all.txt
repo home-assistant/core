@@ -14,15 +14,18 @@ pytest-aiohttp==0.3.0
 pytest-cov==2.5.1
 pytest-sugar==0.9.1
 pytest-timeout==1.3.2
-pytest==3.8.2
+pytest==3.9.1
 requests_mock==1.5.2
 
 
 # homeassistant.components.homekit
-HAP-python==2.2.2
+HAP-python==2.3.0
 
 # homeassistant.components.sensor.rmvtransport
-PyRMVtransport==0.1
+PyRMVtransport==0.1.3
+
+# homeassistant.components.sensor.transport_nsw
+PyTransportNSW==0.0.8
 
 # homeassistant.components.notify.yessssms
 YesssSMS==0.2.3
@@ -37,6 +40,9 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==1.5.0
 
+# homeassistant.components.unifi
+aiounifi==3
+
 # homeassistant.components.notify.apns
 apns2==0.3.0
 
@@ -50,7 +56,7 @@ coinmarketcap==5.0.3
 defusedxml==0.5.0
 
 # homeassistant.components.sensor.dsmr
-dsmr_parser==0.11
+dsmr_parser==0.12
 
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
@@ -69,6 +75,7 @@ foobot_async==0.3.1
 gTTS-token==1.1.2
 
 # homeassistant.components.geo_location.geo_json_events
+# homeassistant.components.geo_location.nsw_rural_fire_service_feed
 geojson_client==0.1
 
 # homeassistant.components.sensor.geo_rss_events
@@ -84,13 +91,13 @@ hangups==0.4.6
 hbmqtt==0.9.4
 
 # homeassistant.components.sensor.jewish_calendar
-hdate==0.6.3
+hdate==0.6.5
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.7
+holidays==0.9.8
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181018.0
+home-assistant-frontend==20181026.1
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -111,7 +118,7 @@ mficlient==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.15.1
+numpy==1.15.2
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -149,6 +156,9 @@ pydeconz==47
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
+
+# homeassistant.components.homematic
+pyhomematic==0.1.51
 
 # homeassistant.components.litejet
 pylitejet==0.1
@@ -205,11 +215,20 @@ rflink==0.0.37
 # homeassistant.components.ring
 ring_doorbell==0.2.1
 
+# homeassistant.components.lovelace
+ruamel.yaml==0.15.72
+
 # homeassistant.components.media_player.yamaha
 rxv==0.5.1
 
+# homeassistant.components.simplisafe
+simplisafe-python==3.1.12
+
 # homeassistant.components.sleepiq
 sleepyq==0.6
+
+# homeassistant.components.smhi
+smhi-pkg==1.0.5
 
 # homeassistant.components.climate.honeywell
 somecomfort==0.5.2

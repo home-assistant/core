@@ -163,7 +163,7 @@ async def async_setup(hass, config):
 
     async def atv_discovered(service, info):
         """Set up an Apple TV that was auto discovered."""
-        await _setup_atv(hass, {
+        await _setup_atv(hass, config, {
             CONF_NAME: info['name'],
             CONF_HOST: info['host'],
             CONF_LOGIN_ID: info['properties']['hG'],
@@ -172,7 +172,7 @@ async def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_APPLE_TV, atv_discovered)
 
-    tasks = [_setup_atv(hass, conf) for conf in config.get(DOMAIN, [])]
+    tasks = [_setup_atv(hass, config, conf) for conf in config.get(DOMAIN, [])]
     if tasks:
         await asyncio.wait(tasks, loop=hass.loop)
 
@@ -187,7 +187,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def _setup_atv(hass, atv_config):
+async def _setup_atv(hass, hass_config, atv_config):
     """Set up an Apple TV."""
     import pyatv
     name = atv_config.get(CONF_NAME)
@@ -212,10 +212,10 @@ async def _setup_atv(hass, atv_config):
     }
 
     hass.async_create_task(discovery.async_load_platform(
-        hass, 'media_player', DOMAIN, atv_config))
+        hass, 'media_player', DOMAIN, atv_config, hass_config))
 
     hass.async_create_task(discovery.async_load_platform(
-        hass, 'remote', DOMAIN, atv_config))
+        hass, 'remote', DOMAIN, atv_config, hass_config))
 
 
 class AppleTVPowerManager:

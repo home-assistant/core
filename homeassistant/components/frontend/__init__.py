@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20181018.0']
+REQUIREMENTS = ['home-assistant-frontend==20181026.1']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',

@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 
-REQUIREMENTS = ['twilio==5.7.0']
+REQUIREMENTS = ['twilio==6.19.1']
 
 DOMAIN = 'twilio'
 
@@ -34,9 +34,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Twilio component."""
-    from twilio.rest import TwilioRestClient
+    from twilio.rest import Client
     conf = config[DOMAIN]
-    hass.data[DATA_TWILIO] = TwilioRestClient(
+    hass.data[DATA_TWILIO] = Client(
         conf.get(CONF_ACCOUNT_SID), conf.get(CONF_AUTH_TOKEN))
     hass.http.register_view(TwilioReceiveDataView())
     return True
@@ -51,8 +51,8 @@ class TwilioReceiveDataView(HomeAssistantView):
     @callback
     def post(self, request):  # pylint: disable=no-self-use
         """Handle Twilio data post."""
-        from twilio.twiml import Response
+        from twilio.twiml import TwiML
         hass = request.app['hass']
         data = yield from request.post()
         hass.bus.async_fire(RECEIVED_DATA, dict(data))
-        return Response().toxml()
+        return TwiML().to_xml()
