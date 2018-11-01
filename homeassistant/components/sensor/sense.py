@@ -49,8 +49,9 @@ MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
-    if discovery_info == None: return
-    
+    if discovery_info is None: 
+        return
+
     data = hass.data[SENSE_DATA]
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
