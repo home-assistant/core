@@ -433,6 +433,9 @@ googlemaps==2.5.1
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
 
+# homeassistant.components.greeneye_monitor
+greeneye_monitor==0.1
+
 # homeassistant.components.light.greenwave
 greenwavereality==0.5.1
 
