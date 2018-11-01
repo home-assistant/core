@@ -54,6 +54,8 @@ MDI_ICONS = {'ac': 'air-conditioner',
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
+    if discovery_info == None: return
+    
     data = hass.data[SENSE_DATA]
 
     sense_devices = data.get_discovered_device_data()
