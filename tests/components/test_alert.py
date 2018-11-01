@@ -21,7 +21,7 @@ TEST_ENTITY = "sensor.test"
 TITLE = 'test'
 TEST_DATA = {
     'data': {
-        'inline_keyboard': ['Close garage:/close_garage, Acknowledge:/garage_acknowledge']
+        'inline_keyboard': ['Close garage:/close_garage']
     }
 }
 TEST_CONFIG = \
