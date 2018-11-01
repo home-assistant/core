@@ -8,6 +8,7 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_API_KEY, CONF_HOST,
@@ -23,12 +24,9 @@ REQUIREMENTS = ['pytautulli==0.4.0']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MONITORED_USERS = 'monitored_users'
-CONF_UPDATE_INTERVAL = 'update_interval'
 
 DEFAULT_NAME = 'Tautulli'
 DEFAULT_PORT = '8181'
-DEFAULT_CONDITIONS = 'None'
-DEFAULT_USERS = 'None'
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
@@ -41,9 +39,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_CONDITIONS):
+    vol.Optional(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_MONITORED_USERS, default=DEFAULT_USERS):
+    vol.Optional(CONF_MONITORED_USERS):
         vol.All(cv.ensure_list, [cv.string]),
     })
 
@@ -66,9 +64,7 @@ async def async_setup_platform(
     tautulli = TautulliData(Tautulli(
         host, port, api_key, hass.loop, session, use_ssl))
 
-    await tautulli.test_connection()
-
-    if not tautulli.test_connection:
+    if not await tautulli.test_connection():
         raise PlatformNotReady
 
     sensor = [TautulliSensor(tautulli, name, monitored_conditions, user)]
@@ -84,7 +80,6 @@ class TautulliSensor(Entity):
         self.tautulli = tautulli
         self.monitored_conditions = monitored_conditions
         self.usernames = users
-        self.users = []
         self.sessions = {}
         self.home = {}
         self._attributes = {}
@@ -103,12 +98,12 @@ class TautulliSensor(Entity):
             if 'sessions' not in key:
                 self._attributes[key] = self.sessions[key]
         for user in self.tautulli.api.users:
-            if user in self.users or not self.users:
+            if self.usernames is None or user in self.usernames:
                 userdata = self.tautulli.api.user_data
                 self._attributes[user] = {}
                 self._attributes[user]['Activity'] = userdata[user]['Activity']
-                for key in self.monitored_conditions:
-                    if key != 'None':
+                if self.monitored_conditions:
+                    for key in self.monitored_conditions:
                         try:
                             self._attributes[user][key] = userdata[user][key]
                         except (KeyError, TypeError):
@@ -149,5 +144,6 @@ class TautulliData:
 
     async def test_connection(self):
         """Test connection to Tautulli."""
-        connection_status = await self.api.test_connection()
+        await self.api.test_connection()
+        connection_status = self.api.connection
         return connection_status
