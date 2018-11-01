@@ -27,6 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         ])
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC switch platform."""
     devices = []
