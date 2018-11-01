@@ -87,7 +87,7 @@ class TautulliSensor(Entity):
         self._state = None
 
     async def async_update(self):
-        """Get the latest data from the Pi-hole API."""
+        """Get the latest data from the Tautulli API."""
         await self.tautulli.async_update()
         self.home = self.tautulli.api.home_data
         self.sessions = self.tautulli.api.session_data
