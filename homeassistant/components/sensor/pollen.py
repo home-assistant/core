@@ -138,6 +138,7 @@ def calculate_average_rating(indices):
         if r['minimum'] <= n <= r['maximum'])
     return max(set(ratings), key=ratings.count)
 
+
 def calculate_trend(indices):
     """Calculate the "moving average" of a set of indices."""
     import numpy as np
@@ -217,8 +218,6 @@ class ForecastSensor(BaseSensor):
 
     async def async_update(self):
         """Update the sensor."""
-        import numpy as np
-
         await self.pollen.async_update()
         if not self.pollen.data:
             return
