@@ -103,7 +103,7 @@ def adb_wrapper(func):
                               'will re-attempt in the next update.')
                 self._firetv._adb = None
                 self._adb_lock = False
-                return None
+                return
 
         self._adb_lock = True
         try:
@@ -116,8 +116,7 @@ def adb_wrapper(func):
         finally:
             self._adb_lock = False
 
-        if returns:
-            return returns
+        return returns
 
     return _adb_wrapper
 
