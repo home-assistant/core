@@ -98,7 +98,7 @@ def adb_wrapper(func):
         if attempts == 5 and self._adb_lock:
             try:
                 self._firetv.connect()
-            except self._EXCEPTIONS:
+            except self._exceptions:
                 _LOGGER.error('Failed to re-establish the ADB connection; '
                               'will re-attempt in the next update.')
                 self._firetv._adb = None
@@ -108,7 +108,7 @@ def adb_wrapper(func):
         self._adb_lock = True
         try:
             returns = func(self, *args, **kwargs)
-        except self._EXCEPTIONS:
+        except self._exceptions:
             returns = None
             _LOGGER.error('Failed to execute an ADB command; will attempt to '
                           're-establish the ADB connection in the next update')
@@ -124,20 +124,20 @@ def adb_wrapper(func):
 class FireTVDevice(MediaPlayerDevice):
     """Representation of an Amazon Fire TV device on the network."""
 
-    from adb.adb_protocol import (
-        InvalidCommandError, InvalidResponseError, InvalidChecksumError)
-
-    _EXCEPTIONS = (TypeError, ValueError, AttributeError,
-                   InvalidCommandError, InvalidResponseError,
-                   InvalidChecksumError)
-
     def __init__(self, host, name, adbkey, get_source, get_sources):
         """Initialize the FireTV device."""
         from firetv import FireTV  # pylint: disable=no-name-in-module
+        from adb.adb_protocol import (
+            InvalidCommandError, InvalidResponseError, InvalidChecksumError)
+
         self._host = host
         self._adbkey = adbkey
         self._firetv = FireTV(host, adbkey)
         self._adb_lock = False
+
+        self._exceptions = (TypeError, ValueError, AttributeError,
+                            InvalidCommandError, InvalidResponseError,
+                            InvalidChecksumError)
 
         self._name = name
         self._state = STATE_UNKNOWN
