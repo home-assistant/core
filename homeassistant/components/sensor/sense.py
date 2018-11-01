@@ -49,6 +49,9 @@ MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
+    if SENSE_DATA not in hass.data:
+        _LOGGER.error("Requires Sense component loaded")
+        return False
     data = hass.data[SENSE_DATA]
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
@@ -61,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data.get_realtime()
 
     devices = []
-    for typ in SENSOR_TYPES:
+    for typ in SENSOR_TYPES.values():
         for var in SENSOR_VARIANTS:
             name = typ.name
             sensor_type = typ.sensor_type

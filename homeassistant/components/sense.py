@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 

@@ -17,6 +17,10 @@ BIN_SENSOR_CLASS = 'power'
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
+    if SENSE_DATA not in hass.data:
+        _LOGGER.error("Requires Sense component loaded")
+        return False
+    
     data = hass.data[SENSE_DATA]
 
     sense_devices = data.get_discovered_device_data()
@@ -31,7 +35,7 @@ class SenseDevice(BinarySensorDevice):
         """Initialize the sensor."""
         self._name = device['name']
         self._id = device['id']
-        self._icon = sense_to_mdi(self._device['icon'])
+        self._icon = self.sense_to_mdi(device['icon'])
         self._data = data
         self._state = False
 
@@ -62,7 +66,7 @@ class SenseDevice(BinarySensorDevice):
 
     def update(self):
         """Retrieve latest state."""
-        from sense_energy import SenseAPITimeoutException
+        from sense_energy.sense_api import SenseAPITimeoutException
         try:
             self._data.get_realtime()
         except SenseAPITimeoutException:
@@ -70,14 +74,14 @@ class SenseDevice(BinarySensorDevice):
             return
         self._state = self._name in self._data.active_devices
         
-    def sense_to_mdi(sense_icon):
+    def sense_to_mdi(self, sense_icon):
         """Convert sense icon to mdi icon"""
         MDI_ICONS = {'ac' : 'air-conditioner',
                      'aquarium' : 'fish',
                      'car' : 'car-electric',
                      'computer' : 'desktop-classic',
                      'cup' : 'coffee',
-                     'dehumidifier' : 'water-off'
+                     'dehumidifier' : 'water-off',
                      'dishes' : 'dishwasher',
                      'drill' : 'toolbox',
                      'fan' : 'fan',
@@ -95,7 +99,7 @@ class SenseDevice(BinarySensorDevice):
                      'media_console' : 'set-top-box',
                      'modem' : 'router-wireless',
                      'outlet' : 'power-socket-us',
-                     'papershredder' : 'shredder'
+                     'papershredder' : 'shredder',
                      'printer' : 'printer',
                      'pump' : 'water-pump',
                      'settings' : 'settings',
@@ -106,6 +110,6 @@ class SenseDevice(BinarySensorDevice):
                      'stove' : 'stove',
                      'trash' : 'trash-can',
                      'tv' : 'television',
-                     'vacuum' : 'robot-vacuum'
+                     'vacuum' : 'robot-vacuum',
                      'washer' : 'washing-machine'}
         return 'mdi-' + MDI_ICONS.get(sense_icon, 'power-plug')
