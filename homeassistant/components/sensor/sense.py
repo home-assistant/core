@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.components.sense import SENSE_DATA
 
-REQUIREMENTS = ['sense']
+DEPENDENCIES = ['sense']
 
 _LOGGER = logging.getLogger(__name__)
 
