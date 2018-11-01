@@ -61,7 +61,6 @@ class HomematicipAuth:
         from homematicip.base.base_connection import HmipConnectionError
 
         auth = AsyncAuth(hass.loop, async_get_clientsession(hass))
-        print(auth)
         try:
             await auth.init(hapid)
             if pin:
