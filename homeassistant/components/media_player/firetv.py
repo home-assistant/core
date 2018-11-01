@@ -87,7 +87,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def adb_wrapper(func):
-    """A wrapper that will wait if previous ADB commands haven't finished."""
+    """Wait if previous ADB commands haven't finished."""
     @functools.wraps(func)
     def _adb_wrapper(self, *args, **kwargs):
         attempts = 0
@@ -221,7 +221,7 @@ class FireTVDevice(MediaPlayerDevice):
                     # Assume the devices is on standby.
                     self._state = STATE_STANDBY
 
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722 # pylint: disable=bare-except
             _LOGGER.error('Update encountered an exception; will attempt to '
                           're-establish the ADB connection in the next update')
             self._firetv._adb = None
