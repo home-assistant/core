@@ -9,11 +9,11 @@ import logging
 from homeassistant.components.velbus import (
     DOMAIN as VELBUS_DOMAIN, VelbusEntity)
 from homeassistant.components.climate import (
-    ClimateDevice, DOMAIN,
+    ClimateDevice,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE)
+    ATTR_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ DEPENDENCIES = ['velbus']
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 OPERATION_LIST = ['comfort', 'day', 'night', 'safe']
+
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -77,5 +78,3 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._module.set_temp(kwargs.get(ATTR_TEMPERATURE))
             self.schedule_update_ha_state()
-
-
