@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 BIN_SENSOR_CLASS = 'power'
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
     if SENSE_DATA not in hass.data:
@@ -48,12 +49,12 @@ class SenseDevice(BinarySensorDevice):
     def name(self):
         """Return the name of the binary sensor."""
         return self._name
-        
+
     @property
     def unique_id(self):
         """Return the id of the binary sensor."""
         return self._id
-        
+
     @property
     def icon(self):
         """Return the icon of the binary sensor."""
@@ -73,7 +74,7 @@ class SenseDevice(BinarySensorDevice):
             _LOGGER.error("Timeout retrieving data")
             return
         self._state = self._name in self._data.active_devices
-        
+
     def sense_to_mdi(self, sense_icon):
         """Convert sense icon to mdi icon"""
         MDI_ICONS = {'ac': 'air-conditioner',
