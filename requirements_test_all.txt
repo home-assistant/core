@@ -19,7 +19,7 @@ requests_mock==1.5.2
 
 
 # homeassistant.components.homekit
-HAP-python==2.3.0
+HAP-python==2.2.2
 
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.1
@@ -90,7 +90,7 @@ hdate==0.6.3
 holidays==0.9.7
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181030.0
+home-assistant-frontend==20180927.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -111,7 +111,7 @@ mficlient==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.15.3
+numpy==1.15.1
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -209,7 +209,7 @@ restrictedpython==4.0b5
 rflink==0.0.37
 
 # homeassistant.components.ring
-ring_doorbell==0.2.2
+ring_doorbell==0.2.1
 
 # homeassistant.components.media_player.yamaha
 rxv==0.5.1
@@ -219,9 +219,6 @@ simplisafe-python==2.0.2
 
 # homeassistant.components.sleepiq
 sleepyq==0.6
-
-# homeassistant.components.smhi
-smhi-pkg==1.0.5
 
 # homeassistant.components.climate.honeywell
 somecomfort==0.5.2
