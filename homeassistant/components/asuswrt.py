@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['aioasuswrt==1.1.3']
+REQUIREMENTS = ['aioasuswrt==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,9 +47,6 @@ async def async_setup(hass, config):
     from aioasuswrt.asuswrt import AsusWrt
 
     conf = config[DOMAIN]
-    if conf[CONF_HOST] is None or conf[CONF_USERNAME] is None:
-        _LOGGER.error("Cant setup asuswrt platform.")
-        return False
 
     api = AsusWrt(conf[CONF_HOST], conf[CONF_PORT],
                   conf[CONF_PROTOCOL] == 'telnet',
@@ -57,6 +54,15 @@ async def async_setup(hass, config):
                   conf.get(CONF_PASSWORD, ''),
                   conf.get('ssh_key', conf.get('pub_key', '')),
                   conf[CONF_MODE], conf[CONF_REQUIRE_IP])
+
+    try:
+        await api.connection.async_connect()
+        if not api.is_connected:
+            _LOGGER.error("Unable to setup asuswrt component")
+            return False
+    except Exception as e:
+        _LOGGER.exception("Unable to setup asuswrt component", e)
+        return False
 
     hass.data[DATA_ASUSWRT] = api
 
