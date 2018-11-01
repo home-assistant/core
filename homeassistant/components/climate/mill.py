@@ -215,4 +215,3 @@ class MillHeater(ClimateDevice):
         else:
             _LOGGER.error("Unrecognized operation mode: %s", operation_mode)
             return
-        self.schedule_update_ha_state()
