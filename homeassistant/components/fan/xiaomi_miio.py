@@ -203,7 +203,7 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
     ATTR_CO2: 'co2',
     ATTR_HUMIDITY: 'humidity',
     ATTR_MODE: 'mode',
-#    ATTR_LED: 'led',
+    ATTR_LED: 'led',
     ATTR_LED_BRIGHTNESS: 'led_brightness',
     ATTR_BUZZER: 'buzzer',
     ATTR_CHILD_LOCK: 'child_lock',
@@ -264,7 +264,7 @@ FEATURE_FLAGS_AIRHUMIDIFIER_CA = (FEATURE_FLAGS_AIRHUMIDIFIER |
                                   FEATURE_SET_DRY)
 
 FEATURE_FLAGS_AIRFRESH = (FEATURE_FLAGS_GENERIC |
-#                          FEATURE_SET_LED |
+                          FEATURE_SET_LED |
                           FEATURE_SET_LED_BRIGHTNESS |
                           FEATURE_RESET_FILTER |
                           FEATURE_SET_EXTRA_FEATURES)
