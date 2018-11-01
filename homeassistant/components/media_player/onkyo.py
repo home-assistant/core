@@ -15,7 +15,8 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, MediaPlayerDevice)
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, ATTR_ENTITY_ID
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, ATTR_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['onkyo-eiscp==1.2.4']
@@ -56,9 +57,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 TIMEOUT_MESSAGE = 'Timeout waiting for response.'
 
 ATTR_VIDEO_OUTPUT = 'video_output'
-ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_VIDEO_OUTPUT): vol.In(['no', 'analog', 'yes', 'out', 'out-sub', 'sub', 'hdbaset', 'both', 'up'])})
+ACCEPTED_VALUES = ['no', 'analog', 'yes', 'out',
+                   'out-sub', 'sub', 'hdbaset', 'both', 'up']
+ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+                                         vol.Required(ATTR_VIDEO_OUTPUT): vol.In(ACCEPTED_VALUES)})
 DOMAIN = 'media_player'
 SERVICE_SELECT_VIDEO_OUTPUT = 'select_video_output'
+
 
 def determine_zones(receiver):
     """Determine what zones are available for the receiver."""
@@ -98,11 +103,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         """Handle for services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         devices = [d for d in hosts if d.entity_id in entity_ids]
-      
+
         for device in devices:
             if service.service == SERVICE_SELECT_VIDEO_OUTPUT:
                 device.select_output(service.data.get(ATTR_VIDEO_OUTPUT))
-    
+
     hass.services.register(
         DOMAIN, SERVICE_SELECT_VIDEO_OUTPUT, service_handle,
         schema=ONKYO_SELECT_OUTPUT_SCHEMA)
@@ -300,10 +305,10 @@ class OnkyoDevice(MediaPlayerDevice):
                 source in DEFAULT_PLAYABLE_SOURCES):
             self.command('preset {}'.format(media_id))
 
-
     def select_output(self, output):
         """Set hdmi-out"""
         self.command('hdmi-output-selector={}'.format(output))
+
 
 class OnkyoDeviceZone(OnkyoDevice):
     """Representation of an Onkyo device's extra zone."""
@@ -375,7 +380,7 @@ class OnkyoDeviceZone(OnkyoDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
-        self.command('zone{}.volume={}'.format(self._zone, int(volume*80)))
+        self.command('zone{}.volume={}'.format(self._zone, int(volume * 80)))
 
     def volume_up(self):
         """Increase volume by 1 step."""
