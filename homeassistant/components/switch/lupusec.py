@@ -6,11 +6,15 @@ https://home-assistant.io/components/switch.lupusec/
 """
 import logging
 
+from datetime import timedelta
+
 from homeassistant.components.lupusec import (LupusecDevice,
                                               DOMAIN as LUPUSEC_DOMAIN)
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['lupusec']
+
+SCAN_INTERVAL = timedelta(seconds=2)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +31,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         devices.append(LupusecSwitch(data, device))
 
-    data.devices.extend(devices)
     add_entities(devices)
 
 

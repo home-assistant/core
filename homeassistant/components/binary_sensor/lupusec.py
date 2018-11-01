@@ -6,11 +6,15 @@ https://home-assistant.io/components/binary_sensor.lupusec/
 """
 import logging
 
+from datetime import timedelta
+
 from homeassistant.components.lupusec import (LupusecDevice,
                                               DOMAIN as LUPUSEC_DOMAIN)
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorDevice, DEVICE_CLASSES
 
 DEPENDENCIES = ['lupusec']
+
+SCAN_INTERVAL = timedelta(seconds=2)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +31,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for device in data.lupusec.get_devices(generic_type=device_types):
         devices.append(LupusecBinarySensor(data, device))
 
-    data.devices.extend(devices)
     add_entities(devices)
 
 
@@ -42,4 +45,8 @@ class LupusecBinarySensor(LupusecDevice, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
-        return self._device.generic_type
+        if self._device.generic_type in DEVICE_CLASSES:
+            return self._device.generic_type
+        else:
+            _LOGGER.error('Binary sensor device class not known')
+            return False

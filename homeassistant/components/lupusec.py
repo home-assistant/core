@@ -7,6 +7,7 @@ https://home-assistant.io/components/lupusec
 
 from datetime import timedelta
 import logging
+
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
@@ -32,8 +33,6 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-SCAN_INTERVAL = timedelta(seconds=2)
-
 LUPUSEC_PLATFORMS = [
     'alarm_control_panel', 'binary_sensor', 'switch'
 ]
@@ -52,7 +51,7 @@ def setup(hass, config):
     try:
         hass.data[DOMAIN] = LupusecSystem(username, password, ip_address, name)
     except LupusecException as ex:
-        _LOGGER.warning(ex)
+        _LOGGER.error(ex)
 
         hass.components.persistent_notification.create(
             'Error: {}<br />'
@@ -76,7 +75,6 @@ class LupusecSystem:
         import lupupy
         self.lupusec = lupupy.Lupusec(username, password, ip_address)
         self.name = name
-        self.devices = []
 
 
 class LupusecDevice(Entity):

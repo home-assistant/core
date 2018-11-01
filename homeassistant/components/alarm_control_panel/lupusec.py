@@ -5,6 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.lupusec/
 """
 
+from datetime import timedelta
+
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.components.lupusec import DOMAIN as LUPUSEC_DOMAIN
 from homeassistant.components.lupusec import LupusecDevice
@@ -17,6 +19,7 @@ DEPENDENCIES = ['lupusec']
 
 ICON = 'mdi:security'
 
+SCAN_INTERVAL = timedelta(seconds=2)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an alarm control panel for a Lupusec device."""
