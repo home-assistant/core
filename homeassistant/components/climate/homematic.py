@@ -7,8 +7,8 @@ https://home-assistant.io/components/climate.homematic/
 import logging
 
 from homeassistant.components.climate import (
-    STATE_AUTO, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    ClimateDevice)
+    STATE_AUTO, STATE_MANUAL, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.components.homematic import (
     ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -17,7 +17,6 @@ DEPENDENCIES = ['homematic']
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_MANUAL = 'manual'
 STATE_BOOST = 'boost'
 STATE_COMFORT = 'comfort'
 STATE_LOWERING = 'lowering'
