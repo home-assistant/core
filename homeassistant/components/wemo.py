@@ -83,7 +83,7 @@ def setup(hass, config):
 
     def stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
-        _LOGGER.info("Shutting down subscriptions.")
+        _LOGGER.debug("Shutting down subscriptions.")
         SUBSCRIPTION_REGISTRY.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
@@ -150,7 +150,7 @@ def setup(hass, config):
             for device in pywemo.discover_devices())
 
     for url, device in devices:
-        _LOGGER.info('Adding wemo at %s:%i', device.host, device.port)
+        _LOGGER.debug('Adding wemo at %s:%i', device.host, device.port)
 
         discovery_info = {
             'model_name': device.model_name,
