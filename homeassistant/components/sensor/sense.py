@@ -8,8 +8,6 @@ import logging
 
 from datetime import timedelta
 
-import voluptuous as vol
-
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.components.sense import SENSE_DATA

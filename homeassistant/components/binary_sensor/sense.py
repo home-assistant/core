@@ -14,7 +14,42 @@ REQUIREMENTS = ['sense']
 _LOGGER = logging.getLogger(__name__)
 
 BIN_SENSOR_CLASS = 'power'
-
+MDI_ICONS = {'ac': 'air-conditioner',
+             'aquarium': 'fish',
+             'car': 'car-electric',
+             'computer': 'desktop-classic',
+             'cup': 'coffee',
+             'dehumidifier': 'water-off',
+             'dishes': 'dishwasher',
+             'drill': 'toolbox',
+             'fan': 'fan',
+             'freezer': 'fridge-top',
+             'fridge': 'fridge-bottom',
+             'game': 'gamepad-variant',
+             'garage': 'garage',
+             'grill': 'stove',
+             'heat': 'fire',
+             'heater': 'radiatior',
+             'humidifier': 'water',
+             'kettle': 'kettle',
+             'leafblower': 'leaf',
+             'lightbulb': 'lightbulb',
+             'media_console': 'set-top-box',
+             'modem': 'router-wireless',
+             'outlet': 'power-socket-us',
+             'papershredder': 'shredder',
+             'printer': 'printer',
+             'pump': 'water-pump',
+             'settings': 'settings',
+             'skillet': 'pot',
+             'smartcamera': 'webcam',
+             'socket': 'power-plug',
+             'sound': 'speaker',
+             'stove': 'stove',
+             'trash': 'trash-can',
+             'tv': 'television',
+             'vacuum': 'robot-vacuum',
+             'washer': 'washing-machine'}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
@@ -28,6 +63,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = [SenseDevice(data, device) for device in sense_devices]
     add_entities(devices)
 
+def sense_to_mdi(self, sense_icon):
+    """Convert sense icon to mdi icon"""
+    return 'mdi-' + MDI_ICONS.get(sense_icon, 'power-plug')
+
 
 class SenseDevice(BinarySensorDevice):
     """Implementation of a Sense energy device binary sensor."""
@@ -36,7 +75,7 @@ class SenseDevice(BinarySensorDevice):
         """Initialize the sensor."""
         self._name = device['name']
         self._id = device['id']
-        self._icon = self.sense_to_mdi(device['icon'])
+        self._icon = sense_to_mdi(device['icon'])
         self._data = data
         self._state = False
 
@@ -74,43 +113,3 @@ class SenseDevice(BinarySensorDevice):
             _LOGGER.error("Timeout retrieving data")
             return
         self._state = self._name in self._data.active_devices
-
-    def sense_to_mdi(self, sense_icon):
-        """Convert sense icon to mdi icon"""
-        MDI_ICONS = {'ac': 'air-conditioner',
-                     'aquarium': 'fish',
-                     'car': 'car-electric',
-                     'computer': 'desktop-classic',
-                     'cup': 'coffee',
-                     'dehumidifier': 'water-off',
-                     'dishes': 'dishwasher',
-                     'drill': 'toolbox',
-                     'fan': 'fan',
-                     'freezer': 'fridge-top',
-                     'fridge': 'fridge-bottom',
-                     'game': 'gamepad-variant',
-                     'garage': 'garage',
-                     'grill': 'stove',
-                     'heat': 'fire',
-                     'heater': 'radiatior',
-                     'humidifier': 'water',
-                     'kettle': 'kettle',
-                     'leafblower': 'leaf',
-                     'lightbulb': 'lightbulb',
-                     'media_console': 'set-top-box',
-                     'modem': 'router-wireless',
-                     'outlet': 'power-socket-us',
-                     'papershredder': 'shredder',
-                     'printer': 'printer',
-                     'pump': 'water-pump',
-                     'settings': 'settings',
-                     'skillet': 'pot',
-                     'smartcamera': 'webcam',
-                     'socket': 'power-plug',
-                     'sound': 'speaker',
-                     'stove': 'stove',
-                     'trash': 'trash-can',
-                     'tv': 'television',
-                     'vacuum': 'robot-vacuum',
-                     'washer': 'washing-machine'}
-        return 'mdi-' + MDI_ICONS.get(sense_icon, 'power-plug')

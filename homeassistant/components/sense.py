@@ -48,6 +48,6 @@ def setup(hass, config):
     except SenseAuthenticationException:
         _LOGGER.error("Could not authenticate with sense server")
         return False
-    load_platform(hass, 'sensor', DOMAIN)
-    load_platform(hass, 'binary_sensor', DOMAIN)
+    load_platform(hass, 'sensor', DOMAIN, {}, config)
+    load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
     return True
