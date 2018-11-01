@@ -72,6 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class IhcLight(IHCDevice, Light):
     """Representation of a IHC light.
+    
     For dimmable lights, the associated IHC resource should be a light
     level (integer). For non dimmable light the IHC resource should be
     an on/off (boolean) resource
