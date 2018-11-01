@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-def sense_to_mdi(self, sense_icon):
+def sense_to_mdi(sense_icon):
     """Convert sense icon to mdi icon"""
     return 'mdi-' + MDI_ICONS.get(sense_icon, 'power-plug')
 
