@@ -2,48 +2,14 @@
 import datetime
 import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import CONF_SWITCHES
+from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['doorbird']
 
 _LOGGER = logging.getLogger(__name__)
 
-SWITCHES = {
-    "open_door": {
-        "name": "{} Open Door",
-        "icon": {
-            True: "lock-open",
-            False: "lock"
-        },
-        "time": datetime.timedelta(seconds=3)
-    },
-    "open_door_2": {
-        "name": "{} Open Door 2",
-        "icon": {
-            True: "lock-open",
-            False: "lock"
-        },
-        "time": datetime.timedelta(seconds=3)
-    },
-    "light_on": {
-        "name": "{} Light On",
-        "icon": {
-            True: "lightbulb-on",
-            False: "lightbulb"
-        },
-        "time": datetime.timedelta(minutes=5)
-    }
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES, default=[]):
-        vol.All(cv.ensure_list([vol.In(SWITCHES)]))
-})
+IR_RELAY = '__ir_light__'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -51,14 +17,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = []
 
     for doorstation in hass.data[DOORBIRD_DOMAIN]:
+        relays = doorstation.device.info()['RELAYS']
+        relays.append(IR_RELAY)
 
-        device = doorstation.device
-
-        for switch in SWITCHES:
-
-            _LOGGER.debug("Adding DoorBird switch %s",
-                          SWITCHES[switch]["name"].format(doorstation.name))
-            switches.append(DoorBirdSwitch(device, switch, doorstation.name))
+        for relay in relays:
+            switch = DoorBirdSwitch(doorstation, relay)
+            switches.append(switch)
 
     add_entities(switches)
 
@@ -66,23 +30,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DoorBirdSwitch(SwitchDevice):
     """A relay in a DoorBird device."""
 
-    def __init__(self, device, switch, name):
+    def __init__(self, doorstation, relay):
         """Initialize a relay in a DoorBird device."""
-        self._device = device
-        self._switch = switch
-        self._name = name
+        self._doorstation = doorstation
+        self._relay = relay
         self._state = False
         self._assume_off = datetime.datetime.min
+
+        if relay == IR_RELAY:
+            self._time = datetime.timedelta(minutes=5)
+        else:
+            self._time = datetime.timedelta(seconds=5)
 
     @property
     def name(self):
         """Return the name of the switch."""
-        return SWITCHES[self._switch]["name"].format(self._name)
+        if self._relay == IR_RELAY:
+            return "{} IR".format(self._doorstation.name)
+
+        return "{} Relay {}".format(self._doorstation.name, self._relay)
 
     @property
     def icon(self):
         """Return the icon to display."""
-        return "mdi:{}".format(SWITCHES[self._switch]["icon"][self._state])
+        return "mdi:lightbulb" if self._relay == IR_RELAY else "mdi:dip-switch"
 
     @property
     def is_on(self):
@@ -91,15 +62,13 @@ class DoorBirdSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Power the relay."""
-        if self._switch == "open_door":
-            self._state = self._device.open_door()
-        elif self._switch == "open_door_2":
-            self._state = self._device.open_door(2)
-        elif self._switch == "light_on":
-            self._state = self._device.turn_light_on()
+        if self._relay == IR_RELAY:
+            self._state = self._doorstation.device.turn_light_on()
+        else:
+            self._state = self._doorstation.device.energize_relay(self._relay)
 
         now = datetime.datetime.now()
-        self._assume_off = now + SWITCHES[self._switch]["time"]
+        self._assume_off = now + self._time
 
     def turn_off(self, **kwargs):
         """Turn off the relays is not needed. They are time-based."""
