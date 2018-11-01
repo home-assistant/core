@@ -67,7 +67,7 @@ class AsuswrtRXSensor(AsuswrtSensor):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        await super().async_device_update()
+        await super().async_update()
         if self._speed is not None:
             self._state = round(self._speed[0] / 125000, 2)
 
@@ -85,7 +85,7 @@ class AsuswrtTXSensor(AsuswrtSensor):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        await super().async_device_update()
+        await super().async_update()
         if self._speed is not None:
             self._state = round(self._speed[1] / 125000, 2)
 
@@ -103,7 +103,7 @@ class AsuswrtTotalRXSensor(AsuswrtSensor):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        await super().async_device_update()
+        await super().async_update()
         if self._rates is not None:
             self._state = round(self._rates[0] / 1000000000, 1)
 
@@ -121,6 +121,6 @@ class AsuswrtTotalTXSensor(AsuswrtSensor):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        await super().async_device_update()
+        await super().async_update()
         if self._rates is not None:
             self._state = round(self._rates[1] / 1000000000, 1)
