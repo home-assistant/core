@@ -59,8 +59,10 @@ TIMEOUT_MESSAGE = 'Timeout waiting for response.'
 ATTR_VIDEO_OUTPUT = 'video_output'
 ACCEPTED_VALUES = ['no', 'analog', 'yes', 'out',
                    'out-sub', 'sub', 'hdbaset', 'both', 'up']
-ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-                                         vol.Required(ATTR_VIDEO_OUTPUT): vol.In(ACCEPTED_VALUES)})
+ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VIDEO_OUTPUT): vol.In(ACCEPTED_VALUES)
+})
 DOMAIN = 'media_player'
 SERVICE_SELECT_VIDEO_OUTPUT = 'select_video_output'
 
