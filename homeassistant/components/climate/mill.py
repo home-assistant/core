@@ -214,4 +214,3 @@ class MillHeater(ClimateDevice):
             await self.async_turn_off()
         else:
             _LOGGER.error("Unrecognized operation mode: %s", operation_mode)
-            return
