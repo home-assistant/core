@@ -118,7 +118,7 @@ def setup(hass, config):
     conf = config[DOMAIN]
     ihc_status = ihc_setup(hass, config, conf, CONTROLLER_ID[PRIMARY])
 
-    #Setup optional secondary controller.
+    # Setup optional secondary controller.
     if ihc_status and CONF_CONTROLLER2 in conf:
         conf2 = conf[CONF_CONTROLLER2]
         ihc_status = ihc_setup(hass, config, conf2, CONTROLLER_ID[SECONDARY])
