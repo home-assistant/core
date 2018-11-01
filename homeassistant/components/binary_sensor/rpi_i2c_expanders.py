@@ -35,33 +35,33 @@ from homeassistant.components import rpi_i2c_expanders
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+    BinarySensorDevice,
+    PLATFORM_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['rpi_i2c_expanders']
+DEPENDENCIES = ["rpi_i2c_expanders"]
 
 
 # TODO: Merge in components.rpi_i2c_expanders ?
 i2c_bus_port = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 
-_SWITCHES_SCHEMA = vol.Schema({
-    cv.positive_int: cv.string,
-})
+_SWITCHES_SCHEMA = vol.Schema({cv.positive_int: cv.string})
 
-_CHIP_SCHEMA = vol.Schema({
-    vol.Required("hw"): cv.string,
-    vol.Required("ports"): _SWITCHES_SCHEMA,
-    vol.Optional("invert_logic_ports"): [cv.positive_int],
-})
+_CHIP_SCHEMA = vol.Schema(
+    {
+        vol.Required("hw"): cv.string,
+        vol.Required("ports"): _SWITCHES_SCHEMA,
+        vol.Optional("invert_logic_ports"): [cv.positive_int],
+    }
+)
 
-_CHIPS_SCHEMA = vol.Schema({
-    i2c_bus_port: _CHIP_SCHEMA,
-})
+_CHIPS_SCHEMA = vol.Schema({i2c_bus_port: _CHIP_SCHEMA})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required("chips"): _CHIPS_SCHEMA,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required("chips"): _CHIPS_SCHEMA}
+)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -77,17 +77,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for address, chip in chips.items():
         chip_id = chip["hw"]
-        invert_logic_ports = chip.get('invert_logic_ports', ())
+        invert_logic_ports = chip.get("invert_logic_ports", ())
         managed_chip = managed_chips.manage_chip(address, chip_id)
-        _LOGGER.debug("address: 0x%x chip_id: %r -> managed_chip: %r, invert_logic_ports: %r",
-                      address, chip_id,  managed_chip, invert_logic_ports, )
+        _LOGGER.debug(
+            "address: 0x%x chip_id: %r -> managed_chip: %r, invert_logic_ports: %r",
+            address,
+            chip_id,
+            managed_chip,
+            invert_logic_ports,
+        )
         for pin, name in chip["ports"].items():
             invert_logic = pin in invert_logic_ports
             expander_sensor = ExpanderSensor(name, managed_chip, invert_logic)
             managed_chip.pin_connect(pin, expander_sensor)
             sensors.append(expander_sensor)
-            _LOGGER.debug("address: 0x%x managed_chip: %r: pin: %r connected to expander sensor: %r",
-                          address, managed_chip, pin, expander_sensor, )
+            _LOGGER.debug(
+                "address: 0x%x managed_chip: %r: pin: %r connected to expander sensor: %r",
+                address,
+                managed_chip,
+                pin,
+                expander_sensor,
+            )
         managed_chip.ha_configure()  # HW configuration of chip
 
     # NOTE: Seems g_pollwatcher is not yet set up

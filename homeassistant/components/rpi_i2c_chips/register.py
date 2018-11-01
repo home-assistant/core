@@ -21,6 +21,7 @@ class Register:
     Allows access to bits via names.
     Keep as close as possible to names used in official docs.
     """
+
     _NOT_USED_BITNAME_ID = "_"
     _bitnames = ()  # Resulf of  parse_bitnames() / gen_bitnames call.
     _bitaliases = {}  # Result of  parse_bitaliases(_bitnames) .
@@ -39,7 +40,7 @@ class Register:
     def gen_bitnames(num, prefix):
         """Generates num bitnames with given prefix."""
         bitnames = []
-        for n in range(num-1, -1, -1):
+        for n in range(num - 1, -1, -1):
             bitnames.append("%s%d" % (prefix, n))
         return tuple(bitnames)
 
@@ -49,7 +50,7 @@ class Register:
         Generates names mappings to bitmasks.
         """
         bitaliases = {}
-        bitmask = 1 << (len(bitnames)-1)
+        bitmask = 1 << (len(bitnames) - 1)
 
         for bitname in bitnames:
             bitaliases[bitname] = bitmask
@@ -58,21 +59,22 @@ class Register:
 
     def __init__(self, val=0):
         self.set(val)
-        self._mask = (2 << len(self._bitnames)-1) - 1
+        self._mask = (2 << len(self._bitnames) - 1) - 1
 
     def __str__(self):
-        bitmask = 1 << (len(self._bitnames)-1)
+        bitmask = 1 << (len(self._bitnames) - 1)
         bit_texts = []
         for bitname in self._bitnames:
             if bitname == self._NOT_USED_BITNAME_ID:
                 continue
-            bit_texts.append("%s:%d" %
-                             (bitname, 1 if self._val & bitmask else 0))
+            bit_texts.append(
+                "%s:%d" % (bitname, 1 if self._val & bitmask else 0)
+            )
             bitmask = bitmask >> 1
         return " ".join(bit_texts)
 
     def __repr__(self):
-        return "<%s 0x%x @%x>" % (self.__class__.__name__, self._val, id(self), )
+        return "<%s 0x%x @%x>" % (self.__class__.__name__, self._val, id(self))
 
     def __getattr__(self, name):
         mask = self._bitaliases.get(name)
@@ -80,7 +82,7 @@ class Register:
             return super().__getattr__(name)
         return 1 if self._val & mask else 0  # or return self.val & mask
 
-    def __setattr__(self, name,  value):
+    def __setattr__(self, name, value):
         mask = self._bitaliases.get(name)
         if mask is None:
             return super().__setattr__(name, value)
@@ -88,14 +90,15 @@ class Register:
         if value:
             self._val |= mask
         else:
-            self._val &= (self._mask - mask)
+            self._val &= self._mask - mask
 
     def set(self, val):
         if val < 0:
             raise ValueError("Negative values not allowed")
         if val > 2 << len(self._bitnames):
             raise ValueError(
-                "Value: %r too big to fit into bits: %r",  val,  self._bitnames)
+                "Value: %r too big to fit into bits: %r", val, self._bitnames
+            )
         self._val = val
 
     def __int__(self):
@@ -116,17 +119,22 @@ class Register:
 
 if __name__ == "__main__":
     import logging
+
     # Run as:
     #   python3 -m rpi_i2c_chips.register
 
     logging.basicConfig(
-        level=logging.DEBUG, format='%(relativeCreated)6d %(threadName)s %(message)s')
+        level=logging.DEBUG,
+        format="%(relativeCreated)6d %(threadName)s %(message)s",
+    )
     # Some simple testing
 
     if 1:
+
         class Test_Register(Register):
             _bitnames = Register.parse_bitnames(
-                "BANK MIRROR SEQOP _ _ ODR INTPOL INTCC")
+                "BANK MIRROR SEQOP _ _ ODR INTPOL INTCC"
+            )
             _bitaliases = Register.parse_bitaliases(_bitnames)
 
         class TestNum_Register(Register):
@@ -134,11 +142,15 @@ if __name__ == "__main__":
             _bitaliases = Register.parse_bitaliases(_bitnames)
 
         reg = Test_Register(0x80 | 0x4)  # BANK ODR set
-        print ("reg: %s" % (reg, ))
-        print ("reg: 0x%02x reg.BANK: %s reg.MIRROR: %s " %
-               (int(reg), reg.BANK, reg.MIRROR))
+        print("reg: %s" % (reg,))
+        print(
+            "reg: 0x%02x reg.BANK: %s reg.MIRROR: %s "
+            % (int(reg), reg.BANK, reg.MIRROR)
+        )
 
-        reg = TestNum_Register(0xf00f)
-        print ("reg: %s" % (reg, ))
-        print ("reg: 0x%04x reg.D12: %s reg.D11: %s " %
-               (int(reg), reg.D12, reg.D11))
+        reg = TestNum_Register(0xF00F)
+        print("reg: %s" % (reg,))
+        print(
+            "reg: 0x%04x reg.D12: %s reg.D11: %s "
+            % (int(reg), reg.D12, reg.D11)
+        )

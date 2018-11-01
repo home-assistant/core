@@ -41,8 +41,10 @@ class HAExpanderMixIn:
         self.check_pin(pin)
         prev_connection = self.pin_connections.get(pin)
         if prev_connection:
-            raise ValueError("Unable to connect %r to pin %r. Pin already connected to: %r." % (
-                dev, pin,  prev_connection))
+            raise ValueError(
+                "Unable to connect %r to pin %r. Pin already connected to: %r."
+                % (dev, pin, prev_connection)
+            )
         self.pin_connections[pin] = dev
 
     def get_pin_dev(self, pin):
@@ -68,11 +70,17 @@ class HAExpanderMixIn:
                 pull_up_mask += 2 ** pin
             else:
                 raise RuntimeError(
-                    "Unable assign %r to expander input/outputs" % (dev, ))
-        _LOGGER.debug("Calculated masks: inputs :0x%X  outputs: 0x%X , outputs_on: 0x%X for %r",
-                      inputs_mask, outputs_mask, outputs_on_mask,  self)
+                    "Unable assign %r to expander input/outputs" % (dev,)
+                )
+        _LOGGER.debug(
+            "Calculated masks: inputs :0x%X  outputs: 0x%X , outputs_on: 0x%X for %r",
+            inputs_mask,
+            outputs_mask,
+            outputs_on_mask,
+            self,
+        )
         # TODO: Pass outputs state to configure without HW flipping ?
-        self.configure(outputs_mask, inputs_mask,  pull_up_mask)
+        self.configure(outputs_mask, inputs_mask, pull_up_mask)
 
     def update_outputs(self):
         """
@@ -88,15 +96,20 @@ class HAExpanderMixIn:
         if self.perform_outputs_verification:
             if not self.verify_outputs():
                 _LOGGER.warn(
-                    "Outputs state wrong. Performing HW configuration again (%s).", self)
+                    "Outputs state wrong. Performing HW configuration again (%s).",
+                    self,
+                )
                 self.ha_configure()
                 self.set_outputs(outputs_on_mask)
                 if self.verify_outputs():
                     _LOGGER.warn(
-                        "Outputs state corrected. Reconfigured %s .",  self)
+                        "Outputs state corrected. Reconfigured %s .", self
+                    )
                 else:
                     _LOGGER.error(
-                        "Outputs state wrong and unable to reconfigure %s .",  self)
+                        "Outputs state wrong and unable to reconfigure %s .",
+                        self,
+                    )
 
 
 class HA_MCP23018(MCP23018.MCP23018, HAExpanderMixIn):
@@ -115,6 +128,7 @@ class HA_MCP23017(HA_MCP23018):
 class HA_PCF8574(PCF8574.PCF8574, HAExpanderMixIn):
     """
     """
+
     id = "PCF8574"
 
     def __init__(self, bus, address):
@@ -126,8 +140,8 @@ class SupportedExpanders:
     """
     Keeps mapping from ids to chip HAExpander classes.
     """
-    chip_class_per_id = {
-    }
+
+    chip_class_per_id = {}
 
     def __init__(self):
         self.add_chip_class(HA_MCP23017)
@@ -165,16 +179,23 @@ class ManagedChips:
             chip = self.chip_per_address.get(address)
             if chip:
                 if chip.id != chip_id:
-                    raise ValueError("Chip (%r) with different id (%r) than expected already managed on address %x" % (
-                        chip, chip.id,  chip_id, address, ))
+                    raise ValueError(
+                        "Chip (%r) with different id (%r) than expected already managed on address %x"
+                        % (chip, chip.id, chip_id, address)
+                    )
             else:
                 chip_class = self.supported_expanders.get_chip_class(chip_id)
                 if chip_class is None:
-                    raise ValueError("Unknown chip id: %r" % (chip_id, ))
+                    raise ValueError("Unknown chip id: %r" % (chip_id,))
                 chip = chip_class(self.bus, address)
                 self.chip_per_address[address] = chip
                 _LOGGER.info(
-                    "New chip (%r) managed on bus: %r address: %x in %r", chip, self.bus, address, self, )
+                    "New chip (%r) managed on bus: %r address: %x in %r",
+                    chip,
+                    self.bus,
+                    address,
+                    self,
+                )
             return chip
 
     def chips(self):

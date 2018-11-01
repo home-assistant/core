@@ -15,7 +15,7 @@ class Expander:
         self.log = log
 
         # Configuration state of chips
-        self.inputs_mask = None   # bits set for input pins.
+        self.inputs_mask = None  # bits set for input pins.
         self.outputs_mask = None  # bits set for output pins.
         # Last time set and expected state of outputs.
         self.outputs_state = None
@@ -23,7 +23,11 @@ class Expander:
         # self.invert_mask =  None  # TBA
 
     def __str__(self):
-        return "<%s %s/@0x%02x >" % (self.__class__.__name__, self.bus, self.address, )
+        return "<%s %s/@0x%02x >" % (
+            self.__class__.__name__,
+            self.bus,
+            self.address,
+        )
 
     def state_info(self):
         """
@@ -56,14 +60,14 @@ class Expander:
 
     def assert_valid_mask(self, mask):
         if mask < 0 or self.MASK < mask:
-            raise ValueError("Invalid mask: %r" % (mask, ))
+            raise ValueError("Invalid mask: %r" % (mask,))
 
     def mask_split2bytes(self, mask):
         """
         Splits mask value to 2 bytes.
         """
-        mask_a = int(mask) & 0xff
-        mask_b = (int(mask) >> 8) & 0xff
+        mask_a = int(mask) & 0xFF
+        mask_b = (int(mask) >> 8) & 0xFF
         return mask_b, mask_a
 
     def mask_invert(self, mask):
@@ -73,7 +77,7 @@ class Expander:
         return self.MASK - (mask & self.MASK)
 
     def byte_invert(self, b):
-        return 0xff - (b & 0xff)
+        return 0xFF - (b & 0xFF)
 
     #
     # Bus operations.
@@ -104,7 +108,8 @@ class Expander:
         Returns chips to state as it was in power up
         """
         raise NotImplementedError(
-            "Must be implemented for specific chip in sub-class")
+            "Must be implemented for specific chip in sub-class"
+        )
 
     def configure(self, outputs_mask, inputs_mask, pull_ups_mask):
         """
@@ -124,8 +129,10 @@ class Expander:
         # self.assert_valid_mask(invert_mask)
         self.assert_valid_mask(pull_ups_mask)
         if outputs_mask & inputs_mask:
-            raise ValueError("Input(0x%x) and output (0x%x) masks overlap." % (
-                inputs_mask, outputs_mask, ))
+            raise ValueError(
+                "Input(0x%x) and output (0x%x) masks overlap."
+                % (inputs_mask, outputs_mask)
+            )
 
         self.outputs_mask = outputs_mask
         self.inputs_mask = inputs_mask
@@ -142,27 +149,33 @@ class Expander:
             pull_ups_mask = inputs_mask
         else:
             if pull_ups_mask & self.mask_invert(inputs_mask):
-                raise ValueError("Pull ups mask (0x%x) outside inputs mask (0x%x)" % (
-                    pull_ups_mask, inputs_mask))
+                raise ValueError(
+                    "Pull ups mask (0x%x) outside inputs mask (0x%x)"
+                    % (pull_ups_mask, inputs_mask)
+                )
 
         if self.outputs_mask and (self.outputs_mask & inputs_mask):
-            raise ValueError("Alredy set outputs: 0x%x overlap with inputs: 0x%x" % (
-                self.outputs_mask,  inputs_mask))
+            raise ValueError(
+                "Alredy set outputs: 0x%x overlap with inputs: 0x%x"
+                % (self.outputs_mask, inputs_mask)
+            )
         if pull_ups_mask:
             # Preserve already set pull_ups outside inputs mask.
             new_pull_ups_mask = self.pull_ups_mask & self.mask_invert(
-                inputs_mask)  # Zeroing coresponding to inputs mask values.
+                inputs_mask
+            )  # Zeroing coresponding to inputs mask values.
             new_pull_ups_mask |= pull_ups_mask
 
-        self.configure(self.outputs_mask, inputs_mask,  new_pull_ups_mask)
+        self.configure(self.outputs_mask, inputs_mask, new_pull_ups_mask)
 
-    def set_outputs(self, mask,):
+    def set_outputs(self, mask):
         """
         Sets outputs to given state
         Always set self.outputs_state 
         """
         raise NotImplementedError(
-            "Must be implemented for specific chip in sub-class")
+            "Must be implemented for specific chip in sub-class"
+        )
 
     def verify_outputs(self):
         """
@@ -177,4 +190,5 @@ class Expander:
         TODO: Are output states ale included ?
         """
         raise NotImplementedError(
-            "Must be implemented for specific chip in sub-class")
+            "Must be implemented for specific chip in sub-class"
+        )

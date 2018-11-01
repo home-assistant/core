@@ -13,29 +13,34 @@ class TimedInputs:
         self.time = t
 
     def __str__(self):
-        return "0x%x" % (self.inputs, )
+        return "0x%x" % (self.inputs,)
 
 
 class TimedInputsChange:
-    def __init__(self, state, pre_timed_inputs,  post_timed_inputs):
+    def __init__(self, state, pre_timed_inputs, post_timed_inputs):
         self.state = state
         self.pre_timed_inputs = pre_timed_inputs
         self.post_timed_inputs = post_timed_inputs
 
     def __str__(self):
-        return "<TimedInputsChange: %s -> %s>" % (self.pre_timed_inputs, self.post_timed_inputs, )
+        return "<TimedInputsChange: %s -> %s>" % (
+            self.pre_timed_inputs,
+            self.post_timed_inputs,
+        )
 
     def changed_bits(self):
         """
         Generates (bit_num, current_val) for each changed value
         """
-        diffs_mask = self.pre_timed_inputs.inputs ^ self.post_timed_inputs.inputs
+        diffs_mask = (
+            self.pre_timed_inputs.inputs ^ self.post_timed_inputs.inputs
+        )
         bit_num = 0
         inputs_mask = self.post_timed_inputs.inputs
         while diffs_mask:
             ## print ("DEBUG: changed_bits(): diffs_mask: %r" % (diffs_mask, ))
             if diffs_mask & 0x1:
-                yield bit_num,  inputs_mask & 0x1
+                yield bit_num, inputs_mask & 0x1
             bit_num += 1
             diffs_mask >>= 1
             inputs_mask >>= 1
@@ -55,7 +60,11 @@ class ExpanderState:
         self.cur_timed_inputs = None
 
     def __str__(self):
-        return "<%s prev: %s cur: %s>" % (self.__class__.__name__, self.prev_timed_inputs,  self.cur_timed_inputs, )
+        return "<%s prev: %s cur: %s>" % (
+            self.__class__.__name__,
+            self.prev_timed_inputs,
+            self.cur_timed_inputs,
+        )
 
     def configure_inputs(self, inputs_mask, set_pull_ups=True, invert=True):
         inputs_mask = self.expander.mask(inputs_mask)
@@ -77,17 +86,20 @@ class ExpanderState:
             self.cur_timed_inputs = new_timed_inputs
             # Dummy old state - pretending all inputs changed
             dummy_inputs = self.expander.mask_invert(
-                self.cur_timed_inputs.inputs)
+                self.cur_timed_inputs.inputs
+            )
             dummy_inputs &= self.expander.inputs_mask
             dummy_timed_inputs = TimedInputs(dummy_inputs, time.time())
             ti_change = TimedInputsChange(
-                self, dummy_timed_inputs, self.cur_timed_inputs)
+                self, dummy_timed_inputs, self.cur_timed_inputs
+            )
             return ti_change
         elif new_timed_inputs.inputs != self.cur_timed_inputs.inputs:
             self.prev_timed_inputs = self.cur_timed_inputs
             self.cur_timed_inputs = new_timed_inputs
             ti_change = TimedInputsChange(
-                self, self.prev_timed_inputs, self.cur_timed_inputs)
+                self, self.prev_timed_inputs, self.cur_timed_inputs
+            )
             return ti_change
         return None
 
@@ -98,14 +110,15 @@ class CallbackCaller(threading.Thread):
     pending exapnder changed states are in queue
     """
 
-    def __init__(self, handler,  log=module_logger, name="CallbackCaller"):
+    def __init__(self, handler, log=module_logger, name="CallbackCaller"):
         threading.Thread.__init__(self, name=name)
         self.handler = handler
         self.log = log
         self._stop_flag = None  #
         self._run_event = threading.Event()
         self._pending_changed_states_queue = queue.Queue(
-            maxsize=100)  # TODO: Consider some sane value here ?
+            maxsize=100
+        )  # TODO: Consider some sane value here ?
 
     def run(self):
         self.log.info("%s started", self.name)
@@ -114,7 +127,9 @@ class CallbackCaller(threading.Thread):
             self._run_event.wait(timeout=1.0)
             self._run_event.clear()
             while not self._pending_changed_states_queue.empty():
-                changed_states = self._pending_changed_states_queue.get_nowait()
+                changed_states = (
+                    self._pending_changed_states_queue.get_nowait()
+                )
                 try:
                     self.handler(changed_states)
                 except Exception as e:
@@ -127,8 +142,10 @@ class CallbackCaller(threading.Thread):
 
     def add_changes(self, new_changed_states):
         self._pending_changed_states_queue.put_nowait(new_changed_states)
-        self.log.debug("New pending_changed_states_queue aprox: len: %d",
-                       self._pending_changed_states_queue.qsize(), )
+        self.log.debug(
+            "New pending_changed_states_queue aprox: len: %d",
+            self._pending_changed_states_queue.qsize(),
+        )
         self._run_event.set()
 
 
@@ -138,7 +155,7 @@ class PollWatcher(threading.Thread):
     Adds detected changes to callback caller queue.
     """
 
-    def __init__(self, handler, poll_interval=0.05,  log=module_logger):
+    def __init__(self, handler, poll_interval=0.05, log=module_logger):
         threading.Thread.__init__(self, name="PollWatcher")
         self.log = log
         self._stop_event = threading.Event()
@@ -161,21 +178,31 @@ class PollWatcher(threading.Thread):
                         ti_change = state.check_state_changed()
                     except OSError as ose:
                         self.log.warn(
-                            "Unable to check state of %r: %r/%s",  state, ose, ose, )
+                            "Unable to check state of %r: %r/%s",
+                            state,
+                            ose,
+                            ose,
+                        )
                         # TODO: Chip dead, bus locked, reset chip/ bus ?
                         continue
                     if ti_change is None:
                         continue
                     changed_states.append(ti_change)
                 if changed_states:
-                    self.log.debug("changes detected: %s",
-                                   " ".join(map(str, changed_states)))
+                    self.log.debug(
+                        "changes detected: %s",
+                        " ".join(map(str, changed_states)),
+                    )
                     self.callback_caller.add_changes(changed_states)
-                sleep_time = self.poll_interval - \
-                    (time.time() - loop_start_time)
+                sleep_time = self.poll_interval - (
+                    time.time() - loop_start_time
+                )
                 if sleep_time < 0:  # Means polling took longer than interval
-                    self.log.warn("Poll loop took longer (%.3fs) than poll interval: %.3fs",
-                                  self.poll_interval-sleep_time,  self.poll_interval)
+                    self.log.warn(
+                        "Poll loop took longer (%.3fs) than poll interval: %.3fs",
+                        self.poll_interval - sleep_time,
+                        self.poll_interval,
+                    )
                     sleep_time = 0
             # TODO: Join with self.callback_caller() here ?
         finally:
@@ -202,18 +229,21 @@ def example_watcher():
     log = module_logger
 
     def test_handler(changed_states):
-        print("CALLED test_handler(changed_states=%s" % (changed_states, ))
+        print("CALLED test_handler(changed_states=%s" % (changed_states,))
         for changed_state in changed_states:
-            print ("  changed_state: %s :%s" %
-                   (changed_state.state,  changed_state, ))
+            print(
+                "  changed_state: %s :%s"
+                % (changed_state.state, changed_state)
+            )
 
     import smbus
+
     # bus = smbus.SMBus(0)  # Rev 1 Pi uses 0
     bus1 = smbus.SMBus(1)  # Rev 2 Pi uses 1
     mcp23018 = MCP23018.MCP23018(bus1, 0x20)
 
     pollwatcher = PollWatcher(test_handler, poll_interval=0.05)
-    pollwatcher.add_to_watch_expander(mcp23018, 0xc0)
+    pollwatcher.add_to_watch_expander(mcp23018, 0xC0)
 
     log.info("Staring PollWatcher")
     pollwatcher.start()
@@ -232,5 +262,7 @@ def example_watcher():
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.DEBUG, format='%(relativeCreated)6d %(threadName)s %(message)s')
+        level=logging.DEBUG,
+        format="%(relativeCreated)6d %(threadName)s %(message)s",
+    )
     example_watcher()

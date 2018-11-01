@@ -12,28 +12,26 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['rpi_i2c_expanders']
+DEPENDENCIES = ["rpi_i2c_expanders"]
 
 # TODO: Merge in components.rpi_i2c_expanders ?
 i2c_bus_port = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 
-_SWITCHES_SCHEMA = vol.Schema({
-    cv.positive_int: cv.string,
-})
+_SWITCHES_SCHEMA = vol.Schema({cv.positive_int: cv.string})
 
-_CHIP_SCHEMA = vol.Schema({
-    vol.Required("hw"): cv.string,
-    vol.Required("ports"): _SWITCHES_SCHEMA,
-    vol.Optional("invert_logic_ports"): [cv.positive_int],
-})
+_CHIP_SCHEMA = vol.Schema(
+    {
+        vol.Required("hw"): cv.string,
+        vol.Required("ports"): _SWITCHES_SCHEMA,
+        vol.Optional("invert_logic_ports"): [cv.positive_int],
+    }
+)
 
-_CHIPS_SCHEMA = vol.Schema({
-    i2c_bus_port: _CHIP_SCHEMA,
-})
+_CHIPS_SCHEMA = vol.Schema({i2c_bus_port: _CHIP_SCHEMA})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required("chips"): _CHIPS_SCHEMA,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required("chips"): _CHIPS_SCHEMA}
+)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -49,17 +47,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for address, chip in chips.items():
         ## _LOGGER.info("address: %r chip: %r", address, chip)
         chip_id = chip["hw"]
-        invert_logic_ports = chip.get('invert_logic_ports', ())
+        invert_logic_ports = chip.get("invert_logic_ports", ())
         managed_chip = managed_chips.manage_chip(address, chip_id)
-        _LOGGER.debug("address: %r chip_id: %r -> managed_chip: %r, invert_logic_ports: %r",
-                      address, chip_id,  managed_chip, invert_logic_ports, )
+        _LOGGER.debug(
+            "address: %r chip_id: %r -> managed_chip: %r, invert_logic_ports: %r",
+            address,
+            chip_id,
+            managed_chip,
+            invert_logic_ports,
+        )
         for pin, name in chip["ports"].items():
             invert_logic = pin in invert_logic_ports
             expander_switch = ExpanderSwitch(name, managed_chip, invert_logic)
             managed_chip.pin_connect(pin, expander_switch)
             switches.append(expander_switch)
-            _LOGGER.debug("address: %r managed_chip: %r: pin: %r connected to expander_switch: %r",
-                          address, managed_chip, pin, expander_switch, )
+            _LOGGER.debug(
+                "address: %r managed_chip: %r: pin: %r connected to expander_switch: %r",
+                address,
+                managed_chip,
+                pin,
+                expander_switch,
+            )
         managed_chip.ha_configure()  # HW configuration of chip.
         managed_chip.update_outputs()  # Set initial states.
 
