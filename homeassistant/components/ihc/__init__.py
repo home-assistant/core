@@ -114,11 +114,11 @@ IHC_PLATFORMS = ('binary_sensor', 'light', 'sensor', 'switch')
 
 
 def setup(hass, config):
-    """Set up the IHC component."""
+    """Set up the IHC component for primary and secondary controller."""
     conf = config[DOMAIN]
     ihc_status = ihc_setup(hass, config, conf, CONTROLLER_ID[PRIMARY])
 
-    """Setup optional secondary controller."""
+    #Setup optional secondary controller.
     if ihc_status and CONF_CONTROLLER2 in conf:
         conf2 = conf[CONF_CONTROLLER2]
         ihc_status = ihc_setup(hass, config, conf2, CONTROLLER_ID[SECONDARY])
@@ -126,6 +126,7 @@ def setup(hass, config):
 
 
 def ihc_setup(hass, config, conf, controller_id):
+    """Set up the IHC component."""
     from ihcsdk.ihccontroller import IHCController
 
     url = conf[CONF_URL]
