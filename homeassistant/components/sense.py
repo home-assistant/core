@@ -41,7 +41,8 @@ def setup(hass, config):
 
     timeout = config[DOMAIN][CONF_TIMEOUT]
     try:
-        hass.data[SENSE_DATA] = Senseable(api_timeout=timeout, wss_timeout=timeout)
+        hass.data[SENSE_DATA] = Senseable(api_timeout=timeout, 
+                                          wss_timeout=timeout)
         hass.data[SENSE_DATA].authenticate(username, password)
         hass.data[SENSE_DATA].rate_limit = ACTIVE_UPDATE_RATE
     except SenseAuthenticationException:
