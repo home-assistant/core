@@ -48,7 +48,7 @@ class AsuswrtSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    async def async_update(self, warning=True):
+    async def async_update(self):
         """Fetch status from asuswrt."""
         self._rates = await self._api.async_get_packets_total()
         self._speed = await self._api.async_get_current_transfer_rates()
@@ -65,9 +65,9 @@ class AsuswrtRXSensor(AsuswrtSensor):
         """Return the unit of measurement."""
         return self._unit
 
-    async def async_update(self, warning=True):
+    async def async_update(self):
         """Fetch new state data for the sensor."""
-        await super().async_device_update(warning)
+        await super().async_device_update()
         if self._speed is not None:
             self._state = round(self._speed[0] / 125000, 2)
 
@@ -83,9 +83,9 @@ class AsuswrtTXSensor(AsuswrtSensor):
         """Return the unit of measurement."""
         return self._unit
 
-    async def async_update(self, warning=True):
+    async def async_update(self):
         """Fetch new state data for the sensor."""
-        await super().async_device_update(warning)
+        await super().async_device_update()
         if self._speed is not None:
             self._state = round(self._speed[1] / 125000, 2)
 
@@ -101,9 +101,9 @@ class AsuswrtTotalRXSensor(AsuswrtSensor):
         """Return the unit of measurement."""
         return self._unit
 
-    async def async_update(self, warning=True):
+    async def async_update(self):
         """Fetch new state data for the sensor."""
-        await super().async_device_update(warning)
+        await super().async_device_update()
         if self._rates is not None:
             self._state = round(self._rates[0] / 1000000000, 1)
 
@@ -119,8 +119,8 @@ class AsuswrtTotalTXSensor(AsuswrtSensor):
         """Return the unit of measurement."""
         return self._unit
 
-    async def async_update(self, warning=True):
+    async def async_update(self):
         """Fetch new state data for the sensor."""
-        await super().async_device_update(warning)
+        await super().async_device_update()
         if self._rates is not None:
             self._state = round(self._rates[1] / 1000000000, 1)
