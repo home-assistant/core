@@ -93,8 +93,7 @@ class TestGeoJsonPlatform(unittest.TestCase):
         # Patching 'utcnow' to gain more control over the timed update.
         with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
             with assert_setup_component(1, geo_location.DOMAIN):
-                self.assertTrue(setup_component(self.hass, geo_location.DOMAIN,
-                                                CONFIG))
+                assert setup_component(self.hass, geo_location.DOMAIN, CONFIG)
                 # Artificially trigger update.
                 self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
                 # Collect events.
@@ -104,7 +103,7 @@ class TestGeoJsonPlatform(unittest.TestCase):
                 assert len(all_states) == 3
 
                 state = self.hass.states.get("geo_location.title_1")
-                self.assertIsNotNone(state)
+                assert state is not None
                 assert state.name == "Title 1"
                 assert state.attributes == {
                     ATTR_EXTERNAL_ID: "1234", ATTR_LATITUDE: -31.0,
@@ -120,10 +119,10 @@ class TestGeoJsonPlatform(unittest.TestCase):
                     ATTR_SIZE: 'Size 1', ATTR_RESPONSIBLE_AGENCY: 'Agency 1',
                     ATTR_UNIT_OF_MEASUREMENT: "km",
                     ATTR_SOURCE: 'nsw_rural_fire_service_feed'}
-                self.assertAlmostEqual(float(state.state), 15.5)
+                assert round(abs(float(state.state)-15.5), 7) == 0
 
                 state = self.hass.states.get("geo_location.title_2")
-                self.assertIsNotNone(state)
+                assert state is not None
                 assert state.name == "Title 2"
                 assert state.attributes == {
                     ATTR_EXTERNAL_ID: "2345", ATTR_LATITUDE: -31.1,
@@ -131,10 +130,10 @@ class TestGeoJsonPlatform(unittest.TestCase):
                     ATTR_FIRE: False,
                     ATTR_UNIT_OF_MEASUREMENT: "km",
                     ATTR_SOURCE: 'nsw_rural_fire_service_feed'}
-                self.assertAlmostEqual(float(state.state), 20.5)
+                assert round(abs(float(state.state)-20.5), 7) == 0
 
                 state = self.hass.states.get("geo_location.title_3")
-                self.assertIsNotNone(state)
+                assert state is not None
                 assert state.name == "Title 3"
                 assert state.attributes == {
                     ATTR_EXTERNAL_ID: "3456", ATTR_LATITUDE: -31.2,
@@ -142,7 +141,7 @@ class TestGeoJsonPlatform(unittest.TestCase):
                     ATTR_FIRE: True,
                     ATTR_UNIT_OF_MEASUREMENT: "km",
                     ATTR_SOURCE: 'nsw_rural_fire_service_feed'}
-                self.assertAlmostEqual(float(state.state), 25.5)
+                assert round(abs(float(state.state)-25.5), 7) == 0
 
                 # Simulate an update - one existing, one new entry,
                 # one outdated entry

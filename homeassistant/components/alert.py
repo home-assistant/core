@@ -24,29 +24,29 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'alert'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-CONF_DONE_MESSAGE = 'done_message'
 CONF_CAN_ACK = 'can_acknowledge'
 CONF_NOTIFIERS = 'notifiers'
 CONF_REPEAT = 'repeat'
 CONF_SKIP_FIRST = 'skip_first'
+CONF_ALERT_MESSAGE = 'message'
+CONF_DONE_MESSAGE = 'done_message'
 CONF_TITLE = 'title'
 CONF_DATA = 'data'
-CONF_DATA_TEMPLATE = 'data_template'
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
 
 ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_DONE_MESSAGE): cv.string,
-    vol.Optional(CONF_TITLE): cv.string,
-    vol.Optional(CONF_DATA): dict,
-    vol.Optional(CONF_DATA_TEMPLATE): {cv.match_all: cv.template_complex},
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
     vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
     vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
     vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
+    vol.Optional(CONF_ALERT_MESSAGE): cv.template,
+    vol.Optional(CONF_DONE_MESSAGE): cv.template,
+    vol.Optional(CONF_TITLE): cv.string,
+    vol.Optional(CONF_DATA): dict,
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
 
 CONFIG_SCHEMA = vol.Schema({
@@ -67,33 +67,49 @@ def is_on(hass, entity_id):
 
 async def async_setup(hass, config):
     """Set up the Alert component."""
-    alerts = config.get(DOMAIN)
-    all_alerts = {}
+    entities = []
+
+    for object_id, cfg in config[DOMAIN].items():
+        if not cfg:
+            cfg = {}
+
+        name = cfg.get(CONF_NAME)
+        watched_entity_id = cfg.get(CONF_ENTITY_ID)
+        alert_state = cfg.get(CONF_STATE)
+        repeat = cfg.get(CONF_REPEAT)
+        skip_first = cfg.get(CONF_SKIP_FIRST)
+        message_template = cfg.get(CONF_ALERT_MESSAGE)
+        done_message_template = cfg.get(CONF_DONE_MESSAGE)
+        notifiers = cfg.get(CONF_NOTIFIERS)
+        can_ack = cfg.get(CONF_CAN_ACK)
+        title = cfg.get(CONF_TITLE)
+        data = cfg.get(CONF_DATA)
+
+        entities.append(Alert(hass, object_id, name,
+                              watched_entity_id, alert_state, repeat,
+                              skip_first, message_template,
+                              done_message_template, notifiers,
+                              can_ack, title, data))
+
+    if not entities:
+        return False
 
     async def async_handle_alert_service(service_call):
         """Handle calls to alert services."""
         alert_ids = service.extract_entity_ids(hass, service_call)
 
         for alert_id in alert_ids:
-            alert = all_alerts[alert_id]
-            alert.async_set_context(service_call.context)
-            if service_call.service == SERVICE_TURN_ON:
-                await alert.async_turn_on()
-            elif service_call.service == SERVICE_TOGGLE:
-                await alert.async_toggle()
-            else:
-                await alert.async_turn_off()
+            for alert in entities:
+                if alert.entity_id != alert_id:
+                    continue
 
-    # Setup alerts
-    for entity_id, alert in alerts.items():
-        entity = Alert(hass, entity_id,
-                       alert[CONF_NAME], alert.get(CONF_DONE_MESSAGE),
-                       alert[CONF_ENTITY_ID], alert[CONF_STATE],
-                       alert[CONF_REPEAT], alert[CONF_SKIP_FIRST],
-                       alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK],
-                       alert.get(CONF_TITLE), alert.get(CONF_DATA),
-                       alert.get(CONF_DATA_TEMPLATE))
-        all_alerts[entity.entity_id] = entity
+                alert.async_set_context(service_call.context)
+                if service_call.service == SERVICE_TURN_ON:
+                    await alert.async_turn_on()
+                elif service_call.service == SERVICE_TOGGLE:
+                    await alert.async_toggle()
+                else:
+                    await alert.async_turn_off()
 
     # Setup service calls
     hass.services.async_register(
@@ -106,7 +122,7 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, async_handle_alert_service,
         schema=ALERT_SERVICE_SCHEMA)
 
-    tasks = [alert.async_update_ha_state() for alert in all_alerts.values()]
+    tasks = [alert.async_update_ha_state() for alert in entities]
     if tasks:
         await asyncio.wait(tasks, loop=hass.loop)
 
@@ -116,26 +132,34 @@ async def async_setup(hass, config):
 class Alert(ToggleEntity):
     """Representation of an alert."""
 
-    def __init__(self, hass, entity_id, name, done_message, watched_entity_id,
-                 state, repeat, skip_first, notifiers,
-                 can_ack, title, data, data_template):
+    def __init__(self, hass, entity_id, name, watched_entity_id,
+                 state, repeat, skip_first, message_template,
+                 done_message_template, notifiers, can_ack, title,
+                 data):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
         self._alert_state = state
         self._skip_first = skip_first
+        self._title = title
+        self._data = data
+
+        self._message_template = message_template
+        if self._message_template is not None:
+            self._message_template.hass = hass
+
+        self._done_message_template = done_message_template
+        if self._done_message_template is not None:
+            self._done_message_template.hass = hass
+
         self._notifiers = notifiers
         self._can_ack = can_ack
-        self._done_message = done_message
 
         self._delay = [timedelta(minutes=val) for val in repeat]
         self._next_delay = 0
 
         self._firing = False
         self._ack = False
-        self._title = title
-        self._data = data
-        self._data_template = data_template
         self._cancel = None
         self._send_done_message = False
         self.entity_id = ENTITY_ID_FORMAT.format(entity_id)
@@ -195,7 +219,7 @@ class Alert(ToggleEntity):
         self._cancel()
         self._ack = False
         self._firing = False
-        if self._done_message and self._send_done_message:
+        if self._send_done_message:
             await self._notify_done_message()
         self.async_schedule_update_ha_state()
 
@@ -216,55 +240,34 @@ class Alert(ToggleEntity):
             _LOGGER.info("Alerting: %s", self._name)
             self._send_done_message = True
 
-            msg_payload = {ATTR_MESSAGE: self._name}
+            if self._message_template is not None:
+                message = self._message_template.async_render()
+            else:
+                message = self._name
 
-            if self._title:
-                msg_payload.update({ATTR_TITLE: self._title})
-
-            if self._data:
-                msg_payload.update(self._data)
-            elif self._data_template:
-                def _data_template_creator(value):
-                    """Recursive template creator helper function."""
-                    if isinstance(value, list):
-                        return [_data_template_creator(item) for item in value]
-                    if isinstance(value, dict):
-                        return {key: _data_template_creator(item)
-                                for key, item in value.items()}
-                    value.hass = self.hass
-                    return value.async_render(self._data_template)
-
-                msg_payload.update(_data_template_creator(self._data_template))
-
-            for target in self._notifiers:
-                await self.hass.services.async_call(
-                    DOMAIN_NOTIFY, target, msg_payload)
+            await self._send_notification_message(message)
         await self._schedule_notify()
 
     async def _notify_done_message(self, *args):
         """Send notification of complete alert."""
-        _LOGGER.info("Alerting: %s", self._done_message)
+        _LOGGER.info("Alerting: %s", self._done_message_template)
         self._send_done_message = False
 
-        msg_payload = {ATTR_MESSAGE: self._done_message}
+        if self._done_message_template is None:
+            return
+
+        message = self._done_message_template.async_render()
+
+        await self._send_notification_message(message)
+
+    async def _send_notification_message(self, message):
+
+        msg_payload = {ATTR_MESSAGE: message}
 
         if self._title:
             msg_payload.update({ATTR_TITLE: self._title})
-
         if self._data:
             msg_payload.update(self._data)
-        elif self._data_template:
-            def _data_template_creator(value):
-                """Recursive template creator helper function."""
-                if isinstance(value, list):
-                    return [_data_template_creator(item) for item in value]
-                if isinstance(value, dict):
-                    return {key: _data_template_creator(item)
-                            for key, item in value.items()}
-                value.hass = self.hass
-                return value.async_render(self._data_template)
-
-            msg_payload.update(_data_template_creator(self._data_template))
 
         for target in self._notifiers:
             await self.hass.services.async_call(

@@ -380,6 +380,8 @@ class GenericThermostat(ClimateDevice):
 
     async def async_turn_away_mode_on(self):
         """Turn away mode on by setting it on away hold indefinitely."""
+        if self._is_away:
+            return
         self._is_away = True
         self._saved_target_temp = self._target_temp
         self._target_temp = self._away_temp
@@ -388,6 +390,8 @@ class GenericThermostat(ClimateDevice):
 
     async def async_turn_away_mode_off(self):
         """Turn away off."""
+        if not self._is_away:
+            return
         self._is_away = False
         self._target_temp = self._saved_target_temp
         await self._async_control_heating()

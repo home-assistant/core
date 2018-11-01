@@ -46,8 +46,7 @@ class TestInputDatetime(unittest.TestCase):
             }},
         ]
         for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+            assert not setup_component(self.hass, DOMAIN, {DOMAIN: cfg})
 
 
 @asyncio.coroutine

@@ -39,8 +39,7 @@ class TestCounter(unittest.TestCase):
         ]
 
         for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+            assert not setup_component(self.hass, DOMAIN, {DOMAIN: cfg})
 
     def test_config_options(self):
         """Test configuration options."""
@@ -66,23 +65,23 @@ class TestCounter(unittest.TestCase):
 
         _LOGGER.debug('ENTITIES: %s', self.hass.states.entity_ids())
 
-        self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
+        assert count_start + 2 == len(self.hass.states.entity_ids())
         self.hass.block_till_done()
 
         state_1 = self.hass.states.get('counter.test_1')
         state_2 = self.hass.states.get('counter.test_2')
 
-        self.assertIsNotNone(state_1)
-        self.assertIsNotNone(state_2)
+        assert state_1 is not None
+        assert state_2 is not None
 
-        self.assertEqual(0, int(state_1.state))
-        self.assertNotIn(ATTR_ICON, state_1.attributes)
-        self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
+        assert 0 == int(state_1.state)
+        assert ATTR_ICON not in state_1.attributes
+        assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-        self.assertEqual(10, int(state_2.state))
-        self.assertEqual('Hello World',
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME))
-        self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
+        assert 10 == int(state_2.state)
+        assert 'Hello World' == \
+            state_2.attributes.get(ATTR_FRIENDLY_NAME)
+        assert 'mdi:work' == state_2.attributes.get(ATTR_ICON)
 
     def test_methods(self):
         """Test increment, decrement, and reset methods."""
@@ -97,31 +96,31 @@ class TestCounter(unittest.TestCase):
         entity_id = 'counter.test_1'
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(0, int(state.state))
+        assert 0 == int(state.state)
 
         increment(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(1, int(state.state))
+        assert 1 == int(state.state)
 
         increment(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(2, int(state.state))
+        assert 2 == int(state.state)
 
         decrement(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(1, int(state.state))
+        assert 1 == int(state.state)
 
         reset(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(0, int(state.state))
+        assert 0 == int(state.state)
 
     def test_methods_with_config(self):
         """Test increment, decrement, and reset methods with configuration."""
@@ -140,25 +139,25 @@ class TestCounter(unittest.TestCase):
         entity_id = 'counter.test'
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(10, int(state.state))
+        assert 10 == int(state.state)
 
         increment(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(15, int(state.state))
+        assert 15 == int(state.state)
 
         increment(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(20, int(state.state))
+        assert 20 == int(state.state)
 
         decrement(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(15, int(state.state))
+        assert 15 == int(state.state)
 
 
 @asyncio.coroutine
