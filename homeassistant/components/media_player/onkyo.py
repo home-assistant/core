@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 TIMEOUT_MESSAGE = 'Timeout waiting for response.'
 
-ATTR_HDMI_OUTPUT = 'video_output'
+ATTR_HDMI_OUTPUT = 'hdmi_output'
 ACCEPTED_VALUES = ['no', 'analog', 'yes', 'out',
                    'out-sub', 'sub', 'hdbaset', 'both', 'up']
 ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema({
