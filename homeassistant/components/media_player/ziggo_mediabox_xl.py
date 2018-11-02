@@ -14,7 +14,8 @@ from homeassistant.components.media_player import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNAVAILABLE,
+    STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['ziggo-mediabox-xl==1.0.0']
@@ -23,10 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_KNOWN_DEVICES = 'ziggo_mediabox_xl_known_devices'
 
-DEFAULT_ECO_MODE = False
-
-CONF_ECO_MODE = 'eco_mode'
-
 SUPPORT_ZIGGO = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
@@ -34,7 +31,6 @@ SUPPORT_ZIGGO = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_ECO_MODE, default=DEFAULT_ECO_MODE): cv.boolean,
 })
 
 
@@ -48,11 +44,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
-        eco_mode = config.get(CONF_ECO_MODE)
+        manual_config = True
     elif discovery_info is not None:
         host = discovery_info.get('host')
         name = discovery_info.get('name')
-        eco_mode = False
+        manual_config = False
     else:
         _LOGGER.error("Cannot determine device")
         return
@@ -64,9 +60,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if ip_addr not in known_devices:
         try:
             mediabox = ZiggoMediaboxXL(ip_addr)
-            if eco_mode or mediabox.test_connection():
-                hosts.append(ZiggoMediaboxXLDevice(mediabox, eco_mode,
-                                                   host, name))
+            # Add the device manually or check if a connection can be
+            # established to the discovered device.
+            if manual_config or mediabox.test_connection():
+                hosts.append(ZiggoMediaboxXLDevice(mediabox, host, name))
                 known_devices.add(ip_addr)
             else:
                 _LOGGER.error("Can't connect to %s", host)
@@ -80,10 +77,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ZiggoMediaboxXLDevice(MediaPlayerDevice):
     """Representation of a Ziggo Mediabox XL Device."""
 
-    def __init__(self, mediabox, eco_mode, host, name):
+    def __init__(self, mediabox, host, name):
         """Initialize the device."""
         self._mediabox = mediabox
-        self._eco_mode = eco_mode
         self._host = host
         self._name = name
         self._state = None
@@ -97,10 +93,7 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
             else:
                 self._state = STATE_OFF
         except socket.error:
-            if self._eco_mode:
-                self._state = STATE_OFF
-            else:
-                _LOGGER.error("Couldn't fetch state from %s", self._host)
+            self._state = STATE_UNAVAILABLE
 
     def send_keys(self, keys):
         """Send keys to the device and handle exceptions."""
