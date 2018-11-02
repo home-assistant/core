@@ -143,13 +143,13 @@ def calculate_trend(indices):
     """Calculate the "moving average" of a set of indices."""
     import numpy as np
 
-    def moving_average(a, n=3):
+    def moving_average(data, samples):
         """Determine the "moving average" (http://tinyurl.com/yaereb3c)."""
-        ret = np.cumsum(a, dtype=float)
-        ret[n:] = ret[n:] - ret[:-n]
-        return ret[n - 1:] / n
+        ret = np.cumsum(data, dtype=float)
+        ret[samples:] = ret[samples:] - ret[:-samples]
+        return ret[samples - 1:] / samples
 
-    increasing = np.all(np.diff(moving_average(np.array(indices), n=4)) > 0)
+    increasing = np.all(np.diff(moving_average(np.array(indices), 4)) > 0)
 
     if increasing:
         return TREND_INCREASING
