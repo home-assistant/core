@@ -54,7 +54,7 @@ SENSOR_PREFIX = 'youless_'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the platform based on the configuration"""
+    """Setup the platform based on the configuration."""
     host = config.get(CONF_HOST)
     sensors = config.get(CONF_MONITORED_CONDITIONS)
     data_bridge = YoulessDataBridge(host)
@@ -70,26 +70,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class YoulessDataBridge(object):
-    """A helper class responsible for fetching data"""
+    """A helper class responsible for fetching data."""
 
     def __init__(self, host):
-        """Initialize the helper class"""
+        """Initialize the helper class."""
         self._url = 'http://' + host + '/e'
         self._data = None
 
     def data(self):
-        """Return the values obtained during the last fetch"""
+        """Return the values obtained during the last fetch."""
         return self._data
 
     @Throttle(timedelta(seconds=1))
     def update(self):
-        """Update the inner values by calling the YouLess API"""
+        """Update the inner values by calling the YouLess API."""
         raw_res = urlopen(self._url)
         self._data = json.loads(raw_res.read().decode('utf-8'))[0]
 
 
 class YoulessSensor(Entity):
-    """The sensor implementation for YouLess"""
+    """The sensor implementation for YouLess."""
 
     def __init__(self, data_bridge, name, variable, sensor_id, uom, icon):
         """Setup the sensor"""
@@ -104,34 +104,34 @@ class YoulessSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor"""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def icon(self):
-        """Return the icon of the sensor depending on the type selected"""
+        """Return the icon of the sensor depending on the type selected."""
         return self._icon
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measure for the created sensor"""
+        """Return the unit of measure for the created sensor."""
         return self._uom
 
     @property
     def state(self):
-        """Return the value stored during the fetching of the data"""
+        """Return the value stored during the fetching of the data."""
         return self._state
 
     @property
     def state_attributes(self):
-        """return the timestamp that the last measurement was done"""
+        """return the timestamp that the last measurement was done."""
         if self._raw is not None:
             return {
                 'timestamp': self._raw['tm']
             }
 
     def update(self):
-        """Update the internal state of the sensor using the data fetcher"""
+        """Update the internal state of the sensor using the data fetcher."""
         self._data_bridge.update()
         self._raw = self._data_bridge.data()
         if self._raw is not None:
