@@ -48,7 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DirecTV platform."""
-
     known_devices = hass.data.get(DATA_DIRECTV, [])
     hosts = []
 
@@ -79,6 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 # Make sure that this device is not already configured
                 # Comparing based on host (IP) and clientAddr.
                 device_unknown = True
+                # pylint: disable=unused-variable
                 for idx, device in enumerate(known_devices):
                     if host in device and loc["clientAddr"] in device:
                         device_unknown = False
