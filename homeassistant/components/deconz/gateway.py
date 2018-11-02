@@ -69,7 +69,7 @@ class DeconzGateway:
 
     @callback
     def async_connection_status_callback(self, available):
-        """Callback for signals of connection status."""
+        """Handle signals of gateway connection status."""
         self.available = available
         async_dispatcher_send(
             self.hass, DECONZ_REACHABLE, {'state': True, 'attr': 'reachable'})
