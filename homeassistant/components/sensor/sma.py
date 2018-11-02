@@ -76,7 +76,7 @@ async def async_setup_platform(
     """Set up SMA WebConnect sensor."""
     import pysma
 
-    # Check config again during load - dependancy available
+    # Check config again during load - dependency available
     config = _check_sensor_schema(config)
 
     # Sensor_defs from the custom config
@@ -125,7 +125,7 @@ async def async_setup_platform(
         values = await sma.read(used_sensors)
         if not values:
             try:
-                backoff = [1, 1, 1, 6, 6, 6, 30, 30][backoff_step]
+                backoff = [1, 1, 1, 6, 30][backoff_step]
                 backoff_step += 1
             except IndexError:
                 backoff = 60
