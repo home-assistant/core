@@ -24,6 +24,7 @@ REQUIREMENTS = ['numpy==1.15.3', 'pillow==5.2.0',
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MATCHES = 'matches'
+ATTR_SUMMARY = 'summary'
 ATTR_TOTAL_MATCHES = 'total_matches'
 
 CONF_FILE_OUT = 'file_out'
@@ -214,7 +215,8 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
     def state_attributes(self):
         """Return device specific state attributes."""
         return {
-            ATTR_MATCHES: {category: len(values)
+            ATTR_MATCHES: self._matches,
+            ATTR_SUMMARY: {category: len(values)
                            for category, values in self._matches.items()},
             ATTR_TOTAL_MATCHES: self._total_matches
         }
