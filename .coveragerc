@@ -870,6 +870,7 @@ omit =
     homeassistant/components/sensor/volkszaehler.py
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/waze_travel_time.py
+    homeassistant/components/sensor/webdav.py
     homeassistant/components/sensor/whois.py
     homeassistant/components/sensor/worldtidesinfo.py
     homeassistant/components/sensor/worxlandroid.py
