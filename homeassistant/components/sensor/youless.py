@@ -46,8 +46,8 @@ CONFIG_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS,
                  default=[SENSOR_POWER, SENSOR_POWER_NET]): vol.All(
-        cv.ensure_list, vol.Length(min=1),
-        [vol.In(SENSOR_TYPES)])
+                     cv.ensure_list, vol.Length(min=1),
+                     [vol.In(SENSOR_TYPES)])
 })
 
 SENSOR_PREFIX = 'youless_'
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
-class YoulessDataBridge(object):
+class YoulessDataBridge:
     """A helper class responsible for fetching data."""
 
     def __init__(self, host):
