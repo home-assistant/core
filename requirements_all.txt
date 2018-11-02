@@ -669,6 +669,7 @@ nuheat==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
+# homeassistant.components.image_processing.tensorflow
 # homeassistant.components.sensor.pollen
 numpy==1.15.3
 
@@ -722,6 +723,7 @@ piglow==1.2.4
 pilight==0.1.1
 
 # homeassistant.components.camera.proxy
+# homeassistant.components.image_processing.tensorflow
 pillow==5.2.0
 
 # homeassistant.components.dominos
@@ -746,6 +748,9 @@ proliphix==0.4.1
 
 # homeassistant.components.prometheus
 prometheus_client==0.2.0
+
+# homeassistant.components.image_processing.tensorflow
+protobuf==3.6.1
 
 # homeassistant.components.sensor.systemmonitor
 psutil==5.4.8
@@ -1463,6 +1468,9 @@ temescal==0.1
 
 # homeassistant.components.sensor.temper
 temperusb==1.5.3
+
+# homeassistant.components.image_processing.tensorflow
+tensorflow==1.11.0
 
 # homeassistant.components.tesla
 teslajsonpy==0.0.23
