@@ -6,30 +6,23 @@ https://home-assistant.io/components/notify.tplink_lte/
 
 import logging
 
-import voluptuous as vol
 import attr
 
 from homeassistant.components.notify import (
-    BaseNotificationService, ATTR_TARGET, PLATFORM_SCHEMA)
-from homeassistant.const import CONF_HOST
-import homeassistant.helpers.config_validation as cv
+    ATTR_TARGET, BaseNotificationService)
 
 from ..tplink_lte import DATA_KEY
-
 
 DEPENDENCIES = ['tplink_lte']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
-})
-
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the notification service."""
-    return TplinkNotifyService(hass, config)
+    if discovery_info is None:
+        return
+    return TplinkNotifyService(hass, discovery_info)
 
 
 @attr.s
@@ -47,7 +40,7 @@ class TplinkNotifyService(BaseNotificationService):
             _LOGGER.error("No modem available")
             return
 
-        phone = self.config.get(ATTR_TARGET)
+        phone = self.config[ATTR_TARGET]
         targets = kwargs.get(ATTR_TARGET, phone)
         if targets and message:
             for target in targets:
