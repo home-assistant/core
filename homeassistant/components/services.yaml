@@ -590,3 +590,27 @@ nest:
       trip_id:
         description: Optional identity of a trip. Using the same trip_ID will update the estimation.
         example: trip_back_home
+
+owfs:
+  read:
+    description: Read a value. The data will be returned in an "owfs.value" event.
+    fields:
+      address:
+        description: The OWFS device address to read from.
+        example: '10.123456789ABC.DE'
+      attr:
+        description: The device attribute to read.
+        example: 'latesttemp'
+  write:
+    description: Write a value to an OWFS device.
+    fields:
+      address:
+        description: The OWFS device address to write to.
+        example: '10.123456789ABC.DE'
+      attr:
+        description: The device attribute to write.
+        example: temphigh
+      value:
+        description: The data to write.
+        example: 95
+

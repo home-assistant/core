@@ -183,6 +183,8 @@ homeassistant/components/*/huawei_lte.py @scop
 # K
 homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
+homeassistant/components/owfs.py @Smurfix
+homeassistant/components/*/owfs.py @Smurfix
 homeassistant/components/konnected.py @heythisisnate
 homeassistant/components/*/konnected.py @heythisisnate
 
