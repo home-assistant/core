@@ -64,7 +64,7 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema({
     vol.Required(ATTR_VIDEO_OUTPUT): vol.In(ACCEPTED_VALUES)
 })
 
-SERVICE_SELECT_VIDEO_OUTPUT = 'select_video_output'
+SERVICE_SELECT_VIDEO_OUTPUT = 'onkyo_select_video_output'
 
 
 def determine_zones(receiver):
