@@ -45,7 +45,8 @@ async def async_setup(hass, config):
 
 
 class LWLink():
-    """LWLink provides a communication link with the LightwaveRF hub"""
+    """LWLink provides a communication link with the LightwaveRF hub."""
+
     SOCKET_TIMEOUT = 2.0
     RX_PORT = 9761
     TX_PORT = 9760
@@ -55,29 +56,29 @@ class LWLink():
     link_ip = ''
 
     def __init__(self, link_ip=None):
-        """Initialise the component"""
+        """Initialise the component."""
         if link_ip is not None:
             LWLink.link_ip = link_ip
 
     def _send_message(self, msg):
-        """Adds message to queue"""
+        """Adds message to queue."""
         LWLink.the_queue.put_nowait(msg)
         if LWLink.thread is None or not self.thread.isAlive():
             LWLink.thread = threading.Thread(target=self._send_queue)
             LWLink.thread.start()
 
     def turn_on_light(self, device_id, name):
-        """Formats message to turn light on"""
+        """Formats message to turn light on."""
         msg = '321,!%sFdP32|Turn On|%s' % (device_id, name)
         self._send_message(msg)
 
     def turn_on_switch(self, device_id, name):
-        """Formats message to turn switch on"""
+        """Formats message to turn switch on."""
         msg = '321,!%sF1|Turn On|%s' % (device_id, name)
         self._send_message(msg)
 
     def turn_on_with_brightness(self, device_id, name, brightness):
-        """Scale brightness from 0..255 to 1..32"""
+        """Scale brightness from 0..255 to 1..32."""
         brightness_value = round((brightness * 31) / 255) + 1
         # F1 = Light on and F0 = light off. FdP[0..32] is brightness. 32 is
         # full. We want that when turning the light on.
@@ -86,18 +87,19 @@ class LWLink():
         self._send_message(msg)
 
     def turn_off(self, device_id, name):
-        """Formats message to turn light or switch off"""
+        """Formats message to turn light or switch off."""
         msg = "321,!%sF0|Turn Off|%s" % (device_id, name)
         self._send_message(msg)
 
     def _send_queue(self):
-        """Starts processing the queue"""
+        """Starts processing the queue."""
         while not LWLink.the_queue.empty():
             self._send_reliable_message(LWLink.the_queue.get_nowait())
 
     def _send_reliable_message(self, msg):
         """Send msg to LightwaveRF hub and only returns after:
-             an OK is received | timeout | exception | max_retries"""
+           an OK is received | timeout | exception | max_retries.
+        """
         result = False
         max_retries = 15
         try:

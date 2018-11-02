@@ -43,7 +43,7 @@ DEPENDENCIES = ['lightwave']
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Find and return LightWave lights"""
+    """Find and return LightWave lights."""
     lights = []
     lwlink = hass.data[LIGHTWAVE_LINK]
 
@@ -58,7 +58,7 @@ class LRFLight(Light):
     """Provides a LightWave light."""
 
     def __init__(self, name, device_id, lwlink):
-        """Setup the component"""
+        """Initilize the component with the name, device_id and link."""
         self._name = name
         self._device_id = device_id
         self._state = None
@@ -77,7 +77,7 @@ class LRFLight(Light):
 
     @property
     def name(self):
-        """Returns the name of the LightWave light."""
+        """LightWave light name."""
         return self._name
 
     @property
@@ -87,7 +87,7 @@ class LRFLight(Light):
 
     @property
     def is_on(self):
-        """True if the LightWave light is on."""
+        """LightWave light is on state."""
         return self._state
 
     async def async_turn_on(self, **kwargs):
