@@ -9,7 +9,6 @@ INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
 INSTALL_DLIB="${INSTALL_DLIB:-yes}"
-INSTALL_TENSORFLOW="${INSTALL_TENSORFLOW:-yes}"
 
 # Required debian packages for running hass or components
 PACKAGES=(
@@ -66,10 +65,6 @@ fi
 
 if [ "$INSTALL_DLIB" == "yes" ]; then
   pip3 install --no-cache-dir "dlib>=19.5"
-fi
-
-if [ "$INSTALL_TENSORFLOW" == "yes" ]; then
-  virtualization/Docker/scripts/tensorflow
 fi
 
 # Remove packages

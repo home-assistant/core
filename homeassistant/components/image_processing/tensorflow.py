@@ -18,7 +18,8 @@ from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.15.3', 'pillow==5.2.0', 'protobuf==3.6.1']
+REQUIREMENTS = ['numpy==1.15.3', 'pillow==5.2.0',
+                'protobuf==3.6.1', 'tensorflow==1.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,10 +39,6 @@ CONF_LEFT = 'left'
 CONF_BOTTOM = 'bottom'
 CONF_RIGHT = 'right'
 
-DEFAULT_MODEL_DIR = "/usr/src/app/tensorflow"
-DEFAULT_LABELS = ("{0}/object_detection/data/mscoco_label_map.pbtxt"
-                  .format(DEFAULT_MODEL_DIR))
-
 AREA_SCHEMA = vol.Schema({
     vol.Optional(CONF_TOP, default=0): cv.small_float,
     vol.Optional(CONF_LEFT, default=0): cv.small_float,
@@ -59,8 +56,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.template]),
     vol.Required(CONF_MODEL): vol.Schema({
         vol.Required(CONF_GRAPH): cv.isfile,
-        vol.Optional(CONF_LABELS, default=DEFAULT_LABELS): cv.isfile,
-        vol.Optional(CONF_MODEL_DIR, default=DEFAULT_MODEL_DIR): cv.isdir,
+        vol.Optional(CONF_LABELS): cv.isfile,
+        vol.Optional(CONF_MODEL_DIR): cv.isdir,
         vol.Optional(CONF_AREA): AREA_SCHEMA,
         vol.Optional(CONF_CATEGORIES, default=[]):
             vol.All(cv.ensure_list, [vol.Any(
@@ -74,9 +71,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TensorFlow image processing platform."""
     import sys
+    import os
 
     model_config = config.get(CONF_MODEL)
-    model_dir = model_config.get(CONF_MODEL_DIR)
+    model_dir = model_config.get(CONF_MODEL_DIR) \
+        or hass.config.path('deps', 'tensorflow')
+    labels = model_config.get(CONF_LABELS) \
+        or hass.config.path('deps', 'tensorflow', 'object_detection',
+                            'data', 'mscoco_label_map.pbtxt')
+
+    # Make sure locations exist
+    if not os.path.isdir(model_dir) or not os.path.exists(labels):
+        _LOGGER.error("Unable to locate tensorflow models or label map.")
+        return
 
     # append custom model path to sys.path
     sys.path.append(model_dir)
@@ -84,7 +91,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         # Verify that the TensorFlow Object Detection API is pre-installed
         # pylint: disable=unused-import,unused-variable
-        import os
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
         import tensorflow as tf # noqa
         from object_detection.utils import label_map_util # noqa
@@ -116,7 +122,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             tf.import_graph_def(od_graph_def, name='')
 
     session = tf.Session(graph=detection_graph)
-    label_map = label_map_util.load_labelmap(model_config.get(CONF_LABELS))
+    label_map = label_map_util.load_labelmap(labels)
     categories = label_map_util.convert_label_map_to_categories(
         label_map, max_num_classes=90, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
