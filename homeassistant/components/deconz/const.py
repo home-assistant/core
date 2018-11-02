@@ -4,8 +4,9 @@ import logging
 _LOGGER = logging.getLogger('homeassistant.components.deconz')
 
 DOMAIN = 'deconz'
-CONFIG_FILE = 'deconz.conf'
 DECONZ_DOMAIN = 'deconz'
+
+DEFAULT_PORT = 80
 
 CONF_ALLOW_CLIP_SENSOR = 'allow_clip_sensor'
 CONF_ALLOW_DECONZ_GROUPS = 'allow_deconz_groups'
