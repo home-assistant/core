@@ -93,7 +93,7 @@ class AsuswrtTXSensor(AsuswrtSensor):
 class AsuswrtTotalRXSensor(AsuswrtSensor):
     """Representation of a asuswrt total download sensor."""
 
-    _name = 'Asuswrt Total Download'
+    _name = 'Asuswrt Download'
     _unit = 'Gigabyte'
 
     @property
@@ -111,7 +111,7 @@ class AsuswrtTotalRXSensor(AsuswrtSensor):
 class AsuswrtTotalTXSensor(AsuswrtSensor):
     """Representation of a asuswrt total upload sensor."""
 
-    _name = 'Asuswrt Total Upload'
+    _name = 'Asuswrt Upload'
     _unit = 'Gigabyte'
 
     @property
