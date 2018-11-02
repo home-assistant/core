@@ -29,7 +29,7 @@ from .const import (
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
-REQUIREMENTS = ['HAP-python==2.3.0']
+REQUIREMENTS = ['HAP-python==2.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
