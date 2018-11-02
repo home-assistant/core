@@ -4,6 +4,7 @@ Component that will help set the FFmpeg component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ffmpeg/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -101,6 +102,7 @@ class FFmpegManager:
         self._cache = {}
         self._bin = ffmpeg_bin
         self._run_test = run_test
+        self._test_lock = asyncio.Lock()
 
     @property
     def binary(self):
@@ -114,20 +116,27 @@ class FFmpegManager:
         """
         from haffmpeg import Test
 
-        if self._run_test:
-            # if in cache
+        if not self._run_test:
+            return True
+
+        # if in cache
+        if input_source in self._cache:
+            return self._cache[input_source]
+
+        # Too many concurrent ffmpegs tests caused tests to fail
+        async with self._test_lock:
+            # Might have resolved
             if input_source in self._cache:
                 return self._cache[input_source]
 
             # run test
-            ffmpeg_test = Test(self.binary, loop=self.hass.loop)
-            success = await ffmpeg_test.run_test(input_source)
+            success = self._cache[input_source] = await Test(
+                self.binary, loop=self.hass.loop).run_test(input_source)
+
             if not success:
                 _LOGGER.error("FFmpeg '%s' test fails!", input_source)
-                self._cache[input_source] = False
-                return False
-            self._cache[input_source] = True
-        return True
+
+            return success
 
 
 class FFmpegBase(Entity):
