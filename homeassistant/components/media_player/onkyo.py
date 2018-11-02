@@ -56,15 +56,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 TIMEOUT_MESSAGE = 'Timeout waiting for response.'
 
-ATTR_VIDEO_OUTPUT = 'video_output'
+ATTR_HDMI_OUTPUT = 'video_output'
 ACCEPTED_VALUES = ['no', 'analog', 'yes', 'out',
                    'out-sub', 'sub', 'hdbaset', 'both', 'up']
 ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_VIDEO_OUTPUT): vol.In(ACCEPTED_VALUES)
+    vol.Required(ATTR_HDMI_OUTPUT): vol.In(ACCEPTED_VALUES)
 })
 
-SERVICE_SELECT_VIDEO_OUTPUT = 'onkyo_select_video_output'
+SERVICE_SELECT_HDMI_OUTPUT = 'onkyo_select_hdmi_output'
 
 
 def determine_zones(receiver):
@@ -107,11 +107,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devices = [d for d in hosts if d.entity_id in entity_ids]
 
         for device in devices:
-            if service.service == SERVICE_SELECT_VIDEO_OUTPUT:
-                device.select_output(service.data.get(ATTR_VIDEO_OUTPUT))
+            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
+                device.select_output(service.data.get(ATTR_HDMI_OUTPUT))
 
     hass.services.register(
-        DOMAIN, SERVICE_SELECT_VIDEO_OUTPUT, service_handle,
+        DOMAIN, SERVICE_SELECT_HDMI_OUTPUT, service_handle,
         schema=ONKYO_SELECT_OUTPUT_SCHEMA)
 
     if CONF_HOST in config and host not in KNOWN_HOSTS:
