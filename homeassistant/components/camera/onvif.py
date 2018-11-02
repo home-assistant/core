@@ -74,7 +74,7 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a ONVIF camera."""
-    if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
+    if not await hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
 
     def handle_ptz(service):
