@@ -1,6 +1,6 @@
 """
-homeassistant.components.light.lightwave
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.light.lightwave.
+
 Implements LightwaveRF lights.
 
 
@@ -43,7 +43,7 @@ DEPENDENCIES = ['lightwave']
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """ Find and return LightWave lights """
+    """Find and return LightWave lights"""
     lights = []
     lwlink = hass.data[LIGHTWAVE_LINK]
 
@@ -55,9 +55,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 class LRFLight(Light):
-    """ Provides a LightWave light. """
+    """Provides a LightWave light."""
 
     def __init__(self, name, device_id, lwlink):
+        """Setup the component"""
         self._name = name
         self._device_id = device_id
         self._state = None
@@ -71,26 +72,26 @@ class LRFLight(Light):
 
     @property
     def should_poll(self):
-        """ No polling needed for a LightWave light. """
+        """No polling needed for a LightWave light."""
         return False
 
     @property
     def name(self):
-        """ Returns the name of the LightWave light. """
+        """Returns the name of the LightWave light."""
         return self._name
 
     @property
     def brightness(self):
-        """ Brightness of this light between 0..255. """
+        """Brightness of this light between 0..255."""
         return self._brightness
 
     @property
     def is_on(self):
-        """ True if the LightWave light is on. """
+        """True if the LightWave light is on."""
         return self._state
 
     async def async_turn_on(self, **kwargs):
-        """ Turn the LightWave light on. """
+        """Turn the LightWave light on."""
         self._state = True
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -105,7 +106,7 @@ class LRFLight(Light):
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """ Turn the LightWave light off. """
+        """Turn the LightWave light off."""
         self._state = False
         self._lwlink.turn_off(self._device_id, self._name)
         self.async_schedule_update_ha_state()

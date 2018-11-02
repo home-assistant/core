@@ -1,10 +1,10 @@
 """
-homeassistant.components.lightwave
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Implements communication with LightwaveRF
+homeassistant.components.lightwave.
+
+Implements communication with LightwaveRF.
 
 My understanding of the LightWave Hub is that devices cannot be discovered
-so must be registered manually. This is done in the configuration file
+so must be registered manually. This is done in the configuration file.
 
 lightwave:
     host: ip_address
@@ -45,7 +45,7 @@ async def async_setup(hass, config):
 
 
 class LWLink():
-    ''' LWLink provides a communication link with the LightwaveRF hub '''
+    """LWLink provides a communication link with the LightwaveRF hub"""
     SOCKET_TIMEOUT = 2.0
     RX_PORT = 9761
     TX_PORT = 9760
@@ -55,23 +55,24 @@ class LWLink():
     link_ip = ''
 
     def __init__(self, link_ip=None):
+        """Initialise the component"""
         if link_ip is not None:
             LWLink.link_ip = link_ip
 
     def _send_message(self, msg):
-        ''' adds message to queue '''
+        """Adds message to queue"""
         LWLink.the_queue.put_nowait(msg)
         if LWLink.thread is None or not self.thread.isAlive():
             LWLink.thread = threading.Thread(target=self._send_queue)
             LWLink.thread.start()
 
     def turn_on_light(self, device_id, name):
-        ''' formats message to turn light on '''
+        """Formats message to turn light on"""
         msg = '321,!%sFdP32|Turn On|%s' % (device_id, name)
         self._send_message(msg)
 
     def turn_on_switch(self, device_id, name):
-        ''' formats message to turn switch on '''
+        """Formats message to turn switch on"""
         msg = '321,!%sF1|Turn On|%s' % (device_id, name)
         self._send_message(msg)
 
@@ -85,18 +86,18 @@ class LWLink():
         self._send_message(msg)
 
     def turn_off(self, device_id, name):
-        ''' formats message to turn light or switch off '''
+        """Formats message to turn light or switch off"""
         msg = "321,!%sF0|Turn Off|%s" % (device_id, name)
         self._send_message(msg)
 
     def _send_queue(self):
-        ''' starts processing the queue '''
+        """Starts processing the queue"""
         while not LWLink.the_queue.empty():
             self._send_reliable_message(LWLink.the_queue.get_nowait())
 
     def _send_reliable_message(self, msg):
-        """ Send msg to LightwaveRF hub and only returns after:
-             an OK is received | timeout | exception | max_retries """
+        """Send msg to LightwaveRF hub and only returns after:
+             an OK is received | timeout | exception | max_retries"""
         result = False
         max_retries = 15
         try:

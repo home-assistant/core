@@ -1,6 +1,6 @@
 """
-homeassistant.components.switch.lightwave
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.switch.lightwave.
+
 Implements LightwaveRF switches.
 
 My understanding of the LightWave Hub is that devices cannot be discovered
@@ -41,7 +41,7 @@ DEPENDENCIES = ['lightwave']
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """ Find and return LightWave switches """
+    """Find and return LightWave switches"""
     switches = []
     lwlink = hass.data[LIGHTWAVE_LINK]
 
@@ -53,9 +53,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 class LRFSwitch(SwitchDevice):
-    """ Provides a LightWave switch. """
+    """Provides a LightWave switch."""
 
     def __init__(self, name, device_id, lwlink):
+        """Setup the component"""
         self._name = name
         self._device_id = device_id
         self._state = None
@@ -63,27 +64,27 @@ class LRFSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """ No polling needed for a LightWave light. """
+        """No polling needed for a LightWave light."""
         return False
 
     @property
     def name(self):
-        """ Returns the name of the LightWave switch. """
+        """Returns the name of the LightWave switch."""
         return self._name
 
     @property
     def is_on(self):
-        """ True if LightWave switch is on. """
+        """True if LightWave switch is on."""
         return self._state
 
     async def async_turn_on(self, **kwargs):
-        """ Turn the LightWave switch on. """
+        """Turn the LightWave switch on."""
         self._state = True
         self._lwlink.turn_on_switch(self._device_id, self._name)
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """ Turn the LightWave switch off. """
+        """Turn the LightWave switch off."""
         self._state = False
         self._lwlink.turn_off(self._device_id, self._name)
         self.async_schedule_update_ha_state()
