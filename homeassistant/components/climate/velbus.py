@@ -9,8 +9,7 @@ import logging
 from homeassistant.components.velbus import (
     DOMAIN as VELBUS_DOMAIN, VelbusEntity)
 from homeassistant.components.climate import (
-    ClimateDevice,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateDevice, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
     ATTR_TEMPERATURE)
@@ -41,6 +40,7 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
 
     @property
     def supported_features(self):
+        """Retur the list off supported featuress."""
         return SUPPORT_FLAGS
 
     @property
