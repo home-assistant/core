@@ -18,8 +18,12 @@ from homeassistant.util import Throttle
 
 SENSOR_POWER = 'pwr'
 SENSOR_POWER_NET = 'net'
-SENSOR_P_HIGH = 'p2'
 SENSOR_P_LOW = 'p1'
+SENSOR_P_HIGH = 'p2'
+SENSOR_DELIVERY_LOW = 'n1'
+SENSOR_DELIVERY_HIGH = 'n2'
+SENSOR_METER_EXTRA = 'cs0'
+SENSOR_USAGE_EXTRA = 'ps0'
 SENSOR_GAS = 'gas'
 
 SENSOR_TYPES = {
@@ -27,6 +31,14 @@ SENSOR_TYPES = {
     SENSOR_POWER_NET: ['Power', 'meter', 'W', 'mdi:gauge'],
     SENSOR_P_LOW: ['Power Low', 'meter_low', 'kWh', 'mdi:flash'],
     SENSOR_P_HIGH: ['Power High', 'meter_high', 'kWh', 'mdi:flash'],
+    SENSOR_DELIVERY_LOW: ['Power Delivery Low', 'delivery_low', 'kWh',
+                          'mdi:gauge'],
+    SENSOR_DELIVERY_HIGH: ['Power Delivery High', 'delivery_high', 'kWh',
+                           'mdi:gauge'],
+    SENSOR_METER_EXTRA: ['Power Meter Extra', 'meter_extra', 'kWh',
+                         'mdi:gauge'],
+    SENSOR_USAGE_EXTRA: ['Power usage Extra', 'current_usage_extra', 'W',
+                         'mdi:flash'],
     SENSOR_GAS: ['Gas', 'gas', 'm3', 'mdi:fire']
 }
 
