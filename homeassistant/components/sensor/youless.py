@@ -54,7 +54,7 @@ SENSOR_PREFIX = 'youless_'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the platform based on the configuration."""
+    """Set up the platform based on the configuration."""
     host = config.get(CONF_HOST)
     sensors = config.get(CONF_MONITORED_CONDITIONS)
     data_bridge = YoulessDataBridge(host)
@@ -83,7 +83,7 @@ class YoulessDataBridge(object):
 
     @Throttle(timedelta(seconds=1))
     def update(self):
-        """Update the inner values by calling the YouLess API."""
+        """Get  the inner values by calling the YouLess API."""
         raw_res = urlopen(self._url)
         self._data = json.loads(raw_res.read().decode('utf-8'))[0]
 
@@ -92,7 +92,7 @@ class YoulessSensor(Entity):
     """The sensor implementation for YouLess."""
 
     def __init__(self, data_bridge, name, variable, sensor_id, uom, icon):
-        """Setup the sensor"""
+        """Set up the sensor."""
         self._state = None
         self._name = name
         self._property = variable
@@ -124,7 +124,7 @@ class YoulessSensor(Entity):
 
     @property
     def state_attributes(self):
-        """return the timestamp that the last measurement was done."""
+        """Return the timestamp that the last measurement was done."""
         if self._raw is not None:
             return {
                 'timestamp': self._raw['tm']
