@@ -28,6 +28,7 @@ CONF_STEP = 'step'
 MODE_SLIDER = 'slider'
 MODE_BOX = 'box'
 
+ATTR_INITIAL = 'initial'
 ATTR_VALUE = 'value'
 ATTR_MIN = 'min'
 ATTR_MAX = 'max'
@@ -131,6 +132,7 @@ class InputNumber(Entity):
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._current_value = initial
+        self._initial = initial
         self._minimum = minimum
         self._maximum = maximum
         self._step = step
@@ -167,6 +169,7 @@ class InputNumber(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         return {
+            ATTR_INITIAL: self._initial,
             ATTR_MIN: self._minimum,
             ATTR_MAX: self._maximum,
             ATTR_STEP: self._step,
