@@ -669,6 +669,7 @@ nuheat==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
+# homeassistant.components.sensor.pollen
 numpy==1.15.3
 
 # homeassistant.components.google
