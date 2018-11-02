@@ -289,6 +289,9 @@ omit =
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
 
+    homeassistant/components/sense.py
+    homeassistant/components/*/sense.py
+
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/*/simplisafe.py
 
@@ -760,7 +763,6 @@ omit =
     homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/rtorrent.py
     homeassistant/components/sensor/scrape.py
-    homeassistant/components/sensor/sense.py
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/serial.py
