@@ -4,18 +4,18 @@ A platform which allows you to get information from Tautulli.
 For more details about this platform, please refer to the documentation at
 https://www.home-assistant.io/components/sensor.tautulli/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, CONF_HOST,
-                                 CONF_MONITORED_CONDITIONS, CONF_NAME,
-                                 CONF_PORT, CONF_SSL, CONF_VERIFY_SSL)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PORT,
+    CONF_SSL, CONF_VERIFY_SSL)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -33,22 +33,21 @@ DEFAULT_VERIFY_SSL = True
 TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_MONITORED_USERS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    vol.Optional(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_MONITORED_USERS):
-        vol.All(cv.ensure_list, [cv.string]),
-    })
+})
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Create the sensor."""
+    """Create the Tautulli sensor."""
     from pytautulli import Tautulli
 
     name = config.get(CONF_NAME)
@@ -73,10 +72,10 @@ async def async_setup_platform(
 
 
 class TautulliSensor(Entity):
-    """Representation of a Sensor."""
+    """Representation of a Tautulli sensor."""
 
     def __init__(self, tautulli, name, monitored_conditions, users):
-        """Initialize the sensor."""
+        """Initialize the Tautulli sensor."""
         self.tautulli = tautulli
         self.monitored_conditions = monitored_conditions
         self.usernames = users
