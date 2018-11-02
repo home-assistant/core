@@ -87,9 +87,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TensorFlow image processing platform."""
     model_config = config.get(CONF_MODEL)
     model_dir = model_config.get(CONF_MODEL_DIR) \
-        or hass.config.path('deps', 'tensorflow')
+        or hass.config.path('tensorflow')
     labels = model_config.get(CONF_LABELS) \
-        or hass.config.path('deps', 'tensorflow', 'object_detection',
+        or hass.config.path('tensorflow', 'object_detection',
                             'data', 'mscoco_label_map.pbtxt')
 
     # Make sure locations exist
