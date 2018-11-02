@@ -84,7 +84,7 @@ class TtnDataSensor(Entity):
         """Return the state of the entity."""
         if self._ttn_data_storage.data is not None:
             try:
-                return round(self._state[self._value], 1)
+                return self._state[self._value]
             except KeyError:
                 pass
 
