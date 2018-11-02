@@ -10,6 +10,8 @@ CONF_DISPLAY_URL = 'display_url'
 
 CONF_FILTER = 'filter'
 CONF_ENTITY_CONFIG = 'entity_config'
+CONF_CLIENT_ID = 'client_id'
+CONF_CLIENT_SECRET = 'client_secret'
 
 ATTR_UID = 'uid'
 ATTR_UPDATE_DATE = 'updateDate'

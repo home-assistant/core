@@ -11,9 +11,12 @@ import logging
 import math
 from uuid import uuid4
 
+import requests
+
 from homeassistant.components import (
     alert, automation, binary_sensor, climate, cover, fan, group, http,
     input_boolean, light, lock, media_player, scene, script, sensor, switch)
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CLOUD_NEVER_EXPOSED_ENTITIES,
@@ -21,13 +24,15 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET, STATE_LOCKED, STATE_ON, STATE_UNLOCKED,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, MATCH_ALL)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 from homeassistant.util.temperature import convert as convert_temperature
 
-from .const import CONF_ENTITY_CONFIG, CONF_FILTER
+from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ENTITY_CONFIG, \
+    CONF_FILTER, DATE_FORMAT
+from .auth import Auth
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +42,8 @@ API_EVENT = 'event'
 API_CONTEXT = 'context'
 API_HEADER = 'header'
 API_PAYLOAD = 'payload'
+API_SCOPE = 'scope'
+API_CHANGE = 'change'
 
 API_TEMP_UNITS = {
     TEMP_FAHRENHEIT: 'FAHRENHEIT',
@@ -65,6 +72,10 @@ CONF_DISPLAY_CATEGORIES = 'display_categories'
 HANDLERS = Registry()
 ENTITY_ADAPTERS = Registry()
 EVENT_ALEXA_SMART_HOME = 'alexa_smart_home'
+
+ALEXA_URI = "https://api.amazonalexa.com/v3/events"
+
+AUTH = None
 
 
 class _DisplayCategory:
@@ -322,7 +333,7 @@ class _AlexaInterface:
     @staticmethod
     def properties_proactively_reported():
         """Return True if properties asynchronously reported."""
-        return False
+        return True  # TODO: check if all devices support this (or move it)
 
     @staticmethod
     def properties_retrievable():
@@ -375,6 +386,8 @@ class _AlexaInterface:
                     'name': prop_name,
                     'namespace': self.name(),
                     'value': prop_value,
+                    'timeOfSample': datetime.now().strftime(DATE_FORMAT),  # TODO: this should be the time at which the property is set
+                    'uncertaintyInMilliseconds': 0
                 }
 
 
@@ -914,8 +927,11 @@ class _Cause:
 class Config:
     """Hold the configuration for Alexa."""
 
-    def __init__(self, should_expose, entity_config=None):
+    def __init__(self, client_id, client_secret, should_expose,
+                 entity_config=None):
         """Initialize the configuration."""
+        self.client_id = client_id
+        self.client_secret = client_secret
         self.should_expose = should_expose
         self.entity_config = entity_config or {}
 
@@ -930,11 +946,20 @@ def async_setup(hass, config):
     Even if that's disabled, the functionality in this module may still be used
     by the cloud component which will call async_handle_message directly.
     """
+
     smart_home_config = Config(
+        client_id=config[CONF_CLIENT_ID],
+        client_secret=config[CONF_CLIENT_SECRET],
         should_expose=config[CONF_FILTER],
         entity_config=config.get(CONF_ENTITY_CONFIG),
     )
     hass.http.register_view(SmartHomeView(smart_home_config))
+
+    global AUTH
+    AUTH = Auth(hass, smart_home_config.client_id,
+                smart_home_config.client_secret)
+
+    hass.loop.create_task(async_enable_proactive_mode(hass, smart_home_config))
 
 
 class SmartHomeView(http.HomeAssistantView):
@@ -964,7 +989,32 @@ class SmartHomeView(http.HomeAssistantView):
         _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
         return b'' if response is None else self.json(response)
 
-
+async def async_enable_proactive_mode(hass, smart_home_config):
+    if not await AUTH.async_is_auth_done():
+        # not ready yet
+        return
+    @ha.callback
+    def async_entity_state_listener(changed_entity, old_state, new_state):
+        if not smart_home_config.should_expose(changed_entity):
+            _LOGGER.debug("Not exposing %s because filtered by config",
+                          changed_entity)
+            return
+        entity = hass.states.get(changed_entity)
+        if not entity:
+            return
+        if entity.domain not in ENTITY_ADAPTERS:
+            return
+        alexa_changed_entity = \
+            ENTITY_ADAPTERS[entity.domain](hass, smart_home_config, entity)
+        for interface in alexa_changed_entity.interfaces():
+            if interface.properties_proactively_reported():
+                # TODO: we should check if this entity was already discovered
+                # by Alexa (store them in the prefs?) and, if not, send a
+                # proactive discovery message instead.
+                hass.async_add_job(async_send_changereport_message,
+                                   alexa_changed_entity)
+                return
+    async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
 class _AlexaDirective:
     def __init__(self, request):
         self._directive = request[API_DIRECTIVE]
@@ -1188,6 +1238,88 @@ async def async_handle_message(
     return response.serialize()
 
 
+def api_proactive_message(token,
+                          name='ChangeReport',
+                          namespace='Alexa',
+                          endpoint=None,
+                          cookie=None,
+                          payload=None,
+                          context=None):
+    """Create a API formatted proactive message."""
+    payload = payload or {}
+
+    response = {
+        API_EVENT: {
+            API_HEADER: {
+                'namespace': namespace,
+                'name': name,
+                'messageId': str(uuid4()),
+                'payloadVersion': '3',
+            },
+            API_ENDPOINT: {
+                API_SCOPE: {
+                    'type': 'BearerToken',
+                    'token': token
+                }
+            },
+            API_PAYLOAD: payload,
+        }
+    }
+
+    if endpoint is not None:
+        response[API_EVENT][API_ENDPOINT]['endpointId'] = endpoint
+
+    if cookie is not None:
+        response[API_EVENT][API_ENDPOINT]['cookie'] = endpoint
+
+    if context is not None:
+        response[API_EVENT][API_CONTEXT] = context
+
+    return response
+
+
+async def async_send_changereport_message(alexa_entity):
+    """Send a ChangeReport message for an Alexa entity."""
+
+    token = await AUTH.async_get_access_token()
+    if not token:
+        _LOGGER.error("Invalid access token.")
+        return
+
+    headers = {
+        "Authorization": "Bearer {}".format(token),
+        "Content-Type": "application/json;charset=UTF-8"
+    }
+
+    endpoint = alexa_entity.entity_id()
+
+    # this sends all the properties of the Alexa Entity, whether they have
+    # changed or not. this should be improved, and properties that have not
+    # changed should be moved to the 'context' object
+    properties = []
+    for interface in alexa_entity.interfaces():
+        properties.extend(interface.serialize_properties())
+
+    payload = {
+        API_CHANGE: {
+            'cause': {'type': _Cause.APP_INTERACTION},
+            'properties': properties
+        }
+    }
+
+    message = api_proactive_message(token, name='ChangeReport',
+                                    namespace='Alexa', endpoint=endpoint,
+                                    payload=payload)
+
+    # TODO: use aiohttp
+    response = requests.post(ALEXA_URI, headers=headers,
+                             data=json.dumps(message), allow_redirects=True)
+
+    _LOGGER.debug("Sent: {0}".format(json.dumps(message)))
+    _LOGGER.debug("Received ({0}): {1}".format(response.status_code,
+                                               json.dumps(response.text)))
+
+
 @HANDLERS.register(('Alexa.Discovery', 'Discover'))
 async def async_api_discovery(hass, config, directive, context):
     """Create a API formatted discovery response.
@@ -1234,6 +1366,22 @@ async def async_api_discovery(hass, config, directive, context):
         namespace='Alexa.Discovery',
         payload={'endpoints': discovery_endpoints},
     )
+@HANDLERS.register(('Alexa.Authorization', 'AcceptGrant'))
+async def async_api_accept_grant(hass, config, request, context):
+    """Create a API formatted AcceptGrant response.
+
+    Async friendly.
+    """
+
+    auth_code = request[API_PAYLOAD]['grant']['code']
+    _LOGGER.debug("AcceptGrant code: {0}".format(auth_code))
+
+    await AUTH.async_do_auth(auth_code)
+    await async_enable_proactive_mode(hass, config)
+
+    return api_message(
+        request, name='AcceptGrant.Response', namespace='Alexa.Authorization',
+        payload={})
 
 
 @HANDLERS.register(('Alexa.PowerController', 'TurnOn'))
