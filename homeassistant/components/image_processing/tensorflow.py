@@ -8,6 +8,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.tensorflow/
 """
 import logging
+import sys
+import os
 
 import voluptuous as vol
 
@@ -69,11 +71,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def draw_box(draw, box, img_width,
+             img_height, text='', color=(255, 255, 0)):
+    """Draw bounding box on image."""
+    ymin, xmin, ymax, xmax = box
+    (left, right, top, bottom) = (xmin * img_width, xmax * img_width,
+                                  ymin * img_height, ymax * img_height)
+    draw.line([(left, top), (left, bottom), (right, bottom),
+               (right, top), (left, top)], width=5, fill=color)
+    if text:
+        draw.text((left, abs(top-15)), text, fill=color)
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TensorFlow image processing platform."""
-    import sys
-    import os
-
     model_config = config.get(CONF_MODEL)
     model_dir = model_config.get(CONF_MODEL_DIR) \
         or hass.config.path('deps', 'tensorflow')
@@ -212,7 +223,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: self._matches,
@@ -227,16 +238,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         img = Image.open(io.BytesIO(bytearray(image))).convert('RGB')
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
-
-        def draw_box(draw, box, img_width,
-                     img_height, text='', color=(255, 255, 0)):
-            ymin, xmin, ymax, xmax = box
-            (left, right, top, bottom) = (xmin * img_width, xmax * img_width,
-                                          ymin * img_height, ymax * img_height)
-            draw.line([(left, top), (left, bottom), (right, bottom),
-                       (right, top), (left, top)], width=5, fill=color)
-            if text:
-                draw.text((left, abs(top-15)), text, fill=color)
 
         # Draw custom global region/area
         if self._area != [0, 0, 1, 1]:
