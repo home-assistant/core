@@ -45,7 +45,7 @@ ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
     vol.Optional(CONF_ALERT_MESSAGE): cv.template,
     vol.Optional(CONF_DONE_MESSAGE): cv.template,
-    vol.Optional(CONF_TITLE): cv.string,
+    vol.Optional(CONF_TITLE): cv.template,
     vol.Optional(CONF_DATA): dict,
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
 

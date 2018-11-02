@@ -33,9 +33,10 @@ TEST_CONFIG = \
             CONF_STATE: STATE_ON,
             alert.CONF_REPEAT: 30,
             alert.CONF_SKIP_FIRST: False,
-            alert.CONF_NOTIFIERS: [NOTIFIER]},
-        alert.CONF_TITLE: '',
-        alert.CONF_DATA: {}
+            alert.CONF_NOTIFIERS: [NOTIFIER],
+            alert.CONF_TITLE: TITLE,
+            alert.CONF_DATA: {}
+        }
     }}
 TEST_NOACK = [NAME, NAME, "sensor.test",
               STATE_ON, [30], False, None, None, NOTIFIER, False, None, None]
