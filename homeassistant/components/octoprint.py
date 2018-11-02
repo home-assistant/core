@@ -110,6 +110,7 @@ def setup(hass, config):
                                                  printer[CONF_HOST],
                                                  printer[CONF_PORT],
                                                  printer[CONF_PATH])
+        _LOGGER.debug('Instance url: %s', base_url)
         api_key = printer[CONF_API_KEY]
         number_of_tools = printer[CONF_NUMBER_OF_TOOLS]
         bed = printer[CONF_BED]
