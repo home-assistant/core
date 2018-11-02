@@ -23,7 +23,8 @@ def async_turn_on(hass, entity_id: str = None, speed: str = None) -> None:
         ] if value is not None
     }
 
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
 @callback
@@ -32,7 +33,7 @@ def async_turn_off(hass, entity_id: str = None) -> None:
     """Turn all or specified fan off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.async_add_job(
+    hass.async_create_task(
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
 
 
@@ -48,7 +49,7 @@ def async_oscillate(hass, entity_id: str = None,
         ] if value is not None
     }
 
-    hass.async_add_job(
+    hass.async_create_task(
         hass.services.async_call(DOMAIN, SERVICE_OSCILLATE, data))
 
 
@@ -63,7 +64,7 @@ def async_set_speed(hass, entity_id: str = None, speed: str = None) -> None:
         ] if value is not None
     }
 
-    hass.async_add_job(
+    hass.async_create_task(
         hass.services.async_call(DOMAIN, SERVICE_SET_SPEED, data))
 
 
@@ -79,5 +80,5 @@ def async_set_direction(
         ] if value is not None
     }
 
-    hass.async_add_job(
+    hass.async_create_task(
         hass.services.async_call(DOMAIN, SERVICE_SET_DIRECTION, data))
