@@ -299,7 +299,7 @@ class TestAlert(unittest.TestCase):
 
         config = deepcopy(TEST_CONFIG)
         config[alert.DOMAIN][NAME][alert.CONF_TITLE] = TITLE
-        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
+        assert setup_component(self.hass, alert.DOMAIN, config)
 
         self.hass.states.set(TEST_ENTITY, STATE_ON)
         self.hass.block_till_done()
