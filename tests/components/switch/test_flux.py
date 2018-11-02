@@ -87,7 +87,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=10, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=10, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -96,7 +96,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
+        with patch('homeassistant.util.dt.utcnow', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
                        side_effect=event_date):
                 assert setup_component(self.hass, switch.DOMAIN, {
@@ -127,7 +127,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=2, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=2, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -136,7 +136,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
+        with patch('homeassistant.util.dt.utcnow', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
                        side_effect=event_date):
                 assert setup_component(self.hass, switch.DOMAIN, {
@@ -172,7 +172,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=8, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=8, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -181,7 +181,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -218,7 +218,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=17, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=17, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -227,7 +227,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -265,7 +265,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=23, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=23, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -274,7 +274,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
+        with patch('homeassistant.util.dt.utcnow', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
                        side_effect=event_date):
                 assert setup_component(self.hass, switch.DOMAIN, {
@@ -310,7 +310,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=17, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=17, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -319,7 +319,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -360,7 +360,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=2, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=2, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -369,7 +369,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -411,7 +411,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=8, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=8, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -420,7 +420,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -461,7 +461,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=23, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=23, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -470,7 +470,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.util.dt.now', return_value=test_time):
+        with patch('homeassistant.util.dt.utcnow', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
                        side_effect=event_date):
                 assert setup_component(self.hass, switch.DOMAIN, {
@@ -510,7 +510,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=00, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=00, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -519,7 +519,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -560,7 +560,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=2, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=2, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -569,7 +569,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -607,7 +607,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=17, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=17, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -616,7 +616,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -656,7 +656,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=17, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=17, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -665,7 +665,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -716,7 +716,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert state.attributes.get('xy_color') is None
         assert state.attributes.get('brightness') is None
 
-        test_time = dt_util.now().replace(hour=12, minute=0, second=0)
+        test_time = dt_util.utcnow().replace(hour=12, minute=0, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -727,7 +727,7 @@ class TestSwitchFlux(unittest.TestCase):
             print('sunset {}'.format(sunset_time))
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -770,7 +770,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert STATE_ON == state.state
         assert state.attributes.get('color_temp') is None
 
-        test_time = dt_util.now().replace(hour=8, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=8, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -779,7 +779,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
@@ -814,7 +814,7 @@ class TestSwitchFlux(unittest.TestCase):
         assert STATE_ON == state.state
         assert state.attributes.get('color_temp') is None
 
-        test_time = dt_util.now().replace(hour=8, minute=30, second=0)
+        test_time = dt_util.utcnow().replace(hour=8, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
@@ -823,7 +823,7 @@ class TestSwitchFlux(unittest.TestCase):
                 return sunrise_time
             return sunset_time
 
-        with patch('homeassistant.components.switch.flux.dt_now',
+        with patch('homeassistant.components.switch.flux.dt_utcnow',
                    return_value=test_time), \
             patch('homeassistant.helpers.sun.get_astral_event_date',
                   side_effect=event_date):
