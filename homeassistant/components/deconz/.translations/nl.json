@@ -9,7 +9,7 @@
             "no_key": "Kon geen API-sleutel ophalen"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "host": "Host",
                     "port": "Poort (standaard: '80')"

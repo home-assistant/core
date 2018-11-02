@@ -9,7 +9,7 @@
             "no_key": "API kulcs lek\u00e9r\u00e9se nem siker\u00fclt"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "host": "H\u00e1zigazda (Host)",
                     "port": "Port (alap\u00e9rtelmezett \u00e9rt\u00e9k: '80')"

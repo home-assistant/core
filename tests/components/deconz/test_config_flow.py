@@ -1,5 +1,4 @@
 """Tests for deCONZ config flow."""
-from unittest.mock import patch
 import pytest
 
 import voluptuous as vol
@@ -58,7 +57,6 @@ async def test_flow_no_discovered_bridges(hass, aioclient_mock):
     result = await flow.async_step_user()
     assert result['type'] == 'form'
     assert result['step_id'] == 'user'
-    # assert result['type'] == 'abort'
 
 
 async def test_flow_one_bridge_discovered(hass, aioclient_mock):

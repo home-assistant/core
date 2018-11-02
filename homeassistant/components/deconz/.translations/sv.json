@@ -10,9 +10,9 @@
         },
         "step": {
             "init": {
-                "data": {
+                "user": {
                     "host": "V\u00e4rd",
-                    "port": "Port (standardv\u00e4rde: '80')"
+                    "port": "Port"
                 },
                 "title": "Definiera deCONZ-gatewaye"
             },

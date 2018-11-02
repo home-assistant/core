@@ -45,14 +45,12 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason='one_instance_only')
 
         if user_input is not None:
-            if self.bridges:
-                for bridge in self.bridges:
-                    if bridge[CONF_HOST] == user_input[CONF_HOST]:
-                        self.deconz_config = bridge
-                        return await self.async_step_link()
-            else:
-                self.deconz_config = user_input
-                return await self.async_step_link()
+            for bridge in self.bridges:
+                if bridge[CONF_HOST] == user_input[CONF_HOST]:
+                    self.deconz_config = bridge
+                    return await self.async_step_link()
+            self.deconz_config = user_input
+            return await self.async_step_link()
 
         session = aiohttp_client.async_get_clientsession(self.hass)
         self.bridges = await async_discovery(session)

@@ -9,7 +9,7 @@
             "no_key": "Methu cael allwedd API"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "host": "Gwesteiwr",
                     "port": "Port (gwerth diofyn: '80')"

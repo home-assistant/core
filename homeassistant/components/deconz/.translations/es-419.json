@@ -9,7 +9,7 @@
             "no_key": "No se pudo obtener una clave de API"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "host": "Host",
                     "port": "Puerto (valor predeterminado: '80')"

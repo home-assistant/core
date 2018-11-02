@@ -9,7 +9,7 @@
             "no_key": "Kunne ikke f\u00e5 en API-n\u00f8kkel"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "host": "Vert",
                     "port": "Port (standardverdi: '80')"

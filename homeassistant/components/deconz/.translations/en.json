@@ -9,10 +9,10 @@
             "no_key": "Couldn't get an API key"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port (default value: '80')"
+                    "port": "Port"
                 },
                 "title": "Define deCONZ gateway"
             },
