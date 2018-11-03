@@ -362,7 +362,6 @@ def update_view(fname: str, view_id: str, view_config, data_format:
     view.clear()
     view.update(view_config)
     yaml.save_yaml(fname, config)
-    return
 
 
 def add_view(fname: str, view_config: str,
@@ -392,7 +391,6 @@ def move_view(fname: str, view_id: str, position: int) -> None:
 
     views.insert(position, views.pop(views.index(view)))
     yaml.save_yaml(fname, config)
-    return
 
 
 def delete_view(fname: str, view_id: str) -> None:
@@ -408,7 +406,6 @@ def delete_view(fname: str, view_id: str) -> None:
 
     views.pop(views.index(view))
     yaml.save_yaml(fname, config)
-    return
 
 
 async def async_setup(hass, config):
