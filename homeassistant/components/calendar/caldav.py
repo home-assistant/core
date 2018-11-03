@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_devices, disc_info=None):
+def setup_platform(hass, config, add_entities, disc_info=None):
     """Set up the WebDav Calendar platform."""
     import caldav
 
@@ -98,7 +98,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                 WebDavCalendarEventDevice(hass, device_data, calendar)
             )
 
-    add_devices(calendar_devices)
+    add_entities(calendar_devices)
 
 
 class WebDavCalendarEventDevice(CalendarEventDevice):
@@ -125,7 +125,7 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         return await self.data.async_get_events(hass, start_date, end_date)
 
 
-class WebDavCalendarData(object):
+class WebDavCalendarData:
     """Class to utilize the calendar dav client object to get next event."""
 
     def __init__(self, calendar, include_all_day, search):

@@ -67,7 +67,7 @@ class DysonTest(unittest.TestCase):
     """Dyson 360 eye robot vacuum component test class."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -77,9 +77,9 @@ class DysonTest(unittest.TestCase):
     def test_setup_component_with_no_devices(self):
         """Test setup component with no devices."""
         self.hass.data[dyson.DYSON_DEVICES] = []
-        add_devices = mock.MagicMock()
-        dyson.setup_platform(self.hass, {}, add_devices)
-        add_devices.assert_called_with([])
+        add_entities = mock.MagicMock()
+        dyson.setup_platform(self.hass, {}, add_entities)
+        add_entities.assert_called_with([])
 
     def test_setup_component(self):
         """Test setup component with devices."""

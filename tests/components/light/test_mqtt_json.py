@@ -97,17 +97,20 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES)
 import homeassistant.components.light as light
+from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.core as ha
+
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message,
-    assert_setup_component, mock_coro)
+    assert_setup_component, mock_coro, async_fire_mqtt_message)
+from tests.components.light import common
 
 
 class TestLightMQTTJSON(unittest.TestCase):
     """Test the MQTT JSON light."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
@@ -115,8 +118,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_fail_setup_if_no_command_topic(self): \
-            # pylint: disable=invalid-name
+    def test_fail_setup_if_no_command_topic(self):
         """Test if setup fails with no command topic."""
         with assert_setup_component(0, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -127,8 +129,7 @@ class TestLightMQTTJSON(unittest.TestCase):
             })
         self.assertIsNone(self.hass.states.get('light.test'))
 
-    def test_no_color_brightness_color_temp_white_val_if_no_topics(self): \
-            # pylint: disable=invalid-name
+    def test_no_color_brightness_color_temp_white_val_if_no_topics(self):
         """Test for no RGB, brightness, color temp, effect, white val or XY."""
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
@@ -163,8 +164,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertIsNone(state.attributes.get('xy_color'))
         self.assertIsNone(state.attributes.get('hs_color'))
 
-    def test_controlling_state_via_topic(self): \
-            # pylint: disable=invalid-name
+    def test_controlling_state_via_topic(self):
         """Test the controlling of the state via topic."""
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
@@ -283,8 +283,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.assertEqual(155, light_state.attributes.get('white_value'))
 
-    def test_sending_mqtt_commands_and_optimistic(self): \
-            # pylint: disable=invalid-name
+    def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending of command in optimistic mode."""
         fake_state = ha.State('light.test', 'on', {'brightness': 95,
                                                    'hs_color': [100, 100],
@@ -319,7 +318,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(191, state.attributes.get(ATTR_SUPPORTED_FEATURES))
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
-        light.turn_on(self.hass, 'light.test')
+        common.turn_on(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -328,7 +327,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
-        light.turn_off(self.hass, 'light.test')
+        common.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -337,9 +336,9 @@ class TestLightMQTTJSON(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        light.turn_on(self.hass, 'light.test',
-                      brightness=50, color_temp=155, effect='colorloop',
-                      white_value=170)
+        common.turn_on(self.hass, 'light.test',
+                       brightness=50, color_temp=155, effect='colorloop',
+                       white_value=170)
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -365,8 +364,8 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(170, state.attributes['white_value'])
 
         # Test a color command
-        light.turn_on(self.hass, 'light.test',
-                      brightness=50, hs_color=(125, 100))
+        common.turn_on(self.hass, 'light.test',
+                       brightness=50, hs_color=(125, 100))
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -402,7 +401,7 @@ class TestLightMQTTJSON(unittest.TestCase):
             }
         })
 
-        light.turn_on(self.hass, 'light.test', hs_color=(180.0, 50.0))
+        common.turn_on(self.hass, 'light.test', hs_color=(180.0, 50.0))
         self.hass.block_till_done()
 
         message_json = json.loads(
@@ -413,8 +412,7 @@ class TestLightMQTTJSON(unittest.TestCase):
             's': 50.0,
         }, message_json["color"])
 
-    def test_flash_short_and_long(self): \
-            # pylint: disable=invalid-name
+    def test_flash_short_and_long(self):
         """Test for flash length being sent when included."""
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
@@ -432,7 +430,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
         self.assertEqual(40, state.attributes.get(ATTR_SUPPORTED_FEATURES))
 
-        light.turn_on(self.hass, 'light.test', flash="short")
+        common.turn_on(self.hass, 'light.test', flash="short")
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -448,7 +446,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual("ON", message_json["state"])
 
         self.mock_publish.async_publish.reset_mock()
-        light.turn_on(self.hass, 'light.test', flash="long")
+        common.turn_on(self.hass, 'light.test', flash="long")
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -479,7 +477,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
         self.assertEqual(40, state.attributes.get(ATTR_SUPPORTED_FEATURES))
 
-        light.turn_on(self.hass, 'light.test', transition=10)
+        common.turn_on(self.hass, 'light.test', transition=10)
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -495,7 +493,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual("ON", message_json["state"])
 
         # Transition back off
-        light.turn_off(self.hass, 'light.test', transition=10)
+        common.turn_off(self.hass, 'light.test', transition=10)
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -547,8 +545,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual(255, state.attributes.get('brightness'))
 
-    def test_invalid_color_brightness_and_white_values(self): \
-            # pylint: disable=invalid-name
+    def test_invalid_color_brightness_and_white_values(self):
         """Test that invalid color/brightness/white values are ignored."""
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
@@ -673,3 +670,25 @@ class TestLightMQTTJSON(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+
+async def test_discovery_removal(hass, mqtt_mock, caplog):
+    """Test removal of discovered mqtt_json lights."""
+    await async_start(hass, 'homeassistant', {'mqtt': {}})
+    data = (
+        '{ "name": "Beer",'
+        '  "platform": "mqtt_json",'
+        '  "command_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('light.beer')
+    assert state is None

@@ -102,12 +102,12 @@ class TomatoDeviceScanner(DeviceScanner):
                 for param, value in \
                         self.parse_api_pattern.findall(response.text):
 
-                    if param == 'wldev' or param == 'dhcpd_lease':
+                    if param in ('wldev', 'dhcpd_lease'):
                         self.last_results[param] = \
                             json.loads(value.replace("'", '"'))
                 return True
 
-            elif response.status_code == 401:
+            if response.status_code == 401:
                 # Authentication error
                 _LOGGER.exception((
                     "Failed to authenticate, "

@@ -52,7 +52,7 @@ def setup(hass, config):
     return True
 
 
-class NuimoLogger(object):
+class NuimoLogger:
     """Handle Nuimo Controller event callbacks."""
 
     def __init__(self, hass, name):
@@ -167,7 +167,7 @@ HOMEASSIST_LOGO = (
     ".........")
 
 
-class DiscoveryLogger(object):
+class DiscoveryLogger:
     """Handle Nuimo Discovery callbacks."""
 
     # pylint: disable=no-self-use

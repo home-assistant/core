@@ -4,7 +4,6 @@ Timer component.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/timer/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -13,12 +12,10 @@ import voluptuous as vol
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME)
-from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 
-from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,64 +61,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@bind_hass
-def start(hass, entity_id, duration):
-    """Start a timer."""
-    hass.add_job(async_start, hass, entity_id, {ATTR_ENTITY_ID: entity_id,
-                                                ATTR_DURATION: duration})
-
-
-@callback
-@bind_hass
-def async_start(hass, entity_id, duration):
-    """Start a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_START, {ATTR_ENTITY_ID: entity_id,
-                                ATTR_DURATION: duration}))
-
-
-@bind_hass
-def pause(hass, entity_id):
-    """Pause a timer."""
-    hass.add_job(async_pause, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_pause(hass, entity_id):
-    """Pause a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_PAUSE, {ATTR_ENTITY_ID: entity_id}))
-
-
-@bind_hass
-def cancel(hass, entity_id):
-    """Cancel a timer."""
-    hass.add_job(async_cancel, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_cancel(hass, entity_id):
-    """Cancel a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_CANCEL, {ATTR_ENTITY_ID: entity_id}))
-
-
-@bind_hass
-def finish(hass, entity_id):
-    """Finish a timer."""
-    hass.add_job(async_cancel, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_finish(hass, entity_id):
-    """Finish a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_FINISH, {ATTR_ENTITY_ID: entity_id}))
-
-
 async def async_setup(hass, config):
     """Set up a timer."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -141,39 +80,18 @@ async def async_setup(hass, config):
     if not entities:
         return False
 
-    async def async_handler_service(service):
-        """Handle a call to the timer services."""
-        target_timers = component.async_extract_from_service(service)
-
-        attr = None
-        if service.service == SERVICE_PAUSE:
-            attr = 'async_pause'
-        elif service.service == SERVICE_CANCEL:
-            attr = 'async_cancel'
-        elif service.service == SERVICE_FINISH:
-            attr = 'async_finish'
-
-        tasks = [getattr(timer, attr)() for timer in target_timers if attr]
-        if service.service == SERVICE_START:
-            for timer in target_timers:
-                tasks.append(
-                    timer.async_start(service.data.get(ATTR_DURATION))
-                )
-        if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_START, async_handler_service,
-        schema=SERVICE_SCHEMA_DURATION)
-    hass.services.async_register(
-        DOMAIN, SERVICE_PAUSE, async_handler_service,
-        schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_CANCEL, async_handler_service,
-        schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_FINISH, async_handler_service,
-        schema=SERVICE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_START, SERVICE_SCHEMA_DURATION,
+        'async_start')
+    component.async_register_entity_service(
+        SERVICE_PAUSE, SERVICE_SCHEMA,
+        'async_pause')
+    component.async_register_entity_service(
+        SERVICE_CANCEL, SERVICE_SCHEMA,
+        'async_cancel')
+    component.async_register_entity_service(
+        SERVICE_FINISH, SERVICE_SCHEMA,
+        'async_finish')
 
     await component.async_add_entities(entities)
     return True

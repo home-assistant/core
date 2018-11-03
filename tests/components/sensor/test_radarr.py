@@ -83,7 +83,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 12
             }
         ], 200)
-    elif 'api/command' in url:
+    if 'api/command' in url:
         return MockResponse([
             {
                 "name": "RescanMovie",
@@ -94,7 +94,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 24
             }
         ], 200)
-    elif 'api/movie' in url:
+    if 'api/movie' in url:
         return MockResponse([
             {
                 "title": "Assassin's Creed",
@@ -149,7 +149,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 1
             }
         ], 200)
-    elif 'api/diskspace' in url:
+    if 'api/diskspace' in url:
         return MockResponse([
             {
                 "path": "/data",
@@ -158,7 +158,7 @@ def mocked_requests_get(*args, **kwargs):
                 "totalSpace": 499738734592
             }
         ], 200)
-    elif 'api/system/status' in url:
+    if 'api/system/status' in url:
         return MockResponse({
             "version": "0.2.0.210",
             "buildTime": "2017-01-22T23:12:49Z",
@@ -182,10 +182,9 @@ def mocked_requests_get(*args, **kwargs):
                                "(Stable 4.6.1.3/abb06f1 "
                                "Mon Oct  3 07:57:59 UTC 2016)")
         }, 200)
-    else:
-        return MockResponse({
-            "error": "Unauthorized"
-        }, 401)
+    return MockResponse({
+        "error": "Unauthorized"
+    }, 401)
 
 
 class TestRadarrSetup(unittest.TestCase):
@@ -194,7 +193,7 @@ class TestRadarrSetup(unittest.TestCase):
     # pylint: disable=invalid-name
     DEVICES = []
 
-    def add_devices(self, devices, update):
+    def add_entities(self, devices, update):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -222,7 +221,7 @@ class TestRadarrSetup(unittest.TestCase):
                 'diskspace'
             ]
         }
-        radarr.setup_platform(self.hass, config, self.add_devices, None)
+        radarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual('263.10', device.state)
@@ -249,7 +248,7 @@ class TestRadarrSetup(unittest.TestCase):
                 'diskspace'
             ]
         }
-        radarr.setup_platform(self.hass, config, self.add_devices, None)
+        radarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual('263.10', device.state)
@@ -276,7 +275,7 @@ class TestRadarrSetup(unittest.TestCase):
                 'commands'
             ]
         }
-        radarr.setup_platform(self.hass, config, self.add_devices, None)
+        radarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -303,7 +302,7 @@ class TestRadarrSetup(unittest.TestCase):
                 'movies'
             ]
         }
-        radarr.setup_platform(self.hass, config, self.add_devices, None)
+        radarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -330,7 +329,7 @@ class TestRadarrSetup(unittest.TestCase):
                 'upcoming'
             ]
         }
-        radarr.setup_platform(self.hass, config, self.add_devices, None)
+        radarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -361,7 +360,7 @@ class TestRadarrSetup(unittest.TestCase):
                 'upcoming'
             ]
         }
-        radarr.setup_platform(self.hass, config, self.add_devices, None)
+        radarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -388,7 +387,7 @@ class TestRadarrSetup(unittest.TestCase):
                 'status'
             ]
         }
-        radarr.setup_platform(self.hass, config, self.add_devices, None)
+        radarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual('0.2.0.210', device.state)
@@ -414,7 +413,7 @@ class TestRadarrSetup(unittest.TestCase):
             ],
             "ssl": "true"
         }
-        radarr.setup_platform(self.hass, config, self.add_devices, None)
+        radarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -442,7 +441,7 @@ class TestRadarrSetup(unittest.TestCase):
                 'upcoming'
             ]
         }
-        radarr.setup_platform(self.hass, config, self.add_devices, None)
+        radarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(None, device.state)

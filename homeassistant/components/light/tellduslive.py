@@ -15,11 +15,11 @@ from homeassistant.components.tellduslive import TelldusLiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tellstick Net lights."""
     if discovery_info is None:
         return
-    add_devices(TelldusLiveLight(hass, light) for light in discovery_info)
+    add_entities(TelldusLiveLight(hass, light) for light in discovery_info)
 
 
 class TelldusLiveLight(TelldusLiveEntity, Light):

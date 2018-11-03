@@ -41,10 +41,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Open Hardware Monitor platform."""
     data = OpenHardwareMonitorData(config, hass)
-    add_devices(data.devices, True)
+    add_entities(data.devices, True)
 
 
 class OpenHardwareMonitorDevice(Entity):
@@ -101,14 +101,13 @@ class OpenHardwareMonitorDevice(Entity):
 
                 self.attributes = _attributes
                 return
-            else:
-                array = array[path_number][OHM_CHILDREN]
-                _attributes.update({
-                    'level_%s' % path_index: values[OHM_NAME]
-                })
+            array = array[path_number][OHM_CHILDREN]
+            _attributes.update({
+                'level_%s' % path_index: values[OHM_NAME]
+            })
 
 
-class OpenHardwareMonitorData(object):
+class OpenHardwareMonitorData:
     """Class used to pull data from OHM and create sensors."""
 
     def __init__(self, config, hass):

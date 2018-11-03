@@ -8,7 +8,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.toon/
 """
 from homeassistant.components.climate import (
-    ATTR_TEMPERATURE, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_PERFORMANCE,
+    ATTR_TEMPERATURE, STATE_COOL, STATE_ECO, STATE_HEAT, STATE_AUTO,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 import homeassistant.components.toon as toon_main
 from homeassistant.const import TEMP_CELSIUS
@@ -16,9 +16,9 @@ from homeassistant.const import TEMP_CELSIUS
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Toon climate device."""
-    add_devices([ThermostatDevice(hass)], True)
+    add_entities([ThermostatDevice(hass)], True)
 
 
 class ThermostatDevice(ClimateDevice):
@@ -34,7 +34,7 @@ class ThermostatDevice(ClimateDevice):
         self._temperature = None
         self._setpoint = None
         self._operation_list = [
-            STATE_PERFORMANCE,
+            STATE_AUTO,
             STATE_HEAT,
             STATE_ECO,
             STATE_COOL,
@@ -84,7 +84,7 @@ class ThermostatDevice(ClimateDevice):
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
         toonlib_values = {
-            STATE_PERFORMANCE: 'Comfort',
+            STATE_AUTO: 'Comfort',
             STATE_HEAT: 'Home',
             STATE_ECO: 'Away',
             STATE_COOL: 'Sleep',

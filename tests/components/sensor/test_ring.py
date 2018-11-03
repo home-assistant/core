@@ -16,7 +16,7 @@ class TestRingSensorSetup(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices, action):
+    def add_entities(self, devices, action):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -66,7 +66,7 @@ class TestRingSensorSetup(unittest.TestCase):
         base_ring.setup(self.hass, VALID_CONFIG)
         ring.setup_platform(self.hass,
                             self.config,
-                            self.add_devices,
+                            self.add_entities,
                             None)
 
         for device in self.DEVICES:

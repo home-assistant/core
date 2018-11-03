@@ -3,15 +3,50 @@
 import asyncio
 import unittest
 
+from homeassistant.loader import bind_hass
+from homeassistant.components.input_select import (
+    ATTR_OPTION, ATTR_OPTIONS, DOMAIN, SERVICE_SET_OPTIONS,
+    SERVICE_SELECT_NEXT, SERVICE_SELECT_OPTION, SERVICE_SELECT_PREVIOUS)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON)
+from homeassistant.core import State, Context
+from homeassistant.setup import setup_component, async_setup_component
+
 from tests.common import get_test_home_assistant, mock_restore_cache
 
-from homeassistant.core import State
-from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.components.input_select import (
-    ATTR_OPTIONS, DOMAIN, SERVICE_SET_OPTIONS,
-    select_option, select_next, select_previous)
-from homeassistant.const import (
-    ATTR_ICON, ATTR_FRIENDLY_NAME)
+
+@bind_hass
+def select_option(hass, entity_id, option):
+    """Set value of input_select.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_SELECT_OPTION, {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_OPTION: option,
+    })
+
+
+@bind_hass
+def select_next(hass, entity_id):
+    """Set next value of input_select.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_SELECT_NEXT, {
+        ATTR_ENTITY_ID: entity_id,
+    })
+
+
+@bind_hass
+def select_previous(hass, entity_id):
+    """Set previous value of input_select.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_SELECT_PREVIOUS, {
+        ATTR_ENTITY_ID: entity_id,
+    })
 
 
 class TestInputSelect(unittest.TestCase):
@@ -19,7 +54,7 @@ class TestInputSelect(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -276,3 +311,30 @@ def test_initial_state_overrules_restore_state(hass):
     state = hass.states.get('input_select.s2')
     assert state
     assert state.state == 'middle option'
+
+
+async def test_input_select_context(hass):
+    """Test that input_select context works."""
+    assert await async_setup_component(hass, 'input_select', {
+        'input_select': {
+            's1': {
+                'options': [
+                    'first option',
+                    'middle option',
+                    'last option',
+                ],
+            }
+        }
+    })
+
+    state = hass.states.get('input_select.s1')
+    assert state is not None
+
+    await hass.services.async_call('input_select', 'select_next', {
+        'entity_id': state.entity_id,
+    }, True, Context(user_id='abcd'))
+
+    state2 = hass.states.get('input_select.s1')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

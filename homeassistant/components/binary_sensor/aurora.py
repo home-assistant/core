@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aurora sensor."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Lat. or long. not set in Home Assistant config")
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Connection to aurora forecast service failed: %s", error)
         return False
 
-    add_devices([AuroraSensor(aurora_data, name)], True)
+    add_entities([AuroraSensor(aurora_data, name)], True)
 
 
 class AuroraSensor(BinarySensorDevice):
@@ -99,7 +99,7 @@ class AuroraSensor(BinarySensorDevice):
         self.aurora_data.update()
 
 
-class AuroraData(object):
+class AuroraData:
     """Get aurora forecast."""
 
     def __init__(self, latitude, longitude, threshold):

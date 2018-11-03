@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bbox sensor."""
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(BboxSensor(bbox_data, variable, name))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class BboxSensor(Entity):
@@ -125,7 +125,7 @@ class BboxSensor(Entity):
                                 2)
 
 
-class BboxData(object):
+class BboxData:
     """Get data from the Bbox."""
 
     def __init__(self):

@@ -94,7 +94,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
     from pypollencom import Client
 
@@ -113,7 +113,7 @@ async def async_setup_platform(
             PollencomSensor(
                 data, config[CONF_ZIP_CODE], kind, category, name, icon, unit))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 def calculate_average_rating(indices):
@@ -183,9 +183,12 @@ class PollencomSensor(Entity):
             return
 
         if self._category:
-            data = self.pollencom.data[self._category]['Location']
+            data = self.pollencom.data[self._category].get('Location')
         else:
-            data = self.pollencom.data[self._type]['Location']
+            data = self.pollencom.data[self._type].get('Location')
+
+        if not data:
+            return
 
         indices = [p['Index'] for p in data['periods']]
         average = round(mean(indices), 1)
@@ -260,7 +263,7 @@ class PollencomSensor(Entity):
             self._state = average
 
 
-class PollenComData(object):
+class PollenComData:
     """Define a data object to retrieve info from Pollen.com."""
 
     def __init__(self, client, sensor_types):
@@ -304,7 +307,7 @@ class PollenComData(object):
                     _LOGGER.error('Unable to get allergy history: %s', err)
                     self.data[TYPE_ALLERGY_HISTORIC] = {}
 
-            if all(s in self._sensor_types
+            if any(s in self._sensor_types
                    for s in [TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
                              TYPE_ALLERGY_YESTERDAY]):
                 try:

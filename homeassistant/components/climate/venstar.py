@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Venstar thermostat."""
     import venstarcolortouch
 
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         addr=host, timeout=timeout, user=username, password=password,
         proto=proto)
 
-    add_devices([VenstarThermostat(client, humidifier)], True)
+    add_entities([VenstarThermostat(client, humidifier)], True)
 
 
 class VenstarThermostat(ClimateDevice):
@@ -152,9 +152,9 @@ class VenstarThermostat(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         if self._client.mode == self._client.MODE_HEAT:
             return STATE_HEAT
-        elif self._client.mode == self._client.MODE_COOL:
+        if self._client.mode == self._client.MODE_COOL:
             return STATE_COOL
-        elif self._client.mode == self._client.MODE_AUTO:
+        if self._client.mode == self._client.MODE_AUTO:
             return STATE_AUTO
         return STATE_OFF
 
@@ -178,7 +178,7 @@ class VenstarThermostat(ClimateDevice):
         """Return the target temperature we try to reach."""
         if self._client.mode == self._client.MODE_HEAT:
             return self._client.heattemp
-        elif self._client.mode == self._client.MODE_COOL:
+        if self._client.mode == self._client.MODE_COOL:
             return self._client.cooltemp
         return None
 

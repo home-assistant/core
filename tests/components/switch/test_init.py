@@ -2,12 +2,13 @@
 # pylint: disable=protected-access
 import unittest
 
-from homeassistant.setup import setup_component
-from homeassistant import loader
+from homeassistant.setup import setup_component, async_setup_component
+from homeassistant import core, loader
 from homeassistant.components import switch
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 
 from tests.common import get_test_home_assistant
+from tests.components.switch import common
 
 
 class TestSwitch(unittest.TestCase):
@@ -15,7 +16,7 @@ class TestSwitch(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         platform = loader.get_component(self.hass, 'switch.test')
         platform.init()
@@ -41,8 +42,8 @@ class TestSwitch(unittest.TestCase):
         self.assertFalse(switch.is_on(self.hass, self.switch_2.entity_id))
         self.assertFalse(switch.is_on(self.hass, self.switch_3.entity_id))
 
-        switch.turn_off(self.hass, self.switch_1.entity_id)
-        switch.turn_on(self.hass, self.switch_2.entity_id)
+        common.turn_off(self.hass, self.switch_1.entity_id)
+        common.turn_on(self.hass, self.switch_2.entity_id)
 
         self.hass.block_till_done()
 
@@ -51,7 +52,7 @@ class TestSwitch(unittest.TestCase):
         self.assertTrue(switch.is_on(self.hass, self.switch_2.entity_id))
 
         # Turn all off
-        switch.turn_off(self.hass)
+        common.turn_off(self.hass)
 
         self.hass.block_till_done()
 
@@ -64,7 +65,7 @@ class TestSwitch(unittest.TestCase):
         self.assertFalse(switch.is_on(self.hass, self.switch_3.entity_id))
 
         # Turn all on
-        switch.turn_on(self.hass)
+        common.turn_on(self.hass)
 
         self.hass.block_till_done()
 
@@ -91,3 +92,24 @@ class TestSwitch(unittest.TestCase):
                 '{} 2'.format(switch.DOMAIN): {CONF_PLATFORM: 'test2'},
             }
         ))
+
+
+async def test_switch_context(hass):
+    """Test that switch context works."""
+    assert await async_setup_component(hass, 'switch', {
+        'switch': {
+            'platform': 'test'
+        }
+    })
+
+    state = hass.states.get('switch.ac')
+    assert state is not None
+
+    await hass.services.async_call('switch', 'toggle', {
+        'entity_id': state.entity_id,
+    }, True, core.Context(user_id='abcd'))
+
+    state2 = hass.states.get('switch.ac')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

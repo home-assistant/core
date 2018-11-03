@@ -63,8 +63,8 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA), _check_sensor_schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up SMA WebConnect sensor."""
     import pysma
 
@@ -93,7 +93,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensor_defs = {name: val for name, val in sensor_defs.items()
                    if name in used_sensors}
 
-    async_add_devices(hass_sensors)
+    async_add_entities(hass_sensors)
 
     # Init the SMA interface
     session = async_get_clientsession(hass)
@@ -106,10 +106,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sma = pysma.SMA(session, url, config[CONF_PASSWORD], group=grp)
 
     # Ensure we logout on shutdown
-    @asyncio.coroutine
-    def async_close_session(event):
+    async def async_close_session(event):
         """Close the session."""
-        yield from sma.close_session()
+        await sma.close_session()
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_close_session)
 
@@ -119,15 +118,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     backoff = 0
 
-    @asyncio.coroutine
-    def async_sma(event):
+    async def async_sma(event):
         """Update all the SMA sensors."""
         nonlocal backoff
         if backoff > 1:
             backoff -= 1
             return
 
-        values = yield from sma.read(keys_to_query)
+        values = await sma.read(keys_to_query)
         if values is None:
             backoff = 3
             return
@@ -141,7 +139,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if task:
                 tasks.append(task)
         if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks, loop=hass.loop)
 
     interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
     async_track_time_interval(hass, async_sma, interval)

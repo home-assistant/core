@@ -27,11 +27,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nello lock platform."""
     from pynello import Nello
     nello = Nello(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
-    add_devices([NelloLock(lock) for lock in nello.locations], True)
+    add_entities([NelloLock(lock) for lock in nello.locations], True)
 
 
 class NelloLock(LockDevice):

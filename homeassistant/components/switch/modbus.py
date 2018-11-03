@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.modbus/
 import logging
 import voluptuous as vol
 
-import homeassistant.components.modbus as modbus
+from homeassistant.components import modbus
 from homeassistant.const import (
     CONF_NAME, CONF_SLAVE, CONF_COMMAND_ON, CONF_COMMAND_OFF)
 from homeassistant.helpers.entity import ToggleEntity
@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = vol.All(
     }))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Read configuration and create Modbus devices."""
     switches = []
     if CONF_COILS in config:
@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 register.get(CONF_REGISTER_TYPE),
                 register.get(CONF_STATE_ON),
                 register.get(CONF_STATE_OFF)))
-    add_devices(switches)
+    add_entities(switches)
 
 
 class ModbusCoilSwitch(ToggleEntity):

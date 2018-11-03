@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the simulated sensor."""
     name = config.get(CONF_NAME)
     unit = config.get(CONF_UNIT)
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensor = SimulatedSensor(name, unit, amp, mean, period, phase, fwhm, seed,
                              relative_to_epoch)
-    add_devices([sensor], True)
+    add_entities([sensor], True)
 
 
 class SimulatedSensor(Entity):

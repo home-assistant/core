@@ -41,8 +41,9 @@ async def async_setup(hass, config):
     hass.http.register_view(CalendarListView(component))
     hass.http.register_view(CalendarEventView(component))
 
-    await hass.components.frontend.async_register_built_in_panel(
-        'calendar', 'calendar', 'hass:calendar')
+    # Doesn't work in prod builds of the frontend: home-assistant-polymer#1289
+    # await hass.components.frontend.async_register_built_in_panel(
+    #     'calendar', 'calendar', 'hass:calendar')
 
     await component.async_setup(config)
     return True
@@ -129,7 +130,7 @@ class CalendarEventDevice(Entity):
 
         now = dt.now()
 
-        if start <= now and end > now:
+        if start <= now < end:
             return STATE_ON
 
         if now >= end:

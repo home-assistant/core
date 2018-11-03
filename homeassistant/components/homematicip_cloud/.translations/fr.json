@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le point d'acc\u00e8s est d\u00e9j\u00e0 configur\u00e9",
+            "connection_aborted": "Impossible de se connecter au serveur HMIP",
+            "unknown": "Une erreur inconnue s'est produite."
+        },
+        "error": {
+            "invalid_pin": "Code PIN invalide, veuillez r\u00e9essayer.",
+            "press_the_button": "Veuillez appuyer sur le bouton bleu.",
+            "register_failed": "\u00c9chec d'enregistrement. Veuillez r\u00e9essayer.",
+            "timeout_button": "D\u00e9lai d'attente expir\u00e9, veuillez r\u00e9\u00e9ssayer."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "ID du point d'acc\u00e8s (SGTIN)",
+                    "name": "Nom (facultatif, utilis\u00e9 comme pr\u00e9fixe de nom pour tous les p\u00e9riph\u00e9riques)",
+                    "pin": "Code PIN (facultatif)"
+                },
+                "title": "Choisissez le point d'acc\u00e8s HomematicIP"
+            },
+            "link": {
+                "description": "Appuyez sur le bouton bleu du point d'acc\u00e8s et sur le bouton Envoyer pour enregistrer HomematicIP avec Home Assistant. \n\n ![Emplacement du bouton sur le pont](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Lier le point d'acc\u00e8s"
+            }
+        },
+        "title": "HomematicIP Cloud"
+    }
+}

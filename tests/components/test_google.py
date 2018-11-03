@@ -14,7 +14,7 @@ class TestGoogle(unittest.TestCase):
     """Test the Google component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -85,8 +85,8 @@ class TestGoogle(unittest.TestCase):
 
         calendar_service = google.GoogleCalendarService(
             self.hass.config.path(google.TOKEN_FILE))
-        self.assertTrue(google.setup_services(self.hass, True,
-                                              calendar_service))
+        assert google.setup_services(
+            self.hass, {'google': {}}, True, calendar_service)
         # self.hass.services.call('google', 'found_calendar', calendar,
         #                         blocking=True)
 

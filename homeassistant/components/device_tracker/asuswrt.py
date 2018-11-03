@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_MODE,
     CONF_PROTOCOL)
 
-REQUIREMENTS = ['pexpect==4.0.1']
+REQUIREMENTS = ['pexpect==4.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -311,12 +311,11 @@ class SshConnection(_Connection):
 
         super().connect()
 
-    def disconnect(self):   \
-            # pylint: disable=broad-except
+    def disconnect(self):
         """Disconnect the current SSH connection."""
         try:
             self._ssh.logout()
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             pass
         finally:
             self._ssh = None
@@ -379,12 +378,11 @@ class TelnetConnection(_Connection):
 
         super().connect()
 
-    def disconnect(self):   \
-            # pylint: disable=broad-except
+    def disconnect(self):
         """Disconnect the current Telnet connection."""
         try:
             self._telnet.write('exit\n'.encode('ascii'))
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             pass
 
         super().disconnect()

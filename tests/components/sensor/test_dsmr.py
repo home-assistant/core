@@ -182,10 +182,14 @@ def test_reconnect(hass, monkeypatch, mock_connection_factory):
 
     # mock waiting coroutine while connection lasts
     closed = asyncio.Event(loop=hass.loop)
+    # Handshake so that `hass.async_block_till_done()` doesn't cycle forever
+    closed2 = asyncio.Event(loop=hass.loop)
 
     @asyncio.coroutine
     def wait_closed():
         yield from closed.wait()
+        closed2.set()
+        closed.clear()
     protocol.wait_closed = wait_closed
 
     yield from async_setup_component(hass, 'sensor', {'sensor': config})
@@ -195,8 +199,11 @@ def test_reconnect(hass, monkeypatch, mock_connection_factory):
     # indicate disconnect, release wait lock and allow reconnect to happen
     closed.set()
     # wait for lock set to resolve
-    yield from hass.async_block_till_done()
-    # wait for sleep to resolve
+    yield from closed2.wait()
+    closed2.clear()
+    assert not closed.is_set()
+
+    closed.set()
     yield from hass.async_block_till_done()
 
     assert connection_factory.call_count >= 2, \

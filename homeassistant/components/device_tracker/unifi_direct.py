@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
     CONF_PORT)
 
-REQUIREMENTS = ['pexpect==4.0.1']
+REQUIREMENTS = ['pexpect==4.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,10 +86,9 @@ class UnifiDeviceScanner(DeviceScanner):
 
     def _disconnect(self):
         """Disconnect the current SSH connection."""
-        # pylint: disable=broad-except
         try:
             self.ssh.logout()
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             pass
         finally:
             self.ssh = None

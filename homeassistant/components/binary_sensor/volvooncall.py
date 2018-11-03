@@ -12,11 +12,11 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Volvo sensors."""
     if discovery_info is None:
         return
-    add_devices([VolvoSensor(hass, *discovery_info)])
+    add_entities([VolvoSensor(hass, *discovery_info)])
 
 
 class VolvoSensor(VolvoEntity, BinarySensorDevice):
@@ -28,7 +28,7 @@ class VolvoSensor(VolvoEntity, BinarySensorDevice):
         val = getattr(self.vehicle, self._attribute)
         if self._attribute == 'bulb_failures':
             return bool(val)
-        elif self._attribute in ['doors', 'windows']:
+        if self._attribute in ['doors', 'windows']:
             return any([val[key] for key in val if 'Open' in key])
         return val != 'Normal'
 
