@@ -74,7 +74,6 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a ONVIF camera."""
-
     def handle_ptz(service):
         """Handle PTZ service call."""
         pan = service.data.get(ATTR_PAN, None)
