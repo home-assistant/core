@@ -1115,6 +1115,9 @@ pystride==0.1.7
 # homeassistant.components.sensor.syncthru
 pysyncthru==0.3.1
 
+# homeassistant.components.sensor.tautulli
+pytautulli==0.4.0
+
 # homeassistant.components.media_player.liveboxplaytv
 pyteleloisirs==3.4
 
