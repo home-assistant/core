@@ -55,7 +55,8 @@ class HomeKitSensor(HomeKitEntity):
 
         for characteristic in characteristics:
             units = None
-            ctype = homekit.CharacteristicsTypes.get_short(characteristic['type'])
+            ctype = characteristic['type']
+            ctype = homekit.CharacteristicsTypes.get_short(ctype)
             if ctype.startswith('Unknown Characteristic'):
                 ctype = CHARACTERISTICS.get(characteristic['type'], None)
                 units = UNITS_OF_MEASUREMENT.get(characteristic['type'], None)
