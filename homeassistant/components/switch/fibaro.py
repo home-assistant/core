@@ -11,7 +11,6 @@ from homeassistant.components.fibaro import (
     FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
 
 DEPENDENCIES = ['fibaro']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -33,15 +32,13 @@ class FibaroSwitch(FibaroDevice, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn device on."""
-        self.switch_on()
+        self.action("turnOn")
         self._state = True
-        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn device off."""
-        self.switch_off()
+        self.action("turnOff")
         self._state = False
-        self.schedule_update_ha_state()
 
     @property
     def is_on(self):

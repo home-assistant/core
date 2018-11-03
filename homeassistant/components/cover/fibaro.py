@@ -31,14 +31,9 @@ class FibaroCover(FibaroDevice, CoverDevice):
         FibaroDevice.__init__(self, fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
-    @property
-    def current_cover_position(self):
-        """
-        Return current position of cover.
-
-        0 is closed, 100 is fully open.
-        """
-        position = self.get_level()
+    @staticmethod
+    def bound(position):
+        """Normalizes the position."""
         if position is None:
             return None
         position = int(position)
@@ -49,27 +44,22 @@ class FibaroCover(FibaroDevice, CoverDevice):
         return position
 
     @property
+    def current_cover_position(self):
+        """Return current position of cover. 0 is closed, 100 is open."""
+        return self.bound(self.get_level())
+
+    @property
     def current_cover_tilt_position(self):
         """Return the current tilt position for venetian blinds."""
-        tilt = self.get_level2()
-        if tilt is None:
-            return None
-        tilt = int(tilt)
-        if tilt <= 5:
-            return 0
-        if tilt >= 95:
-            return 100
-        return tilt
+        return self.bound(self.get_level2())
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         self.set_level(kwargs.get(ATTR_POSITION))
-        self.schedule_update_ha_state()
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.set_level2(kwargs.get(ATTR_TILT_POSITION))
-        self.schedule_update_ha_state()
+        self.action("setValue2", kwargs.get(ATTR_TILT_POSITION))
 
     @property
     def is_closed(self):
@@ -79,32 +69,20 @@ class FibaroCover(FibaroDevice, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self.open()
-        self.schedule_update_ha_state()
+        self.action("open")
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self.close()
-        self.schedule_update_ha_state()
+        self.action("close")
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        self.set_level2(100)
-        self.schedule_update_ha_state()
+        self.action("setValue2", 100)
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover."""
-        self.set_level2(0)
-        self.schedule_update_ha_state()
+        self.action("setValue2", 0)
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.stop()
-        self.schedule_update_ha_state()
-
-#    def update(self):
-#        """Get the latest data and update the state."""
-#        if self.fibaro_device.properties.value == "false":
-#            self._state = False
-#        else:
-#            self._state = True
+        self.action("stop")

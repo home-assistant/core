@@ -15,10 +15,7 @@ from homeassistant.components.fibaro import (
     FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
 
 DEPENDENCIES = ['fibaro']
-
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=5)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -56,15 +53,13 @@ class FibaroSensor(FibaroDevice, Entity):
             if self.fibaro_device.properties.unit == 'F':
                 return TEMP_FAHRENHEIT
             return self.fibaro_device.properties.unit
-        except KeyError:
+        except (KeyError, ValueError):
             pass
-        except ValueError:
-            pass
-        return 'level'
+        return ''
 
     def update(self):
         """Update the state."""
         try:
             self.current_value = self.fibaro_device.properties.value
-        except ValueError:
+        except (KeyError, ValueError):
             pass
