@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             camera.perform_ptz(pan, tilt, zoom)
 
     hass.services.register(DOMAIN, SERVICE_PTZ, handle_ptz,
-                                 schema=SERVICE_PTZ_SCHEMA)
+                           schema=SERVICE_PTZ_SCHEMA)
     add_entities([ONVIFHassCamera(hass, config)])
 
 
