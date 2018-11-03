@@ -77,7 +77,7 @@ class LRFLight(Light):
 
     @property
     def name(self):
-        """LightWave light name."""
+        """Lightwave light name."""
         return self._name
 
     @property
@@ -87,7 +87,7 @@ class LRFLight(Light):
 
     @property
     def is_on(self):
-        """LightWave light is on state."""
+        """Lightwave light is on state."""
         return self._state
 
     async def async_turn_on(self, **kwargs):

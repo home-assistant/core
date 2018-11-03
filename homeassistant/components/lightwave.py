@@ -61,19 +61,19 @@ class LWLink():
             LWLink.link_ip = link_ip
 
     def _send_message(self, msg):
-        """Adds message to queue."""
+        """Add message to queue and start processing the queue."""
         LWLink.the_queue.put_nowait(msg)
         if LWLink.thread is None or not self.thread.isAlive():
             LWLink.thread = threading.Thread(target=self._send_queue)
             LWLink.thread.start()
 
     def turn_on_light(self, device_id, name):
-        """Formats message to turn light on."""
+        """Create the message to turn light on."""
         msg = '321,!%sFdP32|Turn On|%s' % (device_id, name)
         self._send_message(msg)
 
     def turn_on_switch(self, device_id, name):
-        """Formats message to turn switch on."""
+        """Create the message to turn switch on."""
         msg = '321,!%sF1|Turn On|%s' % (device_id, name)
         self._send_message(msg)
 
@@ -87,19 +87,17 @@ class LWLink():
         self._send_message(msg)
 
     def turn_off(self, device_id, name):
-        """Formats message to turn light or switch off."""
+        """Create the message to turn light or switch off."""
         msg = "321,!%sF0|Turn Off|%s" % (device_id, name)
         self._send_message(msg)
 
     def _send_queue(self):
-        """Starts processing the queue."""
+        """if the queue is not empty, process the queue."""
         while not LWLink.the_queue.empty():
             self._send_reliable_message(LWLink.the_queue.get_nowait())
 
     def _send_reliable_message(self, msg):
-        """Send msg to LightwaveRF hub and only returns after:
-           an OK is received | timeout | exception | max_retries.
-        """
+        """Send msg to LightwaveRF hub."""
         result = False
         max_retries = 15
         try:

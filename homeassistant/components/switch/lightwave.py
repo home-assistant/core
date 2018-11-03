@@ -56,7 +56,7 @@ class LRFSwitch(SwitchDevice):
     """Provides a LightWave switch."""
 
     def __init__(self, name, device_id, lwlink):
-        """Setup the component."""
+        """Lightwave switch setup for later use."""
         self._name = name
         self._device_id = device_id
         self._state = None
@@ -69,12 +69,12 @@ class LRFSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """LightWave switch name."""
+        """Lightwave switch name."""
         return self._name
 
     @property
     def is_on(self):
-        """LightWave switch is on state."""
+        """Lightwave switch is on state."""
         return self._state
 
     async def async_turn_on(self, **kwargs):
