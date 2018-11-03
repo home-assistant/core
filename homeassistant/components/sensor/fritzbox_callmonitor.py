@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([sensor])
 
     monitor = FritzBoxCallMonitor(host=host, port=port, sensor=sensor,
-        keepalive=keepalive)
+                                  keepalive=keepalive)
     monitor.connect()
 
     def _stop_listener(_event):
