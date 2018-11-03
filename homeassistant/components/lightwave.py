@@ -92,7 +92,7 @@ class LWLink():
         self._send_message(msg)
 
     def _send_queue(self):
-        """if the queue is not empty, process the queue."""
+        """If the queue is not empty, process the queue."""
         while not LWLink.the_queue.empty():
             self._send_reliable_message(LWLink.the_queue.get_nowait())
 
@@ -141,8 +141,9 @@ class LWLink():
             _LOGGER.error("LW broker timeout!")
             return result
 
-        except:
+        except Exception as ex:
             _LOGGER.error("LW broker something went wrong!")
+            _LOGGER.error(ex)
             raise
 
         if result:
