@@ -40,12 +40,11 @@ CONF_OUTPUT = 'output'
 CONF_RUN_TEST = 'run_test'
 
 DEFAULT_BINARY = 'ffmpeg'
-DEFAULT_RUN_TEST = True
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_FFMPEG_BIN, default=DEFAULT_BINARY): cv.string,
-        vol.Optional(CONF_RUN_TEST, default=DEFAULT_RUN_TEST): cv.boolean,
+        vol.Optional(CONF_RUN_TEST): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
