@@ -312,6 +312,156 @@ async def test_if_action_before(hass, calls):
     await fake_time_fire_event_count_calls(hass, now, 1, calls)
 
 
+async def test_if_action_during_morning_twilight(hass, calls):
+    """Test if action is during morning_twilight."""
+    # Astronomical dawn at 2015-09-16T12:09:37+00:00
+    # Sunrise at 2015-09-16T13:32:43+00:00
+    times = [
+        (datetime(2015, 9, 16, 0, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 12, 9, 36, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 12, 9, 37, tzinfo=dt_util.UTC), 1),
+        (datetime(2015, 9, 16, 13, 32, 42, tzinfo=dt_util.UTC), 2),
+        (datetime(2015, 9, 16, 13, 32, 43, tzinfo=dt_util.UTC), 2),
+    ]
+    period = 'morning_twilight'
+    await action_during_test_helper(hass, calls, period, times)
+
+
+async def test_if_action_during_evening_twilight(hass, calls):
+    """Test if action is during evening_twilight."""
+    # Sunset at 2015-09-16T01:56:46+00:00
+    # Astronomical dusk at 2015-09-16T03:19:59
+    times = [
+        (datetime(2015, 9, 16, 0, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 1, 56, 45, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 1, 56, 46, tzinfo=dt_util.UTC), 1),
+        (datetime(2015, 9, 16, 3, 19, 58, tzinfo=dt_util.UTC), 2),
+        (datetime(2015, 9, 16, 3, 19, 59, tzinfo=dt_util.UTC), 2),
+    ]
+    period = 'evening_twilight'
+    await action_during_test_helper(hass, calls, period, times)
+
+
+async def test_if_action_during_morning_astronomical_twilight(hass, calls):
+    """Test if action is during morning_astronomical_twilight."""
+    # Astronomical dawn at 2015-09-16T12:09:37+00:00
+    # Nautical dawn at 2015-09-16T12:39:01+00:00
+    times = [
+        (datetime(2015, 9, 16, 0, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 12, 9, 36, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 12, 9, 37, tzinfo=dt_util.UTC), 1),
+        (datetime(2015, 9, 16, 12, 39, 0, tzinfo=dt_util.UTC), 2),
+        (datetime(2015, 9, 16, 12, 39, 1, tzinfo=dt_util.UTC), 2),
+    ]
+    period = 'morning_astronomical_twilight'
+    await action_during_test_helper(hass, calls, period, times)
+
+
+async def test_if_action_during_evening_astronomical_twilight(hass, calls):
+    """Test if action is during evening_astronomical_twilight."""
+    # Nautical dusk at 2015-09-16T02:50:31+00:00
+    # Astronomical dusk at 2015-09-16T03:19:59
+    times = [
+        (datetime(2015, 9, 16, 0, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 2, 50, 30, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 2, 50, 31, tzinfo=dt_util.UTC), 1),
+        (datetime(2015, 9, 16, 3, 19, 58, tzinfo=dt_util.UTC), 2),
+        (datetime(2015, 9, 16, 3, 19, 59, tzinfo=dt_util.UTC), 2),
+    ]
+    period = 'evening_astronomical_twilight'
+    await action_during_test_helper(hass, calls, period, times)
+
+
+async def test_if_action_during_morning_civil_twilight(hass, calls):
+    """Test if action is during morning_civil_twilight."""
+    # Civil dawn at 2015-09-16T13:07:59+00:00
+    # Sunrise at 2015-09-16T13:32:43+00:00
+    times = [
+        (datetime(2015, 9, 16, 0, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 13, 7, 58, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 13, 7, 59, tzinfo=dt_util.UTC), 1),
+        (datetime(2015, 9, 16, 13, 32, 42, tzinfo=dt_util.UTC), 2),
+        (datetime(2015, 9, 16, 13, 32, 43, tzinfo=dt_util.UTC), 2),
+    ]
+    period = 'morning_civil_twilight'
+    await action_during_test_helper(hass, calls, period, times)
+
+
+async def test_if_action_during_evening_civil_twilight(hass, calls):
+    """Test if action is during evening_civil_twilight."""
+    # Sunset at 2015-09-16T01:56:46+00:00
+    # Civil dusk at 2015-09-16T02:21:31+00:00
+    times = [
+        (datetime(2015, 9, 16, 0, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 1, 55, 45, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 1, 56, 46, tzinfo=dt_util.UTC), 1),
+        (datetime(2015, 9, 16, 2, 21, 30, tzinfo=dt_util.UTC), 2),
+        (datetime(2015, 9, 16, 2, 21, 31, tzinfo=dt_util.UTC), 2),
+    ]
+    period = 'evening_civil_twilight'
+    await action_during_test_helper(hass, calls, period, times)
+
+
+async def test_if_action_during_morning_nautical_twilight(hass, calls):
+    """Test if action is during morning_nautical_twilight."""
+    # Nautical dawn at 2015-09-16T12:39:01+00:00
+    # Civil dawn at 2015-09-16T13:07:59+00:00
+    times = [
+        (datetime(2015, 9, 16, 0, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 12, 39, 0, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 12, 39, 1, tzinfo=dt_util.UTC), 1),
+        (datetime(2015, 9, 16, 13, 7, 58, tzinfo=dt_util.UTC), 2),
+        (datetime(2015, 9, 16, 13, 7, 59, tzinfo=dt_util.UTC), 2),
+    ]
+    period = 'morning_nautical_twilight'
+    await action_during_test_helper(hass, calls, period, times)
+
+
+async def test_if_action_during_evening_nautical_twilight(hass, calls):
+    """Test if action is during evening_nautical_twilight."""
+    # Civil dusk at 2015-09-16T02:21:31+00:00
+    # Nautical dusk at 2015-09-16T02:50:31+00:00
+    times = [
+        (datetime(2015, 9, 16, 0, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 2, 21, 30, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 2, 21, 31, tzinfo=dt_util.UTC), 1),
+        (datetime(2015, 9, 16, 2, 50, 30, tzinfo=dt_util.UTC), 2),
+        (datetime(2015, 9, 16, 2, 50, 31, tzinfo=dt_util.UTC), 2),
+    ]
+    period = 'evening_nautical_twilight'
+    await action_during_test_helper(hass, calls, period, times)
+
+
+async def test_if_action_during_day(hass, calls):
+    """Test if action is during day."""
+    # Sunrise at 2015-09-16T13:32:43+00:00
+    # Sunset at 2015-09-17T01:55:24+00:00
+    times = [
+        (datetime(2015, 9, 16, 3, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 13, 32, 42, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 13, 32, 43, tzinfo=dt_util.UTC), 1),
+        (datetime(2015, 9, 17, 1, 55, 23, tzinfo=dt_util.UTC), 2),
+        (datetime(2015, 9, 17, 1, 55, 24, tzinfo=dt_util.UTC), 2),
+    ]
+    period = 'day'
+    await action_during_test_helper(hass, calls, period, times)
+
+
+async def test_if_action_during_night(hass, calls):
+    """Test if action is during night."""
+    # Astronomical dusk at 2015-09-16T03:19:59
+    # Astronomical dawn at 2015-09-16T12:09:37+00:00
+    times = [
+        (datetime(2015, 9, 16, 0, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 3, 19, 58, tzinfo=dt_util.UTC), 0),
+        (datetime(2015, 9, 16, 3, 19, 59, tzinfo=dt_util.UTC), 1),
+        (datetime(2015, 9, 16, 12, 9, 36, tzinfo=dt_util.UTC), 2),
+        (datetime(2015, 9, 16, 12, 9, 37, tzinfo=dt_util.UTC), 2),
+    ]
+    period = 'night'
+    await action_during_test_helper(hass, calls, period, times)
+
+
 async def test_if_action_from_sunrise_until_nautical_dusk(hass, calls):
     """Test if action is during day."""
     # Sunrise at 2015-09-16T13:32:43+00:00

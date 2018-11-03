@@ -43,6 +43,11 @@ sun_event = vol.All(vol.Lower, vol.Any(
     SUN_EVENT_ASTRONOMICAL_DAWN, SUN_EVENT_ASTRONOMICAL_DUSK,
     SUN_EVENT_CIVIL_DAWN, SUN_EVENT_CIVIL_DUSK, SUN_EVENT_NAUTICAL_DAWN,
     SUN_EVENT_NAUTICAL_DUSK))
+sun_period = vol.All(vol.Lower, vol.Any(
+    'day', 'night', 'morning_twilight', 'evening_twilight',
+    'morning_astronomical_twilight', 'evening_astronomical_twilight',
+    'morning_civil_twilight', 'evening_civil_twilight',
+    'morning_nautical_twilight', 'evening_nautical_twilight'))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
 # typing typevar
@@ -546,6 +551,7 @@ SUN_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Optional('after_offset'): time_period,
     vol.Optional('from'): sun_event,
     vol.Optional('until'): sun_event,
+    vol.Optional('during'): sun_period,
     vol.Exclusive('from', 'during'): string,
     vol.Exclusive('from', 'until'): string,
 }), has_at_least_one_key('before', 'after', 'during', 'from', 'until'))

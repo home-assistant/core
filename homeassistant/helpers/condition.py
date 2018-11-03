@@ -13,7 +13,10 @@ from homeassistant.const import (
     CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
     WEEKDAYS, CONF_STATE, CONF_ZONE, CONF_BEFORE,
     CONF_AFTER, CONF_WEEKDAY, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
-    CONF_BELOW, CONF_ABOVE, STATE_UNAVAILABLE, STATE_UNKNOWN)
+    SUN_EVENT_ASTRONOMICAL_DAWN, SUN_EVENT_ASTRONOMICAL_DUSK,
+    SUN_EVENT_CIVIL_DAWN, SUN_EVENT_CIVIL_DUSK, SUN_EVENT_NAUTICAL_DAWN,
+    SUN_EVENT_NAUTICAL_DUSK, CONF_BELOW, CONF_ABOVE, STATE_UNAVAILABLE,
+    STATE_UNKNOWN)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date, is_between
@@ -236,6 +239,43 @@ def state_from_config(config, config_validation=True):
     return if_state
 
 
+def sun_interval_to_events(during):
+    """Convert duration to start and end events."""
+    from_ = None
+    until = None
+    if during == 'day':
+        from_ = SUN_EVENT_SUNRISE
+        until = SUN_EVENT_SUNSET
+    elif during == 'night':
+        from_ = SUN_EVENT_ASTRONOMICAL_DUSK
+        until = SUN_EVENT_ASTRONOMICAL_DAWN
+    elif during == 'morning_twilight':
+        from_ = SUN_EVENT_ASTRONOMICAL_DAWN
+        until = SUN_EVENT_SUNRISE
+    elif during == 'evening_twilight':
+        from_ = SUN_EVENT_SUNSET
+        until = SUN_EVENT_ASTRONOMICAL_DUSK
+    elif during == 'morning_astronomical_twilight':
+        from_ = SUN_EVENT_ASTRONOMICAL_DAWN
+        until = SUN_EVENT_NAUTICAL_DAWN
+    elif during == 'evening_astronomical_twilight':
+        from_ = SUN_EVENT_NAUTICAL_DUSK
+        until = SUN_EVENT_ASTRONOMICAL_DUSK
+    elif during == 'morning_civil_twilight':
+        from_ = SUN_EVENT_CIVIL_DAWN
+        until = SUN_EVENT_SUNRISE
+    elif during == 'evening_civil_twilight':
+        from_ = SUN_EVENT_SUNSET
+        until = SUN_EVENT_CIVIL_DUSK
+    elif during == 'morning_nautical_twilight':
+        from_ = SUN_EVENT_NAUTICAL_DAWN
+        until = SUN_EVENT_CIVIL_DAWN
+    elif during == 'evening_nautical_twilight':
+        from_ = SUN_EVENT_CIVIL_DUSK
+        until = SUN_EVENT_NAUTICAL_DUSK
+    return from_, until
+
+
 def sun(hass, before=None, after=None, before_offset=None, after_offset=None,
         from_=None, until=None, during=None):
     """Test if current time matches sun requirements."""
@@ -246,6 +286,10 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None,
 
     sunrise_today = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
     sunset_today = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
+
+    if during is not None:
+        from_, until = sun_interval_to_events(during)
+        _LOGGER.debug("sun condition during: %s", during)
 
     if from_ is not None and until is not None:
         _LOGGER.debug("sun: utcnow: %s, now: %s, from: %s, until: %s",
