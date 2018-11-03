@@ -21,7 +21,8 @@ class HAExpanderMixIn:
 
     def __init__(self, perform_outputs_verification=True):
         """
-        perform_outputs_verification - if set, every write to port will be followed by read allowing to verify port state.
+        perform_outputs_verification - if set, every write to port
+        will be followed by read allowing to verify port state.
         """
         self.pin_connections = {}
         self.perform_outputs_verification = perform_outputs_verification
@@ -73,7 +74,8 @@ class HAExpanderMixIn:
                     "Unable assign %r to expander input/outputs" % (dev,)
                 )
         _LOGGER.debug(
-            "Calculated masks: inputs :0x%X  outputs: 0x%X , outputs_on: 0x%X for %r",
+            "Calculated masks: inputs :0x%X  outputs: 0x%X , "
+            "outputs_on: 0x%X for %r",
             inputs_mask,
             outputs_mask,
             outputs_on_mask,
@@ -96,7 +98,8 @@ class HAExpanderMixIn:
         if self.perform_outputs_verification:
             if not self.verify_outputs():
                 _LOGGER.warn(
-                    "Outputs state wrong. Performing HW configuration again (%s).",
+                    "Outputs state wrong. "
+                    "Performing HW configuration again (%s).",
                     self,
                 )
                 self.ha_configure()
@@ -169,7 +172,8 @@ class ManagedChips:
         self.supported_expanders = SupportedExpanders()
         # Chips marked to manage:
         self.chip_per_address = {}
-        # Request for adding chips on buses may come from differnet components (switches/sensors) and different threads.
+        # Request for adding chips on buses may come from differnet components
+        # (switches/sensors) and different threads, so lock needed
         self.lock = threading.Lock()
         # Bus to operate on.
         self.bus = bus
@@ -180,7 +184,8 @@ class ManagedChips:
             if chip:
                 if chip.id != chip_id:
                     raise ValueError(
-                        "Chip (%r) with different id (%r) than expected already managed on address %x"
+                        "Chip (%r) with different id (%r)"
+                        " than expected already managed on address %x"
                         % (chip, chip.id, chip_id, address)
                     )
             else:

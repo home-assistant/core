@@ -38,7 +38,7 @@ class TimedInputsChange:
         bit_num = 0
         inputs_mask = self.post_timed_inputs.inputs
         while diffs_mask:
-            ## print ("DEBUG: changed_bits(): diffs_mask: %r" % (diffs_mask, ))
+            # print ("DEBUG: changed_bits(): diffs_mask: %r" % (diffs_mask, ))
             if diffs_mask & 0x1:
                 yield bit_num, inputs_mask & 0x1
             bit_num += 1
@@ -73,13 +73,16 @@ class ExpanderState:
 
     def read_inputs(self):
         inputs = int(self.expander.read_inputs())
-        ## inputs = inputs & self.input_mask
-        ## self.log.debug("read_inputs(): masked with input mask(0x%X) : 0x%X", self.input_mask, inputs)
+        # inputs = inputs & self.input_mask
+        # self.log.debug("read_inputs(): masked with input mask(0x%X): 0x%X",
+        # self.input_mask, inputs)
         return TimedInputs(inputs, time.time())
 
     def check_state_changed(self):
         new_timed_inputs = self.read_inputs()
-        ## self.log.debug("check_state_changed(): self.cur_timed_inputs: %s -> new_timed_inputs: %s", self.cur_timed_inputs, new_timed_inputs, )
+        # self.log.debug("check_state_changed(): self.cur_timed_inputs: %s "
+        # "-> new_timed_inputs: %s",
+        # self.cur_timed_inputs, new_timed_inputs, )
         if self.prev_timed_inputs is None:
             # First change
             self.prev_timed_inputs = self.cur_timed_inputs
@@ -106,7 +109,7 @@ class ExpanderState:
 
 class CallbackCaller(threading.Thread):
     """
-    Thread used to call callbacks, when 
+    Thread used to call callbacks, when
     pending exapnder changed states are in queue
     """
 
@@ -172,7 +175,7 @@ class PollWatcher(threading.Thread):
                 loop_start_time = time.time()
                 changed_states = []
                 for state in self.expander_states_per_address.values():
-                    ## self.log.debug("Processing state: %s" % (state, ))
+                    # self.log.debug("Processing state: %s" % (state, ))
                     ti_change = None
                     try:
                         ti_change = state.check_state_changed()
@@ -199,7 +202,8 @@ class PollWatcher(threading.Thread):
                 )
                 if sleep_time < 0:  # Means polling took longer than interval
                     self.log.warn(
-                        "Poll loop took longer (%.3fs) than poll interval: %.3fs",
+                        "Poll loop took longer (%.3fs) "
+                        "than poll interval: %.3fs",
                         self.poll_interval - sleep_time,
                         self.poll_interval,
                     )

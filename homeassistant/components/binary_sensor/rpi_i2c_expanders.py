@@ -9,12 +9,12 @@ binary_sensor:
       17: GPIO17
   - platform: rpi_i2c_expanders
     chips:
-        0x20: 
+        0x20:
            hw: MCP23018
            ports:
                6: P20_IN_6
            invert_logic_ports: [ 6, ]
-        0x24: 
+        0x24:
             hw: PCF8574
             ports:
                 7: P24_IN_7
@@ -66,12 +66,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup RPi I²C based I/O expanders."""
-    ## import awesomelights
 
     import homeassistant.components.rpi_i2c_expanders
 
     managed_chips = homeassistant.components.rpi_i2c_expanders.g_managed_chips
-
     sensors = []
     chips = config.get("chips")
 
@@ -80,7 +78,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         invert_logic_ports = chip.get("invert_logic_ports", ())
         managed_chip = managed_chips.manage_chip(address, chip_id)
         _LOGGER.debug(
-            "address: 0x%x chip_id: %r -> managed_chip: %r, invert_logic_ports: %r",
+            "address: 0x%x chip_id: %r -> managed_chip: %r,"
+            " invert_logic_ports: %r",
             address,
             chip_id,
             managed_chip,
@@ -92,7 +91,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             managed_chip.pin_connect(pin, expander_sensor)
             sensors.append(expander_sensor)
             _LOGGER.debug(
-                "address: 0x%x managed_chip: %r: pin: %r connected to expander sensor: %r",
+                "address: 0x%x managed_chip: %r: pin: %r "
+                "connected to expander sensor: %r",
                 address,
                 managed_chip,
                 pin,

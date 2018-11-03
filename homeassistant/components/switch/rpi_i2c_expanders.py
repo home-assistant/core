@@ -43,14 +43,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     switches = []
     chips = config.get("chips")
 
-    ## log.info("chips: %r", chips)
     for address, chip in chips.items():
-        ## _LOGGER.info("address: %r chip: %r", address, chip)
         chip_id = chip["hw"]
         invert_logic_ports = chip.get("invert_logic_ports", ())
         managed_chip = managed_chips.manage_chip(address, chip_id)
         _LOGGER.debug(
-            "address: %r chip_id: %r -> managed_chip: %r, invert_logic_ports: %r",
+            "address: %r chip_id: %r -> managed_chip: %r,"
+            "invert_logic_ports: %r",
             address,
             chip_id,
             managed_chip,
@@ -62,7 +61,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             managed_chip.pin_connect(pin, expander_switch)
             switches.append(expander_switch)
             _LOGGER.debug(
-                "address: %r managed_chip: %r: pin: %r connected to expander_switch: %r",
+                "address: %r managed_chip: %r:"
+                " pin: %r connected to expander_switch: %r",
                 address,
                 managed_chip,
                 pin,

@@ -72,7 +72,6 @@ class MCP23018(Expander):
                 "Invalid device address: 0x%x for MCP23018" % (address,)
             )
         super().__init__(bus, address, log)
-        ## self.log.debug("%s init done", self)
 
     def reset(self):
         """Sets chip like after power on reset.
@@ -87,7 +86,7 @@ class MCP23018(Expander):
             OR’ed so that an interrupt on either port will cause
             both pins to activate
         MIRROR = 0, the INT pins are separated.
-            Interrupt conditions on a port will cause its respecive 
+            Interrupt conditions on a port will cause its respecive
             INT pin to activate
 
         """
@@ -110,7 +109,7 @@ class MCP23018(Expander):
 
     class IODIR_Register(Register):
         """  IODIR – I/O DIRECTION REGISTER
-        When a bit is set, the corresponding pin becomes an input. 
+        When a bit is set, the corresponding pin becomes an input.
         When a bit is clear, the corresponding pin becomes an output.
         """
 
@@ -218,7 +217,8 @@ class MCP23018(Expander):
     def read_GPIO(self):
         mask = self.bus_read_byte_data(self.GPIOA)
         mask |= self.bus_read_byte_data(self.GPIOB) << 8
-        # TODO: Should use 16bit wide GPIO_Register16 having GPA0..GPA7,GPB0..GPB7 ?
+        # TODO: Should use 16bit wide GPIO_Register16
+        # having GPA0..GPA7,GPB0..GPB7 ?
         return mask
 
     def configure(self, outputs_mask, inputs_mask, pull_ups_mask):
@@ -226,16 +226,18 @@ class MCP23018(Expander):
         Configures chip:
         outputs_mask - whose pins became outputs, rest is configure inputs
         inputs_mask - whose pins became inputs, must not overlap with inputs
-        pull_ups_mask - whose pins have pull ups set, 
+        pull_ups_mask - whose pins have pull ups set,
 
         Only inputs/outputs_mask is configure, rest is left untouched.
         pull_up_mask can be only set for inputs/outputs
 
-        Configuraiton tries to preserve previous state of chip as much as possible.
+        Configuraiton tries to preserve previous state of
+        chip as much as possible.
 
         """
         self.log.debug(
-            "CALLED: configure(%s,outputs_mask=%r,inputs_mask=%r,pull_up_mask=%r) ",
+            "CALLED: configure(%s,outputs_mask=%r,"
+            "inputs_mask=%r,pull_up_mask=%r) ",
             self,
             outputs_mask,
             inputs_mask,
@@ -272,16 +274,19 @@ class MCP23018(Expander):
         actual_outputs_mask = int(gpio) & self.outputs_mask
         # Inputs state: 65535 (0xFFFF) usually means chip was reset.
         self.log.debug(
-            "Verified inputs state: %s (0x%X) outputs_masked: 0x%X expected: 0x%X",
+            "Verified inputs state: %s (0x%X) "
+            "outputs_masked: 0x%X expected: 0x%X",
             gpio,
             int(gpio),
             actual_outputs_mask,
             self.outputs_state,
         )
         if actual_outputs_mask != self.outputs_state:
-            # NOTE: Below we work on real ports state, not logical, as values may be inverted.
+            # NOTE: Below we work on real ports state, not logical,
+            # as values may be inverted.
             self.log.warn(
-                "Outputs state mismatch. Read inputs: 0x%X , outputs_masked: 0x%X but expected: 0x%X",
+                "Outputs state mismatch. Read inputs: 0x%X, "
+                "outputs_masked: 0x%X but expected: 0x%X",
                 int(gpio),
                 actual_outputs_mask,
                 self.outputs_state,
@@ -296,9 +301,12 @@ class MCP23018(Expander):
         self.bus_write_byte_data(self.OLATB, mask)
 
     def read_inputs(self):
-        # NOTE: We can't get information about outputs by reading inputs in MCP23018
+        # NOTE: We can't get information about outputs
+        # by reading inputs in MCP23018
         input_vals = int(self.read_GPIO())
-        ## self.log.debug("read_inputs(): read GPIO: 0x%X inputs mask: 0x%X  exptected outputs state: 0x%X", input_vals, self.inputs_mask, self.outputs_state, )
+        # self.log.debug("read_inputs(): read GPIO: 0x%X inputs mask: 0x%X "
+        # "expected outputs state: 0x%X",
+        # input_vals, self.inputs_mask, self.outputs_state, )
         input_vals &= self.inputs_mask
         return input_vals
 
@@ -317,7 +325,9 @@ if __name__ == "__main__":
 
     if 1:  # Configuration write test
         conf_reg = mcp23018.read_configuration()
-        # Fails on first run with OSError: [Errno 121] Remote I/O error on return self.bus.read_byte_data(self.address, cmd) ???
+        # Fails on first run with OSError:
+        #   [Errno 121] Remote I/O error on return
+        #   self.bus.read_byte_data(self.address, cmd) ???
         # https://stackoverflow.com/questions/15245235/input-output-error-using-python-module-smbus-a-raspberry-pi-and-an-arduino
         # subprocess.call(['i2cdetect', '-y', '1'])
         # i2cdetect -y 1
@@ -335,7 +345,6 @@ if __name__ == "__main__":
         )
 
     if 1:
-        ## outputs_mask = 0xffff
         outputs_mask = 0x0001
         print("Blinking 1Hz on 0x%04x outputs" % (outputs_mask,))
         # configure(self, output_mask, invert_mask, pull_up_mask):
@@ -354,8 +363,9 @@ if __name__ == "__main__":
 
     if 0:
         print("Reading all inputs in endless loop.. Hit CTRL+C to stop.")
-        # Set Pullups on all outputs, so they will stay high, but shorting to GND (via pressing button) will drive them low
-        # mcp23018.configure_inputs(0xffff,  set_pull_ups = True,  invert=True)
+        # Set Pullups on all outputs, so they will stay high,
+        # but shorting to GND (via pressing button) will drive them low
+        # mcp23018.configure_inputs(0xffff, set_pull_ups = True, invert=True)
 
         # Same as above, but only on GPA7 & GPA6
         input_reg = mcp23018.GPIO_Register()
@@ -371,10 +381,12 @@ if __name__ == "__main__":
 
     if 0:
         print(
-            "Detecting pushbutton hits via interrputs in endless loop.. Hit CTRL+C to stop."
+            "Detecting pushbutton hits via interrputs in endless loop... "
+            "Hit CTRL+C to stop."
         )
         mcp23018.set_io_direction_input(0xFFFF)  # 0 means output
-        # Set Pullups on all outputs, so they will stay high, but short to GND will drive them low
+        # Set Pullups on all outputs, so they will stay high,
+        # but short to GND will drive them low
         mcp23018.set_GPPU(0xFFFF)
         # Enable interrputs
         mcp23018.set_interrupt_on_change(0x0000)  # Turn off interrupts

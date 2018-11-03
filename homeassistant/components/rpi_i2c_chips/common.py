@@ -119,11 +119,11 @@ class Expander:
         pull_ups_mask - whose pins have pull ups set
 
         TBD:
-        invert_mask - whose pins are inverted (both inputs/outputs) 
+        invert_mask - whose pins are inverted (both inputs/outputs)
 
-        NOTE: Expand this method in sublcases implementing real HW configuration
+        NOTE: Expand this method in sublcases
+        implementing real HW configuration
         """
-        ## raise NotImplementedError("Must be implemented for specific chip in sub-class")
         self.assert_valid_mask(outputs_mask)
         self.assert_valid_mask(inputs_mask)
         # self.assert_valid_mask(invert_mask)
@@ -136,12 +136,12 @@ class Expander:
 
         self.outputs_mask = outputs_mask
         self.inputs_mask = inputs_mask
-        ## self.invert_mask =  invert_mask
+        # self.invert_mask =  invert_mask
         self.pull_ups_mask = pull_ups_mask
 
     def configure_inputs(self, inputs_mask, pull_ups_mask=None):
         """
-        Configure subset of pins as inputs. 
+        Configure subset of pins as inputs.
         Pins must not be already configured as outputs
         """
         if pull_ups_mask is None:
@@ -171,7 +171,7 @@ class Expander:
     def set_outputs(self, mask):
         """
         Sets outputs to given state
-        Always set self.outputs_state 
+        Always set self.outputs_state
         """
         raise NotImplementedError(
             "Must be implemented for specific chip in sub-class"

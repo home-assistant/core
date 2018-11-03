@@ -2,7 +2,8 @@
 Support for controlling I²C port expanders connected to Raspberry Pi
 
 """
-# TODO:  For more details about this component, please refer to the documentation at
+# TODO:  For more details about this component,
+# please refer to the documentation at
 # https://home-assistant.io/components/TODO/
 
 import logging

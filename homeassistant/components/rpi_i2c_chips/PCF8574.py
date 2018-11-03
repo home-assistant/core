@@ -27,7 +27,7 @@ class PCF8574(Expander):
         self.log.debug("%s @ 0x%x init done", self, self.address)
 
     class Port_Register(Register):
-        """ 
+        """
         Only PCF8574 register representing both I/O ports
         """
 
@@ -44,16 +44,18 @@ class PCF8574(Expander):
         Configures chip:
         outputs_mask - whose pins became outputs, rest is configure inputs
         inputs_mask - whose pins became inputs, must not overlap with inputs
-        pull_ups_mask - whose pins have pull ups set, 
+        pull_ups_mask - whose pins have pull ups set,
 
         Only inputs/outputs_mask is configure, rest is left untouched.
         pull_ups_mask can be only set for inputs/outputs
 
-        Configuraiton tries to preserve previous state of chip as much as possible.
+        Configuraiton tries to preserve previous state of chip
+        as much as possible.
 
         """
         self.log.debug(
-            "CALLED: configure(%s,outputs_mask=0x%X,inputs_mask=0x%X,pull_ups_mask=0x%X) ",
+            "CALLED: configure(%s,outputs_mask=0x%X,inputs_mask=0x%X,"
+            "pull_ups_mask=0x%X) ",
             self,
             outputs_mask,
             inputs_mask,
@@ -67,7 +69,8 @@ class PCF8574(Expander):
         io_mask = outputs_mask | inputs_mask
         if pull_ups_mask & self.mask_invert(io_mask):
             raise ValueError(
-                "Pull-ups mask (0x%x) set out of inputs (0x%s) and outputs (%x)"
+                "Pull-ups mask (0x%x) set out of inputs (0x%s) "
+                "and outputs (%x)"
                 % (pull_ups_mask,)
             )
         old_state = int(self.read_byte())  # Reading previous state
@@ -101,14 +104,16 @@ class PCF8574(Expander):
         portval = self.read_byte()
         outputs = portval & self.outputs_mask
         self.log.debug(
-            "verify_outputs(): read byte: 0x%X outputs: 0x%X   exptected outputs state: 0x%X",
+            "verify_outputs(): read byte: 0x%X outputs: 0x%X "
+            "exptected outputs state: 0x%X",
             portval,
             outputs,
             self.outputs_state,
         )
         if outputs != self.outputs_state:
             self.log.warn(
-                "verify_outputs(): read byte: 0x%X outputs: 0x%X  exptected outputs state: 0x%X mismatch.",
+                "verify_outputs(): read byte: 0x%X outputs: 0x%X "
+                "exptected outputs state: 0x%X mismatch.",
                 portval,
                 outputs,
                 self.outputs_state,
@@ -121,10 +126,14 @@ class PCF8574(Expander):
         if 1:  # Double check
             if self.outputs_mask != None and self.outputs_state != None:
                 outputs = inputs & self.outputs_mask
-                ## self.log.debug("read_inputs(): read byte: 0x%X outputs: 0x%X  exptected outputs state: 0x%X", inputs, outputs, self.outputs_state, )
+                # self.log.debug("read_inputs():
+                # read byte: 0x%X outputs: 0x%X "
+                # "exptected outputs state: 0x%X",
+                # inputs, outputs, self.outputs_state, )
                 if outputs != self.outputs_state:
                     self.log.warn(
-                        "read_inputs(): read byte: 0x%X outputs: 0x%X mismatch: expected outputs: 0x%X .",
+                        "read_inputs(): read byte: 0x%X outputs: "
+                        "0x%X mismatch: expected outputs: 0x%X .",
                         inputs,
                         outputs,
                         self.outputs_state,
