@@ -11,7 +11,7 @@ import re
 import voluptuous as vol
 from homeassistant.const import (
     CONF_EXCLUDE, CONF_HOST, CONF_INCLUDE, CONF_PASSWORD,
-    CONF_TEMPERATURE_UNIT, CONF_USERNAME, TEMP_FAHRENHEIT)
+    CONF_TEMPERATURE_UNIT, CONF_USERNAME)
 from homeassistant.core import HomeAssistant, callback  # noqa
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
