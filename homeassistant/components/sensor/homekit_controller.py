@@ -12,18 +12,15 @@ from homeassistant.components.homekit_controller import (HomeKitEntity,
 DEPENDENCIES = ['homekit_controller']
 
 CHARACTERISTICS = {
-    '4aaaf931-0dec-11e5-b939-0800200c9a66': {
-        'title': 'realtime_energy',
-        'units': 'Wh'
-    },
-    '4aaaf932-0dec-11e5-b939-0800200c9a66': {
-        'title': 'current_hour_data',
-        'units': 'Wh'
-    },
-    '4aaaf93f-0dec-11e5-b939-0800200c9a66': {
-        'title': 'running_time',
-        'units': 's'
-    },
+    '4aaaf931-0dec-11e5-b939-0800200c9a66': 'realtime_energy',
+    '4aaaf932-0dec-11e5-b939-0800200c9a66': 'current_hour_data',
+    '4aaaf93f-0dec-11e5-b939-0800200c9a66': 'running_time',
+}
+
+UNITS_OF_MEASUREMENT = {
+    '4aaaf931-0dec-11e5-b939-0800200c9a66': 'Wh',
+    '4aaaf932-0dec-11e5-b939-0800200c9a66': 'Wh',
+    '4aaaf93f-0dec-11e5-b939-0800200c9a66': 's',
 }
 
 SERVICE_DEFAULT_CHARACTERISTIC = {
@@ -54,18 +51,27 @@ class HomeKitSensor(HomeKitEntity):
 
     def update_characteristics(self, characteristics):
         """Synchronise the sensor state with Home Assistant."""
+        import homekit  # pylint: disable=import-error
 
         for characteristic in characteristics:
-            ctype = CHARACTERISTICS.get(characteristic['type'], None)
+            units = None
+            ctype = homekit.CharacteristicsTypes.get_short(characteristic['type'])
+            if ctype.startswith('Unknown Characteristic'):
+                ctype = CHARACTERISTICS.get(characteristic['type'], None)
+                units = UNITS_OF_MEASUREMENT.get(characteristic['type'], None)
+
             if ctype is not None:
                 dataValue = characteristic['value']
-                self._sensor_data[ctype['title']] = dataValue
-                self._sensor_data[ctype['title'] + '_unit'] = ctype['units']
+                self._sensor_data[ctype] = dataValue
+
+                if units is not None:
+                    self._sensor_data[ctype + '_unit'] = units
 
                 if self._defaultc is not None \
-                        and ctype['title'] == self._defaultc:
+                        and ctype == self._defaultc:
                     self._state = dataValue
-                    self._unit_of_measurement = ctype['units']
+                    if units is not None:
+                        self._unit_of_measurement = units
 
     @property
     def state(self):
