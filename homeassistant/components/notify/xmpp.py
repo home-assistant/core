@@ -7,6 +7,7 @@ https://home-assistant.io/components/notify.xmpp/
 from concurrent.futures import TimeoutError as FutTimeoutError
 import logging
 import mimetypes
+import pathlib
 import random
 import string
 
@@ -78,7 +79,7 @@ class XmppNotificationService(BaseNotificationService):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         text = '{}: {}'.format(title, message) if title else message
-        data = None or kwargs.get(ATTR_DATA)
+        data = kwargs.get(ATTR_DATA)
         timeout = data.get(ATTR_TIMEOUT, XEP_0363_TIMEOUT) if data else None
 
         await async_send_message(
@@ -151,8 +152,22 @@ async def async_send_message(
                 # Uploading with XEP_0363
                 _LOGGER.debug("Timeout set to %ss", timeout)
                 url = await self.upload_file(timeout=timeout)
-                if url is None:
-                    raise FileUploadError("Could not upload file")
+
+                _LOGGER.info("Upload success")
+                if room:
+                    _LOGGER.info("Sending file to %s", room)
+                    message = self.Message(sto=room, stype='groupchat')
+                else:
+                    _LOGGER.info("Sending file to %s", recipient)
+                    message = self.Message(sto=recipient, stype='chat')
+
+                message['body'] = url
+                # pylint: disable=invalid-sequence-index
+                message['oob']['url'] = url
+                try:
+                    message.send()
+                except (IqError, IqTimeout, XMPPError) as ex:
+                    _LOGGER.error("Could not send image message %s", ex)
             except (IqError, IqTimeout, XMPPError) as ex:
                 _LOGGER.error("Upload error, could not send message %s", ex)
             except NotConnectedError as ex:
@@ -176,23 +191,6 @@ async def async_send_message(
                 _LOGGER.error("Error reading file %s", ex)
             except FutTimeoutError as ex:
                 _LOGGER.error("The server did not respond in time, %s", ex)
-            else:
-                _LOGGER.info("Upload success")
-
-                if room:
-                    _LOGGER.info("Sending file to %s", room)
-                    message = self.Message(sto=room, stype='groupchat')
-                else:
-                    _LOGGER.info("Sending file to %s", recipient)
-                    message = self.Message(sto=recipient, stype='chat')
-
-                message['body'] = url
-                # pylint: disable=invalid-sequence-index
-                message['oob']['url'] = url
-                try:
-                    message.send()
-                except (IqError, IqTimeout, XMPPError) as ex:
-                    _LOGGER.error("Could not send image message %s", ex)
 
         async def upload_file(self, timeout=None):
             """Upload file to Jabber server and return new URL.
@@ -202,31 +200,32 @@ async def async_send_message(
             """
             if data.get(ATTR_URL_TEMPLATE):
                 _LOGGER.debug(
-                    "Got url template: %s", data.get(ATTR_URL_TEMPLATE))
+                    "Got url template: %s", data[ATTR_URL_TEMPLATE])
                 templ = template_helper.Template(
-                    data.get(ATTR_URL_TEMPLATE), hass)
+                    data[ATTR_URL_TEMPLATE], hass)
                 get_url = template_helper.render_complex(templ, None)
                 url = await self.upload_file_from_url(
                     get_url, timeout=timeout)
             elif data.get(ATTR_URL):
                 url = await self.upload_file_from_url(
-                    data.get(ATTR_URL), timeout=timeout)
+                    data[ATTR_URL], timeout=timeout)
             elif data.get(ATTR_PATH_TEMPLATE):
                 _LOGGER.debug(
-                    "Got path template: %s", data.get(ATTR_PATH_TEMPLATE))
+                    "Got path template: %s", data[ATTR_PATH_TEMPLATE])
                 templ = template_helper.Template(
-                    data.get(ATTR_PATH_TEMPLATE), hass)
+                    data[ATTR_PATH_TEMPLATE], hass)
                 get_path = template_helper.render_complex(templ, None)
                 url = await self.upload_file_from_path(
                     get_path, timeout=timeout)
             elif data.get(ATTR_PATH):
                 url = await self.upload_file_from_path(
-                    data.get(ATTR_PATH), timeout=timeout)
+                    data[ATTR_PATH], timeout=timeout)
             else:
                 url = None
 
             if url is None:
                 _LOGGER.error("No path or URL found for file")
+                raise FileUploadError("Could not upload file")
 
             return url
 
@@ -238,6 +237,7 @@ async def async_send_message(
             _LOGGER.info("Getting file from %s", url)
 
             def get_url(url):
+                """Return result for GET request to url."""
                 return requests.get(
                     url, verify=data.get(ATTR_VERIFY, True), timeout=timeout)
             result = await hass.async_add_executor_job(get_url, url)
@@ -259,7 +259,7 @@ async def async_send_message(
                 extension = mimetypes.guess_extension(
                     result.headers['Content-Type']) or ".unknown"
                 _LOGGER.debug("Got %s extension", extension)
-                filename = self.get_random_filename(extension)
+                filename = self.get_random_filename(None, extension=extension)
 
             _LOGGER.info("Uploading file from URL, %s", filename)
 
@@ -272,6 +272,10 @@ async def async_send_message(
         async def upload_file_from_path(self, path, timeout=None):
             """Upload a file from a local file path via XEP_0363."""
             _LOGGER.info('Uploading file from path, %s ...', path)
+
+            if not hass.config.is_allowed_path(path):
+                raise PermissionError(
+                    "Could not access file. Not in whitelist.")
 
             with open(path, 'rb') as upfile:
                 _LOGGER.debug("Reading file %s", path)
@@ -312,14 +316,16 @@ async def async_send_message(
                 _LOGGER.error("Connection error %s", ex)
 
         # pylint: disable=no-self-use
-        def get_random_filename(self, filename):
+        def get_random_filename(self, filename, extension=None):
             """Return a random filename, leaving the extension intact."""
-            if '.' in filename:
-                extension = filename.split('.')[-1]
-            else:
-                extension = "txt"
+            if extension is None:
+                path = pathlib.Path(filename)
+                if path.suffix:
+                    extension = ''.join(path.suffixes)
+                else:
+                    extension = ".txt"
             return ''.join(random.choice(string.ascii_letters)
-                           for i in range(10)) + '.' + extension
+                           for i in range(10)) + extension
 
         def disconnect_on_login_fail(self, event):
             """Disconnect from the server if credentials are invalid."""
