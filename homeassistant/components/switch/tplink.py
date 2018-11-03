@@ -11,7 +11,7 @@ from homeassistant.components.switch import (
     SwitchDevice, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
 from homeassistant.components.tplink import DOMAIN as TPLINK_DOMAIN
 from homeassistant.const import ATTR_VOLTAGE
-from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.device_registry as dr
 
 DEPENDENCIES = ['tplink']
 
@@ -25,17 +25,9 @@ ATTR_CURRENT_A = 'current_a'
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up discovered switches."""
-    from pyHS100 import SmartDeviceException
     devs = []
     for dev in hass.data[TPLINK_DOMAIN]['switch']:
-        try:
-            # fetch MAC and name already now to avoid I/O inside init
-            unique_id = dev.sys_info['mac']
-            name = dev.alias
-            devs.append(SmartPlugSwitch(dev, unique_id, name, leds_on=None))
-        except SmartDeviceException as ex:
-            _LOGGER.error("Unable to fetch data from the device: %s", ex)
-            raise PlatformNotReady
+        devs.append(SmartPlugSwitch(dev))
 
     async_add_devices(devs, True)
 
@@ -43,39 +35,39 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug, unique_id, name, leds_on):
+    def __init__(self, smartplug):
         """Initialize the switch."""
         self.smartplug = smartplug
-        self._unique_id = unique_id
-        self._name = name
-        self._leds_on = leds_on
+        self._sysinfo = None
         self._state = None
-        self._available = True
+        self._available = False
         # Set up emeter cache
         self._emeter_params = {}
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._unique_id
+        return self._sysinfo["mac"]
 
     @property
     def name(self):
         """Return the name of the Smart Plug."""
-        return self._name
+        return self._sysinfo["alias"]
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
             'identifiers': {
-                (TPLINK_DOMAIN, self._unique_id)
+                (TPLINK_DOMAIN, self.unique_id)
             },
-            'name': self._name,
-            'model': self.smartplug.model,
+            'name': self.name,
+            'model': self._sysinfo["model"],
             'manufacturer': 'TP-Link',
-            'sw_version': self.smartplug.sys_info["sw_ver"],
-            'hw_version': self.smartplug.sys_info["hw_ver"],
+            'connections': {
+                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
+            },
+            'sw_version': self._sysinfo["sw_ver"],
         }
 
     @property
@@ -105,12 +97,11 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the TP-Link switch's state."""
         from pyHS100 import SmartDeviceException
         try:
+            if not self._sysinfo:
+                self._sysinfo = self.smartplug.sys_info
+
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON
-
-            if self._leds_on is not None:
-                self.smartplug.led = self._leds_on
-                self._leds_on = None
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()

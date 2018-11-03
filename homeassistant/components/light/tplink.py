@@ -14,8 +14,8 @@ from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
+import homeassistant.helpers.device_registry as dr
 from homeassistant.components.tplink import DOMAIN as TPLINK_DOMAIN
-from homeassistant.exceptions import PlatformNotReady
 
 DEPENDENCIES = ['tplink']
 
@@ -30,18 +30,9 @@ ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up discovered switches."""
-    from pyHS100 import SmartDeviceException
     devs = []
     for dev in hass.data[TPLINK_DOMAIN]['light']:
-        try:
-            # fetch MAC and name already now to avoid I/O inside init
-            _LOGGER.error(dev.sys_info)
-            unique_id = dev.sys_info['mac']
-            name = dev.alias
-            devs.append(TPLinkSmartBulb(dev, unique_id, name))
-        except SmartDeviceException as ex:
-            _LOGGER.error("Unable to fetch data from the device: %s", ex)
-            raise PlatformNotReady
+        devs.append(TPLinkSmartBulb(dev))
 
     async_add_devices(devs, True)
 
@@ -59,14 +50,12 @@ def brightness_from_percentage(percent):
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    # F821: https://github.com/PyCQA/pyflakes/issues/373
-    def __init__(self, smartbulb, unique_id, name) -> None:  # noqa: F821
+    def __init__(self, smartbulb) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
-        self._unique_id = unique_id
-        self._name = name
+        self._sysinfo = None
         self._state = None
-        self._available = True
+        self._available = False
         self._color_temp = None
         self._brightness = None
         self._hs = None
@@ -78,23 +67,27 @@ class TPLinkSmartBulb(Light):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._unique_id
+        return self._sysinfo["mac"]
 
     @property
     def name(self):
         """Return the name of the Smart Bulb."""
-        return self._name
+        return self._sysinfo["alias"]
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
             'identifiers': {
-                (TPLINK_DOMAIN, self._unique_id)
+                (TPLINK_DOMAIN, self.unique_id)
             },
-            'name': self._name,
-            'model': self.smartbulb.model,
+            'name': self.name,
+            'model': self._sysinfo["model"],
             'manufacturer': 'TP-Link',
+            'connections': {
+                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
+            },
+            'sw_version': self._sysinfo["sw_ver"],
         }
 
     @property
@@ -213,6 +206,8 @@ class TPLinkSmartBulb(Light):
 
     def get_features(self):
         """Determine all supported features in one go."""
+        self._sysinfo = self.smartbulb.sys_info
+
         if self.smartbulb.is_dimmable:
             self._supported_features += SUPPORT_BRIGHTNESS
         if self.smartbulb.is_variable_color_temp:
