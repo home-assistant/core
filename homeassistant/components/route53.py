@@ -51,12 +51,24 @@ def setup(hass, config):
     def update_records_interval(now):
         """Set up recurring update."""
         _update_route53(
-            aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl)
+            aws_access_key_id,
+            aws_secret_access_key,
+            zone,
+            domain,
+            records,
+            ttl
+        )
 
     def update_records_service(now):
         """Set up service for manual trigger."""
         _update_route53(
-            aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl)
+            aws_access_key_id,
+            aws_secret_access_key,
+            zone,
+            domain,
+            records,
+            ttl
+        )
 
     track_time_interval(hass, update_records_interval, INTERVAL)
 
