@@ -26,7 +26,6 @@ g_pollwatcher = None
 def setup(hass, config):
     """Set up RPi i²C expanders component."""
     import smbus
-    from . import rpi_i2c_chips
     from . import rpi_i2c_ha_expanders
 
     global g_managed_chips
@@ -71,7 +70,6 @@ def input_state_change_handler(changed_states):
 
 def start(event):
     """Stuff to do when home assistant starts."""
-    import smbus
     from .rpi_i2c_chips.pollwatcher import PollWatcher
 
     global g_pollwatcher

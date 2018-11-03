@@ -70,8 +70,7 @@ class PCF8574(Expander):
         if pull_ups_mask & self.mask_invert(io_mask):
             raise ValueError(
                 "Pull-ups mask (0x%x) set out of inputs (0x%s) "
-                "and outputs (%x)"
-                % (pull_ups_mask,)
+                "and outputs (%x)" % (pull_ups_mask,)
             )
         old_state = int(self.read_byte())  # Reading previous state
         new_state = old_state | inputs_mask  # setting inputs to high (pullup)
@@ -124,7 +123,10 @@ class PCF8574(Expander):
     def read_inputs(self):
         inputs = self.read_byte()
         if 1:  # Double check
-            if self.outputs_mask != None and self.outputs_state != None:
+            if (
+                self.outputs_mask is not None
+                and self.outputs_state is not None
+            ):
                 outputs = inputs & self.outputs_mask
                 # self.log.debug("read_inputs():
                 # read byte: 0x%X outputs: 0x%X "

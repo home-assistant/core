@@ -31,7 +31,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import rpi_i2c_expanders
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.binary_sensor import (
