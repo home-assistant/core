@@ -1,6 +1,6 @@
 """The tests for Home Assistant ffmpeg."""
 import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 import homeassistant.components.ffmpeg as ffmpeg
 from homeassistant.components.ffmpeg import (
@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_coro)
+    get_test_home_assistant, assert_setup_component)
 
 
 @callback
