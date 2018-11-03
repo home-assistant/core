@@ -59,7 +59,7 @@ class TPLinkSmartBulb(Light):
         self._color_temp = None
         self._brightness = None
         self._hs = None
-        self._supported_features = 0
+        self._supported_features = None
         self._min_mireds = None
         self._max_mireds = None
         self._emeter_params = {}
@@ -78,16 +78,13 @@ class TPLinkSmartBulb(Light):
     def device_info(self):
         """Return information about the device."""
         return {
-            'identifiers': {
-                (TPLINK_DOMAIN, self.unique_id)
-            },
-            'name': self.name,
-            'model': self._sysinfo["model"],
-            'manufacturer': 'TP-Link',
-            'connections': {
+            "name": self.name,
+            "model": self._sysinfo["model"],
+            "manufacturer": 'TP-Link',
+            "connections": {
                 (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
             },
-            'sw_version': self._sysinfo["sw_ver"],
+            "sw_version": self._sysinfo["sw_ver"],
         }
 
     @property
@@ -155,7 +152,7 @@ class TPLinkSmartBulb(Light):
         """Update the TP-Link Bulb's state."""
         from pyHS100 import SmartDeviceException
         try:
-            if self._supported_features == 0:
+            if not self._supported_features:
                 self.get_features()
 
             self._state = (

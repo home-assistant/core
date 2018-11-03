@@ -67,10 +67,10 @@ async def async_setup_entry(hass, entry):
                 if type == 'light':
                     dev = SmartBulb(host)
                 elif type_ == 'switch':
-                    dev = SmartPlug
+                    dev = SmartPlug(host)
                 devices[host] = dev
-                _LOGGER.info("Succesfully added %s %s: %s",
-                             type_, host, dev)
+                _LOGGER.debug("Succesfully added %s %s: %s",
+                              type_, host, dev)
             except SmartDeviceException as ex:
                 _LOGGER.error("Unable to initialize %s %s: %s",
                               type_, host, ex)
