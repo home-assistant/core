@@ -64,7 +64,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Discover and add a MQTT binary sensor."""
         config = PLATFORM_SCHEMA(discovery_payload)
         await _async_setup_entity(hass, config, async_add_entities,
-                                  discovery_payload[ATTR_DISCOVERY_HASH])
+                                  discovery_payload, async_discover)
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(binary_sensor.DOMAIN, 'mqtt'),
@@ -72,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(hass, config, async_add_entities,
-                              discovery_hash=None):
+                              discovery_payload=None, async_discover=None):
     """Set up the MQTT binary sensor."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
@@ -93,7 +93,8 @@ async def _async_setup_entity(hass, config, async_add_entities,
         value_template,
         config.get(CONF_UNIQUE_ID),
         config.get(CONF_DEVICE),
-        discovery_hash,
+        discovery_payload,
+        async_discover,
     )])
 
 
@@ -105,11 +106,12 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
                  qos, force_update, off_delay, payload_on, payload_off,
                  payload_available, payload_not_available, value_template,
                  unique_id: Optional[str], device_config: Optional[ConfigType],
-                 discovery_hash):
+                 discovery_payload, async_discover):
         """Initialize the MQTT binary sensor."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash)
+        MqttDiscoveryUpdate.__init__(self, None, discovery_payload,
+                                     async_discover)
         MqttEntityDeviceInfo.__init__(self, device_config)
         self._name = name
         self._state = None
@@ -122,6 +124,9 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         self._off_delay = off_delay
         self._template = value_template
         self._unique_id = unique_id
+        discovery_hash = None
+        if discovery_payload:
+            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
         self._discovery_hash = discovery_hash
         self._delay_listener = None
 

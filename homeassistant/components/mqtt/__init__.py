@@ -864,9 +864,14 @@ class MqttAvailability(Entity):
 class MqttDiscoveryUpdate(Entity):
     """Mixin used to handle updated discovery message."""
 
-    def __init__(self, discovery_hash) -> None:
+    def __init__(self, discovery_hash, discovery_payload=None,
+                 async_discover=None) -> None:
         """Initialize the discovery update mixin."""
+        if discovery_payload:
+            discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
         self._discovery_hash = discovery_hash
+        self._discovery_payload = discovery_payload
+        self._async_discover = async_discover
         self._remove_signal = None
 
     async def async_added_to_hass(self) -> None:
@@ -880,12 +885,16 @@ class MqttDiscoveryUpdate(Entity):
             """Handle discovery update."""
             _LOGGER.info("Got update for entity with hash: %s '%s'",
                          self._discovery_hash, payload)
-            if not payload:
+            if ((self._async_discover and self._discovery_payload != payload)
+                    or not payload):
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self.hass.async_create_task(self.async_remove())
                 del self.hass.data[ALREADY_DISCOVERED][self._discovery_hash]
                 self._remove_signal()
+                if payload and self._async_discover:
+                    _LOGGER.info("Adding component: %s", self.entity_id)
+                    self.hass.async_create_task(self._async_discover(payload))
 
         if self._discovery_hash:
             self._remove_signal = async_dispatcher_connect(
