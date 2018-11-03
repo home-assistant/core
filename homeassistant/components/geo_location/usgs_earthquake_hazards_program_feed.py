@@ -77,8 +77,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
-    vol.Optional(CONF_MINIMUM_MAGNITUDE,
-                 default=DEFAULT_MINIMUM_MAGNITUDE):
+    vol.Optional(CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE):
         vol.All(vol.Coerce(float), vol.Range(min=0))
 })
 
@@ -163,11 +162,12 @@ class UsgsEarthquakeHazardsProgramEvent(GeoLocationEvent):
         self._longitude = None
         self._attribution = None
         self._place = None
+        self._magnitude = None
         self._time = None
         self._updated = None
-        self._alert = None
         self._status = None
         self._type = None
+        self._alert = None
         self._remove_signal_delete = None
         self._remove_signal_update = None
 
