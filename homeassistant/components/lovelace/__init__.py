@@ -4,13 +4,11 @@ Support for the Lovelace UI.
 For more details about this component, please refer to the documentation
 at https://www.home-assistant.io/lovelace/
 """
-import logging
-import os
-import uuid
-import time
 from functools import wraps
 import logging
+import os
 from typing import Dict, List, Union
+import time
 import uuid
 
 import voluptuous as vol
