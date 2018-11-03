@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME,
                                  CONF_PASSWORD, CONF_USERNAME,
+                                 CONF_TCP_KEEPALIVE,
                                  EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -31,6 +32,7 @@ CONF_PREFIXES = 'prefixes'
 DEFAULT_HOST = '169.254.1.1'  # IP valid for all Fritz!Box routers
 DEFAULT_NAME = 'Phone'
 DEFAULT_PORT = 1012
+DEFAULT_CONF_TCP_KEEPALIVE = False
 
 INTERVAL_RECONNECT = 60
 
@@ -52,7 +54,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME, default=''): cv.string,
     vol.Optional(CONF_PHONEBOOK, default=0): cv.positive_int,
     vol.Optional(CONF_PREFIXES, default=[]):
-        vol.All(cv.ensure_list, [cv.string])
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_TCP_KEEPALIVE, default=CONF_TCP_KEEPALIVE):
+        cv.boolean
 })
 
 
@@ -63,8 +67,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     port = config.get(CONF_PORT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    phonebook_id = config.get('phonebook')
-    prefixes = config.get('prefixes')
+    phonebook_id = config.get(CONF_PHONEBOOK)
+    prefixes = config.get(CONF_PREFIXES)
+    keepalive = config.get(CONF_TCP_KEEPALIVE)
 
     try:
         phonebook = FritzBoxPhonebook(
@@ -79,7 +84,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities([sensor])
 
-    monitor = FritzBoxCallMonitor(host=host, port=port, sensor=sensor)
+    monitor = FritzBoxCallMonitor(host=host, port=port, sensor=sensor,
+        keepalive=keepalive)
     monitor.connect()
 
     def _stop_listener(_event):
@@ -146,18 +152,23 @@ class FritzBoxCallSensor(Entity):
 class FritzBoxCallMonitor:
     """Event listener to monitor calls on the Fritz!Box."""
 
-    def __init__(self, host, port, sensor):
+    def __init__(self, host, port, sensor, keepalive):
         """Initialize Fritz!Box monitor instance."""
         self.host = host
         self.port = port
+        self.keepalive = keepalive
         self.sock = None
         self._sensor = sensor
         self.stopped = threading.Event()
 
     def connect(self):
         """Connect to the Fritz!Box."""
+        _LOGGER.debug('Setting up socket...')
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(10)
+        if self.keepalive:
+            _LOGGER.debug('Enabling TCP keepalive...')
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         try:
             self.sock.connect((self.host, self.port))
             threading.Thread(target=self._listen).start()
@@ -168,6 +179,7 @@ class FritzBoxCallMonitor:
 
     def _listen(self):
         """Listen to incoming or outgoing calls."""
+        _LOGGER.debug('Connection established, waiting for response...')
         while not self.stopped.isSet():
             try:
                 response = self.sock.recv(2048)
@@ -175,10 +187,12 @@ class FritzBoxCallMonitor:
                 # if no response after 10 seconds, just recv again
                 continue
             response = str(response, "utf-8")
+            _LOGGER.debug('Received %s', response)
 
             if not response:
                 # if the response is empty, the connection has been lost.
                 # try to reconnect
+                _LOGGER.warning('Connection lost, reconnecting...')
                 self.sock = None
                 while self.sock is None:
                     self.connect()
