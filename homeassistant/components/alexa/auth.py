@@ -101,12 +101,11 @@ class Auth:
         response = requests.post(LWA_TOKEN_URI, headers=LWA_HEADERS,
                                  data=lwa_params, allow_redirects=True)
         _LOGGER.debug(
-            "LWA response header: {0}".format(format(response.headers)))
+            "LWA response header: {0}".format(response.headers))
         _LOGGER.debug(
-            "LWA response status: {0}".format(
-                format(response.status_code)))
+            "LWA response status: {0}".format(response.status_code))
         _LOGGER.debug(
-            "LWA response body  : {0}".format(format(response.text)))
+            "LWA response body  : {0}".format(response.text))
 
         if response.status_code != 200:
             _LOGGER.error("Error calling LWA to get auth token.")
