@@ -142,6 +142,6 @@ class FibaroLight(FibaroDevice, Light):
             rgbw_color_str = self.fibaro_device.properties.color
             rgbw_list = [int(i) for i in rgbw_color_str.split(",")][:4]
             self._color = color_util.color_RGB_to_hs(*rgbw_list[:3]) \
-                          if rgbw_list else None
+                if rgbw_list else None
             if self._supported_flags & SUPPORT_WHITE_VALUE:
                 self._white = rgbw_list[3]
