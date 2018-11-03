@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     ClimateDevice)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_PASSWORD, TEMP_CELSIUS,
+    ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
@@ -34,15 +34,10 @@ SAVECAIR_FAN_MODES = {
 }
 
 CONF_IAM_ID = "iam_id"
-
 DEFAULT_NAME = "SystemAIR"
-DEFAULT_DEVICE = "vtr_300"
-
-SIGNAL_SYSTEMAIR_UPDATE = "systemair_update"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
     vol.Required(CONF_IAM_ID): cv.string,
     vol.Required(CONF_PASSWORD): cv.string
 })
@@ -52,21 +47,22 @@ async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the SystemAIRplatform."""
     name = config[CONF_NAME]
-    device = config[CONF_DEVICE]
     iam_id = config[CONF_IAM_ID]
     password = config[CONF_PASSWORD]
 
-    climate = SystemAIRClimate(hass, name, device, iam_id, password)
+    # Create savecair client
+    from systemair.savecair import SaveCairClient
+    client = SaveCairClient(iam_id, password, loop=hass.loop)
+    climate = SystemAIRClimate(client, name)
     async_add_entities([climate])
 
 
 class SystemAIRClimate(ClimateDevice):
     """Representation of the climate sensor."""
 
-    def __init__(self, hass, name, unit, iam_id, password):
+    def __init__(self, client, name):
         """Construct the SystemAIR Climate Device."""
         self._name = name
-        self._unit = unit
 
         """Initialize the climate device."""
         self._support_flags = SUPPORT_TARGET_TEMPERATURE
@@ -74,17 +70,15 @@ class SystemAIRClimate(ClimateDevice):
         self._support_flags = self._support_flags | SUPPORT_OPERATION_MODE
         self._support_flags = self._support_flags | SUPPORT_AWAY_MODE
 
-        # Create savecair client
-        self._client = SaveCairClient(iam_id, password, loop=hass.loop)
-        self._client.start()
-
         self._fan_list = [FAN_OFF, FAN_LOW, FAN_NORMAL, FAN_HIGH]
         self._operation_list = [STATE_AUTO, STATE_MANUAL]
+
+        self._client = client
+        self._client.start()
 
     async def async_update(self):
         """Retrieve latest state."""
         await self._client.update_sensors()
-        await self.async_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Register update signal handler."""
@@ -199,38 +193,12 @@ class SystemAIRClimate(ClimateDevice):
         fan_mode = int(self._client.data["main_airflow"])
         ha_fan_mode = SAVECAIR_FAN_MODES[fan_mode]
 
-        if ha_fan_mode == FAN_OFF:
-            return FAN_OFF
-        if ha_fan_mode == FAN_LOW:
-            return FAN_LOW
-        if ha_fan_mode == FAN_NORMAL:
-            return FAN_NORMAL
-        if ha_fan_mode == FAN_HIGH:
-            return FAN_HIGH
-
-        return None
+        return ha_fan_mode
 
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if "main_user_mode" not in self._client.data:
-            return None
-
-        if self._client.data["main_user_mode"] is None:
-            return None
-
-        opcode = int(self._client.data["main_user_mode"])
-
-        if opcode == 0:
-            return STATE_AUTO
-        if opcode == 1:
-            return STATE_MANUAL
-        if opcode == 5:
-            return STATE_IDLE
-
-        return None
-
-
+        return self._client.get_current_operation()
 
     @property
     def is_on(self):
@@ -273,21 +241,11 @@ class SystemAIRClimate(ClimateDevice):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
-        if fan_mode == FAN_OFF:
-            await self._client.set_fan_off()
-        elif fan_mode == FAN_LOW:
-            await self._client.set_fan_low()
-        elif fan_mode == FAN_NORMAL:
-            await self._client.set_fan_normal()
-        elif fan_mode == FAN_HIGH:
-            await self._client.set_fan_high()
+        await self._client.set_fan_mode(fan_mode)
 
     async def async_set_operation_mode(self, operation_mode):
         """Set the operation mode."""
-        if operation_mode.lower() == STATE_AUTO:
-            await self._client.set_auto_mode()
-        elif operation_mode.lower() == STATE_MANUAL:
-            await self._client.set_manual_mode()
+        await self._client.set_operation_mode(operation_mode)
 
     async def async_turn_on(self):
         """Turn on the climate device."""
