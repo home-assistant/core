@@ -14,6 +14,7 @@ import aiohttp
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.util import Throttle
@@ -116,7 +117,8 @@ async def _setup_lte(hass, lte_config):
         retry_task = hass.loop.create_task(
             _retry_login(hass, modem_data, password))
 
-        async def cleanup_retry(event):
+        @callback
+        def cleanup_retry(event):
             """Clean up retry task resources."""
             if not retry_task.done():
                 retry_task.cancel()
