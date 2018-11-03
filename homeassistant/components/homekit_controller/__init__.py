@@ -25,14 +25,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'lightbulb': 'light',
     'outlet': 'switch',
     'thermostat': 'climate',
-}
-
-# Mapping from Service type IDs to type and platform
-HOMEKIT_KNOWN_SERVICE_TYPES = {
-    '4aaaf930-0dec-11e5-b939-0800200c9a66': {
-        'type': 'sensor',
-        'platform': 'koogeek'
-    }
+    '4aaaf930-0dec-11e5-b939-0800200c9a66': 'sensor'
 }
 
 HOMEKIT_IGNORE = [
@@ -155,26 +148,16 @@ class HKDevice():
             for service in accessory['services']:
                 service_info = {'serial': serial,
                                 'aid': aid,
-                                'iid': service['iid']}
-                stype = service['type']
-                kservice = HOMEKIT_KNOWN_SERVICE_TYPES.get(stype, None)
-                # If service type ID is known, it is dispatched to platform
-                if kservice is not None:
-                    _LOGGER.debug("Mapped service: %s type: %s platform: %s",
-                                  stype,
-                                  kservice['type'],
-                                  kservice['platform'])
-                    component = kservice['type']
-                    devdomain = kservice['platform']
-                else:
-                    # Supported generic device types are resolved here
-                    devtype = homekit.ServicesTypes.get_short(stype)
-                    _LOGGER.debug("Found %s", devtype)
-                    component = HOMEKIT_ACCESSORY_DISPATCH.get(devtype, None)
-                    devdomain = DOMAIN
+                                'iid': service['iid'],
+                                'type': service['type']}
 
+                devtype = homekit.ServicesTypes.get_short(service_info['type'])
+                if devtype.startswith('Unknown Service:'):
+                    devtype = service_info['type']
+                _LOGGER.debug("Found %s", devtype)
+                component = HOMEKIT_ACCESSORY_DISPATCH.get(devtype, None)
                 if component is not None:
-                    discovery.load_platform(self.hass, component, devdomain,
+                    discovery.load_platform(self.hass, component, DOMAIN,
                                             service_info, self.config)
 
     def get_json(self, target):
@@ -214,36 +197,36 @@ class HKDevice():
         except homekit.exception.UnavailableError:
             error_msg = "This accessory is already paired to another device. \
                          Please reset the accessory and try again."
-            _configurator = self.hass.data[DOMAIN + self.hkid]
+            _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.notify_errors(_configurator, error_msg)
             return
         except homekit.exception.AuthenticationError:
             error_msg = "Incorrect HomeKit code for {}. Please check it and \
                          try again.".format(self.model)
-            _configurator = self.hass.data[DOMAIN + self.hkid]
+            _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.notify_errors(_configurator, error_msg)
             return
         except homekit.exception.UnknownError:
             error_msg = "Received an unknown error. Please file a bug."
-            _configurator = self.hass.data[DOMAIN + self.hkid]
+            _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.notify_errors(_configurator, error_msg)
             raise
 
         if self.pairing_data is not None:
             homekit.save_pairing(self.pairing_file, self.pairing_data)
-            _configurator = self.hass.data[DOMAIN + self.hkid]
+            _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.request_done(_configurator)
             self.accessory_setup()
         else:
             error_msg = "Unable to pair, please try again"
-            _configurator = self.hass.data[DOMAIN + self.hkid]
+            _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.notify_errors(_configurator, error_msg)
 
     def configure(self):
         """Obtain the pairing code for a HomeKit device."""
         description = "Please enter the HomeKit code for your {}".format(
             self.model)
-        self.hass.data[DOMAIN + self.hkid] = \
+        self.hass.data[DOMAIN+self.hkid] = \
             self.configurator.request_config(self.model,
                                              self.device_config_callback,
                                              description=description,
@@ -262,6 +245,7 @@ class HomeKitEntity(Entity):
         self._accessory = accessory
         self._aid = devinfo['aid']
         self._iid = devinfo['iid']
+        self._type = devinfo['type']
         self._address = "homekit-{}-{}".format(devinfo['serial'], self._iid)
         self._features = 0
         self._chars = {}
@@ -308,7 +292,6 @@ class HomeKitEntity(Entity):
 
 def setup(hass, config):
     """Set up for Homekit devices."""
-
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for Homekit discovery events."""
         # model, id
