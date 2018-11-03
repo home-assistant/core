@@ -1,12 +1,14 @@
 """Support for Alexa skill auth."""
 
+import aiohttp
+import async_timeout
+import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
 
-import requests
-
-from .const import DATE_FORMAT
+from homeassistant.helpers import aiohttp_client
+from .const import DATE_FORMAT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,23 +99,32 @@ class Auth:
         return True
 
     async def _async_request_new_token(self, lwa_params):
-        # TODO: use aiohttp
-        response = requests.post(LWA_TOKEN_URI, headers=LWA_HEADERS,
-                                 data=lwa_params, allow_redirects=True)
-        _LOGGER.debug(
-            "LWA response header: {0}".format(response.headers))
-        _LOGGER.debug(
-            "LWA response status: {0}".format(response.status_code))
-        _LOGGER.debug(
-            "LWA response body  : {0}".format(response.text))
 
-        if response.status_code != 200:
+        try:
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            with async_timeout.timeout(DEFAULT_TIMEOUT, loop=self.hass.loop):
+                response = await session.post(LWA_TOKEN_URI,
+                                              headers=LWA_HEADERS,
+                                              data=lwa_params,
+                                              allow_redirects=True)
+
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Timeout calling LWA to get auth token.")
+            return None
+
+        response_text = await response.text()
+
+        _LOGGER.debug("LWA response header: {0}".format(response.headers))
+        _LOGGER.debug("LWA response status: {0}".format(response.status))
+        _LOGGER.debug("LWA response body  : {0}".format(response_text))
+
+        if response.status != 200:
             _LOGGER.error("Error calling LWA to get auth token.")
             return None
 
-        access_token = json.loads(response.text)["access_token"]
-        refresh_token = json.loads(response.text)["refresh_token"]
-        expires_in = json.loads(response.text)["expires_in"]
+        access_token = json.loads(response_text)["access_token"]
+        refresh_token = json.loads(response_text)["refresh_token"]
+        expires_in = json.loads(response_text)["expires_in"]
         expire_time = datetime.utcnow() + timedelta(seconds=expires_in)
 
         await self._async_update_preferences(access_token, refresh_token,

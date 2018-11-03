@@ -4,7 +4,9 @@ API documentation:
 https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html
 https://developer.amazon.com/docs/device-apis/message-guide.html
 """
-
+import aiohttp
+import async_timeout
+import asyncio
 from collections import OrderedDict
 from datetime import datetime
 import json
@@ -12,11 +14,10 @@ import logging
 import math
 from uuid import uuid4
 
-import requests
-
 from homeassistant.components import (
     alert, automation, binary_sensor, climate, cover, fan, group, http,
     input_boolean, light, lock, media_player, scene, script, sensor, switch)
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
@@ -32,7 +33,7 @@ from homeassistant.util.decorator import Registry
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ENTITY_CONFIG, \
-    CONF_FILTER, DATE_FORMAT
+    CONF_FILTER, DATE_FORMAT, DEFAULT_TIMEOUT
 from .auth import Auth
 
 _LOGGER = logging.getLogger(__name__)
@@ -334,7 +335,7 @@ class _AlexaInterface:
     @staticmethod
     def properties_proactively_reported():
         """Return True if properties asynchronously reported."""
-        return True  # TODO: check if all devices support this (or move it)
+        return False
 
     @staticmethod
     def properties_retrievable():
@@ -387,7 +388,7 @@ class _AlexaInterface:
                     'name': prop_name,
                     'namespace': self.name(),
                     'value': prop_value,
-                    'timeOfSample': datetime.now().strftime(DATE_FORMAT),  # TODO: this should be the time at which the property is set
+                    'timeOfSample': datetime.now().strftime(DATE_FORMAT),
                     'uncertaintyInMilliseconds': 0
                 }
 
@@ -403,6 +404,9 @@ class _AlexaPowerController(_AlexaInterface):
 
     def properties_supported(self):
         return [{'name': 'powerState'}]
+
+    def properties_proactively_reported(self):
+        return True
 
     def properties_retrievable(self):
         return True
@@ -429,6 +433,9 @@ class _AlexaLockController(_AlexaInterface):
         return [{'name': 'lockState'}]
 
     def properties_retrievable(self):
+        return True
+
+    def properties_proactively_reported(self):
         return True
 
     def get_property(self, name):
@@ -467,6 +474,9 @@ class _AlexaBrightnessController(_AlexaInterface):
 
     def properties_supported(self):
         return [{'name': 'brightness'}]
+
+    def properties_proactively_reported(self):
+        return True
 
     def properties_retrievable(self):
         return True
@@ -565,6 +575,9 @@ class _AlexaTemperatureSensor(_AlexaInterface):
     def properties_supported(self):
         return [{'name': 'temperature'}]
 
+    def properties_proactively_reported(self):
+        return True
+
     def properties_retrievable(self):
         return True
 
@@ -605,6 +618,9 @@ class _AlexaContactSensor(_AlexaInterface):
     def properties_supported(self):
         return [{'name': 'detectionState'}]
 
+    def properties_proactively_reported(self):
+        return True
+
     def properties_retrievable(self):
         return True
 
@@ -627,6 +643,9 @@ class _AlexaMotionSensor(_AlexaInterface):
 
     def properties_supported(self):
         return [{'name': 'detectionState'}]
+
+    def properties_proactively_reported(self):
+        return True
 
     def properties_retrievable(self):
         return True
@@ -665,6 +684,9 @@ class _AlexaThermostatController(_AlexaInterface):
         if supported & climate.SUPPORT_OPERATION_MODE:
             properties.append({'name': 'thermostatMode'})
         return properties
+
+    def properties_proactively_reported(self):
+        return True
 
     def properties_retrievable(self):
         return True
@@ -990,7 +1012,7 @@ async def async_enable_proactive_mode(hass, smart_home_config):
                 # TODO: we should check if this entity was already discovered
                 # by Alexa (store them in the prefs?) and, if not, send a
                 # proactive discovery message instead.
-                hass.async_add_job(async_send_changereport_message,
+                hass.async_add_job(async_send_changereport_message, hass,
                                    alexa_changed_entity)
                 return
 
@@ -1138,7 +1160,7 @@ class _AlexaResponse:
         """
         self._response[API_EVENT][API_HEADER]['correlationToken'] = token
 
-    def set_proactive_endpoint(self, bearer_token, endpoint_id, cookie = None):
+    def set_proactive_endpoint(self, bearer_token, endpoint_id, cookie=None):
         """Sets the endpoint dictionary used to send proactive messages to
         Alexa.
         """
@@ -1266,7 +1288,7 @@ async def async_handle_message(
     return response.serialize()
 
 
-async def async_send_changereport_message(alexa_entity):
+async def async_send_changereport_message(hass, alexa_entity):
     """Send a ChangeReport message for an Alexa entity."""
 
     token = await AUTH.async_get_access_token()
@@ -1299,17 +1321,28 @@ async def async_send_changereport_message(alexa_entity):
                              payload=payload)
     message.set_proactive_endpoint(token, endpoint)
 
-    # TODO: use aiohttp
     message_str = json.dumps(message.serialize())
-    response = requests.post(ALEXA_URI, headers=headers,
-                             data=message_str, allow_redirects=True)
+
+    try:
+        session = aiohttp_client.async_get_clientsession(hass)
+        with async_timeout.timeout(DEFAULT_TIMEOUT, loop=hass.loop):
+            response = await session.post(ALEXA_URI,
+                                          headers=headers,
+                                          data=message_str,
+                                          allow_redirects=True)
+
+    except (asyncio.TimeoutError, aiohttp.ClientError):
+        _LOGGER.error("Timeout calling LWA to get auth token.")
+        return None
+
+    response_text = await response.text()
 
     _LOGGER.debug("Sent: {0}".format(message_str))
-    _LOGGER.debug("Received ({0}): {1}".format(response.status_code,
-                                               response.text))
+    _LOGGER.debug("Received ({0}): {1}".format(response.status,
+                                               response_text))
 
-    if response.status_code != 202:
-        response_json = json.loads(response.text)
+    if response.status != 202:
+        response_json = json.loads(response_text)
         _LOGGER.error("Error when sending ChangeReport to Alexa: {0}: {1}"
                       .format(response_json["payload"]["code"],
                               response_json["payload"]["description"]))
