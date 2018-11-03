@@ -32,7 +32,7 @@ CONF_PREFIXES = 'prefixes'
 DEFAULT_HOST = '169.254.1.1'  # IP valid for all Fritz!Box routers
 DEFAULT_NAME = 'Phone'
 DEFAULT_PORT = 1012
-DEFAULT_CONF_TCP_KEEPALIVE = False
+DEFAULT_TCP_KEEPALIVE = False
 
 INTERVAL_RECONNECT = 60
 
@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PHONEBOOK, default=0): cv.positive_int,
     vol.Optional(CONF_PREFIXES, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_TCP_KEEPALIVE, default=CONF_TCP_KEEPALIVE):
+    vol.Optional(CONF_TCP_KEEPALIVE, default=DEFAULT_TCP_KEEPALIVE):
         cv.boolean
 })
 
