@@ -6,10 +6,11 @@ https://home-assistant.io/components/route53/
 """
 from datetime import timedelta
 import logging
+from typing import List
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_ZONE
+from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
@@ -24,6 +25,7 @@ CONF_RECORDS = 'records'
 DOMAIN = 'route53'
 
 INTERVAL = timedelta(minutes=60)
+DEFAULT_TTL = 300
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -32,6 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_RECORDS): vol.All(cv.ensure_list, [cv.string]),
         vol.Required(CONF_SECRET_ACCESS_KEY): cv.string,
         vol.Required(CONF_ZONE): cv.string,
+        vol.Optional(CONF_TTL, default=DEFAULT_TTL): cv.positive_int,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -43,16 +46,29 @@ def setup(hass, config):
     zone = config[DOMAIN][CONF_ZONE]
     aws_access_key_id = config[DOMAIN][CONF_ACCESS_KEY_ID]
     aws_secret_access_key = config[DOMAIN][CONF_SECRET_ACCESS_KEY]
+    ttl = config[DOMAIN][CONF_TTL]
 
     def update_records_interval(now):
         """Set up recurring update."""
         _update_route53(
-            aws_access_key_id, aws_secret_access_key, zone, domain, records)
+            aws_access_key_id,
+            aws_secret_access_key,
+            zone,
+            domain,
+            records,
+            ttl
+        )
 
     def update_records_service(now):
         """Set up service for manual trigger."""
         _update_route53(
-            aws_access_key_id, aws_secret_access_key, zone, domain, records)
+            aws_access_key_id,
+            aws_secret_access_key,
+            zone,
+            domain,
+            records,
+            ttl
+        )
 
     track_time_interval(hass, update_records_interval, INTERVAL)
 
@@ -61,7 +77,13 @@ def setup(hass, config):
 
 
 def _update_route53(
-        aws_access_key_id, aws_secret_access_key, zone, domain, records):
+        aws_access_key_id: str,
+        aws_secret_access_key: str,
+        zone: str,
+        domain: str,
+        records: List[str],
+        ttl: int,
+):
     import boto3
     from ipify import get_ip
     from ipify import exceptions
@@ -95,7 +117,7 @@ def _update_route53(
             'ResourceRecordSet': {
                 'Name': '{}.{}'.format(record, domain),
                 'Type': 'A',
-                'TTL': 300,
+                'TTL': ttl,
                 'ResourceRecords': [
                     {'Value': ipaddress},
                 ],
