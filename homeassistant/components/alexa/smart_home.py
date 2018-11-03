@@ -1160,7 +1160,7 @@ class _AlexaResponse:
         """
         self._response[API_EVENT][API_HEADER]['correlationToken'] = token
 
-    def set_proactive_endpoint(self, bearer_token, endpoint_id, cookie=None):
+    def set_endpoint_full(self, bearer_token, endpoint_id, cookie=None):
         """Sets the endpoint dictionary used to send proactive messages to
         Alexa.
         """
@@ -1319,7 +1319,7 @@ async def async_send_changereport_message(hass, alexa_entity):
 
     message = _AlexaResponse(name='ChangeReport', namespace='Alexa',
                              payload=payload)
-    message.set_proactive_endpoint(token, endpoint)
+    message.set_endpoint_full(token, endpoint)
 
     message_str = json.dumps(message.serialize())
 
