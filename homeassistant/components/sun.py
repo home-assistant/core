@@ -30,6 +30,12 @@ STATE_ATTR_AZIMUTH = 'azimuth'
 STATE_ATTR_ELEVATION = 'elevation'
 STATE_ATTR_NEXT_DAWN = 'next_dawn'
 STATE_ATTR_NEXT_DUSK = 'next_dusk'
+STATE_ATTR_NEXT_ASTRONOMICAL_DAWN = 'next_astronomical_dawn'
+STATE_ATTR_NEXT_ASTRONOMICAL_DUSK = 'next_astronomical_dusk'
+STATE_ATTR_NEXT_CIVIL_DAWN = 'next_civil_dawn'
+STATE_ATTR_NEXT_CIVIL_DUSK = 'next_civil_dusk'
+STATE_ATTR_NEXT_NAUTICAL_DAWN = 'next_nautical_dawn'
+STATE_ATTR_NEXT_NAUTICAL_DUSK = 'next_nautical_dusk'
 STATE_ATTR_NEXT_MIDNIGHT = 'next_midnight'
 STATE_ATTR_NEXT_NOON = 'next_noon'
 STATE_ATTR_NEXT_RISING = 'next_rising'
@@ -59,7 +65,9 @@ class Sun(Entity):
         self.hass = hass
         self.location = location
         self._state = self.next_rising = self.next_setting = None
-        self.next_dawn = self.next_dusk = None
+        self.next_astronomical_dawn = self.next_astronomical_dusk = None
+        self.next_civil_dawn = self.next_civil_dusk = None
+        self.next_nautical_dawn = self.next_nautical_dusk = None
         self.next_midnight = self.next_noon = None
         self.solar_elevation = self.solar_azimuth = None
 
@@ -82,8 +90,16 @@ class Sun(Entity):
     def state_attributes(self):
         """Return the state attributes of the sun."""
         return {
-            STATE_ATTR_NEXT_DAWN: self.next_dawn.isoformat(),
-            STATE_ATTR_NEXT_DUSK: self.next_dusk.isoformat(),
+            STATE_ATTR_NEXT_DAWN: self.next_civil_dawn.isoformat(),
+            STATE_ATTR_NEXT_DUSK: self.next_civil_dusk.isoformat(),
+            STATE_ATTR_NEXT_ASTRONOMICAL_DAWN:
+                self.next_astronomical_dawn.isoformat(),
+            STATE_ATTR_NEXT_ASTRONOMICAL_DUSK:
+                self.next_astronomical_dusk.isoformat(),
+            STATE_ATTR_NEXT_CIVIL_DAWN: self.next_civil_dawn.isoformat(),
+            STATE_ATTR_NEXT_CIVIL_DUSK: self.next_civil_dusk.isoformat(),
+            STATE_ATTR_NEXT_NAUTICAL_DAWN: self.next_nautical_dawn.isoformat(),
+            STATE_ATTR_NEXT_NAUTICAL_DUSK: self.next_nautical_dusk.isoformat(),
             STATE_ATTR_NEXT_MIDNIGHT: self.next_midnight.isoformat(),
             STATE_ATTR_NEXT_NOON: self.next_noon.isoformat(),
             STATE_ATTR_NEXT_RISING: self.next_rising.isoformat(),
@@ -95,16 +111,29 @@ class Sun(Entity):
     @property
     def next_change(self):
         """Datetime when the next change to the state is."""
-        return min(self.next_dawn, self.next_dusk, self.next_midnight,
-                   self.next_noon, self.next_rising, self.next_setting)
+        return min(self.next_astronomical_dawn, self.next_astronomical_dusk,
+                   self.next_civil_dawn, self.next_civil_dusk,
+                   self.next_nautical_dawn, self.next_nautical_dusk,
+                   self.next_midnight, self.next_noon,
+                   self.next_rising, self.next_setting)
 
     @callback
     def update_as_of(self, utc_point_in_time):
         """Update the attributes containing solar events."""
-        self.next_dawn = get_astral_event_next(
-            self.hass, 'dawn', utc_point_in_time)
-        self.next_dusk = get_astral_event_next(
-            self.hass, 'dusk', utc_point_in_time)
+        self.next_astronomical_dawn = get_astral_event_next(
+            self.hass, 'dawn', utc_point_in_time,
+            solar_depression='astronomical')
+        self.next_astronomical_dusk = get_astral_event_next(
+            self.hass, 'dusk', utc_point_in_time,
+            solar_depression='astronomical')
+        self.next_civil_dawn = get_astral_event_next(
+            self.hass, 'dawn', utc_point_in_time, solar_depression='civil')
+        self.next_civil_dusk = get_astral_event_next(
+            self.hass, 'dusk', utc_point_in_time, solar_depression='civil')
+        self.next_nautical_dawn = get_astral_event_next(
+            self.hass, 'dawn', utc_point_in_time, solar_depression='nautical')
+        self.next_nautical_dusk = get_astral_event_next(
+            self.hass, 'dusk', utc_point_in_time, solar_depression='nautical')
         self.next_midnight = get_astral_event_next(
             self.hass, 'solar_midnight', utc_point_in_time)
         self.next_noon = get_astral_event_next(

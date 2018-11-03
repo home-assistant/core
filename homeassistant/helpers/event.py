@@ -265,28 +265,35 @@ track_time_interval = threaded_listener_factory(async_track_time_interval)
 
 @callback
 @bind_hass
-def async_track_sunrise(hass, action, offset=None):
-    """Add a listener that will fire a specified offset from sunrise daily."""
+def async_sun_event(hass, action, event, offset=None, solar_depression=None):
+    """Add a listener that will fire a specified offset from event daily."""
     remove = None
 
     @callback
-    def sunrise_automation_listener(now):
+    def sun_automation_listener(now):
         """Handle points in time to execute actions."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
-            hass, sunrise_automation_listener, get_astral_event_next(
-                hass, SUN_EVENT_SUNRISE, offset=offset))
+            hass, sun_automation_listener, get_astral_event_next(
+                hass, event, offset=offset, solar_depression=solar_depression))
         hass.async_run_job(action)
 
     remove = async_track_point_in_utc_time(
-        hass, sunrise_automation_listener, get_astral_event_next(
-            hass, SUN_EVENT_SUNRISE, offset=offset))
+        hass, sun_automation_listener, get_astral_event_next(
+            hass, event, offset=offset, solar_depression=solar_depression))
 
     def remove_listener():
-        """Remove sunset listener."""
+        """Remove listener."""
         remove()
 
     return remove_listener
+
+
+@callback
+@bind_hass
+def async_track_sunrise(hass, action, offset=None):
+    """Add a listener that will fire a specified offset from sunrise daily."""
+    return async_sun_event(hass, action, SUN_EVENT_SUNRISE, offset)
 
 
 track_sunrise = threaded_listener_factory(async_track_sunrise)
@@ -296,29 +303,78 @@ track_sunrise = threaded_listener_factory(async_track_sunrise)
 @bind_hass
 def async_track_sunset(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunset daily."""
-    remove = None
-
-    @callback
-    def sunset_automation_listener(now):
-        """Handle points in time to execute actions."""
-        nonlocal remove
-        remove = async_track_point_in_utc_time(
-            hass, sunset_automation_listener, get_astral_event_next(
-                hass, SUN_EVENT_SUNSET, offset=offset))
-        hass.async_run_job(action)
-
-    remove = async_track_point_in_utc_time(
-        hass, sunset_automation_listener, get_astral_event_next(
-            hass, SUN_EVENT_SUNSET, offset=offset))
-
-    def remove_listener():
-        """Remove sunset listener."""
-        remove()
-
-    return remove_listener
+    return async_sun_event(hass, action, SUN_EVENT_SUNSET, offset)
 
 
 track_sunset = threaded_listener_factory(async_track_sunset)
+
+
+@callback
+@bind_hass
+def async_track_astronomical_dawn(hass, action, offset=None):
+    """Add a listener that will fire a specified offset from dawn daily."""
+    return async_sun_event(
+        hass, action, 'dawn', offset, solar_depression='astronomical')
+
+
+track_astronomical_dawn = threaded_listener_factory(
+    async_track_astronomical_dawn)
+
+
+@callback
+@bind_hass
+def async_track_astronomical_dusk(hass, action, offset=None):
+    """Add a listener that will fire a specified offset from dusk daily."""
+    return async_sun_event(
+        hass, action, 'dusk', offset, solar_depression='astronomical')
+
+
+track_astronomical_dusk = threaded_listener_factory(
+    async_track_astronomical_dusk)
+
+
+@callback
+@bind_hass
+def async_track_civil_dawn(hass, action, offset=None):
+    """Add a listener that will fire a specified offset from dawn daily."""
+    return async_sun_event(
+        hass, action, 'dawn', offset, solar_depression='civil')
+
+
+track_civil_dawn = threaded_listener_factory(async_track_civil_dawn)
+
+
+@callback
+@bind_hass
+def async_track_civil_dusk(hass, action, offset=None):
+    """Add a listener that will fire a specified offset from dusk daily."""
+    return async_sun_event(
+        hass, action, 'dusk', offset, solar_depression='civil')
+
+
+track_civil_dusk = threaded_listener_factory(async_track_civil_dusk)
+
+
+@callback
+@bind_hass
+def async_track_nautical_dawn(hass, action, offset=None):
+    """Add a listener that will fire a specified offset from dawn daily."""
+    return async_sun_event(
+        hass, action, 'dawn', offset, solar_depression='nautical')
+
+
+track_nautical_dawn = threaded_listener_factory(async_track_nautical_dawn)
+
+
+@callback
+@bind_hass
+def async_track_nautical_dusk(hass, action, offset=None):
+    """Add a listener that will fire a specified offset from dusk daily."""
+    return async_sun_event(
+        hass, action, 'dusk', offset, solar_depression='nautical')
+
+
+track_nautical_dusk = threaded_listener_factory(async_track_nautical_dusk)
 
 
 @callback

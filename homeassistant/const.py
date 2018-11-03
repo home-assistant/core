@@ -19,6 +19,12 @@ DEVICE_DEFAULT_NAME = 'Unnamed Device'
 # Sun events
 SUN_EVENT_SUNSET = 'sunset'
 SUN_EVENT_SUNRISE = 'sunrise'
+SUN_EVENT_ASTRONOMICAL_DAWN = 'astronomical_dawn'
+SUN_EVENT_ASTRONOMICAL_DUSK = 'astronomical_dusk'
+SUN_EVENT_CIVIL_DAWN = 'civil_dawn'
+SUN_EVENT_CIVIL_DUSK = 'civil_dusk'
+SUN_EVENT_NAUTICAL_DAWN = 'nautical_dawn'
+SUN_EVENT_NAUTICAL_DUSK = 'nautical_dusk'
 
 # #### CONFIG ####
 CONF_ABOVE = 'above'
