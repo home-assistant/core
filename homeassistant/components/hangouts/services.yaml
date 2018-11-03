@@ -1,5 +1,5 @@
 update:
-  description: Updates the list of users and conversations.
+  description: Updates the list of conversations.
 
 send_message:
   description: Send a notification to a specific target.
@@ -13,3 +13,6 @@ send_message:
     data:
       description: Other options ['image_file' / 'image_url']
       example: '{ "image_file": "file" }  or  { "image_url": "url" }'
+
+reconnect:
+  description: Reconnect the bot.
