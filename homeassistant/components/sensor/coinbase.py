@@ -9,11 +9,13 @@ from homeassistant.helpers.entity import Entity
 
 ATTR_NATIVE_BALANCE = "Balance in native currency"
 
-BTC_ICON = 'mdi:currency-btc'
-ETH_ICON = 'mdi:currency-eth'
-EUR_ICON = 'mdi:currency-eur'
-LTC_ICON = 'mdi:litecoin'
-USD_ICON = 'mdi:currency-usd'
+icons = {
+    'BTC': 'mdi:currency-btc',
+    'ETH': 'mdi:currency-eth',
+    'EUR': 'mdi:currency-eur',
+    'LTC': 'mdi:litecoin',
+    'USD': 'mdi:currency-usd'
+}
 COIN_ICON = 'mdi:coin'
 
 CONF_ATTRIBUTION = "Data provided by coinbase.com"
@@ -69,11 +71,7 @@ class AccountSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        if self._unit_of_measurement == "BTC":
-            return BTC_ICON
-        if self._unit_of_measurement == "ETH":
-            return ETH_ICON
-        return COIN_ICON
+        return icons.get(self._unit_of_measurement, COIN_ICON)
 
     @property
     def device_state_attributes(self):
@@ -123,11 +121,7 @@ class ExchangeRateSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        if self.currency == "BTC":
-            return BTC_ICON
-        if self.currency == "ETH":
-            return ETH_ICON
-        return COIN_ICON
+        return icons.get(self.currency, COIN_ICON)
 
     @property
     def device_state_attributes(self):
