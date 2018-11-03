@@ -80,6 +80,10 @@ async def test_garage_door_open_close(hass, hk_driver, cls, events):
     hass.states.async_set(entity_id, STATE_CLOSED)
     await hass.async_block_till_done()
 
+    await hass.async_add_job(acc.char_target_state.client_update_value, 1)
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
     await hass.async_add_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()
     assert call_open_cover
@@ -88,6 +92,13 @@ async def test_garage_door_open_close(hass, hk_driver, cls, events):
     assert acc.char_target_state.value == 0
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
+
+    hass.states.async_set(entity_id, STATE_OPEN)
+    await hass.async_block_till_done()
+
+    await hass.async_add_job(acc.char_target_state.client_update_value, 0)
+    await hass.async_block_till_done()
+    assert len(events) == 2
 
 
 async def test_window_set_cover_position(hass, hk_driver, cls, events):

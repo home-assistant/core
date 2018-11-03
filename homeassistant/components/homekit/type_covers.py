@@ -42,6 +42,9 @@ class GarageDoorOpener(HomeAccessory):
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
         _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
+        if self.char_current_state.value == value:
+            _LOGGER.debug('%s: Ignoring state change', self.entity_id)
+            return
         self._flag_state = True
 
         params = {ATTR_ENTITY_ID: self.entity_id}
