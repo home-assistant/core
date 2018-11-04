@@ -16,7 +16,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME,
                                  CONF_PASSWORD, CONF_USERNAME,
-                                 CONF_TCP_KEEPALIVE,
                                  EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -28,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PHONEBOOK = 'phonebook'
 CONF_PREFIXES = 'prefixes'
+CONF_TCP_KEEPALIVE = 'tcp_keepalive'
 
 DEFAULT_HOST = '169.254.1.1'  # IP valid for all Fritz!Box routers
 DEFAULT_NAME = 'Phone'
