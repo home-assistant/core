@@ -28,7 +28,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
         """Show the form to the user."""
         data_schema = vol.Schema({
             vol.Required(CONF_SENSOR_ID): str,
-            vol.Optional(CONF_SHOW_ON_MAP): bool,
+            vol.Optional(CONF_SHOW_ON_MAP, default=False): bool,
         })
 
         return self.async_show_form(
@@ -70,7 +70,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input.update({
             CONF_SCAN_INTERVAL: scan_interval.seconds,
-            CONF_SENSOR_ID: sensor_id,
         })
 
         return self.async_create_entry(title=sensor_id, data=user_input)
