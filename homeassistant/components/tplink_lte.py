@@ -11,7 +11,7 @@ import aiohttp
 import attr
 import voluptuous as vol
 
-from homeassistant.components.notify import ATTR_TARGET, SERVICE_NOTIFY
+from homeassistant.components.notify import ATTR_TARGET
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'tplink_lte'
 DATA_KEY = 'tplink_lte'
 
-DEFAULT_DISCOVERY = True
+CONF_NOTIFY = "notify"
 
 _NOTIFY_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
@@ -36,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(SERVICE_NOTIFY):
+        vol.Optional(CONF_NOTIFY):
             vol.All(cv.ensure_list, [_NOTIFY_SCHEMA]),
     })])
 }, extra=vol.ALLOW_EXTRA)
@@ -83,7 +83,7 @@ async def async_setup(hass, config):
         await asyncio.wait(tasks)
 
     for conf in domain_config:
-        for notify_conf in conf.get(SERVICE_NOTIFY, []):
+        for notify_conf in conf.get(CONF_NOTIFY, []):
             hass.async_create_task(discovery.async_load_platform(
                 hass, 'notify', DOMAIN, notify_conf, config))
 
@@ -119,11 +119,7 @@ async def _setup_lte(hass, lte_config, delay=0):
 
 async def _login(hass, modem_data, password):
     """Log in and complete setup."""
-    try:
-        await modem_data.modem.login(password=password)
-    except asyncio.CancelledError:
-        return
-
+    await modem_data.modem.login(password=password)
     modem_data.connected = True
     hass.data[DATA_KEY].modem_data[modem_data.host] = modem_data
 
@@ -145,10 +141,7 @@ async def _retry_login(hass, modem_data, password):
     delay = 15
 
     while not modem_data.connected:
-        try:
-            await asyncio.sleep(delay)
-        except asyncio.CancelledError:
-            return
+        await asyncio.sleep(delay)
 
         try:
             await _login(hass, modem_data, password)
