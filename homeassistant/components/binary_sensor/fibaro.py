@@ -15,6 +15,14 @@ DEPENDENCIES = ['fibaro']
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_TYPES = {
+    'com.fibaro.doorSensor':   ['Door', 'mdi:window-open', 'door'],
+    'com.fibaro.windowSensor': ['Window', 'mdi:window-open', 'window'],
+    'com.fibaro.smokeSensor': ['Smoke', 'mdi:smoking', 'smoke'],
+    'com.fibaro.FGMS001': ['Motion', 'mdi:run', 'motion'],
+    'com.fibaro.heatDetector': ['Heat', 'mdi:fire', 'heat'],
+}
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Fibaro controller devices."""
@@ -26,12 +34,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
     """Representation of a Fibaro Binary Sensor."""
 
+    _icon = None
+    _device_class = None
+
     def __init__(self, fibaro_device, controller):
         """Initialize the binary_sensor."""
         self._state = None
         self.last_changed_time = None
         FibaroDevice.__init__(self, fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        stype = None
+        if fibaro_device.type in SENSOR_TYPES.keys():
+            stype = fibaro_device.type
+        elif fibaro_device.baseType in SENSOR_TYPES.keys():
+            stype = fibaro_device.baseType
+        if stype:
+            self._device_class = SENSOR_TYPES[stype][2]
+            self._icon = SENSOR_TYPES[stype][1]
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return self._icon
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
 
     @property
     def is_on(self):

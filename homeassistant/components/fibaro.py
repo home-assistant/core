@@ -6,6 +6,11 @@ To enable, add the following section to configuration.yaml:
     url: "http://yourfibarohc/api/"
     username: "your@superuseremail.com"
     password: "YourPassword1"
+    plugins: True or False
+
+Plugins config option controls whether you want plugin devices
+(such as Netatmo, etc) imported. Usually it's best to set them up
+in HA directly.
 
 For more detailed debugging, you can enable it in the [logger] section of you
 configuration.yaml, like this:
@@ -30,9 +35,10 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'fibaro'
 FIBARO_DEVICES = 'fibaro_devices'
 FIBARO_CONTROLLER = 'fibaro_controller'
-FIBARO_ID_FORMAT = '{}_{}'
+FIBARO_ID_FORMAT = '{}_{}_{}'
 ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
+CONF_PLUGINS = "plugins"
 
 FIBARO_COMPONENTS = [
     'binary_sensor',
@@ -48,26 +54,26 @@ FIBARO_COMPONENTS = [
 FIBARO_TYPEMAP = {
     'com.fibaro.multilevelSensor': "sensor",
     'com.fibaro.binarySwitch': 'switch',
-    'com.fibaro.FGRGBW441M': 'light',
     'com.fibaro.multilevelSwitch': 'switch',
     'com.fibaro.FGD212': 'light',
     'com.fibaro.FGR': 'cover',
     'com.fibaro.doorSensor': 'binary_sensor',
-    'com.fibaro.FGMS001v2': 'binary_sensor',
-    'com.fibaro.lightSensor': 'sensor',
-    'com.fibaro.seismometer': 'sensor',
-    'com.fibaro.accelerometer': 'sensor',
-    'com.fibaro.FGSS001': 'sensor',
+    'com.fibaro.doorWindowSensor': 'binary_sensor',
+    'com.fibaro.FGMS001': 'binary_sensor',
+    'com.fibaro.heatDetector': 'binary_sensor',
+    'com.fibaro.lifeDangerSensor': 'binary_sensor',
+    'com.fibaro.smokeSensor': 'binary_sensor',
     'com.fibaro.remoteSwitch': 'switch',
     'com.fibaro.sensor': 'sensor',
-    'com.fibaro.colorController': 'sensor'
+    'com.fibaro.colorController': 'light'
 }
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_URL): cv.string
+        vol.Required(CONF_URL): cv.string,
+        vol.Optional(CONF_PLUGINS, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -81,8 +87,9 @@ class FibaroController():
     callbacks = {}              # Dict of update value callbacks by deviceId
     client = None               # Fiblary's Client object for communication
     state_handler = None        # Fiblary's StateHandler object
+    _import_plugins = None      # Whether to import devices from plugins
 
-    def __init__(self, username, password, url):
+    def __init__(self, username, password, url, import_plugins):
         """Initialize the communication with the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
         self.client = FibaroClient(url, username, password)
@@ -152,38 +159,63 @@ class FibaroController():
                 room_name = 'Unknown'
             else:
                 room_name = self.my_rooms[device.roomID].name
-            device.friendly_name = room_name + '_' + device.name
+            device.friendly_name = room_name + ' ' + device.name
+            device.ha_id = FIBARO_ID_FORMAT.format(
+                slugify(room_name), slugify(device.name), device.id)
             self.my_devices[device.id] = device
         self.my_fibaro_devices = defaultdict(list)
         for _, device in self.my_devices.items():
-            if (device.enabled is True) and (device.visible is True):
+            if (device.enabled is True) and \
+                    (self._import_plugins is True or device.isPlugin is False):
+                # Use our lookup table to identify device type
                 device_type = FIBARO_TYPEMAP.get(
-                    device.type,
-                    FIBARO_TYPEMAP.get(device.baseType, None))
+                    device.type, FIBARO_TYPEMAP.get(device.baseType, None))
+
+                # We can also identify device type by its capabilities
+                if device_type is None:
+                    if 'setBrightness' in device.actions:
+                        device_type = 'light'
+                    elif 'turnOn' in device.actions:
+                        device_type = 'switch'
+                    elif 'open' in device.actions:
+                        device_type = 'cover'
+                    elif 'value' in device.properties:
+                        if device.properties.value == 'true' or \
+                                device.properties.value == 'false':
+                            device_type = 'binary_sensor'
+                        else:
+                            device_type = 'sensor'
+
+                # Switches that control lights should show up as lights
                 if device_type == 'switch' and \
                         'isLight' in device.properties and \
                         device.properties.isLight == 'true':
                     device_type = 'light'
+
                 device.mapped_type = device_type
                 if device_type:
                     self.my_fibaro_devices[device_type].append(device)
+                else:
+                    _LOGGER.debug("%s (%s, %s) not mapped",
+                                  device.friendly_name, device.type,
+                                  device.baseType)
         return True
 
 
 def setup(hass, config):
     """Set up the Fibaro Component."""
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
-    url = config[DOMAIN][CONF_URL]
-    controller = FibaroController(username, password, url)
-    hass.data[FIBARO_CONTROLLER] = controller
+
+    hass.data[FIBARO_CONTROLLER] = controller = \
+        FibaroController(config[DOMAIN][CONF_USERNAME],
+                         config[DOMAIN][CONF_PASSWORD],
+                         config[DOMAIN][CONF_URL],
+                         config[DOMAIN][CONF_PLUGINS])
     hass.data[FIBARO_DEVICES] = controller.my_fibaro_devices
 
     for component in FIBARO_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     controller.enable_state_handler()
-
     return True
 
 
@@ -194,12 +226,8 @@ class FibaroDevice(Entity):
         """Initialize the device."""
         self.fibaro_device = fibaro_device
         self.controller = controller
-
         self._name = fibaro_device.friendly_name
-        # Append device id to prevent name clashes in HA.
-        self.ha_id = FIBARO_ID_FORMAT.format(
-            slugify(self._name), fibaro_device.id)
-        self.fibaro_device.ha_id = self.ha_id
+        self.ha_id = fibaro_device.ha_id
         self.controller.register(fibaro_device.id, self._update_callback)
 
     def _update_callback(self):
@@ -242,6 +270,11 @@ class FibaroDevice(Entity):
             getattr(self.fibaro_device, cmd)(*args)
         else:
             self.dont_know_message(cmd)
+
+    @property
+    def hidden(self) -> bool:
+        """Return True if the entity should be hidden from UIs."""
+        return self.fibaro_device.visible is False
 
     @property
     def current_power_w(self):
