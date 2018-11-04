@@ -94,8 +94,7 @@ class FibaroLight(FibaroDevice, Light):
                         self._brightness = self._last_brightness
                     else:
                         self._brightness = 255
-                    self.set_level(int(self._brightness*100/255))
-                self.action("turnOn")
+                self.set_level(int(self._brightness*100/255))
                 return
             # We're supposed to turn it on to a very very low level,
             # so instead, we switch it off
@@ -106,7 +105,6 @@ class FibaroLight(FibaroDevice, Light):
             # We set it to the target brightness and turn it on
             self._brightness = target_brightness
             self.set_level(int(target_brightness*100/255))
-            self.action("turnOn")
             return
         # The simplest case is left for last. No dimming, just switch on
         self.action("turnOn")
