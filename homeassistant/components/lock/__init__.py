@@ -84,6 +84,13 @@ async def async_setup_entry(hass, entry):
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
+<<<<<<< HEAD
+=======
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
+
+>>>>>>> Config Entry setup for zwave lock
 class LockDevice(Entity):
     """Representation of a lock."""
 

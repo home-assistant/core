@@ -3,6 +3,7 @@ import asyncio
 
 from unittest.mock import patch, MagicMock
 
+from homeassistant import config_entries
 from homeassistant.components.lock import zwave
 from homeassistant.components.zwave import const
 
@@ -183,6 +184,16 @@ def test_lock_alarm_level(mock_openzwave):
     assert device.device_state_attributes[zwave.ATTR_LOCK_STATUS] == \
         'Tamper Alarm: Too many keypresses'
 
+@asyncio.coroutine
+def setup_ozw(hass, mock_openzwave):
+    """Load the Z-Wave loc platform with the provided bridge."""
+    hass.config.components.add(zwave.DOMAIN)
+    config_entry = config_entries.ConfigEntry(1, zwave.DOMAIN, 'Mock Title', {
+        'usb_path': 'mock-path',
+        'network_key': 'mock-key'
+    }, 'test', config_entries.CONN_CLASS_LOCAL_PUSH)
+    yield from hass.config_entries.async_forward_entry_setup(config_entry, 'lock')
+    yield from hass.async_block_till_done()
 
 @asyncio.coroutine
 def test_lock_set_usercode_service(hass, mock_openzwave):
@@ -191,8 +202,10 @@ def test_lock_set_usercode_service(hass, mock_openzwave):
     node = MockNode(node_id=12)
     value0 = MockValue(data='          ', node=node, index=0)
     value1 = MockValue(data='          ', node=node, index=1)
-    yield from zwave.async_setup_platform(
-        hass, {}, MagicMock())
+    #yield from zwave.async_setup_platform(
+    #    hass, {}, MagicMock())
+    yield from setup_ozw(hass, mock_openzwave)
+    yield from hass.async_block_till_done()
 
     node.get_values.return_value = {
         value0.value_id: value0,
