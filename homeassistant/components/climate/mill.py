@@ -114,7 +114,7 @@ class MillHeater(ClimateDevice):
         """Return the state attributes."""
         if self._heater.room:
             room = self._heater.room.name
-            avg_room_temp = self._heater.avg_temp
+            avg_room_temp = self._heater.room.avg_temp
         else:
             room = "Independent device"
             avg_room_temp = None
