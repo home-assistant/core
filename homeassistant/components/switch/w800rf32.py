@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             return
 
         _LOGGER.debug(
-           "Switch update (Device ID: %s Command %s ...)",
+            "Switch update (Device ID: %s Command %s ...)",
             dev_id, command)
 
         # Update the w800rf32 device state
