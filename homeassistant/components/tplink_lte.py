@@ -124,9 +124,7 @@ async def _login(hass, modem_data, password):
     except asyncio.CancelledError:
         return
 
-    _LOGGER.warning("Connected to %s", modem_data.host)
     modem_data.connected = True
-
     hass.data[DATA_KEY].modem_data[modem_data.host] = modem_data
 
     async def cleanup(event):
@@ -154,5 +152,6 @@ async def _retry_login(hass, modem_data, password):
 
         try:
             await _login(hass, modem_data, password)
+            _LOGGER.warning("Connected to %s", modem_data.host)
         except tp_connected.Error:
             delay = min(2*delay, 300)
