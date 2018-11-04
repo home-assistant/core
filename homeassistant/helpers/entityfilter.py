@@ -10,6 +10,18 @@ CONF_INCLUDE_ENTITIES = 'include_entities'
 CONF_EXCLUDE_DOMAINS = 'exclude_domains'
 CONF_EXCLUDE_ENTITIES = 'exclude_entities'
 
+
+def _convert_filter(config):
+    filt = generate_filter(
+        config[CONF_INCLUDE_DOMAINS],
+        config[CONF_INCLUDE_ENTITIES],
+        config[CONF_EXCLUDE_DOMAINS],
+        config[CONF_EXCLUDE_ENTITIES],
+    )
+    filt.config = config
+    return filt
+
+
 FILTER_SCHEMA = vol.All(
     vol.Schema({
         vol.Optional(CONF_EXCLUDE_DOMAINS, default=[]):
@@ -18,13 +30,7 @@ FILTER_SCHEMA = vol.All(
         vol.Optional(CONF_INCLUDE_DOMAINS, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
-    }),
-    lambda config: generate_filter(
-        config[CONF_INCLUDE_DOMAINS],
-        config[CONF_INCLUDE_ENTITIES],
-        config[CONF_EXCLUDE_DOMAINS],
-        config[CONF_EXCLUDE_ENTITIES],
-    ))
+    }), _convert_filter)
 
 
 def generate_filter(include_domains, include_entities,
