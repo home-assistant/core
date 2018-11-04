@@ -14,11 +14,11 @@ from homeassistant.components.media_player import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNAVAILABLE,
-    STATE_PAUSED, STATE_PLAYING)
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_UNAVAILABLE, STATE_PAUSED,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['ziggo-mediabox-xl==1.0.0']
+REQUIREMENTS = ['ziggo-mediabox-xl==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ip_addr = socket.gethostbyname(host)
     if ip_addr not in known_devices:
         try:
-            mediabox = ZiggoMediaboxXL(ip_addr)
+            mediabox = ZiggoMediaboxXL(ip_addr, 5)
             # Add the device manually or check if a connection can be
             # established to the discovered device.
             if manual_config or mediabox.test_connection():
@@ -126,12 +126,10 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self.send_keys(['POWER'])
-        self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
         self.send_keys(['POWER'])
-        self._state = STATE_OFF
 
     def media_play(self):
         """Send play command."""
