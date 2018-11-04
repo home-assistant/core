@@ -39,7 +39,7 @@ async def async_setup(hass, config):
 
     res = await tibber_connection.validate_login()
     if res:
-        _LOGGER.error("Failed to setup Tibber. %s", res)
+        _LOGGER.error("Failed to validate login. %s", res)
         return False
 
     hass.data[DOMAIN] = tibber_connection
