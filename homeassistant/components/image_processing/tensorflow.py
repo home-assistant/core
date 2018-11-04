@@ -20,8 +20,7 @@ from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.15.3', 'pillow==5.2.0',
-                'protobuf==3.6.1', 'tensorflow==1.11.0']
+REQUIREMENTS = ['numpy==1.15.3', 'pillow==5.2.0', 'protobuf==3.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
