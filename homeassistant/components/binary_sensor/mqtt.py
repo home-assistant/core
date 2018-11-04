@@ -99,8 +99,8 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         """Initialize the MQTT binary sensor."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
-        MqttDiscoveryUpdate.__init__(self, None, self.discovery_callback,
-                                     discovery_payload)
+        MqttDiscoveryUpdate.__init__(self, None, discovery_payload,
+                                     self.discovery_callback)
         MqttEntityDeviceInfo.__init__(self, device_config)
         self._config = config
         self._state = None
@@ -108,7 +108,7 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         self._delay_listener = None
 
         # Config
-        self._name = None
+        self._name = config.get(CONF_NAME)
         self._state_topic = None
         self._device_class = None
         self._payload_on = None
@@ -117,7 +117,7 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         self._force_update = None
         self._off_delay = None
         self._template = None
-        self._unique_id = None
+        self._unique_id = config.get(CONF_UNIQUE_ID)
 
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
