@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LupusecAlarm(LupusecDevice, AlarmControlPanel):
     """An alarm_control_panel implementation for Lupusec."""
 
-    def __init__(self, data, device, name):
+    def __init__(self, data, device):
         """Initialize the alarm control panel."""
         super().__init__(data, device)
 
