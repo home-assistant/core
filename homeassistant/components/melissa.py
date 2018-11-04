@@ -12,7 +12,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ["py-melissa-climate==2.0.0"]
+REQUIREMENTS = ["py-melissa-climate==2.1.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,4 +41,6 @@ async def async_setup(hass, config):
 
     hass.async_create_task(
         async_load_platform(hass, 'climate', DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, 'water_heater', DOMAIN, {}, config))
     return True
