@@ -45,7 +45,7 @@ class TestRMVtransportSensor(unittest.TestCase):
     def test_transportnsw_config(self, mock_get_departures):
         """Test minimal TransportNSW configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG)
-        state = self.hass.states.get('sensor.next_leave_event')
+        state = self.hass.states.get('sensor.next_bus')
         assert state.state == '16'
         assert state.attributes['stop_id'] == '209516'
         assert state.attributes['route'] == '199'
