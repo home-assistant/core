@@ -84,7 +84,7 @@ class MonzoAuthCallbackView(HomeAssistantView):
                 CONF_LAST_SAVED_AT: int(time.time())
             }
 
-        hass.async_add_job(hass.config_entries.flow.async_init(
+        hass.async_create_task(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
                 CONF_CLIENT_ID: self.oauth.client_id,
