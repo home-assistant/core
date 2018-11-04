@@ -97,17 +97,17 @@ class FibaroController():
         self._read_devices()
 
     def __del__(self):
-        """Deinitialize the Fibaro Controller"""
+        """Deinitialize the Fibaro Controller."""
         if self.state_handler:
             self.disable_state_handler()
 
     def enable_state_handler(self):
-        """Start StateHandler thread for monitoring updates"""
+        """Start StateHandler thread for monitoring updates."""
         from fiblary3.client.v4.client import StateHandler
         self.state_handler = StateHandler(self.client, self._on_state_change)
 
     def disable_state_handler(self):
-        """Stop StateHandler thread used for monitoring updates"""
+        """Stop StateHandler thread used for monitoring updates."""
         self.state_handler.stop()
         self.state_handler = None
 

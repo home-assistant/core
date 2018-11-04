@@ -33,7 +33,7 @@ class FibaroCover(FibaroDevice, CoverDevice):
 
     @staticmethod
     def bound(position):
-        """Normalizes the position."""
+        """Normalize the position."""
         if position is None:
             return None
         position = int(position)
