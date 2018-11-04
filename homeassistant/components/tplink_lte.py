@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components.notify import ATTR_TARGET, SERVICE_NOTIFY
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -45,7 +46,10 @@ CONFIG_SCHEMA = vol.Schema({
 class ModemData:
     """Class for modem state."""
 
+    host = attr.ib()
     modem = attr.ib()
+
+    connected = attr.ib(init=False, default=True)
 
 
 @attr.s
@@ -90,36 +94,65 @@ async def _setup_lte(hass, lte_config, delay=0):
     """Set up a TP-Link LTE modem."""
     import tp_connected
 
-    setup_task = None
-    try:
-        if delay:
-            await asyncio.sleep(delay)
-    except asyncio.CancelledError:
-        return
-
     host = lte_config[CONF_HOST]
     password = lte_config[CONF_PASSWORD]
 
     websession = hass.data[DATA_KEY].websession
     modem = tp_connected.Modem(hostname=host, websession=websession)
 
+    modem_data = ModemData(host, modem)
+
     try:
-        await modem.login(password=password)
+        await _login(hass, modem_data, password)
+    except tp_connected.Error:
+        retry_task = hass.loop.create_task(
+            _retry_login(hass, modem_data, password))
+
+        @callback
+        def cleanup_retry(event):
+            """Clean up retry task resources."""
+            if not retry_task.done():
+                retry_task.cancel()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_retry)
+
+
+async def _login(hass, modem_data, password):
+    """Log in and complete setup."""
+    try:
+        await modem_data.modem.login(password=password)
     except asyncio.CancelledError:
         return
-    except tp_connected.Error:
-        delay = max(15, min(2*delay, 300))
-        _LOGGER.warning("Retrying %s in %d seconds", host, delay)
-        setup_task = hass.loop.create_task(_setup_lte(hass, lte_config, delay))
-        return
 
-    modem_data = ModemData(modem)
-    hass.data[DATA_KEY].modem_data[host] = modem_data
+    _LOGGER.warning("Connected to %s", modem_data.host)
+    modem_data.connected = True
+
+    hass.data[DATA_KEY].modem_data[modem_data.host] = modem_data
 
     async def cleanup(event):
         """Clean up resources."""
-        if setup_task is not None and not setup_task.done():
-            setup_task.cancel()
-        await modem.logout()
+        await modem_data.modem.logout()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+
+
+async def _retry_login(hass, modem_data, password):
+    """Sleep and retry setup."""
+    import tp_connected
+
+    _LOGGER.warning(
+        "Could not connect to %s. Will keep trying.", modem_data.host)
+
+    modem_data.connected = False
+    delay = 15
+
+    while not modem_data.connected:
+        try:
+            await asyncio.sleep(delay)
+        except asyncio.CancelledError:
+            return
+
+        try:
+            await _login(hass, modem_data, password)
+        except tp_connected.Error:
+            delay = min(2*delay, 300)
