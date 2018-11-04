@@ -19,7 +19,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
 
-REQUIREMENTS = ['pytraccar==0.1.1']
+REQUIREMENTS = ['pytraccar==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,10 +44,10 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return a Traccar scanner."""
     from pytraccar.api import API
 
-    session = async_get_clientsession(hass, config.get(CONF_VERIFY_SSL))
+    session = async_get_clientsession(hass, config[CONF_VERIFY_SSL])
 
     api = API(hass.loop, session, config[CONF_USERNAME], config[CONF_PASSWORD],
-              config[CONF_HOST], config.get(CONF_PORT), config.get(CONF_SSL))
+              config[CONF_HOST], config[CONF_PORT], config[CONF_SSL])
     scanner = TraccarScanner(api, hass, async_see)
     return await scanner.async_init()
 
