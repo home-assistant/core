@@ -885,16 +885,16 @@ class MqttDiscoveryUpdate(Entity):
             """Handle discovery update."""
             _LOGGER.info("Got update for entity with hash: %s '%s'",
                          self._discovery_hash, payload)
-            if ((self._async_discover and self._discovery_payload != payload)
-                    or not payload):
+            if not payload:
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self.hass.async_create_task(self.async_remove())
                 del self.hass.data[ALREADY_DISCOVERED][self._discovery_hash]
                 self._remove_signal()
-                if payload and self._async_discover:
-                    _LOGGER.info("Adding component: %s", self.entity_id)
-                    self.hass.async_create_task(self._async_discover(payload))
+            elif self._async_discover and self._discovery_payload != payload:
+                # Non-empty payload: Notify component
+                _LOGGER.info("Updating component: %s", self.entity_id)
+                self.hass.async_create_task(self._async_discover(payload))
 
         if self._discovery_hash:
             self._remove_signal = async_dispatcher_connect(
