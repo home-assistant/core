@@ -12,8 +12,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_STATE, CONF_LATITUDE,
-    CONF_MONITORED_CONDITIONS, CONF_LONGITUDE)
+    ATTR_ATTRIBUTION, ATTR_STATE, CONF_LATITUDE, CONF_MONITORED_CONDITIONS,
+    CONF_LONGITUDE)
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -41,6 +41,7 @@ TYPE_USER_FLU = 'flu'
 TYPE_USER_LEPTO = 'lepto'
 TYPE_USER_NO_NONE = 'none'
 TYPE_USER_SYMPTOMS = 'symptoms'
+TYPE_USER_TOTAL = 'total'
 
 SENSORS = {
     CATEGORY_CDC_REPORT: [
@@ -54,12 +55,15 @@ SENSORS = {
         (TYPE_USER_LEPTO, 'Leptospirosis Symptoms', 'mdi:alert', 'reports'),
         (TYPE_USER_NO_NONE, 'No Symptoms', 'mdi:alert', 'reports'),
         (TYPE_USER_SYMPTOMS, 'Flu-like Symptoms', 'mdi:alert', 'reports'),
+        (TYPE_USER_TOTAL, 'Total Symptoms', 'mdi:alert', 'reports'),
     ]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_LATITUDE):
+        cv.latitude,
+    vol.Optional(CONF_LONGITUDE):
+        cv.longitude,
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
         vol.All(cv.ensure_list, [vol.In(SENSORS)])
 })
@@ -164,7 +168,14 @@ class FluNearYouSensor(Entity):
                 ATTR_REPORTED_LONGITUDE: data['longitude'],
                 ATTR_ZIP_CODE: data['zip'],
             })
-            self._state = data[self._kind]
+
+            if self._kind == TYPE_USER_TOTAL:
+                self._state = sum(
+                    v for k, v in data.items() if k in (
+                        TYPE_USER_CHICK, TYPE_USER_DENGUE, TYPE_USER_FLU,
+                        TYPE_USER_LEPTO, TYPE_USER_SYMPTOMS))
+            else:
+                self._state = data[self._kind]
 
 
 class FluNearYouData:
