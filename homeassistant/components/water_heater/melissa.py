@@ -60,12 +60,12 @@ class Bobbie(WaterHeaterDevice):
 
     @property
     def state(self):
-        """Gets the current state."""
+        """Property for state."""
         return 'heating' if self._data.get('load', None) else 'idle'
 
     @property
     def temperature_unit(self):
-        """Temperature unit property."""
+        """Property for Temperature unit."""
         return TEMP_CELSIUS
 
     @property
@@ -98,4 +98,4 @@ class Bobbie(WaterHeaterDevice):
     async def async_send(self, value):
         """Send action to service."""
         return await self._api.async_send(
-                self._serial_number, 'bobbie', value)
+            self._serial_number, 'bobbie', value)
