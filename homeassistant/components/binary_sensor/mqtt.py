@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mqtt/
 """
 import logging
-from typing import Optional
 
 import voluptuous as vol
 
@@ -79,11 +78,6 @@ async def _async_setup_entity(hass, config, async_add_entities,
         value_template.hass = hass
 
     async_add_entities([MqttBinarySensor(
-        config.get(CONF_AVAILABILITY_TOPIC),
-        config.get(CONF_QOS),
-        config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-        config.get(CONF_DEVICE),
         config,
         discovery_payload
     )])
@@ -93,22 +87,14 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
                        MqttEntityDeviceInfo, BinarySensorDevice):
     """Representation a binary sensor that is updated by MQTT."""
 
-    def __init__(self, availability_topic, qos, payload_available,
-                 payload_not_available, device_config: Optional[ConfigType],
-                 config, discovery_payload):
+    def __init__(self, config, discovery_payload):
         """Initialize the MQTT binary sensor."""
-        MqttAvailability.__init__(self, availability_topic, qos,
-                                  payload_available, payload_not_available)
-        MqttDiscoveryUpdate.__init__(self, None, discovery_payload,
-                                     self.discovery_callback)
-        MqttEntityDeviceInfo.__init__(self, device_config)
         self._config = config
         self._state = None
         self._state_unsub = None
         self._delay_listener = None
 
-        # Config
-        self._name = config.get(CONF_NAME)
+        self._name = None
         self._state_topic = None
         self._device_class = None
         self._payload_on = None
@@ -117,24 +103,40 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         self._force_update = None
         self._off_delay = None
         self._template = None
-        self._unique_id = config.get(CONF_UNIQUE_ID)
+        self._unique_id = None
+
+        # Load config
+        self._setup_from_config(config)
+
+        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
+        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
+        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+        device_config = config.get(CONF_DEVICE)
+
+        MqttAvailability.__init__(self, availability_topic, self._qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, None, discovery_payload,
+                                     self.discovery_callback)
+        MqttEntityDeviceInfo.__init__(self, device_config)
 
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
         await MqttAvailability.async_added_to_hass(self)
         await MqttDiscoveryUpdate.async_added_to_hass(self)
-        await self._setup_from_config(self._config)
+        await self._subscribe_topics(None)
 
     async def discovery_callback(self, discovery_payload):
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        await self._setup_from_config(config)
+        self._setup_from_config(config)
+        old_state_topic = self._state_topic
+        await self._subscribe_topics(old_state_topic)
         self.async_schedule_update_ha_state()
 
-    async def _setup_from_config(self, config):
+    def _setup_from_config(self, config):
         """(Re)Setup the entity."""
         self._name = config.get(CONF_NAME)
-        state_topic = config.get(CONF_STATE_TOPIC)
+        self._state_topic = config.get(CONF_STATE_TOPIC)
         self._device_class = config.get(CONF_DEVICE_CLASS)
         self._qos = config.get(CONF_QOS)
         self._force_update = config.get(CONF_FORCE_UPDATE)
@@ -157,6 +159,8 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         # TODO: Handle changed device?
         # config.get(CONF_DEVICE),
 
+    async def _subscribe_topics(self, old_state_topic):
+        """(Re)Subscribe to topics."""
         @callback
         def off_delay_listener(now):
             """Switch device off after a delay."""
@@ -189,8 +193,7 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
 
             self.async_schedule_update_ha_state()
 
-        if self._state_topic != state_topic:
-            self._state_topic = state_topic
+        if self._state_topic != old_state_topic:
             if self._state_unsub is not None:
                 self._state_unsub()
             self._state_unsub = await mqtt.async_subscribe(
