@@ -127,6 +127,7 @@ CHAR_VALVE_TYPE = 'ValveType'
 # #### Properties ####
 PROP_MAX_VALUE = 'maxValue'
 PROP_MIN_VALUE = 'minValue'
+PROP_MIN_STEP = 'minStep'
 PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
 
 # #### Device Classes ####
