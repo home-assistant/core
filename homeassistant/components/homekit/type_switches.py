@@ -73,20 +73,22 @@ class Switch(HomeAccessory):
         self._domain = split_entity_id(self.entity_id)[0]
         self._flag_state = False
 
-        can_cancel = self.hass.states.get(self.entity_id) \
-            .attributes.get(ATTR_CAN_CANCEL)
-        self.activate_only = False
-        if self._domain == 'script' and not can_cancel:
-            self.activate_only = True
+        self.activate_only = self.is_activate(
+            self.hass.states.get(self.entity_id))
 
         serv_switch = self.add_preload_service(SERV_SWITCH)
         self.char_on = serv_switch.configure_char(
             CHAR_ON, value=False, setter_callback=self.set_state)
 
+    def is_activate(self, state):
+        """Check if entity is activate only."""
+        can_cancel = state.attributes.get(ATTR_CAN_CANCEL)
+        if self._domain == 'script' and not can_cancel:
+            return True
+        return False
+
     def reset_switch(self, *args):
         """Reset switch to emulate activate click."""
-        if self.char_on.value == 0:
-            return
         _LOGGER.debug('%s: Reset switch to off', self.entity_id)
         self.char_on.set_value(0)
 
@@ -107,6 +109,7 @@ class Switch(HomeAccessory):
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
+        self.activate_only = self.is_activate(new_state)
         if self.activate_only:
             _LOGGER.debug('%s: Ignore state change, entity is activate only',
                           self.entity_id)
