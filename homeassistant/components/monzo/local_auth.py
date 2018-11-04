@@ -75,6 +75,7 @@ class MonzoAuthCallbackView(HomeAssistantView):
         html_response = """<html><head><title>Monzo Auth</title></head>
         <body><h1>{}</h1></body></html>""".format(response_message)
 
+        tokens = {}
         if result:
             tokens = {
                 CONF_CLIENT_ID: self.oauth.client_id,
