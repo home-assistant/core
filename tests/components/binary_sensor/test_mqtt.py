@@ -323,11 +323,11 @@ async def test_discovery_update_binary_sensor(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('binary_sensor.beer')
-    assert state is None
-
-    state = hass.states.get('binary_sensor.milk')
     assert state is not None
     assert state.name == 'Milk'
+
+    state = hass.states.get('binary_sensor.milk')
+    assert state is None
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
