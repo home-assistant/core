@@ -2,12 +2,14 @@
 import asyncio
 import logging
 import pprint
+import uuid
 
 from aiohttp import hdrs, client_exceptions, WSMsgType
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.alexa import smart_home as alexa
 from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.core import callback
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
@@ -23,6 +25,14 @@ STATE_DISCONNECTED = 'disconnected'
 
 class UnknownHandler(Exception):
     """Exception raised when trying to handle unknown handler."""
+
+
+class ErrorMessage(Exception):
+    """Exception raised when there was error handling message in the cloud."""
+
+    def __init__(self, error):
+        super.__init__(self, "Error in Cloud")
+        self.error = error
 
 
 class CloudIoT:
@@ -41,6 +51,19 @@ class CloudIoT:
         self.tries = 0
         # Current state of the connection
         self.state = STATE_DISCONNECTED
+        # Local code waiting for a response
+        self._response_handler = {}
+        self._on_connect = []
+
+    @callback
+    def register_on_connect(self, callback):
+        """Register an async on_connect callback."""
+        self._on_connect.append(callback)
+
+    @property
+    def connected(self):
+        """Return if we're currently connected."""
+        return self.state == STATE_CONNECTED
 
     @asyncio.coroutine
     def connect(self):
@@ -91,6 +114,17 @@ class CloudIoT:
         if remove_hass_stop_listener is not None:
             remove_hass_stop_listener()
 
+    async def async_send_message(self, handler, payload):
+        """Send a message."""
+        msgid = uuid.uuid4().hex
+        self._response_handler[msgid] = asyncio.Future()
+        message = {
+            'msgid': msgid,
+            'handler': handler,
+            'payload': payload,
+        }
+        await self.client.send_json(message)
+
     @asyncio.coroutine
     def _handle_connection(self):
         """Connect to the IoT broker."""
@@ -134,6 +168,9 @@ class CloudIoT:
             _LOGGER.info("Connected")
             self.state = STATE_CONNECTED
 
+            if self._on_connect:
+                yield from asyncio.wait([cb() for cb in self._on_connect])
+
             while not client.closed:
                 msg = yield from client.receive()
 
@@ -158,6 +195,17 @@ class CloudIoT:
                 if _LOGGER.isEnabledFor(logging.DEBUG):
                     _LOGGER.debug("Received message:\n%s\n",
                                   pprint.pformat(msg))
+
+                response_handler = self._response_handler.pop(msg['msgid'],
+                                                              None)
+
+                if response_handler is not None:
+                    if 'payload' in msg:
+                        response_handler.set_result(msg["payload"])
+                    else:
+                        response_handler.set_exception(
+                            ErrorMessage(msg['error']))
+                    continue
 
                 response = {
                     'msgid': msg['msgid'],

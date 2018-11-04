@@ -527,3 +527,11 @@ async def test_websocket_update_preferences(hass, hass_ws_client,
     assert not setup_api[PREF_ENABLE_GOOGLE]
     assert not setup_api[PREF_ENABLE_ALEXA]
     assert not setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
+
+
+async def test_enabling_webhook():
+    assert False
+
+
+async def test_disabling_webhook():
+    assert False
