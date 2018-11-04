@@ -10,7 +10,7 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
+from homeassistant.components import mqtt, light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, ATTR_WHITE_VALUE, FLASH_LONG, FLASH_SHORT,
@@ -22,11 +22,13 @@ from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
     CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate)
+from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.const import (
     CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, CONF_NAME, CONF_OPTIMISTIC,
     CONF_RGB, CONF_WHITE_VALUE, CONF_XY, STATE_ON)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.color as color_util
@@ -86,14 +88,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
-    """Set up a MQTT JSON Light."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
+    """Set up MQTT JSON Light through configuration.yaml."""
+    await _async_setup_entity(hass, config, async_add_entities)
 
-    discovery_hash = None
-    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
-        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up MQTT JSON Light dynamically through MQTT discovery."""
+    async def async_discover(discovery_payload):
+        """Discover and add a MQTT JSON Light."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(hass, config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
+    async_dispatcher_connect(
+        hass, MQTT_DISCOVERY_NEW.format(light.DOMAIN, DOMAIN),
+        async_discover)
+
+
+async def _async_setup_entity(hass, config, async_add_entities,
+                              discovery_hash=None):
+    """Set up the MQTT JSON Light."""
     async_add_entities([MqttJson(
         config.get(CONF_NAME),
         config.get(CONF_UNIQUE_ID),

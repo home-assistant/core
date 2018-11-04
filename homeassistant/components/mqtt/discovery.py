@@ -44,7 +44,7 @@ CONFIG_ENTRY_PLATFORMS = {
     'binary_sensor': ['mqtt'],
     'camera': ['mqtt'],
     'cover': ['mqtt'],
-    'light': ['mqtt'],
+    'light': ['mqtt', 'mqtt_json'],
     'lock': ['mqtt'],
     'sensor': ['mqtt'],
     'switch': ['mqtt'],
