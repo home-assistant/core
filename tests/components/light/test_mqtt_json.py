@@ -93,11 +93,11 @@ from homeassistant.setup import async_setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES)
-from homeassistant.components import light, mqtt
+import homeassistant.components.light as light
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.core as ha
 
-from tests.common import mock_coro, async_fire_mqtt_message, MockConfigEntry
+from tests.common import mock_coro, async_fire_mqtt_message
 
 
 async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
@@ -524,8 +524,7 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
 async def test_discovery_removal(hass, mqtt_mock, caplog):
     """Test removal of discovered mqtt_json lights."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, 'homeassistant', {'mqtt': {}}, entry)
+    await async_start(hass, 'homeassistant', {'mqtt': {}})
     data = (
         '{ "name": "Beer",'
         '  "platform": "mqtt_json",'

@@ -27,7 +27,6 @@ from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 import homeassistant.helpers.config_validation as cv
-from homeassistant.loader import get_platform
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,17 +121,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT light dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add a MQTT light."""
-        if discovery_payload['platform'] == 'mqtt_json':
-            mqtt_json = get_platform(hass, 'light', 'mqtt_json')
-            config = mqtt_json.PLATFORM_SCHEMA(discovery_payload)
-            await mqtt_json.async_setup_entity(
-                hass, config, async_add_entities,
-                discovery_payload[ATTR_DISCOVERY_HASH])
-        else:
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(
-                hass, config, async_add_entities,
-                discovery_payload[ATTR_DISCOVERY_HASH])
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(hass, config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
+
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(light.DOMAIN, 'mqtt'),
         async_discover)

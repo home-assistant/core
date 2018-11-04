@@ -44,7 +44,7 @@ CONFIG_ENTRY_PLATFORMS = {
     'binary_sensor': ['mqtt'],
     'camera': ['mqtt'],
     'cover': ['mqtt'],
-    'light': ['mqtt', 'mqtt_json'],
+    'light': ['mqtt'],
     'lock': ['mqtt'],
     'sensor': ['mqtt'],
     'switch': ['mqtt'],
@@ -245,7 +245,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                     hass, component, platform, payload, hass_config)
                 return
 
-            config_entries_key = '{}.{}'.format(component, 'mqtt')
+            config_entries_key = '{}.{}'.format(component, platform)
             async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     await hass.config_entries.async_forward_entry_setup(
@@ -253,7 +253,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                     hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
             async_dispatcher_send(hass, MQTT_DISCOVERY_NEW.format(
-                component, 'mqtt'), payload)
+                component, platform), payload)
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
