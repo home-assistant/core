@@ -34,9 +34,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_PORT, default=8082): cv.port,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
 
 
