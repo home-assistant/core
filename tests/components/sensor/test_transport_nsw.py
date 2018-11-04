@@ -23,7 +23,7 @@ def get_departuresMock(_stop_id, route, destination, api_key):
         'due': 16,
         'delay': 6,
         'real_time': 'y',
-        'destination' : 'Palm Beach',
+        'destination': 'Palm Beach',
         'mode': 'Bus'
         }
     return data
