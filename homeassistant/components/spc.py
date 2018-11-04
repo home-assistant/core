@@ -63,11 +63,11 @@ async def async_setup(hass, config):
 
     # add sensor devices for each zone (typically motion/fire/door sensors)
     hass.async_create_task(discovery.async_load_platform(
-        hass, 'binary_sensor', DOMAIN, {}))
+        hass, 'binary_sensor', DOMAIN, {}, config))
 
     # create a separate alarm panel for each area
     hass.async_create_task(discovery.async_load_platform(
-        hass, 'alarm_control_panel', DOMAIN, {}))
+        hass, 'alarm_control_panel', DOMAIN, {}, config))
 
     # start listening for incoming events over websocket
     spc.start()

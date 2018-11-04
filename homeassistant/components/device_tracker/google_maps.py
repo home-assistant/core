@@ -19,7 +19,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify, dt as dt_util
 
-REQUIREMENTS = ['locationsharinglib==3.0.6']
+REQUIREMENTS = ['locationsharinglib==3.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 

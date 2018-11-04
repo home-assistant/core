@@ -55,7 +55,7 @@ async def test_if_fires_on_change_str(hass, calls):
         automation.DOMAIN: {
             'trigger': {
                 'platform': 'template',
-                'value_template': 'true',
+                'value_template': '{{ "true" }}',
             },
             'action': {
                 'service': 'test.automation'
@@ -74,7 +74,7 @@ async def test_if_fires_on_change_str_crazy(hass, calls):
         automation.DOMAIN: {
             'trigger': {
                 'platform': 'template',
-                'value_template': 'TrUE',
+                'value_template': '{{ "TrUE" }}',
             },
             'action': {
                 'service': 'test.automation'
@@ -112,7 +112,7 @@ async def test_if_not_fires_on_change_str(hass, calls):
         automation.DOMAIN: {
             'trigger': {
                 'platform': 'template',
-                'value_template': 'False',
+                'value_template': 'true',
             },
             'action': {
                 'service': 'test.automation'
@@ -131,7 +131,7 @@ async def test_if_not_fires_on_change_str_crazy(hass, calls):
         automation.DOMAIN: {
             'trigger': {
                 'platform': 'template',
-                'value_template': 'Anything other than "true" is false.',
+                'value_template': '{{ "Anything other than true is false." }}',
             },
             'action': {
                 'service': 'test.automation'

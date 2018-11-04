@@ -10,23 +10,20 @@ import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_AXIS
 from homeassistant.const import (
-    ATTR_LOCATION, ATTR_TRIPPED, CONF_EVENT, CONF_HOST, CONF_INCLUDE,
+    ATTR_LOCATION, CONF_EVENT, CONF_HOST, CONF_INCLUDE,
     CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_TRIGGER_TIME, CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['axis==14']
+REQUIREMENTS = ['axis==16']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'axis'
 CONFIG_FILE = 'axis.conf'
-
-AXIS_DEVICES = {}
 
 EVENT_TYPES = ['motion', 'vmd3', 'pir', 'sound',
                'daynight', 'tampering', 'input']
@@ -99,8 +96,6 @@ def request_configuration(hass, config, name, host, serialnumber):
             return False
 
         if setup_device(hass, config, device_config):
-            del device_config['events']
-            del device_config['signal']
             config_file = load_json(hass.config.path(CONFIG_FILE))
             config_file[serialnumber] = dict(device_config)
             save_json(hass.config.path(CONFIG_FILE), config_file)
@@ -146,9 +141,11 @@ def request_configuration(hass, config, name, host, serialnumber):
 
 def setup(hass, config):
     """Set up for Axis devices."""
+    hass.data[DOMAIN] = {}
+
     def _shutdown(call):
         """Stop the event stream on shutdown."""
-        for serialnumber, device in AXIS_DEVICES.items():
+        for serialnumber, device in hass.data[DOMAIN].items():
             _LOGGER.info("Stopping event stream for %s.", serialnumber)
             device.stop()
 
@@ -160,7 +157,7 @@ def setup(hass, config):
         name = discovery_info['hostname']
         serialnumber = discovery_info['properties']['macaddress']
 
-        if serialnumber not in AXIS_DEVICES:
+        if serialnumber not in hass.data[DOMAIN]:
             config_file = load_json(hass.config.path(CONFIG_FILE))
             if serialnumber in config_file:
                 # Device config previously saved to file
@@ -178,7 +175,7 @@ def setup(hass, config):
                 request_configuration(hass, config, name, host, serialnumber)
         else:
             # Device already registered, but on a different IP
-            device = AXIS_DEVICES[serialnumber]
+            device = hass.data[DOMAIN][serialnumber]
             device.config.host = host
             dispatcher_send(hass, DOMAIN + '_' + device.name + '_new_ip', host)
 
@@ -195,7 +192,7 @@ def setup(hass, config):
 
     def vapix_service(call):
         """Service to send a message."""
-        for _, device in AXIS_DEVICES.items():
+        for device in hass.data[DOMAIN].values():
             if device.name == call.data[CONF_NAME]:
                 response = device.vapix.do_request(
                     call.data[SERVICE_CGI],
@@ -214,7 +211,7 @@ def setup(hass, config):
 
 def setup_device(hass, config, device_config):
     """Set up an Axis device."""
-    from axis import AxisDevice
+    import axis
 
     def signal_callback(action, event):
         """Call to configure events when initialized on event stream."""
@@ -229,17 +226,31 @@ def setup_device(hass, config, device_config):
             discovery.load_platform(
                 hass, component, DOMAIN, event_config, config)
 
-    event_types = list(filter(lambda x: x in device_config[CONF_INCLUDE],
-                              EVENT_TYPES))
-    device_config['events'] = event_types
-    device_config['signal'] = signal_callback
-    device = AxisDevice(hass.loop, **device_config)
-    device.name = device_config[CONF_NAME]
+    event_types = [
+        event
+        for event in device_config[CONF_INCLUDE]
+        if event in EVENT_TYPES
+    ]
 
-    if device.serial_number is None:
-        # If there is no serial number a connection could not be made
-        _LOGGER.error("Couldn't connect to %s", device_config[CONF_HOST])
+    device = axis.AxisDevice(
+        loop=hass.loop, host=device_config[CONF_HOST],
+        username=device_config[CONF_USERNAME],
+        password=device_config[CONF_PASSWORD],
+        port=device_config[CONF_PORT], web_proto='http',
+        event_types=event_types, signal=signal_callback)
+
+    try:
+        hass.data[DOMAIN][device.vapix.serial_number] = device
+
+    except axis.Unauthorized:
+        _LOGGER.error("Credentials for %s are faulty",
+                      device_config[CONF_HOST])
         return False
+
+    except axis.RequestError:
+        return False
+
+    device.name = device_config[CONF_NAME]
 
     for component in device_config[CONF_INCLUDE]:
         if component == 'camera':
@@ -253,51 +264,6 @@ def setup_device(hass, config, device_config):
             discovery.load_platform(
                 hass, component, DOMAIN, camera_config, config)
 
-    AXIS_DEVICES[device.serial_number] = device
     if event_types:
         hass.add_job(device.start)
     return True
-
-
-class AxisDeviceEvent(Entity):
-    """Representation of a Axis device event."""
-
-    def __init__(self, event_config):
-        """Initialize the event."""
-        self.axis_event = event_config[CONF_EVENT]
-        self._name = '{}_{}_{}'.format(
-            event_config[CONF_NAME], self.axis_event.event_type,
-            self.axis_event.id)
-        self.location = event_config[ATTR_LOCATION]
-        self.axis_event.callback = self._update_callback
-
-    def _update_callback(self):
-        """Update the sensor's state, if needed."""
-        self.schedule_update_ha_state(True)
-
-    @property
-    def name(self):
-        """Return the name of the event."""
-        return self._name
-
-    @property
-    def device_class(self):
-        """Return the class of the event."""
-        return self.axis_event.event_class
-
-    @property
-    def should_poll(self):
-        """Return the polling state. No polling needed."""
-        return False
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the event."""
-        attr = {}
-
-        tripped = self.axis_event.is_tripped
-        attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
-
-        attr[ATTR_LOCATION] = self.location
-
-        return attr
