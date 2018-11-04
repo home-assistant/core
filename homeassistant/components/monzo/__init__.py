@@ -24,7 +24,7 @@ from .const import (
     DOMAIN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ACCESS_TOKEN,
     CONF_REFRESH_TOKEN, CONF_LAST_SAVED_AT, CONF_EXPIRES_AT)
 
-REQUIREMENTS = ['monzotomtest==0.6.3']
+REQUIREMENTS = ['monzo==0.8.0']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
