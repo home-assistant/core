@@ -128,7 +128,6 @@ async def _async_setup_component(hass: core.HomeAssistant,
         return False
 
     start = timer()
-    _LOGGER.info("Setting up %s", domain)
 
     if hasattr(component, 'PLATFORM_SCHEMA'):
         # Entity components have their own warning

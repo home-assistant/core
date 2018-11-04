@@ -93,8 +93,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES)
-from homeassistant.components import light
-from homeassistant.components.light import mqtt_json
+from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.core as ha
 
@@ -525,7 +524,7 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
 async def test_discovery_removal(hass, mqtt_mock, caplog):
     """Test removal of discovered mqtt_json lights."""
-    entry = MockConfigEntry(domain=mqtt_json.DOMAIN)
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, 'homeassistant', {'mqtt': {}}, entry)
     data = (
         '{ "name": "Beer",'
@@ -544,3 +543,37 @@ async def test_discovery_removal(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     state = hass.states.get('light.beer')
     assert state is None
+
+
+async def test_discovery_update(hass, mqtt_mock, caplog):
+    """Test removal of discovered mqtt_json lights."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {'mqtt': {}}, entry)
+    data1 = (
+        '{ "name": "Beer",'
+        '  "platform": "mqtt_json",'
+        '  "command_topic": "test_topic" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "platform": "mqtt_json",'
+        '  "command_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    # state = hass.states.get('light.milk')
+    # assert state is not None
+    # assert state.name == 'Milk'
