@@ -2,14 +2,6 @@
   "config": {
     "title": "Monzo",
     "step": {
-      "user": {
-        "title": "OAuth Application Setup",
-        "description": "Set up a [Monzo OAuth Client](https://developers.monzo.com) and enter the details here.",
-        "data": {
-          "client_id": "Client ID",
-          "client_secret": "Client Secret"
-        }
-      },
       "link": {
         "title": "Link Monzo Account",
         "description": "To link your Monzo account, [authorize your account]({url})."

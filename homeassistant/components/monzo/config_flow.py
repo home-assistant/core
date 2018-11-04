@@ -31,37 +31,6 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize the config flow."""
-        pass
-
-    async def async_step_init(self, user_input=None):
-        """Handle a flow start."""
-        return await self.async_step_user(user_input)
-
-    async def async_step_user(self, user_input=None):
-        """Handle the start of the config flow."""
-        errors = {}
-
-        if user_input is not None:
-            client_id = user_input.get(CONF_CLIENT_ID)
-            client_secret = user_input.get(CONF_CLIENT_SECRET)
-            if None not in (client_id, client_secret):
-                if client_id in configured_instances(self.hass):
-                    errors['base'] = 'identifier_exists'
-                else:
-                    return await self._set_up_redirect(user_input)
-
-        data_schema = OrderedDict()
-        data_schema[vol.Required(CONF_CLIENT_ID)] = str
-        data_schema[vol.Required(CONF_CLIENT_SECRET)] = str
-
-        return self.async_show_form(
-            step_id='user',
-            data_schema=vol.Schema(data_schema),
-            errors=errors,
-        )
-
     async def async_step_link(self, user_input=None):
         """Attempt to link with the Monzo account.
 
@@ -109,7 +78,7 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
 
             return await self.async_step_link(user_input)
 
-        return await self.async_step_init(user_input)
+        #return await self.async_step_init(user_input)
 
     async def async_step_import(self, info):
         """Import existing auth from Monzo."""
@@ -120,12 +89,6 @@ class MonzoFlowHandler(config_entries.ConfigFlow):
         tokens = info.get('tokens')
         if tokens is not None:
             return self._entry_from_tokens('Monzo', tokens)
-
-        # Check if component has been initalized without any credentials.
-        client_id = info.get(CONF_CLIENT_ID)
-        client_secret = info.get(CONF_CLIENT_SECRET)
-        if None in (client_id, client_secret):
-            return await self.async_step_init(info)
 
         # Send user to Monzo for authentication
         return await self._set_up_redirect(info)

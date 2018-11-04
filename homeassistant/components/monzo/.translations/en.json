@@ -4,14 +4,6 @@
             "already_setup": "You can only configure a single Monzo account."
         },
         "step": {
-            "user": {
-                "data": {
-                    "client_id": "Client ID",
-                    "client_secret": "Client Secret"
-                },
-                "description": "Set up a [Monzo OAuth Client](https://developers.monzo.com) and enter the details here.",
-                "title": "OAuth Application Setup"
-            },
             "link": {
                 "description": "To link your Monzo account, [authorize your account]({url}).",
                 "title": "Link Monzo Account"
