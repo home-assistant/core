@@ -1469,9 +1469,6 @@ temescal==0.1
 # homeassistant.components.sensor.temper
 temperusb==1.5.3
 
-# homeassistant.components.image_processing.tensorflow
-tensorflow==1.11.0
-
 # homeassistant.components.tesla
 teslajsonpy==0.0.23
 
