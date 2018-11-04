@@ -42,17 +42,16 @@ class GarageDoorOpener(HomeAccessory):
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
         _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
-        if self.char_current_state.value == value:
-            _LOGGER.debug('%s: Ignoring state change', self.entity_id)
-            return
         self._flag_state = True
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         if value == 0:
-            self.char_current_state.set_value(3)
+            if self.char_current_state.value != value:
+                self.char_current_state.set_value(3)
             self.call_service(DOMAIN, SERVICE_OPEN_COVER, params)
         elif value == 1:
-            self.char_current_state.set_value(2)
+            if self.char_current_state.value != value:
+                self.char_current_state.set_value(2)
             self.call_service(DOMAIN, SERVICE_CLOSE_COVER, params)
 
     def update_state(self, new_state):
