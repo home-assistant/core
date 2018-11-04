@@ -17,13 +17,14 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE,
     Light)
+from homeassistant.components.light.mqtt import CONF_BRIGHTNESS_SCALE
 from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
     MqttAvailability, MqttDiscoveryUpdate)
 from homeassistant.const import (
-    CONF_BRIGHTNESS, CONF_BRIGHTNESS_SCALE, CONF_COLOR_TEMP, CONF_EFFECT,
-    CONF_NAME, CONF_OPTIMISTIC, CONF_RGB, CONF_WHITE_VALUE, CONF_XY, STATE_ON)
+    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, CONF_NAME, CONF_OPTIMISTIC,
+    CONF_RGB, CONF_WHITE_VALUE, CONF_XY, STATE_ON)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import async_get_last_state
@@ -86,11 +87,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
     """Set up MQTT JSON Light through configuration.yaml."""
-    await _async_setup_entity(hass, config, async_add_entities)
+    await async_setup_entity(hass, config, async_add_entities)
 
 
-async def _async_setup_entity(hass, config, async_add_entities,
-                              discovery_hash=None):
+async def async_setup_entity(hass, config, async_add_entities,
+                             discovery_hash=None):
     """Set up the MQTT JSON Light."""
     async_add_entities([MqttJson(
         config.get(CONF_NAME),

@@ -15,14 +15,9 @@ from homeassistant.components.light import (
     ATTR_WHITE_VALUE, Light, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_COLOR, SUPPORT_WHITE_VALUE)
 from homeassistant.const import (
-    CONF_BRIGHTNESS, CONF_BRIGHTNESS_SCALE, CONF_COLOR_TEMP, CONF_EFFECT,
-    CONF_HS, CONF_NAME, CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON,
-    STATE_ON, CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE,
-    CONF_XY)
-from homeassistant.components.light.mqtt_json import (
-    PLATFORM_SCHEMA as PLATFORM_SCHEMA_JSON)
-from homeassistant.components.light.mqtt_json import (
-    _async_setup_entity as _async_setup_entity_json)
+    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, CONF_HS, CONF_NAME,
+    CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, STATE_ON,
+    CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
@@ -32,6 +27,7 @@ from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import get_platform
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['mqtt']
 
 CONF_BRIGHTNESS_COMMAND_TOPIC = 'brightness_command_topic'
+CONF_BRIGHTNESS_SCALE = 'brightness_scale'
 CONF_BRIGHTNESS_STATE_TOPIC = 'brightness_state_topic'
 CONF_BRIGHTNESS_VALUE_TEMPLATE = 'brightness_value_template'
 CONF_COLOR_TEMP_COMMAND_TOPIC = 'color_temp_command_topic'
@@ -126,8 +123,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add a MQTT light."""
         if discovery_payload['platform'] == 'mqtt_json':
-            config = PLATFORM_SCHEMA_JSON(discovery_payload)
-            await _async_setup_entity_json(
+            mqtt_json = get_platform(hass, 'light', 'mqtt_json')
+            config = mqtt_json.PLATFORM_SCHEMA(discovery_payload)
+            await mqtt_json.async_setup_entity(
                 hass, config, async_add_entities,
                 discovery_payload[ATTR_DISCOVERY_HASH])
         else:
