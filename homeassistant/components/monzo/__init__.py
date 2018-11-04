@@ -58,8 +58,8 @@ SENSOR_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_CLIENT_ID): cv.string,
-        vol.Optional(CONF_CLIENT_SECRET): cv.string,
+        vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
             cv.time_period,
