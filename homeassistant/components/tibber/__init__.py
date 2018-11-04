@@ -16,7 +16,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN,
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['pyTibber==0.7.2']
+REQUIREMENTS = ['pyTibber==0.7.3']
 
 DOMAIN = 'tibber'
 
@@ -36,6 +36,12 @@ async def async_setup(hass, config):
     import tibber
     tibber_connection = tibber.Tibber(conf[CONF_ACCESS_TOKEN],
                                       websession=async_get_clientsession(hass))
+
+    res = await tibber_connection.validate_login()
+    if res:
+        _LOGGER.error("Failed to setup Tibber. %s", res)
+        return False
+
     hass.data[DOMAIN] = tibber_connection
 
     async def _close(event):
