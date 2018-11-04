@@ -18,6 +18,7 @@ from homeassistant.components.rflink import (
     EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice,
     remove_deprecated)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.const import (CONF_NAME, CONF_TYPE)
 
 DEPENDENCIES = ['rflink']
@@ -159,6 +160,14 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
 
     _brightness = 255
 
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+
+        old_state = await async_get_last_state(self.hass, self.entity_id)
+        if old_state is not None and \
+                old_state.attributes.get(ATTR_BRIGHTNESS) is not None:
+            self._brightness = int(old_state.attributes.get(ATTR_BRIGHTNESS))
+
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -195,6 +204,14 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
     """
 
     _brightness = 255
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+
+        old_state = await async_get_last_state(self.hass, self.entity_id)
+        if old_state is not None and \
+                old_state.attributes.get(ATTR_BRIGHTNESS) is not None:
+            self._brightness = int(old_state.attributes.get(ATTR_BRIGHTNESS))
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on and set dim level."""

@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP)
+    STATE_ON, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +21,7 @@ from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
-
+from homeassistant.helpers.restore_state import async_get_last_state
 
 REQUIREMENTS = ['rflink==0.0.37']
 
@@ -501,6 +501,14 @@ class RflinkCommand(RflinkDevice):
 
 class SwitchableRflinkDevice(RflinkCommand):
     """Rflink entity which can switch on/off (eg: light, switch)."""
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+
+        old_state = await async_get_last_state(self.hass, self.entity_id)
+        _LOGGER.debug('async_added_to_hass :: oldState %s', old_state)
+        if old_state is not None:
+            self._state = str(old_state.state) == STATE_ON
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
