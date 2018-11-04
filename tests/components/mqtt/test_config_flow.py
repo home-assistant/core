@@ -119,7 +119,7 @@ async def test_hassio_confirm(hass, mock_try_connection,
         'mqtt',
         data={
             'addon': 'Mock Addon',
-            'broker': 'mock-broker',
+            'host': 'mock-broker',
             'port': 1883,
             'username': 'mock-user',
             'password': 'mock-pass',
