@@ -113,8 +113,9 @@ class MelissaClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._cur_settings is not None:
-            return self._cur_settings[self._api.TEMP]
+        if self._cur_settings is None:
+            return None
+        return self._cur_settings[self._api.TEMP]
 
     @property
     def state(self):
@@ -122,6 +123,15 @@ class MelissaClimate(ClimateDevice):
         if self._cur_settings is not None:
             return self.melissa_state_to_hass(
                 self._cur_settings[self._api.STATE])
+
+    @property
+    def state_attributes(self):
+        """Add the attributes that's available."""
+        data = super(MelissaClimate, self).state_attributes
+        add_data = self._data.copy()
+        add_data.pop('temp')
+        data.update(add_data)
+        return data
 
     @property
     def temperature_unit(self):
