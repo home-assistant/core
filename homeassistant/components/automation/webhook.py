@@ -14,6 +14,8 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
 import homeassistant.helpers.config_validation as cv
 
+from . import DOMAIN as AUTOMATION_DOMAIN
+
 DEPENDENCIES = ('webhook',)
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +45,7 @@ async def async_trigger(hass, config, action, automation_info):
     """Trigger based on incoming webhooks."""
     webhook_id = config.get(CONF_WEBHOOK_ID)
     hass.components.webhook.async_register(
+        AUTOMATION_DOMAIN, automation_info['name'],
         webhook_id, partial(_handle_webhook, action))
 
     @callback
