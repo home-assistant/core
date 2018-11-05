@@ -2,7 +2,7 @@
 Support for HLK-SW16 switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hlk-sw16/
+https://home-assistant.io/components/switch.hlk_sw16/
 """
 import logging
 

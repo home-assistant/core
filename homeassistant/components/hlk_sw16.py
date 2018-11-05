@@ -2,11 +2,10 @@
 Support for HLK-SW16 relay switch.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/hlk-sw16/
+https://home-assistant.io/components/hlk_sw16/
 """
 import asyncio
 import logging
-import codecs
 import async_timeout
 
 import voluptuous as vol
@@ -18,11 +17,11 @@ from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 
-REQUIREMENTS = ['hlk-sw16==0.0.1']
+REQUIREMENTS = ['hlk-sw16==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,21 +66,11 @@ async def async_setup(hass, config):
     hass.data[DATA_DEVICE_REGISTER] = {}
     switches = config[DOMAIN][CONF_SWITCHES]
 
-    @callback
-    def event_callback(event):
-        """Handle incoming HLK-SW16 events.
-
-        HLK-SW16 events arrive as dictionaries of varying content
-        depending on their type. Identify the events and distribute
-        accordingly.
-        """
-        _LOGGER.debug('event: %s', event)
-
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
 
     @callback
-    def reconnect(exc=None):
+    def reconnect():
         """Schedule reconnect after connection has been unexpectedly lost."""
         # Reset protocol binding before starting reconnect
         SW16Command.set_hlk_sw16_protocol(None)
@@ -103,7 +92,6 @@ async def async_setup(hass, config):
                 transport, protocol = await create_hlk_sw16_connection(
                     host=host,
                     port=port,
-                    event_callback=event_callback,
                     disconnect_callback=reconnect,
                     loop=hass.loop,
                     logger=_LOGGER)
@@ -112,7 +100,7 @@ async def async_setup(hass, config):
         except (ConnectionRefusedError, TimeoutError, OSError,
                 asyncio.TimeoutError) as exc:
             reconnect_interval = config[DOMAIN][CONF_RECONNECT_INTERVAL]
-            _LOGGER.exception(
+            _LOGGER.error(
                 "Error connecting to HLK-SW16, reconnecting in %s",
                 reconnect_interval)
             # Connection to HLK-SW16 device is lost, make entities unavailable
@@ -127,16 +115,12 @@ async def async_setup(hass, config):
 
         # Load platforms
         for comp_name, comp_conf in comps.items():
-            if comp_conf:
-                load_platform(hass, comp_name, DOMAIN, {DOMAIN: comp_conf},
-                              config)
+            hass.async_create_task(
+                async_load_platform(hass, comp_name, DOMAIN,
+                                    {DOMAIN: comp_conf}, config))
 
         # Bind protocol to command class to allow entities to send commands
         SW16Command.set_hlk_sw16_protocol(protocol)
-
-        # There is a valid connection to a HLK-SW16 device now so
-        # mark entities as available
-        async_dispatcher_send(hass, SIGNAL_AVAILABILITY, True)
 
         # handle shutdown of HLK-SW16 asyncio transport
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
@@ -157,11 +141,9 @@ class SW16Device(Entity):
     platform = None
     _available = True
 
-    def __init__(self, device_id, device_port, initial_event=None,
-                 name=None):
+    def __init__(self, device_id, device_port, name=None):
         """Initialize the device."""
         # HLK-SW16 specific attributes for every component type
-        self._initial_event = initial_event
         self._device_id = device_id
         self._device_port = str(device_port)
         self._is_on = None
@@ -210,10 +192,6 @@ class SW16Device(Entity):
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
                                  self._availability_callback)
 
-        # Process the initial event now that the entity is created
-        if self._initial_event:
-            self.handle_event_callback(self._initial_event)
-
 
 class SW16Command(SW16Device):
     """Singleton class to make HLK-SW16 command interface available to entities.
@@ -244,30 +222,24 @@ class SW16Command(SW16Device):
             raise HomeAssistantError('Cannot send command, not connected!')
 
         if command == 'turn_on':
-            state = await self._protocol.turn_on(codecs.decode(
-                self._device_port.rjust(2, '0'), 'hex'))
-            _LOGGER.debug("new state:")
-            _LOGGER.debug(state)
+            state = await self._protocol.turn_on(self._device_port)
+            _LOGGER.debug("Relay %s new state: %r", self._device_port, True)
             self._is_on = True
             # Update state of entity
             await self.async_update_ha_state()
 
         elif command == 'turn_off':
-            state = await self._protocol.turn_off(codecs.decode(
-                self._device_port.rjust(2, '0'), 'hex'))
-            _LOGGER.debug("new state:")
-            _LOGGER.debug(state)
+            state = await self._protocol.turn_off(self._device_port)
+            _LOGGER.debug("Relay %s new state: %r", self._device_port, False)
             self._is_on = False
             # Update state of entity
             await self.async_update_ha_state()
 
         elif command == 'status':
-            state = await self._protocol.status()
-            _LOGGER.debug("new state:")
-            _LOGGER.debug(state)
-            # if the state is unknown or false, it gets set as true
-            # if the state is true, it gets set as false
-            self._is_on = state[self._device_port]
+            state = await self._protocol.status(self._device_port)
+            _LOGGER.debug("Relay %s new state: %r", self._device_port, state)
+            # Update state of entity
+            self._is_on = state
 
 
 class SwitchableSW16Device(SW16Command):
