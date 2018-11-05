@@ -13,7 +13,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, STATE_UNKNOWN, ATTR_UNIT_OF_MEASUREMENT)
+    CONF_NAME, CONF_ENTITY_ID, EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
+    ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
@@ -99,10 +100,8 @@ class StatisticsSensor(Entity):
         self.min_age = self.max_age = None
         self.change = self.average_change = self.change_rate = None
 
-        if 'recorder' in self._hass.config.components:
-            # only use the database if it's configured
-            hass.async_add_job(self._initialize_from_database)
-
+    async def async_added_to_hass(self):
+        """Register callbacks."""
         @callback
         def async_stats_sensor_state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
@@ -111,10 +110,22 @@ class StatisticsSensor(Entity):
 
             self._add_state_to_queue(new_state)
 
-            hass.async_add_job(self.async_update_ha_state, True)
+            self.hass.async_add_job(self.async_update_ha_state, True)
 
-        async_track_state_change(
-            hass, entity_id, async_stats_sensor_state_listener)
+        @callback
+        def async_stats_sensor_startup(event):
+            """Add listener and get recorded state."""
+            _LOGGER.debug("Startup for %s", self.entity_id)
+
+            async_track_state_change(
+                self.hass, self._entity_id, async_stats_sensor_state_listener)
+
+            if 'recorder' in self._hass.config.components:
+                # only use the database if it's configured
+                self.hass.async_add_job(self._initialize_from_database)
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, async_stats_sensor_startup)
 
     def _add_state_to_queue(self, new_state):
         try:
@@ -274,6 +285,8 @@ class StatisticsSensor(Entity):
 
         for state in reversed(states):
             self._add_state_to_queue(state)
+
+        self.hass.async_add_job(self.async_update_ha_state, True)
 
         _LOGGER.debug("%s: initializing from database completed",
                       self.entity_id)
