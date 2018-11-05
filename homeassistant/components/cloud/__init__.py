@@ -68,7 +68,9 @@ ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
 })
 
 GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}
+    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA},
+    vol.Optional(ga_c.CONF_ALLOW_UNLOCK,
+                 default=ga_c.DEFAULT_ALLOW_UNLOCK): cv.boolean
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -190,6 +192,7 @@ class Cloud:
                 should_expose=should_expose,
                 agent_user_id=self.claims['cognito:username'],
                 entity_config=conf.get(CONF_ENTITY_CONFIG),
+                allow_unlock=conf.get(ga_c.CONF_ALLOW_UNLOCK),
             )
 
         return self._gactions_config

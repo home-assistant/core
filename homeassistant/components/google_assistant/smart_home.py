@@ -15,6 +15,7 @@ from homeassistant.components import (
     group,
     input_boolean,
     light,
+    lock,
     media_player,
     scene,
     script,
@@ -24,10 +25,10 @@ from homeassistant.components import (
 
 from . import trait
 from .const import (
-    TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_VACUUM,
+    TYPE_LIGHT, TYPE_LOCK, TYPE_SCENE, TYPE_SWITCH, TYPE_VACUUM,
     TYPE_THERMOSTAT, TYPE_FAN,
     CONF_ALIASES, CONF_ROOM_HINT,
-    ERR_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
+    ERR_FUNCTION_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
     ERR_UNKNOWN_ERROR
 )
 from .helpers import SmartHomeError
@@ -42,6 +43,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     group.DOMAIN: TYPE_SWITCH,
     input_boolean.DOMAIN: TYPE_SWITCH,
     light.DOMAIN: TYPE_LIGHT,
+    lock.DOMAIN: TYPE_LOCK,
     media_player.DOMAIN: TYPE_SWITCH,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
@@ -80,7 +82,7 @@ class _GoogleEntity:
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        return [Trait(self.hass, state) for Trait in trait.TRAITS
+        return [Trait(self.hass, state, self.config) for Trait in trait.TRAITS
                 if Trait.supported(domain, features)]
 
     @callback
@@ -168,7 +170,7 @@ class _GoogleEntity:
 
         if not executed:
             raise SmartHomeError(
-                ERR_NOT_SUPPORTED,
+                ERR_FUNCTION_NOT_SUPPORTED,
                 'Unable to execute {} for {}'.format(command,
                                                      self.state.entity_id))
 

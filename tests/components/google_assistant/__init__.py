@@ -230,4 +230,36 @@ DEMO_DEVICES = [{
     'traits': ['action.devices.traits.TemperatureSetting'],
     'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False
+}, {
+    'id': 'lock.front_door',
+    'name': {
+        'name': 'Front Door'
+    },
+    'traits': ['action.devices.traits.LockUnlock'],
+    'type': 'action.devices.types.LOCK',
+    'willReportState': False
+}, {
+    'id': 'lock.kitchen_door',
+    'name': {
+        'name': 'Kitchen Door'
+    },
+    'traits': ['action.devices.traits.LockUnlock'],
+    'type': 'action.devices.types.LOCK',
+    'willReportState': False
+}, {
+    'id': 'lock.openable_lock',
+    'name': {
+        'name': 'Openable Lock'
+    },
+    'traits': ['action.devices.traits.LockUnlock'],
+    'type': 'action.devices.types.LOCK',
+    'willReportState': False
+}, {
+    'id': 'group.all_locks',
+    'name': {
+        'name': 'all locks'
+    },
+    'traits': ['action.devices.traits.OnOff'],
+    'type': 'action.devices.types.SWITCH',
+    'willReportState': False
 }]

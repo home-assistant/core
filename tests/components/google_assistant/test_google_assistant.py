@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import core, const, setup
 from homeassistant.components import (
-    fan, cover, light, switch, climate, async_setup, media_player)
+    fan, cover, light, switch, climate, lock, async_setup, media_player)
 from homeassistant.components import google_assistant as ga
 
 from . import DEMO_DEVICES
@@ -92,6 +92,13 @@ def hass_fixture(loop, hass):
     loop.run_until_complete(
         setup.async_setup_component(hass, climate.DOMAIN, {
             'climate': [{
+                'platform': 'demo'
+            }]
+        }))
+
+    loop.run_until_complete(
+        setup.async_setup_component(hass, lock.DOMAIN, {
+            'lock': [{
                 'platform': 'demo'
             }]
         }))
