@@ -1426,7 +1426,6 @@ spotcrime==1.0.3
 spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
-# homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
 sqlalchemy==1.2.13
 
