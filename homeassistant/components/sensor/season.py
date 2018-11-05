@@ -19,10 +19,10 @@ REQUIREMENTS = ['ephem==3.7.6.0']
 _LOGGER = logging.getLogger(__name__)
 
 SEASON_ICONS = {
-    'spring': 'mdi:flower',
-    'summer': 'mdi:sunglasses',
-    'autumn': 'mdi:leaf',
-    'winter': 'mdi:snowflake'
+    STATE_SPRING: 'mdi:flower',
+    STATE_SUMMER: 'mdi:sunglasses',
+    STATE_AUTUMN: 'mdi:leaf',
+    STATE_WINTER: 'mdi:snowflake'
 }
 DEFAULT_CLOUD_ICON = 'mdi:cloud'
 
