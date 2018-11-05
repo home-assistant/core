@@ -35,7 +35,7 @@ from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
 # Loading the config flow file will register the flow
-from . import config_flow  # noqa  # pylint: disable=unused-import
+from . import config_flow  # noqa pylint: disable=unused-import
 from .const import CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY
 from .server import HBMQTT_CONFIG_SCHEMA
 

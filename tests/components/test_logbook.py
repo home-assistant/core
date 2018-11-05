@@ -63,15 +63,15 @@ class TestComponentLogbook(unittest.TestCase):
         # scheduled. This means that they may not have been processed yet.
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(calls))
+        assert 1 == len(calls)
         last_call = calls[-1]
 
-        self.assertEqual('Alarm', last_call.data.get(logbook.ATTR_NAME))
-        self.assertEqual('is triggered', last_call.data.get(
-            logbook.ATTR_MESSAGE))
-        self.assertEqual('switch', last_call.data.get(logbook.ATTR_DOMAIN))
-        self.assertEqual('switch.test_switch', last_call.data.get(
-            logbook.ATTR_ENTITY_ID))
+        assert 'Alarm' == last_call.data.get(logbook.ATTR_NAME)
+        assert 'is triggered' == last_call.data.get(
+            logbook.ATTR_MESSAGE)
+        assert 'switch' == last_call.data.get(logbook.ATTR_DOMAIN)
+        assert 'switch.test_switch' == last_call.data.get(
+            logbook.ATTR_ENTITY_ID)
 
     def test_service_call_create_log_book_entry_no_message(self):
         """Test if service call create log book entry without message."""
@@ -90,7 +90,7 @@ class TestComponentLogbook(unittest.TestCase):
         # scheduled. This means that they may not have been processed yet.
         self.hass.block_till_done()
 
-        self.assertEqual(0, len(calls))
+        assert 0 == len(calls)
 
     def test_humanify_filter_sensor(self):
         """Test humanify filter too frequent sensor values."""
@@ -106,7 +106,7 @@ class TestComponentLogbook(unittest.TestCase):
 
         entries = list(logbook.humanify(self.hass, (eventA, eventB, eventC)))
 
-        self.assertEqual(2, len(entries))
+        assert 2 == len(entries)
         self.assert_entry(
             entries[0], pointB, 'bla', domain='sensor', entity_id=entity_id)
 
@@ -123,7 +123,7 @@ class TestComponentLogbook(unittest.TestCase):
 
         entries = list(logbook.humanify(self.hass, (eventA,)))
 
-        self.assertEqual(0, len(entries))
+        assert 0 == len(entries)
 
     def test_exclude_new_entities(self):
         """Test if events are excluded on first update."""
@@ -140,7 +140,7 @@ class TestComponentLogbook(unittest.TestCase):
                                           eventA, eventB), {})
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(2, len(entries))
+        assert 2 == len(entries)
         self.assert_entry(
             entries[0], name='Home Assistant', message='stopped',
             domain=ha.DOMAIN)
@@ -162,7 +162,7 @@ class TestComponentLogbook(unittest.TestCase):
                                           eventA, eventB), {})
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(2, len(entries))
+        assert 2 == len(entries)
         self.assert_entry(
             entries[0], name='Home Assistant', message='stopped',
             domain=ha.DOMAIN)
@@ -184,7 +184,7 @@ class TestComponentLogbook(unittest.TestCase):
                                           eventA, eventB), {})
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(2, len(entries))
+        assert 2 == len(entries)
         self.assert_entry(
             entries[0], name='Home Assistant', message='stopped',
             domain=ha.DOMAIN)
@@ -210,7 +210,7 @@ class TestComponentLogbook(unittest.TestCase):
             config[logbook.DOMAIN])
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(2, len(entries))
+        assert 2 == len(entries)
         self.assert_entry(
             entries[0], name='Home Assistant', message='stopped',
             domain=ha.DOMAIN)
@@ -236,7 +236,7 @@ class TestComponentLogbook(unittest.TestCase):
             config[logbook.DOMAIN])
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(2, len(entries))
+        assert 2 == len(entries)
         self.assert_entry(entries[0], name='Home Assistant', message='started',
                           domain=ha.DOMAIN)
         self.assert_entry(entries[1], pointB, 'blu', domain='sensor',
@@ -273,7 +273,7 @@ class TestComponentLogbook(unittest.TestCase):
             config[logbook.DOMAIN])
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(2, len(entries))
+        assert 2 == len(entries)
         self.assert_entry(
             entries[0], name='Home Assistant', message='stopped',
             domain=ha.DOMAIN)
@@ -299,7 +299,7 @@ class TestComponentLogbook(unittest.TestCase):
             config[logbook.DOMAIN])
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(2, len(entries))
+        assert 2 == len(entries)
         self.assert_entry(
             entries[0], name='Home Assistant', message='stopped',
             domain=ha.DOMAIN)
@@ -325,7 +325,7 @@ class TestComponentLogbook(unittest.TestCase):
             config[logbook.DOMAIN])
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(2, len(entries))
+        assert 2 == len(entries)
         self.assert_entry(entries[0], name='Home Assistant', message='started',
                           domain=ha.DOMAIN)
         self.assert_entry(entries[1], pointB, 'blu', domain='sensor',
@@ -359,7 +359,7 @@ class TestComponentLogbook(unittest.TestCase):
              eventB1, eventB2), config[logbook.DOMAIN])
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(3, len(entries))
+        assert 3 == len(entries)
         self.assert_entry(entries[0], name='Home Assistant', message='started',
                           domain=ha.DOMAIN)
         self.assert_entry(entries[1], pointA, 'blu', domain='sensor',
@@ -380,7 +380,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = logbook._exclude_events((eventA, eventB), {})
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(1, len(entries))
+        assert 1 == len(entries)
         self.assert_entry(entries[0], pointA, 'bla', domain='switch',
                           entity_id=entity_id)
 
@@ -398,7 +398,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = logbook._exclude_events((eventA, eventB), {})
         entries = list(logbook.humanify(self.hass, events))
 
-        self.assertEqual(1, len(entries))
+        assert 1 == len(entries)
         self.assert_entry(entries[0], pointA, 'bla', domain='switch',
                           entity_id=entity_id)
 
@@ -412,7 +412,7 @@ class TestComponentLogbook(unittest.TestCase):
             ha.Event(EVENT_HOMEASSISTANT_START),
             )))
 
-        self.assertEqual(1, len(entries))
+        assert 1 == len(entries)
         self.assert_entry(
             entries[0], name='Home Assistant', message='restarted',
             domain=ha.DOMAIN)
@@ -427,7 +427,7 @@ class TestComponentLogbook(unittest.TestCase):
             self.create_state_changed_event(pointA, entity_id, 10)
             )))
 
-        self.assertEqual(2, len(entries))
+        assert 2 == len(entries)
         self.assert_entry(
             entries[0], name='Home Assistant', message='started',
             domain=ha.DOMAIN)
@@ -445,21 +445,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(pointA, 'switch.bla', 10)
         to_state = ha.State.from_dict(eventA.data.get('new_state'))
         message = logbook._entry_message_from_state(to_state.domain, to_state)
-        self.assertEqual('changed to 10', message)
+        assert 'changed to 10' == message
 
         # message for a switch turned on
         eventA = self.create_state_changed_event(pointA, 'switch.bla',
                                                  STATE_ON)
         to_state = ha.State.from_dict(eventA.data.get('new_state'))
         message = logbook._entry_message_from_state(to_state.domain, to_state)
-        self.assertEqual('turned on', message)
+        assert 'turned on' == message
 
         # message for a switch turned off
         eventA = self.create_state_changed_event(pointA, 'switch.bla',
                                                  STATE_OFF)
         to_state = ha.State.from_dict(eventA.data.get('new_state'))
         message = logbook._entry_message_from_state(to_state.domain, to_state)
-        self.assertEqual('turned off', message)
+        assert 'turned off' == message
 
     def test_entry_message_from_state_device_tracker(self):
         """Test if logbook message is correctly created for device tracker."""
@@ -470,14 +470,14 @@ class TestComponentLogbook(unittest.TestCase):
                                                  STATE_NOT_HOME)
         to_state = ha.State.from_dict(eventA.data.get('new_state'))
         message = logbook._entry_message_from_state(to_state.domain, to_state)
-        self.assertEqual('is away', message)
+        assert 'is away' == message
 
         # message for a device tracker "home" state
         eventA = self.create_state_changed_event(pointA, 'device_tracker.john',
                                                  'work')
         to_state = ha.State.from_dict(eventA.data.get('new_state'))
         message = logbook._entry_message_from_state(to_state.domain, to_state)
-        self.assertEqual('is at work', message)
+        assert 'is at work' == message
 
     def test_entry_message_from_state_sun(self):
         """Test if logbook message is correctly created for sun."""
@@ -488,14 +488,14 @@ class TestComponentLogbook(unittest.TestCase):
                                                  sun.STATE_ABOVE_HORIZON)
         to_state = ha.State.from_dict(eventA.data.get('new_state'))
         message = logbook._entry_message_from_state(to_state.domain, to_state)
-        self.assertEqual('has risen', message)
+        assert 'has risen' == message
 
         # message for a sun set
         eventA = self.create_state_changed_event(pointA, 'sun.sun',
                                                  sun.STATE_BELOW_HORIZON)
         to_state = ha.State.from_dict(eventA.data.get('new_state'))
         message = logbook._entry_message_from_state(to_state.domain, to_state)
-        self.assertEqual('has set', message)
+        assert 'has set' == message
 
     def test_process_custom_logbook_entries(self):
         """Test if custom log book entries get added as an entry."""
@@ -511,7 +511,7 @@ class TestComponentLogbook(unittest.TestCase):
                 }),
             )))
 
-        self.assertEqual(1, len(entries))
+        assert 1 == len(entries)
         self.assert_entry(
             entries[0], name=name, message=message,
             domain='sun', entity_id=entity_id)
@@ -520,19 +520,19 @@ class TestComponentLogbook(unittest.TestCase):
                      domain=None, entity_id=None):
         """Assert an entry is what is expected."""
         if when:
-            self.assertEqual(when, entry['when'])
+            assert when == entry['when']
 
         if name:
-            self.assertEqual(name, entry['name'])
+            assert name == entry['name']
 
         if message:
-            self.assertEqual(message, entry['message'])
+            assert message == entry['message']
 
         if domain:
-            self.assertEqual(domain, entry['domain'])
+            assert domain == entry['domain']
 
         if entity_id:
-            self.assertEqual(entity_id, entry['entity_id'])
+            assert entity_id == entry['entity_id']
 
     def create_state_changed_event(self, event_time_fired, entity_id, state,
                                    attributes=None, last_changed=None,

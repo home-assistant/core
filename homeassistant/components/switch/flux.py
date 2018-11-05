@@ -18,14 +18,14 @@ from homeassistant.components.light import (
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE,
-    SERVICE_TURN_ON)
+    SERVICE_TURN_ON, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired)
-from homeassistant.util.dt import now as dt_now
+from homeassistant.util.dt import utcnow as dt_utcnow, as_local
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -195,12 +195,14 @@ class FluxSwitch(SwitchDevice):
 
         self.schedule_update_ha_state()
 
-    def flux_update(self, now=None):
+    def flux_update(self, utcnow=None):
         """Update all the lights using flux."""
-        if now is None:
-            now = dt_now()
+        if utcnow is None:
+            utcnow = dt_utcnow()
 
-        sunset = get_astral_event_date(self.hass, 'sunset', now.date())
+        now = as_local(utcnow)
+
+        sunset = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, now.date())
         start_time = self.find_start_time(now)
         stop_time = self.find_stop_time(now)
 
@@ -283,7 +285,8 @@ class FluxSwitch(SwitchDevice):
                 hour=self._start_time.hour, minute=self._start_time.minute,
                 second=0)
         else:
-            sunrise = get_astral_event_date(self.hass, 'sunrise', now.date())
+            sunrise = get_astral_event_date(self.hass, SUN_EVENT_SUNRISE,
+                                            now.date())
         return sunrise
 
     def find_stop_time(self, now):

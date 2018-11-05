@@ -1,29 +1,29 @@
 """The tests for the Jewish calendar sensor platform."""
-import unittest
 from datetime import time
 from datetime import datetime as dt
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.util.async_ import run_coroutine_threadsafe
-from homeassistant.util.dt import get_time_zone
+from homeassistant.util.dt import get_time_zone, set_default_time_zone
 from homeassistant.setup import setup_component
 from homeassistant.components.sensor.jewish_calendar import JewishCalSensor
 from tests.common import get_test_home_assistant
 
 
-class TestJewishCalenderSensor(unittest.TestCase):
+class TestJewishCalenderSensor():
     """Test the Jewish Calendar sensor."""
 
-    TEST_LATITUDE = 31.778
-    TEST_LONGITUDE = 35.235
-
-    def setUp(self):
+    def setup_method(self, method):
         """Set up things to run when tests begin."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):
+    def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
+        # Reset the default timezone, so we don't affect other tests
+        set_default_time_zone(get_time_zone('UTC'))
 
     def test_jewish_calendar_min_config(self):
         """Test minimum jewish calendar configuration."""
@@ -60,111 +60,63 @@ class TestJewishCalenderSensor(unittest.TestCase):
 
         assert setup_component(self.hass, 'sensor', config)
 
-    def test_jewish_calendar_sensor_date_output(self):
-        """Test Jewish calendar sensor date output."""
-        test_time = dt(2018, 9, 3)
+    test_params = [
+        (dt(2018, 9, 3), 'UTC', 31.778, 35.235, "english", "date",
+         False, "23 Elul 5778"),
+        (dt(2018, 9, 3), 'UTC', 31.778, 35.235, "hebrew", "date",
+         False, "כ\"ג באלול ה\' תשע\"ח"),
+        (dt(2018, 9, 10), 'UTC', 31.778, 35.235, "hebrew", "holiday_name",
+         False, "א\' ראש השנה"),
+        (dt(2018, 9, 10), 'UTC', 31.778, 35.235, "english", "holiday_name",
+         False, "Rosh Hashana I"),
+        (dt(2018, 9, 10), 'UTC', 31.778, 35.235, "english", "holyness",
+         False, 1),
+        (dt(2018, 9, 8), 'UTC', 31.778, 35.235, "hebrew", "weekly_portion",
+         False, "פרשת נצבים"),
+        (dt(2018, 9, 8), 'America/New_York', 40.7128, -74.0060, "hebrew",
+         "first_stars", True, time(19, 48)),
+        (dt(2018, 9, 8), "Asia/Jerusalem", 31.778, 35.235, "hebrew",
+         "first_stars", False, time(19, 21)),
+        (dt(2018, 10, 14), "Asia/Jerusalem", 31.778, 35.235, "hebrew",
+         "weekly_portion", False, "פרשת לך לך"),
+        (dt(2018, 10, 14, 17, 0, 0), "Asia/Jerusalem", 31.778, 35.235,
+         "hebrew", "date", False, "ה\' בחשון ה\' תשע\"ט"),
+        (dt(2018, 10, 14, 19, 0, 0), "Asia/Jerusalem", 31.778, 35.235,
+         "hebrew", "date", False, "ו\' בחשון ה\' תשע\"ט")
+    ]
+
+    test_ids = [
+        "date_output",
+        "date_output_hebrew",
+        "holiday_name",
+        "holiday_name_english",
+        "holyness",
+        "torah_reading",
+        "first_stars_ny",
+        "first_stars_jerusalem",
+        "torah_reading_weekday",
+        "date_before_sunset",
+        "date_after_sunset"
+    ]
+
+    @pytest.mark.parametrize(["time", "tzname", "latitude", "longitude",
+                              "language", "sensor", "diaspora", "result"],
+                             test_params, ids=test_ids)
+    def test_jewish_calendar_sensor(self, time, tzname, latitude, longitude,
+                                    language, sensor, diaspora, result):
+        """Test Jewish calendar sensor output."""
+        tz = get_time_zone(tzname)
+        set_default_time_zone(tz)
+        test_time = tz.localize(time)
+        self.hass.config.latitude = latitude
+        self.hass.config.longitude = longitude
         sensor = JewishCalSensor(
-            name='test', language='english', sensor_type='date',
-            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
-            timezone="UTC", diaspora=False)
+            name='test', language=language, sensor_type=sensor,
+            latitude=latitude, longitude=longitude,
+            timezone=tz, diaspora=diaspora)
+        sensor.hass = self.hass
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(),
                 self.hass.loop).result()
-            self.assertEqual(sensor.state, '23 Elul 5778')
-
-    def test_jewish_calendar_sensor_date_output_hebrew(self):
-        """Test Jewish calendar sensor date output in hebrew."""
-        test_time = dt(2018, 9, 3)
-        sensor = JewishCalSensor(
-            name='test', language='hebrew', sensor_type='date',
-            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
-            timezone="UTC", diaspora=False)
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            run_coroutine_threadsafe(
-                sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, "כ\"ג באלול ה\' תשע\"ח")
-
-    def test_jewish_calendar_sensor_holiday_name(self):
-        """Test Jewish calendar sensor holiday name output in hebrew."""
-        test_time = dt(2018, 9, 10)
-        sensor = JewishCalSensor(
-            name='test', language='hebrew', sensor_type='holiday_name',
-            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
-            timezone="UTC", diaspora=False)
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            run_coroutine_threadsafe(
-                sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, "א\' ראש השנה")
-
-    def test_jewish_calendar_sensor_holiday_name_english(self):
-        """Test Jewish calendar sensor holiday name output in english."""
-        test_time = dt(2018, 9, 10)
-        sensor = JewishCalSensor(
-            name='test', language='english', sensor_type='holiday_name',
-            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
-            timezone="UTC", diaspora=False)
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            run_coroutine_threadsafe(
-                sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, "Rosh Hashana I")
-
-    def test_jewish_calendar_sensor_holyness(self):
-        """Test Jewish calendar sensor holyness value."""
-        test_time = dt(2018, 9, 10)
-        sensor = JewishCalSensor(
-            name='test', language='hebrew', sensor_type='holyness',
-            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
-            timezone="UTC", diaspora=False)
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            run_coroutine_threadsafe(
-                sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, 1)
-
-    def test_jewish_calendar_sensor_torah_reading(self):
-        """Test Jewish calendar sensor torah reading in hebrew."""
-        test_time = dt(2018, 9, 8)
-        sensor = JewishCalSensor(
-            name='test', language='hebrew', sensor_type='weekly_portion',
-            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
-            timezone="UTC", diaspora=False)
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            run_coroutine_threadsafe(
-                sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, "פרשת נצבים")
-
-    def test_jewish_calendar_sensor_first_stars_ny(self):
-        """Test Jewish calendar sensor first stars time in NY, US."""
-        test_time = dt(2018, 9, 8)
-        sensor = JewishCalSensor(
-            name='test', language='hebrew', sensor_type='first_stars',
-            latitude=40.7128, longitude=-74.0060,
-            timezone=get_time_zone("America/New_York"), diaspora=False)
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            run_coroutine_threadsafe(
-                sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, time(19, 48))
-
-    def test_jewish_calendar_sensor_first_stars_jerusalem(self):
-        """Test Jewish calendar sensor first stars time in Jerusalem, IL."""
-        test_time = dt(2018, 9, 8)
-        sensor = JewishCalSensor(
-            name='test', language='hebrew', sensor_type='first_stars',
-            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
-            timezone="Asia/Jerusalem", diaspora=False)
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            run_coroutine_threadsafe(
-                sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, time(19, 21))
-
-    def test_jewish_calendar_sensor_torah_reading_weekday(self):
-        """Test the sensor showing torah reading also on weekdays."""
-        test_time = dt(2018, 10, 14)
-        sensor = JewishCalSensor(
-            name='test', language='hebrew', sensor_type='weekly_portion',
-            latitude=self.TEST_LATITUDE, longitude=self.TEST_LONGITUDE,
-            timezone="Asia/Jerusalem", diaspora=False)
-        with patch('homeassistant.util.dt.now', return_value=test_time):
-            run_coroutine_threadsafe(
-                sensor.async_update(), self.hass.loop).result()
-            self.assertEqual(sensor.state, "פרשת לך לך")
+            assert sensor.state == result

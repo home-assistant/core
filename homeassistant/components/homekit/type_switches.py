@@ -1,7 +1,8 @@
 """Class to hold all switch accessories."""
 import logging
 
-from pyhap.const import CATEGORY_OUTLET, CATEGORY_SWITCH
+from pyhap.const import (
+    CATEGORY_OUTLET, CATEGORY_SWITCH)
 
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (

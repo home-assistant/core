@@ -38,12 +38,12 @@ class TestCommandSensorSensor(unittest.TestCase):
 
         command_line.setup_platform(self.hass, config, add_dev_callback)
 
-        self.assertEqual(1, len(devices))
+        assert 1 == len(devices)
         entity = devices[0]
         entity.update()
-        self.assertEqual('Test', entity.name)
-        self.assertEqual('in', entity.unit_of_measurement)
-        self.assertEqual('5', entity.state)
+        assert 'Test' == entity.name
+        assert 'in' == entity.unit_of_measurement
+        assert '5' == entity.state
 
     def test_template(self):
         """Test command sensor with template."""
@@ -54,7 +54,7 @@ class TestCommandSensorSensor(unittest.TestCase):
             Template('{{ value | multiply(0.1) }}', self.hass), [])
 
         entity.update()
-        self.assertEqual(5, float(entity.state))
+        assert 5 == float(entity.state)
 
     def test_template_render(self):
         """Ensure command with templates get rendered properly."""
@@ -65,14 +65,14 @@ class TestCommandSensorSensor(unittest.TestCase):
         )
         data.update()
 
-        self.assertEqual("Works", data.value)
+        assert "Works" == data.value
 
     def test_bad_command(self):
         """Test bad command."""
         data = command_line.CommandSensorData(self.hass, 'asdfasdf', 15)
         data.update()
 
-        self.assertEqual(None, data.value)
+        assert data.value is None
 
     def test_update_with_json_attrs(self):
         """Test attributes get extracted from a JSON result."""
@@ -88,12 +88,12 @@ class TestCommandSensorSensor(unittest.TestCase):
                                                               'another_key',
                                                               'key_three'])
         self.sensor.update()
-        self.assertEqual('some_json_value',
-                         self.sensor.device_state_attributes['key'])
-        self.assertEqual('another_json_value',
-                         self.sensor.device_state_attributes['another_key'])
-        self.assertEqual('value_three',
-                         self.sensor.device_state_attributes['key_three'])
+        assert 'some_json_value' == \
+            self.sensor.device_state_attributes['key']
+        assert 'another_json_value' == \
+            self.sensor.device_state_attributes['another_key']
+        assert 'value_three' == \
+            self.sensor.device_state_attributes['key_three']
 
     @patch('homeassistant.components.sensor.command_line._LOGGER')
     def test_update_with_json_attrs_no_data(self, mock_logger):
@@ -105,8 +105,8 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.sensor = command_line.CommandSensor(self.hass, data, 'test',
                                                  None, None, ['key'])
         self.sensor.update()
-        self.assertEqual({}, self.sensor.device_state_attributes)
-        self.assertTrue(mock_logger.warning.called)
+        assert {} == self.sensor.device_state_attributes
+        assert mock_logger.warning.called
 
     @patch('homeassistant.components.sensor.command_line._LOGGER')
     def test_update_with_json_attrs_not_dict(self, mock_logger):
@@ -118,8 +118,8 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.sensor = command_line.CommandSensor(self.hass, data, 'test',
                                                  None, None, ['key'])
         self.sensor.update()
-        self.assertEqual({}, self.sensor.device_state_attributes)
-        self.assertTrue(mock_logger.warning.called)
+        assert {} == self.sensor.device_state_attributes
+        assert mock_logger.warning.called
 
     @patch('homeassistant.components.sensor.command_line._LOGGER')
     def test_update_with_json_attrs_bad_JSON(self, mock_logger):
@@ -131,8 +131,8 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.sensor = command_line.CommandSensor(self.hass, data, 'test',
                                                  None, None, ['key'])
         self.sensor.update()
-        self.assertEqual({}, self.sensor.device_state_attributes)
-        self.assertTrue(mock_logger.warning.called)
+        assert {} == self.sensor.device_state_attributes
+        assert mock_logger.warning.called
 
     def test_update_with_missing_json_attrs(self):
         """Test attributes get extracted from a JSON result."""
@@ -149,13 +149,13 @@ class TestCommandSensorSensor(unittest.TestCase):
                                                               'key_three',
                                                               'special_key'])
         self.sensor.update()
-        self.assertEqual('some_json_value',
-                         self.sensor.device_state_attributes['key'])
-        self.assertEqual('another_json_value',
-                         self.sensor.device_state_attributes['another_key'])
-        self.assertEqual('value_three',
-                         self.sensor.device_state_attributes['key_three'])
-        self.assertFalse('special_key' in self.sensor.device_state_attributes)
+        assert 'some_json_value' == \
+            self.sensor.device_state_attributes['key']
+        assert 'another_json_value' == \
+            self.sensor.device_state_attributes['another_key']
+        assert 'value_three' == \
+            self.sensor.device_state_attributes['key_three']
+        assert not ('special_key' in self.sensor.device_state_attributes)
 
     def test_update_with_unnecessary_json_attrs(self):
         """Test attributes get extracted from a JSON result."""
@@ -170,8 +170,8 @@ class TestCommandSensorSensor(unittest.TestCase):
                                                  None, None, ['key',
                                                               'another_key'])
         self.sensor.update()
-        self.assertEqual('some_json_value',
-                         self.sensor.device_state_attributes['key'])
-        self.assertEqual('another_json_value',
-                         self.sensor.device_state_attributes['another_key'])
-        self.assertFalse('key_three' in self.sensor.device_state_attributes)
+        assert 'some_json_value' == \
+            self.sensor.device_state_attributes['key']
+        assert 'another_json_value' == \
+            self.sensor.device_state_attributes['another_key']
+        assert not ('key_three' in self.sensor.device_state_attributes)
