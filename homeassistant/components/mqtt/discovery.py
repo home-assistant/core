@@ -27,31 +27,18 @@ SUPPORTED_COMPONENTS = [
     'light', 'sensor', 'switch', 'lock', 'climate',
     'alarm_control_panel']
 
-ALLOWED_PLATFORMS = {
-    'binary_sensor': ['mqtt'],
-    'camera': ['mqtt'],
-    'cover': ['mqtt'],
-    'fan': ['mqtt'],
-    'light': ['mqtt', 'mqtt_json', 'mqtt_template'],
-    'lock': ['mqtt'],
-    'sensor': ['mqtt'],
-    'switch': ['mqtt'],
-    'climate': ['mqtt'],
-    'alarm_control_panel': ['mqtt'],
-}
-
-CONFIG_ENTRY_PLATFORMS = {
-    'binary_sensor': ['mqtt'],
-    'camera': ['mqtt'],
-    'cover': ['mqtt'],
-    'light': ['mqtt'],
-    'lock': ['mqtt'],
-    'sensor': ['mqtt'],
-    'switch': ['mqtt'],
-    'climate': ['mqtt'],
-    'alarm_control_panel': ['mqtt'],
-    'fan': ['mqtt'],
-}
+CONFIG_ENTRY_COMPONENTS = [
+    'binary_sensor',
+    'camera',
+    'cover',
+    'light',
+    'lock',
+    'sensor',
+    'switch',
+    'climate',
+    'alarm_control_panel',
+    'fan',
+]
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
 DATA_CONFIG_ENTRY_LOCK = 'mqtt_config_entry_lock'
@@ -216,11 +203,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         discovery_hash = (component, discovery_id)
 
         if payload:
-            platform = payload.get(CONF_PLATFORM, 'mqtt')
-            if platform not in ALLOWED_PLATFORMS.get(component, []):
-                _LOGGER.warning("Platform %s (component %s) is not allowed",
-                                platform, component)
-                return
+            platform = 'mqtt'
             payload[CONF_PLATFORM] = platform
 
             if CONF_STATE_TOPIC not in payload:
@@ -244,7 +227,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
             hass.data[ALREADY_DISCOVERED][discovery_hash] = None
 
-            if platform not in CONFIG_ENTRY_PLATFORMS.get(component, []):
+            if component not in CONFIG_ENTRY_COMPONENTS:
                 await async_load_platform(
                     hass, component, platform, payload, hass_config)
                 return

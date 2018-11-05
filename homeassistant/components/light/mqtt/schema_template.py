@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light, PLATFORM_SCHEMA,
+    ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
     SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF
@@ -44,7 +44,7 @@ CONF_RED_TEMPLATE = 'red_template'
 CONF_STATE_TEMPLATE = 'state_template'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA_TEMPLATE = vol.Schema({
     vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
     vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
     vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
@@ -58,20 +58,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
-    vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
-    vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
+    vol.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
+    vol.Optional(CONF_COMMAND_ON_TEMPLATE): cv.template,
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS):
         vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+})
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_entity_template(hass, config, async_add_entities,
+                                      discovery_hash):
     """Set up a MQTT Template light."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
-
     async_add_entities([MqttTemplate(
         hass,
         config.get(CONF_NAME),
