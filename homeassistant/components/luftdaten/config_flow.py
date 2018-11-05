@@ -27,7 +27,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @callback
-    async def _show_form(self, errors=None):
+    def _show_form(self, errors=None):
         """Show the form to the user."""
         data_schema = OrderedDict()
         data_schema[vol.Required(CONF_SENSOR_ID)] = str
