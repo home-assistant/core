@@ -65,7 +65,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     phonebook_id = config.get(CONF_PHONEBOOK)
     prefixes = config.get(CONF_PREFIXES)
-    keepalive = config.get(CONF_TCP_KEEPALIVE)
 
     try:
         phonebook = FritzBoxPhonebook(
@@ -80,8 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities([sensor])
 
-    monitor = FritzBoxCallMonitor(host=host, port=port, sensor=sensor,
-                                  keepalive=keepalive)
+    monitor = FritzBoxCallMonitor(host=host, port=port, sensor=sensor)
     monitor.connect()
 
     def _stop_listener(_event):
@@ -148,11 +146,10 @@ class FritzBoxCallSensor(Entity):
 class FritzBoxCallMonitor:
     """Event listener to monitor calls on the Fritz!Box."""
 
-    def __init__(self, host, port, sensor, keepalive):
+    def __init__(self, host, port, sensor):
         """Initialize Fritz!Box monitor instance."""
         self.host = host
         self.port = port
-        self.keepalive = keepalive
         self.sock = None
         self._sensor = sensor
         self.stopped = threading.Event()
