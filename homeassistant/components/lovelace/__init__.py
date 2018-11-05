@@ -332,36 +332,38 @@ def get_view(fname: str, view_id: str, data_format: str = FORMAT_YAML) -> None:
     """Get view without it's cards."""
     round_trip = data_format == FORMAT_YAML
     config = yaml.load_yaml(fname, round_trip)
-    view = None
+    found = None
     for view in config.get('views', []):
         if str(view.get('id', '')) == view_id:
+            found = view
             break
-    if view is None:
+    if found is None:
         raise ViewNotFoundError(
             "View with ID: {} was not found in {}.".format(view_id, fname))
 
-    del view['cards']
+    del found['cards']
     if data_format == FORMAT_YAML:
-        return yaml.object_to_yaml(view)
-    return view
+        return yaml.object_to_yaml(found)
+    return found
 
 
 def update_view(fname: str, view_id: str, view_config, data_format:
                 str = FORMAT_YAML) -> None:
     """Update view."""
     config = yaml.load_yaml(fname, True)
-    view = None
+    found = None
     for view in config.get('views', []):
         if str(view.get('id', '')) == view_id:
+            found = view
             break
-    if view is None:
+    if found is None:
         raise ViewNotFoundError(
             "View with ID: {} was not found in {}.".format(view_id, fname))
     if data_format == FORMAT_YAML:
         view_config = yaml.yaml_to_object(view_config)
     view_config['cards'] = view.get('cards', [])
-    view.clear()
-    view.update(view_config)
+    found.clear()
+    found.update(view_config)
     yaml.save_yaml(fname, config)
 
 
@@ -383,15 +385,16 @@ def move_view(fname: str, view_id: str, position: int) -> None:
     """Move a view to a different position."""
     config = yaml.load_yaml(fname, True)
     views = config.get('views', [])
-    view = None
+    found = None
     for view in views:
         if str(view.get('id', '')) == view_id:
+            found = view
             break
-    if view is None:
+    if found is None:
         raise ViewNotFoundError(
             "View with ID: {} was not found in {}.".format(view_id, fname))
 
-    views.insert(position, views.pop(views.index(view)))
+    views.insert(position, views.pop(views.index(found)))
     yaml.save_yaml(fname, config)
 
 
@@ -399,15 +402,16 @@ def delete_view(fname: str, view_id: str) -> None:
     """Delete a view."""
     config = yaml.load_yaml(fname, True)
     views = config.get('views', [])
-    view = None
+    found = None
     for view in views:
         if str(view.get('id', '')) == view_id:
+            found = view
             break
-    if view is None:
+    if found is None:
         raise ViewNotFoundError(
             "View with ID: {} was not found in {}.".format(view_id, fname))
 
-    views.pop(views.index(view))
+    views.pop(views.index(found))
     yaml.save_yaml(fname, config)
 
 
