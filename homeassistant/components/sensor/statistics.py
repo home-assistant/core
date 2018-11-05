@@ -247,6 +247,8 @@ class StatisticsSensor(Entity):
         The query will get the list of states in DESCENDING order so that we
         can limit the result to self._sample_size. Afterwards reverse the
         list so that we get it in the right order again.
+        If MaxAge is provided then query will restrict to entries younger then
+        current datetime - MaxAge.
         """
         from homeassistant.components.recorder.models import States
         _LOGGER.debug("%s: initializing values from the database",
@@ -254,7 +256,17 @@ class StatisticsSensor(Entity):
 
         with session_scope(hass=self._hass) as session:
             query = session.query(States)\
-                .filter(States.entity_id == self._entity_id.lower())\
+                .filter(States.entity_id == self._entity_id.lower())
+
+            if self._max_age is not None:
+                records_older_then = dt_util.utcnow() - self._max_age
+                _LOGGER.debug("%s: retrieve records not older then %s",
+                              self.entity_id, records_older_then)
+                query = query.filter(States.last_updated > records_older_then)
+            else:
+                _LOGGER.debug("%s: retrieving all records.", self.entity_id)
+
+            query = query\
                 .order_by(States.last_updated.desc())\
                 .limit(self._sampling_size)
             states = execute(query)
