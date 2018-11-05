@@ -127,7 +127,7 @@ def _led(hass, call):
 
     import subprocess
     subprocess.Popen(
-        "su -c ' ." + script + " " + str(brightness) + "'",
+        "su -c ' " + script + " " + str(brightness) + "'",
         shell=True, stdout=None, stderr=None)
 
 
