@@ -361,7 +361,7 @@ def update_view(fname: str, view_id: str, view_config, data_format:
             "View with ID: {} was not found in {}.".format(view_id, fname))
     if data_format == FORMAT_YAML:
         view_config = yaml.yaml_to_object(view_config)
-    view_config['cards'] = view.get('cards', [])
+    view_config['cards'] = found.get('cards', [])
     found.clear()
     found.update(view_config)
     yaml.save_yaml(fname, config)
