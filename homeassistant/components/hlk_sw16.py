@@ -31,16 +31,14 @@ ATTR_STATE = 'state'
 CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 
 DATA_DEVICE_REGISTER = 'hlk_sw16_device_register'
-DATA_ENTITY_LOOKUP = 'hlk_sw16_entity_lookup'
 DEFAULT_RECONNECT_INTERVAL = 10
 CONNECTION_TIMEOUT = 10
+DEFAULT_PORT = 8080
 
 DOMAIN = 'hlk_sw16'
 
 SIGNAL_AVAILABILITY = 'hlk_sw16_device_available'
 SIGNAL_HANDLE_EVENT = 'hlk_sw16_handle_event_{}'
-
-TMP_ENTITY = 'tmp.{}'
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
@@ -52,8 +50,8 @@ RELAY_ID = vol.All(
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
-        vol.Optional(CONF_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_RECONNECT_INTERVAL,
                      default=DEFAULT_RECONNECT_INTERVAL): int,
         vol.Required(CONF_SWITCHES): vol.Schema({RELAY_ID: SWITCH_SCHEMA}),
