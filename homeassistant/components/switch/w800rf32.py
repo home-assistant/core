@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA, SwitchDevice)
-from homeassistant.components.w800rf32 import (W800RF32_DEVICE, CONF_FIRE_EVENT)
+from homeassistant.components.w800rf32 import (
+    W800RF32_DEVICE, CONF_FIRE_EVENT)
 from homeassistant.const import (ATTR_NAME, CONF_DEVICES, CONF_NAME)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect)
