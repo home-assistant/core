@@ -89,6 +89,12 @@ class MelissaClimate(ClimateDevice):
             return self._data[self._api.TEMP]
 
     @property
+    def current_humidity(self):
+        """Return the current humidity value."""
+        if self._data:
+            return self._data[self._api.HUMIDITY]
+
+    @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
         return PRECISION_WHOLE
@@ -123,14 +129,6 @@ class MelissaClimate(ClimateDevice):
         if self._cur_settings is not None:
             return self.melissa_state_to_hass(
                 self._cur_settings[self._api.STATE])
-
-    @property
-    def device_state_attributes(self):
-        """Add the attributes that's available."""
-        data = dict()
-        if self._data:
-            data['humidity'] = self._data['humidity']
-        return data
 
     @property
     def temperature_unit(self):
