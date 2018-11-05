@@ -35,8 +35,3 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 class SW16Switch(SwitchableSW16Device, ToggleEntity):
     """Representation of a HLK-SW16 switch."""
-
-    @property
-    def force_update(self) -> bool:
-        """Will trigger anytime the state property is updated."""
-        return True
