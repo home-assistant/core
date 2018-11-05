@@ -47,13 +47,15 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
 })
 
+RELAY_ID = vol.Any(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'a', 'b', 'c', 'd', 'e', 'f')
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_RECONNECT_INTERVAL,
                      default=DEFAULT_RECONNECT_INTERVAL): int,
-        vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+        vol.Required(CONF_SWITCHES): vol.Schema({RELAY_ID: SWITCH_SCHEMA}),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -94,8 +96,6 @@ async def async_setup(hass, config):
     async def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
         _LOGGER.info('Initiating HLK-SW16 connection')
-
-        # HLK-SW16 create_hlk_sw16_connection
 
         try:
             with async_timeout.timeout(CONNECTION_TIMEOUT,
@@ -163,7 +163,7 @@ class SW16Device(Entity):
         # HLK-SW16 specific attributes for every component type
         self._initial_event = initial_event
         self._device_id = device_id
-        self._device_port = device_port
+        self._device_port = str(device_port)
         self._is_on = None
         if name:
             self._name = name
@@ -207,12 +207,8 @@ class SW16Device(Entity):
 
     async def async_added_to_hass(self):
         """Register update callback."""
-        # Remove temporary bogus entity_id if added
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
                                  self._availability_callback)
-        async_dispatcher_connect(self.hass,
-                                 SIGNAL_HANDLE_EVENT.format(self.entity_id),
-                                 self.handle_event_callback)
 
         # Process the initial event now that the entity is created
         if self._initial_event:
