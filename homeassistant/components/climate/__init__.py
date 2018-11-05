@@ -251,7 +251,6 @@ class ClimateDevice(Entity):
 
         if supported_features & SUPPORT_TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
-            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
 
             if supported_features & SUPPORT_TARGET_HUMIDITY_LOW:
                 data[ATTR_MIN_HUMIDITY] = self.min_humidity
@@ -284,6 +283,9 @@ class ClimateDevice(Entity):
         if supported_features & SUPPORT_AUX_HEAT:
             is_aux_heat = self.is_aux_heat_on
             data[ATTR_AUX_HEAT] = STATE_ON if is_aux_heat else STATE_OFF
+
+        if self.current_humidity is not None:
+            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
 
         return data
 
