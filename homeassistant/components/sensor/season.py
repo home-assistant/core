@@ -18,6 +18,14 @@ REQUIREMENTS = ['ephem==3.7.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+SEASON_ICONS = {
+    'spring': 'mdi:flower',
+    'summer': 'mdi:sunglasses',
+    'autumn': 'mdi:leaf',
+    'winter': 'mdi:snowflake'
+}
+DEFAULT_CLOUD_ICON = 'mdi:cloud'
+
 NORTHERN = 'northern'
 SOUTHERN = 'southern'
 EQUATOR = 'equator'
@@ -115,6 +123,11 @@ class Season(Entity):
     def state(self):
         """Return the current season."""
         return self.season
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return SEASON_ICONS.get(self.season, DEFAULT_CLOUD_ICON)
 
     def update(self):
         """Update season."""
