@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_STOPID = 'stopid'
 CONF_DESTINATION = 'destination'
-CONF_OFFSETT = 'offsett'
+CONF_OFFSET = 'offset'
 
 DEFAULT_NAME = 'Ruter'
 
@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOPID): cv.positive_int,
     vol.Optional(CONF_DESTINATION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_OFFSETT, default=1): cv.positive_int,
+    vol.Optional(CONF_OFFSET, default=1): cv.positive_int,
     })
 
 
@@ -42,22 +42,22 @@ async def async_setup_platform(
     stopid = config[CONF_STOPID]
     destination = config.get(CONF_DESTINATION)
     name = config[CONF_NAME]
-    offsett = config[CONF_OFFSETT]
+    offset = config[CONF_OFFSET]
 
     ruter = Departures(hass.loop, stopid, destination)
-    sensor = [TautulliSensor(ruter, name, offsett)]
+    sensor = [TautulliSensor(ruter, name, offset)]
     async_add_entities(sensor, True)
 
 
 class TautulliSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, ruter, name, offsett):
+    def __init__(self, ruter, name, offset):
         """Initialize the sensor."""
         self.ruter = ruter
         self._attributes = {}
         self._name = name
-        self._offset = offsett
+        self._offset = offset
         self._line = None
         self._destination = None
         self._state = None
