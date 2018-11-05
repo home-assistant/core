@@ -46,7 +46,9 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
 })
 
-RELAY_ID = vol.Any(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'a', 'b', 'c', 'd', 'e', 'f')
+RELAY_ID = vol.All(
+    vol.Any(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'a', 'b', 'c', 'd', 'e', 'f'),
+    vol.Coerce(str))
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -141,7 +143,7 @@ class SW16Device(Entity):
         """Initialize the device."""
         # HLK-SW16 specific attributes for every component type
         self._device_id = device_id
-        self._device_port = str(device_port)
+        self._device_port = device_port
         self._is_on = None
         if name:
             self._name = name
