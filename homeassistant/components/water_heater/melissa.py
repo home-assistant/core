@@ -65,7 +65,7 @@ class Bobbie(WaterHeaterDevice):
             return 'heating'
         else:
             if self.is_away_mode_on:
-                return "off"
+                return "Away mode"
             else:
                 return 'idle'
 
