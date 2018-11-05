@@ -109,15 +109,11 @@ async def async_setup(hass, config):
             hass.loop.call_later(reconnect_interval, reconnect, exc)
             return
 
-        comps = {'switch': []}
-        for switch in switches.items():
-            comps['switch'].append(switch)
-
         # Load platforms
-        for comp_name, comp_conf in comps.items():
+        for comp_name, comp_conf in switches.items():
             hass.async_create_task(
-                async_load_platform(hass, comp_name, DOMAIN,
-                                    {DOMAIN: comp_conf}, config))
+                async_load_platform(hass, 'switch', DOMAIN,
+                                    (comp_name, comp_conf), config))
 
         # Bind protocol to command class to allow entities to send commands
         SW16Command.set_hlk_sw16_protocol(protocol)

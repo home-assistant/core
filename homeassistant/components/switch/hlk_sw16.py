@@ -19,12 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 
 def devices_from_config(domain_config):
     """Parse configuration and add HLK-SW16 switch devices."""
-    devices = []
-    for device_port, device_name in domain_config[HLK_SW16]:
-        device = SW16Switch(device_name.get(CONF_NAME, device_port),
-                            device_port)
-        devices.append(device)
-    return devices
+    device_port = domain_config[0]
+    device_config = domain_config[1]
+    device_name = device_config.get(CONF_NAME, device_port)
+    device = SW16Switch(device_name, device_port)
+    return [device]
 
 
 async def async_setup_platform(hass, config, async_add_entities,
