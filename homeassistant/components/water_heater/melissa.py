@@ -87,6 +87,7 @@ class Bobbie(WaterHeaterDevice):
             data['energy'] = self._data['energy']
             data['voltage'] = self._data['voltage']
             data['current'] = self._data['current']
+            data['kW'] = self._data['voltage'] * self._data['current']
         return data
 
     async def async_turn_away_mode_on(self):
