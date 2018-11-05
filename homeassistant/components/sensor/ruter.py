@@ -2,10 +2,9 @@
 A sensor platform that give you information about next departures from Ruter.
 
 For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.tautulli/
+https://www.home-assistant.io/components/sensor.ruter/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -18,16 +17,14 @@ REQUIREMENTS = ['pyruter==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_STOPID = 'stopid'
+CONF_STOP_ID = 'stop_id'
 CONF_DESTINATION = 'destination'
 CONF_OFFSET = 'offset'
 
 DEFAULT_NAME = 'Ruter'
 
-TIME_BETWEEN_UPDATES = timedelta(seconds=10)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STOPID): cv.positive_int,
+    vol.Required(CONF_STOP_ID): cv.positive_int,
     vol.Optional(CONF_DESTINATION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OFFSET, default=1): cv.positive_int,
@@ -39,12 +36,12 @@ async def async_setup_platform(
     """Create the sensor."""
     from pyruter.api import Departures
 
-    stopid = config[CONF_STOPID]
+    stop_id = config[CONF_STOP_ID]
     destination = config.get(CONF_DESTINATION)
     name = config[CONF_NAME]
     offset = config[CONF_OFFSET]
 
-    ruter = Departures(hass.loop, stopid, destination)
+    ruter = Departures(hass.loop, stop_id, destination)
     sensor = [TautulliSensor(ruter, name, offset)]
     async_add_entities(sensor, True)
 
@@ -58,8 +55,6 @@ class TautulliSensor(Entity):
         self._attributes = {}
         self._name = name
         self._offset = offset
-        self._line = None
-        self._destination = None
         self._state = None
 
     async def async_update(self):
@@ -69,10 +64,12 @@ class TautulliSensor(Entity):
             try:
                 data = self.ruter.departures[self._offset]
                 self._state = data['time']
-                self._line = data['line']
-                self._destination = data['destination']
+                self._attributes['line'] = data['line']
+                self._attributes['destination'] = data['destination']
             except (KeyError, IndexError) as error:
-                _LOGGER.error("Error getting data from Ruter, %s", error)
+                _LOGGER.debug("Error getting data from Ruter, %s", error)
+        else:
+            _LOGGER.error("No data recieved from Ruter.")
 
     @property
     def name(self):
