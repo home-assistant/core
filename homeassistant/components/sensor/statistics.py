@@ -247,7 +247,10 @@ class StatisticsSensor(Entity):
         The query will get the list of states in DESCENDING order so that we
         can limit the result to self._sample_size. Afterwards reverse the
         list so that we get it in the right order again.
+<<<<<<< HEAD
 
+=======
+>>>>>>> Update query to include maxAge
         If MaxAge is provided then query will restrict to entries younger then
         current datetime - MaxAge.
         """
