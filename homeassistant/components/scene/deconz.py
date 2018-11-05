@@ -4,7 +4,7 @@ Support for deCONZ scenes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.deconz/
 """
-from homeassistant.components.deconz import DOMAIN as DATA_DECONZ
+from homeassistant.components.deconz import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.scene import Scene
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,30 +20,32 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up scenes for deCONZ component."""
+    gateway = hass.data[DECONZ_DOMAIN]
+
     @callback
     def async_add_scene(scenes):
         """Add scene from deCONZ."""
         entities = []
         for scene in scenes:
-            entities.append(DeconzScene(scene))
+            entities.append(DeconzScene(scene, gateway))
         async_add_entities(entities)
-    hass.data[DATA_DECONZ].listeners.append(
+    gateway.listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_scene', async_add_scene))
 
-    async_add_scene(hass.data[DATA_DECONZ].api.scenes.values())
+    async_add_scene(gateway.api.scenes.values())
 
 
 class DeconzScene(Scene):
     """Representation of a deCONZ scene."""
 
-    def __init__(self, scene):
+    def __init__(self, scene, gateway):
         """Set up a scene."""
         self._scene = scene
+        self.gateway = gateway
 
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
-        self.hass.data[DATA_DECONZ].deconz_ids[self.entity_id] = \
-            self._scene.deconz_id
+        self.gateway.deconz_ids[self.entity_id] = self._scene.deconz_id
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect scene object when removed."""
