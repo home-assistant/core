@@ -180,6 +180,7 @@ async def test_valve_set_state(hass, hk_driver, events):
 
 
 @pytest.mark.parametrize('entity_id, attrs', [
+    ('scene.test', {}),
     ('script.test', {}),
     ('script.test', {ATTR_CAN_CANCEL: False}),
 ])
