@@ -18,14 +18,6 @@ REQUIREMENTS = ['ephem==3.7.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-SEASON_ICONS = {
-    STATE_SPRING: 'mdi:flower',
-    STATE_SUMMER: 'mdi:sunglasses',
-    STATE_AUTUMN: 'mdi:leaf',
-    STATE_WINTER: 'mdi:snowflake'
-}
-DEFAULT_CLOUD_ICON = 'mdi:cloud'
-
 NORTHERN = 'northern'
 SOUTHERN = 'southern'
 EQUATOR = 'equator'
@@ -41,6 +33,14 @@ HEMISPHERE_SEASON_SWAP = {STATE_WINTER: STATE_SUMMER,
                           STATE_SPRING: STATE_AUTUMN,
                           STATE_AUTUMN: STATE_SPRING,
                           STATE_SUMMER: STATE_WINTER}
+
+SEASON_ICONS = {
+    STATE_SPRING: 'mdi:flower',
+    STATE_SUMMER: 'mdi:sunglasses',
+    STATE_AUTUMN: 'mdi:leaf',
+    STATE_WINTER: 'mdi:snowflake'
+}
+DEFAULT_CLOUD_ICON = 'mdi:cloud'
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
