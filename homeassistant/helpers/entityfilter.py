@@ -70,8 +70,8 @@ def generate_filter(include_domains, include_entities,
 
     # Case 4 - both includes and excludes specified
     # Case 4a - include domain specified
-    #  - if domain is included, and entity not excluded, pass
-    #  - if domain is not included, and entity not included, fail
+    #  - if domain is included, pass if entity not excluded
+    #  - if domain is not included, pass if entity is included
     # note: if both include and exclude domains specified,
     #   the exclude domains are ignored
     if include_d:
@@ -85,8 +85,8 @@ def generate_filter(include_domains, include_entities,
         return entity_filter_4a
 
     # Case 4b - exclude domain specified
-    #  - if domain is excluded, and entity not included, fail
-    #  - if domain is not excluded, and entity not excluded, pass
+    #  - if domain is excluded, pass if entity is included
+    #  - if domain is not excluded, pass if entity not excluded
     if exclude_d:
         def entity_filter_4b(entity_id):
             """Return filter function for case 4b."""
