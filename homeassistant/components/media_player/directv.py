@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DirecTV platform."""
-    known_devices = hass.data.get(DATA_DIRECTV, [])
+    known_devices = hass.data.get(DATA_DIRECTV, set())
     hosts = []
 
     if CONF_HOST in config:
@@ -89,18 +89,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             # Make sure that this device is not already configured
             # Comparing based on host (IP) and clientAddr.
-            device_unknown = True
-            for device in known_devices:
-                if host in device and loc["clientAddr"] in device:
-                    device_unknown = False
-                    _LOGGER.debug("Discovered device %s on host %s with "
-                                  "client address %s is already "
-                                  "configured",
-                                  str.title(loc["locationName"]),
-                                  host, loc["clientAddr"])
-                    break
-
-            if device_unknown:
+            if (host, loc["clientAddr"]) in known_devices:
+                _LOGGER.debug("Discovered device %s on host %s with "
+                              "client address %s is already "
+                              "configured",
+                              str.title(loc["locationName"]),
+                              host, loc["clientAddr"])
+            else:
                 _LOGGER.debug("Adding discovered device %s with"
                               " client address %s",
                               str.title(loc["locationName"]),
@@ -112,7 +107,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for host in hosts:
         dtvs.append(DirecTvDevice(*host))
-        hass.data.setdefault(DATA_DIRECTV, []).append(host)
+        hass.data.setdefault(DATA_DIRECTV, set()).add((host[1], host[3]))
 
     add_entities(dtvs)
 
