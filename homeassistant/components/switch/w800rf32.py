@@ -30,7 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config,
+                               add_entities, discovery_info=None):
     """Set up the Switch platform to w800rf32."""
     switches = []
 
