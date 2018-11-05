@@ -61,7 +61,13 @@ class Bobbie(WaterHeaterDevice):
     @property
     def state(self):
         """Property for state."""
-        return 'heating' if self._data.get('load', None) else 'idle'
+        if self._data.get('load', None):
+            return 'heating'
+        else:
+            if self.is_away_mode_on:
+                return "off"
+            else:
+                return 'idle'
 
     @property
     def temperature_unit(self):
