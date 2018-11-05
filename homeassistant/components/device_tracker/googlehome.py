@@ -46,7 +46,7 @@ class GoogleHomeDeviceScanner(DeviceScanner):
 
         self.success_init = False
         self._host = config[CONF_HOST]
-        self.rssi_threshold = config.get(CONF_RSSI_THRESHOLD)
+        self.rssi_threshold = config[CONF_RSSI_THRESHOLD]
 
         session = async_get_clientsession(hass)
         self.deviceinfo = DeviceInfo(hass.loop, session, self._host)
