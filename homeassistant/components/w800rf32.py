@@ -27,6 +27,7 @@ REQUIREMENTS = ['pyW800rf32==0.1']
 
 DOMAIN = 'w800rf32'
 DATA_W800RF32 = 'data_w800rf32'
+W800RF32_DEVICE = 'w800rf32_{}'
 
 ATTR_FIRE_EVENT = 'fire_event'
 CONF_FIRE_EVENT = 'fire_event'
@@ -61,14 +62,8 @@ def setup(hass, config):
 
         # Get device_type from device_id in hass.data
         device_id = event.device.lower()
-
-        try:
-            device_type = \
-                hass.data[DOMAIN]['entities'][device_id].__class__.__name__
-        except KeyError:
-            return
-
-        dispatcher_send(hass, device_type, event)
+        signal = W800RF32_DEVICE.format(device_id)
+        dispatcher_send(hass, signal, event)
 
     # device --> /dev/ttyUSB0
     device = config[DOMAIN][CONF_DEVICE]
@@ -84,5 +79,5 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_w800rf32)
 
     hass.data[DATA_W800RF32] = w800_object
-    hass.data[DOMAIN] = {'entities': {}}
+
     return True
