@@ -183,7 +183,8 @@ async def test_get_gateway_fails(hass):
     """Failed call."""
     with patch('pydeconz.DeconzSession.async_load_parameters',
                return_value=mock_coro(False)):
-        assert await gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
+        assert await gateway.get_gateway(
+            hass, ENTRY_CONFIG, Mock(), Mock()) is False
 
 
 async def test_create_event():
