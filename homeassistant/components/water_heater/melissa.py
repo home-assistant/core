@@ -63,11 +63,9 @@ class Bobbie(WaterHeaterDevice):
         """Property for state."""
         if self._data.get('load', None):
             return 'heating'
-        else:
-            if self.is_away_mode_on:
-                return "Away mode"
-            else:
-                return 'idle'
+        if self.is_away_mode_on:
+            return "Away mode"
+        return 'idle'
 
     @property
     def temperature_unit(self):
@@ -82,7 +80,14 @@ class Bobbie(WaterHeaterDevice):
     @property
     def device_state_attributes(self):
         """Device state attributes property."""
-        return self._data
+        data = dict()
+        if self._data:
+            data['hot'] = self._data['hot']
+            data['cold'] = self._data['cold']
+            data['energy'] = self._data['energy']
+            data['voltage'] = self._data['voltage']
+            data['current'] = self._data['current']
+        return data
 
     async def async_turn_away_mode_on(self):
         """Turn on away mode."""
