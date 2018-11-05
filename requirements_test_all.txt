@@ -232,7 +232,6 @@ smhi-pkg==1.0.5
 somecomfort==0.5.2
 
 # homeassistant.components.recorder
-# homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
 sqlalchemy==1.2.13
 
