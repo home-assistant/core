@@ -1,10 +1,10 @@
 """The tests for the Srp Energy Platform."""
-import unittest
 from unittest.mock import patch
+import logging
 from homeassistant.setup import setup_component
+from tests.common import get_test_home_assistant
 
-from tests.common import (get_test_home_assistant,
-                          MockDependency)
+_LOGGER = logging.getLogger(__name__)
 
 VALID_CONFIG_MINIMAL = {
     'sensor': {
@@ -18,11 +18,17 @@ VALID_CONFIG_MINIMAL = {
 
 def mock_init(self, accountid, username, password):
     """Mock srpusage usage."""
+    _LOGGER.log(logging.INFO, "Calling mock Init")
     return None
 
+def mock_validate(self):
+    """Mock srpusage usage."""
+    _LOGGER.log(logging.INFO, "Calling mock Validate")
+    return True
 
 def mock_usage(self, startdate, enddate):  # pylint: disable=invalid-name
     """Mock srpusage usage."""
+    _LOGGER.log(logging.INFO, "Calling mock usage")
     usage = [
         ('9/19/2018', '12:00 AM', '2018-09-19T00:00:00-7:00', '1.2', '0.17'),
         ('9/19/2018', '1:00 AM', '2018-09-19T01:00:00-7:00', '2.1', '0.30'),
@@ -33,41 +39,32 @@ def mock_usage(self, startdate, enddate):  # pylint: disable=invalid-name
         ]
     return usage
 
+def test_setup_with_config():
+    """Test the platform setup with configuration."""
+    with patch('srpenergy.client.SrpEnergyClient.__init__', new=mock_init), \
+         patch('srpenergy.client.SrpEnergyClient.validate', new=mock_validate), \
+         patch('srpenergy.client.SrpEnergyClient.usage', new=mock_usage):
 
-class TestSrpEnergySetup(unittest.TestCase):
-    """Test the Srp Energy platform."""
+        hass = get_test_home_assistant()
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
-        self.username = 'foo'
-        self.password = self.hass.config.username = 'abba'
-        self.id = self.hass.config.id = '123'
-        self.entities = []
+        setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    @MockDependency('srpenergy.client.SrpEnergyClient')
-    @patch('srpenergy.client.SrpEnergyClient.__init__', new=mock_init)
-    @patch('srpenergy.client.SrpEnergyClient.usage', new=mock_usage)
-    def test_setup_with_config(self, mock_client):
-        """Test the platform setup with configuration."""
-        setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
-
-        state = self.hass.states.get('sensor.srp_energy')
-        print(state)
+        state = hass.states.get('sensor.srp_energy')
         assert state is not None
+      
+def test_daily_usage():
+    """Test the platform setup with configuration."""
+    with patch('srpenergy.client.SrpEnergyClient.__init__', new=mock_init), \
+         patch('srpenergy.client.SrpEnergyClient.validate', new=mock_validate), \
+         patch('srpenergy.client.SrpEnergyClient.usage', new=mock_usage):
 
-    @MockDependency('srpenergy.client.SrpEnergyClient')
-    @patch('srpenergy.client.SrpEnergyClient.__init__', new=mock_init)
-    @patch('srpenergy.client.SrpEnergyClient.usage', new=mock_usage)
-    def test_daily_usage(self, mock_client):
-        """Test the platform setup with configuration."""
-        setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
+        hass = get_test_home_assistant()
+        setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
 
-        state = self.hass.states.get('sensor.srp_energy')
+        state = hass.states.get('sensor.srp_energy')
 
-        assert state.attributes is not None
-        assert state.attributes['daily_usage'] == '7.50'
+        assert state
+        assert state.state == '7.50'
+
+        assert state.attributes
+        assert state.attributes.get('unit_of_measurement')
