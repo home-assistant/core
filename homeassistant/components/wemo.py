@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.28']
+REQUIREMENTS = ['pywemo==0.4.29']
 
 DOMAIN = 'wemo'
 
