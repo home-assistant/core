@@ -1,4 +1,4 @@
-"""Support for Honeywell evohome (EMEA/EU-based systems only).
+"""Support for (EMEA/EU-based) Honeywell evohome systems.
 
 Support for a temperature control system (TCS, controller) with 0+ heating
 zones (e.g. TRVs, relays) and, optionally, a DHW controller.
@@ -8,40 +8,41 @@ https://home-assistant.io/components/evohome/
 """
 
 # Glossary:
+
 # TCS - temperature control system (a.k.a. Controller, Parent), which can
 # have up to 13 Children:
 #   0-12 Heating zones (a.k.a. Zone), and
 #   0-1 DHW controller, (a.k.a. Boiler)
+
+# The TCS & Zones are implemented as Climate devices, Boiler as a WaterHeater
 
 import logging
 
 from requests.exceptions import HTTPError
 import voluptuous as vol
 
+from homeassistant.components.climate.evohome import EvoController, EvoZone
 from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    HTTP_BAD_REQUEST
+    CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_START,
+    HTTP_BAD_REQUEST, HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS
 )
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 REQUIREMENTS = ['evohomeclient==0.2.7']
-# If ever > 0.2.7, re-check the work-around wrapper is still required when
-# instantiating the client, below.
+# If REQUIREMENTS ever become > 0.2.7, re-check if the work-around wrapper is
+# still required when instantiating the client; see setup(), below
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'evohome'
 DATA_EVOHOME = 'data_' + DOMAIN
+DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
 
 CONF_LOCATION_IDX = 'location_idx'
-MAX_TEMP = 28
-MIN_TEMP = 5
-SCAN_INTERVAL_DEFAULT = 180
-SCAN_INTERVAL_MAX = 300
+SCAN_INTERVAL_DEFAULT = 300
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -55,12 +56,14 @@ CONFIG_SCHEMA = vol.Schema({
 GWS = 'gateways'
 TCS = 'temperatureControlSystems'
 
+# bit masks for dispatcher packets
+EVO_PARENT = 0x01
+
 
 def setup(hass, config):
-    """Create a Honeywell (EMEA/EU) evohome CH/DHW system.
+    """Create a (EMEA/EU-based) Honeywell evohome system.
 
-    One controller with 0+ heating zones (e.g. TRVs, relays) and, optionally, a
-    DHW controller.  Does not work for US-based systems.
+    Currently, only the Controller and the Zones are implemented here.
     """
     evo_data = hass.data[DATA_EVOHOME] = {}
     evo_data['timers'] = {}
@@ -71,7 +74,6 @@ def setup(hass, config):
     from evohomeclient2 import EvohomeClient
 
     _LOGGER.debug("setup(): API call [4 request(s)]: client.__init__()...")
-
     try:
         # There's a bug in evohomeclient2 v0.2.7: the client.__init__() sets
         # the root loglevel when EvohomeClient(debug=?), so remember it now...
@@ -88,22 +90,38 @@ def setup(hass, config):
     except HTTPError as err:
         if err.response.status_code == HTTP_BAD_REQUEST:
             _LOGGER.error(
-                "Failed to establish a connection with evohome web servers, "
+                "setup(): Failed to connect with the vendor's web servers. "
                 "Check your username (%s), and password are correct."
                 "Unable to continue. Resolve any errors and restart HA.",
                 evo_data['params'][CONF_USERNAME]
             )
-            return False  # unable to continue
 
-        raise  # we dont handle any other HTTPErrors
+        elif err.response.status_code == HTTP_SERVICE_UNAVAILABLE:
+            _LOGGER.error(
+                "setup(): Failed to connect with the vendor's web servers. "
+                "The server is not contactable. Unable to continue. "
+                "Resolve any errors and restart HA."
+            )
 
-    finally:  # Redact username, password as no longer needed.
+        elif err.response.status_code == HTTP_TOO_MANY_REQUESTS:
+            _LOGGER.error(
+                "setup(): Failed to connect with the vendor's web servers. "
+                "You have exceeded the api rate limit. Unable to continue. "
+                "Wait a while (say 10 minutes) and restart HA."
+            )
+
+        else:
+            raise  # we dont expect/handle any other HTTPErrors
+
+        return False  # unable to continue
+
+    finally:  # Redact username, password as no longer needed
         evo_data['params'][CONF_USERNAME] = 'REDACTED'
         evo_data['params'][CONF_PASSWORD] = 'REDACTED'
 
     evo_data['client'] = client
 
-    # Redact any installation data we'll never need.
+    # Redact any installation data we'll never need
     if client.installation_info[0]['locationInfo']['locationId'] != 'REDACTED':
         for loc in client.installation_info:
             loc['locationInfo']['streetAddress'] = 'REDACTED'
@@ -111,7 +129,7 @@ def setup(hass, config):
             loc['locationInfo']['locationOwner'] = 'REDACTED'
             loc[GWS][0]['gatewayInfo'] = 'REDACTED'
 
-    # Pull down the installation configuration.
+    # Pull down the installation configuration
     loc_idx = evo_data['params'][CONF_LOCATION_IDX]
 
     try:
@@ -119,7 +137,7 @@ def setup(hass, config):
 
     except IndexError:
         _LOGGER.warning(
-            "setup(): Parameter '%s' = %s , is outside its range (0-%s)",
+            "setup(): Parameter '%s'=%s , is outside its range (0-%s)",
             CONF_LOCATION_IDX,
             loc_idx,
             len(client.installation_info) - 1
@@ -127,19 +145,57 @@ def setup(hass, config):
 
         return False  # unable to continue
 
-    evo_data['status'] = {}
+    # Now we're ready to go, but we have no state as yet, so...
+    def _first_update(event):
+        """Let the Controller know it can obtain it's first update."""
+        pkt = {
+            'sender': 'setup()',
+            'signal': 'update',
+            'to': EVO_PARENT
+        }
+        async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)
+
+    # Create a listener for the above...
+    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         tmp_loc = dict(evo_data['config'])
         tmp_loc['locationInfo']['postcode'] = 'REDACTED'
-        tmp_tcs = tmp_loc[GWS][0][TCS][0]
-        if 'zones' in tmp_tcs:
-            tmp_tcs['zones'] = '...'
-        if 'dhw' in tmp_tcs:
-            tmp_tcs['dhw'] = '...'
+        if 'dhw' in tmp_loc[GWS][0][TCS][0]:  # if this location has DHW...
+            tmp_loc[GWS][0][TCS][0]['dhw'] = '...'
 
-        _LOGGER.debug("setup(), location = %s", tmp_loc)
+        _LOGGER.debug("setup(): evo_data['config']=%s", tmp_loc)
+
+    # evohomeclient has exposed no means of accessing non-default location
+    # (i.e. loc_idx > 0) other than using a protected member, such as below
+    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
+
+    _LOGGER.debug(
+        "setup(): Found Controller, id=%s, name=%s (location_idx=%s)",
+        tcs_obj_ref.systemId + " [" + tcs_obj_ref.modelType + "]",
+        tcs_obj_ref.location.name,
+        loc_idx
+    )
+
+    evo_data['parent'] = EvoController(hass, client, tcs_obj_ref)
+    evo_data['children'] = zones = []
+
+    for z in tcs_obj_ref.zones:                                                 # noqa E501; pylint: disable=invalid-name
+        zone_obj_ref = tcs_obj_ref.zones[z]
+        _LOGGER.debug(
+            "setup(): Found Zone, id=%s, name=%s",
+            zone_obj_ref.zoneId + " [" + zone_obj_ref.zone_type + "]",
+            zone_obj_ref.name
+        )
+        zones.append(EvoZone(hass, client, zone_obj_ref))
 
     load_platform(hass, 'climate', DOMAIN, {}, config)
+
+    # Inform the Controller when HA has started so it can get it's first update
+    def _first_update(event):
+        pkt = {'sender': 'setup()', 'signal': 'refresh', 'to': EVO_PARENT}
+        async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)
+
+    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
 
     return True
