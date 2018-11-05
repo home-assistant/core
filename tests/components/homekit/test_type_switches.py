@@ -62,6 +62,7 @@ async def test_outlet_set_state(hass, hk_driver, events):
     ('automation.test', {}),
     ('input_boolean.test', {}),
     ('remote.test', {}),
+    ('scene.test', {}),
     ('script.test', {ATTR_CAN_CANCEL: True}),
     ('switch.test', {}),
 ])
@@ -180,6 +181,7 @@ async def test_valve_set_state(hass, hk_driver, events):
 
 
 @pytest.mark.parametrize('entity_id, attrs', [
+    ('scene.test', {}),
     ('script.test', {}),
     ('script.test', {ATTR_CAN_CANCEL: False}),
 ])
