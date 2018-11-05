@@ -67,16 +67,12 @@ class GoogleHomeDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         if device not in self.last_results:
             return None
-        return self._host + '_' + self.last_results[device]['mac_address']
+        return '{}_{}'.format(self._host,
+                              self.last_results[device]['btle_mac_address'])
 
     async def get_extra_attributes(self, device):
         """Return the extra attributes of the device."""
-        attributes = {}
-        for attribute in self.last_results[device]:
-            attributes[attribute] = self.last_results[device][attribute]
-
-        _LOGGER.debug("Device %s attributes %s", device, attributes)
-        return attributes
+        return self.last_results[device]
 
     async def async_update_info(self):
         """Ensure the information from Google Home is up to date."""
@@ -87,10 +83,10 @@ class GoogleHomeDeviceScanner(DeviceScanner):
         devices = {}
         for device in self.scanner.devices:
             if device['rssi'] > self.rssi_threshold:
-                uuid = self._host + '_' + device['mac_address']
+                uuid = '{}_{}'.format(self._host, device['mac_address'])
                 devices[uuid] = {}
                 devices[uuid]['rssi'] = device['rssi']
-                devices[uuid]['mac_address'] = device['mac_address']
+                devices[uuid]['btle_mac_address'] = device['mac_address']
                 devices[uuid]['ghname'] = ghname
                 devices[uuid]['source_type'] = 'bluetooth'
         self.last_results = devices
