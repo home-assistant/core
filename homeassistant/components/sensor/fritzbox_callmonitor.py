@@ -27,12 +27,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PHONEBOOK = 'phonebook'
 CONF_PREFIXES = 'prefixes'
-CONF_TCP_KEEPALIVE = 'tcp_keepalive'
 
 DEFAULT_HOST = '169.254.1.1'  # IP valid for all Fritz!Box routers
 DEFAULT_NAME = 'Phone'
 DEFAULT_PORT = 1012
-DEFAULT_TCP_KEEPALIVE = False
 
 INTERVAL_RECONNECT = 60
 
@@ -54,9 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME, default=''): cv.string,
     vol.Optional(CONF_PHONEBOOK, default=0): cv.positive_int,
     vol.Optional(CONF_PREFIXES, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_TCP_KEEPALIVE, default=DEFAULT_TCP_KEEPALIVE):
-        cv.boolean
+        vol.All(cv.ensure_list, [cv.string])
 })
 
 
@@ -166,9 +162,7 @@ class FritzBoxCallMonitor:
         _LOGGER.debug('Setting up socket...')
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(10)
-        if self.keepalive:
-            _LOGGER.debug('Enabling TCP keepalive...')
-            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         try:
             self.sock.connect((self.host, self.port))
             threading.Thread(target=self._listen).start()
