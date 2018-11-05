@@ -127,8 +127,9 @@ class MelissaClimate(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Add the attributes that's available."""
-        data = self._data.copy()
-        data.pop('temp')
+        data = dict()
+        if self._data:
+            data['humidity'] = self._data['humidity']
         return data
 
     @property
