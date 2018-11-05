@@ -907,6 +907,19 @@ def get_groups(hass):
             if (remote is not None):
                 if (entity.entity_id != 'group.ais_pilot'):
                     add_menu_item(entity)
+        elif entity.entity_id.startswith('sensor.'):
+            # add sensors to the all_ais_sensors group
+            device_class = entity.attributes.get('device_class', None)
+            if device_class is not None:
+                hass.async_add_job(
+                    hass.services.async_call(
+                        'group',
+                        'set', {
+                            "object_id": "all_ais_sensors",
+                            "add_entities": [entity.entity_id]
+                        }
+                    )
+                )
     GROUP_ENTITIES = sorted(GROUP_ENTITIES, key=getKey)
 
 

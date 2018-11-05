@@ -74,6 +74,7 @@ class MqttSensor(MqttAvailability, Entity):
                 'name': name,
                 'unique_id': slugify(name),
                 'state_topic': conf_state_topic,
+                'device_class': 'temperature',
                 'icon': 'mdi:temperature-celsius',
                 'unit_of_measurement': '°C',
                 'value_template': "{{ value_json['SI7021'].Temperature | round(2)}}"
@@ -90,6 +91,7 @@ class MqttSensor(MqttAvailability, Entity):
                 'name': name,
                 'unique_id': slugify(name),
                 'state_topic': conf_state_topic,
+                'device_class': 'humidity',
                 'icon': 'mdi:temperature-celsius',
                 'unit_of_measurement': '%',
                 'value_template': "{{ value_json['SI7021'].Humidity | round(2)}}"
@@ -107,6 +109,7 @@ class MqttSensor(MqttAvailability, Entity):
                 'name': name,
                 'unique_id': slugify(name),
                 'state_topic': conf_state_topic,
+                'device_class': 'battery',
                 'icon': 'mdi:flash-red-eye',
                 'unit_of_measurement': 'W',
                 'value_template': "{{ value_json['ENERGY'].Power | round(2)}}"
@@ -123,6 +126,7 @@ class MqttSensor(MqttAvailability, Entity):
                 'name': name,
                 'unique_id': slugify(name),
                 'state_topic': conf_state_topic,
+                'device_class': 'battery',
                 'icon': 'mdi:flash-red-eye',
                 'unit_of_measurement': 'kWh',
                 'value_template': "{{ value_json['ENERGY'].Total | round(2)}}"
@@ -139,6 +143,7 @@ class MqttSensor(MqttAvailability, Entity):
                 'name': name,
                 'unique_id': slugify(name),
                 'state_topic': conf_state_topic,
+                'device_class': 'battery',
                 'icon': 'mdi:flash-red-eye',
                 'unit_of_measurement': 'kWh',
                 'value_template': "{{ value_json['ENERGY'].Today | round(2)}}"
@@ -155,6 +160,7 @@ class MqttSensor(MqttAvailability, Entity):
                 'name': name,
                 'unique_id': slugify(name),
                 'state_topic': conf_state_topic,
+                'device_class': 'battery',
                 'icon': 'mdi:flash-red-eye',
                 'unit_of_measurement': 'kWh',
                 'value_template': "{{ value_json['ENERGY'].Yesterday | round(2)}}"
@@ -171,6 +177,7 @@ class MqttSensor(MqttAvailability, Entity):
                 'name': name,
                 'unique_id': slugify(name),
                 'state_topic': conf_state_topic,
+                'device_class': 'battery',
                 'icon': 'mdi:flash-red-eye',
                 'unit_of_measurement': 'V',
                 'value_template': "{{ value_json['ENERGY'].Voltage | round(2)}}"
@@ -187,6 +194,7 @@ class MqttSensor(MqttAvailability, Entity):
                 'name': name,
                 'unique_id': slugify(name),
                 'state_topic': conf_state_topic,
+                'device_class': 'battery',
                 'icon': 'mdi:flash-auto',
                 'unit_of_measurement': 'A',
                 'value_template': "{{ value_json['ENERGY'].Current | round(2)}}"
