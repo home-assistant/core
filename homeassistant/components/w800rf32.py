@@ -28,15 +28,9 @@ REQUIREMENTS = ['pyW800rf32==0.1']
 DOMAIN = 'w800rf32'
 DATA_W800RF32 = 'data_w800rf32'
 W800RF32_DEVICE = 'w800rf32_{}'
-
-ATTR_FIRE_EVENT = 'fire_event'
-CONF_FIRE_EVENT = 'fire_event'
-CONF_DEBUG = 'debug'
 CONF_OFF_DELAY = 'off_delay'
-CONF_DEVICE_CLASS = 'device_class'
-EVENT_BUTTON_PRESSED = 'button_pressed'
+CONF_DEBUG = 'debug'
 
-RECEIVED_EVT_SUBSCRIBERS = []
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({

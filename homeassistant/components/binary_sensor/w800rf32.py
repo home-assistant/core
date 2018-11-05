@@ -11,12 +11,10 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.components.w800rf32 import (
-    W800RF32_DEVICE, CONF_FIRE_EVENT, CONF_OFF_DELAY)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_STATE,
-    CONF_DEVICE_CLASS, CONF_NAME,
-    ATTR_NAME, CONF_DEVICES)
+from homeassistant.components.w800rf32 import (W800RF32_DEVICE, CONF_OFF_DELAY)
+from homeassistant.const import (CONF_DEVICE_CLASS, CONF_NAME,
+                                 ATTR_NAME, CONF_DEVICES)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import event as evt
 from homeassistant.util import dt as dt_util
@@ -26,15 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['w800rf32']
 
-ATTR_FIRE_EVENT = 'fire_event'
-EVENT_BUTTON_PRESSED = 'button_pressed'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {
         cv.string: vol.Schema({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
             vol.Optional(CONF_OFF_DELAY):
             vol.Any(cv.time_period, cv.positive_timedelta)
         })
@@ -54,9 +48,8 @@ async def async_setup_platform(hass, config,
                       entity[ATTR_NAME], entity.get(CONF_DEVICE_CLASS))
 
         device = W800rf32BinarySensor(
-            hass, device_id, entity.get(CONF_NAME),
-            entity.get(CONF_DEVICE_CLASS),
-            entity[CONF_FIRE_EVENT], entity.get(CONF_OFF_DELAY))
+            device_id, entity.get(CONF_NAME), entity.get(CONF_DEVICE_CLASS),
+            entity.get(CONF_OFF_DELAY))
 
         binary_sensors.append(device)
 
@@ -66,19 +59,18 @@ async def async_setup_platform(hass, config,
 class W800rf32BinarySensor(BinarySensorDevice):
     """A representation of a w800rf32 binary sensor."""
 
-    def __init__(self, hass, device_id, name, device_class=None,
-                 should_fire=False, off_delay=None):
+    def __init__(self, device_id, name, device_class=None, off_delay=None):
         """Initialize the w800rf32 sensor."""
-        self._hass = hass
-        self._device_id = device_id.lower()
+        self._device_id = device_id
         self._signal = W800RF32_DEVICE.format(self._device_id)
         self._name = name
-        self._should_fire_event = should_fire
+        self._should_fire_event = False
         self._device_class = device_class
         self._off_delay = off_delay
         self._state = False
         self._delay_listener = None
 
+    @callback
     def _off_delay_listener(self, now):
         """Switch device off after a delay."""
         self._delay_listener = None
@@ -105,15 +97,11 @@ class W800rf32BinarySensor(BinarySensorDevice):
         return self._device_class
 
     @property
-    def off_delay(self):
-        """Return the off_delay attribute value."""
-        return self._off_delay
-
-    @property
     def is_on(self):
         """Return true if the sensor state is True."""
         return self._state
 
+    @callback
     def binary_sensor_update(self, event):
         """Call for control updates from the w800rf32 gateway."""
         import W800rf32 as w800rf32mod
@@ -121,7 +109,7 @@ class W800rf32BinarySensor(BinarySensorDevice):
         if not isinstance(event, w800rf32mod.W800rf32Event):
             return
 
-        dev_id = event.device.lower()
+        dev_id = event.device
         command = event.command
 
         _LOGGER.debug(
@@ -133,29 +121,20 @@ class W800rf32BinarySensor(BinarySensorDevice):
             is_on = command == 'On'
             self.update_state(is_on)
 
-        # # Fire event
-        if self.should_fire_event:
-            self._hass.bus.fire(
-                EVENT_BUTTON_PRESSED, {
-                    ATTR_ENTITY_ID:
-                        self.entity_id,
-                    ATTR_STATE: command.lower()
-                }
-            )
-
         if (self.is_on and self._off_delay is not None and
                 self._delay_listener is None):
 
-            self._delay_listener = evt.track_point_in_time(
-                self._hass, self._off_delay_listener,
+            self._delay_listener = evt.async_track_point_in_time(
+                self.hass, self._off_delay_listener,
                 dt_util.utcnow() + self._off_delay)
 
+    @callback
     def update_state(self, state):
         """Update the state of the device."""
         self._state = state
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Register update callback."""
-        async_dispatcher_connect(self._hass, self._signal,
+        async_dispatcher_connect(self.hass, self._signal,
                                  self.binary_sensor_update)
