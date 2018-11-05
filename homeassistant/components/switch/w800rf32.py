@@ -59,7 +59,6 @@ class W800rf32Switch(SwitchDevice):
         self._device_id = device_id
         self._signal = W800RF32_DEVICE.format(self._device_id)
         self._name = name
-        self._should_fire_event = False
         self._state = False
 
     @property
@@ -76,11 +75,6 @@ class W800rf32Switch(SwitchDevice):
     def is_on(self):
         """Return true if the sensor state is True."""
         return self._state
-
-    @property
-    def should_fire_event(self):
-        """Return if the device must fire event."""
-        return self._should_fire_event
 
     @callback
     def switch_update(self, event):
@@ -113,7 +107,6 @@ class W800rf32Switch(SwitchDevice):
         self._state = False
         self.async_schedule_update_ha_state()
 
-    @callback
     def update_state(self, state):
         """Update the state of the device."""
         self._state = state

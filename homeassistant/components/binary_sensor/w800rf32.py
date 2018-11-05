@@ -64,7 +64,6 @@ class W800rf32BinarySensor(BinarySensorDevice):
         self._device_id = device_id
         self._signal = W800RF32_DEVICE.format(self._device_id)
         self._name = name
-        self._should_fire_event = False
         self._device_class = device_class
         self._off_delay = off_delay
         self._state = False
@@ -85,11 +84,6 @@ class W800rf32BinarySensor(BinarySensorDevice):
     def should_poll(self):
         """No polling needed."""
         return False
-
-    @property
-    def should_fire_event(self):
-        """Return is the device must fire event."""
-        return self._should_fire_event
 
     @property
     def device_class(self):
@@ -128,7 +122,6 @@ class W800rf32BinarySensor(BinarySensorDevice):
                 self.hass, self._off_delay_listener,
                 dt_util.utcnow() + self._off_delay)
 
-    @callback
     def update_state(self, state):
         """Update the state of the device."""
         self._state = state
