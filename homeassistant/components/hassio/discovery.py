@@ -71,7 +71,7 @@ class HassIODiscovery(HomeAssistantView):
 
     async def delete(self, request, uuid):
         """Handle remove discovery requests."""
-        data = request.json()
+        data = await request.json()
 
         await self.async_process_del(data)
         return web.Response()

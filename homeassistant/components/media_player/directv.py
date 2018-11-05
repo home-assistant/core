@@ -127,28 +127,43 @@ class DirecTvDevice(MediaPlayerDevice):
         self._last_position = None
         self._is_recorded = None
         self._assumed_state = None
+        self._available = False
 
         _LOGGER.debug("Created DirecTV device for %s", self._name)
 
     def update(self):
         """Retrieve latest state."""
         _LOGGER.debug("Updating status for %s", self._name)
-        self._is_standby = self.dtv.get_standby()
-        if self._is_standby:
-            self._current = None
-            self._is_recorded = None
-            self._paused = None
-            self._assumed_state = False
-            self._last_position = None
-            self._last_update = None
-        else:
-            self._current = self.dtv.get_tuned()
-            self._is_recorded = self._current.get('uniqueId') is not None
-            self._paused = self._last_position == self._current['offset']
-            self._assumed_state = self._is_recorded
-            self._last_position = self._current['offset']
-            self._last_update = dt_util.now() if not self._paused or\
-                self._last_update is None else self._last_update
+        try:
+            self._available = True
+            self._is_standby = self.dtv.get_standby()
+            if self._is_standby:
+                self._current = None
+                self._is_recorded = None
+                self._paused = None
+                self._assumed_state = False
+                self._last_position = None
+                self._last_update = None
+            else:
+                self._current = self.dtv.get_tuned()
+                if self._current['status']['code'] == 200:
+                    self._is_recorded = self._current.get('uniqueId')\
+                        is not None
+                    self._paused = self._last_position == \
+                        self._current['offset']
+                    self._assumed_state = self._is_recorded
+                    self._last_position = self._current['offset']
+                    self._last_update = dt_util.now() if not self._paused or\
+                        self._last_update is None else self._last_update
+                else:
+                    self._available = False
+        except requests.RequestException as ex:
+            _LOGGER.error("Request error trying to update current status for"
+                          " %s. %s", self._name, ex)
+            self._available = False
+        except Exception:
+            self._available = False
+            raise
 
     @property
     def device_state_attributes(self):
@@ -182,6 +197,11 @@ class DirecTvDevice(MediaPlayerDevice):
             return STATE_PAUSED
 
         return STATE_PLAYING
+
+    @property
+    def available(self):
+        """Return if able to retrieve information from DVR or not."""
+        return self._available
 
     @property
     def assumed_state(self):

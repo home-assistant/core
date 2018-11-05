@@ -76,16 +76,13 @@ omit =
     homeassistant/components/daikin.py
     homeassistant/components/*/daikin.py
 
-    homeassistant/components/deconz/*
-    homeassistant/components/*/deconz.py
-
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
 
     homeassistant/components/dominos.py
 
-	homeassistant/components/doorbird.py
-	homeassistant/components/*/doorbird.py
+    homeassistant/components/doorbird.py
+    homeassistant/components/*/doorbird.py
 
     homeassistant/components/dweet.py
     homeassistant/components/*/dweet.py
@@ -128,6 +125,9 @@ omit =
 
     homeassistant/components/google.py
     homeassistant/components/*/google.py
+
+    homeassistant/components/greeneye_monitor.py
+    homeassistant/components/sensor/greeneye_monitor.py
 
     homeassistant/components/habitica/*
     homeassistant/components/*/habitica.py
@@ -289,6 +289,9 @@ omit =
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
 
+    homeassistant/components/sense.py
+    homeassistant/components/*/sense.py
+
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/*/simplisafe.py
 
@@ -329,6 +332,9 @@ omit =
 
     homeassistant/components/toon.py
     homeassistant/components/*/toon.py
+
+    homeassistant/components/tplink_lte.py
+    homeassistant/components/*/tplink_lte.py
 
     homeassistant/components/tradfri.py
     homeassistant/components/*/tradfri.py
@@ -493,6 +499,7 @@ omit =
     homeassistant/components/device_tracker/tile.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
+    homeassistant/components/device_tracker/traccar.py
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/downloader.py
@@ -507,6 +514,7 @@ omit =
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
     homeassistant/components/image_processing/seven_segments.py
+    homeassistant/components/image_processing/tensorflow.py
     homeassistant/components/keyboard_remote.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/avion.py
@@ -760,7 +768,6 @@ omit =
     homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/rtorrent.py
     homeassistant/components/sensor/scrape.py
-    homeassistant/components/sensor/sense.py
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/serial.py
@@ -786,6 +793,7 @@ omit =
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/sytadin.py
     homeassistant/components/sensor/tank_utility.py
+    homeassistant/components/sensor/tautulli.py
     homeassistant/components/sensor/ted5000.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/thermoworks_smoke.py

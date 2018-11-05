@@ -17,19 +17,21 @@ from tests.common import get_test_home_assistant
 NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
 NOTIFIER = 'test'
+TEMPLATE = "{{ states.sensor.test.entity_id }}"
+TEST_ENTITY = "sensor.test"
 TEST_CONFIG = \
     {alert.DOMAIN: {
         NAME: {
             CONF_NAME: NAME,
             alert.CONF_DONE_MESSAGE: DONE_MESSAGE,
-            CONF_ENTITY_ID: "sensor.test",
+            CONF_ENTITY_ID: TEST_ENTITY,
             CONF_STATE: STATE_ON,
             alert.CONF_REPEAT: 30,
             alert.CONF_SKIP_FIRST: False,
             alert.CONF_NOTIFIERS: [NOTIFIER]}
         }}
-TEST_NOACK = [NAME, NAME, DONE_MESSAGE, "sensor.test",
-              STATE_ON, [30], False, NOTIFIER, False]
+TEST_NOACK = [NAME, NAME, "sensor.test",
+              STATE_ON, [30], False, None, None, NOTIFIER, False]
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
 
 
@@ -101,6 +103,19 @@ class TestAlert(unittest.TestCase):
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
+
+    def _setup_notify(self):
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.services.register(
+            notify.DOMAIN, NOTIFIER, record_event)
+
+        return events
 
     def test_is_on(self):
         """Test is_on method."""
@@ -227,6 +242,48 @@ class TestAlert(unittest.TestCase):
         self.hass.states.set("sensor.test", STATE_OFF)
         self.hass.block_till_done()
         assert 2 == len(events)
+
+    def test_sending_non_templated_notification(self):
+        """Test notifications."""
+        events = self._setup_notify()
+
+        assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
+
+        self.hass.states.set(TEST_ENTITY, STATE_ON)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(events))
+        last_event = events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], NAME)
+
+    def test_sending_templated_notification(self):
+        """Test templated notification."""
+        events = self._setup_notify()
+
+        config = deepcopy(TEST_CONFIG)
+        config[alert.DOMAIN][NAME][alert.CONF_ALERT_MESSAGE] = TEMPLATE
+        assert setup_component(self.hass, alert.DOMAIN, config)
+
+        self.hass.states.set(TEST_ENTITY, STATE_ON)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(events))
+        last_event = events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], TEST_ENTITY)
+
+    def test_sending_templated_done_notification(self):
+        """Test templated notification."""
+        events = self._setup_notify()
+
+        config = deepcopy(TEST_CONFIG)
+        config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE] = TEMPLATE
+        assert setup_component(self.hass, alert.DOMAIN, config)
+
+        self.hass.states.set(TEST_ENTITY, STATE_ON)
+        self.hass.block_till_done()
+        self.hass.states.set(TEST_ENTITY, STATE_OFF)
+        self.hass.block_till_done()
+        self.assertEqual(2, len(events))
+        last_event = events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], TEST_ENTITY)
 
     def test_skipfirst(self):
         """Test skipping first notification."""

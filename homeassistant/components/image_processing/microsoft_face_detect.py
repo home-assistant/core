@@ -102,7 +102,7 @@ class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
             return
 
         if not face_data:
-            return
+            face_data = []
 
         faces = []
         for face in face_data:
