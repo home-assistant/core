@@ -181,7 +181,7 @@ class MelissaClimate(ClimateDevice):
         except AttributeError:
             old_value = None
         if not await self._api.async_send(
-                self._serial_number, self._cur_settings):
+                self._serial_number, "melissa", self._cur_settings):
             self._cur_settings = old_value
 
     async def async_update(self):
