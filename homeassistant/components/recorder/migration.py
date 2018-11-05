@@ -169,7 +169,7 @@ def _add_columns(engine, table_name, columns_def):
             if 'duplicate' not in str(err).lower():
                 raise
 
-            _LOGGER.warning('Column %s already exists on %s, continueing',
+            _LOGGER.warning('Column %s already exists on %s, continuing',
                             column_def.split(' ')[1], table_name)
 
 

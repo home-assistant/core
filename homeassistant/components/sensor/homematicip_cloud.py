@@ -1,18 +1,17 @@
 """
-Support for HomematicIP sensors.
+Support for HomematicIP Cloud sensors.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.homematicip_cloud/
 """
-
 import logging
 
 from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN,
-    HMIPC_HAPID)
+    HMIPC_HAPID, HomematicipGenericDevice)
+from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.const import (
-    TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,36 +24,38 @@ ATTR_TEMPERATURE_OFFSET = 'temperature_offset'
 ATTR_HUMIDITY = 'humidity'
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
-    """Set up the HomematicIP sensors devices."""
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the HomematicIP Cloud sensors devices."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Set up the HomematicIP sensors from a config entry."""
-    from homematicip.device import (
-        HeatingThermostat, TemperatureHumiditySensorWithoutDisplay,
-        TemperatureHumiditySensorDisplay, MotionDetectorIndoor)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the HomematicIP Cloud sensors from a config entry."""
+    from homematicip.aio.device import (
+        AsyncHeatingThermostat, AsyncTemperatureHumiditySensorWithoutDisplay,
+        AsyncTemperatureHumiditySensorDisplay, AsyncMotionDetectorIndoor,
+        AsyncTemperatureHumiditySensorOutdoor)
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = [HomematicipAccesspointStatus(home)]
     for device in home.devices:
-        if isinstance(device, HeatingThermostat):
+        if isinstance(device, AsyncHeatingThermostat):
             devices.append(HomematicipHeatingThermostat(home, device))
-        if isinstance(device, (TemperatureHumiditySensorDisplay,
-                               TemperatureHumiditySensorWithoutDisplay)):
+        if isinstance(device, (AsyncTemperatureHumiditySensorDisplay,
+                               AsyncTemperatureHumiditySensorWithoutDisplay,
+                               AsyncTemperatureHumiditySensorOutdoor)):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
-        if isinstance(device, MotionDetectorIndoor):
+        if isinstance(device, AsyncMotionDetectorIndoor):
             devices.append(HomematicipIlluminanceSensor(home, device))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipAccesspointStatus(HomematicipGenericDevice):
-    """Representation of an HomeMaticIP access point."""
+    """Representation of an HomeMaticIP Cloud access point."""
 
     def __init__(self, home):
         """Initialize access point device."""
@@ -82,7 +83,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
 
 
 class HomematicipHeatingThermostat(HomematicipGenericDevice):
-    """MomematicIP heating thermostat representation."""
+    """Represenation of a HomematicIP heating thermostat device."""
 
     def __init__(self, home, device):
         """Initialize heating thermostat device."""
@@ -115,7 +116,7 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
 
 
 class HomematicipHumiditySensor(HomematicipGenericDevice):
-    """MomematicIP humidity device."""
+    """Represenation of a HomematicIP Cloud humidity device."""
 
     def __init__(self, home, device):
         """Initialize the thermometer device."""
@@ -138,7 +139,7 @@ class HomematicipHumiditySensor(HomematicipGenericDevice):
 
 
 class HomematicipTemperatureSensor(HomematicipGenericDevice):
-    """MomematicIP the thermometer device."""
+    """Representation of a HomematicIP Cloud thermometer device."""
 
     def __init__(self, home, device):
         """Initialize the thermometer device."""
@@ -161,7 +162,7 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericDevice):
-    """MomematicIP the thermometer device."""
+    """Represenation of a HomematicIP Illuminance device."""
 
     def __init__(self, home, device):
         """Initialize the  device."""

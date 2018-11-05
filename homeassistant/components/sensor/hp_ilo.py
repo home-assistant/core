@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HP ILO sensor."""
     hostname = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 CONF_UNIT_OF_MEASUREMENT))
         devices.append(new_device)
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class HpIloSensor(Entity):

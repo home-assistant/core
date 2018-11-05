@@ -15,7 +15,6 @@ import logging
 import queue
 import threading
 import time
-
 from typing import Any, Dict, Optional  # noqa: F401
 
 import voluptuous as vol
@@ -35,7 +34,7 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.10']
+REQUIREMENTS = ['sqlalchemy==1.2.11']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,7 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/fan.dyson/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -32,7 +31,7 @@ DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
     from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
 
@@ -46,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dyson_entity = DysonPureCoolLinkDevice(hass, device)
         hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
-    add_devices(hass.data[DYSON_FAN_DEVICES])
+    add_entities(hass.data[DYSON_FAN_DEVICES])
 
     def service_handle(service):
         """Handle the Dyson services."""
@@ -77,8 +76,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         self.hass = hass
         self._device = device
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.async_add_job(
             self._device.add_message_listener, self.on_message)

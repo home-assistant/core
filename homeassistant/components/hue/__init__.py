@@ -11,9 +11,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_FILENAME, CONF_HOST
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv, device_registry as dr)
 
-from .const import DOMAIN, API_NUPNP
+from .const import DOMAIN
 from .bridge import HueBridge
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
@@ -61,36 +62,10 @@ async def async_setup(hass, config):
     configured = configured_hosts(hass)
 
     # User has configured bridges
-    if CONF_BRIDGES in conf:
-        bridges = conf[CONF_BRIDGES]
-
-    # Component is part of config but no bridges specified, discover.
-    elif DOMAIN in config:
-        # discover from nupnp
-        websession = aiohttp_client.async_get_clientsession(hass)
-
-        async with websession.get(API_NUPNP) as req:
-            hosts = await req.json()
-
-        bridges = []
-        for entry in hosts:
-            # Filter out already configured hosts
-            if entry['internalipaddress'] in configured:
-                continue
-
-            # Run through config schema to populate defaults
-            bridges.append(BRIDGE_CONFIG_SCHEMA({
-                CONF_HOST: entry['internalipaddress'],
-                # Careful with using entry['id'] for other reasons. The
-                # value is in lowercase but is returned uppercase from hub.
-                CONF_FILENAME: '.hue_{}.conf'.format(entry['id']),
-            }))
-    else:
-        # Component not specified in config, we're loaded via discovery
-        bridges = []
-
-    if not bridges:
+    if CONF_BRIDGES not in conf:
         return True
+
+    bridges = conf[CONF_BRIDGES]
 
     for bridge_conf in bridges:
         host = bridge_conf[CONF_HOST]
@@ -107,7 +82,7 @@ async def async_setup(hass, config):
         # this component we'll have to use hass.async_add_job to avoid a
         # deadlock: creating a config entry will set up the component but the
         # setup would block till the entry is created!
-        hass.async_add_job(hass.config_entries.flow.async_init(
+        hass.async_create_task(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
                 'host': bridge_conf[CONF_HOST],
@@ -132,7 +107,28 @@ async def async_setup_entry(hass, entry):
 
     bridge = HueBridge(hass, entry, allow_unreachable, allow_groups)
     hass.data[DOMAIN][host] = bridge
-    return await bridge.async_setup()
+
+    if not await bridge.async_setup():
+        return False
+
+    config = bridge.api.config
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={
+            (dr.CONNECTION_NETWORK_MAC, config.mac)
+        },
+        identifiers={
+            (DOMAIN, config.bridgeid)
+        },
+        manufacturer='Signify',
+        name=config.name,
+        # Not yet exposed as properties in aiohue
+        model=config.raw['modelid'],
+        sw_version=config.raw['swversion'],
+    )
+
+    return True
 
 
 async def async_unload_entry(hass, entry):

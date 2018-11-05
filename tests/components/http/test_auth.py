@@ -38,7 +38,7 @@ async def mock_handler(request):
 
 @pytest.fixture
 def app(hass):
-    """Fixture to setup a web.Application."""
+    """Fixture to set up a web.Application."""
     app = web.Application()
     app['hass'] = hass
     app.router.add_get('/', mock_handler)
@@ -48,7 +48,7 @@ def app(hass):
 
 @pytest.fixture
 def app2(hass):
-    """Fixture to setup a web.Application without real_ip middleware."""
+    """Fixture to set up a web.Application without real_ip middleware."""
     app = web.Application()
     app['hass'] = hass
     app.router.add_get('/', mock_handler)

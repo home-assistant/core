@@ -4,7 +4,6 @@ Support for Alexa skill service end point.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
 """
-import asyncio
 import enum
 import logging
 
@@ -59,16 +58,15 @@ class AlexaIntentsView(http.HomeAssistantView):
     url = INTENTS_API_ENDPOINT
     name = 'api:alexa'
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle Alexa."""
         hass = request.app['hass']
-        message = yield from request.json()
+        message = await request.json()
 
         _LOGGER.debug("Received Alexa request: %s", message)
 
         try:
-            response = yield from async_handle_message(hass, message)
+            response = await async_handle_message(hass, message)
             return b'' if response is None else self.json(response)
         except UnknownRequest as err:
             _LOGGER.warning(str(err))
@@ -101,8 +99,7 @@ def intent_error_response(hass, message, error):
     return alexa_response.as_dict()
 
 
-@asyncio.coroutine
-def async_handle_message(hass, message):
+async def async_handle_message(hass, message):
     """Handle an Alexa intent.
 
     Raises:
@@ -120,20 +117,18 @@ def async_handle_message(hass, message):
     if not handler:
         raise UnknownRequest('Received unknown request {}'.format(req_type))
 
-    return (yield from handler(hass, message))
+    return await handler(hass, message)
 
 
 @HANDLERS.register('SessionEndedRequest')
-@asyncio.coroutine
-def async_handle_session_end(hass, message):
+async def async_handle_session_end(hass, message):
     """Handle a session end request."""
     return None
 
 
 @HANDLERS.register('IntentRequest')
 @HANDLERS.register('LaunchRequest')
-@asyncio.coroutine
-def async_handle_intent(hass, message):
+async def async_handle_intent(hass, message):
     """Handle an intent request.
 
     Raises:
@@ -153,7 +148,7 @@ def async_handle_intent(hass, message):
     else:
         intent_name = alexa_intent_info['name']
 
-    intent_response = yield from intent.async_handle(
+    intent_response = await intent.async_handle(
         hass, DOMAIN, intent_name,
         {key: {'value': value} for key, value
          in alexa_response.variables.items()})

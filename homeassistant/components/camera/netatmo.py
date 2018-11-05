@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to Netatmo cameras."""
     netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
@@ -43,8 +43,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if config[CONF_CAMERAS] != [] and \
                    camera_name not in config[CONF_CAMERAS]:
                     continue
-            add_devices([NetatmoCamera(data, camera_name, home,
-                                       camera_type, verify_ssl)])
+            add_entities([NetatmoCamera(data, camera_name, home,
+                                        camera_type, verify_ssl)])
     except pyatmo.NoDevice:
         return None
 

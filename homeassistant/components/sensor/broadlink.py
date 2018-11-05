@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink device sensors."""
     host = config.get(CONF_HOST)
     mac = config.get(CONF_MAC).encode().replace(b':', b'')
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BroadlinkSensor(name, broadlink_data, variable))
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class BroadlinkSensor(Entity):

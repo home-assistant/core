@@ -113,6 +113,24 @@ def check_token(cloud):
         raise _map_aws_exception(err)
 
 
+def renew_access_token(cloud):
+    """Renew access token."""
+    from botocore.exceptions import ClientError
+
+    cognito = _cognito(
+        cloud,
+        access_token=cloud.access_token,
+        refresh_token=cloud.refresh_token)
+
+    try:
+        cognito.renew_access_token()
+        cloud.id_token = cognito.id_token
+        cloud.access_token = cognito.access_token
+        cloud.write_user_info()
+    except ClientError as err:
+        raise _map_aws_exception(err)
+
+
 def _authenticate(cloud, email, password):
     """Log in and return an authenticated Cognito instance."""
     from botocore.exceptions import ClientError

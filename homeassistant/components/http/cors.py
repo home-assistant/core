@@ -1,4 +1,4 @@
-"""Provide cors support for the HTTP component."""
+"""Provide CORS support for the HTTP component."""
 
 
 from aiohttp.hdrs import ACCEPT, ORIGIN, CONTENT_TYPE
@@ -17,7 +17,7 @@ ALLOWED_CORS_HEADERS = [
 
 @callback
 def setup_cors(app, origins):
-    """Setup cors."""
+    """Set up CORS."""
     import aiohttp_cors
 
     cors = aiohttp_cors.setup(app, defaults={
@@ -30,7 +30,7 @@ def setup_cors(app, origins):
     cors_added = set()
 
     def _allow_cors(route, config=None):
-        """Allow cors on a route."""
+        """Allow CORS on a route."""
         if hasattr(route, 'resource'):
             path = route.resource
         else:
@@ -55,7 +55,7 @@ def setup_cors(app, origins):
         return
 
     async def cors_startup(app):
-        """Initialize cors when app starts up."""
+        """Initialize CORS when app starts up."""
         for route in list(app.router.routes()):
             _allow_cors(route)
 

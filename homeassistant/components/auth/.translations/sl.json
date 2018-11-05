@@ -1,0 +1,35 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Ni na voljo storitev obve\u0161\u010danja."
+            },
+            "error": {
+                "invalid_code": "Neveljavna koda, poskusite znova."
+            },
+            "step": {
+                "init": {
+                    "description": "Prosimo, izberite eno od storitev obve\u0161\u010danja:",
+                    "title": "Nastavite enkratno geslo, ki ga dostavite z obvestilno komponento"
+                },
+                "setup": {
+                    "description": "Enkratno geslo je poslal **notify.{notify_service} **. Vnesite ga spodaj:",
+                    "title": "Preverite nastavitev"
+                }
+            },
+            "title": "Obvesti Enkratno Geslo"
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "Neveljavna koda, prosimo, poskusite znova. \u010ce dobite to sporo\u010dilo ve\u010dkrat, prosimo poskrbite, da bo ura va\u0161ega Home Assistenta to\u010dna."
+            },
+            "step": {
+                "init": {
+                    "description": "\u010ce \u017eelite aktivirati preverjanje pristnosti dveh faktorjev z enkratnimi gesli, ki temeljijo na \u010dasu, skenirajte kodo QR s svojo aplikacijo za preverjanje pristnosti. \u010ce je nimate, priporo\u010damo bodisi [Google Authenticator] (https://support.google.com/accounts/answer/1066447) ali [Authy] (https://authy.com/). \n\n {qr_code} \n \n Po skeniranju kode vnesite \u0161estmestno kodo iz aplikacije, da preverite nastavitev. \u010ce imate te\u017eave pri skeniranju kode QR, naredite ro\u010dno nastavitev s kodo ** ` {code} ` **.",
+                    "title": "Nastavite dvofaktorsko avtentifikacijo s pomo\u010djo TOTP-ja"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

@@ -4,7 +4,6 @@ Nuki.io lock platform.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/lock.nuki/
 """
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -50,11 +49,11 @@ UNLATCH_SERVICE_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
     from pynuki import NukiBridge
     bridge = NukiBridge(config.get(CONF_HOST), config.get(CONF_TOKEN))
-    add_devices([NukiLock(lock) for lock in bridge.locks])
+    add_entities([NukiLock(lock) for lock in bridge.locks])
 
     def service_handler(service):
         """Service handler for nuki services."""
@@ -92,8 +91,7 @@ class NukiLock(LockDevice):
         self._name = nuki_lock.name
         self._battery_critical = nuki_lock.battery_critical
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         if NUKI_DATA not in self.hass.data:
             self.hass.data[NUKI_DATA] = {}

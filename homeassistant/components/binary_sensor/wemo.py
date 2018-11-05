@@ -5,25 +5,33 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.wemo/
 """
 import logging
+import requests
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.exceptions import PlatformNotReady
 
 DEPENDENCIES = ['wemo']
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Register discovered WeMo binary sensors."""
     from pywemo import discovery
 
     if discovery_info is not None:
         location = discovery_info['ssdp_description']
         mac = discovery_info['mac_address']
-        device = discovery.device_from_description(location, mac)
+
+        try:
+            device = discovery.device_from_description(location, mac)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as err:
+            _LOGGER.error('Unable to access %s (%s)', location, err)
+            raise PlatformNotReady
 
         if device:
-            add_devices_callback([WemoBinarySensor(hass, device)])
+            add_entities_callback([WemoBinarySensor(hass, device)])
 
 
 class WemoBinarySensor(BinarySensorDevice):

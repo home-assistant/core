@@ -15,8 +15,8 @@ DEPENDENCIES = ['melissa']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the melissa sensor platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the melissa sensor platform."""
     sensors = []
     api = hass.data[DATA_MELISSA]
     devices = api.fetch_devices().values()
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if device['type'] == 'melissa':
             sensors.append(MelissaTemperatureSensor(device, api))
             sensors.append(MelissaHumiditySensor(device, api))
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class MelissaSensor(Entity):

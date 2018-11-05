@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an Avion switch."""
     # pylint: disable=no-member
     import avion
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device['address'] = address
         lights.append(AvionLight(device))
 
-    add_devices(lights)
+    add_entities(lights)
 
 
 class AvionLight(Light):

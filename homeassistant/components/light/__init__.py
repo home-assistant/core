@@ -17,7 +17,6 @@ from homeassistant.components.group import \
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     STATE_ON)
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import ToggleEntity
@@ -142,90 +141,6 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@bind_hass
-def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            brightness_pct=None, rgb_color=None, xy_color=None, hs_color=None,
-            color_temp=None, kelvin=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None):
-    """Turn all or specified light on."""
-    hass.add_job(
-        async_turn_on, hass, entity_id, transition, brightness, brightness_pct,
-        rgb_color, xy_color, hs_color, color_temp, kelvin, white_value,
-        profile, flash, effect, color_name)
-
-
-@callback
-@bind_hass
-def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
-                  brightness_pct=None, rgb_color=None, xy_color=None,
-                  hs_color=None, color_temp=None, kelvin=None,
-                  white_value=None, profile=None, flash=None, effect=None,
-                  color_name=None):
-    """Turn all or specified light on."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_PROFILE, profile),
-            (ATTR_TRANSITION, transition),
-            (ATTR_BRIGHTNESS, brightness),
-            (ATTR_BRIGHTNESS_PCT, brightness_pct),
-            (ATTR_RGB_COLOR, rgb_color),
-            (ATTR_XY_COLOR, xy_color),
-            (ATTR_HS_COLOR, hs_color),
-            (ATTR_COLOR_TEMP, color_temp),
-            (ATTR_KELVIN, kelvin),
-            (ATTR_WHITE_VALUE, white_value),
-            (ATTR_FLASH, flash),
-            (ATTR_EFFECT, effect),
-            (ATTR_COLOR_NAME, color_name),
-        ] if value is not None
-    }
-
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
-
-
-@bind_hass
-def turn_off(hass, entity_id=None, transition=None):
-    """Turn all or specified light off."""
-    hass.add_job(async_turn_off, hass, entity_id, transition)
-
-
-@callback
-@bind_hass
-def async_turn_off(hass, entity_id=None, transition=None):
-    """Turn all or specified light off."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_TRANSITION, transition),
-        ] if value is not None
-    }
-
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, data))
-
-
-@callback
-@bind_hass
-def async_toggle(hass, entity_id=None, transition=None):
-    """Toggle all or specified light."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_TRANSITION, transition),
-        ] if value is not None
-    }
-
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE, data))
-
-
-@bind_hass
-def toggle(hass, entity_id=None, transition=None):
-    """Toggle all or specified light."""
-    hass.add_job(async_toggle, hass, entity_id, transition)
-
-
 def preprocess_turn_on_alternatives(params):
     """Process extra data for turn light on request."""
     profile = Profiles.get(params.pop(ATTR_PROFILE, None))
@@ -332,8 +247,8 @@ async def async_setup(hass, config):
     if not profiles_valid:
         return False
 
-    async def async_handle_light_service(service):
-        """Handle a turn light on or off service call."""
+    async def async_handle_light_on_service(service):
+        """Handle a turn light on service call."""
         # Get the validated data
         params = service.data.copy()
 
@@ -345,39 +260,38 @@ async def async_setup(hass, config):
 
         update_tasks = []
         for light in target_lights:
-            if service.service == SERVICE_TURN_ON:
-                pars = params
-                if not pars:
-                    pars = params.copy()
-                    pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
-                    preprocess_turn_on_alternatives(pars)
-                await light.async_turn_on(**pars)
-            elif service.service == SERVICE_TURN_OFF:
-                await light.async_turn_off(**params)
-            else:
-                await light.async_toggle(**params)
+            light.async_set_context(service.context)
+
+            pars = params
+            if not pars:
+                pars = params.copy()
+                pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
+                preprocess_turn_on_alternatives(pars)
+            await light.async_turn_on(**pars)
 
             if not light.should_poll:
                 continue
 
             update_tasks.append(
-                light.async_update_ha_state(True, service.context))
+                light.async_update_ha_state(True))
 
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_light_service,
+        DOMAIN, SERVICE_TURN_ON, async_handle_light_on_service,
         schema=LIGHT_TURN_ON_SCHEMA)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_light_service,
-        schema=LIGHT_TURN_OFF_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, LIGHT_TURN_OFF_SCHEMA,
+        'async_turn_off'
+    )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_light_service,
-        schema=LIGHT_TOGGLE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, LIGHT_TOGGLE_SCHEMA,
+        'async_toggle'
+    )
 
     hass.helpers.intent.async_register(SetIntentHandler())
 
@@ -385,7 +299,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, entry):
-    """Setup a config entry."""
+    """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 

@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:security'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an alarm control panel for an Abode device."""
     data = hass.data[ABODE_DOMAIN]
 
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data.devices.extend(alarm_devices)
 
-    add_devices(alarm_devices)
+    add_entities(alarm_devices)
 
 
 class AbodeAlarm(AbodeDevice, AlarmControlPanel):

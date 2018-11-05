@@ -1,6 +1,7 @@
 """The tests for the emulated Hue component."""
 import asyncio
 import json
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
@@ -26,7 +27,7 @@ JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 @pytest.fixture
 def hass_hue(loop, hass):
-    """Setup a Home Assistant instance for these tests."""
+    """Set up a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(
         core_components.async_setup(hass, {core.DOMAIN: {}}))
@@ -484,3 +485,12 @@ def perform_put_light_state(hass_hue, client, entity_id, is_on,
     yield from hass_hue.async_block_till_done()
 
     return result
+
+
+async def test_external_ip_blocked(hue_client):
+    """Test external IP blocked."""
+    with patch('homeassistant.components.http.real_ip.ip_address',
+               return_value=ip_address('45.45.45.45')):
+        result = await hue_client.get('/api/username/lights')
+
+    assert result.status == 400

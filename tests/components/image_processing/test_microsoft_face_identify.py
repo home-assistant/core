@@ -9,13 +9,14 @@ import homeassistant.components.microsoft_face as mf
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture, mock_coro)
+from tests.components.image_processing import common
 
 
 class TestMicrosoftFaceIdentifySetup:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self):
@@ -25,7 +26,7 @@ class TestMicrosoftFaceIdentifySetup:
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_platform(self, store_mock):
-        """Setup platform with one entity."""
+        """Set up platform with one entity."""
         config = {
             ip.DOMAIN: {
                 'platform': 'microsoft_face_identify',
@@ -51,7 +52,7 @@ class TestMicrosoftFaceIdentifySetup:
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_platform_name(self, store_mock):
-        """Setup platform with one entity and set name."""
+        """Set up platform with one entity and set name."""
         config = {
             ip.DOMAIN: {
                 'platform': 'microsoft_face_identify',
@@ -79,7 +80,7 @@ class TestMicrosoftFaceIdentify:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.config = {
@@ -109,7 +110,7 @@ class TestMicrosoftFaceIdentify:
            'MicrosoftFaceIdentifyEntity.should_poll',
            new_callable=PropertyMock(return_value=False))
     def test_ms_identify_process_image(self, poll_mock, aioclient_mock):
-        """Setup and scan a picture and test plates from event."""
+        """Set up and scan a picture and test plates from event."""
         aioclient_mock.get(
             self.endpoint_url.format("persongroups"),
             text=load_fixture('microsoft_face_persongroups.json')
@@ -150,7 +151,7 @@ class TestMicrosoftFaceIdentify:
             text=load_fixture('microsoft_face_identify.json')
         )
 
-        ip.scan(self.hass, entity_id='image_processing.test_local')
+        common.scan(self.hass, entity_id='image_processing.test_local')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.test_local')

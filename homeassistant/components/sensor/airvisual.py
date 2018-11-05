@@ -117,7 +117,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
     from pyairvisual import Client
 
@@ -161,7 +161,7 @@ async def async_setup_platform(
                 AirVisualSensor(
                     data, kind, name, icon, unit, locale, location_id))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class AirVisualSensor(Entity):
@@ -281,7 +281,7 @@ class AirVisualData:
             _LOGGER.debug("New data retrieved: %s", resp)
 
             self.pollution_info = resp['current']['pollution']
-        except AirVisualError as err:
+        except (KeyError, AirVisualError) as err:
             if self.city and self.state and self.country:
                 location = (self.city, self.state, self.country)
             else:

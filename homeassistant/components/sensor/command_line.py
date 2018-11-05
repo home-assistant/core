@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Command Sensor."""
     name = config.get(CONF_NAME)
     command = config.get(CONF_COMMAND)
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     json_attributes = config.get(CONF_JSON_ATTRIBUTES)
     data = CommandSensorData(hass, command, command_timeout)
 
-    add_devices([CommandSensor(
+    add_entities([CommandSensor(
         hass, data, name, unit, value_template, json_attributes)], True)
 
 

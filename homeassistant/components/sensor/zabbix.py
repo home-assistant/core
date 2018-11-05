@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Zabbix sensor platform."""
     sensors = []
 
@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensor = ZabbixTriggerCountSensor(zapi)
         sensors.append(sensor)
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class ZabbixTriggerCountSensor(Entity):

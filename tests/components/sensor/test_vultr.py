@@ -23,7 +23,7 @@ class TestVultrSensorSetup(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices, action):
+    def add_entities(self, devices, action):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -71,7 +71,7 @@ class TestVultrSensorSetup(unittest.TestCase):
 
         for config in self.configs:
             setup = vultr.setup_platform(
-                self.hass, config, self.add_devices, None)
+                self.hass, config, self.add_entities, None)
 
             self.assertIsNone(setup)
 
@@ -160,7 +160,7 @@ class TestVultrSensorSetup(unittest.TestCase):
         }  # No subs at all
 
         no_sub_setup = vultr.setup_platform(
-            self.hass, bad_conf, self.add_devices, None)
+            self.hass, bad_conf, self.add_entities, None)
 
         self.assertIsNone(no_sub_setup)
         self.assertEqual(0, len(self.DEVICES))

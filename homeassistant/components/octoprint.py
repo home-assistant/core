@@ -11,43 +11,118 @@ import requests
 import voluptuous as vol
 from aiohttp.hdrs import CONTENT_TYPE
 
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON
+from homeassistant.components.discovery import SERVICE_OCTOPRINT
+from homeassistant.const import (
+    CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON, CONF_NAME, CONF_PORT,
+    CONF_SSL, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
+    CONF_BINARY_SENSORS)
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.util import slugify as util_slugify
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'octoprint'
 CONF_NUMBER_OF_TOOLS = 'number_of_tools'
 CONF_BED = 'bed'
+DEFAULT_NAME = 'OctoPrint'
+
+
+def has_all_unique_names(value):
+    """Validate that printers have an unique name."""
+    names = [util_slugify(printer['name']) for printer in value]
+    vol.Schema(vol.Unique())(names)
+    return value
+
+
+BINARY_SENSOR_TYPES = {
+    # API Endpoint, Group, Key, unit
+    'Printing': ['printer', 'state', 'printing', None],
+    'Printing Error': ['printer', 'state', 'error', None]
+}
+
+BINARY_SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSOR_TYPES)):
+        vol.All(cv.ensure_list, [vol.In(BINARY_SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
+SENSOR_TYPES = {
+    # API Endpoint, Group, Key, unit, icon
+    'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
+    'Current State': ['printer', 'state', 'text', None, 'mdi:printer-3d'],
+    'Job Percentage': ['job', 'progress', 'completion', '%',
+                       'mdi:file-percent'],
+    'Time Remaining': ['job', 'progress', 'printTimeLeft', 'seconds',
+                       'mdi:clock-end'],
+    'Time Elapsed': ['job', 'progress', 'printTime', 'seconds',
+                     'mdi:clock-start'],
+}
+
+SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
-        vol.Optional(CONF_BED, default=False): cv.boolean
-    }),
+        vol.Optional(CONF_BED, default=False): cv.boolean,
+        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+        vol.Optional(CONF_BINARY_SENSORS, default={}): BINARY_SENSOR_SCHEMA
+    })], has_all_unique_names),
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up the OctoPrint component."""
-    base_url = 'http://{}/api/'.format(config[DOMAIN][CONF_HOST])
-    api_key = config[DOMAIN][CONF_API_KEY]
-    number_of_tools = config[DOMAIN][CONF_NUMBER_OF_TOOLS]
-    bed = config[DOMAIN][CONF_BED]
+    printers = hass.data[DOMAIN] = {}
+    success = False
 
-    hass.data[DOMAIN] = {"api": None}
+    def device_discovered(service, info):
+        """Get called when an Octoprint server has been discovered."""
+        _LOGGER.debug('Found an Octoprint server: %s', info)
 
-    try:
-        octoprint_api = OctoPrintAPI(base_url, api_key, bed, number_of_tools)
-        hass.data[DOMAIN]["api"] = octoprint_api
-        octoprint_api.get('printer')
-        octoprint_api.get('job')
-    except requests.exceptions.RequestException as conn_err:
-        _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
+    discovery.listen(hass, SERVICE_OCTOPRINT, device_discovered)
 
-    return True
+    for printer in config[DOMAIN]:
+        name = printer[CONF_NAME]
+        ssl = 's' if printer[CONF_SSL] else ''
+        base_url = 'http{}://{}:{}/api/'.format(ssl,
+                                                printer[CONF_HOST],
+                                                printer[CONF_PORT])
+        api_key = printer[CONF_API_KEY]
+        number_of_tools = printer[CONF_NUMBER_OF_TOOLS]
+        bed = printer[CONF_BED]
+        try:
+            octoprint_api = OctoPrintAPI(base_url, api_key, bed,
+                                         number_of_tools)
+            printers[base_url] = octoprint_api
+            octoprint_api.get('printer')
+            octoprint_api.get('job')
+        except requests.exceptions.RequestException as conn_err:
+            _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
+            continue
+
+        sensors = printer[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
+        load_platform(hass, 'sensor', DOMAIN, {'name': name,
+                                               'base_url': base_url,
+                                               'sensors': sensors}, config)
+        b_sensors = printer[CONF_BINARY_SENSORS][CONF_MONITORED_CONDITIONS]
+        load_platform(hass, 'binary_sensor', DOMAIN, {'name': name,
+                                                      'base_url': base_url,
+                                                      'sensors': b_sensors},
+                      config)
+        success = True
+
+    return success
 
 
 class OctoPrintAPI:

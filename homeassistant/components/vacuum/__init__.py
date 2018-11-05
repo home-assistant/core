@@ -4,7 +4,6 @@ Support for vacuum cleaner robots (botvacs).
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/vacuum/
 """
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -62,23 +61,6 @@ VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
 })
 
-SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: {'method': 'async_turn_on'},
-    SERVICE_TURN_OFF: {'method': 'async_turn_off'},
-    SERVICE_TOGGLE: {'method': 'async_toggle'},
-    SERVICE_START_PAUSE: {'method': 'async_start_pause'},
-    SERVICE_START: {'method': 'async_start'},
-    SERVICE_PAUSE: {'method': 'async_pause'},
-    SERVICE_RETURN_TO_BASE: {'method': 'async_return_to_base'},
-    SERVICE_CLEAN_SPOT: {'method': 'async_clean_spot'},
-    SERVICE_LOCATE: {'method': 'async_locate'},
-    SERVICE_STOP: {'method': 'async_stop'},
-    SERVICE_SET_FAN_SPEED: {'method': 'async_set_fan_speed',
-                            'schema': VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA},
-    SERVICE_SEND_COMMAND: {'method': 'async_send_command',
-                           'schema': VACUUM_SEND_COMMAND_SERVICE_SCHEMA},
-}
-
 STATE_CLEANING = 'cleaning'
 STATE_DOCKED = 'docked'
 STATE_IDLE = STATE_IDLE
@@ -111,126 +93,61 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@bind_hass
-def turn_on(hass, entity_id=None):
-    """Turn all or specified vacuum on."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
-
-
-@bind_hass
-def turn_off(hass, entity_id=None):
-    """Turn all or specified vacuum off."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-@bind_hass
-def toggle(hass, entity_id=None):
-    """Toggle all or specified vacuum."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
-
-
-@bind_hass
-def locate(hass, entity_id=None):
-    """Locate all or specified vacuum."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_LOCATE, data)
-
-
-@bind_hass
-def clean_spot(hass, entity_id=None):
-    """Tell all or specified vacuum to perform a spot clean-up."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_CLEAN_SPOT, data)
-
-
-@bind_hass
-def return_to_base(hass, entity_id=None):
-    """Tell all or specified vacuum to return to base."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_RETURN_TO_BASE, data)
-
-
-@bind_hass
-def start_pause(hass, entity_id=None):
-    """Tell all or specified vacuum to start or pause the current task."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_START_PAUSE, data)
-
-
-@bind_hass
-def start(hass, entity_id=None):
-    """Tell all or specified vacuum to start or resume the current task."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_START, data)
-
-
-@bind_hass
-def pause(hass, entity_id=None):
-    """Tell all or the specified vacuum to pause the current task."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_PAUSE, data)
-
-
-@bind_hass
-def stop(hass, entity_id=None):
-    """Stop all or specified vacuum."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_STOP, data)
-
-
-@bind_hass
-def set_fan_speed(hass, fan_speed, entity_id=None):
-    """Set fan speed for all or specified vacuum."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_FAN_SPEED] = fan_speed
-    hass.services.call(DOMAIN, SERVICE_SET_FAN_SPEED, data)
-
-
-@bind_hass
-def send_command(hass, command, params=None, entity_id=None):
-    """Send command to all or specified vacuum."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_COMMAND] = command
-    if params is not None:
-        data[ATTR_PARAMS] = params
-    hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the vacuum component."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_VACUUMS)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_vacuum_service(service):
-        """Map services to methods on VacuumDevice."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        target_vacuums = component.async_extract_from_service(service)
-        params = service.data.copy()
-        params.pop(ATTR_ENTITY_ID, None)
-
-        update_tasks = []
-        for vacuum in target_vacuums:
-            yield from getattr(vacuum, method['method'])(**params)
-            if not vacuum.should_poll:
-                continue
-            update_tasks.append(vacuum.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get(
-            'schema', VACUUM_SERVICE_SCHEMA)
-        hass.services.async_register(
-            DOMAIN, service, async_handle_vacuum_service,
-            schema=schema)
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, VACUUM_SERVICE_SCHEMA,
+        'async_turn_on'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, VACUUM_SERVICE_SCHEMA,
+        'async_turn_off'
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, VACUUM_SERVICE_SCHEMA,
+        'async_toggle'
+    )
+    component.async_register_entity_service(
+        SERVICE_START_PAUSE, VACUUM_SERVICE_SCHEMA,
+        'async_start_pause'
+    )
+    component.async_register_entity_service(
+        SERVICE_START, VACUUM_SERVICE_SCHEMA,
+        'async_start'
+    )
+    component.async_register_entity_service(
+        SERVICE_PAUSE, VACUUM_SERVICE_SCHEMA,
+        'async_pause'
+    )
+    component.async_register_entity_service(
+        SERVICE_RETURN_TO_BASE, VACUUM_SERVICE_SCHEMA,
+        'async_return_to_base'
+    )
+    component.async_register_entity_service(
+        SERVICE_CLEAN_SPOT, VACUUM_SERVICE_SCHEMA,
+        'async_clean_spot'
+    )
+    component.async_register_entity_service(
+        SERVICE_LOCATE, VACUUM_SERVICE_SCHEMA,
+        'async_locate'
+    )
+    component.async_register_entity_service(
+        SERVICE_STOP, VACUUM_SERVICE_SCHEMA,
+        'async_stop'
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_FAN_SPEED, VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA,
+        'async_set_fan_speed'
+    )
+    component.async_register_entity_service(
+        SERVICE_SEND_COMMAND, VACUUM_SEND_COMMAND_SERVICE_SCHEMA,
+        'async_send_command'
+    )
 
     return True
 

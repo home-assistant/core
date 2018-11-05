@@ -15,7 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['alpha_vantage==2.0.0']
+REQUIREMENTS = ['alpha_vantage==2.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Alpha Vantage sensor."""
     from alpha_vantage.timeseries import TimeSeries
     from alpha_vantage.foreignexchange import ForeignExchange
@@ -107,7 +107,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.debug(str(error))
         dev.append(AlphaVantageForeignExchange(forex, conversion))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
     _LOGGER.debug("Setup completed")
 
 

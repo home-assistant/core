@@ -28,11 +28,11 @@ MODE_HOMEKIT_TO_HASS = {
 MODE_HASS_TO_HOMEKIT = {v: k for k, v in MODE_HOMEKIT_TO_HASS.items()}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit climate."""
     if discovery_info is not None:
         accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
-        add_devices([HomeKitClimateDevice(accessory, discovery_info)], True)
+        add_entities([HomeKitClimateDevice(accessory, discovery_info)], True)
 
 
 class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):

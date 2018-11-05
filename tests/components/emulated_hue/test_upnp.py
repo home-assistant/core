@@ -50,7 +50,7 @@ class TestEmulatedHue(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Setup the class."""
+        """Set up the class."""
         cls.hass = hass = get_test_home_assistant()
 
         # We need to do this to get access to homeassistant/turn_(on,off)

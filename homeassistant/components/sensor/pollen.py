@@ -94,7 +94,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
     from pypollencom import Client
 
@@ -113,7 +113,7 @@ async def async_setup_platform(
             PollencomSensor(
                 data, config[CONF_ZIP_CODE], kind, category, name, icon, unit))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 def calculate_average_rating(indices):

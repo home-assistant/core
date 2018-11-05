@@ -10,12 +10,14 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA,
-                                             DOMAIN, )
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
-                                 ATTR_ENTITY_ID, )
+from homeassistant.components.switch import (
+    DOMAIN, PLATFORM_SCHEMA, SwitchDevice)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN)
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'chuangmi.plug.v2',
          'chuangmi.plug.v3']),
 })
-
-REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
@@ -97,7 +97,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the switch from config."""
     from miio import Device, DeviceException
@@ -158,7 +158,7 @@ async def async_setup_platform(hass, config, async_add_devices,
             'and provide the following data: %s', model)
         return False
 
-    async_add_devices(devices, update_before_add=True)
+    async_add_entities(devices, update_before_add=True)
 
     async def async_service_handler(service):
         """Map services to methods on XiaomiPlugGenericSwitch."""

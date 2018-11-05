@@ -44,18 +44,18 @@ async def test_default_setup(hass, aioclient_mock):
 
 async def test_setup_timeout_error(hass, aioclient_mock):
     """Expected failures caused by a timeout in API response."""
-    fake_async_add_devices = MagicMock()
+    fake_async_add_entities = MagicMock()
 
     aioclient_mock.get(re.compile('api.foobot.io/v2/owner/.*'),
                        exc=asyncio.TimeoutError())
     with pytest.raises(PlatformNotReady):
         await foobot.async_setup_platform(hass, {'sensor': VALID_CONFIG},
-                                          fake_async_add_devices)
+                                          fake_async_add_entities)
 
 
 async def test_setup_permanent_error(hass, aioclient_mock):
     """Expected failures caused by permanent errors in API response."""
-    fake_async_add_devices = MagicMock()
+    fake_async_add_entities = MagicMock()
 
     errors = [400, 401, 403]
     for error in errors:
@@ -63,13 +63,13 @@ async def test_setup_permanent_error(hass, aioclient_mock):
                            status=error)
         result = await foobot.async_setup_platform(hass,
                                                    {'sensor': VALID_CONFIG},
-                                                   fake_async_add_devices)
+                                                   fake_async_add_entities)
         assert result is None
 
 
 async def test_setup_temporary_error(hass, aioclient_mock):
     """Expected failures caused by temporary errors in API response."""
-    fake_async_add_devices = MagicMock()
+    fake_async_add_entities = MagicMock()
 
     errors = [429, 500]
     for error in errors:
@@ -78,4 +78,4 @@ async def test_setup_temporary_error(hass, aioclient_mock):
         with pytest.raises(PlatformNotReady):
             await foobot.async_setup_platform(hass,
                                               {'sensor': VALID_CONFIG},
-                                              fake_async_add_devices)
+                                              fake_async_add_entities)

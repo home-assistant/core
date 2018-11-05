@@ -9,7 +9,7 @@
         "error": {
             "internal_error": "Error intern al validar el codi",
             "invalid_code": "Codi inv\u00e0lid",
-            "timeout": "Temps d'espera de validaci\u00f3 del codi esgotat",
+            "timeout": "S'ha acabat el temps d'espera durant la validaci\u00f3 del codi.",
             "unknown": "Error desconegut al validar el codi"
         },
         "step": {

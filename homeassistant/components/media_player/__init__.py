@@ -15,33 +15,31 @@ from random import SystemRandom
 from urllib.parse import urlparse
 
 from aiohttp import web
-from aiohttp.hdrs import CONTENT_TYPE, CACHE_CONTROL
+from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.const import (
-    STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, ATTR_ENTITY_ID,
-    SERVICE_TOGGLE, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
-    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP,
-    SERVICE_VOLUME_SET, SERVICE_MEDIA_PAUSE, SERVICE_SHUFFLE_SET,
-    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK)
+    ATTR_ENTITY_ID, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP, SERVICE_SHUFFLE_SET,
+    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE,
+    STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
-from homeassistant.components import websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
 
 DOMAIN = 'media_player'
 DEPENDENCIES = ['http']
-SCAN_INTERVAL = timedelta(seconds=10)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -97,6 +95,8 @@ MEDIA_TYPE_CHANNEL = 'channel'
 MEDIA_TYPE_PLAYLIST = 'playlist'
 MEDIA_TYPE_URL = 'url'
 
+SCAN_INTERVAL = timedelta(seconds=10)
+
 SUPPORT_PAUSE = 1
 SUPPORT_SEEK = 2
 SUPPORT_VOLUME_SET = 4
@@ -151,42 +151,6 @@ MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean,
 })
 
-SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: {'method': 'async_turn_on'},
-    SERVICE_TURN_OFF: {'method': 'async_turn_off'},
-    SERVICE_TOGGLE: {'method': 'async_toggle'},
-    SERVICE_VOLUME_UP: {'method': 'async_volume_up'},
-    SERVICE_VOLUME_DOWN: {'method': 'async_volume_down'},
-    SERVICE_MEDIA_PLAY_PAUSE: {'method': 'async_media_play_pause'},
-    SERVICE_MEDIA_PLAY: {'method': 'async_media_play'},
-    SERVICE_MEDIA_PAUSE: {'method': 'async_media_pause'},
-    SERVICE_MEDIA_STOP: {'method': 'async_media_stop'},
-    SERVICE_MEDIA_NEXT_TRACK: {'method': 'async_media_next_track'},
-    SERVICE_MEDIA_PREVIOUS_TRACK: {'method': 'async_media_previous_track'},
-    SERVICE_CLEAR_PLAYLIST: {'method': 'async_clear_playlist'},
-    SERVICE_VOLUME_SET: {
-        'method': 'async_set_volume_level',
-        'schema': MEDIA_PLAYER_SET_VOLUME_SCHEMA},
-    SERVICE_VOLUME_MUTE: {
-        'method': 'async_mute_volume',
-        'schema': MEDIA_PLAYER_MUTE_VOLUME_SCHEMA},
-    SERVICE_MEDIA_SEEK: {
-        'method': 'async_media_seek',
-        'schema': MEDIA_PLAYER_MEDIA_SEEK_SCHEMA},
-    SERVICE_SELECT_SOURCE: {
-        'method': 'async_select_source',
-        'schema': MEDIA_PLAYER_SELECT_SOURCE_SCHEMA},
-    SERVICE_SELECT_SOUND_MODE: {
-        'method': 'async_select_sound_mode',
-        'schema': MEDIA_PLAYER_SELECT_SOUND_MODE_SCHEMA},
-    SERVICE_PLAY_MEDIA: {
-        'method': 'async_play_media',
-        'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
-    SERVICE_SHUFFLE_SET: {
-        'method': 'async_set_shuffle',
-        'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
-}
-
 ATTR_TO_PROPERTY = [
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -227,168 +191,6 @@ def is_on(hass, entity_id=None):
                for entity_id in entity_ids)
 
 
-@bind_hass
-def turn_on(hass, entity_id=None):
-    """Turn on specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
-
-
-@bind_hass
-def turn_off(hass, entity_id=None):
-    """Turn off specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-@bind_hass
-def toggle(hass, entity_id=None):
-    """Toggle specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
-
-
-@bind_hass
-def volume_up(hass, entity_id=None):
-    """Send the media player the command for volume up."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_VOLUME_UP, data)
-
-
-@bind_hass
-def volume_down(hass, entity_id=None):
-    """Send the media player the command for volume down."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN, data)
-
-
-@bind_hass
-def mute_volume(hass, mute, entity_id=None):
-    """Send the media player the command for muting the volume."""
-    data = {ATTR_MEDIA_VOLUME_MUTED: mute}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE, data)
-
-
-@bind_hass
-def set_volume_level(hass, volume, entity_id=None):
-    """Send the media player the command for setting the volume."""
-    data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_VOLUME_SET, data)
-
-
-@bind_hass
-def media_play_pause(hass, entity_id=None):
-    """Send the media player the command for play/pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data)
-
-
-@bind_hass
-def media_play(hass, entity_id=None):
-    """Send the media player the command for play/pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY, data)
-
-
-@bind_hass
-def media_pause(hass, entity_id=None):
-    """Send the media player the command for pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
-
-
-@bind_hass
-def media_stop(hass, entity_id=None):
-    """Send the media player the stop command."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_STOP, data)
-
-
-@bind_hass
-def media_next_track(hass, entity_id=None):
-    """Send the media player the command for next track."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
-
-
-@bind_hass
-def media_previous_track(hass, entity_id=None):
-    """Send the media player the command for prev track."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
-
-
-@bind_hass
-def media_seek(hass, position, entity_id=None):
-    """Send the media player the command to seek in current playing media."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_MEDIA_SEEK_POSITION] = position
-    hass.services.call(DOMAIN, SERVICE_MEDIA_SEEK, data)
-
-
-@bind_hass
-def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
-    """Send the media player the command for playing media."""
-    data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    if enqueue:
-        data[ATTR_MEDIA_ENQUEUE] = enqueue
-
-    hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
-
-
-@bind_hass
-def select_source(hass, source, entity_id=None):
-    """Send the media player the command to select input source."""
-    data = {ATTR_INPUT_SOURCE: source}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SELECT_SOURCE, data)
-
-
-@bind_hass
-def select_sound_mode(hass, sound_mode, entity_id=None):
-    """Send the media player the command to select sound mode."""
-    data = {ATTR_SOUND_MODE: sound_mode}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SELECT_SOUND_MODE, data)
-
-
-@bind_hass
-def clear_playlist(hass, entity_id=None):
-    """Send the media player the command for clear playlist."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
-
-
-@bind_hass
-def set_shuffle(hass, shuffle, entity_id=None):
-    """Send the media player the command to enable/disable shuffle mode."""
-    data = {ATTR_MEDIA_SHUFFLE: shuffle}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SHUFFLE_SET, data)
-
-
 WS_TYPE_MEDIA_PLAYER_THUMBNAIL = 'media_player_thumbnail'
 SCHEMA_WEBSOCKET_GET_THUMBNAIL = \
     websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -409,56 +211,95 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
 
-    async def async_service_handler(service):
-        """Map services to methods on MediaPlayerDevice."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
-            return
-
-        params = {}
-        if service.service == SERVICE_VOLUME_SET:
-            params['volume'] = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
-        elif service.service == SERVICE_VOLUME_MUTE:
-            params['mute'] = service.data.get(ATTR_MEDIA_VOLUME_MUTED)
-        elif service.service == SERVICE_MEDIA_SEEK:
-            params['position'] = service.data.get(ATTR_MEDIA_SEEK_POSITION)
-        elif service.service == SERVICE_SELECT_SOURCE:
-            params['source'] = service.data.get(ATTR_INPUT_SOURCE)
-        elif service.service == SERVICE_SELECT_SOUND_MODE:
-            params['sound_mode'] = service.data.get(ATTR_SOUND_MODE)
-        elif service.service == SERVICE_PLAY_MEDIA:
-            params['media_type'] = \
-                service.data.get(ATTR_MEDIA_CONTENT_TYPE)
-            params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
-            params[ATTR_MEDIA_ENQUEUE] = \
-                service.data.get(ATTR_MEDIA_ENQUEUE)
-        elif service.service == SERVICE_SHUFFLE_SET:
-            params[ATTR_MEDIA_SHUFFLE] = \
-                service.data.get(ATTR_MEDIA_SHUFFLE)
-        target_players = component.async_extract_from_service(service)
-
-        update_tasks = []
-        for player in target_players:
-            await getattr(player, method['method'])(**params)
-            if not player.should_poll:
-                continue
-            update_tasks.append(player.async_update_ha_state(True))
-
-        if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get(
-            'schema', MEDIA_PLAYER_SCHEMA)
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler,
-            schema=schema)
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, MEDIA_PLAYER_SCHEMA,
+        'async_turn_on'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, MEDIA_PLAYER_SCHEMA,
+        'async_turn_off'
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, MEDIA_PLAYER_SCHEMA,
+        'async_toggle'
+    )
+    component.async_register_entity_service(
+        SERVICE_VOLUME_UP, MEDIA_PLAYER_SCHEMA,
+        'async_volume_up'
+    )
+    component.async_register_entity_service(
+        SERVICE_VOLUME_DOWN, MEDIA_PLAYER_SCHEMA,
+        'async_volume_down'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_PLAY_PAUSE, MEDIA_PLAYER_SCHEMA,
+        'async_media_play_pause'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_PLAY, MEDIA_PLAYER_SCHEMA,
+        'async_media_play'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_PAUSE, MEDIA_PLAYER_SCHEMA,
+        'async_media_pause'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_STOP, MEDIA_PLAYER_SCHEMA,
+        'async_media_stop'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_NEXT_TRACK, MEDIA_PLAYER_SCHEMA,
+        'async_media_next_track'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_PREVIOUS_TRACK, MEDIA_PLAYER_SCHEMA,
+        'async_media_previous_track'
+    )
+    component.async_register_entity_service(
+        SERVICE_CLEAR_PLAYLIST, MEDIA_PLAYER_SCHEMA,
+        'async_clear_playlist'
+    )
+    component.async_register_entity_service(
+        SERVICE_VOLUME_SET, MEDIA_PLAYER_SET_VOLUME_SCHEMA,
+        lambda entity, call: entity.async_set_volume_level(
+            volume=call.data[ATTR_MEDIA_VOLUME_LEVEL])
+    )
+    component.async_register_entity_service(
+        SERVICE_VOLUME_MUTE, MEDIA_PLAYER_MUTE_VOLUME_SCHEMA,
+        lambda entity, call: entity.async_mute_volume(
+            mute=call.data[ATTR_MEDIA_VOLUME_MUTED])
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_SEEK, MEDIA_PLAYER_MEDIA_SEEK_SCHEMA,
+        lambda entity, call: entity.async_media_seek(
+            position=call.data[ATTR_MEDIA_SEEK_POSITION])
+    )
+    component.async_register_entity_service(
+        SERVICE_SELECT_SOURCE, MEDIA_PLAYER_SELECT_SOURCE_SCHEMA,
+        'async_select_source'
+    )
+    component.async_register_entity_service(
+        SERVICE_SELECT_SOUND_MODE, MEDIA_PLAYER_SELECT_SOUND_MODE_SCHEMA,
+        'async_select_sound_mode'
+    )
+    component.async_register_entity_service(
+        SERVICE_PLAY_MEDIA, MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
+        lambda entity, call: entity.async_play_media(
+            media_type=call.data[ATTR_MEDIA_CONTENT_TYPE],
+            media_id=call.data[ATTR_MEDIA_CONTENT_ID],
+            enqueue=call.data.get(ATTR_MEDIA_ENQUEUE)
+        )
+    )
+    component.async_register_entity_service(
+        SERVICE_SHUFFLE_SET, MEDIA_PLAYER_SET_SHUFFLE_SCHEMA,
+        'async_set_shuffle'
+    )
 
     return True
 
 
 async def async_setup_entry(hass, entry):
-    """Setup a config entry."""
+    """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
@@ -1023,8 +864,8 @@ class MediaPlayerImageView(HomeAssistantView):
             body=data, content_type=content_type, headers=headers)
 
 
-@callback
-def websocket_handle_thumbnail(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_handle_thumbnail(hass, connection, msg):
     """Handle get media player cover command.
 
     Async friendly.
@@ -1033,24 +874,20 @@ def websocket_handle_thumbnail(hass, connection, msg):
     player = component.get_entity(msg['entity_id'])
 
     if player is None:
-        connection.send_message_outside(websocket_api.error_message(
+        connection.send_message(websocket_api.error_message(
             msg['id'], 'entity_not_found', 'Entity not found'))
         return
 
-    async def send_image():
-        """Send image."""
-        data, content_type = await player.async_get_media_image()
+    data, content_type = await player.async_get_media_image()
 
-        if data is None:
-            connection.send_message_outside(websocket_api.error_message(
-                msg['id'], 'thumbnail_fetch_failed',
-                'Failed to fetch thumbnail'))
-            return
+    if data is None:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'thumbnail_fetch_failed',
+            'Failed to fetch thumbnail'))
+        return
 
-        connection.send_message_outside(websocket_api.result_message(
-            msg['id'], {
-                'content_type': content_type,
-                'content': base64.b64encode(data).decode('utf-8')
-            }))
-
-    hass.async_add_job(send_image())
+    connection.send_message(websocket_api.result_message(
+        msg['id'], {
+            'content_type': content_type,
+            'content': base64.b64encode(data).decode('utf-8')
+        }))

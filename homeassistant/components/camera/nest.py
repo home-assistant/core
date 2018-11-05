@@ -23,20 +23,20 @@ NEST_BRAND = 'Nest'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Nest Cam.
 
     No longer in use.
     """
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest sensor based on a config entry."""
     camera_devices = \
         await hass.async_add_job(hass.data[nest.DATA_NEST].cameras)
     cameras = [NestCamera(structure, device)
                for structure, device in camera_devices]
-    async_add_devices(cameras, True)
+    async_add_entities(cameras, True)
 
 
 class NestCamera(Camera):
@@ -61,6 +61,23 @@ class NestCamera(Camera):
     def name(self):
         """Return the name of the nest, if any."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the serial number."""
+        return self.device.device_id
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (nest.DOMAIN, self.device.device_id)
+            },
+            'name': self.device.name_long,
+            'manufacturer': 'Nest Labs',
+            'model': "Camera",
+        }
 
     @property
     def should_poll(self):

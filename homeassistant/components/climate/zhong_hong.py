@@ -18,25 +18,27 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               async_dispatcher_send)
 
+REQUIREMENTS = ['zhong_hong_hvac==1.0.9']
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_GATEWAY_ADDRRESS = 'gateway_address'
 
-REQUIREMENTS = ['zhong_hong_hvac==1.0.9']
+DEFAULT_PORT = 9999
+DEFAULT_GATEWAY_ADDRRESS = 1
+
 SIGNAL_DEVICE_ADDED = 'zhong_hong_device_added'
 SIGNAL_ZHONG_HONG_HUB_START = 'zhong_hong_hub_start'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=9999):
-    vol.Coerce(int),
-    vol.Optional(CONF_GATEWAY_ADDRRESS, default=1):
-    vol.Coerce(int),
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS):
+        cv.positive_int,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZhongHong HVAC platform."""
     from zhong_hong_hvac.hub import ZhongHongGateway
     host = config.get(CONF_HOST)
@@ -69,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, startup)
 
     # add devices after SIGNAL_DEVICE_SETTED_UP event is listend
-    add_devices(devices)
+    add_entities(devices)
 
     def stop_listen(event):
         """Stop ZhongHongHub socket."""
@@ -100,7 +102,7 @@ class ZhongHongClimate(ClimateDevice):
         async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADDED)
 
     def _after_update(self, climate):
-        """Callback to update state."""
+        """Handle state update."""
         _LOGGER.debug("async update ha state")
         if self._device.current_operation:
             self._current_operation = self._device.current_operation.lower()

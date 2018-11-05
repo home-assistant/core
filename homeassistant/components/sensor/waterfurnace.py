@@ -4,7 +4,6 @@ Support for Waterfurnace.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.waterfurnace/
 """
-import asyncio
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.waterfurnace import (
@@ -46,7 +45,7 @@ SENSORS = [
 ]
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Waterfurnace sensor."""
     if discovery_info is None:
         return
@@ -56,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sconfig in SENSORS:
         sensors.append(WaterFurnaceSensor(client, sconfig))
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class WaterFurnaceSensor(Entity):
@@ -100,8 +99,7 @@ class WaterFurnaceSensor(Entity):
         """Return the polling state."""
         return False
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             UPDATE_TOPIC, self.async_update_callback)

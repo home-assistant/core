@@ -14,7 +14,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 import homeassistant.util.dt as dt_util
 from homeassistant.core import Event, EventOrigin, State, split_entity_id
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name

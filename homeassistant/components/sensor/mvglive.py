@@ -31,12 +31,13 @@ CONF_PRODUCTS = 'products'
 CONF_TIMEOFFSET = 'timeoffset'
 CONF_NUMBER = 'number'
 
-DEFAULT_PRODUCT = ['U-Bahn', 'Tram', 'Bus', 'S-Bahn']
+DEFAULT_PRODUCT = ['U-Bahn', 'Tram', 'Bus', 'ExpressBus', 'S-Bahn']
 
 ICONS = {
     'U-Bahn': 'mdi:subway',
     'Tram': 'mdi:tram',
     'Bus': 'mdi:bus',
+    'ExpressBus': 'mdi:bus',
     'S-Bahn': 'mdi:train',
     'SEV': 'mdi:checkbox-blank-circle-outline',
     '-': 'mdi:clock'
@@ -59,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MVGLive sensor."""
     sensors = []
     for nextdeparture in config.get(CONF_NEXT_DEPARTURE):
@@ -73,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 nextdeparture.get(CONF_TIMEOFFSET),
                 nextdeparture.get(CONF_NUMBER),
                 nextdeparture.get(CONF_NAME)))
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class MVGLiveSensor(Entity):

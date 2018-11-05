@@ -93,6 +93,8 @@ async def test_snips_intent(hass, mqtt_mock):
     assert result
     payload = """
     {
+        "siteId": "default",
+        "sessionId": "1234567890ABCDEF",
         "input": "turn the lights green",
         "intent": {
             "intentName": "Lights",
@@ -104,7 +106,8 @@ async def test_snips_intent(hass, mqtt_mock):
                 "value": {
                     "kind": "Custom",
                     "value": "green"
-                }
+                },
+                "rawValue": "green"
             }
         ]
     }
@@ -119,9 +122,12 @@ async def test_snips_intent(hass, mqtt_mock):
     intent = intents[0]
     assert intent.platform == 'snips'
     assert intent.intent_type == 'Lights'
+    assert intent
     assert intent.slots == {'light_color': {'value': 'green'},
+                            'light_color_raw': {'value': 'green'},
                             'probability': {'value': 1},
-                            'site_id': {'value': None}}
+                            'site_id': {'value': 'default'},
+                            'session_id': {'value': '1234567890ABCDEF'}}
     assert intent.text_input == 'turn the lights green'
 
 
@@ -147,7 +153,8 @@ async def test_snips_service_intent(hass, mqtt_mock):
                 "value": {
                     "kind": "Custom",
                     "value": "kitchen"
-                }
+                },
+                "rawValue": "green"
             }
         ]
     }
@@ -217,7 +224,9 @@ async def test_snips_intent_with_duration(hass, mqtt_mock):
     assert intent.intent_type == 'SetTimer'
     assert intent.slots == {'probability': {'value': 1},
                             'site_id': {'value': None},
-                            'timer_duration': {'value': 300}}
+                            'session_id': {'value': None},
+                            'timer_duration': {'value': 300},
+                            'timer_duration_raw': {'value': 'five minutes'}}
 
 
 async def test_intent_speech_response(hass, mqtt_mock):

@@ -34,7 +34,7 @@ FAN_MODES = [
 ]
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Iterate through and add all Melissa devices."""
     api = hass.data[DATA_MELISSA]
     devices = api.fetch_devices().values()
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             all_devices.append(MelissaClimate(
                 api, device['serial_number'], device))
 
-    add_devices(all_devices)
+    add_entities(all_devices)
 
 
 class MelissaClimate(ClimateDevice):
@@ -166,7 +166,7 @@ class MelissaClimate(ClimateDevice):
         self.send({self._api.STATE: self._api.STATE_OFF})
 
     def send(self, value):
-        """Sending action to service."""
+        """Send action to service."""
         try:
             old_value = self._cur_settings.copy()
             self._cur_settings.update(value)

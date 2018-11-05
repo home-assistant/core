@@ -164,7 +164,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = PyNUTData(host, port, alias, username, password)
 
     if data.status is None:
-        _LOGGER.error("NUT Sensor has no data, unable to setup")
+        _LOGGER.error("NUT Sensor has no data, unable to set up")
         raise PlatformNotReady
 
     _LOGGER.debug('NUT Sensors Available: %s', data.status)

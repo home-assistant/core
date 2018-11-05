@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 from itertools import chain
+import logging
 
 from homeassistant import config as conf_util
 from homeassistant.setup import async_prepare_setup_platform
@@ -11,10 +12,33 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from .entity_platform import EntityPlatform
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
+DATA_INSTANCES = 'entity_components'
+
+
+@bind_hass
+async def async_update_entity(hass, entity_id):
+    """Trigger an update for an entity."""
+    domain = entity_id.split('.', 1)[0]
+    entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
+
+    if entity_comp is None:
+        logging.getLogger(__name__).warning(
+            'Forced update failed. Component for %s not loaded.', entity_id)
+        return
+
+    entity = entity_comp.get_entity(entity_id)
+
+    if entity is None:
+        logging.getLogger(__name__).warning(
+            'Forced update failed. Entity %s not found.', entity_id)
+        return
+
+    await entity.async_update_ha_state(True)
 
 
 class EntityComponent:
@@ -45,6 +69,8 @@ class EntityComponent:
         self.async_add_entities = self._platforms[domain].async_add_entities
         self.add_entities = self._platforms[domain].add_entities
 
+        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
+
     @property
     def entities(self):
         """Return an iterable that returns all entities."""
@@ -52,7 +78,7 @@ class EntityComponent:
                                    in self._platforms.values())
 
     def get_entity(self, entity_id):
-        """Helper method to get an entity."""
+        """Get an entity."""
         for platform in self._platforms.values():
             entity = platform.entities.get(entity_id)
             if entity is not None:
@@ -94,7 +120,7 @@ class EntityComponent:
             self.hass, self.domain, component_platform_discovered)
 
     async def async_setup_entry(self, config_entry):
-        """Setup a config entry."""
+        """Set up a config entry."""
         platform_type = config_entry.domain
         platform = await async_prepare_setup_platform(
             self.hass, self.config, self.domain, platform_type)
@@ -142,6 +168,18 @@ class EntityComponent:
         return [entity for entity in self.entities
                 if entity.available and entity.entity_id in entity_ids]
 
+    @callback
+    def async_register_entity_service(self, name, schema, func):
+        """Register an entity service."""
+        async def handle_service(call):
+            """Handle the service."""
+            await self.hass.helpers.service.entity_service_call(
+                self._platforms.values(), func, call
+            )
+
+        self.hass.services.async_register(
+            self.domain, name, handle_service, schema)
+
     async def _async_setup_platform(self, platform_type, platform_config,
                                     discovery_info=None):
         """Set up a platform for this component."""
@@ -178,10 +216,13 @@ class EntityComponent:
                sorted(self.entities,
                       key=lambda entity: entity.name or entity.entity_id)]
 
-        self.hass.components.group.async_set_group(
-            slugify(self.group_name), name=self.group_name,
-            visible=False, entity_ids=ids
-        )
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                'group', 'set', dict(
+                    object_id=slugify(self.group_name),
+                    name=self.group_name,
+                    visible=False,
+                    entities=ids)))
 
     async def _async_reset(self):
         """Remove entities and reset the entity component to initial values.
@@ -200,7 +241,9 @@ class EntityComponent:
         self.config = None
 
         if self.group_name is not None:
-            self.hass.components.group.async_remove(slugify(self.group_name))
+            await self.hass.services.async_call(
+                'group', 'remove', dict(
+                    object_id=slugify(self.group_name)))
 
     async def async_remove_entity(self, entity_id):
         """Remove an entity managed by one of the platforms."""
@@ -231,7 +274,7 @@ class EntityComponent:
 
     def _async_init_entity_platform(self, platform_type, platform,
                                     scan_interval=None, entity_namespace=None):
-        """Helper to initialize an entity platform."""
+        """Initialize an entity platform."""
         if scan_interval is None:
             scan_interval = self.scan_interval
 

@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['velbus']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up Velbus binary sensors."""
     if discovery_info is None:
@@ -25,7 +25,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         module = hass.data[VELBUS_DOMAIN].get_module(sensor[0])
         channel = sensor[1]
         sensors.append(VelbusBinarySensor(module, channel))
-    async_add_devices(sensors)
+    async_add_entities(sensors)
 
 
 class VelbusBinarySensor(VelbusEntity, BinarySensorDevice):

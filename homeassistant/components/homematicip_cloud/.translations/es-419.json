@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Accesspoint ya est\u00e1 configurado",
-            "conection_aborted": "No se pudo conectar al servidor HMIP",
+            "connection_aborted": "No se pudo conectar al servidor HMIP",
             "unknown": "Se produjo un error desconocido."
         },
         "error": {
@@ -18,6 +18,7 @@
                     "pin": "C\u00f3digo PIN (opcional)"
                 }
             }
-        }
+        },
+        "title": "HomematicIP Cloud"
     }
 }

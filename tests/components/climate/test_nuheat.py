@@ -67,11 +67,11 @@ class TestNuHeat(unittest.TestCase):
         self.hass.data[nuheat.NUHEAT_DOMAIN] = (self.api, ["12345"])
 
         config = {}
-        add_devices = Mock()
+        add_entities = Mock()
         discovery_info = {}
 
-        nuheat.setup_platform(self.hass, config, add_devices, discovery_info)
-        add_devices.assert_called_once_with(thermostats, True)
+        nuheat.setup_platform(self.hass, config, add_entities, discovery_info)
+        add_entities.assert_called_once_with(thermostats, True)
 
     @patch("homeassistant.components.climate.nuheat.NuHeatThermostat")
     def test_resume_program_service(self, mocked_thermostat):

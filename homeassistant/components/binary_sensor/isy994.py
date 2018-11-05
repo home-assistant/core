@@ -4,8 +4,6 @@ Support for ISY994 binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.isy994/
 """
-
-import asyncio
 import logging
 from datetime import timedelta
 from typing import Callable
@@ -29,7 +27,7 @@ ISY_DEVICE_TYPES = {
 
 
 def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+                   add_entities: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 binary sensor platform."""
     devices = []
     devices_by_nid = {}
@@ -75,7 +73,7 @@ def setup_platform(hass, config: ConfigType,
     for name, status, _ in hass.data[ISY994_PROGRAMS][DOMAIN]:
         devices.append(ISYBinarySensorProgram(name, status))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 def _detect_device_type(node) -> str:
@@ -121,10 +119,9 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
             self._computed_state = bool(self._node.status._val)
             self._status_was_unknown = False
 
-    @asyncio.coroutine
-    def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self) -> None:
         """Subscribe to the node and subnode event emitters."""
-        yield from super().async_added_to_hass()
+        await super().async_added_to_hass()
 
         self._node.controlEvents.subscribe(self._positive_node_control_handler)
 
@@ -261,10 +258,9 @@ class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorDevice):
         self._parent_device = parent_device
         self._heartbeat_timer = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self) -> None:
         """Subscribe to the node and subnode event emitters."""
-        yield from super().async_added_to_hass()
+        await super().async_added_to_hass()
 
         self._node.controlEvents.subscribe(
             self._heartbeat_node_control_handler)

@@ -28,17 +28,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SCSGate switches."""
     logger = logging.getLogger(__name__)
 
     _setup_traditional_switches(
-        logger=logger, config=config, add_devices_callback=add_devices)
+        logger=logger, config=config, add_entities_callback=add_entities)
 
     _setup_scenario_switches(logger=logger, config=config, hass=hass)
 
 
-def _setup_traditional_switches(logger, config, add_devices_callback):
+def _setup_traditional_switches(logger, config, add_entities_callback):
     """Add traditional SCSGate switches."""
     traditional = config.get(CONF_TRADITIONAL)
     switches = []
@@ -56,7 +56,7 @@ def _setup_traditional_switches(logger, config, add_devices_callback):
             switch = SCSGateSwitch(name=name, scs_id=scs_id, logger=logger)
             switches.append(switch)
 
-    add_devices_callback(switches)
+    add_entities_callback(switches)
     scsgate.SCSGATE.add_devices_to_register(switches)
 
 

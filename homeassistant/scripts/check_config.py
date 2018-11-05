@@ -6,10 +6,10 @@ import os
 from collections import OrderedDict, namedtuple
 from glob import glob
 from platform import system
+from typing import Dict, List, Sequence
 from unittest.mock import patch
 
 import attr
-from typing import Dict, List, Sequence
 import voluptuous as vol
 
 from homeassistant import bootstrap, core, loader
@@ -325,7 +325,7 @@ def check_ha_config_file(hass):
     # Merge packages
     merge_packages_config(
         hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
-    del core_config[CONF_PACKAGES]
+    core_config.pop(CONF_PACKAGES, None)
 
     # Ensure we have no None values after merge
     for key, value in config.items():

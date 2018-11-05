@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Etherscan.io sensors."""
     address = config.get(CONF_ADDRESS)
     name = config.get(CONF_NAME)
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not name:
         name = "ETH Balance"
 
-    add_devices([EtherscanSensor(name, address, token, token_address)], True)
+    add_entities([EtherscanSensor(name, address, token, token_address)], True)
 
 
 class EtherscanSensor(Entity):

@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dlib Face detection platform."""
     entities = []
     for camera in config[CONF_SOURCE]:
@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             camera[CONF_ENTITY_ID], config[CONF_FACES], camera.get(CONF_NAME)
         ))
 
-    add_devices(entities)
+    add_entities(entities)
 
 
 class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):

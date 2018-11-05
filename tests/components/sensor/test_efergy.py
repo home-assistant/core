@@ -61,7 +61,7 @@ class TestEfergySensor(unittest.TestCase):
     DEVICES = []
 
     @requests_mock.Mocker()
-    def add_devices(self, devices, mock):
+    def add_entities(self, devices, mock):
         """Mock add devices."""
         mock_responses(mock)
         for device in devices:

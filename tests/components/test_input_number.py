@@ -3,12 +3,49 @@
 import asyncio
 import unittest
 
-from homeassistant.core import CoreState, State
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.core import CoreState, State, Context
 from homeassistant.components.input_number import (
-    DOMAIN, set_value, increment, decrement)
+    ATTR_VALUE, DOMAIN, SERVICE_DECREMENT, SERVICE_INCREMENT,
+    SERVICE_SET_VALUE)
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.loader import bind_hass
+from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import get_test_home_assistant, mock_restore_cache
+
+
+@bind_hass
+def set_value(hass, entity_id, value):
+    """Set input_number to value.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_VALUE: value,
+    })
+
+
+@bind_hass
+def increment(hass, entity_id):
+    """Increment value of entity.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_INCREMENT, {
+        ATTR_ENTITY_ID: entity_id
+    })
+
+
+@bind_hass
+def decrement(hass, entity_id):
+    """Decrement value of entity.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.services.call(DOMAIN, SERVICE_DECREMENT, {
+        ATTR_ENTITY_ID: entity_id
+    })
 
 
 class TestInputNumber(unittest.TestCase):
@@ -16,7 +53,7 @@ class TestInputNumber(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -236,3 +273,27 @@ def test_no_initial_state_and_no_restore_state(hass):
     state = hass.states.get('input_number.b1')
     assert state
     assert float(state.state) == 0
+
+
+async def test_input_number_context(hass):
+    """Test that input_number context works."""
+    assert await async_setup_component(hass, 'input_number', {
+        'input_number': {
+            'b1': {
+                'min': 0,
+                'max': 100,
+            },
+        }
+    })
+
+    state = hass.states.get('input_number.b1')
+    assert state is not None
+
+    await hass.services.async_call('input_number', 'increment', {
+        'entity_id': state.entity_id,
+    }, True, Context(user_id='abcd'))
+
+    state2 = hass.states.get('input_number.b1')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

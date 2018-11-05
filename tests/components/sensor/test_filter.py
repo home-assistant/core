@@ -17,7 +17,7 @@ class TestFilterSensor(unittest.TestCase):
     """Test the Data Filter sensor."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         raw_values = [20, 19, 18, 21, 22, 0]
         self.values = []
@@ -136,6 +136,23 @@ class TestFilterSensor(unittest.TestCase):
         """Test if range filter works."""
         lower = 10
         upper = 20
+        filt = RangeFilter(entity=None,
+                           lower_bound=lower,
+                           upper_bound=upper)
+        for unf_state in self.values:
+            unf = float(unf_state.state)
+            filtered = filt.filter_state(unf_state)
+            if unf < lower:
+                self.assertEqual(lower, filtered.state)
+            elif unf > upper:
+                self.assertEqual(upper, filtered.state)
+            else:
+                self.assertEqual(unf, filtered.state)
+
+    def test_range_zero(self):
+        """Test if range filter works with zeroes as bounds."""
+        lower = 0
+        upper = 0
         filt = RangeFilter(entity=None,
                            lower_bound=lower,
                            upper_bound=upper)

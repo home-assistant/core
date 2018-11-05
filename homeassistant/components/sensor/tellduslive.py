@@ -44,11 +44,11 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tellstick sensors."""
     if discovery_info is None:
         return
-    add_devices(TelldusLiveSensor(hass, sensor) for sensor in discovery_info)
+    add_entities(TelldusLiveSensor(hass, sensor) for sensor in discovery_info)
 
 
 class TelldusLiveSensor(TelldusLiveEntity):

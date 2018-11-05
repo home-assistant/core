@@ -4,7 +4,6 @@ Provides a binary sensor which is a collection of ffmpeg tools.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.ffmpeg_noise/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -43,16 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the FFmpeg noise binary sensor."""
     manager = hass.data[DATA_FFMPEG]
-
-    if not manager.async_run_test(config.get(CONF_INPUT)):
-        return
-
     entity = FFmpegNoise(hass, manager, config)
-    async_add_devices([entity])
+    async_add_entities([entity])
 
 
 class FFmpegNoise(FFmpegBinarySensor):
@@ -66,8 +61,7 @@ class FFmpegNoise(FFmpegBinarySensor):
         self.ffmpeg = SensorNoise(
             manager.binary, hass.loop, self._async_callback)
 
-    @asyncio.coroutine
-    def _async_start_ffmpeg(self, entity_ids):
+    async def _async_start_ffmpeg(self, entity_ids):
         """Start a FFmpeg instance.
 
         This method is a coroutine.
@@ -81,7 +75,7 @@ class FFmpegNoise(FFmpegBinarySensor):
             peak=self._config.get(CONF_PEAK),
         )
 
-        yield from self.ffmpeg.open_sensor(
+        await self.ffmpeg.open_sensor(
             input_source=self._config.get(CONF_INPUT),
             output_dest=self._config.get(CONF_OUTPUT),
             extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),

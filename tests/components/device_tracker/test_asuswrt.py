@@ -116,7 +116,7 @@ WAKE_DEVICES_NO_IP = {
 
 
 def setup_module():
-    """Setup the test module."""
+    """Set up the test module."""
     global FAKEFILE
     FAKEFILE = get_test_config_dir('fake_file')
     with open(FAKEFILE, 'w') as out:
@@ -138,7 +138,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     hass = None
 
     def setup_method(self, _):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'zone')
 
@@ -500,7 +500,7 @@ class TestSshConnection(unittest.TestCase):
     """Testing SshConnection."""
 
     def setUp(self):
-        """Setup test env."""
+        """Set up test env."""
         self.connection = SshConnection(
             'fake', 'fake', 'fake', 'fake', 'fake')
         self.connection._connected = True
@@ -544,7 +544,7 @@ class TestTelnetConnection(unittest.TestCase):
     """Testing TelnetConnection."""
 
     def setUp(self):
-        """Setup test env."""
+        """Set up test env."""
         self.connection = TelnetConnection(
             'fake', 'fake', 'fake', 'fake')
         self.connection._connected = True

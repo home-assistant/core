@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['beautifulsoup4==4.6.1']
+REQUIREMENTS = ['beautifulsoup4==4.6.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up of the Sytadin Traffic sensor platform."""
     name = config.get(CONF_NAME)
 
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(SytadinSensor(
             sytadin, name, option, SENSOR_TYPES[option][0],
             SENSOR_TYPES[option][1]))
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class SytadinSensor(Entity):

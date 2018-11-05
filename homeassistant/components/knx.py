@@ -240,7 +240,7 @@ class KNXModule:
 
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
-        self.hass.bus.fire('knx_event', {
+        self.hass.bus.async_fire('knx_event', {
             'address': str(telegram.group_address),
             'data': telegram.payload.value
         })
@@ -334,7 +334,7 @@ class KNXExposeSensor:
             self.hass, self.entity_id, self._async_entity_changed)
 
     async def _async_entity_changed(self, entity_id, old_state, new_state):
-        """Callback after entity changed."""
+        """Handle entity change."""
         if new_state is None:
             return
         await self.device.set(float(new_state.state))

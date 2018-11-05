@@ -66,10 +66,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Radarr platform."""
     conditions = config.get(CONF_MONITORED_CONDITIONS)
-    add_devices(
+    add_entities(
         [RadarrSensor(hass, config, sensor) for sensor in conditions], True)
 
 

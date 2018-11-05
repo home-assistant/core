@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.event import track_utc_time_change
 
-REQUIREMENTS = ['ritassist==0.5']
+REQUIREMENTS = ['ritassist==0.9.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class RitAssistDeviceScanner:
                         config.get(CONF_PASSWORD))
 
     def setup(self, hass):
-        """Setup a timer and start gathering devices."""
+        """Set up a timer and start gathering devices."""
         self._refresh()
         track_utc_time_change(hass,
                               lambda now: self._refresh(),
@@ -78,6 +78,10 @@ class RitAssistDeviceScanner:
             for device in devices:
                 if (not self._include or
                         device.license_plate in self._include):
+
+                    if device.active or device.current_address is None:
+                        device.get_map_details()
+
                     self._see(dev_id=device.plate_as_id,
                               gps=(device.latitude, device.longitude),
                               attributes=device.state_attributes,

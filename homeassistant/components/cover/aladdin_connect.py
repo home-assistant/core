@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
                                  STATE_OPENING, STATE_CLOSING, STATE_OPEN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['aladdin_connect==0.1']
+REQUIREMENTS = ['aladdin_connect==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Aladdin Connect platform."""
     from aladdin_connect import AladdinConnectClient
 
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         if not acc.login():
             raise ValueError("Username or Password is incorrect")
-        add_devices(AladdinDevice(acc, door) for door in acc.get_doors())
+        add_entities(AladdinDevice(acc, door) for door in acc.get_doors())
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
@@ -78,6 +78,11 @@ class AladdinDevice(CoverDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORTED_FEATURES
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return '{}-{}'.format(self._device_id, self._number)
 
     @property
     def name(self):

@@ -12,9 +12,9 @@ from homeassistant.components.image_processing.openalpr_local import (
     ImageProcessingAlprEntity)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the demo image processing platform."""
-    add_devices([
+    add_entities([
         DemoImageProcessingAlpr('camera.demo_camera', "Demo Alpr"),
         DemoImageProcessingFace(
             'camera.demo_camera', "Demo Face")

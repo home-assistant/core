@@ -13,17 +13,19 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    is_on, turn_on, VALID_TRANSITION, ATTR_TRANSITION)
+    is_on, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    ATTR_WHITE_VALUE, ATTR_XY_COLOR, DOMAIN as LIGHT_DOMAIN, VALID_TRANSITION)
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import (
-    CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE)
-from homeassistant.helpers.event import track_time_change
+    ATTR_ENTITY_ID, CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE,
+    SERVICE_TURN_ON)
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired)
-from homeassistant.util.dt import now as dt_now
+from homeassistant.util.dt import utcnow as dt_utcnow, as_local
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,33 +71,47 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            turn_on(hass, light,
-                    xy_color=[x_val, y_val],
-                    brightness=brightness,
-                    transition=transition,
-                    white_value=brightness)
+            service_data = {ATTR_ENTITY_ID: light}
+            if x_val is not None and y_val is not None:
+                service_data[ATTR_XY_COLOR] = [x_val, y_val]
+            if brightness is not None:
+                service_data[ATTR_BRIGHTNESS] = brightness
+                service_data[ATTR_WHITE_VALUE] = brightness
+            if transition is not None:
+                service_data[ATTR_TRANSITION] = transition
+            hass.services.call(
+                LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
 def set_lights_temp(hass, lights, mired, brightness, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            turn_on(hass, light,
-                    color_temp=int(mired),
-                    brightness=brightness,
-                    transition=transition)
+            service_data = {ATTR_ENTITY_ID: light}
+            if mired is not None:
+                service_data[ATTR_COLOR_TEMP] = int(mired)
+            if brightness is not None:
+                service_data[ATTR_BRIGHTNESS] = brightness
+            if transition is not None:
+                service_data[ATTR_TRANSITION] = transition
+            hass.services.call(
+                LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
 def set_lights_rgb(hass, lights, rgb, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            turn_on(hass, light,
-                    rgb_color=rgb,
-                    transition=transition)
+            service_data = {ATTR_ENTITY_ID: light}
+            if rgb is not None:
+                service_data[ATTR_RGB_COLOR] = rgb
+            if transition is not None:
+                service_data[ATTR_TRANSITION] = transition
+            hass.services.call(
+                LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flux switches."""
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
@@ -113,7 +129,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       start_colortemp, sunset_colortemp, stop_colortemp,
                       brightness, disable_brightness_adjust, mode, interval,
                       transition)
-    add_devices([flux])
+    add_entities([flux])
 
     def update(call=None):
         """Update lights."""
@@ -164,8 +180,10 @@ class FluxSwitch(SwitchDevice):
         # Make initial update
         self.flux_update()
 
-        self.unsub_tracker = track_time_change(
-            self.hass, self.flux_update, second=[0, self._interval])
+        self.unsub_tracker = track_time_interval(
+            self.hass,
+            self.flux_update,
+            datetime.timedelta(seconds=self._interval))
 
         self.schedule_update_ha_state()
 
@@ -177,10 +195,12 @@ class FluxSwitch(SwitchDevice):
 
         self.schedule_update_ha_state()
 
-    def flux_update(self, now=None):
+    def flux_update(self, utcnow=None):
         """Update all the lights using flux."""
-        if now is None:
-            now = dt_now()
+        if utcnow is None:
+            utcnow = dt_utcnow()
+
+        now = as_local(utcnow)
 
         sunset = get_astral_event_date(self.hass, 'sunset', now.date())
         start_time = self.find_start_time(now)

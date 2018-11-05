@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 import logging
 import inspect
-
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
 import voluptuous as vol
@@ -60,21 +59,6 @@ def has_at_least_one_key(*keys: str) -> Callable:
     return validate
 
 
-def has_at_least_one_key_value(*items: list) -> Callable:
-    """Validate that at least one (key, value) pair exists."""
-    def validate(obj: Dict) -> Dict:
-        """Test (key,value) exist in dict."""
-        if not isinstance(obj, dict):
-            raise vol.Invalid('expected dictionary')
-
-        for item in obj.items():
-            if item in items:
-                return obj
-        raise vol.Invalid('must contain one of {}.'.format(str(items)))
-
-    return validate
-
-
 def boolean(value: Any) -> bool:
     """Validate and coerce a boolean value."""
     if isinstance(value, str):
@@ -107,7 +91,7 @@ def matches_regex(regex):
 
         if not regex.match(value):
             raise vol.Invalid('value {} does not match regular expression {}'
-                              .format(regex.pattern, value))
+                              .format(value, regex.pattern))
 
         return value
     return validator
@@ -351,9 +335,12 @@ def slugify(value):
 
 def string(value: Any) -> str:
     """Coerce value to string, except for None."""
-    if value is not None:
-        return str(value)
-    raise vol.Invalid('string value is None')
+    if value is None:
+        raise vol.Invalid('string value is None')
+    if isinstance(value, (list, dict)):
+        raise vol.Invalid('value should be a string')
+
+    return str(value)
 
 
 def temperature_unit(value) -> str:
@@ -606,13 +593,14 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("delay"): vol.Any(
         vol.All(time_period, positive_timedelta),
-        template)
+        template, template_complex)
 })
 
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("wait_template"): template,
     vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
+    vol.Optional("continue_on_timeout"): boolean,
 })
 
 SCRIPT_SCHEMA = vol.All(

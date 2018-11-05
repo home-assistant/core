@@ -19,7 +19,7 @@ from homeassistant.util.color import \
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
 
-REQUIREMENTS = ['pyHS100==0.3.2']
+REQUIREMENTS = ['pyHS100==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +35,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Initialise pyLB100 SmartBulb."""
     from pyHS100 import SmartBulb
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
-    add_devices([TPLinkSmartBulb(SmartBulb(host), name)], True)
+    add_entities([TPLinkSmartBulb(SmartBulb(host), name)], True)
 
 
 def brightness_to_percentage(byt):

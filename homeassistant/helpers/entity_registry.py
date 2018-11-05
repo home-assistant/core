@@ -6,15 +6,10 @@ identified by their domain, platform and a unique id provided by that platform.
 The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
-
-After initializing, call EntityRegistry.async_ensure_loaded to load the data
-from disk.
 """
-
 from collections import OrderedDict
 from itertools import chain
 import logging
-import os
 import weakref
 
 import attr
@@ -22,7 +17,7 @@ import attr
 from homeassistant.core import callback, split_entity_id, valid_entity_id
 from homeassistant.loader import bind_hass
 from homeassistant.util import ensure_unique_string, slugify
-from homeassistant.util.yaml import load_yaml, save_yaml
+from homeassistant.util.yaml import load_yaml
 
 PATH_REGISTRY = 'entity_registry.yaml'
 DATA_REGISTRY = 'entity_registry'
@@ -31,6 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
 DISABLED_HASS = 'hass'
 DISABLED_USER = 'user'
+
+STORAGE_VERSION = 1
+STORAGE_KEY = 'core.entity_registry'
 
 
 @attr.s(slots=True, frozen=True)
@@ -41,6 +39,7 @@ class RegistryEntry:
     unique_id = attr.ib(type=str)
     platform = attr.ib(type=str)
     name = attr.ib(type=str, default=None)
+    device_id = attr.ib(type=str, default=None)
     config_entry_id = attr.ib(type=str, default=None)
     disabled_by = attr.ib(
         type=str, default=None,
@@ -79,8 +78,7 @@ class EntityRegistry:
         """Initialize the registry."""
         self.hass = hass
         self.entities = None
-        self._load_task = None
-        self._sched_save = None
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
     def async_is_registered(self, entity_id):
@@ -110,17 +108,14 @@ class EntityRegistry:
 
     @callback
     def async_get_or_create(self, domain, platform, unique_id, *,
-                            suggested_object_id=None, config_entry_id=None):
+                            suggested_object_id=None, config_entry_id=None,
+                            device_id=None):
         """Get entity. Create if it doesn't exist."""
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
         if entity_id:
-            entry = self.entities[entity_id]
-            if entry.config_entry_id == config_entry_id:
-                return entry
-
-            self._async_update_entity(
-                entity_id, config_entry_id=config_entry_id)
-            return self.entities[entity_id]
+            return self._async_update_entity(
+                entity_id, config_entry_id=config_entry_id,
+                device_id=device_id)
 
         entity_id = self.async_generate_entity_id(
             domain, suggested_object_id or '{}_{}'.format(platform, unique_id))
@@ -128,6 +123,7 @@ class EntityRegistry:
         entity = RegistryEntry(
             entity_id=entity_id,
             config_entry_id=config_entry_id,
+            device_id=device_id,
             unique_id=unique_id,
             platform=platform,
         )
@@ -149,7 +145,8 @@ class EntityRegistry:
 
     @callback
     def _async_update_entity(self, entity_id, *, name=_UNDEF,
-                             config_entry_id=_UNDEF, new_entity_id=_UNDEF):
+                             config_entry_id=_UNDEF, new_entity_id=_UNDEF,
+                             device_id=_UNDEF):
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
@@ -161,6 +158,9 @@ class EntityRegistry:
         if (config_entry_id is not _UNDEF and
                 config_entry_id != old.config_entry_id):
             changes['config_entry_id'] = config_entry_id
+
+        if (device_id is not _UNDEF and device_id != old.device_id):
+            changes['device_id'] = device_id
 
         if new_entity_id is not _UNDEF and new_entity_id != old.entity_id:
             if self.async_is_registered(new_entity_id):
@@ -185,7 +185,7 @@ class EntityRegistry:
         for listener_ref in new.update_listeners:
             listener = listener_ref()
             if listener is None:
-                to_remove.append(listener)
+                to_remove.append(listener_ref)
             else:
                 try:
                     listener.async_registry_updated(old, new)
@@ -199,71 +199,82 @@ class EntityRegistry:
 
         return new
 
-    async def async_ensure_loaded(self):
-        """Load the registry from disk."""
-        if self.entities is not None:
-            return
-
-        if self._load_task is None:
-            self._load_task = self.hass.async_add_job(self._async_load)
-
-        await self._load_task
-
-    async def _async_load(self):
+    async def async_load(self):
         """Load the entity registry."""
-        path = self.hass.config.path(PATH_REGISTRY)
+        data = await self.hass.helpers.storage.async_migrator(
+            self.hass.config.path(PATH_REGISTRY), self._store,
+            old_conf_load_func=load_yaml,
+            old_conf_migrate_func=_async_migrate
+        )
         entities = OrderedDict()
 
-        if os.path.isfile(path):
-            data = await self.hass.async_add_job(load_yaml, path)
-
-            for entity_id, info in data.items():
-                entities[entity_id] = RegistryEntry(
-                    entity_id=entity_id,
-                    config_entry_id=info.get('config_entry_id'),
-                    unique_id=info['unique_id'],
-                    platform=info['platform'],
-                    name=info.get('name'),
-                    disabled_by=info.get('disabled_by')
+        if data is not None:
+            for entity in data['entities']:
+                entities[entity['entity_id']] = RegistryEntry(
+                    entity_id=entity['entity_id'],
+                    config_entry_id=entity.get('config_entry_id'),
+                    device_id=entity.get('device_id'),
+                    unique_id=entity['unique_id'],
+                    platform=entity['platform'],
+                    name=entity.get('name'),
+                    disabled_by=entity.get('disabled_by')
                 )
 
         self.entities = entities
-        self._load_task = None
 
     @callback
     def async_schedule_save(self):
         """Schedule saving the entity registry."""
-        if self._sched_save is not None:
-            self._sched_save.cancel()
+        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
-        self._sched_save = self.hass.loop.call_later(
-            SAVE_DELAY, self.hass.async_add_job, self._async_save
-        )
+    @callback
+    def _data_to_save(self):
+        """Return data of entity registry to store in a file."""
+        data = {}
 
-    async def _async_save(self):
-        """Save the entity registry to a file."""
-        self._sched_save = None
-        data = OrderedDict()
-
-        for entry in self.entities.values():
-            data[entry.entity_id] = {
+        data['entities'] = [
+            {
+                'entity_id': entry.entity_id,
                 'config_entry_id': entry.config_entry_id,
+                'device_id': entry.device_id,
                 'unique_id': entry.unique_id,
                 'platform': entry.platform,
                 'name': entry.name,
-            }
+                'disabled_by': entry.disabled_by,
+            } for entry in self.entities.values()
+        ]
 
-        await self.hass.async_add_job(
-            save_yaml, self.hass.config.path(PATH_REGISTRY), data)
+        return data
+
+    @callback
+    def async_clear_config_entry(self, config_entry):
+        """Clear config entry from registry entries."""
+        for entity_id, entry in self.entities.items():
+            if config_entry == entry.config_entry_id:
+                self._async_update_entity(entity_id, config_entry_id=None)
 
 
 @bind_hass
 async def async_get_registry(hass) -> EntityRegistry:
     """Return entity registry instance."""
-    registry = hass.data.get(DATA_REGISTRY)
+    task = hass.data.get(DATA_REGISTRY)
 
-    if registry is None:
-        registry = hass.data[DATA_REGISTRY] = EntityRegistry(hass)
+    if task is None:
+        async def _load_reg():
+            registry = EntityRegistry(hass)
+            await registry.async_load()
+            return registry
 
-    await registry.async_ensure_loaded()
-    return registry
+        task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
+
+    return await task
+
+
+async def _async_migrate(entities):
+    """Migrate the YAML config file to storage helper format."""
+    return {
+        'entities': [
+            {'entity_id': entity_id, **info}
+            for entity_id, info in entities.items()
+        ]
+    }

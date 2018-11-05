@@ -60,13 +60,13 @@ class TestSeason(unittest.TestCase):
     CONFIG_ASTRONOMICAL = {'type': 'astronomical'}
     CONFIG_METEOROLOGICAL = {'type': 'meteorological'}
 
-    def add_devices(self, devices):
+    def add_entities(self, devices):
         """Mock add devices."""
         for device in devices:
             self.DEVICE = device
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):

@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['lutron_caseta']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Lutron Caseta shades as a cover device."""
     devs = []
@@ -27,7 +27,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         dev = LutronCasetaCover(cover_device, bridge)
         devs.append(dev)
 
-    async_add_devices(devs, True)
+    async_add_entities(devs, True)
 
 
 class LutronCasetaCover(LutronCasetaDevice, CoverDevice):

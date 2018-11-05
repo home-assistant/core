@@ -140,8 +140,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Create the buienradar sensor."""
     from homeassistant.components.weather.buienradar import DEFAULT_TIMEFRAME
 
@@ -163,11 +163,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br'),
                             coordinates))
-    async_add_devices(dev)
+    async_add_entities(dev)
 
     data = BrData(hass, coordinates, timeframe, dev)
     # schedule the first update in 1 minute from now:
-    yield from data.schedule_update(1)
+    await data.schedule_update(1)
 
 
 class BrSensor(Entity):
@@ -385,8 +385,7 @@ class BrData:
         self.coordinates = coordinates
         self.timeframe = timeframe
 
-    @asyncio.coroutine
-    def update_devices(self):
+    async def update_devices(self):
         """Update all devices/sensors."""
         if self.devices:
             tasks = []
@@ -396,18 +395,16 @@ class BrData:
                     tasks.append(dev.async_update_ha_state())
 
             if tasks:
-                yield from asyncio.wait(tasks, loop=self.hass.loop)
+                await asyncio.wait(tasks, loop=self.hass.loop)
 
-    @asyncio.coroutine
-    def schedule_update(self, minute=1):
+    async def schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""
         _LOGGER.debug("Scheduling next update in %s minutes.", minute)
         nxt = dt_util.utcnow() + timedelta(minutes=minute)
         async_track_point_in_utc_time(self.hass, self.async_update,
                                       nxt)
 
-    @asyncio.coroutine
-    def get_data(self, url):
+    async def get_data(self, url):
         """Load data from specified url."""
         from buienradar.buienradar import (CONTENT,
                                            MESSAGE, STATUS_CODE, SUCCESS)
@@ -418,10 +415,10 @@ class BrData:
         try:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(10, loop=self.hass.loop):
-                resp = yield from websession.get(url)
+                resp = await websession.get(url)
 
                 result[STATUS_CODE] = resp.status
-                result[CONTENT] = yield from resp.text()
+                result[CONTENT] = await resp.text()
                 if resp.status == 200:
                     result[SUCCESS] = True
                 else:
@@ -433,17 +430,16 @@ class BrData:
             return result
         finally:
             if resp is not None:
-                yield from resp.release()
+                await resp.release()
 
-    @asyncio.coroutine
-    def async_update(self, *_):
+    async def async_update(self, *_):
         """Update the data from buienradar."""
         from buienradar.buienradar import (parse_data, CONTENT,
                                            DATA, MESSAGE, STATUS_CODE, SUCCESS)
 
-        content = yield from self.get_data('http://xml.buienradar.nl')
+        content = await self.get_data('http://xml.buienradar.nl')
         if not content.get(SUCCESS, False):
-            content = yield from self.get_data('http://api.buienradar.nl')
+            content = await self.get_data('http://api.buienradar.nl')
 
         if content.get(SUCCESS) is not True:
             # unable to get the data
@@ -452,7 +448,7 @@ class BrData:
                             content.get(MESSAGE),
                             content.get(STATUS_CODE),)
             # schedule new call
-            yield from self.schedule_update(SCHEDULE_NOK)
+            await self.schedule_update(SCHEDULE_NOK)
             return
 
         # rounding coordinates prevents unnecessary redirects/calls
@@ -461,7 +457,7 @@ class BrData:
             round(self.coordinates[CONF_LATITUDE], 2),
             round(self.coordinates[CONF_LONGITUDE], 2)
             )
-        raincontent = yield from self.get_data(rainurl)
+        raincontent = await self.get_data(rainurl)
 
         if raincontent.get(SUCCESS) is not True:
             # unable to get the data
@@ -470,7 +466,7 @@ class BrData:
                             raincontent.get(MESSAGE),
                             raincontent.get(STATUS_CODE),)
             # schedule new call
-            yield from self.schedule_update(SCHEDULE_NOK)
+            await self.schedule_update(SCHEDULE_NOK)
             return
 
         result = parse_data(content.get(CONTENT),
@@ -485,12 +481,12 @@ class BrData:
                 _LOGGER.warning("Unable to parse data from Buienradar."
                                 "(Msg: %s)",
                                 result.get(MESSAGE),)
-            yield from self.schedule_update(SCHEDULE_NOK)
+            await self.schedule_update(SCHEDULE_NOK)
             return
 
         self.data = result.get(DATA)
-        yield from self.update_devices()
-        yield from self.schedule_update(SCHEDULE_OK)
+        await self.update_devices()
+        await self.schedule_update(SCHEDULE_OK)
 
     @property
     def attribution(self):

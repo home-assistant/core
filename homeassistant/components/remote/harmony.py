@@ -4,7 +4,6 @@ Support for Harmony Hub devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.harmony/
 """
-import asyncio
 import logging
 import time
 
@@ -44,7 +43,7 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Harmony platform."""
     host = None
     activity = None
@@ -96,7 +95,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device = HarmonyRemote(
             name, address, port, activity, harmony_conf_file, delay_secs)
         DEVICES.append(device)
-        add_devices([device])
+        add_entities([device])
         register_services(hass)
     except (ValueError, AttributeError):
         raise PlatformNotReady
@@ -152,8 +151,7 @@ class HarmonyRemote(remote.RemoteDevice):
             pyharmony.ha_write_config_file(self._config, self._config_path)
         self._delay_secs = delay_secs
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Complete the initialization."""
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP,

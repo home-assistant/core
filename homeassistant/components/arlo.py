@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-REQUIREMENTS = ['pyarlo==0.2.0']
+REQUIREMENTS = ['pyarlo==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,10 +61,12 @@ def setup(hass, config):
         arlo_base_station = next((
             station for station in arlo.base_stations), None)
 
-        if arlo_base_station is None:
+        if arlo_base_station is not None:
+            arlo_base_station.refresh_rate = scan_interval.total_seconds()
+        elif not arlo.cameras:
+            _LOGGER.error("No Arlo camera or base station available.")
             return False
 
-        arlo_base_station.refresh_rate = scan_interval.total_seconds()
         hass.data[DATA_ARLO] = arlo
 
     except (ConnectTimeout, HTTPError) as ex:
@@ -79,7 +81,7 @@ def setup(hass, config):
 
     def hub_refresh(event_time):
         """Call ArloHub to refresh information."""
-        _LOGGER.info("Updating Arlo Hub component")
+        _LOGGER.debug("Updating Arlo Hub component")
         hass.data[DATA_ARLO].update(update_cameras=True,
                                     update_base_station=True)
         dispatcher_send(hass, SIGNAL_UPDATE_ARLO)

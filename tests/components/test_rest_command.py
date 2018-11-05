@@ -14,7 +14,7 @@ class TestRestCommandSetup:
     """Test the rest command component."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.config = {
@@ -51,7 +51,7 @@ class TestRestCommandComponent:
     """Test the rest command component."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.url = "https://example.com/"
         self.config = {
             rc.DOMAIN: {
@@ -81,7 +81,7 @@ class TestRestCommandComponent:
         self.hass.stop()
 
     def test_setup_tests(self):
-        """Setup test config and test it."""
+        """Set up test config and test it."""
         with assert_setup_component(4):
             setup_component(self.hass, rc.DOMAIN, self.config)
 

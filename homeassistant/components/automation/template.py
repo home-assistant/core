@@ -4,7 +4,6 @@ Offer template automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/docs/automation/trigger/#template-trigger
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -23,8 +22,7 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     value_template.hass = hass
@@ -32,13 +30,13 @@ def async_trigger(hass, config, action):
     @callback
     def template_listener(entity_id, from_s, to_s):
         """Listen for state changes and calls action."""
-        hass.async_run_job(action, {
+        hass.async_run_job(action({
             'trigger': {
                 'platform': 'template',
                 'entity_id': entity_id,
                 'from_state': from_s,
                 'to_state': to_s,
             },
-        })
+        }, context=to_s.context))
 
     return async_track_template(hass, value_template, template_listener)

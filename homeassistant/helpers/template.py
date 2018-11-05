@@ -367,18 +367,9 @@ class TemplateMethods:
 
         while to_process:
             value = to_process.pop(0)
+            point_state = self._resolve_state(value)
 
-            if isinstance(value, State):
-                latitude = value.attributes.get(ATTR_LATITUDE)
-                longitude = value.attributes.get(ATTR_LONGITUDE)
-
-                if latitude is None or longitude is None:
-                    _LOGGER.warning(
-                        "Distance:State does not contains a location: %s",
-                        value)
-                    return None
-
-            else:
+            if point_state is None:
                 # We expect this and next value to be lat&lng
                 if not to_process:
                     _LOGGER.warning(
@@ -393,6 +384,22 @@ class TemplateMethods:
                 if latitude is None or longitude is None:
                     _LOGGER.warning("Distance:Unable to process latitude and "
                                     "longitude: %s, %s", value, value_2)
+                    return None
+
+            else:
+                if not loc_helper.has_location(point_state):
+                    _LOGGER.warning(
+                        "distance:State does not contain valid location: %s",
+                        point_state)
+                    return None
+
+                latitude = point_state.attributes.get(ATTR_LATITUDE)
+                longitude = point_state.attributes.get(ATTR_LONGITUDE)
+
+                if latitude is None or longitude is None:
+                    _LOGGER.warning(
+                        "Distance:State does not contains a location: %s",
+                        value)
                     return None
 
             locations.append((latitude, longitude))
@@ -580,6 +587,16 @@ def regex_findall_index(value, find='', index=0, ignorecase=False):
     return re.findall(find, value, flags)[index]
 
 
+def bitwise_and(first_value, second_value):
+    """Perform a bitwise and operation."""
+    return first_value & second_value
+
+
+def bitwise_or(first_value, second_value):
+    """Perform a bitwise or operation."""
+    return first_value | second_value
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -617,6 +634,8 @@ ENV.filters['regex_match'] = regex_match
 ENV.filters['regex_replace'] = regex_replace
 ENV.filters['regex_search'] = regex_search
 ENV.filters['regex_findall_index'] = regex_findall_index
+ENV.filters['bitwise_and'] = bitwise_and
+ENV.filters['bitwise_or'] = bitwise_or
 ENV.globals['log'] = logarithm
 ENV.globals['sin'] = sine
 ENV.globals['cos'] = cosine

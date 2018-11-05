@@ -9,11 +9,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
+    MEDIA_TYPE_MOVIE, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, STATE_HOME)
+    CONF_HOST, STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-roku==3.1.5']
@@ -35,18 +35,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Roku platform."""
     hosts = []
 
     if discovery_info:
-        host = discovery_info.get("host")
+        host = discovery_info.get('host')
 
         if host in KNOWN_HOSTS:
             return
 
         _LOGGER.debug("Discovered Roku: %s", host)
-        hosts.append(discovery_info.get("host"))
+        hosts.append(discovery_info.get('host'))
 
     elif CONF_HOST in config:
         hosts.append(config.get(CONF_HOST))
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
 
-    add_devices(rokus)
+    add_entities(rokus)
 
 
 class RokuDevice(MediaPlayerDevice):
@@ -87,7 +87,7 @@ class RokuDevice(MediaPlayerDevice):
         self.ip_address = host
         self.channels = []
         self.current_app = None
-        self.device_info = {}
+        self._device_info = {}
 
         self.update()
 
@@ -96,7 +96,7 @@ class RokuDevice(MediaPlayerDevice):
         import requests.exceptions
 
         try:
-            self.device_info = self.roku.device_info
+            self._device_info = self.roku.device_info
             self.ip_address = self.roku.host
             self.channels = self.get_source_list()
 
@@ -121,9 +121,9 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        if self.device_info.userdevicename:
-            return self.device_info.userdevicename
-        return "Roku {}".format(self.device_info.sernum)
+        if self._device_info.userdevicename:
+            return self._device_info.userdevicename
+        return "Roku {}".format(self._device_info.sernum)
 
     @property
     def state(self):
@@ -149,7 +149,7 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return self.device_info.sernum
+        return self._device_info.sernum
 
     @property
     def media_content_type(self):

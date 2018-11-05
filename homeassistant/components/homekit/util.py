@@ -11,8 +11,8 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
 from .const import (
     CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, TYPE_OUTLET,
-    TYPE_SWITCH)
+    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, TYPE_FAUCET,
+    TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +38,17 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({
 
 SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend({
     vol.Optional(CONF_TYPE, default=TYPE_SWITCH): vol.All(
-        cv.string, vol.In((TYPE_OUTLET, TYPE_SWITCH))),
+        cv.string, vol.In((
+            TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER,
+            TYPE_SWITCH, TYPE_VALVE))),
 })
 
 
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
+    if not isinstance(values, dict):
+        raise vol.Invalid('expected a dictionary')
+
     entities = {}
     for entity_id, config in values.items():
         entity = cv.entity_id(entity_id)
@@ -99,7 +104,7 @@ def validate_media_player_features(state, feature_list):
             error_list.append(feature)
 
     if error_list:
-        _LOGGER.error("%s does not support features: %s",
+        _LOGGER.error('%s does not support features: %s',
                       state.entity_id, error_list)
         return False
     return True
@@ -109,7 +114,7 @@ def show_setup_message(hass, pincode):
     """Display persistent notification with setup information."""
     pin = pincode.decode()
     _LOGGER.info('Pincode: %s', pin)
-    message = 'To setup Home Assistant in the Home App, enter the ' \
+    message = 'To set up Home Assistant in the Home App, enter the ' \
               'following code:\n### {}'.format(pin)
     hass.components.persistent_notification.create(
         message, 'HomeKit Setup', HOMEKIT_NOTIFY_ID)
