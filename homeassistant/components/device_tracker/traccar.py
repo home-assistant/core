@@ -88,8 +88,3 @@ class TraccarScanner:
                 dev_id=slugify(device['device_id']),
                 gps=(device['latitude'], device['longitude']),
                 attributes=device_attributes)
-            _LOGGER.debug('Device %s, attributes %s, gps %s %s',
-                          device['device_id'],
-                          device_attributes,
-                          device['latitude'],
-                          device['longitude'])
