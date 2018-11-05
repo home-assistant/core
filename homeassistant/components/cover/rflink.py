@@ -65,10 +65,10 @@ class RflinkCover(RflinkCommand, CoverDevice):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
 
     async def async_added_to_hass(self):
+        """Restore RFLink cover state."""
         await super().async_added_to_hass()
 
         old_state = await async_get_last_state(self.hass, self.entity_id)
-        _LOGGER.debug('async_added_to_hass :: oldState %s', old_state)
         if old_state is not None:
             self._state = str(old_state.state) == STATE_OPEN
 

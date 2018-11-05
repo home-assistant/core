@@ -161,6 +161,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
     _brightness = 255
 
     async def async_added_to_hass(self):
+        """Restore RFLink light brightness attribute."""
         await super().async_added_to_hass()
 
         old_state = await async_get_last_state(self.hass, self.entity_id)
@@ -206,6 +207,7 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
     _brightness = 255
 
     async def async_added_to_hass(self):
+        """Restore RFLink light brightness attribute."""
         await super().async_added_to_hass()
 
         old_state = await async_get_last_state(self.hass, self.entity_id)
