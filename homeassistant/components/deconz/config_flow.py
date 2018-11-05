@@ -33,6 +33,10 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         self.deconz_config = {}
 
     async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(self, user_input=None):
         """Handle a deCONZ config flow start.
 
         Only allows one instance to be set up.
@@ -64,7 +68,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
             for bridge in self.bridges:
                 hosts.append(bridge[CONF_HOST])
             return self.async_show_form(
-                step_id='user',
+                step_id='init',
                 data_schema=vol.Schema({
                     vol.Required(CONF_HOST): vol.In(hosts)
                 })

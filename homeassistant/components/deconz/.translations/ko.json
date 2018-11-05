@@ -9,7 +9,7 @@
             "no_key": "API \ud0a4\ub97c \uac00\uc838\uc62c \uc218 \uc5c6\uc2b5\ub2c8\ub2e4"
         },
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8",
                     "port": "\ud3ec\ud2b8 (\uae30\ubcf8\uac12: '80')"

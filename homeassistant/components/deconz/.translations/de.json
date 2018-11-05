@@ -9,7 +9,7 @@
             "no_key": "Es konnte kein API-Schl\u00fcssel abgerufen werden"
         },
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "host": "Host",
                     "port": "Port (Standartwert : '80')"

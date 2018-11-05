@@ -9,7 +9,7 @@
             "no_key": "No s'ha pogut obtenir una clau API"
         },
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "host": "Amfitri\u00f3",
                     "port": "Port (predeterminat: '80')"

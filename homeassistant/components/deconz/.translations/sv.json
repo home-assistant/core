@@ -10,7 +10,7 @@
         },
         "step": {
             "init": {
-                "user": {
+                "init": {
                     "host": "V\u00e4rd",
                     "port": "Port"
                 },

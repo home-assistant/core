@@ -9,7 +9,7 @@
             "no_key": "Nie mo\u017cna uzyska\u0107 klucza API"
         },
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "host": "Host",
                     "port": "Port (warto\u015b\u0107 domy\u015blna: \"80\")"

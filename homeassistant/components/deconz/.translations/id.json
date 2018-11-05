@@ -9,7 +9,7 @@
             "no_key": "Tidak bisa mendapatkan kunci API"
         },
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "host": "Host",
                     "port": "Port (nilai default: '80')"

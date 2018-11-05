@@ -9,7 +9,7 @@
             "no_key": "Couldn't get an API key"
         },
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "host": "Host",
                     "port": "Port"

@@ -2,7 +2,7 @@
     "config": {
         "title": "deCONZ Zigbee gateway",
         "step": {
-            "user": {
+            "init": {
                 "title": "Define deCONZ gateway",
                 "data": {
                     "host": "Host",
