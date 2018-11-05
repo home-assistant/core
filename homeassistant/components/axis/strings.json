@@ -1,0 +1,48 @@
+{
+    "config": {
+        "title": "Axis device",
+        "step": {
+            "user": {
+                "title": "Set up Axis device",
+                "data": {
+                    "host": "Host",
+                    "username": "Username",
+                    "password": "Password",
+                    "port": "Port"
+                }
+            },
+            "features": {
+                "title": "Select features from Axis device",
+                "data": {
+                    "camera": "MJPEG video stream",
+                    "daynight": "Day/Night mode",
+                    "input": "Input port",
+                    "motion": "Motion detection",
+                    "pir": "PIR sensor",
+                    "sound": "Sound detector",
+                    "tampering": "Tampering sensor",
+                    "vmd3": "Video Motion Detection 3",
+                    "vmd4": "Video Motion Detection 4"
+                }
+            },
+            "options": {
+                "title": "Configure options for Axis device",
+                "data": {
+                    "trigger_time": "Minimum time a sensor will be active"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "device_unavailable": "Device is not available",
+            "faulty_credentials": "Bad user credentials",
+            "no_device_support": "Device isn't compatible with this component",
+            "no_feature": "No feature selected"
+        },
+        "abort": {
+            "already_configured": "Device is already configured",
+            "bad_config_file": "Bad data from config file",
+            "link_local_address": "Link local addresses are not supported"
+        }
+    }
+}
