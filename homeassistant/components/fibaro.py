@@ -204,7 +204,6 @@ class FibaroController():
 
 def setup(hass, config):
     """Set up the Fibaro Component."""
-
     hass.data[FIBARO_CONTROLLER] = controller = \
         FibaroController(config[DOMAIN][CONF_USERNAME],
                          config[DOMAIN][CONF_PASSWORD],
