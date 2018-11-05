@@ -48,7 +48,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
         from luftdaten import Luftdaten, exceptions
 
         if not user_input:
-            return await self._show_form()
+            return self._show_form()
 
         sensor_id = user_input[CONF_SENSOR_ID]
 
