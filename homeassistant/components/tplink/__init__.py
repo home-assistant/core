@@ -57,7 +57,7 @@ async def async_setup_entry(hass, entry):
 
     if hass.data[DOMAIN]["discovery"]:
         devs = await _async_has_devices(hass)
-        _LOGGER.info("Discovered %s TP-Link smart home devices", len(devs))
+        _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devs))
         devices.update(devs)
 
     for type_ in ['light', 'switch']:
@@ -75,16 +75,20 @@ async def async_setup_entry(hass, entry):
                 _LOGGER.error("Unable to initialize %s %s: %s",
                               type_, host, ex)
 
-    for dev in devices.values():
-        if isinstance(dev, SmartPlug):
-            if dev.is_dimmable:  # Dimmers act as lights
+    def _fill_device_lists():
+        for dev in devices.values():
+            if isinstance(dev, SmartPlug):
+                if dev.is_dimmable:  # Dimmers act as lights
+                    hass.data[DOMAIN]['light'].append(dev)
+                else:
+                    hass.data[DOMAIN]['switch'].append(dev)
+            elif isinstance(dev, SmartBulb):
                 hass.data[DOMAIN]['light'].append(dev)
             else:
-                hass.data[DOMAIN]['switch'].append(dev)
-        elif isinstance(dev, SmartBulb):
-            hass.data[DOMAIN]['light'].append(dev)
-        else:
-            _LOGGER.error("Unknown smart device type: %s", type(dev))
+                _LOGGER.error("Unknown smart device type: %s", type(dev))
+
+    # Avoid blocking on is_dimmable
+    await hass.async_add_executor_job(_fill_device_lists)
 
     if hass.data[DOMAIN]['light']:
         hass.async_add_job(

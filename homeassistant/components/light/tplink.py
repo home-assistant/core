@@ -161,7 +161,7 @@ class TPLinkSmartBulb(Light):
         """Update the TP-Link Bulb's state."""
         from pyHS100 import SmartDeviceException
         try:
-            if not self._supported_features:
+            if self._supported_features is None:
                 self.get_features()
 
             self._state = (
