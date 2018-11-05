@@ -112,19 +112,17 @@ class MillHeater(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._heater.room:
-            room = self._heater.room.name
-            avg_room_temp = self._heater.room.avg_temp
-        else:
-            room = "Independent device"
-            avg_room_temp = None
-        return {
-            "room": room,
+        res = {
             "open_window": self._heater.open_window,
             "heating": self._heater.is_heating,
             "controlled_by_tibber": self._heater.tibber_control,
-            "avg_room_temp": avg_room_temp,
         }
+        if self._heater.room:
+            res['room'] = self._heater.room.name
+            res['avg_room_temp'] = self._heater.room.avg_temp
+        else:
+            res['room'] = "Independent device"
+        return res
 
     @property
     def temperature_unit(self):
