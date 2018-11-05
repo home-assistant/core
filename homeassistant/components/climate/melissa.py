@@ -125,12 +125,10 @@ class MelissaClimate(ClimateDevice):
                 self._cur_settings[self._api.STATE])
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Add the attributes that's available."""
-        data = super(MelissaClimate, self).state_attributes
-        add_data = self._data.copy()
-        add_data.pop('temp')
-        data.update(add_data)
+        data = self._data.copy()
+        data.pop('temp')
         return data
 
     @property
