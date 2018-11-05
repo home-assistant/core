@@ -4,7 +4,6 @@ import logging
 _LOGGER = logging.getLogger('homeassistant.components.deconz')
 
 DOMAIN = 'deconz'
-DECONZ_DOMAIN = 'deconz'
 
 DEFAULT_PORT = 80
 

@@ -10,7 +10,7 @@
         },
         "step": {
             "init": {
-                "init": {
+                "data": {
                     "host": "V\u00e4rd",
                     "port": "Port"
                 },
