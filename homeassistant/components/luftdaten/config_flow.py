@@ -1,4 +1,6 @@
 """Config flow to configure the Luftdaten component."""
+from collections import OrderedDict
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -24,16 +26,16 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    @callback
     async def _show_form(self, errors=None):
         """Show the form to the user."""
-        data_schema = vol.Schema({
-            vol.Required(CONF_SENSOR_ID): str,
-            vol.Optional(CONF_SHOW_ON_MAP, default=False): bool,
-        })
+        data_schema = OrderedDict()
+        data_schema[vol.Required(CONF_SENSOR_ID)] = str
+        data_schema[vol.Optional(CONF_SHOW_ON_MAP, default=False)] = bool
 
         return self.async_show_form(
             step_id='user',
-            data_schema=data_schema,
+            data_schema=vol.Schema(data_schema),
             errors=errors or {}
         )
 
@@ -68,8 +70,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
 
         scan_interval = user_input.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input.update({
-            CONF_SCAN_INTERVAL: scan_interval.seconds,
-        })
+        user_input.update({CONF_SCAN_INTERVAL: scan_interval.seconds})
 
         return self.async_create_entry(title=sensor_id, data=user_input)
