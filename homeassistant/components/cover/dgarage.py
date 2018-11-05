@@ -1,5 +1,5 @@
 """
-Platform for the Garadget cover component.
+Platform for the dGarage cover component.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/dgarage/
