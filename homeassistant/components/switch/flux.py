@@ -67,7 +67,8 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 
-async def async_set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
+async def async_set_lights_xy(hass, lights, x_val, y_val, brightness,
+                              transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
@@ -111,7 +112,8 @@ async def async_set_lights_rgb(hass, lights, rgb, transition):
                 LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Flux switches."""
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
@@ -265,15 +267,16 @@ class FluxSwitch(SwitchDevice):
                          brightness, round(
                              percentage_complete * 100), time_state, now)
         elif self._mode == MODE_RGB:
-            await async_set_lights_rgb(self.hass, self._lights, rgb, self._transition)
+            await async_set_lights_rgb(self.hass, self._lights, rgb,
+                            self._transition)
             _LOGGER.info("Lights updated to rgb:%s, %s%% "
                          "of %s cycle complete at %s", rgb,
                          round(percentage_complete * 100), time_state, now)
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
-            await async_set_lights_temp(self.hass, self._lights, mired, brightness,
-                            self._transition)
+            await async_set_lights_temp(self.hass, self._lights, mired,
+                            brightness, self._transition)
             _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", mired, brightness,
                          round(percentage_complete * 100), time_state, now)
