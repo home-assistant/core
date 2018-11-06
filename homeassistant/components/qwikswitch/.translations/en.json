@@ -13,7 +13,6 @@
         },
         "error": {
             "no_key": "Couldn't get an API key",
-            "timeout": "Timeout",
             "name_exists": "Name already exists"
         }
     }
