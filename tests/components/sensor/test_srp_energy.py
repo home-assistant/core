@@ -1,8 +1,7 @@
 """The tests for the Srp Energy Platform."""
 from unittest.mock import patch
 import logging
-from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,16 +14,21 @@ VALID_CONFIG_MINIMAL = {
     }
 }
 
+PATCH_INIT = 'srpenergy.client.SrpEnergyClient.__init__'
+PATCH_VALIDATE = 'srpenergy.client.SrpEnergyClient.validate'
+PATCH_USAGE = 'srpenergy.client.SrpEnergyClient.usage'
+
 
 def mock_init(self, accountid, username, password):
     """Mock srpusage usage."""
     _LOGGER.log(logging.INFO, "Calling mock Init")
-    return None
+
 
 def mock_validate(self):
     """Mock srpusage usage."""
     _LOGGER.log(logging.INFO, "Calling mock Validate")
     return True
+
 
 def mock_usage(self, startdate, enddate):  # pylint: disable=invalid-name
     """Mock srpusage usage."""
@@ -39,27 +43,27 @@ def mock_usage(self, startdate, enddate):  # pylint: disable=invalid-name
         ]
     return usage
 
-def test_setup_with_config():
+
+async def test_setup_with_config(hass):
     """Test the platform setup with configuration."""
-    with patch('srpenergy.client.SrpEnergyClient.__init__', new=mock_init), \
-         patch('srpenergy.client.SrpEnergyClient.validate', new=mock_validate), \
-         patch('srpenergy.client.SrpEnergyClient.usage', new=mock_usage):
+    with patch(PATCH_INIT, new=mock_init), \
+         patch(PATCH_VALIDATE, new=mock_validate), \
+         patch(PATCH_USAGE, new=mock_usage):            # noqa: E127
 
-        hass = get_test_home_assistant()
-
-        setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
+        await async_setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
 
         state = hass.states.get('sensor.srp_energy')
         assert state is not None
-      
-def test_daily_usage():
-    """Test the platform setup with configuration."""
-    with patch('srpenergy.client.SrpEnergyClient.__init__', new=mock_init), \
-         patch('srpenergy.client.SrpEnergyClient.validate', new=mock_validate), \
-         patch('srpenergy.client.SrpEnergyClient.usage', new=mock_usage):
 
-        hass = get_test_home_assistant()
-        setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
+
+async def test_daily_usage(hass):
+    """Test the platform setup with configuration."""
+    with patch(PATCH_INIT, new=mock_init), \
+         patch(PATCH_VALIDATE, new=mock_validate), \
+         patch(PATCH_USAGE, new=mock_usage):            # noqa: E127
+
+        # hass = get_test_home_assistant()
+        await async_setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
 
         state = hass.states.get('sensor.srp_energy')
 
