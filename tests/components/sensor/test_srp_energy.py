@@ -47,8 +47,8 @@ def mock_usage(self, startdate, enddate):  # pylint: disable=invalid-name
 async def test_setup_with_config(hass):
     """Test the platform setup with configuration."""
     with patch(PATCH_INIT, new=mock_init), \
-         patch(PATCH_VALIDATE, new=mock_validate), \
-         patch(PATCH_USAGE, new=mock_usage):            # noqa: E127
+        patch(PATCH_VALIDATE, new=mock_validate), \
+            patch(PATCH_USAGE, new=mock_usage):
 
         await async_setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
 
@@ -59,8 +59,8 @@ async def test_setup_with_config(hass):
 async def test_daily_usage(hass):
     """Test the platform setup with configuration."""
     with patch(PATCH_INIT, new=mock_init), \
-         patch(PATCH_VALIDATE, new=mock_validate), \
-         patch(PATCH_USAGE, new=mock_usage):            # noqa: E127
+        patch(PATCH_VALIDATE, new=mock_validate), \
+            patch(PATCH_USAGE, new=mock_usage):
 
         # hass = get_test_home_assistant()
         await async_setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)

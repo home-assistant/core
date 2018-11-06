@@ -54,6 +54,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     srp_client = SrpEnergyClient(account_id, username, password)
 
+<<<<<<< 0e4d33cdfb5a2cc828a63e9d76fa0762c26d7de3
+=======
+    if not srp_client.validate():
+        _LOGGER.error("Couldn't connect to %s. Check credentials", name)
+        return
+
+>>>>>>> Remove period. Rename _ variables.
     add_entities([SrpEnergy(name, srp_client)], True)
 
 
@@ -99,6 +106,7 @@ class SrpEnergy(Entity):
         if self.data is None:
             return None
 
+<<<<<<< 0e4d33cdfb5a2cc828a63e9d76fa0762c26d7de3
         data = [{
                 ATTR_READING_TIME:
                     isodate,
@@ -107,6 +115,13 @@ class SrpEnergy(Entity):
                 ATTR_READING_COST:
                     cost
                 } for date, hour, isodate, kwh, cost in self.data]
+=======
+        history = [{
+            ATTR_READING_TIME: isodate,
+            ATTR_READING_USAGE: kwh,
+            ATTR_READING_COST: cost
+            } for _, _, isodate, kwh, cost in self._usage]
+>>>>>>> Remove period. Rename _ variables.
 
         return data
 
@@ -131,7 +146,11 @@ class SrpEnergy(Entity):
             usage = self._client.usage(start_date, end_date)
 
             daily_usage = 0.0
+<<<<<<< 0e4d33cdfb5a2cc828a63e9d76fa0762c26d7de3
             for date, hour, isodate, kwh, cost in usage:
+=======
+            for _, _, _, kwh, _ in usage:
+>>>>>>> Remove period. Rename _ variables.
                 daily_usage = daily_usage + float(kwh)
 
             if(len(usage) > 0):
