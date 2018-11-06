@@ -28,17 +28,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     data = hass.data[LUPUSEC_DOMAIN]
 
-    alarm_devices = [LupusecDevice(data, data.lupusec.get_alarm())]
+    alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm())]
 
     add_entities(alarm_devices)
 
 
 class LupusecAlarm(LupusecDevice, AlarmControlPanel):
     """An alarm_control_panel implementation for Lupusec."""
-
-    # def __init__(self, data, device):
-    #     """Initialize the alarm control panel."""
-    #     super().__init__(data, device)
 
     @property
     def icon(self):
