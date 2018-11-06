@@ -264,7 +264,8 @@ class HomeAssistant:
         elif is_callback(target):
             task = asyncio.Future()
 
-            def _run(fut: asyncio.Future, target: Callable[..., Any], *args: Any) -> Any:
+            def _run(fut: asyncio.Future, target: Callable[..., Any],
+                     *args: Any) -> Any:
                 try:
                     fut.set_result(target(*args))
                 except Exception as exc:
