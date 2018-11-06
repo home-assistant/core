@@ -1300,7 +1300,7 @@ async def async_send_changereport_message(hass, config, alexa_entity):
     # this sends all the properties of the Alexa Entity, whether they have
     # changed or not. this should be improved, and properties that have not
     # changed should be moved to the 'context' object
-    properties = []
+    properties = list(alexa_entity.serialize_properties())
     for interface in alexa_entity.interfaces():
         properties.extend(interface.serialize_properties())
 
