@@ -263,7 +263,7 @@ class StatisticsSensor(Entity):
                 records_older_then = dt_util.utcnow() - self._max_age
                 _LOGGER.debug("%s: retrieve records not older then %s",
                               self.entity_id, records_older_then)
-                query = query.filter(States.last_updated > records_older_then)
+                query = query.filter(States.last_updated >= records_older_then)
             else:
                 _LOGGER.debug("%s: retrieving all records.", self.entity_id)
 
