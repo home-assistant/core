@@ -268,7 +268,7 @@ class FluxSwitch(SwitchDevice):
                              percentage_complete * 100), time_state, now)
         elif self._mode == MODE_RGB:
             await async_set_lights_rgb(self.hass, self._lights, rgb,
-                            self._transition)
+                                       self._transition)
             _LOGGER.info("Lights updated to rgb:%s, %s%% "
                          "of %s cycle complete at %s", rgb,
                          round(percentage_complete * 100), time_state, now)
@@ -276,7 +276,7 @@ class FluxSwitch(SwitchDevice):
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
             await async_set_lights_temp(self.hass, self._lights, mired,
-                            brightness, self._transition)
+                                        brightness, self._transition)
             _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", mired, brightness,
                          round(percentage_complete * 100), time_state, now)
