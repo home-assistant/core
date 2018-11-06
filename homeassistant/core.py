@@ -262,7 +262,7 @@ class HomeAssistant:
             task = self.loop.create_task(target)  # type: ignore
 
         elif is_callback(target):
-            task = asyncio.Future()
+            task = asyncio.Future(loop=self.loop)
 
             def _run(fut: asyncio.Future, target: Callable[..., Any],
                      *args: Any) -> Any:
