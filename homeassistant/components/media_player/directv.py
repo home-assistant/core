@@ -130,7 +130,7 @@ class DirecTvDevice(MediaPlayerDevice):
         self._paused = None
         self._last_position = None
         self._is_recorded = None
-        self._is_client = False if device == '0' else True
+        self._is_client = device != '0'
         self._assumed_state = None
         self._available = False
 
@@ -336,15 +336,19 @@ class DirecTvDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on the receiver."""
-        if not self._is_client:
-            _LOGGER.debug("Turn on %s", self._name)
-            self.dtv.key_press('poweron')
+        if self._is_client:
+            raise NotImplementedError()
+
+        _LOGGER.debug("Turn on %s", self._name)
+        self.dtv.key_press('poweron')
 
     def turn_off(self):
         """Turn off the receiver."""
-        if not self._is_client:
-            _LOGGER.debug("Turn off %s", self._name)
-            self.dtv.key_press('poweroff')
+        if self._is_client:
+            raise NotImplementedError()
+
+        _LOGGER.debug("Turn off %s", self._name)
+        self.dtv.key_press('poweroff')
 
     def media_play(self):
         """Send play command."""
