@@ -154,6 +154,9 @@ omit =
     homeassistant/components/homematicip_cloud.py
     homeassistant/components/*/homematicip_cloud.py
 
+    homeassistant/components/homeworks.py
+    homeassistant/components/*/homeworks.py
+
     homeassistant/components/huawei_lte.py
     homeassistant/components/*/huawei_lte.py
 
@@ -344,6 +347,9 @@ omit =
     homeassistant/components/usps.py
     homeassistant/components/*/usps.py
 
+    homeassistant/components/v6m.py
+    homeassistant/components/*/v6m.py
+
     homeassistant/components/velbus.py
     homeassistant/components/*/velbus.py
 
@@ -457,6 +463,7 @@ omit =
     homeassistant/components/cover/knx.py
     homeassistant/components/cover/myq.py
     homeassistant/components/cover/opengarage.py
+    homeassistant/components/cover/r2d7.py
     homeassistant/components/cover/rpi_gpio.py
     homeassistant/components/cover/scsgate.py
     homeassistant/components/device_tracker/actiontec.py
@@ -756,6 +763,7 @@ omit =
     homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/rainbird.py
+    homeassistant/components/sensor/rfk101.py
     homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/rtorrent.py
     homeassistant/components/sensor/scrape.py
@@ -825,6 +833,7 @@ omit =
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py
+    homeassistant/components/switch/pencom.py
     homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rainbird.py
     homeassistant/components/switch/rest.py
