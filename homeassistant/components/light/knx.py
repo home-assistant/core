@@ -183,7 +183,8 @@ class KNXLight(Light):
         if self.device.supports_brightness and \
                 (update_brightness and not update_color):
             # if we don't need to update the color, try updating brightness
-            # directly if supported
+            # directly if supported; don't do it if color also has to be changed,
+            # as RGB color implicitly sets the brightness as well
             await self.device.set_brightness(brightness)
         elif self.device.supports_color and \
                 (update_brightness or update_color):
@@ -191,7 +192,7 @@ class KNXLight(Light):
             await self.device.set_color(
                 color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255))
         else:
-            # no color/brightness change, so just turn it on
+            # no color/brightness change requested, so just turn it on
             await self.device.set_on()
 
     async def async_turn_off(self, **kwargs):
