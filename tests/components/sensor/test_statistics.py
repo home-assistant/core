@@ -306,6 +306,9 @@ class TestStatisticsSensor(unittest.TestCase):
                 }
             })
 
+            self.hass.start()
+            self.hass.block_till_done()
+
             # check if the result is as in test_sensor_source()
             state = self.hass.states.get('sensor.test_mean')
 
