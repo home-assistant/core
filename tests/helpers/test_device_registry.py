@@ -295,50 +295,36 @@ async def test_format_mac(registry):
             (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
         },
     )
-    entry2 = registry.async_get_or_create(
-        config_entry_id='1234',
-        connections={
-            (device_registry.CONNECTION_NETWORK_MAC, '123456ABCDEF')
-        },
-    )
-    entry3 = registry.async_get_or_create(
-        config_entry_id='1234',
-        connections={
-            (device_registry.CONNECTION_NETWORK_MAC, '123456abcdef')
-        },
-    )
-    entry4 = registry.async_get_or_create(
-        config_entry_id='1234',
-        connections={
+    for mac in [
+        '123456ABCDEF',
+        '123456abcdef',
+        '12:34:56:ab:cd:ef',
+        '1234.56ab.cdef',
+    ]:
+        test_entry = registry.async_get_or_create(
+            config_entry_id='1234',
+            connections={
+                (device_registry.CONNECTION_NETWORK_MAC, mac)
+            },
+        )
+        assert test_entry.id == entry.id, mac
+        assert test_entry.connections == {
             (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:ab:cd:ef')
-        },
-    )
-
-    assert entry.connections == {
-        (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:ab:cd:ef')
-    }
-
-    assert entry.id == entry2.id
-    assert entry2.connections == {
-        (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:ab:cd:ef')
-    }
-
-    assert entry.id == entry3.id
-    assert entry2.connections == {
-        (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:ab:cd:ef')
-    }
-
-    assert entry.id == entry4.id
-    assert entry4.connections == {
-        (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:ab:cd:ef')
-    }
+        }
 
     # This should not raise
-    invalid_mac_entry = registry.async_get_or_create(
-        config_entry_id='1234',
-        connections={
-            (device_registry.CONNECTION_NETWORK_MAC, 'invalid_mac')
-        },
-    )
-
-    assert list(invalid_mac_entry.connections)[0][1] == 'invalid_mac'
+    for invalid in [
+        'invalid_mac',
+        '123456ABCDEFG',  # 1 extra char
+        '12:34:56:ab:cdef',  # not enough :
+        '12:34:56:ab:cd:e:f',  # too many :
+        '1234.56abcdef',  # not enough .
+        '123.456.abc.def',  # too many .
+    ]:
+        invalid_mac_entry = registry.async_get_or_create(
+            config_entry_id='1234',
+            connections={
+                (device_registry.CONNECTION_NETWORK_MAC, invalid)
+            },
+        )
+        assert list(invalid_mac_entry.connections)[0][1] == invalid

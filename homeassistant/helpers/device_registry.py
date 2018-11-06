@@ -40,13 +40,21 @@ class DeviceEntry:
 
 def format_mac(mac):
     """Format the mac address string for entry into dev reg."""
-    lower_mac = mac.lower()
-    if len(lower_mac) == 12:
-        # no : included
-        return ':'.join(lower_mac[i:i + 2] for i in range(0, 12, 2))
+    to_test = mac
 
-    # Either with ':' included or not sure how formatted
-    return lower_mac
+    if len(to_test) == 17 and to_test.count(':') == 5:
+        return to_test.lower()
+    elif len(to_test) == 17 and to_test.count('-') == 5:
+        to_test = to_test.replace('-', '')
+    elif len(to_test) == 14 and to_test.count('.') == 2:
+        to_test = to_test.replace('.', '')
+
+    if len(to_test) == 12:
+        # no : included
+        return ':'.join(to_test.lower()[i:i + 2] for i in range(0, 12, 2))
+
+    # Not sure how formatted, return original
+    return mac
 
 
 class DeviceRegistry:
