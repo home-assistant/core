@@ -17,13 +17,22 @@ from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
     SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_TEMPERATURE_UNIT, STATE_OFF,
-    STATE_ON, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, STATE_OFF, STATE_ON, STATE_UNKNOWN,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['nest']
+
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_TEMPERATURE_SCALE = 'temperature_scale'
+
+NEST_MODE_HEAT_COOL = 'heat-cool'
+NEST_TEMP_SCALE_C = 'c'
+NEST_TEMP_SCALE_F = 'f'
+
+SERVICE_SET_TEMPERATURE_SCALE = 'set_temperature_scale'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL):
@@ -31,17 +40,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 TEMPERATURE_SCALE_SCHEMA = vol.Schema({
-    vol.Required(CONF_TEMPERATURE_UNIT): vol.In(
-        [TEMP_CELSIUS, TEMP_FAHRENHEIT]),
+    vol.Required(ATTR_TEMPERATURE_SCALE): vol.In(
+        [NEST_TEMP_SCALE_C, NEST_TEMP_SCALE_F]),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
-
-NEST_MODE_HEAT_COOL = 'heat-cool'
-
-TEMPERATURE_SCALE_MAP = {
-    TEMP_CELSIUS: 'c',
-    TEMP_FAHRENHEIT: 'f'
-}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -74,10 +76,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         for thermostat in target_thermostats:
             thermostat.set_temperature_scale(
-                service.data[CONF_TEMPERATURE_UNIT])
+                service.data[ATTR_TEMPERATURE_SCALE])
 
     hass.services.async_register(
-        NEST_DOMAIN, 'set_temperature_scale', set_temperature_scale,
+        NEST_DOMAIN, SERVICE_SET_TEMPERATURE_SCALE, set_temperature_scale,
         schema=TEMPERATURE_SCALE_SCHEMA)
 
     async_add_entities(all_devices, True)
@@ -312,10 +314,22 @@ class NestThermostat(ClimateDevice):
         """Identify max_temp in Nest API or defaults if not available."""
         return self._max_temperature
 
+    @property
+    def state_attributes(self):
+        """Return the optional state attributes."""
+        attrs = {}
+        super_attrs = super().state_attributes
+        if super_attrs is not None:
+            attrs.update(super_attrs)
+
+        if self._temperature_scale is not None:
+            attrs[ATTR_TEMPERATURE_SCALE] = self._temperature_scale
+
+        return attrs
+
     def set_temperature_scale(self, temperature_scale):
         """Set the temperature scale for the device."""
-        self.device.temperature_scale = \
-            TEMPERATURE_SCALE_MAP[temperature_scale]
+        self.device.temperature_scale = temperature_scale
 
     def update(self):
         """Cache value from Python-nest."""
