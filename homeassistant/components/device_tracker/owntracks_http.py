@@ -77,6 +77,6 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
             return None
 
     hass.components.webhook.async_register(
-        config['webhook_id'], handle_webhook)
+        'owntracks', 'OwnTracks', config['webhook_id'], handle_webhook)
 
     return True
