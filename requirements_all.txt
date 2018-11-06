@@ -478,11 +478,11 @@ hole==0.3.0
 # homeassistant.components.binary_sensor.workday
 holidays==0.9.8
 
-# homeassistant.components.zwave
-homeassistant-pyozw==0.1.0
-
 # homeassistant.components.frontend
 home-assistant-frontend==20181103.1
+
+# homeassistant.components.zwave
+homeassistant-pyozw==0.1.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
