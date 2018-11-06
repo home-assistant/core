@@ -947,7 +947,7 @@ pyhomematic==0.1.51
 pyhydroquebec==2.2.2
 
 # homeassistant.components.alarm_control_panel.ialarm
-pyialarm==0.2
+pyialarm==0.3
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
