@@ -9,22 +9,14 @@ async def test_flow_works(hass):
     flow.hass = hass
     result = await flow.async_step_user(user_input={
         'name': 'Emulated Roku Test',
-        'listen_port': 8060,
-        'host_ip': '1.2.3.4',
-        'advertise_ip': '1.2.3.5',
-        'advertise_port': 8070,
-        'upnp_bind_multicast': False
+        'listen_port': 8060
     })
 
     assert result['type'] == 'create_entry'
     assert result['title'] == 'Emulated Roku Test'
     assert result['data'] == {
         'name': 'Emulated Roku Test',
-        'listen_port': 8060,
-        'host_ip': '1.2.3.4',
-        'advertise_ip': '1.2.3.5',
-        'advertise_port': 8070,
-        'upnp_bind_multicast': False
+        'listen_port': 8060
     }
 
 

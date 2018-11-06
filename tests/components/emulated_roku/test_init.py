@@ -1,12 +1,48 @@
 """Test emulated_roku component setup process."""
 from unittest.mock import Mock, patch
 
+from homeassistant.setup import async_setup_component
 from homeassistant.components import emulated_roku
 
 from tests.common import mock_coro
 
 
-async def test_setup_entry(hass):
+async def test_config_required_fields(hass):
+    """Test that configuration is successful with required fields."""
+    with patch.object(
+            emulated_roku, 'configured_servers', return_value=[]), \
+            patch('emulated_roku.make_roku_api',
+                  return_value=mock_coro(((None, None), None))):
+        assert await async_setup_component(hass, emulated_roku.DOMAIN, {
+            emulated_roku.DOMAIN: {
+                emulated_roku.CONF_SERVERS: [{
+                    emulated_roku.CONF_NAME: 'Emulated Roku Test',
+                    emulated_roku.CONF_LISTEN_PORT: 8060
+                }]
+            }
+        }) is True
+
+
+async def test_config_already_registered_not_configured(hass):
+    """Test that an already registered name causes the entry to be ignored."""
+    with patch('emulated_roku.make_roku_api',
+               return_value=mock_coro(((None, None), None))) \
+            as make_roku_api, \
+            patch.object(emulated_roku, 'configured_servers',
+                         return_value=['Emulated Roku Test']):
+        assert await async_setup_component(hass, emulated_roku.DOMAIN, {
+            emulated_roku.DOMAIN: {
+                emulated_roku.CONF_SERVERS: [{
+                    emulated_roku.CONF_NAME: 'Emulated Roku Test',
+                    emulated_roku.CONF_LISTEN_PORT: 8060
+                }]
+            }
+        }) is True
+
+    assert len(make_roku_api.mock_calls) == 0
+
+
+async def test_setup_entry_successful(hass):
     """Test setup entry is successful."""
     entry = Mock()
     entry.data = {
@@ -24,7 +60,7 @@ async def test_setup_entry(hass):
     assert len(make_roku_api.mock_calls) == 1
     assert hass.data[emulated_roku.DOMAIN]
 
-    roku_instance = hass.data[emulated_roku.DOMAIN]['emulated_roku_test']
+    roku_instance = hass.data[emulated_roku.DOMAIN]['Emulated Roku Test']
 
     assert roku_instance.roku_usn == 'Emulated Roku Test'
     assert roku_instance.host_ip == '1.2.3.5'

@@ -54,7 +54,7 @@ class EmulatedRoku:
                     ATTR_SOURCE_NAME: roku_usn,
                     ATTR_COMMAND_TYPE: ROKU_COMMAND_KEYDOWN,
                     ATTR_KEY: key
-                }, EventOrigin.remote)
+                }, EventOrigin.local)
 
             def on_keyup(self, roku_usn, key):
                 """Handle keyup event."""
@@ -62,7 +62,7 @@ class EmulatedRoku:
                     ATTR_SOURCE_NAME: roku_usn,
                     ATTR_COMMAND_TYPE: ROKU_COMMAND_KEYUP,
                     ATTR_KEY: key
-                }, EventOrigin.remote)
+                }, EventOrigin.local)
 
             def on_keypress(self, roku_usn, key):
                 """Handle keypress event."""
@@ -70,7 +70,7 @@ class EmulatedRoku:
                     ATTR_SOURCE_NAME: roku_usn,
                     ATTR_COMMAND_TYPE: ROKU_COMMAND_KEYPRESS,
                     ATTR_KEY: key
-                }, EventOrigin.remote)
+                }, EventOrigin.local)
 
             def launch(self, roku_usn, app_id):
                 """Handle launch event."""
@@ -78,7 +78,7 @@ class EmulatedRoku:
                     ATTR_SOURCE_NAME: roku_usn,
                     ATTR_COMMAND_TYPE: ROKU_COMMAND_LAUNCH,
                     ATTR_APP_ID: app_id
-                }, EventOrigin.remote)
+                }, EventOrigin.local)
 
         handler = EventCommandHandler(self.hass)
 
