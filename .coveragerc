@@ -809,7 +809,7 @@ omit =
     homeassistant/components/sensor/ups.py
     homeassistant/components/sensor/uscis.py
     homeassistant/components/sensor/vasttrafik.py
-    homeassistant/components/sensor/velo.py
+    homeassistant/components/sensor/velo_antwerpen.py
     homeassistant/components/sensor/viaggiatreno.py
     homeassistant/components/sensor/volkszaehler.py
     homeassistant/components/sensor/waqi.py

@@ -2,7 +2,7 @@
 Shows the available amount of public city bikes for Velo Antwerpen.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.velo/
+https://home-assistant.io/components/sensor.velo_antwerpen/
 """
 
 import logging
@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -73,7 +73,7 @@ class VeloSensor(Entity):
         return {
             "Station ID": self._station,
             "Station": self._station_data["address"],
-            "Data provided by": "https://www.velo-antwerpen.be/",
+            ATTR_ATTRIBUTION: "https://www.velo-antwerpen.be/",
         }
 
     @property
@@ -84,13 +84,14 @@ class VeloSensor(Entity):
     def make_request(self):
         """Perform the API request to the Velo Antwerpen API"""
         request = requests.Request("GET", "https://www.velo-antwerpen.be/availability_map/getJsonObject"
-            ).prepare()
+                                   ).prepare()
         try:
             with requests.Session() as sess:
                 response = sess.send(request, timeout=10)
 
             station_data = response.json()
-            result = list(filter(lambda x: (x['id'] == self._station), station_data))
+            result = list(
+                filter(lambda x: (x['id'] == self._station), station_data))
             return result[0]
         except requests.exceptions.RequestException as ex:
             _LOGGER.error("Error fetching data: %s from %s failed with %s",
@@ -101,5 +102,5 @@ class VeloSensor(Entity):
         try:
             station_data = self.make_request()
             self._state = int(station_data["bikes"])
-        except:
+        except BaseException:
             self._state = None
