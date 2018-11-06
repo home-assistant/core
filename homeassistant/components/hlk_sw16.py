@@ -50,11 +50,13 @@ RELAY_ID = vol.All(
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_RECONNECT_INTERVAL,
-                     default=DEFAULT_RECONNECT_INTERVAL): int,
-        vol.Required(CONF_SWITCHES): vol.Schema({RELAY_ID: SWITCH_SCHEMA}),
+        cv.string: vol.Schema({
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_RECONNECT_INTERVAL,
+                         default=DEFAULT_RECONNECT_INTERVAL): int,
+            vol.Required(CONF_SWITCHES): vol.Schema({RELAY_ID: SWITCH_SCHEMA}),
+        }),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -64,67 +66,74 @@ async def async_setup(hass, config):
     # Allow platform to specify function to register new unknown devices
     from hlk_sw16 import create_hlk_sw16_connection
     hass.data[DATA_DEVICE_REGISTER] = {}
-    switches = config[DOMAIN][CONF_SWITCHES]
 
-    host = config[DOMAIN][CONF_HOST]
-    port = config[DOMAIN][CONF_PORT]
+    def add_device(device):
+        switches = config[DOMAIN][device][CONF_SWITCHES]
 
-    @callback
-    def reconnect():
-        """Schedule reconnect after connection has been unexpectedly lost."""
-        # Reset protocol binding before starting reconnect
-        SW16Device.set_hlk_sw16_protocol(None)
+        host = config[DOMAIN][device][CONF_HOST]
+        port = config[DOMAIN][device][CONF_PORT]
 
-        async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
+        @callback
+        def reconnect():
+            """Schedule reconnect after connection has been lost."""
+            # Reset protocol binding before starting reconnect
+            SW16Device.set_hlk_sw16_protocol(None, device)
 
-        # If HA is not stopping, initiate new connection
-        if hass.state != CoreState.stopping:
-            _LOGGER.warning('disconnected from HLK-SW16, reconnecting')
-            hass.async_create_task(connect())
-
-    async def connect():
-        """Set up connection and hook it into HA for reconnect/shutdown."""
-        _LOGGER.info('Initiating HLK-SW16 connection')
-
-        try:
-            with async_timeout.timeout(CONNECTION_TIMEOUT,
-                                       loop=hass.loop):
-                transport, protocol = await create_hlk_sw16_connection(
-                    host=host,
-                    port=port,
-                    disconnect_callback=reconnect,
-                    loop=hass.loop,
-                    logger=_LOGGER)
-                _LOGGER.info(transport)
-
-        except (ConnectionRefusedError, TimeoutError, OSError,
-                asyncio.TimeoutError) as exc:
-            reconnect_interval = config[DOMAIN][CONF_RECONNECT_INTERVAL]
-            _LOGGER.error(
-                "Error connecting to HLK-SW16, reconnecting in %s",
-                reconnect_interval)
-            # Connection to HLK-SW16 device is lost, make entities unavailable
             async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
-            hass.loop.call_later(reconnect_interval, reconnect, exc)
-            return
+            # If HA is not stopping, initiate new connection
+            if hass.state != CoreState.stopping:
+                _LOGGER.warning('disconnected from HLK-SW16, reconnecting')
+                hass.async_create_task(connect())
 
-        # Load platforms
-        for comp_name, comp_conf in switches.items():
-            hass.async_create_task(
-                async_load_platform(hass, 'switch', DOMAIN,
-                                    (comp_name, comp_conf), config))
+        async def connect():
+            """Set up connection and hook it into HA for reconnect/shutdown."""
+            _LOGGER.info('Initiating HLK-SW16 connection')
 
-        # Bind protocol to command class to allow entities to send commands
-        SW16Device.set_hlk_sw16_protocol(protocol)
+            try:
+                with async_timeout.timeout(CONNECTION_TIMEOUT,
+                                           loop=hass.loop):
+                    transport, protocol = await create_hlk_sw16_connection(
+                        host=host,
+                        port=port,
+                        disconnect_callback=reconnect,
+                        loop=hass.loop,
+                        logger=_LOGGER)
+                    _LOGGER.info(transport)
 
-        # handle shutdown of HLK-SW16 asyncio transport
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                   lambda x: transport.close())
+            except (ConnectionRefusedError, TimeoutError, OSError,
+                    asyncio.TimeoutError) as exc:
+                reconnect_interval = config[DOMAIN][device][
+                    CONF_RECONNECT_INTERVAL]
+                _LOGGER.error(
+                    "Error connecting to HLK-SW16, reconnecting in %s",
+                    reconnect_interval)
+                # Connection lost make entities unavailable
+                async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
-        _LOGGER.info('Connected to HLK-SW16')
+                hass.loop.call_later(reconnect_interval, reconnect, exc)
+                return
 
-    hass.async_create_task(connect())
+            # Load platforms
+            for comp_name, comp_conf in switches.items():
+                hass.async_create_task(
+                    async_load_platform(hass, 'switch', DOMAIN,
+                                        (comp_name, comp_conf, device),
+                                        config))
+
+            # Bind protocol to command class to allow entities to send commands
+            SW16Device.set_hlk_sw16_protocol(protocol, device)
+
+            # handle shutdown of HLK-SW16 asyncio transport
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                       lambda x: transport.close())
+
+            _LOGGER.info('Connected to HLK-SW16')
+
+        hass.async_create_task(connect())
+
+    for device in config[DOMAIN]:
+        add_device(device)
     return True
 
 
@@ -136,28 +145,25 @@ class SW16Device(Entity):
 
     platform = None
     _available = True
-    _protocol = None
+    _protocol_reg = {}
 
-    def __init__(self, device_id, device_port, name=None):
+    def __init__(self, relay_name, device_port, device_id, name=None):
         """Initialize the device."""
         # HLK-SW16 specific attributes for every component type
         self._device_id = device_id
         self._device_port = device_port
         self._is_on = None
-        if name:
-            self._name = name
-        else:
-            self._name = device_id
+        self._protocol = self._protocol_reg[device_id]
+        self._name = relay_name
 
     @classmethod
-    def set_hlk_sw16_protocol(cls, protocol):
+    def set_hlk_sw16_protocol(cls, protocol, device_id):
         """Set the HLK-S16 asyncio protocol as a class variable."""
-        cls._protocol = protocol
+        cls._protocol_reg[device_id] = protocol
 
-    @classmethod
-    def is_connected(cls):
+    def is_connected(self):
         """Return connection status."""
-        return bool(cls._protocol)
+        return bool(self._protocol)
 
     @callback
     def handle_event_callback(self, event):

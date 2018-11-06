@@ -21,8 +21,9 @@ def devices_from_config(domain_config):
     """Parse configuration and add HLK-SW16 switch devices."""
     device_port = domain_config[0]
     device_config = domain_config[1]
+    device_id = domain_config[2]
     device_name = device_config.get(CONF_NAME, device_port)
-    device = SW16Switch(device_name, device_port)
+    device = SW16Switch(device_name, device_port, device_id)
     return [device]
 
 
