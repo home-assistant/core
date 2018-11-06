@@ -11,6 +11,7 @@ import re
 from aiohttp.web import Response
 import voluptuous as vol
 
+# pylint: disable=unused-import
 from homeassistant.components.device_tracker.owntracks import (  # NOQA
     PLATFORM_SCHEMA, REQUIREMENTS, async_handle_message, context_from_config)
 from homeassistant.const import CONF_WEBHOOK_ID
