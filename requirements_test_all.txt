@@ -239,7 +239,7 @@ somecomfort==0.5.2
 sqlalchemy==1.2.13
 
 # homeassistant.components.sensor.srp_energy
-srpenergy==1.0.2
+srpenergy==1.0.5
 
 # homeassistant.components.statsd
 statsd==3.2.1
