@@ -1,5 +1,6 @@
 """
-Support for Velo Antwerpen.
+Shows the available amount of public city bikes for Velo Antwerpen.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.velo/
 """
@@ -37,7 +38,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class VeloSensor(Entity):
+    """Get the available amount of bikes and set the selected station as attributes"""
+
     def __init__(self, name, station):
+        """Initialize the Velo sensor."""
         self._name = name
         self._station = station
         self._state = None
@@ -93,6 +97,7 @@ class VeloSensor(Entity):
                           request, request.url, ex)
 
     def update(self):
+        """Set the state to the available amount of bikes as a number"""
         try:
             station_data = self.make_request()
             self._state = int(station_data["bikes"])
