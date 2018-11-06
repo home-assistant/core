@@ -23,6 +23,8 @@ DEFAULT_UNIT = 'bikes'
 
 CONF_STATION_ID = 'station_id'
 
+RESOURCE_URL = "https://www.velo-antwerpen.be/availability_map/getJsonObject"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -83,9 +85,7 @@ class VeloSensor(Entity):
 
     def make_request(self):
         """Perform the API request to the Velo Antwerpen API"""
-        request = requests.Request("GET",
-                                   "https://www.velo-antwerpen.be/availability_map/getJsonObject"
-                                   ).prepare()
+        request = requests.Request("GET", RESOURCE_URL).prepare()
         try:
             with requests.Session() as sess:
                 response = sess.send(request, timeout=10)
