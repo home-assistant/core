@@ -10,12 +10,14 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pylaunches==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_ATTRIBUTION = "Data provided by Launch Library."
 
 DEFAULT_NAME = 'Launch'
 
@@ -60,6 +62,7 @@ class LaunchSensor(Entity):
             self._attributes['agency_country_code'] = (data
                                                        ['agency_country_code'])
             self._attributes['stream'] = data['stream']
+            self._attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         except (KeyError, IndexError) as error:
             _LOGGER.debug("Error getting data, %s", error)
 
