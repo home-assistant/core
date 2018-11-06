@@ -145,10 +145,11 @@ async def test_clear_logs(hass, aiohttp_client):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     _LOGGER.error('error message')
 
-    hass.async_add_job(
+    fut = hass.async_add_job(
         hass.services.async_call(
-            system_log.DOMAIN, system_log.SERVICE_CLEAR, {}))
-    await hass.async_block_till_done()
+            system_log.DOMAIN, system_log.SERVICE_CLEAR, {},
+            blocking=True))
+    await fut
 
     # Assert done by get_error_log
     await get_error_log(hass, aiohttp_client, 0)
