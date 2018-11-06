@@ -261,7 +261,7 @@ class TestStatisticsSensor(unittest.TestCase):
 
         with patch('homeassistant.components.sensor.statistics.dt_util.utcnow',
                    new=mock_now), \
-             patch.object(StatisticsSensor, '_purge_old', mock_purge):
+                patch.object(StatisticsSensor, '_purge_old', mock_purge):
             # store some values
             for value in self.values:
                 self.hass.states.set('sensor.test_monitored', value,
