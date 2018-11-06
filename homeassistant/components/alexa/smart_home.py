@@ -990,19 +990,16 @@ async def async_enable_proactive_mode(hass, smart_home_config):
     @ha.callback
     def async_entity_state_listener(changed_entity, old_state, new_state):
         if not smart_home_config.should_expose(changed_entity):
-            _LOGGER.debug("Not exposing %s because filtered by config",
-                          changed_entity)
+            _LOGGER.debug("Not exposing {} because filtered by config".format(
+                changed_entity))
             return
 
-        entity = hass.states.get(changed_entity)
-        if not entity:
-            return
-
-        if entity.domain not in ENTITY_ADAPTERS:
+        if new_state.domain not in ENTITY_ADAPTERS:
             return
 
         alexa_changed_entity = \
-            ENTITY_ADAPTERS[entity.domain](hass, smart_home_config, entity)
+            ENTITY_ADAPTERS[new_state.domain](hass, smart_home_config,
+                                              new_state)
 
         for interface in alexa_changed_entity.interfaces():
             if interface.properties_proactively_reported():
@@ -1381,8 +1378,9 @@ async def async_api_discovery(hass, config, directive, context):
             i.serialize_discovery() for i in alexa_entity.interfaces()]
 
         if not endpoint['capabilities']:
-            _LOGGER.debug("Not exposing %s because it has no capabilities",
-                          entity.entity_id)
+            _LOGGER.debug(
+                "Not exposing {} because it has no capabilities".format(
+                    entity.entity_id))
             continue
         discovery_endpoints.append(endpoint)
 
@@ -1399,7 +1397,6 @@ async def async_api_accept_grant(hass, config, directive, context):
 
     Async friendly.
     """
-
     auth_code = directive.payload['grant']['code']
     _LOGGER.debug("AcceptGrant code: {0}".format(auth_code))
 
