@@ -109,7 +109,6 @@ homeassistant/components/sensor/gpsd.py @fabaff
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/jewish_calendar.py @tsvi
 homeassistant/components/sensor/linux_battery.py @fabaff
-homeassistant/components/sensor/luftdaten.py @fabaff
 homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
 homeassistant/components/sensor/min_max.py @fabaff
 homeassistant/components/sensor/moon.py @fabaff
@@ -189,6 +188,8 @@ homeassistant/components/*/konnected.py @heythisisnate
 # L
 homeassistant/components/lifx.py @amelchio
 homeassistant/components/*/lifx.py @amelchio
+homeassistant/components/luftdaten/* @fabaff
+homeassistant/components/*/luftdaten.py @fabaff
 
 # M
 homeassistant/components/matrix.py @tinloaf

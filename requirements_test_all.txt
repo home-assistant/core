@@ -112,6 +112,9 @@ libpurecoollink==0.4.2
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.7.2
 
+# homeassistant.components.luftdaten
+luftdaten==0.3.4
+
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
 mficlient==0.3.0
