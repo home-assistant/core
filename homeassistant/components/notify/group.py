@@ -10,6 +10,7 @@ from copy import deepcopy
 import logging
 import voluptuous as vol
 
+from build.lib.homeassistant.helpers.service import CONF_SERVICE_TEMPLATE
 from homeassistant.const import ATTR_SERVICE
 from homeassistant.components.notify import (
     DOMAIN, ATTR_MESSAGE, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
@@ -21,7 +22,8 @@ CONF_SERVICES = 'services'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERVICES): vol.All(cv.ensure_list, [{
-        vol.Required(ATTR_SERVICE): cv.slug,
+        vol.Optional(ATTR_SERVICE): cv.slug,
+        vol.Optional(CONF_SERVICE_TEMPLATE): cv.template,
         vol.Optional(ATTR_DATA): dict,
     }])
 })
@@ -61,11 +63,17 @@ class GroupNotifyPlatform(BaseNotificationService):
 
         tasks = []
         for entity in self.entities:
+            service_template = entity.get(CONF_SERVICE_TEMPLATE)
+            if service_template is not None:
+                service = service_template.render()
+            else:
+                service = entity.get(ATTR_DATA)
+
             sending_payload = deepcopy(payload.copy())
-            if entity.get(ATTR_DATA) is not None:
-                update(sending_payload, entity.get(ATTR_DATA))
+            if service is not None:
+                update(sending_payload, service)
             tasks.append(self.hass.services.async_call(
-                DOMAIN, entity.get(ATTR_SERVICE), sending_payload))
+                DOMAIN, service, sending_payload))
 
         if tasks:
             await asyncio.wait(tasks, loop=self.hass.loop)
