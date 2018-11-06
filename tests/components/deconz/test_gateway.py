@@ -135,7 +135,7 @@ async def test_reset_cancel_retry():
 
 
 async def test_reset_after_successful_setup():
-    """"""
+    """Verify that reset works on a setup component."""
     hass = Mock()
     entry = Mock()
     entry.data = ENTRY_CONFIG
