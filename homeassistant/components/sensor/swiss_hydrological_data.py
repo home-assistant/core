@@ -8,7 +8,6 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
-import requests
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -17,58 +16,81 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['swisshydrodata==0.0.2']
+REQUIREMENTS = ['swisshydrodata==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_STATION = 'station'
-CONF_MEASUREMENTS = 'measurements'
+CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_ATTRIBUTION = "Data provided by the Swiss Federal Office for the " \
                    "Environment FOEN"
 
 DEFAULT_NAME = 'SwissHydroData'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION): vol.Coerce(int),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_MEASUREMENTS): vol.Any([
-        'temperature',
-        'level',
-        'discharge',
-        'min_temperature',
-        'min_level',
-        'min_discharge',
-        'max_temperature',
-        'max_level',
-        'max_discharge',
-        'mean_temperature',
-        'mean_level',
-        'mean_discharge'
-    ])
+    vol.Required(CONF_MONITORED_CONDITIONS): vol.Any({
+        "temperature": vol.Any([
+            "value",
+            "previous-24h",
+            "delta-24h",
+            "max-24h",
+            "mean-24h",
+            "min-24h",
+            "max-1h",
+            "mean-1h",
+            "min-1h",
+        ]),
+        "level": vol.Any([
+            "value",
+            "previous-24h",
+            "delta-24h",
+            "max-24h",
+            "mean-24h",
+            "min-24h",
+            "max-1h",
+            "mean-1h",
+            "min-1h",
+        ]),
+        "discharge": vol.Any([
+            "value",
+            "previous-24h",
+            "delta-24h",
+            "max-24h",
+            "mean-24h",
+            "min-24h",
+            "max-1h",
+            "mean-1h",
+            "min-1h"
+        ])
+    })
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Swiss hydrological sensor."""
-    name = config.get(CONF_NAME)
+    from swisshydrodata import SwissHydroData
+
     station = config.get(CONF_STATION)
-    measurements = config.get(CONF_MEASUREMENTS)
+    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
 
-    data = HydrologicalData(station)
+    shd = SwissHydroData()
 
-    response = requests.get(
-        "https://www.hydrodaten.admin.ch/en/{0}.html".format(station),
-        timeout=5
-    )
-    if response.status_code != 200:
+    if station not in shd.get_stations():
         _LOGGER.error("The given station does not exist: %s", station)
         return False
 
+    hydro_data = HydrologicalData(station)
+    hydro_data.update()
     entities = []
-    for measurement in measurements:
-        entities.append(SwissHydrologicalDataSensor(name, data, measurement))
+
+    for condition in monitored_conditions:
+        for value in monitored_conditions[condition]:
+            entities.append(
+                SwissHydrologicalDataSensor(hydro_data, condition, value)
+            )
 
     add_entities(entities, True)
 
@@ -76,26 +98,28 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SwissHydrologicalDataSensor(Entity):
     """Implementation of an Swiss hydrological sensor."""
 
-    def __init__(self, name, data, measurement):
+    def __init__(self, hydro_data, measurement, value):
         """Initialize the sensor."""
-        self.data = data
-        self._name = name
+        self.hydro_data = hydro_data
+        self._name = None
         self._measurement = measurement
+        self._value = value
         self._unit_of_measurement = None
         self._state = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        if not self._name:
-            self._name = "SwissHydroData"
-        return "{0}_{1}".format(self._name, self._measurement)
+        return "{0} {1} {2}".format(
+            self.hydro_data.data["name"],
+            self._measurement,
+            self._value)
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self._state is not STATE_UNKNOWN:
-            return self.data.measurements[self._measurement]["unit"]
+            return self.hydro_data.data["parameters"][self._measurement]["unit"]
         return None
 
     @property
@@ -107,10 +131,14 @@ class SwissHydrologicalDataSensor(Entity):
             return STATE_UNKNOWN
 
     @property
-    def device_state_attributes(self):
+    def state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+            "ATTR_WATER_BODY": self.hydro_data.data["water-body-name"],
+            "ATTR_WATER_BODY_TYPE": self.hydro_data.data["water-body-type"],
+            "ATTR_STATION": self.hydro_data.data["name"],
+            "ATTR_UPDATE": self.hydro_data.data["parameters"][self._measurement]["datetime"],
+            "ATTR_ATTRIBUTION": CONF_ATTRIBUTION
         }
 
     @property
@@ -127,11 +155,11 @@ class SwissHydrologicalDataSensor(Entity):
 
     def update(self):
         """Get the latest data and update the state."""
-        self.data.update()
-        if self.data.measurements is None:
+        self.hydro_data.update()
+        if self.hydro_data.data is None:
             self._state = STATE_UNKNOWN
         else:
-            self._state = self.data.measurements[self._measurement]["value"]
+            self._state = self.hydro_data.data["parameters"][self._measurement][self._value]
 
 
 class HydrologicalData:
@@ -140,29 +168,12 @@ class HydrologicalData:
     def __init__(self, station):
         """Initialize the data object."""
         self.station = station
-        self.measurements = None
+        self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from hydrodata.ch."""
+        """Get the latest data. """
         from swisshydrodata import SwissHydroData
 
-        data = {}
-
         shd = SwissHydroData()
-        shd.load_station_data(self.station)
-
-        data["temperature"] = shd.get_latest_temperature()
-        data["level"] = shd.get_latest_level()
-        data["discharge"] = shd.get_latest_discharge()
-        data["min_temperature"] = shd.get_min_temperature()
-        data["min_level"] = shd.get_min_level()
-        data["min_discharge"] = shd.get_min_discharge()
-        data["max_temperature"] = shd.get_max_temperature()
-        data["max_level"] = shd.get_max_level()
-        data["max_discharge"] = shd.get_max_discharge()
-        data["mean_temperature"] = shd.get_mean_temperature()
-        data["mean_level"] = shd.get_mean_level()
-        data["mean_discharge"] = shd.get_mean_discharge()
-
-        self.measurements = data
+        self.data = shd.get_station(self.station)
