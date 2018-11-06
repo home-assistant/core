@@ -29,14 +29,12 @@ DOMAIN = 'w800rf32'
 DATA_W800RF32 = 'data_w800rf32'
 W800RF32_DEVICE = 'w800rf32_{}'
 CONF_OFF_DELAY = 'off_delay'
-CONF_DEBUG = 'debug'
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): cv.string,
-        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Required(CONF_DEVICE): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
 
