@@ -75,7 +75,6 @@ async def async_setup(hass, config):
         @callback
         def reconnect():
             """Schedule reconnect after connection has been lost."""
-
             async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
             # If HA is not stopping, initiate new connection
