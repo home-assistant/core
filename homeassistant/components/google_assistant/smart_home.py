@@ -7,7 +7,9 @@ from homeassistant.util.decorator import Registry
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES)
+    CLOUD_NEVER_EXPOSED_ENTITIES, CONF_NAME, STATE_UNAVAILABLE,
+    ATTR_SUPPORTED_FEATURES
+)
 from homeassistant.components import (
     climate,
     cover,
@@ -22,6 +24,7 @@ from homeassistant.components import (
     switch,
     vacuum,
 )
+
 
 from . import trait
 from .const import (
@@ -234,6 +237,9 @@ async def async_devices_sync(hass, config, payload):
     """
     devices = []
     for state in hass.states.async_all():
+        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+            continue
+
         if not config.should_expose(state):
             continue
 

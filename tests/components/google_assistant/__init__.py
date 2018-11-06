@@ -254,12 +254,4 @@ DEMO_DEVICES = [{
     'traits': ['action.devices.traits.LockUnlock'],
     'type': 'action.devices.types.LOCK',
     'willReportState': False
-}, {
-    'id': 'group.all_locks',
-    'name': {
-        'name': 'all locks'
-    },
-    'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.SWITCH',
-    'willReportState': False
 }]

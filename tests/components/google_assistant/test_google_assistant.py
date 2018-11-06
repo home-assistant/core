@@ -9,6 +9,7 @@ import pytest
 from homeassistant import core, const, setup
 from homeassistant.components import (
     fan, cover, light, switch, climate, lock, async_setup, media_player)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.components import google_assistant as ga
 
 from . import DEMO_DEVICES
@@ -122,6 +123,9 @@ def test_sync_request(hass_fixture, assistant_client, auth_header):
     assert (
         sorted([dev['id'] for dev in devices])
         == sorted([dev['id'] for dev in DEMO_DEVICES]))
+
+    for dev in devices:
+        assert dev['id'] not in CLOUD_NEVER_EXPOSED_ENTITIES
 
     for dev, demo in zip(
             sorted(devices, key=lambda d: d['id']),
