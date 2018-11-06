@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_NAME, CONF_ICON, CONF_URL)
+from homeassistant.const import (CONF_NAME, CONF_ICON, CONF_URL,
+                                 CONF_VALUE_TEMPLATE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
@@ -23,9 +24,10 @@ DOMAIN = 'weblink'
 
 ENTITIES_SCHEMA = vol.Schema({
     # pylint: disable=no-value-for-parameter
-    vol.Required(CONF_URL): vol.Any(
+    vol.Optional(CONF_URL): vol.Any(
         vol.Match(CONF_RELATIVE_URL_REGEX, msg=CONF_RELATIVE_URL_ERROR_MSG),
         vol.Url()),
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
 })
@@ -42,7 +44,14 @@ def setup(hass, config):
     links = config.get(DOMAIN)
 
     for link in links.get(CONF_ENTITIES):
-        Link(hass, link.get(CONF_NAME), link.get(CONF_URL),
+        value_template = link.get(CONF_VALUE_TEMPLATE)
+        if value_template:
+            value_template.hass = hass
+            url = value_template.render()
+        else:
+            url = link.get(CONF_URL)
+
+        Link(hass, link.get(CONF_NAME), url,
              link.get(CONF_ICON))
 
     return True
