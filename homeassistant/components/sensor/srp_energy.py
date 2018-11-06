@@ -2,7 +2,7 @@
 Platform for retrieving energy data from SRP.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/energy.srp_energy/
+https://home-assistant.io/components/sensor.srp_energy/
 """
 from datetime import datetime, timedelta
 import logging
@@ -16,10 +16,10 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.components.sensor import PLATFORM_SCHEMA  # noqa
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['srpenergy==1.0.2']
+REQUIREMENTS = ['srpenergy==1.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,13 +54,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     srp_client = SrpEnergyClient(account_id, username, password)
 
-<<<<<<< 0e4d33cdfb5a2cc828a63e9d76fa0762c26d7de3
-=======
     if not srp_client.validate():
         _LOGGER.error("Couldn't connect to %s. Check credentials", name)
         return
 
->>>>>>> Remove period. Rename _ variables.
     add_entities([SrpEnergy(name, srp_client)], True)
 
 
@@ -73,9 +70,7 @@ class SrpEnergy(Entity):
         self._name = name
         self._client = client
         self._history = None
-        self._unit_of_measurement = ENERGY_KWH
-
-        self.usage = None
+        self._usage = None
 
     @property
     def attribution(self):
@@ -98,46 +93,34 @@ class SrpEnergy(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        return ENERGY_KWH
 
     @property
     def history(self):
         """Return the energy usage history of this entity, if any."""
-        if self.data is None:
+        if self._usage is None:
             return None
 
-<<<<<<< 0e4d33cdfb5a2cc828a63e9d76fa0762c26d7de3
-        data = [{
-                ATTR_READING_TIME:
-                    isodate,
-                ATTR_READING_USAGE:
-                    kwh,
-                ATTR_READING_COST:
-                    cost
-                } for date, hour, isodate, kwh, cost in self.data]
-=======
         history = [{
             ATTR_READING_TIME: isodate,
             ATTR_READING_USAGE: kwh,
             ATTR_READING_COST: cost
             } for _, _, isodate, kwh, cost in self._usage]
->>>>>>> Remove period. Rename _ variables.
 
-        return data
+        return history
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
-        data = {
-            ATTR_DAILY_USAGE: self.state,
+        attributes = {
             ATTR_USAGE_HISTORY: self.history
         }
 
-        return data
+        return attributes
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from SRP Energy."""
+        """Get the latest usage from SRP Energy."""
         start_date = datetime.now() + timedelta(days=-1)
         end_date = datetime.now()
 
@@ -146,31 +129,21 @@ class SrpEnergy(Entity):
             usage = self._client.usage(start_date, end_date)
 
             daily_usage = 0.0
-<<<<<<< 0e4d33cdfb5a2cc828a63e9d76fa0762c26d7de3
-            for date, hour, isodate, kwh, cost in usage:
-=======
             for _, _, _, kwh, _ in usage:
->>>>>>> Remove period. Rename _ variables.
                 daily_usage = daily_usage + float(kwh)
 
-            if(len(usage) > 0):
+            if usage:
 
                 self._state = daily_usage
-                self.data = usage
+                self._usage = usage
 
             else:
                 _LOGGER.error("Unable to fetch data from SRP. No data")
 
         except (ConnectError, HTTPError, Timeout) as error:
             _LOGGER.error("Unable to connect to SRP. %s", error)
-            self.data = None
         except ValueError as error:
             _LOGGER.error("Value error connecting to SRP. %s", error)
-            self.data = None
         except TypeError as error:
             _LOGGER.error("Type error connecting to SRP. "
                           "Check username and password. %s", error)
-            self.data = None
-        except Exception as error:
-            _LOGGER.error("Unknown error connecting to SRP. %s", error)
-            self.data = None
