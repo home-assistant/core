@@ -968,21 +968,30 @@ def async_setup(hass, config):
     by the cloud component which will call async_handle_message directly.
     """
 
-    global AUTH
-    AUTH = Auth(hass, config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET])
+    if config.get(CONF_CLIENT_ID) and config.get(CONF_CLIENT_SECRET):
+        global AUTH
+        AUTH = Auth(hass, config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET])
+
+    async_get_access_token = AUTH.async_get_access_token if AUTH else None
 
     smart_home_config = Config(
-        endpoint=config[CONF_ENDPOINT],
-        async_get_access_token=AUTH.async_get_access_token,
+        endpoint=config.get(CONF_ENDPOINT),
+        async_get_access_token=async_get_access_token,
         should_expose=config[CONF_FILTER],
         entity_config=config.get(CONF_ENTITY_CONFIG),
     )
     hass.http.register_view(SmartHomeView(smart_home_config))
 
-    hass.loop.create_task(async_enable_proactive_mode(hass, smart_home_config))
+    if AUTH:
+        hass.loop.create_task(
+            async_enable_proactive_mode(hass, smart_home_config))
 
 
 async def async_enable_proactive_mode(hass, smart_home_config):
+    if smart_home_config.async_get_access_token is None:
+        # no function to call to get token
+        return
+
     if await smart_home_config.async_get_access_token() is None:
         # not ready yet
         return
@@ -1398,8 +1407,9 @@ async def async_api_accept_grant(hass, config, directive, context):
     auth_code = directive.payload['grant']['code']
     _LOGGER.debug("AcceptGrant code: {0}".format(auth_code))
 
-    await AUTH.async_do_auth(auth_code)
-    await async_enable_proactive_mode(hass, config)
+    if AUTH:
+        await AUTH.async_do_auth(auth_code)
+        await async_enable_proactive_mode(hass, config)
 
     return directive.response(
         name='AcceptGrant.Response',
