@@ -2,10 +2,10 @@
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
     STATE_LOCKED, STATE_UNLOCKED, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
-import homeassistant.components.lock as lock
+from homeassistant.components import lock, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 
-from tests.common import async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message, MockConfigEntry
 
 
 async def test_controlling_state_via_topic(hass, mqtt_mock):
@@ -136,7 +136,8 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
 async def test_discovery_removal_lock(hass, mqtt_mock, caplog):
     """Test removal of discovered lock."""
-    await async_start(hass, 'homeassistant', {'mqtt': {}})
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
     data = (
         '{ "name": "Beer",'
         '  "command_topic": "test_topic" }'
