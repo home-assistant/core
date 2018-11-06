@@ -12,7 +12,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_MESSAGE, ATTR_TITLE, DOMAIN as DOMAIN_NOTIFY)
+    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, DOMAIN as DOMAIN_NOTIFY)
 from homeassistant.const import (
     CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
@@ -82,14 +82,14 @@ async def async_setup(hass, config):
         done_message_template = cfg.get(CONF_DONE_MESSAGE)
         notifiers = cfg.get(CONF_NOTIFIERS)
         can_ack = cfg.get(CONF_CAN_ACK)
-        title = cfg.get(CONF_TITLE)
+        title_template = cfg.get(CONF_TITLE)
         data = cfg.get(CONF_DATA)
 
         entities.append(Alert(hass, object_id, name,
                               watched_entity_id, alert_state, repeat,
                               skip_first, message_template,
                               done_message_template, notifiers,
-                              can_ack, title, data))
+                              can_ack, title_template, data))
 
     if not entities:
         return False
@@ -134,14 +134,13 @@ class Alert(ToggleEntity):
 
     def __init__(self, hass, entity_id, name, watched_entity_id,
                  state, repeat, skip_first, message_template,
-                 done_message_template, notifiers, can_ack, title,
+                 done_message_template, notifiers, can_ack, title_template,
                  data):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
         self._alert_state = state
         self._skip_first = skip_first
-        self._title = title
         self._data = data
 
         self._message_template = message_template
@@ -151,6 +150,10 @@ class Alert(ToggleEntity):
         self._done_message_template = done_message_template
         if self._done_message_template is not None:
             self._done_message_template.hass = hass
+
+        self._title_template = title_template
+        if self._title_template is not None:
+            self._title_template.hass = hass
 
         self._notifiers = notifiers
         self._can_ack = can_ack
@@ -264,10 +267,12 @@ class Alert(ToggleEntity):
 
         msg_payload = {ATTR_MESSAGE: message}
 
-        if self._title:
-            msg_payload.update({ATTR_TITLE: self._title})
+        if self._title_template is not None:
+            msg_payload.update({ATTR_TITLE: self._title_template.async_render()})
         if self._data:
-            msg_payload.update(self._data)
+            msg_payload.update({ATTR_DATA: self._data})
+
+        _LOGGER.debug(msg_payload)
 
         for target in self._notifiers:
             await self.hass.services.async_call(
