@@ -10,6 +10,7 @@ from homeassistant.components import (
     input_boolean,
     media_player,
     light,
+    lock,
     scene,
     script,
     switch,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_LOCKED,
     STATE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -40,6 +42,7 @@ TRAIT_COLOR_SPECTRUM = PREFIX_TRAITS + 'ColorSpectrum'
 TRAIT_COLOR_TEMP = PREFIX_TRAITS + 'ColorTemperature'
 TRAIT_SCENE = PREFIX_TRAITS + 'Scene'
 TRAIT_TEMPERATURE_SETTING = PREFIX_TRAITS + 'TemperatureSetting'
+TRAIT_LOCKUNLOCK = PREFIX_TRAITS + 'LockUnlock'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
@@ -54,6 +57,7 @@ COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
 COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
     PREFIX_COMMANDS + 'ThermostatTemperatureSetRange')
 COMMAND_THERMOSTAT_SET_MODE = PREFIX_COMMANDS + 'ThermostatSetMode'
+COMMAND_LOCKUNLOCK = PREFIX_COMMANDS + 'LockUnlock'
 
 
 TRAITS = []
@@ -77,10 +81,11 @@ class _Trait:
 
     commands = []
 
-    def __init__(self, hass, state):
+    def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
         self.hass = hass
         self.state = state
+        self.config = config
 
     def sync_attributes(self):
         """Return attributes for a sync request."""
@@ -628,3 +633,45 @@ class TemperatureSettingTrait(_Trait):
                     climate.ATTR_OPERATION_MODE:
                         self.google_to_hass[params['thermostatMode']],
                 }, blocking=True)
+
+
+@register_trait
+class LockUnlockTrait(_Trait):
+    """Trait to lock or unlock a lock.
+
+    https://developers.google.com/actions/smarthome/traits/lockunlock
+    """
+
+    name = TRAIT_LOCKUNLOCK
+    commands = [
+        COMMAND_LOCKUNLOCK
+    ]
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        return domain == lock.DOMAIN
+
+    def sync_attributes(self):
+        """Return LockUnlock attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return LockUnlock query attributes."""
+        return {'isLocked': self.state.state == STATE_LOCKED}
+
+    def can_execute(self, command, params):
+        """Test if command can be executed."""
+        allowed_unlock = not params['lock'] and self.config.allow_unlock
+        return params['lock'] or allowed_unlock
+
+    async def execute(self, command, params):
+        """Execute an LockUnlock command."""
+        if params['lock']:
+            service = lock.SERVICE_LOCK
+        else:
+            service = lock.SERVICE_UNLOCK
+
+        await self.hass.services.async_call(lock.DOMAIN, service, {
+            ATTR_ENTITY_ID: self.state.entity_id
+        }, blocking=True)
