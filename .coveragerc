@@ -768,6 +768,7 @@ omit =
     homeassistant/components/sensor/rainbird.py
     homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/rtorrent.py
+    homeassistant/components/sensor/ruter.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
