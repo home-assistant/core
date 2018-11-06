@@ -10,7 +10,6 @@ from datetime import timedelta
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.components.lupusec import DOMAIN as LUPUSEC_DOMAIN
 from homeassistant.components.lupusec import LupusecDevice
-
 from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME,
                                  STATE_ALARM_DISARMED)
@@ -24,9 +23,12 @@ SCAN_INTERVAL = timedelta(seconds=2)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an alarm control panel for a Lupusec device."""
+    if discovery_info is None:
+        return
+
     data = hass.data[LUPUSEC_DOMAIN]
 
-    alarm_devices = [LupusecAlarm(data, data.lupusec.get_alarm(), data.name)]
+    alarm_devices = [LupusecDevice(data, data.lupusec.get_alarm())]
 
     add_entities(alarm_devices)
 
@@ -34,9 +36,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LupusecAlarm(LupusecDevice, AlarmControlPanel):
     """An alarm_control_panel implementation for Lupusec."""
 
-    def __init__(self, data, device):
-        """Initialize the alarm control panel."""
-        super().__init__(data, device)
+    # def __init__(self, data, device):
+    #     """Initialize the alarm control panel."""
+    #     super().__init__(data, device)
 
     @property
     def icon(self):
