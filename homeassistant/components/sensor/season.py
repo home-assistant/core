@@ -40,7 +40,6 @@ SEASON_ICONS = {
     STATE_AUTUMN: 'mdi:leaf',
     STATE_WINTER: 'mdi:snowflake'
 }
-DEFAULT_CLOUD_ICON = 'mdi:cloud'
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -127,7 +126,7 @@ class Season(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return SEASON_ICONS.get(self.season, DEFAULT_CLOUD_ICON)
+        return SEASON_ICONS.get(self.season, 'mdi:cloud')
 
     def update(self):
         """Update season."""
