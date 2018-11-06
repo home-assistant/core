@@ -268,7 +268,8 @@ class Alert(ToggleEntity):
         msg_payload = {ATTR_MESSAGE: message}
 
         if self._title_template is not None:
-            msg_payload.update({ATTR_TITLE: self._title_template.async_render()})
+            title = self._title_template.async_render()
+            msg_payload.update({ATTR_TITLE: title})
         if self._data:
             msg_payload.update({ATTR_DATA: self._data})
 
