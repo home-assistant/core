@@ -102,5 +102,5 @@ class VeloSensor(Entity):
         try:
             station_data = self.make_request()
             self._state = int(station_data["bikes"])
-        except BaseException:
+        except KeyError:
             self._state = None
