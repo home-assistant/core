@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT,
     EVENT_HOMEASSISTANT_STOP, CONF_SWITCHES, CONF_NAME)
 from homeassistant.core import CoreState, callback
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
@@ -76,8 +75,6 @@ async def async_setup(hass, config):
         @callback
         def reconnect():
             """Schedule reconnect after connection has been lost."""
-            # Reset protocol binding before starting reconnect
-            SW16Device.set_hlk_sw16_protocol(None, device)
 
             async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
@@ -114,15 +111,14 @@ async def async_setup(hass, config):
                 hass.loop.call_later(reconnect_interval, reconnect, exc)
                 return
 
+            hass.data[DATA_DEVICE_REGISTER][device] = protocol
+
             # Load platforms
             for comp_name, comp_conf in switches.items():
                 hass.async_create_task(
                     async_load_platform(hass, 'switch', DOMAIN,
                                         (comp_name, comp_conf, device),
                                         config))
-
-            # Bind protocol to command class to allow entities to send commands
-            SW16Device.set_hlk_sw16_protocol(protocol, device)
 
             # handle shutdown of HLK-SW16 asyncio transport
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
@@ -143,23 +139,14 @@ class SW16Device(Entity):
     Contains the common logic for HLK-SW16 entities.
     """
 
-    platform = None
-    _available = True
-    _protocol_reg = {}
-
-    def __init__(self, relay_name, device_port, device_id, name=None):
+    def __init__(self, relay_name, device_port, device_id, protocol):
         """Initialize the device."""
         # HLK-SW16 specific attributes for every component type
         self._device_id = device_id
         self._device_port = device_port
         self._is_on = None
-        self._protocol = self._protocol_reg[device_id]
+        self._protocol = protocol
         self._name = relay_name
-
-    @classmethod
-    def set_hlk_sw16_protocol(cls, protocol, device_id):
-        """Set the HLK-S16 asyncio protocol as a class variable."""
-        cls._protocol_reg[device_id] = protocol
 
     def is_connected(self):
         """Return connection status."""
@@ -191,12 +178,11 @@ class SW16Device(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._available
+        return self.is_connected()
 
     @callback
     def _availability_callback(self, availability):
         """Update availability state."""
-        self._available = availability
         self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
@@ -214,17 +200,20 @@ class SwitchableSW16Device(SW16Device):
     async def async_update(self):
         """Get current switch status from the device."""
         if not self.is_connected():
-            raise HomeAssistantError('Cannot send command, not connected!')
+            _LOGGER.error('Cannot send command, not connected!')
+            return
         await self._protocol.status(self._device_port)
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         if not self.is_connected():
-            raise HomeAssistantError('Cannot send command, not connected!')
+            _LOGGER.error('Cannot send command, not connected!')
+            return
         await self._protocol.turn_on(self._device_port)
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if not self.is_connected():
-            raise HomeAssistantError('Cannot send command, not connected!')
+            _LOGGER.error('Cannot send command, not connected!')
+            return
         await self._protocol.turn_off(self._device_port)
