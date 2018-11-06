@@ -717,6 +717,9 @@ class _ClimateCapabilities(_AlexaEntity):
         return [_DisplayCategory.THERMOSTAT]
 
     def interfaces(self):
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & climate.SUPPORT_ON_OFF:
+            yield _AlexaPowerController(self.entity)
         yield _AlexaThermostatController(self.hass, self.entity)
         yield _AlexaTemperatureSensor(self.hass, self.entity)
 
