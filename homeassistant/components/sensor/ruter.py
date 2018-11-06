@@ -42,12 +42,12 @@ async def async_setup_platform(
     offset = config[CONF_OFFSET]
 
     ruter = Departures(hass.loop, stop_id, destination)
-    sensor = [TautulliSensor(ruter, name, offset)]
+    sensor = [RuterSensor(ruter, name, offset)]
     async_add_entities(sensor, True)
 
 
 class RuterSensor(Entity):
-    """Representation of the Sensor."""
+    """Representation of a Ruter sensor."""
 
     def __init__(self, ruter, name, offset):
         """Initialize the sensor."""
