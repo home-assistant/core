@@ -25,7 +25,7 @@ import homeassistant.helpers.config_validation as cv
 
 positive_float = vol.All(vol.Coerce(float), vol.Range(min=0))
 
-REQUIREMENTS = ['trio_owfs>=0.6.7']
+REQUIREMENTS = ['trio_owfs==0.6.7']
 
 DOMAIN = "owfs"
 DATA_OWFS = "data_owfs"

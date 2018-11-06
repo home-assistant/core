@@ -694,10 +694,6 @@ openhomedevice==0.4.2
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
 
-# homeassistant.components.owfs
-# homeassistant.components.*.owfs
-trio_owfs==0.6.7
-
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
 paho-mqtt==1.4.0
@@ -1508,6 +1504,9 @@ tplink==0.2.1
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
+
+# homeassistant.components.owfs
+trio_owfs==0.6.7
 
 # homeassistant.components.tuya
 tuyapy==0.1.3
