@@ -148,10 +148,6 @@ class SW16Device(Entity):
         self._protocol = protocol
         self._name = relay_name
 
-    def is_connected(self):
-        """Return connection status."""
-        return bool(self._protocol)
-
     @callback
     def handle_event_callback(self, event):
         """Propagate changes through ha."""
@@ -178,7 +174,7 @@ class SW16Device(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self.is_connected()
+        return bool(self._protocol)
 
     @callback
     def _availability_callback(self, availability):
@@ -199,21 +195,21 @@ class SwitchableSW16Device(SW16Device):
 
     async def async_update(self):
         """Get current switch status from the device."""
-        if not self.is_connected():
+        if not self.available:
             _LOGGER.error('Cannot send command, not connected!')
             return
         await self._protocol.status(self._device_port)
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        if not self.is_connected():
+        if not self.available:
             _LOGGER.error('Cannot send command, not connected!')
             return
         await self._protocol.turn_on(self._device_port)
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        if not self.is_connected():
+        if not self.available:
             _LOGGER.error('Cannot send command, not connected!')
             return
         await self._protocol.turn_off(self._device_port)
