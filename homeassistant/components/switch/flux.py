@@ -179,13 +179,13 @@ class FluxSwitch(SwitchDevice):
         if self.is_on:
             return
 
-        # Make initial update
-        await self.async_flux_update()
-
         self.unsub_tracker = async_track_time_interval(
             self.hass,
             self.async_flux_update,
             datetime.timedelta(seconds=self._interval))
+
+        # Make initial update
+        await self.async_flux_update()
 
         self.async_schedule_update_ha_state()
 
