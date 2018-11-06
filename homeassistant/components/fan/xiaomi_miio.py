@@ -48,6 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'zhimi.airpurifier.v3',
          'zhimi.airpurifier.v5',
          'zhimi.airpurifier.v6',
+         'zhimi.airpurifier.mc1',
          'zhimi.humidifier.v1',
          'zhimi.humidifier.ca1',
          'zhimi.airfresh.va2']),
