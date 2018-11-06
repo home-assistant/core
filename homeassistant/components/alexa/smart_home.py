@@ -32,8 +32,8 @@ import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 from homeassistant.util.temperature import convert as convert_temperature
 
-from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ENTITY_CONFIG, \
-    CONF_FILTER, DATE_FORMAT, DEFAULT_TIMEOUT
+from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ENDPOINT, \
+    CONF_ENTITY_CONFIG, CONF_FILTER, DATE_FORMAT, DEFAULT_TIMEOUT
 from .auth import Auth
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,8 +74,6 @@ CONF_DISPLAY_CATEGORIES = 'display_categories'
 HANDLERS = Registry()
 ENTITY_ADAPTERS = Registry()
 EVENT_ALEXA_SMART_HOME = 'alexa_smart_home'
-
-ALEXA_URI = "https://api.amazonalexa.com/v3/events"
 
 AUTH = None
 
@@ -950,9 +948,10 @@ class _Cause:
 class Config:
     """Hold the configuration for Alexa."""
 
-    def __init__(self, client_id, client_secret, should_expose,
+    def __init__(self, endpoint, client_id, client_secret, should_expose,
                  entity_config=None):
         """Initialize the configuration."""
+        self.endpoint = endpoint
         self.client_id = client_id
         self.client_secret = client_secret
         self.should_expose = should_expose
@@ -971,6 +970,7 @@ def async_setup(hass, config):
     """
 
     smart_home_config = Config(
+        endpoint=config[CONF_ENDPOINT],
         client_id=config[CONF_CLIENT_ID],
         client_secret=config[CONF_CLIENT_SECRET],
         should_expose=config[CONF_FILTER],
@@ -1013,7 +1013,7 @@ async def async_enable_proactive_mode(hass, smart_home_config):
                 # by Alexa (store them in the prefs?) and, if not, send a
                 # proactive discovery message instead.
                 hass.async_add_job(async_send_changereport_message, hass,
-                                   alexa_changed_entity)
+                                   smart_home_config, alexa_changed_entity)
                 return
 
     async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
@@ -1288,7 +1288,7 @@ async def async_handle_message(
     return response.serialize()
 
 
-async def async_send_changereport_message(hass, alexa_entity):
+async def async_send_changereport_message(hass, config, alexa_entity):
     """Send a ChangeReport message for an Alexa entity."""
 
     token = await AUTH.async_get_access_token()
@@ -1326,7 +1326,7 @@ async def async_send_changereport_message(hass, alexa_entity):
     try:
         session = aiohttp_client.async_get_clientsession(hass)
         with async_timeout.timeout(DEFAULT_TIMEOUT, loop=hass.loop):
-            response = await session.post(ALEXA_URI,
+            response = await session.post(config.endpoint,
                                           headers=headers,
                                           data=message_str,
                                           allow_redirects=True)
