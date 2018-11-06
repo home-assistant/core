@@ -83,7 +83,8 @@ class VeloSensor(Entity):
 
     def make_request(self):
         """Perform the API request to the Velo Antwerpen API"""
-        request = requests.Request("GET", "https://www.velo-antwerpen.be/availability_map/getJsonObject"
+        request = requests.Request("GET",
+                                   "https://www.velo-antwerpen.be/availability_map/getJsonObject"
                                    ).prepare()
         try:
             with requests.Session() as sess:
