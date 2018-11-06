@@ -11,6 +11,7 @@ from aiohttp.web import Request, Response
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 
 from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
@@ -36,6 +37,9 @@ def async_register_http(hass, cfg):
         """Determine if an entity should be exposed to Google Assistant."""
         if entity.attributes.get('view') is not None:
             # Ignore entities that are views
+            return False
+
+        if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
 
         explicit_expose = \
