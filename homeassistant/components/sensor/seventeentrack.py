@@ -17,7 +17,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, slugify
 
-REQUIREMENTS = ['py17track==2.0.1']
+REQUIREMENTS = ['py17track==2.0.2']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DESTINATION_COUNTRY = 'destination_country'
@@ -34,6 +34,10 @@ DATA_SUMMARY = 'summary_data'
 
 DEFAULT_ATTRIBUTION = 'Data provided by 17track.net'
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
+
+NOTIFICATION_DELIVERED_ID_SCAFFOLD = 'package_delivered_{0}'
+NOTIFICATION_DELIVERED_TITLE = 'Package Delivered'
+NOTIFICATION_DELIVERED_URL_SCAFFOLD = 'https://t.17track.net/track#nums={0}'
 
 VALUE_DELIVERED = 'Delivered'
 
@@ -59,20 +63,17 @@ async def async_setup_platform(
         login_result = await client.profile.login(
             config[CONF_USERNAME], config[CONF_PASSWORD])
 
-        if login_result is False:
+        if not login_result:
             _LOGGER.error('Invalid username and password provided')
-            return False
+            return
     except SeventeenTrackError as err:
         _LOGGER.error('There was an error while logging in: %s', err)
-        return False
+        return
 
-    if CONF_SCAN_INTERVAL in config:
-        scan_interval = config[CONF_SCAN_INTERVAL]
-    else:
-        scan_interval = DEFAULT_SCAN_INTERVAL
+    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     data = SeventeenTrackData(
-        client, scan_interval, config[CONF_SHOW_ARCHIVED],
+        client, async_add_entities, scan_interval, config[CONF_SHOW_ARCHIVED],
         config[CONF_SHOW_DELIVERED])
     await data.async_update()
 
@@ -90,12 +91,12 @@ async def async_setup_platform(
 class SeventeenTrackSummarySensor(Entity):
     """Define a summary sensor."""
 
-    def __init__(self, data, name, initial_state):
+    def __init__(self, data, status, initial_state):
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._data = data
-        self._name = name
         self._state = initial_state
+        self._status = status
 
     @property
     def device_state_attributes(self):
@@ -110,7 +111,7 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return 'Packages {0}'.format(self._name)
+        return 'Packages {0}'.format(self._status)
 
     @property
     def state(self):
@@ -120,20 +121,19 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}'.format(self._data.account_id, slugify(self._name))
+        return 'summary_{0}_{1}'.format(
+            self._data.account_id, slugify(self._status))
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        if self._state == 1:
-            return 'package'
         return 'packages'
 
     async def async_update(self):
         """Update the sensor."""
         await self._data.async_update()
 
-        self._state = self._data.summary[self._name]
+        self._state = self._data.summary[self._status]
 
 
 class SeventeenTrackPackageSensor(Entity):
@@ -151,8 +151,8 @@ class SeventeenTrackPackageSensor(Entity):
             ATTR_TRACKING_INFO_LANGUAGE: package.tracking_info_language,
         }
         self._data = data
-        self._name = package.tracking_number
         self._state = package.status
+        self._tracking_number = package.tracking_number
 
     @property
     def device_state_attributes(self):
@@ -167,7 +167,7 @@ class SeventeenTrackPackageSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return self._name
+        return self._tracking_number
 
     @property
     def state(self):
@@ -177,14 +177,43 @@ class SeventeenTrackPackageSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}'.format(self._data.account_id, self._name)
+        return 'package_{0}_{1}'.format(
+            self._data.account_id, self._tracking_number)
 
     async def async_update(self):
         """Update the sensor."""
         await self._data.async_update()
-        [package] = [
-            p for p in self._data.packages if p.tracking_number == self._name
-        ]
+
+        try:
+            package = next(
+                iter([
+                    p for p in self._data.packages
+                    if p.tracking_number == self._tracking_number
+                ]))
+        except StopIteration:
+            # If the package no longer exists in the data, log a message and
+            # delete this entity:
+            _LOGGER.info(
+                'Deleting entity for stale package: %s', self._tracking_number)
+            self.hass.async_create_task(self.async_remove())
+            return
+
+        # If the user has elected to not see delivered packages and one gets
+        # delivered, post a notification and delete the entity:
+        if package.status == VALUE_DELIVERED and not self._data.show_delivered:
+            _LOGGER.info('Package delivered: %s', self._tracking_number)
+            self.hass.components.persistent_notification.create(
+                'Package Delivered: {0}<br />'
+                'Visit 17.track for more infomation: {1}'
+                ''.format(
+                    self._tracking_number,
+                    NOTIFICATION_DELIVERED_URL_SCAFFOLD.format(
+                        self._tracking_number)),
+                title=NOTIFICATION_DELIVERED_TITLE,
+                notification_id=NOTIFICATION_DELIVERED_ID_SCAFFOLD.format(
+                    self._tracking_number))
+            self.hass.async_create_task(self.async_remove())
+            return
 
         self._attrs.update({
             ATTR_INFO_TEXT: package.info_text,
@@ -196,14 +225,17 @@ class SeventeenTrackPackageSensor(Entity):
 class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
-    def __init__(self, client, scan_interval, show_archived, show_delivered):
+    def __init__(
+            self, client, async_add_entities, scan_interval, show_archived,
+            show_delivered):
         """Initialize."""
+        self._async_add_entities = async_add_entities
         self._client = client
         self._scan_interval = scan_interval
         self._show_archived = show_archived
-        self._show_delivered = show_delivered
         self.account_id = client.profile.account_id
         self.packages = []
+        self.show_delivered = show_delivered
         self.summary = {}
 
         self.async_update = Throttle(self._scan_interval)(self._async_update)
@@ -217,12 +249,18 @@ class SeventeenTrackData:
                 show_archived=self._show_archived)
             _LOGGER.debug('New package data received: %s', packages)
 
-            if self._show_delivered:
-                self.packages = packages
-            else:
-                self.packages = [
-                    p for p in packages if p.status != VALUE_DELIVERED
-                ]
+            if not self.show_delivered:
+                packages = [p for p in packages if p.status != VALUE_DELIVERED]
+
+            # Add new packates:
+            to_add = list(set(packages) - set(self.packages))
+            if self.packages and to_add:
+                self._async_add_entities([
+                    SeventeenTrackPackageSensor(self, package)
+                    for package in to_add
+                ], True)
+
+            self.packages = packages
         except SeventeenTrackError as err:
             _LOGGER.error('There was an error retrieving packages: %s', err)
             self.packages = []
