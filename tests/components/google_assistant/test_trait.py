@@ -129,7 +129,9 @@ async def test_onoff_group(hass):
         'on': True
     }
 
-    trt_off = trait.OnOffTrait(hass, State('group.bla', STATE_OFF), BASIC_CONFIG)
+    trt_off = trait.OnOffTrait(hass, State('group.bla', STATE_OFF),
+                               BASIC_CONFIG)
+
     assert trt_off.query_attributes() == {
         'on': False
     }
@@ -157,7 +159,8 @@ async def test_onoff_input_boolean(hass):
     """Test OnOff trait support for input_boolean domain."""
     assert trait.OnOffTrait.supported(input_boolean.DOMAIN, 0)
 
-    trt_on = trait.OnOffTrait(hass, State('input_boolean.bla', STATE_ON), BASIC_CONFIG)
+    trt_on = trait.OnOffTrait(hass, State('input_boolean.bla', STATE_ON),
+                              BASIC_CONFIG)
 
     assert trt_on.sync_attributes() == {}
 
@@ -165,7 +168,9 @@ async def test_onoff_input_boolean(hass):
         'on': True
     }
 
-    trt_off = trait.OnOffTrait(hass, State('input_boolean.bla', STATE_OFF), BASIC_CONFIG)
+    trt_off = trait.OnOffTrait(hass, State('input_boolean.bla', STATE_OFF),
+                               BASIC_CONFIG)
+
     assert trt_off.query_attributes() == {
         'on': False
     }
@@ -194,7 +199,8 @@ async def test_onoff_switch(hass):
     """Test OnOff trait support for switch domain."""
     assert trait.OnOffTrait.supported(switch.DOMAIN, 0)
 
-    trt_on = trait.OnOffTrait(hass, State('switch.bla', STATE_ON), BASIC_CONFIG)
+    trt_on = trait.OnOffTrait(hass, State('switch.bla', STATE_ON),
+                              BASIC_CONFIG)
 
     assert trt_on.sync_attributes() == {}
 
@@ -202,7 +208,9 @@ async def test_onoff_switch(hass):
         'on': True
     }
 
-    trt_off = trait.OnOffTrait(hass, State('switch.bla', STATE_OFF), BASIC_CONFIG)
+    trt_off = trait.OnOffTrait(hass, State('switch.bla', STATE_OFF),
+                               BASIC_CONFIG)
+
     assert trt_off.query_attributes() == {
         'on': False
     }
@@ -274,7 +282,9 @@ async def test_onoff_light(hass):
         'on': True
     }
 
-    trt_off = trait.OnOffTrait(hass, State('light.bla', STATE_OFF), BASIC_CONFIG)
+    trt_off = trait.OnOffTrait(hass, State('light.bla', STATE_OFF),
+                               BASIC_CONFIG)
+
     assert trt_off.query_attributes() == {
         'on': False
     }
@@ -302,7 +312,8 @@ async def test_onoff_cover(hass):
     """Test OnOff trait support for cover domain."""
     assert trait.OnOffTrait.supported(cover.DOMAIN, 0)
 
-    trt_on = trait.OnOffTrait(hass, State('cover.bla', cover.STATE_OPEN), BASIC_CONFIG)
+    trt_on = trait.OnOffTrait(hass, State('cover.bla', cover.STATE_OPEN),
+                              BASIC_CONFIG)
 
     assert trt_on.sync_attributes() == {}
 
@@ -310,7 +321,9 @@ async def test_onoff_cover(hass):
         'on': True
     }
 
-    trt_off = trait.OnOffTrait(hass, State('cover.bla', cover.STATE_CLOSED), BASIC_CONFIG)
+    trt_off = trait.OnOffTrait(hass, State('cover.bla', cover.STATE_CLOSED),
+                               BASIC_CONFIG)
+
     assert trt_off.query_attributes() == {
         'on': False
     }
@@ -339,7 +352,8 @@ async def test_onoff_media_player(hass):
     """Test OnOff trait support for media_player domain."""
     assert trait.OnOffTrait.supported(media_player.DOMAIN, 0)
 
-    trt_on = trait.OnOffTrait(hass, State('media_player.bla', STATE_ON), BASIC_CONFIG)
+    trt_on = trait.OnOffTrait(hass, State('media_player.bla', STATE_ON),
+                              BASIC_CONFIG)
 
     assert trt_on.sync_attributes() == {}
 
@@ -347,7 +361,9 @@ async def test_onoff_media_player(hass):
         'on': True
     }
 
-    trt_off = trait.OnOffTrait(hass, State('media_player.bla', STATE_OFF), BASIC_CONFIG)
+    trt_off = trait.OnOffTrait(hass, State('media_player.bla', STATE_OFF),
+                               BASIC_CONFIG)
+
     assert trt_off.query_attributes() == {
         'on': False
     }
@@ -361,7 +377,9 @@ async def test_onoff_media_player(hass):
         ATTR_ENTITY_ID: 'media_player.bla',
     }
 
-    off_calls = async_mock_service(hass, media_player.DOMAIN, SERVICE_TURN_OFF)
+    off_calls = async_mock_service(hass, media_player.DOMAIN,
+                                   SERVICE_TURN_OFF)
+
     await trt_on.execute(trait.COMMAND_ONOFF, {
         'on': False
     })
@@ -375,7 +393,8 @@ async def test_dock_vacuum(hass):
     """Test dock trait support for vacuum domain."""
     assert trait.DockTrait.supported(vacuum.DOMAIN, 0)
 
-    trt = trait.DockTrait(hass, State('vacuum.bla', vacuum.STATE_IDLE), BASIC_CONFIG)
+    trt = trait.DockTrait(hass, State('vacuum.bla', vacuum.STATE_IDLE),
+                          BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
 
@@ -715,11 +734,14 @@ async def test_temperature_setting_climate_setpoint(hass):
         climate.ATTR_TEMPERATURE: 19
     }
 
+
 async def test_lock_unlock_lock(hass):
     """Test LockUnlock trait locking support for lock domain."""
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN)
 
-    trt = trait.LockUnlockTrait(hass, State('lock.front_door', lock.STATE_UNLOCKED), BASIC_CONFIG)
+    trt = trait.LockUnlockTrait(hass,
+                                State('lock.front_door', lock.STATE_UNLOCKED),
+                                BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
 
@@ -737,11 +759,14 @@ async def test_lock_unlock_lock(hass):
         ATTR_ENTITY_ID: 'lock.front_door'
     }
 
+
 async def test_lock_unlock_unlock(hass):
     """Test LockUnlock trait unlocking support for lock domain."""
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN)
 
-    trt = trait.LockUnlockTrait(hass, State('lock.front_door', lock.STATE_LOCKED), BASIC_CONFIG)
+    trt = trait.LockUnlockTrait(hass,
+                                State('lock.front_door', lock.STATE_LOCKED),
+                                BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
 
@@ -751,7 +776,9 @@ async def test_lock_unlock_unlock(hass):
 
     assert not trt.can_execute(trait.COMMAND_LOCKUNLOCK, {'lock': False})
 
-    trt = trait.LockUnlockTrait(hass, State('lock.front_door', lock.STATE_LOCKED), UNSAFE_CONFIG)
+    trt = trait.LockUnlockTrait(hass,
+                                State('lock.front_door', lock.STATE_LOCKED),
+                                UNSAFE_CONFIG)
 
     assert trt.sync_attributes() == {}
 

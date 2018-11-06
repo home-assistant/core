@@ -658,16 +658,15 @@ class LockUnlockTrait(_Trait):
 
     def query_attributes(self):
         """Return LockUnlock query attributes."""
-
         return {'isLocked': self.state.state == STATE_LOCKED}
 
     def can_execute(self, command, params):
         """Test if command can be executed."""
-        return params['lock'] or (not params['lock'] and self.config.allow_unlock)
+        allowed_unlock = not params['lock'] and self.config.allow_unlock
+        return params['lock'] or allowed_unlock
 
     async def execute(self, command, params):
         """Execute an LockUnlock command."""
-
         if params['lock']:
             service = lock.SERVICE_LOCK
         else:
