@@ -44,7 +44,8 @@ def format_mac(mac):
 
     if len(to_test) == 17 and to_test.count(':') == 5:
         return to_test.lower()
-    elif len(to_test) == 17 and to_test.count('-') == 5:
+
+    if len(to_test) == 17 and to_test.count('-') == 5:
         to_test = to_test.replace('-', '')
     elif len(to_test) == 14 and to_test.count('.') == 2:
         to_test = to_test.replace('.', '')
