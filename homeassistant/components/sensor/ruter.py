@@ -46,8 +46,8 @@ async def async_setup_platform(
     async_add_entities(sensor, True)
 
 
-class TautulliSensor(Entity):
-    """Representation of a Sensor."""
+class RuterSensor(Entity):
+    """Representation of the Sensor."""
 
     def __init__(self, ruter, name, offset):
         """Initialize the sensor."""
@@ -60,7 +60,9 @@ class TautulliSensor(Entity):
     async def async_update(self):
         """Get the latest data from the Ruter API."""
         await self.ruter.get_departures()
-        if self.ruter.departures is not None:
+        if self.ruter.departures is None:
+            _LOGGER.error("No data recieved from Ruter.")
+        else:
             try:
                 data = self.ruter.departures[self._offset]
                 self._state = data['time']
@@ -68,8 +70,6 @@ class TautulliSensor(Entity):
                 self._attributes['destination'] = data['destination']
             except (KeyError, IndexError) as error:
                 _LOGGER.debug("Error getting data from Ruter, %s", error)
-        else:
-            _LOGGER.error("No data recieved from Ruter.")
 
     @property
     def name(self):
