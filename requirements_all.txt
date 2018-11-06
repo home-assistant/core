@@ -1617,7 +1617,7 @@ zeroconf==0.21.3
 zhong_hong_hvac==1.0.9
 
 # homeassistant.components.media_player.ziggo_mediabox_xl
-ziggo-mediabox-xl==1.0.0
+ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.1.1
