@@ -948,12 +948,11 @@ class _Cause:
 class Config:
     """Hold the configuration for Alexa."""
 
-    def __init__(self, endpoint, client_id, client_secret, should_expose,
+    def __init__(self, endpoint, async_get_access_token, should_expose,
                  entity_config=None):
         """Initialize the configuration."""
         self.endpoint = endpoint
-        self.client_id = client_id
-        self.client_secret = client_secret
+        self.async_get_access_token = async_get_access_token
         self.should_expose = should_expose
         self.entity_config = entity_config or {}
 
@@ -969,24 +968,22 @@ def async_setup(hass, config):
     by the cloud component which will call async_handle_message directly.
     """
 
+    global AUTH
+    AUTH = Auth(hass, config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET])
+
     smart_home_config = Config(
         endpoint=config[CONF_ENDPOINT],
-        client_id=config[CONF_CLIENT_ID],
-        client_secret=config[CONF_CLIENT_SECRET],
+        async_get_access_token=AUTH.async_get_access_token,
         should_expose=config[CONF_FILTER],
         entity_config=config.get(CONF_ENTITY_CONFIG),
     )
     hass.http.register_view(SmartHomeView(smart_home_config))
 
-    global AUTH
-    AUTH = Auth(hass, smart_home_config.client_id,
-                smart_home_config.client_secret)
-
     hass.loop.create_task(async_enable_proactive_mode(hass, smart_home_config))
 
 
 async def async_enable_proactive_mode(hass, smart_home_config):
-    if not await AUTH.async_is_auth_done():
+    if await smart_home_config.async_get_access_token() is None:
         # not ready yet
         return
 
@@ -1291,7 +1288,7 @@ async def async_handle_message(
 async def async_send_changereport_message(hass, config, alexa_entity):
     """Send a ChangeReport message for an Alexa entity."""
 
-    token = await AUTH.async_get_access_token()
+    token = await config.async_get_access_token()
     if not token:
         _LOGGER.error("Invalid access token.")
         return

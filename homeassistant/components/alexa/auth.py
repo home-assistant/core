@@ -52,12 +52,6 @@ class Auth:
 
         return await self._async_request_new_token(lwa_params)
 
-    async def async_is_auth_done(self):
-        if self._prefs is None:
-            await self.async_load_preferences()
-
-        return self._prefs[STORAGE_ACCESS_TOKEN] is not None
-
     async def async_get_access_token(self):
         """Performs access token or token refresh request as needed and returns
         valid access token """
@@ -70,7 +64,8 @@ class Auth:
             return self._prefs[STORAGE_ACCESS_TOKEN]
 
         if self._prefs[STORAGE_REFRESH_TOKEN] is None:
-            _LOGGER.error("Token invalid and no refresh token available.")
+            _LOGGER.debug("Token invalid and no refresh token available.")
+            return None
 
         lwa_params = {
             "grant_type": "refresh_token",
