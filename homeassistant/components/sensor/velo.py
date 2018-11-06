@@ -27,12 +27,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Velo sensor."""
     name = config.get(CONF_NAME)
     station = config.get(CONF_STATION_ID)
 
     add_entities([VeloSensor(name, station)], True)
+
 
 class VeloSensor(Entity):
     def __init__(self, name, station):
