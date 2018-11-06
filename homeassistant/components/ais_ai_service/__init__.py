@@ -1236,6 +1236,12 @@ def _widi_rssi_to_info(rssi):
         return "moc bardzo słaba (" + str(rssi) + ")"
     return info
 
+def _wifi_frequency_info(mhz):
+    if mhz.startwith("2"):
+        return "2.4 GHz"
+    elif mhz.startwith("5"):
+        return "5 GHz"
+    return mhz
 
 def _publish_wifi_status(hass, service):
     wifis = json.loads(service.data["payload"])
@@ -1245,7 +1251,7 @@ def _publish_wifi_status(hass, service):
             wifis_names.append(
                 item["ssid"] + "; " +
                 _widi_rssi_to_info(item["rssi"]) +
-                "; " + item["capabilities"])
+                "; " + item["capabilities"] + "; " + _wifi_frequency_info(item["frequency_mhz"]))
     hass.async_run_job(
         hass.services.call(
             'input_select',

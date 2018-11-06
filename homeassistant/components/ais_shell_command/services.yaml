@@ -49,5 +49,5 @@ led:
   description: Sterowanie diodą led umieszczoną z przodu urządzenia
   fields:
     brightness:
-      description: Parametr do przekazania, 0 - czerwony, 255 - niebieski, timer - utuchomienie funkcji mrugania, heartbeat - uruchomienie funkcji bicia serca ...
+      description: Parametr do przekazania, 0 - czerwony, 255 - niebieski, timer - utuchomienie funkcji mrugania, heartbeat - uruchomienie funkcji bicia serca. Inne funkcje to (none, rc-feedback, nand-disk, oneshot, backlight, emmc, sd, sdio, breathe, scpi, scpistop, disturb, rfkill0, rfkill1).
       example: '255'
