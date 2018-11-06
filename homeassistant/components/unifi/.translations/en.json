@@ -6,6 +6,7 @@
         },
         "error": {
             "faulty_credentials": "Bad user credentials",
+            "port_invalid": "Port must be an integer",
             "service_unavailable": "No service available"
         },
         "step": {

@@ -18,7 +18,7 @@ from .controller import UniFiController, get_controller
 from .errors import (
     AlreadyConfigured, AuthenticationRequired, CannotConnect, UserLevel)
 
-DEFAULT_PORT = 8443
+DEFAULT_PORT = '8443'
 DEFAULT_SITE_ID = 'default'
 DEFAULT_VERIFY_SSL = False
 
@@ -98,7 +98,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_PORT: user_input.get(CONF_PORT),
+                    CONF_PORT: int(user_input.get(CONF_PORT)),
                     CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
                     CONF_SITE_ID: DEFAULT_SITE_ID,
                 }
@@ -107,6 +107,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
                 self.sites = await controller.sites()
 
                 return await self.async_step_site()
+
+            except ValueError:
+                errors['base'] = 'port_invalid'
 
             except AuthenticationRequired:
                 errors['base'] = 'faulty_credentials'
@@ -126,7 +129,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): str,
                 vol.Optional(
                     CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
             }),

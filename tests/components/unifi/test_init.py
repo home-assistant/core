@@ -288,11 +288,31 @@ async def test_user_credentials_faulty(hass, aioclient_mock):
             unifi.CONF_HOST: '1.2.3.4',
             unifi.CONF_USERNAME: 'username',
             unifi.CONF_PASSWORD: 'password',
+            unifi.CONF_PORT: '8443',
             unifi.CONF_SITE_ID: 'default',
         })
 
     assert result['type'] == 'form'
     assert result['errors'] == {'base': 'faulty_credentials'}
+
+
+async def test_port_invalid(hass, aioclient_mock):
+    """Test config flow."""
+    flow = unifi.UnifiFlowHandler()
+    flow.hass = hass
+
+    with patch.object(unifi, 'get_controller',
+                      side_effect=unifi.errors.AuthenticationRequired):
+        result = await flow.async_step_user({
+            unifi.CONF_HOST: '1.2.3.4',
+            unifi.CONF_USERNAME: 'username',
+            unifi.CONF_PASSWORD: 'password',
+            unifi.CONF_PORT: 's',
+            unifi.CONF_SITE_ID: 'default',
+        })
+
+    assert result['type'] == 'form'
+    assert result['errors'] == {'base': 'port_invalid'}
 
 
 async def test_controller_is_unavailable(hass, aioclient_mock):
@@ -306,6 +326,7 @@ async def test_controller_is_unavailable(hass, aioclient_mock):
             unifi.CONF_HOST: '1.2.3.4',
             unifi.CONF_USERNAME: 'username',
             unifi.CONF_PASSWORD: 'password',
+            unifi.CONF_PORT: '8443',
             unifi.CONF_SITE_ID: 'default',
         })
 
