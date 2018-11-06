@@ -62,14 +62,14 @@ class RuterSensor(Entity):
         await self.ruter.get_departures()
         if self.ruter.departures is None:
             _LOGGER.error("No data recieved from Ruter.")
-        else:
-            try:
-                data = self.ruter.departures[self._offset]
-                self._state = data['time']
-                self._attributes['line'] = data['line']
-                self._attributes['destination'] = data['destination']
-            except (KeyError, IndexError) as error:
-                _LOGGER.debug("Error getting data from Ruter, %s", error)
+            return
+        try:
+            data = self.ruter.departures[self._offset]
+            self._state = data['time']
+            self._attributes['line'] = data['line']
+            self._attributes['destination'] = data['destination']
+        except (KeyError, IndexError) as error:
+            _LOGGER.debug("Error getting data from Ruter, %s", error)
 
     @property
     def name(self):
