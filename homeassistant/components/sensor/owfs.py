@@ -11,8 +11,6 @@ from homeassistant.components.owfs import (OWFSDevice, init_devices,
                                            DEVICE_SCHEMA)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
-from trio_owfs.event import DeviceValue
-
 DEPENDENCIES = ['owfs']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(DEVICE_SCHEMA.schema)
@@ -44,6 +42,8 @@ class TemperatureSensor(OWFSDevice):
             await self.dev.set_polling_interval("temperature", 30)
 
     async def process_event(self, event):
+        from trio_owfs.event import DeviceValue
+
         if isinstance(event, DeviceValue) and \
                 event.attribute in {'temperature', 'latesttemp'}:
             self.temperature = event.value

@@ -23,12 +23,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-from trio_owfs import OWFS
-from trio_owfs.device import Device as OW_Device
-from trio_owfs.event import ServerRegistered, \
-    ServerDeregistered, \
-    DeviceEvent, DeviceAlarm, DeviceValue
-
 positive_float = vol.All(vol.Coerce(float), vol.Range(min=0))
 
 REQUIREMENTS = ['trio_owfs>=0.6.7']
@@ -213,7 +207,8 @@ class OWFSDevice(Entity):
     _next_poll = 0
     _events = None  # list: remembered events
 
-    def __init__(self, hass: HomeAssistant, dev: OW_Device, config: dict = {}):
+    def __init__(self, hass: HomeAssistant, dev: "trio_owfs.device.Device",
+                 config: dict = {}):
         self.hass = hass
         self.dev = dev
         self._events = None
@@ -284,11 +279,13 @@ class OWFSDevice(Entity):
             rd = self.name + ' ' + rd
         return "<%s:%s>" % (self.__class__.__name__, rd)
 
-    async def process_event(self, evt: DeviceEvent):
+    async def process_event(self, evt: "trio_owfs.event.DeviceEvent"):
         """handle an event from OWFS.
 
         If the event is an alarm, trigger a message.
         """
+        from trio_owfs.event import DeviceAlarm, DeviceValue
+
         if isinstance(evt, DeviceAlarm):
             self.hass.bus.async_fire(
                 EVENT_OWFS_ALARM, {
@@ -327,6 +324,7 @@ class OWFSModule:
 
     async def _owfs_service(self, evt_start: asyncio.Event):
         """Hold the OWFS service"""
+        from trio_owfs import OWFS
         try:
             async with OWFS() as service:
                 self.service = service
@@ -338,6 +336,9 @@ class OWFSModule:
 
     async def _owfs_loop(self):
         """Listen for OWFS events"""
+        from trio_owfs.event import ServerRegistered, \
+            ServerDeregistered, DeviceEvent, DeviceValue
+
         n_servers = 0
         with self.service.events as eq:
             async for evt in eq:
@@ -376,7 +377,7 @@ class OWFSModule:
                 except Exception as exc:
                     _LOGGER.exception("While processing %s", repr(evt))
 
-    async def auto_device(self, dev: OW_Device):
+    async def auto_device(self, dev: "trio_owfs.device.Device"):
         t = CODEMAP.get(dev.family, False)
         if t is None:
             _LOGGER.info("Ignored device: %s", repr(dev))
