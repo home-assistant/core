@@ -38,7 +38,7 @@ async def async_setup_platform(
     name = config[CONF_NAME]
 
     session = async_get_clientsession(hass)
-    launches = LaunchData(Launches(hass.loop, session))
+    launches = Launches(hass.loop, session)
     sensor = [LaunchSensor(launches, name)]
     async_add_entities(sensor, True)
 
@@ -55,12 +55,12 @@ class LaunchSensor(Entity):
 
     async def async_update(self):
         """Get the latest data."""
-        await self.launches.async_update()
-        if self.launches.api.launches is None:
+        await self.launches.get_launches()
+        if self.launches.launches is None:
             _LOGGER.error("No data recieved.")
             return
         try:
-            data = self.launches.api.launches[0]
+            data = self.launches.launches[0]
             self._state = data['name']
             self._attributes['launch_time'] = data['start']
             self._attributes['agency'] = data['agency']
@@ -90,15 +90,3 @@ class LaunchSensor(Entity):
     def device_state_attributes(self):
         """Return attributes for the sensor."""
         return self._attributes
-
-
-class LaunchData():
-    """Get the latest data and update the states."""
-
-    def __init__(self, api):
-        """Initialize the data object."""
-        self.api = api
-
-    async def async_update(self):
-        """Get the latest launch data."""
-        await self.api.get_launches()
