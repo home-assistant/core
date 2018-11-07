@@ -86,10 +86,9 @@ class VersionSensor(Entity):
         """Return the name of the sensor."""
         if self._name:
             return self._name
-        elif self.haversion.source == DEFAULT_SOURCE:
+        if self.haversion.source == DEFAULT_SOURCE:
             return DEFAULT_NAME_LOCAL
-        else:
-            return DEFAULT_NAME_LATEST
+        return DEFAULT_NAME_LATEST
 
     @property
     def state(self):
