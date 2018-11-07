@@ -45,7 +45,6 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up the asuswrt component."""
     from aioasuswrt.asuswrt import AsusWrt
-
     conf = config[DOMAIN]
 
     api = AsusWrt(conf[CONF_HOST], conf.get(CONF_PORT),
