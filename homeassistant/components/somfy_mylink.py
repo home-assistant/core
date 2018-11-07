@@ -8,6 +8,7 @@ import json
 import logging
 import socket
 from random import randint
+from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers import config_validation as cv
