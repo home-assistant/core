@@ -6,43 +6,17 @@ https://home-assistant.io/components/device_tracker.asuswrt/
 """
 import logging
 
-import voluptuous as vol
+from homeassistant.components.asuswrt import DATA_ASUSWRT
+from homeassistant.components.device_tracker import DeviceScanner
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_MODE,
-    CONF_PROTOCOL)
-
-REQUIREMENTS = ['aioasuswrt==1.1.2']
+DEPENDENCIES = ['asuswrt']
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_PUB_KEY = 'pub_key'
-CONF_SSH_KEY = 'ssh_key'
-CONF_REQUIRE_IP = 'require_ip'
-DEFAULT_SSH_PORT = 22
-SECRET_GROUP = 'Password or SSH Key'
-
-PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_PASSWORD, CONF_PUB_KEY, CONF_SSH_KEY),
-    PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PROTOCOL, default='ssh'): vol.In(['ssh', 'telnet']),
-        vol.Optional(CONF_MODE, default='router'): vol.In(['router', 'ap']),
-        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
-        vol.Optional(CONF_REQUIRE_IP, default=True): cv.boolean,
-        vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
-        vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
-        vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
-    }))
 
 
 async def async_get_scanner(hass, config):
     """Validate the configuration and return an ASUS-WRT scanner."""
-    scanner = AsusWrtDeviceScanner(config[DOMAIN])
+    scanner = AsusWrtDeviceScanner(hass.data[DATA_ASUSWRT])
     await scanner.async_connect()
     return scanner if scanner.success_init else None
 
@@ -51,19 +25,11 @@ class AsusWrtDeviceScanner(DeviceScanner):
     """This class queries a router running ASUSWRT firmware."""
 
     # Eighth attribute needed for mode (AP mode vs router mode)
-    def __init__(self, config):
+    def __init__(self, api):
         """Initialize the scanner."""
-        from aioasuswrt.asuswrt import AsusWrt
-
         self.last_results = {}
         self.success_init = False
-        self.connection = AsusWrt(config[CONF_HOST], config[CONF_PORT],
-                                  config[CONF_PROTOCOL] == 'telnet',
-                                  config[CONF_USERNAME],
-                                  config.get(CONF_PASSWORD, ''),
-                                  config.get('ssh_key',
-                                             config.get('pub_key', '')),
-                                  config[CONF_MODE], config[CONF_REQUIRE_IP])
+        self.connection = api
 
     async def async_connect(self):
         """Initialize connection to the router."""
