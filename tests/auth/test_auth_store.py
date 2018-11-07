@@ -60,9 +60,15 @@ async def test_loading_old_data_format(hass, hass_storage):
 
     store = auth_store.AuthStore(hass)
     groups = await store.async_get_groups()
-    assert len(groups) == 1
-    group = groups[0]
-    assert group.name == "All Access"
+    assert len(groups) == 2
+    admin_group = groups[0]
+    assert admin_group.name == auth_store.GROUP_NAME_ADMIN
+    assert admin_group.system_generated
+    assert admin_group.id == auth_store.GROUP_ID_ADMIN
+    read_group = groups[1]
+    assert read_group.name == auth_store.GROUP_NAME_READ_ONLY
+    assert read_group.system_generated
+    assert read_group.id == auth_store.GROUP_ID_READ_ONLY
 
     users = await store.async_get_users()
     assert len(users) == 2
@@ -70,7 +76,7 @@ async def test_loading_old_data_format(hass, hass_storage):
     owner, system = users
 
     assert owner.system_generated is False
-    assert owner.groups == [group]
+    assert owner.groups == [admin_group]
     assert len(owner.refresh_tokens) == 1
     owner_token = list(owner.refresh_tokens.values())[0]
     assert owner_token.id == 'user-token-id'

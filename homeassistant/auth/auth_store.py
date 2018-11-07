@@ -10,11 +10,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
-from .permissions import DEFAULT_POLICY
+from .permissions import system_policies
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'
-INITIAL_GROUP_NAME = 'All Access'
+GROUP_NAME_ADMIN = 'Administrators'
+GROUP_ID_ADMIN = 'system-admin'
+GROUP_NAME_READ_ONLY = 'Read Only'
+GROUP_ID_READ_ONLY = 'system-read-only'
 
 
 class AuthStore:
@@ -238,38 +241,86 @@ class AuthStore:
         users = OrderedDict()  # type: Dict[str, models.User]
         groups = OrderedDict()  # type: Dict[str, models.Group]
 
-        # When creating objects we mention each attribute explicetely. This
+        # Soft-migrating data as we load. We are going to make sure we have a
+        # read only group and an admin group. There are two states that we can
+        # migrate from:
+        # - Data from a recent version which has a single group without policy
+        # - Data from old version which has no groups
+        has_admin_group = False
+        has_read_only_group = False
+        no_policy_group_id = None
+
+        # When creating objects we mention each attribute explicitly. This
         # prevents crashing if user rolls back HA version after a new property
         # was added.
 
         for group_dict in data.get('groups', []):
+            if group_dict['id'] == GROUP_ID_ADMIN:
+                has_admin_group = True
+
+                name = GROUP_NAME_ADMIN
+                policy = system_policies.ADMIN_POLICY
+                system_generated = True
+
+            elif group_dict['id'] == GROUP_ID_READ_ONLY:
+                has_read_only_group = True
+
+                name = GROUP_NAME_READ_ONLY
+                policy = system_policies.READ_ONLY_POLICY
+                system_generated = True
+
+            else:
+                name = group_dict['name']
+                policy = group_dict.get('policy')
+                system_generated = False
+
+            # We don't want groups without a policy that are not system groups
+            if policy is None:
+                no_policy_group_id = group_dict['id']
+                continue
+
             groups[group_dict['id']] = models.Group(
-                name=group_dict['name'],
                 id=group_dict['id'],
-                policy=group_dict.get('policy', DEFAULT_POLICY),
+                name=name,
+                policy=policy,
+                system_generated=system_generated,
             )
 
-        migrate_group = None
+        # If there are no groups, add all existing users to the admin group.
+        migrate_users_to_admin_group = not groups
 
-        if not groups:
-            migrate_group = models.Group(
-                name=INITIAL_GROUP_NAME,
-                policy=DEFAULT_POLICY
-            )
-            groups[migrate_group.id] = migrate_group
+        # If we find a no_policy_group, we need to migrate all users to the
+        # admin group. We only do this if there are no other groups, as is
+        # the expected state. If not expected state, not marking people admin.
+        if groups and no_policy_group_id is not None:
+            no_policy_group_id = None
+
+        if not has_admin_group:
+            _add_system_admin_group(groups)
+
+        if not has_read_only_group:
+            _add_system_read_only_group(groups)
 
         for user_dict in data['users']:
+            # Collect the users group.
+            user_groups = []
+            for group_id in user_dict.get('group_ids', []):
+                if group_id == no_policy_group_id:
+                    group_id = GROUP_ID_ADMIN
+                user_groups.append(groups[group_id])
+
+            if (not user_dict['system_generated'] and
+                    migrate_users_to_admin_group):
+                user_groups.append(groups[GROUP_ID_ADMIN])
+
             users[user_dict['id']] = models.User(
                 name=user_dict['name'],
-                groups=[groups[group_id] for group_id
-                        in user_dict.get('group_ids', [])],
+                groups=user_groups,
                 id=user_dict['id'],
                 is_owner=user_dict['is_owner'],
                 is_active=user_dict['is_active'],
                 system_generated=user_dict['system_generated'],
             )
-            if migrate_group is not None and not user_dict['system_generated']:
-                users[user_dict['id']].groups = [migrate_group]
 
         for cred_dict in data['credentials']:
             users[cred_dict['user_id']].credentials.append(models.Credentials(
@@ -360,7 +411,7 @@ class AuthStore:
                 'id': group.id,
             }  # type: Dict[str, Any]
 
-            if group.policy is not DEFAULT_POLICY:
+            if group.policy not in system_policies.ALL:
                 g_dict['policy'] = group.policy
 
             groups.append(g_dict)
@@ -410,13 +461,27 @@ class AuthStore:
         """Set default values for auth store."""
         self._users = OrderedDict()  # type: Dict[str, models.User]
 
-        # Add default group
-        all_access_group = models.Group(
-            name=INITIAL_GROUP_NAME,
-            policy=DEFAULT_POLICY,
-        )
-
         groups = OrderedDict()  # type: Dict[str, models.Group]
-        groups[all_access_group.id] = all_access_group
-
+        _add_system_admin_group(groups)
+        _add_system_read_only_group(groups)
         self._groups = groups
+
+
+def _add_system_admin_group(groups):
+    """Add system admin group."""
+    groups[GROUP_ID_ADMIN] = models.Group(
+        name=GROUP_NAME_ADMIN,
+        id=GROUP_ID_ADMIN,
+        policy=system_policies.ADMIN_POLICY,
+        system_generated=True,
+    )
+
+
+def _add_system_read_only_group(groups):
+    """Add system admin group."""
+    groups[GROUP_ID_READ_ONLY] = models.Group(
+        name=GROUP_NAME_READ_ONLY,
+        id=GROUP_ID_READ_ONLY,
+        policy=system_policies.READ_ONLY_POLICY,
+        system_generated=True,
+    )
