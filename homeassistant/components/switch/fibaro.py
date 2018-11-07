@@ -5,6 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.fibaro/
 """
 import logging
+from homeassistant.util import convert
+
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 from homeassistant.components.fibaro import (
@@ -39,6 +41,20 @@ class FibaroSwitch(FibaroDevice, SwitchDevice):
         """Turn device off."""
         self.action("turnOff")
         self._state = False
+
+    @property
+    def current_power_w(self):
+        """Return the current power usage in W."""
+        if 'power' in self.fibaro_device.interfaces:
+            return convert(self.fibaro_device.properties.power, float, 0.0)
+        return None
+
+    @property
+    def today_energy_kwh(self):
+        """Return the today total energy usage in kWh."""
+        if 'energy' in self.fibaro_device.interfaces:
+            return convert(self.fibaro_device.properties.energy, float, 0.0)
+        return None
 
     @property
     def is_on(self):

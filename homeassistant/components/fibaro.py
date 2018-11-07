@@ -81,123 +81,143 @@ CONFIG_SCHEMA = vol.Schema({
 class FibaroController():
     """Initiate Fibaro Controller Class."""
 
-    my_rooms = None             # Dict for mapping roomId to room object
-    my_devices = None           # Dict for mapping deviceId to device object
-    my_fibaro_devices = None    # List of devices by type
-    callbacks = {}              # Dict of update value callbacks by deviceId
-    client = None               # Fiblary's Client object for communication
-    state_handler = None        # Fiblary's StateHandler object
+    _room_map = None            # Dict for mapping roomId to room object
+    _device_map = None          # Dict for mapping deviceId to device object
+    fibaro_devices = None       # List of devices by type
+    _callbacks = {}             # Dict of update value callbacks by deviceId
+    _client = None               # Fiblary's Client object for communication
+    _state_handler = None        # Fiblary's StateHandler object
     _import_plugins = None      # Whether to import devices from plugins
 
     def __init__(self, username, password, url, import_plugins):
         """Initialize the communication with the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
-        self.client = FibaroClient(url, username, password)
+        self._client = FibaroClient(url, username, password)
 
-        login = self.client.login.get()
+    def connect(self):
+        try:
+            login = self._client.login.get()
+        except AssertionError:
+            _LOGGER.error("Can't connect to Fibaro HC. "
+                          "Please check URL.")
+            return False
         if login is None or login.status is False:
             _LOGGER.error("Invalid login for Fibaro HC. "
                           "Please check username and password.")
-            self.client = None
-            return
+            return False
         self._read_rooms()
         self._read_devices()
+        return True
 
     def __del__(self):
         """Deinitialize the Fibaro Controller."""
-        if self.state_handler:
+        if self._state_handler:
             self.disable_state_handler()
 
     def enable_state_handler(self):
         """Start StateHandler thread for monitoring updates."""
         from fiblary3.client.v4.client import StateHandler
-        self.state_handler = StateHandler(self.client, self._on_state_change)
+        self._state_handler = StateHandler(self._client, self._on_state_change)
 
     def disable_state_handler(self):
         """Stop StateHandler thread used for monitoring updates."""
-        self.state_handler.stop()
-        self.state_handler = None
+        self._state_handler.stop()
+        self._state_handler = None
 
     def _on_state_change(self, state):
         """Handle change report received from the HomeCenter."""
+        callback_set = set()
         for change in state.get('changes', []):
             device_id = change.pop('id')
             for property_name, value in list(change.items()):
-                if property_name == "log" and value and value != "transfer OK":
-                    _LOGGER.info("LOG %s: %s",
-                                 self.my_devices[device_id].friendly_name,
-                                 value)
+                if property_name == 'log':
+                    if value and value != "transfer OK":
+                        _LOGGER.info("LOG %s: %s",
+                                     self._device_map[device_id].friendly_name,
+                                     value)
                     continue
-                if property_name in self.my_devices[device_id].properties:
-                    self.my_devices[device_id].properties[property_name] = \
+                if property_name == 'logTemp':
+                    continue
+                if property_name in self._device_map[device_id].properties:
+                    self._device_map[device_id].properties[property_name] = \
                         value
+                    _LOGGER.debug("<- %s.%s = %s",
+                                  self._device_map[device_id].ha_id,
+                                  property_name,
+                                  str(value))
                 else:
                     _LOGGER.warning("Error updating %s data of %s, not found",
                                     property_name,
-                                    self.my_devices[device_id].friendly_name)
-                if self.callbacks.get(device_id, None):
-                    self.callbacks[device_id]()
+                                    self._device_map[device_id].ha_id)
+                if self._callbacks.get(device_id, None):
+                    callback_set.add(device_id)
+        for item in callback_set:
+            self._callbacks[item]()
 
     def register(self, device_id, callback):
         """Register device with a callback for updates."""
-        self.callbacks[device_id] = callback
+        self._callbacks[device_id] = callback
 
     def _read_rooms(self):
         """Read and process the room list."""
-        rooms = self.client.rooms.list()
-        self.my_rooms = {}
+        rooms = self._client.rooms.list()
+        self._room_map = {}
         for room in rooms:
-            self.my_rooms[room.id] = room
+            self._room_map[room.id] = room
         return True
+
+    @staticmethod
+    def _map_device_to_type(device):
+        """Map device to HA device type."""
+        # Use our lookup table to identify device type
+        device_type = FIBARO_TYPEMAP.get(
+            device.type, FIBARO_TYPEMAP.get(device.baseType, None))
+
+        # We can also identify device type by its capabilities
+        if device_type is None:
+            if 'setBrightness' in device.actions:
+                device_type = 'light'
+            elif 'turnOn' in device.actions:
+                device_type = 'switch'
+            elif 'open' in device.actions:
+                device_type = 'cover'
+            elif 'value' in device.properties:
+                if device.properties.value == 'true' or \
+                        device.properties.value == 'false':
+                    device_type = 'binary_sensor'
+                else:
+                    device_type = 'sensor'
+
+        # Switches that control lights should show up as lights
+        if device_type == 'switch' and \
+                'isLight' in device.properties and \
+                device.properties.isLight == 'true':
+            device_type = 'light'
+        return device_type
 
     def _read_devices(self):
         """Read and process the device list."""
-        devices = self.client.devices.list()
-        self.my_devices = {}
+        devices = self._client.devices.list()
+        self._device_map = {}
         for device in devices:
             if device.roomID == 0:
                 room_name = 'Unknown'
             else:
-                room_name = self.my_rooms[device.roomID].name
+                room_name = self._room_map[device.roomID].name
             device.friendly_name = room_name + ' ' + device.name
             device.ha_id = FIBARO_ID_FORMAT.format(
                 slugify(room_name), slugify(device.name), device.id)
-            self.my_devices[device.id] = device
-        self.my_fibaro_devices = defaultdict(list)
-        for _, device in self.my_devices.items():
+            self._device_map[device.id] = device
+        self.fibaro_devices = defaultdict(list)
+        for _, device in self._device_map.items():
             if (device.enabled is True) and \
                     (self._import_plugins is True or device.isPlugin is False):
-                # Use our lookup table to identify device type
-                device_type = FIBARO_TYPEMAP.get(
-                    device.type, FIBARO_TYPEMAP.get(device.baseType, None))
-
-                # We can also identify device type by its capabilities
-                if device_type is None:
-                    if 'setBrightness' in device.actions:
-                        device_type = 'light'
-                    elif 'turnOn' in device.actions:
-                        device_type = 'switch'
-                    elif 'open' in device.actions:
-                        device_type = 'cover'
-                    elif 'value' in device.properties:
-                        if device.properties.value == 'true' or \
-                                device.properties.value == 'false':
-                            device_type = 'binary_sensor'
-                        else:
-                            device_type = 'sensor'
-
-                # Switches that control lights should show up as lights
-                if device_type == 'switch' and \
-                        'isLight' in device.properties and \
-                        device.properties.isLight == 'true':
-                    device_type = 'light'
-
-                device.mapped_type = device_type
-                if device_type:
-                    self.my_fibaro_devices[device_type].append(device)
+                device.mapped_type = self._map_device_to_type(device)
+                if device.mapped_type:
+                    self.fibaro_devices[device.mapped_type].append(device)
                 else:
                     _LOGGER.debug("%s (%s, %s) not mapped",
-                                  device.friendly_name, device.type,
+                                  device.ha_id, device.type,
                                   device.baseType)
         return True
 
@@ -209,13 +229,13 @@ def setup(hass, config):
                          config[DOMAIN][CONF_PASSWORD],
                          config[DOMAIN][CONF_URL],
                          config[DOMAIN][CONF_PLUGINS])
-    hass.data[FIBARO_DEVICES] = controller.my_fibaro_devices
-
-    for component in FIBARO_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
-
-    controller.enable_state_handler()
-    return True
+    if controller.connect():
+        hass.data[FIBARO_DEVICES] = controller.fibaro_devices
+        for component in FIBARO_COMPONENTS:
+            discovery.load_platform(hass, component, DOMAIN, {}, config)
+        controller.enable_state_handler()
+        return True
+    return False
 
 
 class FibaroDevice(Entity):
@@ -231,7 +251,8 @@ class FibaroDevice(Entity):
 
     def _update_callback(self):
         """Update the state."""
-        self.schedule_update_ha_state(True)
+        self.update()
+        self.schedule_update_ha_state(False)
 
     def get_level(self):
         """Get the level of Fibaro device."""
@@ -254,19 +275,25 @@ class FibaroDevice(Entity):
     def set_level(self, level):
         """Set the level of Fibaro device."""
         self.action("setValue", level)
+        if 'value' in self.fibaro_device.properties:
+            self.fibaro_device.properties.value = level
+        if 'brightness' in self.fibaro_device.properties:
+            self.fibaro_device.properties.brightness = level
 
-    def set_color(self, color, white):
+    def set_color(self, red, green, blue, white):
         """Set the tilt level of Fibaro device."""
-        color_str = "{},{},{},{}".format(color[0], color[1],
-                                         color[2], white)
+        color_str = "{},{},{},{}".format(int(red), int(green),
+                                         int(blue), int(white))
         self.fibaro_device.properties.color = color_str
-        self.action("setColor", str(color[0]), str(color[1]),
-                    str(color[2]), str(white))
+        self.action("setColor", str(int(red)), str(int(green)),
+                    str(int(blue)), str(int(white)))
 
     def action(self, cmd, *args):
         """Perform an action on the Fibaro HC."""
         if cmd in self.fibaro_device.actions:
             getattr(self.fibaro_device, cmd)(*args)
+            _LOGGER.debug("-> %s.%s%s called", str(self.ha_id),
+                          str(cmd), str(args))
         else:
             self.dont_know_message(cmd)
 
@@ -304,6 +331,10 @@ class FibaroDevice(Entity):
     def should_poll(self):
         """Get polling requirement from fibaro device."""
         return False
+
+    def update(self):
+        """Call to update state."""
+        pass
 
     @property
     def device_state_attributes(self):
