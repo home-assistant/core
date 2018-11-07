@@ -503,12 +503,11 @@ class SwitchableRflinkDevice(RflinkCommand):
     """Rflink entity which can switch on/off (eg: light, switch)."""
 
     async def async_added_to_hass(self):
-        """Restore RFLink device state."""
+        """Restore RFLink device state (ON/OFF)."""
         await super().async_added_to_hass()
 
         old_state = await async_get_last_state(self.hass, self.entity_id)
-        if old_state is not None:
-            self._state = str(old_state.state) == STATE_ON
+        self._state = old_state and old_state.state == STATE_ON
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
