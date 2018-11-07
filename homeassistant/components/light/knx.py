@@ -193,8 +193,8 @@ class KNXLight(Light):
         if self.device.supports_brightness and \
                 (update_brightness and not update_color):
             # if we don't need to update the color, try updating brightness
-            # directly if supported; don't do it if color also has to be changed,
-            # as RGB color implicitly sets the brightness as well
+            # directly if supported; don't do it if color also has to be
+            # changed, as RGB color implicitly sets the brightness as well
             await self.device.set_brightness(brightness)
         elif self.device.supports_color and \
                 (update_brightness or update_color):
