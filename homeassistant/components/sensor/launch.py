@@ -92,6 +92,7 @@ class LaunchSensor(Entity):
         """Return attributes for the sensor."""
         return self._attributes
 
+
 class LaunchData():
     """Get the latest data and update the states."""
 
