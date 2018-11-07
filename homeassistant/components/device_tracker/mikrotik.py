@@ -8,6 +8,8 @@ import logging
 
 import voluptuous as vol
 
+import ssl
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
@@ -17,6 +19,7 @@ from homeassistant.const import (
 REQUIREMENTS = ['librouteros==2.1.1']
 
 MTK_DEFAULT_API_PORT = '8728'
+MTK_DEFAULT_API_SSL_PORT = '8729'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=MTK_DEFAULT_API_PORT): cv.port,
+    vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean
 })
 
@@ -43,10 +46,13 @@ class MikrotikScanner(DeviceScanner):
         self.last_results = {}
 
         self.host = config[CONF_HOST]
-        self.port = config[CONF_PORT]
+        self.ssl = config[CONF_SSL]
+        try:
+            self.port = config[CONF_PORT]
+        except KeyError:
+            self.port = MTK_DEFAULT_API_SSL_PORT if self.ssl else MTK_DEFAULT_API_PORT
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        self.ssl = config[CONF_SSL]
 
         self.connected = False
         self.success_init = False
@@ -69,29 +75,22 @@ class MikrotikScanner(DeviceScanner):
     def connect_to_device(self):
         """Connect to Mikrotik method."""
         import librouteros
-        if self.ssl:
-            import ssl
         try:
+            kwargs = {
+              'port': self.port,
+              'encoding': 'utf-8'
+            }
             if self.ssl:
                 ssl_context = ssl.create_default_context()
                 ssl_context.check_hostname = False
                 ssl_context.verify_mode = ssl.CERT_NONE
-                self.client = librouteros.connect(
-                    self.host,
-                    self.username,
-                    self.password,
-                    port=int(self.port),
-                    encoding='utf-8',
-                    ssl_wrapper=ssl_context.wrap_socket
-                )
-            else:
-                self.client = librouteros.connect(
-                    self.host,
-                    self.username,
-                    self.password,
-                    port=int(self.port),
-                    encoding='utf-8'
-                )
+                kwargs['ssl_wrapper'] = ssl_context.wrap_socket
+            self.client = librouteros.connect(
+                self.host,
+                self.username,
+                self.password,
+                **kwargs
+            )
 
             try:
                 routerboard_info = self.client(
