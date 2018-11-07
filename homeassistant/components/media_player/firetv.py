@@ -7,7 +7,6 @@ https://home-assistant.io/components/media_player.firetv/
 import functools
 import logging
 import os
-import time
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -90,28 +89,20 @@ def adb_wrapper(func):
     """Wait if previous ADB commands haven't finished."""
     @functools.wraps(func)
     def _adb_wrapper(self, *args, **kwargs):
-        attempts = 0
-        while self._adb_lock and attempts < 5:
-            attempts += 1
-            time.sleep(1)
+        # If an ADB command is already running, don't execute this command
+        if self._firetv._adb and self._adb_lock:
+            _LOGGER.info('Skipping an ADB command because a previous command '
+                         'is still running')
+            return
 
-        if attempts == 5 and self._adb_lock:
-            try:
-                self._firetv.connect()
-            except self._exceptions:
-                _LOGGER.error('Failed to re-establish the ADB connection; '
-                              'will re-attempt in the next update.')
-                self._firetv._adb = None
-                self._adb_lock = False
-                return
-
+        # Prevent additional ADB commands while trying to run this command
         self._adb_lock = True
         try:
             returns = func(self, *args, **kwargs)
         except self._exceptions:
-            returns = None
             _LOGGER.error('Failed to execute an ADB command; will attempt to '
                           're-establish the ADB connection in the next update')
+            returns = None
             self._firetv._adb = None
         finally:
             self._adb_lock = False
