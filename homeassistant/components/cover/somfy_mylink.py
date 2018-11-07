@@ -11,7 +11,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP, CoverDevice)
 from homeassistant.components.somfy_mylink import (
     CONF_COVER_OPTIONS, DATA_SOMFY_MYLINK)
-from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.event import async_track_time_change
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['somfy_mylink']
@@ -102,31 +102,31 @@ class SomfyShade(CoverDevice):
             return self._supported_features
         return super().supported_features
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Close the cover."""
         if self._reverse and not kwargs.get('redir'):
-            self.open_cover(redir=True)
+            await self.async_open_cover(redir=True)
         elif self._move_time:
-            self.set_cover_position(position=0)
+            await self.async_set_cover_position(position=0)
         else:
-            self.somfy_mylink.move_down(self._target_id)
+            await self.somfy_mylink.move_down(self._target_id)
             self._closed = True
         self.schedule_update_ha_state()
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Open the cover."""
         if self._reverse and not kwargs.get('redir'):
-            self.close_cover(redir=True)
+            await self.async_close_cover(redir=True)
         elif self._move_time:
-            self.set_cover_position(position=100)
+            await self.async_set_cover_position(position=100)
         else:
-            self.somfy_mylink.move_up(self._target_id)
+            await self.somfy_mylink.move_up(self._target_id)
             self._closed = False
         self.schedule_update_ha_state()
 
-    def stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.somfy_mylink.move_stop(self._target_id)
+        await self.somfy_mylink.move_stop(self._target_id)
         self._is_closing = False
         self._is_opening = False
         if self._position is None:
@@ -138,7 +138,30 @@ class SomfyShade(CoverDevice):
             self._unsub_listener_cover = None
             self._set_position = None
 
-    def calculate_move_time(self, target_position):
+    async def async_set_cover_position(self, **kwargs):
+        """Move the cover to a specific position."""
+        position = kwargs.get(ATTR_POSITION)
+        self._set_position = round(position, -1)
+        if self._position == position:
+            return
+        self._partial_move_time = self._calculate_move_time(self._set_position)
+        self._requested_closing = position < self._position
+        _LOGGER.debug("Moving to position %s in %s seconds",
+                      self._set_position, self._partial_move_time)
+        if self._requested_closing:
+            await self.somfy_mylink.move_down(self._target_id)
+            if self._position is None:
+                self._closed = True
+                self._position = 100
+            self._listen_cover()
+        else:
+            await self.somfy_mylink.move_up(self._target_id)
+            if self._position is None:
+                self._closed = False
+                self._position = 0
+            self._listen_cover()
+
+    def _calculate_move_time(self, target_position):
         """Calculate time required to move the cover."""
         current_pos = self._position
         move_time = self._move_time
@@ -150,38 +173,15 @@ class SomfyShade(CoverDevice):
             total_move_time = (perc_time * -position_diff)
         return total_move_time
 
-    def set_cover_position(self, **kwargs):
-        """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
-        self._set_position = round(position, -1)
-        if self._position == position:
-            return
-        self._partial_move_time = self.calculate_move_time(self._set_position)
-        self._requested_closing = position < self._position
-        _LOGGER.debug("Moving to position %s in %s seconds",
-                      self._set_position, self._partial_move_time)
-        if self._requested_closing:
-            self.somfy_mylink.move_down(self._target_id)
-            if self._position is None:
-                self._closed = True
-                self._position = 100
-            self._listen_cover()
-        else:
-            self.somfy_mylink.move_up(self._target_id)
-            if self._position is None:
-                self._closed = False
-                self._position = 0
-            self._listen_cover()
-
     def _listen_cover(self):
         """Listen for changes in cover."""
         listen_interval_str = "/{}".format(self.LISTEN_INTERVAL)
         if self._unsub_listener_cover is None:
-            self._unsub_listener_cover = track_time_change(
+            self._unsub_listener_cover = async_track_time_change(
                 self.hass, self._time_changed_cover,
                 second=listen_interval_str)
 
-    def _time_changed_cover(self, now):
+    async def _time_changed_cover(self, now):
         """Track time changes."""
         move_increment = int((100/self._move_time)*self.LISTEN_INTERVAL)
         if self._requested_closing:
@@ -198,6 +198,6 @@ class SomfyShade(CoverDevice):
                 self._unsub_listener_cover()
                 self._unsub_listener_cover = None
             else:
-                self.stop_cover()
+                await self.async_stop_cover()
         self._closed = self.current_cover_position <= 0
         self.schedule_update_ha_state()

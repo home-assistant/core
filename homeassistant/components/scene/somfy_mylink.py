@@ -38,9 +38,9 @@ class SomfyScene(Scene):
         self._name = scene_name
         self._id = scene_id
 
-    def activate(self):
+    async def activate(self):
         """Activate the scene."""
-        self.somfy_mylink.scene_run(self._id)
+        await self.somfy_mylink.scene_run(self._id)
 
     @property
     def name(self):
