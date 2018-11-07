@@ -18,12 +18,12 @@ DEPENDENCIES = ['somfy_mylink']
 DEFAULT_SUPPORTED_FEATURES = (SUPPORT_OPEN | SUPPORT_STOP | SUPPORT_CLOSE)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Discover and configure Somfy covers."""
     somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
     cover_options = discovery_info.get(CONF_COVER_OPTIONS, [])
     cover_list = list()
-    mylink_status = somfy_mylink.status_info()
+    mylink_status = await somfy_mylink.status_info()
     for cover in mylink_status['result']:
         cover_config = dict()
         cover_config['target_id'] = cover['targetID']
@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         cover_list.append(SomfyShade(somfy_mylink, **cover_config))
         _LOGGER.info('Adding Somfy Cover: %s with targetID %s',
                      cover_config['name'], cover_config['target_id'])
-    add_entities(cover_list)
+    async_add_entities(cover_list)
 
 
 class SomfyShade(CoverDevice):

@@ -13,11 +13,11 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['somfy_mylink']
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Discover and configure Somfy MyLink scenes."""
     somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
     scene_list = list()
-    mylink_scenes = somfy_mylink.scene_list()
+    mylink_scenes = await somfy_mylink.scene_list()
     for scene in mylink_scenes['result']:
         _LOGGER.info('Adding Somfy Scene: %s with sceneID %s',
                      scene.get('name'), scene.get('sceneID'))
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             scene_id=scene.get('sceneID')
         )
         scene_list.append(SomfyScene(somfy_mylink, **scene_data))
-    add_entities(scene_list)
+    async_add_entities(scene_list)
 
 
 class SomfyScene(Scene):
