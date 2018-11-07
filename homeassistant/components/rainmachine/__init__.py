@@ -15,23 +15,20 @@ from homeassistant.const import (
     CONF_PORT, CONF_SCAN_INTERVAL, CONF_SENSORS, CONF_SSL,
     CONF_MONITORED_CONDITIONS, CONF_SWITCHES)
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client, config_validation as cv, discovery)
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
-from .const import DATA_CLIENT, DOMAIN
+from .const import (
+    DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
 
-REQUIREMENTS = ['regenmaschine==1.0.2']
+REQUIREMENTS = ['regenmaschine==1.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_LISTENER = 'listener'
-
-NOTIFICATION_ID = 'rainmachine_notification'
-NOTIFICATION_TITLE = 'RainMachine Component Setup'
 
 PROGRAM_UPDATE_TOPIC = '{0}_program_update'.format(DOMAIN)
 SENSOR_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
@@ -153,78 +150,81 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up RainMachine as config entry."""
-    from regenmaschine import Client
+    from regenmaschine import login
     from regenmaschine.errors import RainMachineError
 
-    ip_address = config_entry.data[CONF_IP_ADDRESS]
-    password = config_entry.data[CONF_PASSWORD]
-    port = config_entry.data[CONF_PORT]
-    ssl = config_entry.data[CONF_SSL]
+    _LOGGER.debug("AARON")
+    _LOGGER.debug(config_entry.data)
 
-    websession = aiohttp_client.async_get_clientsession(hass)
+    # ip_address = config_entry.data[CONF_IP_ADDRESS]
+    # password = config_entry.data[CONF_PASSWORD]
+    # port = config_entry.data[CONF_PORT]
+    # ssl = config_entry.data[CONF_SSL]
 
-    try:
-        client = Client(ip_address, websession, port=port, ssl=ssl)
-        await client.authenticate(password)
-        rainmachine = RainMachine(client)
-        await rainmachine.async_update()
-    except RainMachineError as err:
-        _LOGGER.error('An error occurred: %s', err)
-        raise ConfigEntryNotReady
+    # websession = aiohttp_client.async_get_clientsession(hass)
 
-    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = rainmachine
+    # try:
+    #     client = Client(ip_address, websession, port=port, ssl=ssl)
+    #     await client.authenticate(password)
+    #     rainmachine = RainMachine(client)
+    #     await rainmachine.async_update()
+    # except RainMachineError as err:
+    #     _LOGGER.error('An error occurred: %s', err)
+    #     raise ConfigEntryNotReady
 
-    for component in ('binary_sensor', 'sensor', 'switch'):
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                config_entry, component))
+    # hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = rainmachine
 
-    async def refresh(event_time):
-        """Refresh RainMachine sensor data."""
-        _LOGGER.debug('Updating RainMachine sensor data')
-        await rainmachine.async_update()
-        async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
+    # for component in ('binary_sensor', 'sensor', 'switch'):
+    #     hass.async_create_task(
+    #         hass.config_entries.async_forward_entry_setup(
+    #             config_entry, component))
 
-    hass.data[DOMAIN][DATA_LISTENER][
-        config_entry.entry_id] = async_track_time_interval(
-            hass,
-            refresh,
-            timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
+    # async def refresh(event_time):
+    #     """Refresh RainMachine sensor data."""
+    #     _LOGGER.debug('Updating RainMachine sensor data')
+    #     await rainmachine.async_update()
+    #     async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
 
-    async def start_program(service):
-        """Start a particular program."""
-        await rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
-        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+    # hass.data[DOMAIN][DATA_LISTENER][
+    #     config_entry.entry_id] = async_track_time_interval(
+    #         hass,
+    #         refresh,
+    #         timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
-    async def start_zone(service):
-        """Start a particular zone for a certain amount of time."""
-        await rainmachine.client.zones.start(service.data[CONF_ZONE_ID],
-                                             service.data[CONF_ZONE_RUN_TIME])
-        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
+    # async def start_program(service):
+    #     """Start a particular program."""
+    #     await rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
+    #     async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def stop_all(service):
-        """Stop all watering."""
-        await rainmachine.client.watering.stop_all()
-        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+    # async def start_zone(service):
+    #     """Start a particular zone for a certain amount of time."""
+    #     await rainmachine.client.zones.start(service.data[CONF_ZONE_ID],
+    #                                          service.data[CONF_ZONE_RUN_TIME])
+    #     async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    async def stop_program(service):
-        """Stop a program."""
-        await rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
-        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+    # async def stop_all(service):
+    #     """Stop all watering."""
+    #     await rainmachine.client.watering.stop_all()
+    #     async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def stop_zone(service):
-        """Stop a zone."""
-        await rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
-        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
+    # async def stop_program(service):
+    #     """Stop a program."""
+    #     await rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
+    #     async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    for service, method, schema in [
-            ('start_program', start_program, SERVICE_START_PROGRAM_SCHEMA),
-            ('start_zone', start_zone, SERVICE_START_ZONE_SCHEMA),
-            ('stop_all', stop_all, {}),
-            ('stop_program', stop_program, SERVICE_STOP_PROGRAM_SCHEMA),
-            ('stop_zone', stop_zone, SERVICE_STOP_ZONE_SCHEMA)
-    ]:
-        hass.services.async_register(DOMAIN, service, method, schema=schema)
+    # async def stop_zone(service):
+    #     """Stop a zone."""
+    #     await rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
+    #     async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
+
+    # for service, method, schema in [
+    #         ('start_program', start_program, SERVICE_START_PROGRAM_SCHEMA),
+    #         ('start_zone', start_zone, SERVICE_START_ZONE_SCHEMA),
+    #         ('stop_all', stop_all, {}),
+    #         ('stop_program', stop_program, SERVICE_STOP_PROGRAM_SCHEMA),
+    #         ('stop_zone', stop_zone, SERVICE_STOP_ZONE_SCHEMA)
+    # ]:
+    #     hass.services.async_register(DOMAIN, service, method, schema=schema)
 
     return True
 

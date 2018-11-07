@@ -7,11 +7,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SSL,
-    CONF_TOKEN)
+    CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SSL)
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN
+from .const import (
+    DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN, LOGGER)
 
 
 @callback
@@ -51,7 +51,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from regenmaschine import Client
+        from regenmaschine import login
         from regenmaschine.errors import RainMachineError
 
         if not user_input:
@@ -65,12 +65,12 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
-            client = Client(
+            await login(
                 user_input[CONF_IP_ADDRESS],
+                user_input[CONF_PASSWORD],
                 websession,
                 port=user_input.get(CONF_PORT, DEFAULT_PORT),
                 ssl=user_input.get(CONF_SSL, DEFAULT_SSL))
-            await client.authenticate(user_input[CONF_PASSWORD])
         except RainMachineError:
             return await self._show_form({
                 CONF_PASSWORD: 'invalid_credentials'
@@ -78,11 +78,12 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
 
         scan_interval = user_input.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
 
+        # Unfortunately, RainMachine doesn't provide a way to refresh the
+        # access token without using the IP address and pasword, so we have to
+        # store it:
         return self.async_create_entry(
             title=user_input[CONF_IP_ADDRESS],
-            data={
-                CONF_TOKEN: simplisafe.refresh_token,
-                CONF_SCAN_INTERVAL: scan_interval.seconds,
-            },
+            data=user_input
         )
