@@ -13,6 +13,7 @@ from homeassistant.core import callback, HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, models
+from .const import GROUP_ID_ADMIN
 from .mfa_modules import auth_mfa_module_from_config, MultiFactorAuthModule
 from .providers import auth_provider_from_config, AuthProvider, LoginFlow
 
@@ -144,7 +145,7 @@ class AuthManager:
 
     async def async_create_user(self, name: str) -> models.User:
         """Create a user."""
-        group = (await self._store.async_get_groups())[0]
+        group = await self._store.async_get_group(GROUP_ID_ADMIN)
         kwargs = {
             'name': name,
             'is_active': True,

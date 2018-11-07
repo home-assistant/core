@@ -10,14 +10,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
+from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from .permissions import system_policies
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'
 GROUP_NAME_ADMIN = 'Administrators'
-GROUP_ID_ADMIN = 'system-admin'
 GROUP_NAME_READ_ONLY = 'Read Only'
-GROUP_ID_READ_ONLY = 'system-read-only'
 
 
 class AuthStore:
@@ -244,8 +243,8 @@ class AuthStore:
         # Soft-migrating data as we load. We are going to make sure we have a
         # read only group and an admin group. There are two states that we can
         # migrate from:
-        # - Data from a recent version which has a single group without policy
-        # - Data from old version which has no groups
+        # 1. Data from a recent version which has a single group without policy
+        # 2. Data from old version which has no groups
         has_admin_group = False
         has_read_only_group = False
         no_policy_group_id = None
@@ -275,6 +274,7 @@ class AuthStore:
                 system_generated = False
 
             # We don't want groups without a policy that are not system groups
+            # This is part of migrating from state 1
             if policy is None:
                 no_policy_group_id = group_dict['id']
                 continue
@@ -287,17 +287,21 @@ class AuthStore:
             )
 
         # If there are no groups, add all existing users to the admin group.
-        migrate_users_to_admin_group = not groups
+        # This is part of migrating from state 2
+        migrate_users_to_admin_group = not groups and no_policy_group_id is None
 
         # If we find a no_policy_group, we need to migrate all users to the
         # admin group. We only do this if there are no other groups, as is
         # the expected state. If not expected state, not marking people admin.
+        # This is part of migrating from state 1
         if groups and no_policy_group_id is not None:
             no_policy_group_id = None
 
+        # This is part of migrating from state 1 and 2
         if not has_admin_group:
             _add_system_admin_group(groups)
 
+        # This is part of migrating from state 1 and 2
         if not has_read_only_group:
             _add_system_read_only_group(groups)
 
@@ -305,10 +309,12 @@ class AuthStore:
             # Collect the users group.
             user_groups = []
             for group_id in user_dict.get('group_ids', []):
+                # This is part of migrating from state 1
                 if group_id == no_policy_group_id:
                     group_id = GROUP_ID_ADMIN
                 user_groups.append(groups[group_id])
 
+            # This is part of migrating from state 2
             if (not user_dict['system_generated'] and
                     migrate_users_to_admin_group):
                 user_groups.append(groups[GROUP_ID_ADMIN])
@@ -407,11 +413,11 @@ class AuthStore:
         groups = []
         for group in self._groups.values():
             g_dict = {
-                'name': group.name,
                 'id': group.id,
             }  # type: Dict[str, Any]
 
-            if group.policy not in system_policies.ALL:
+            if group.id not in (GROUP_ID_READ_ONLY, GROUP_ID_ADMIN):
+                g_dict['name'] = group.name
                 g_dict['policy'] = group.policy
 
             groups.append(g_dict)

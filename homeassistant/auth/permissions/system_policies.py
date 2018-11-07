@@ -12,5 +12,3 @@ READ_ONLY_POLICY = {
         }
     }
 }
-
-ALL = (ADMIN_POLICY, READ_ONLY_POLICY)
