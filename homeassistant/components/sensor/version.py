@@ -101,6 +101,11 @@ class VersionSensor(Entity):
         """Return attributes for the sensor."""
         return self.haversion.api.version_data
 
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return ICON
+
 
 class VersionData:
     """Get the latest data and update the states."""
