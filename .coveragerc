@@ -708,6 +708,7 @@ omit =
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/htu21d.py
     homeassistant/components/sensor/upnp.py
+    homeassistant/components/sensor/idteck_prox.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/influxdb.py
