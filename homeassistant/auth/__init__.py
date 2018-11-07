@@ -134,7 +134,7 @@ class AuthManager:
             name=name,
             system_generated=True,
             is_active=True,
-            groups=[],
+            group_ids=[],
         )
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {
@@ -145,11 +145,10 @@ class AuthManager:
 
     async def async_create_user(self, name: str) -> models.User:
         """Create a user."""
-        group = await self._store.async_get_group(GROUP_ID_ADMIN)
         kwargs = {
             'name': name,
             'is_active': True,
-            'groups': [group]
+            'group_ids': [GROUP_ID_ADMIN]
         }  # type: Dict[str, Any]
 
         if await self._user_should_be_owner():

@@ -12,6 +12,7 @@ from homeassistant.util import dt as dt_util
 from . import models
 from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from .permissions import system_policies
+from .permissions.types import PolicyType  # noqa: F401
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'
@@ -65,7 +66,7 @@ class AuthStore:
             is_active: Optional[bool] = None,
             system_generated: Optional[bool] = None,
             credentials: Optional[models.Credentials] = None,
-            groups: Optional[List[models.Group]] = None) -> models.User:
+            group_ids: Optional[List[str]] = None) -> models.User:
         """Create a new user."""
         if self._users is None:
             await self._async_load()
@@ -73,11 +74,18 @@ class AuthStore:
         assert self._users is not None
         assert self._groups is not None
 
+        groups = []
+        for group_id in (group_ids or []):
+            group = self._groups.get(group_id)
+            if group is None:
+                raise ValueError('Invalid group specified {}'.format(group_id))
+            groups.append(group)
+
         kwargs = {
             'name': name,
             # Until we get group management, we just put everyone in the
             # same group.
-            'groups': groups or [],
+            'groups': groups,
         }  # type: Dict[str, Any]
 
         if is_owner is not None:
@@ -247,13 +255,15 @@ class AuthStore:
         # 2. Data from old version which has no groups
         has_admin_group = False
         has_read_only_group = False
-        no_policy_group_id = None
+        group_without_policy = None
 
         # When creating objects we mention each attribute explicitly. This
         # prevents crashing if user rolls back HA version after a new property
         # was added.
 
         for group_dict in data.get('groups', []):
+            policy = None  # type: Optional[PolicyType]
+
             if group_dict['id'] == GROUP_ID_ADMIN:
                 has_admin_group = True
 
@@ -276,7 +286,7 @@ class AuthStore:
             # We don't want groups without a policy that are not system groups
             # This is part of migrating from state 1
             if policy is None:
-                no_policy_group_id = group_dict['id']
+                group_without_policy = group_dict['id']
                 continue
 
             groups[group_dict['id']] = models.Group(
@@ -288,14 +298,15 @@ class AuthStore:
 
         # If there are no groups, add all existing users to the admin group.
         # This is part of migrating from state 2
-        migrate_users_to_admin_group = not groups and no_policy_group_id is None
+        migrate_users_to_admin_group = (not groups and
+                                        group_without_policy is None)
 
         # If we find a no_policy_group, we need to migrate all users to the
         # admin group. We only do this if there are no other groups, as is
         # the expected state. If not expected state, not marking people admin.
         # This is part of migrating from state 1
-        if groups and no_policy_group_id is not None:
-            no_policy_group_id = None
+        if groups and group_without_policy is not None:
+            group_without_policy = None
 
         # This is part of migrating from state 1 and 2
         if not has_admin_group:
@@ -310,7 +321,7 @@ class AuthStore:
             user_groups = []
             for group_id in user_dict.get('group_ids', []):
                 # This is part of migrating from state 1
-                if group_id == no_policy_group_id:
+                if group_id == group_without_policy:
                     group_id = GROUP_ID_ADMIN
                 user_groups.append(groups[group_id])
 
@@ -473,7 +484,7 @@ class AuthStore:
         self._groups = groups
 
 
-def _add_system_admin_group(groups):
+def _add_system_admin_group(groups: Dict[str, models.Group]) -> None:
     """Add system admin group."""
     groups[GROUP_ID_ADMIN] = models.Group(
         name=GROUP_NAME_ADMIN,
@@ -483,7 +494,7 @@ def _add_system_admin_group(groups):
     )
 
 
-def _add_system_read_only_group(groups):
+def _add_system_read_only_group(groups: Dict[str, models.Group]) -> None:
     """Add system admin group."""
     groups[GROUP_ID_READ_ONLY] = models.Group(
         name=GROUP_NAME_READ_ONLY,
