@@ -104,7 +104,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-REQUIREMENTS = ['pyotgw==0.3b0']
+REQUIREMENTS = ['pyotgw==0.3b1']
 
 _LOGGER = logging.getLogger(__name__)
 
