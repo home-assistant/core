@@ -143,7 +143,7 @@ async def async_check_config(hass):
         result = await hassio.check_homeassistant_config()
     except HassioAPIError as err:
         _LOGGER.error("Error on Hass.io API: %s", err)
-    else
+    else:
         if result['result'] == "error":
             return result['message']
 
