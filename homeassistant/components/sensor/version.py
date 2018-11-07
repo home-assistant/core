@@ -27,17 +27,24 @@ DEFAULT_IMAGE = 'default'
 DEFAULT_NAME = "Current Version"
 DEFAULT_SOURCE = 'local'
 
+ALL_IMAGES = [
+    'default', 'intel-nuc', 'qemux86', 'qemux86-64', 'qemuarm',
+    'qemuarm-64', 'raspberrypi', 'raspberrypi2', 'raspberrypi3',
+    'raspberrypi3-64', 'tinker', 'odroid-c2', 'odroid-xu'
+]
+ALL_SOURCES = [
+    'local', 'pypi', 'hassio', 'docker'
+]
+
 ICON = 'mdi:package-up'
 
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BETA, default=False): cv.boolean,
-    vol.Optional(CONF_IMAGE, default=DEFAULT_IMAGE): vol.All(cv.string,
-                                                             vol.Lower),
+    vol.Optional(CONF_IMAGE, default=DEFAULT_IMAGE): vol.In(ALL_IMAGES),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SOURCE, default=DEFAULT_SOURCE): vol.All(cv.string,
-                                                               vol.Lower),
+    vol.Optional(CONF_SOURCE, default=DEFAULT_SOURCE): vol.In(ALL_SOURCES),
 })
 
 
