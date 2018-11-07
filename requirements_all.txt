@@ -1087,7 +1087,7 @@ pyrainbird==0.1.6
 pyrecswitch==1.0.2
 
 # homeassistant.components.sensor.ruter
-pyruter==1.0.2
+pyruter==1.1.2
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.0
