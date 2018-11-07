@@ -2,7 +2,7 @@
 from typing import (  # noqa: F401
     cast, Dict, List, Set)
 
-from .common import PolicyType, CategoryType
+from .types import PolicyType, CategoryType
 
 
 def merge_policies(policies: List[PolicyType]) -> PolicyType:

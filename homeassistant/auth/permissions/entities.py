@@ -5,12 +5,8 @@ from typing import (  # noqa: F401
 
 import voluptuous as vol
 
-from .common import CategoryType, ValueType, SUBCAT_ALL
-
-
-POLICY_READ = 'read'
-POLICY_CONTROL = 'control'
-POLICY_EDIT = 'edit'
+from .const import SUBCAT_ALL, POLICY_READ, POLICY_CONTROL, POLICY_EDIT
+from .types import CategoryType, ValueType
 
 SINGLE_ENTITY_SCHEMA = vol.Any(True, vol.Schema({
     vol.Optional(POLICY_READ): True,
