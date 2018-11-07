@@ -197,7 +197,7 @@ class DirecTvDevice(MediaPlayerDevice):
         """Add DirecTV client devices as entities in HASS."""
         dtvs = []
 
-        if len(new_entities) != 0:
+        if not new_entities:
             _LOGGER.debug("Adding %s new DirecTV entities to HASS",
                           len(new_entities))
 
@@ -247,25 +247,25 @@ class DirecTvDevice(MediaPlayerDevice):
         # has been elapsed since last discovery (default 5 minutes)
         if self._discover_clients and \
            dt_util.utcnow() >= self._next_client_discover:
-                self._next_client_discover = dt_util.utcnow() +\
-                    self._client_discover_interval
+            self._next_client_discover = dt_util.utcnow() +\
+                self._client_discover_interval
 
-                new_clients = []
-                try:
-                    new_clients = self._discover_directv_client_devices()
-                except requests.exceptions.RequestException as ex:
-                    _LOGGER.debug("Request exception %s trying to discover "
-                                  "new clients", ex)
+            new_clients = []
+            try:
+                new_clients = self._discover_directv_client_devices()
+            except requests.exceptions.RequestException as ex:
+                _LOGGER.debug("Request exception %s trying to discover "
+                              "new clients", ex)
 
-                # If _add_entities is not defined but clients were found then
-                # raise NotImplementedError.
-                if self._add_entities is None and len(new_clients) > 0:
-                    raise NotImplementedError()
-                else:
-                    self._add_directv_entities(new_clients)
+            # If _add_entities is not defined but clients were found then
+            # raise NotImplementedError.
+            if self._add_entities is None and new_clients:
+                raise NotImplementedError()
+            else:
+                self._add_directv_entities(new_clients)
 
-                _LOGGER.debug("Next client discovery will occur on %s",
-                              dt_util.as_local(self._next_client_discover))
+            _LOGGER.debug("Next client discovery will occur on %s",
+                          dt_util.as_local(self._next_client_discover))
 
     @property
     def device_state_attributes(self):
