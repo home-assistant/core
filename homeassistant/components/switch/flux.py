@@ -261,7 +261,7 @@ class FluxSwitch(SwitchDevice):
             brightness = None
         if self._mode == MODE_XY:
             await async_set_lights_xy(self.hass, self._lights, x_val,
-                          y_val, brightness, self._transition)
+                                      y_val, brightness, self._transition)
             _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", x_val, y_val,
                          brightness, round(
