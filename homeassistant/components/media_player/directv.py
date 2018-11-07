@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.directv/
 """
 import logging
+from datetime import timedelta
 import requests
 import voluptuous as vol
 
@@ -28,9 +29,14 @@ ATTR_MEDIA_RATING = 'media_rating'
 ATTR_MEDIA_RECORDED = 'media_recorded'
 ATTR_MEDIA_START_TIME = 'media_start_time'
 
+CONF_DISCOVER_CLIENTS = 'discover_clients'
+CONF_CLIENT_DISCOVER_INTERVAL = 'client_discover_interval'
+
 DEFAULT_DEVICE = '0'
+DEFAULT_DISCOVER_CLIENTS = True
 DEFAULT_NAME = "DirecTV Receiver"
 DEFAULT_PORT = 8080
+DEFAULT_CLIENT_DISCOVER_INTERVAL = timedelta(seconds=300)
 
 SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
@@ -51,98 +57,156 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Optional(CONF_DISCOVER_CLIENTS, default=DEFAULT_DISCOVER_CLIENTS):
+        cv.boolean,
+    vol.Optional(CONF_CLIENT_DISCOVER_INTERVAL,
+                 default=DEFAULT_CLIENT_DISCOVER_INTERVAL):
+        cv.time_period,
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DirecTV platform."""
     known_devices = hass.data.get(DATA_DIRECTV, set())
-    hosts = []
+    directv_entity = None
 
     if CONF_HOST in config:
         _LOGGER.debug("Adding configured device %s with client address %s ",
                       config.get(CONF_NAME), config.get(CONF_DEVICE))
-        hosts.append([
-            config.get(CONF_NAME), config.get(CONF_HOST),
-            config.get(CONF_PORT), config.get(CONF_DEVICE)
-        ])
+        directv_entity = {
+            CONF_NAME: config.get(CONF_NAME),
+            CONF_HOST: config.get(CONF_HOST),
+            CONF_PORT: config.get(CONF_PORT),
+            CONF_DEVICE: config.get(CONF_DEVICE),
+            CONF_DISCOVER_CLIENTS: config.get(CONF_DISCOVER_CLIENTS),
+            CONF_CLIENT_DISCOVER_INTERVAL: config.get(
+                CONF_CLIENT_DISCOVER_INTERVAL),
+            'entities': add_entities
+        }
 
     elif discovery_info:
         host = discovery_info.get('host')
-        name = 'DirecTV_{}'.format(discovery_info.get('serial', ''))
-
-        # Attempt to discover additional RVU units
-        _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
-
-        from DirectPy import DIRECTV
-        dtv = DIRECTV(host, DEFAULT_PORT)
-        try:
-            resp = dtv.get_locations()
-        except requests.exceptions.RequestException as ex:
-            # Bail out and just go forward with uPnP data
-            # Make sure that this device is not already configured
-            # Comparing based on host (IP) and clientAddr.
-            _LOGGER.debug("Request exception %s trying to get locations", ex)
-            resp = {
-                'locations': [{
-                    'locationName': name,
-                    'clientAddr': DEFAULT_DEVICE
-                }]
+        if (host, DEFAULT_DEVICE) in known_devices:
+            name = 'DirecTV_{}'.format(discovery_info.get('serial', ''))
+            _LOGGER.debug("Discovered device %s on host %s is already"
+                          " configured", name, host)
+        else:
+            _LOGGER.debug("Adding discovered device %s on host %s",
+                          name, host)
+            directv_entity = {
+                CONF_NAME: name,
+                CONF_HOST: host,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_DEVICE: '0',
+                CONF_DISCOVER_CLIENTS: DEFAULT_DISCOVER_CLIENTS,
+                CONF_CLIENT_DISCOVER_INTERVAL:
+                    DEFAULT_CLIENT_DISCOVER_INTERVAL,
+                'entities': add_entities
             }
 
-        _LOGGER.debug("Known devices: %s", known_devices)
-        for loc in resp.get("locations") or []:
-            if "locationName" not in loc or "clientAddr" not in loc:
-                continue
-
-            # Make sure that this device is not already configured
-            # Comparing based on host (IP) and clientAddr.
-            if (host, loc["clientAddr"]) in known_devices:
-                _LOGGER.debug("Discovered device %s on host %s with "
-                              "client address %s is already "
-                              "configured",
-                              str.title(loc["locationName"]),
-                              host, loc["clientAddr"])
-            else:
-                _LOGGER.debug("Adding discovered device %s with"
-                              " client address %s",
-                              str.title(loc["locationName"]),
-                              loc["clientAddr"])
-                hosts.append([str.title(loc["locationName"]), host,
-                              DEFAULT_PORT, loc["clientAddr"]])
-
-    dtvs = []
-
-    for host in hosts:
-        dtvs.append(DirecTvDevice(*host))
-        hass.data.setdefault(DATA_DIRECTV, set()).add((host[1], host[3]))
-
-    add_entities(dtvs)
+    if directv_entity is not None:
+        hass.data.setdefault(DATA_DIRECTV, set()).add((
+            directv_entity[CONF_HOST], directv_entity[CONF_DEVICE]))
+        add_entities([DirecTvDevice(**directv_entity)])
 
 
 class DirecTvDevice(MediaPlayerDevice):
     """Representation of a DirecTV receiver on the network."""
 
-    def __init__(self, name, host, port, device):
+    def __init__(self, **kwargs):
         """Initialize the device."""
+        self._host = kwargs.get(CONF_HOST)
+        self._name = kwargs.get(CONF_NAME, self._host)
+        self._port = kwargs.get(CONF_PORT, DEFAULT_PORT)
+        self._device = kwargs.get(CONF_DEVICE, DEFAULT_DEVICE)
+
+        # This is a client device is client address is not 0
+        self._is_client = self._device != DEFAULT_DEVICE
+        # Disable discover_clients if this is a client device, otherwise
+        # base it on configuration provided or default.
+        self._discover_clients = kwargs.get(CONF_DISCOVER_CLIENTS,
+                                            DEFAULT_DISCOVER_CLIENTS) \
+            if not self._is_client else False
+        self._client_discover_interval = kwargs.get(
+            CONF_CLIENT_DISCOVER_INTERVAL, DEFAULT_CLIENT_DISCOVER_INTERVAL)
+        self._add_entities = kwargs.get('entities')
+
         from DirectPy import DIRECTV
-        self.dtv = DIRECTV(host, port, device)
-        self._name = name
+        self.dtv = DIRECTV(self._host, self._port, self._device)
+
         self._is_standby = True
         self._current = None
         self._last_update = None
         self._paused = None
         self._last_position = None
         self._is_recorded = None
-        self._is_client = device != '0'
         self._assumed_state = None
         self._available = False
+        self._next_client_discover = dt_util.utcnow()
 
         if self._is_client:
-            _LOGGER.debug("Created DirecTV client %s for device %s",
-                          self._name, device)
+            _LOGGER.debug("Created entity %s for DirecTV client %s",
+                          self._name, self._device)
         else:
-            _LOGGER.debug("Created DirecTV device for %s", self._name)
+            _LOGGER.debug("Created entity %s for DirecTV device", self._name)
+            if self._discover_clients:
+                _LOGGER.debug("Will perform client discovery every %s",
+                              self._client_discover_interval)
+
+    def _discover_directv_client_devices(self):
+        """Discover any client devices on the main DVR."""
+        known_devices = self.hass.data.get(DATA_DIRECTV, set())
+        discovered_devices = []
+
+        # Attempt to discover additional RVU units
+        _LOGGER.debug("Doing discovery of DirecTV devices on %s", self._host)
+
+        resp = self.dtv.get_locations()
+
+        _LOGGER.debug("Known devices: %s", known_devices)
+        for loc in resp.get('locations') or []:
+            if 'locationName' not in loc or 'clientAddr' not in loc or\
+               loc.get('clientAddr') == 0:
+                continue
+
+            # Make sure that this device is not already configured
+            # Comparing based on host (IP) and clientAddr.
+            if (self._host, loc['clientAddr']) in known_devices:
+                _LOGGER.debug("Discovered device %s on host %s with "
+                              "client address %s is already "
+                              "configured",
+                              str.title(loc['locationName']),
+                              self._host, loc['clientAddr'])
+            else:
+                _LOGGER.debug("Adding discovered device %s with"
+                              " client address %s",
+                              str.title(loc['locationName']),
+                              loc['clientAddr'])
+                discovered_devices.append({
+                    CONF_NAME: str.title(loc['locationName']),
+                    CONF_HOST: self._host,
+                    CONF_PORT: self._port,
+                    CONF_DEVICE: loc['clientAddr'],
+                    CONF_DISCOVER_CLIENTS: False,
+                    'entities': self._add_entities
+                })
+
+        return discovered_devices
+
+    def _add_directv_entities(self, new_entities):
+        """Add DirecTV client devices as entities in HASS."""
+        dtvs = []
+
+        if len(new_entities) != 0:
+            _LOGGER.debug("Adding %s new DirecTV entities to HASS",
+                          len(new_entities))
+
+            for new_entity in new_entities:
+                dtvs.append(DirecTvDevice(**new_entity))
+                self.hass.data.setdefault(DATA_DIRECTV, set()).add(
+                    (new_entity[CONF_HOST], new_entity[CONF_DEVICE]))
+
+            self._add_entities(dtvs)
 
     def update(self):
         """Retrieve latest state."""
@@ -177,6 +241,31 @@ class DirecTvDevice(MediaPlayerDevice):
         except Exception:
             self._available = False
             raise
+
+        # Perform discovery to determine if any new client devices have
+        # shown up if client discovery is enabled (default) and defined time
+        # has been elapsed since last discovery (default 5 minutes)
+        if self._discover_clients and \
+           dt_util.utcnow() >= self._next_client_discover:
+                self._next_client_discover = dt_util.utcnow() +\
+                    self._client_discover_interval
+
+                new_clients = []
+                try:
+                    new_clients = self._discover_directv_client_devices()
+                except requests.exceptions.RequestException as ex:
+                    _LOGGER.debug("Request exception %s trying to discover "
+                                  "new clients", ex)
+
+                # If _add_entities is not defined but clients were found then
+                # raise NotImplementedError.
+                if self._add_entities is None and len(new_clients) > 0:
+                    raise NotImplementedError()
+                else:
+                    self._add_directv_entities(new_clients)
+
+                _LOGGER.debug("Next client discovery will occur on %s",
+                              dt_util.as_local(self._next_client_discover))
 
     @property
     def device_state_attributes(self):
