@@ -37,11 +37,11 @@ def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
     try:
         import pysma
-    except ImportError:
+        valid = [s.name for s in pysma.SENSORS]
+    except (ImportError, AttributeError):
         return conf
 
-    valid = list(conf[CONF_CUSTOM].keys())
-    valid.extend([s.name for s in pysma.SENSORS])
+    valid.extend(conf[CONF_CUSTOM].keys())
     for sname, attrs in conf[CONF_SENSORS].items():
         if sname not in valid:
             raise vol.Invalid("{} does not exist".format(sname))
