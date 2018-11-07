@@ -209,6 +209,8 @@ homeassistant/components/*/rfxtrx.py @danielhiversen
 # S
 homeassistant/components/simplisafe/* @bachya
 homeassistant/components/*/simplisafe.py @bachya
+homeassistant/components/somfy_mylink/* @bendews
+homeassistant/components/*/somfy_mylink.py @bendews
 
 # T
 homeassistant/components/tahoma.py @philklei
