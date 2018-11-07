@@ -4,15 +4,14 @@ Platform for the Somfy MyLink device supporting the Synergy JsonRPC API.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/somfy_mylink/
 """
-import json
 import logging
-import socket
-from random import randint
+
 from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers import config_validation as cv
+
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.discovery import load_platform
 
 _LOGGER = logging.getLogger(__name__)
 CONF_COVER_OPTIONS = 'cover_options'
