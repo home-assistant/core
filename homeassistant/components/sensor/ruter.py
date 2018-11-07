@@ -12,8 +12,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['pyruter==1.0.2']
+REQUIREMENTS = ['pyruter==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,8 @@ async def async_setup_platform(
     name = config[CONF_NAME]
     offset = config[CONF_OFFSET]
 
-    ruter = Departures(hass.loop, stop_id, destination)
+    session = async_get_clientsession(hass)
+    ruter = Departures(hass.loop, stop_id, destination, session)
     sensor = [RuterSensor(ruter, name, offset)]
     async_add_entities(sensor, True)
 
