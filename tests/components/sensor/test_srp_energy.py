@@ -19,17 +19,6 @@ PATCH_VALIDATE = 'srpenergy.client.SrpEnergyClient.validate'
 PATCH_USAGE = 'srpenergy.client.SrpEnergyClient.usage'
 
 
-def mock_init(self, accountid, username, password):
-    """Mock srpusage usage."""
-    _LOGGER.log(logging.INFO, "Calling mock Init")
-
-
-def mock_validate(self):
-    """Mock srpusage usage."""
-    _LOGGER.log(logging.INFO, "Calling mock Validate")
-    return True
-
-
 def mock_usage(self, startdate, enddate):  # pylint: disable=invalid-name
     """Mock srpusage usage."""
     _LOGGER.log(logging.INFO, "Calling mock usage")
@@ -46,8 +35,8 @@ def mock_usage(self, startdate, enddate):  # pylint: disable=invalid-name
 
 async def test_setup_with_config(hass):
     """Test the platform setup with configuration."""
-    with patch(PATCH_INIT, new=mock_init), \
-        patch(PATCH_VALIDATE, new=mock_validate), \
+    with patch(PATCH_INIT, return_value=None), \
+        patch(PATCH_VALIDATE, return_value=True), \
             patch(PATCH_USAGE, new=mock_usage):
 
         await async_setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
@@ -57,12 +46,11 @@ async def test_setup_with_config(hass):
 
 
 async def test_daily_usage(hass):
-    """Test the platform setup with configuration."""
-    with patch(PATCH_INIT, new=mock_init), \
-        patch(PATCH_VALIDATE, new=mock_validate), \
+    """Test the platform daily usage."""
+    with patch(PATCH_INIT, return_value=None), \
+        patch(PATCH_VALIDATE, return_value=True), \
             patch(PATCH_USAGE, new=mock_usage):
 
-        # hass = get_test_home_assistant()
         await async_setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
 
         state = hass.states.get('sensor.srp_energy')

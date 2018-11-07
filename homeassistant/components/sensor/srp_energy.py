@@ -130,7 +130,7 @@ class SrpEnergy(Entity):
 
             daily_usage = 0.0
             for _, _, _, kwh, _ in usage:
-                daily_usage = daily_usage + float(kwh)
+                daily_usage += float(kwh)
 
             if usage:
 
