@@ -266,7 +266,8 @@ class MiroboVacuum(StateVacuumDevice):
         """Call a vacuum command handling error messages."""
         from miio import DeviceException
         try:
-            await self.hass.async_add_job(partial(func, *args, **kwargs))
+            await self.hass.async_add_executor_job(
+                partial(func, *args, **kwargs))
             return True
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
