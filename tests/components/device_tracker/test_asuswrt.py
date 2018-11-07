@@ -1,8 +1,6 @@
 """The tests for the ASUSWRT device tracker platform."""
-from homeassistant.components.device_tracker.asuswrt import async_get_scanner
-
 from homeassistant.components.asuswrt import (
-    CONF_PROTOCOL, CONF_MODE, DOMAIN, CONF_PORT, DATA_ASUSWRT)
+    CONF_PROTOCOL, CONF_MODE, DOMAIN, CONF_PORT, DATA_ASUSWRT, async_setup)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 
@@ -22,31 +20,32 @@ VALID_CONFIG_ROUTER_SSH = {DOMAIN: {
 
 async def test_password_or_pub_key_required(hass):
     """Test creating an AsusWRT scanner without a pass or pubkey."""
-    with MockDependency('aioasuswrt') as mocked_asus:
-        mocked_asus.async_get_connected_devices = mock_coro_func()
-        hass.data[DATA_ASUSWRT] = mocked_asus
-        scanner = await async_get_scanner(
-            hass, {
+    with MockDependency('aioasuswrt.asuswrt')as mocked_asus:
+        mocked_asus.AsusWrt().connection.async_connect = mock_coro_func()
+        mocked_asus.AsusWrt().is_connected = False
+        assert not await async_setup(
+            hass, {DOMAIN: {
                 CONF_PLATFORM: 'asuswrt',
                 CONF_HOST: 'fake_host',
                 CONF_USERNAME: 'fake_user'
-            })
+            }})
         await hass.async_block_till_done()
-        assert scanner is None
+        assert hass.data.get(DATA_ASUSWRT) is None
 
 
 async def test_get_scanner_with_password_no_pubkey(hass):
     """Test creating an AsusWRT scanner with a password and no pubkey."""
-    with MockDependency('aioasuswrt') as mocked_asus:
-        mocked_asus.async_get_connected_devices = mock_coro_func(
+    with MockDependency('aioasuswrt.asuswrt')as mocked_asus:
+        mocked_asus.AsusWrt().connection.async_connect = mock_coro_func()
+        mocked_asus.AsusWrt(
+        ).connection.async_get_connected_devices = mock_coro_func(
             return_value={})
-        hass.data[DATA_ASUSWRT] = mocked_asus
-        scanner = await async_get_scanner(
-            hass, {
+        assert await async_setup(
+            hass, {DOMAIN: {
                 CONF_PLATFORM: 'asuswrt',
                 CONF_HOST: 'fake_host',
                 CONF_USERNAME: 'fake_user',
                 CONF_PASSWORD: '4321'
-            })
+            }})
         await hass.async_block_till_done()
-        assert scanner is not None
+        assert hass.data[DATA_ASUSWRT] is not None

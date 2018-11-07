@@ -48,12 +48,12 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    api = AsusWrt(conf[CONF_HOST], conf[CONF_PORT],
-                  conf[CONF_PROTOCOL] == 'telnet',
+    api = AsusWrt(conf[CONF_HOST], conf.get(CONF_PORT),
+                  conf.get(CONF_PROTOCOL) == 'telnet',
                   conf[CONF_USERNAME],
                   conf.get(CONF_PASSWORD, ''),
                   conf.get('ssh_key', conf.get('pub_key', '')),
-                  conf[CONF_MODE], conf[CONF_REQUIRE_IP])
+                  conf.get(CONF_MODE), conf.get(CONF_REQUIRE_IP))
 
     await api.connection.async_connect()
     if not api.is_connected:
