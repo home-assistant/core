@@ -14,7 +14,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pylaunches==0.1.1']
 
@@ -24,7 +23,7 @@ CONF_ATTRIBUTION = "Data provided by Launch Library."
 
 DEFAULT_NAME = 'Launch'
 
-TIME_BETWEEN_UPDATES = timedelta(hours=1)
+SCAN_INTERVAL = timedelta(hours=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -100,7 +99,6 @@ class LaunchData():
         """Initialize the data object."""
         self.api = api
 
-    @Throttle(TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest launch data."""
         await self.api.get_launches()
