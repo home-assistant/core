@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['hdate==0.6.5']
+REQUIREMENTS = ['hdate==0.7.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,7 +113,6 @@ class JewishCalSensor(Entity):
         _LOGGER.debug("Now: %s Timezone = %s", now, now.tzinfo)
 
         today = now.date()
-        upcoming_saturday = today + timedelta((12 - today.weekday()) % 7)
         sunset = dt_util.as_local(get_astral_event_date(
             self.hass, SUN_EVENT_SUNSET, today))
 
@@ -124,30 +123,15 @@ class JewishCalSensor(Entity):
 
         date = hdate.HDate(
             today, diaspora=self.diaspora, hebrew=self._hebrew)
-        upcoming_shabbat = hdate.HDate(
-            upcoming_saturday, diaspora=self.diaspora, hebrew=self._hebrew)
 
         if self.type == 'date':
-            self._state = hdate.date.get_hebrew_date(
-                date.h_day, date.h_month, date.h_year, hebrew=self._hebrew)
+            self._state = date.hebrew_date
         elif self.type == 'weekly_portion':
-            self._state = hdate.date.get_parashe(
-                upcoming_shabbat.get_reading(self.diaspora),
-                hebrew=self._hebrew)
+            self._state = date.parasha
         elif self.type == 'holiday_name':
-            try:
-                description = next(
-                    x.description[self._hebrew]
-                    for x in hdate.htables.HOLIDAYS
-                    if x.index == date.get_holyday())
-                if not self._hebrew:
-                    self._state = description
-                else:
-                    self._state = description.long
-            except StopIteration:
-                self._state = None
+            self._state = date.holiday_description
         elif self.type == 'holyness':
-            self._state = hdate.date.get_holyday_type(date.get_holyday())
+            self._state = date.holiday_type
         else:
             times = hdate.Zmanim(
                 date=today, latitude=self.latitude, longitude=self.longitude,
