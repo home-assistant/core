@@ -507,7 +507,8 @@ class SwitchableRflinkDevice(RflinkCommand):
         await super().async_added_to_hass()
 
         old_state = await async_get_last_state(self.hass, self.entity_id)
-        self._state = old_state and old_state.state == STATE_ON
+        if old_state is not None:
+            self._state = old_state.state == STATE_ON
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
