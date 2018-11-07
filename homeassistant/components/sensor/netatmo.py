@@ -326,8 +326,6 @@ class NetAtmoData:
             return
 
         try:
-            import pyatmo
-
             self.station_data = self._detect_platform_type()
             if not self.station_data:
                 raise Exception("No Weather nor HomeCoach devices found")
