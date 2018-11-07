@@ -18,7 +18,8 @@ from homeassistant.const import (
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo)
+    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
+    subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -91,7 +92,7 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         """Initialize the MQTT binary sensor."""
         self._config = config
         self._state = None
-        self._state_unsub = None
+        self._sub_state = None
         self._delay_listener = None
 
         self._name = None
@@ -123,14 +124,14 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         """Subscribe mqtt events."""
         await MqttAvailability.async_added_to_hass(self)
         await MqttDiscoveryUpdate.async_added_to_hass(self)
-        await self._subscribe_topics(None)
+        await self._subscribe_topics()
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        old_state_topic = self._state_topic
         self._setup_from_config(config)
-        await self._subscribe_topics(old_state_topic)
+        await self.availability_discovery_update(config)
+        await self._subscribe_topics()
         self.async_schedule_update_ha_state()
 
     def _setup_from_config(self, config):
@@ -148,18 +149,12 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
             value_template.hass = self.hass
         self._template = value_template
 
-        # TODO: What if unique ID is changed?
         self._unique_id = config.get(CONF_UNIQUE_ID)
-
-        # TODO: Handle changed availability_topic / payload?
-        # config.get(CONF_AVAILABILITY_TOPIC),
-        # config.get(CONF_PAYLOAD_AVAILABLE),
-        # config.get(CONF_PAYLOAD_NOT_AVAILABLE),
 
         # TODO: Handle changed device?
         # config.get(CONF_DEVICE),
 
-    async def _subscribe_topics(self, old_state_topic):
+    async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         @callback
         def off_delay_listener(now):
@@ -193,17 +188,14 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
 
             self.async_schedule_update_ha_state()
 
-        if self._state_topic != old_state_topic:
-            if self._state_unsub is not None:
-                self._state_unsub()
-            self._state_unsub = await mqtt.async_subscribe(
-                self.hass, self._state_topic, state_message_received,
-                self._qos)
+        self._sub_state = await subscription.async_subscribe_topics(
+            self.hass, self._sub_state, {'state_topic': self._state_topic},
+            state_message_received, self._qos)
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        if self._state_unsub is not None:
-            self._state_unsub()
+        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
     def should_poll(self):

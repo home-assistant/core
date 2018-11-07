@@ -206,12 +206,11 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                 if value[-1] == TOPIC_BASE and key.endswith('_topic'):
                     payload[key] = "{}{}".format(value[:-1], base)
 
-        # If present, the node_id will be included in the discovered object id
-        discovery_id = '_'.join((node_id, object_id)) if node_id else object_id
-
-        if ALREADY_DISCOVERED not in hass.data:
-            hass.data[ALREADY_DISCOVERED] = {}
-
+        # If present, unique_id is used as the discovered object id. Otherwise,
+        # if present, the node_id will be included in the discovered object id
+        discovery_id = payload.get(
+            'unique_id', '_'.join(
+                (node_id, object_id)) if node_id else object_id)
         discovery_hash = (component, discovery_id)
 
         if payload:
@@ -229,6 +228,8 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
 
             payload[ATTR_DISCOVERY_HASH] = discovery_hash
 
+        if ALREADY_DISCOVERED not in hass.data:
+            hass.data[ALREADY_DISCOVERED] = {}
         if discovery_hash in hass.data[ALREADY_DISCOVERED]:
             # Dispatch update
             _LOGGER.info(
