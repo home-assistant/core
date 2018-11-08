@@ -66,6 +66,8 @@ INTENT_SWITCHES_OFF = 'AisSwitchesOff'
 INTENT_OPEN_COVER = 'AisCoverOpen'
 INTENT_CLOSE_COVER = 'AisCoverClose'
 INTENT_STOP = 'AisStop'
+INTENT_NEXT = 'AisNext'
+INTENT_PREV = 'AisPrev'
 INTENT_SCENE = 'AisSceneActive'
 
 
@@ -1063,6 +1065,8 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisOpenCover())
     hass.helpers.intent.async_register(AisCloseCover())
     hass.helpers.intent.async_register(AisStop())
+    hass.helpers.intent.async_register(AisNext())
+    hass.helpers.intent.async_register(AisPrev())
     hass.helpers.intent.async_register(AisSceneActive())
     async_register(hass, INTENT_GET_WEATHER, [
             'pogoda',
@@ -1165,6 +1169,8 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_CLOSE_COVER, ['Zamknij {item}', 'Zasłoń {item}'])
     async_register(hass, INTENT_STOP, ['Stop', 'Zatrzymaj', 'Koniec', 'Pauza', 'Zaniechaj', 'Stój'])
     async_register(hass, INTENT_SCENE, ['Scena {item}', 'Aktywuj [scenę] {item}'])
+    async_register(hass, INTENT_NEXT, ['[włącz] następny', '[włącz] kolejny', '[graj] następny', '[graj] kolejny'])
+    async_register(hass, INTENT_PREV, ['[włącz] poprzedni', '[włącz] wcześniejszy', '[graj] poprzedni', '[graj] wcześniejszy'])
 
 
     return True
@@ -1222,7 +1228,7 @@ def _publish_command_to_frame(hass, key, val, ip):
             _LOGGER.info("requests.post problem")
 
 
-def _widi_rssi_to_info(rssi):
+def _wifi_rssi_to_info(rssi):
     info = "moc nieznana"
     if rssi > -31:
         return "moc doskonała (" + str(rssi) + ")"
@@ -1236,12 +1242,14 @@ def _widi_rssi_to_info(rssi):
         return "moc bardzo słaba (" + str(rssi) + ")"
     return info
 
+
 def _wifi_frequency_info(mhz):
-    if mhz.startwith("2"):
+    if str(mhz).startswith("2"):
         return "2.4 GHz"
-    elif mhz.startwith("5"):
+    elif str(mhz).startswith("5"):
         return "5 GHz"
-    return mhz
+    return str(mhz)
+
 
 def _publish_wifi_status(hass, service):
     wifis = json.loads(service.data["payload"])
@@ -1250,7 +1258,7 @@ def _publish_wifi_status(hass, service):
         if len(item["ssid"]) > 0:
             wifis_names.append(
                 item["ssid"] + "; " +
-                _widi_rssi_to_info(item["rssi"]) +
+                _wifi_rssi_to_info(item["rssi"]) +
                 "; " + item["capabilities"] + "; " + _wifi_frequency_info(item["frequency_mhz"]))
     hass.async_run_job(
         hass.services.call(
@@ -1303,7 +1311,7 @@ def _process_command_from_frame(hass, service):
             if len(item["ssid"]) > 0:
                 iot_names.append(
                     item["ssid"] + "; " +
-                    _widi_rssi_to_info(item["rssi"]) +
+                    _wifi_rssi_to_info(item["rssi"]) +
                     "; " + item["capabilities"])
         hass.async_run_job(
             hass.services.call(
@@ -1362,7 +1370,9 @@ def _process_command_from_frame(hass, service):
                 if "link_speed_mbps" in cci:
                     info += "; prędkość: " + str(cci["link_speed_mbps"]) + " megabitów na sekundę"
                 if "rssi" in cci:
-                    info += "; " + _widi_rssi_to_info(cci["rssi"])
+                    info += "; " + _wifi_rssi_to_info(cci["rssi"])
+                if "frequency_mhz" in cci:
+                    info += "; " + _wifi_frequency_info(cci["frequency_mhz"])
 
         hass.states.async_set(
             'sensor.ais_android_wifi_current_network_info',
@@ -2255,6 +2265,34 @@ class AisStop(intent.IntentHandler):
         yield from hass.services.async_call(
             'media_player', 'media_stop')
         message = 'ok, stop'
+        return message, True
+
+
+class AisNext(intent.IntentHandler):
+    """Handle AisNext intents."""
+    intent_type = INTENT_NEXT
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        yield from hass.services.async_call(
+            'media_player', 'media_next_track')
+        message = 'ok, następny'
+        return message, True
+
+
+class AisPrev(intent.IntentHandler):
+    """Handle AisPrev intents."""
+    intent_type = INTENT_PREV
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        yield from hass.services.async_call(
+            'media_player', 'media_previous_track')
+        message = 'ok, poprzedni'
         return message, True
 
 

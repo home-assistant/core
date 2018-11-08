@@ -961,7 +961,7 @@ class AisColudData:
                             CONF_IP_ADDRESS: call.data.get(CONF_IP_ADDRESS),
                             CONF_MAC: call.data.get(CONF_MAC)
                         },
-                        {}))
+                        hass.config))
 
         # take the info about normal players
         entities = hass.states.async_all()

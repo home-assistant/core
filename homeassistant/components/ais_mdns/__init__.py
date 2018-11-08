@@ -18,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['api']
 DOMAIN = 'ais_mdns'
-ZEROCONF_NAME = 'ais-dom'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({}),
@@ -37,6 +36,10 @@ def setup(hass, config):
         host_name = return_value.strip().decode('utf-8')
     except subprocess.CalledProcessError:
         host_name = socket.gethostname()
+    if len(host_name) == 0:
+        # get the mac address
+        import uuid
+        host_name = ''.join(['{:02x}'.format((uuid.getnode() >> i) & 0xff) for i in range(0, 8*6, 8)][::-1])
     if host_name.endswith('.local'):
         host_name = host_name[:-len('.local')]
 
@@ -45,19 +48,22 @@ def setup(hass, config):
     except socket.error:
         ip = socket.inet_pton(socket.AF_INET6, host_ip)
 
-    # hass.http.server_port - 8180
-    # hass.config.api.base_url
     params = {
         'version': __version__,
         'company_url': "https://ai-speaker.com",
     }
 
-    # https://ais-dom.local:8123
-    # http://ais-dom.local:8180
+    # HASS
+    hass_info = ServiceInfo("_home-assistant._tcp.local.",
+                            host_name + "._home-assistant._tcp.local.",
+                            ip, 8180, 0, 0,
+                            params, host_name + ".local.")
+
+    zero_config.register_service(hass_info)
 
     # HTTP
     http_info = ServiceInfo("_http._tcp.local.",
-                            ZEROCONF_NAME + "._http._tcp.local.",
+                            host_name + "._http._tcp.local.",
                             ip, 8180, 0, 0,
                             params, host_name + ".local.")
 
@@ -65,7 +71,7 @@ def setup(hass, config):
 
     # MQTT
     mqtt_info = ServiceInfo("_mqtt._tcp.local.",
-                            ZEROCONF_NAME + "._mqtt._tcp.local.",
+                            host_name + "._mqtt._tcp.local.",
                             ip, 1883, 0, 0,
                             params, host_name + ".local.")
 
@@ -73,26 +79,19 @@ def setup(hass, config):
 
     # FTP
     ftp_info = ServiceInfo("_ftp._tcp.local.",
-                           ZEROCONF_NAME + "._ftp._tcp.local.",
+                           host_name + "._ftp._tcp.local.",
                            ip, 1024, 0, 0,
                            params, host_name + ".local.")
 
     zero_config.register_service(ftp_info)
 
-    # SSH
-    ssh_info = ServiceInfo("_ssh._tcp.local.",
-                           ZEROCONF_NAME + "._ssh._tcp.local.",
-                           ip, 8022, 0, 0,
-                           params, host_name + ".local.")
-
-    zero_config.register_service(ssh_info)
 
     def stop_zeroconf(event):
         """Stop Zeroconf."""
+        zero_config.unregister_service(hass_info)
         zero_config.unregister_service(http_info)
         zero_config.unregister_service(mqtt_info)
         zero_config.unregister_service(ftp_info)
-        zero_config.unregister_service(ssh_info)
         zero_config.close()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
