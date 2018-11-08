@@ -99,6 +99,11 @@ class SeventeenTrackSummarySensor(Entity):
         self._status = status
 
     @property
+    def available(self):
+        """Return whether the entity is available."""
+        return self._data.summary.get(self._status) is not None
+
+    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
@@ -133,7 +138,7 @@ class SeventeenTrackSummarySensor(Entity):
         """Update the sensor."""
         await self._data.async_update()
 
-        self._state = self._data.summary[self._status]
+        self._state = self._data.summary.get(self._status)
 
 
 class SeventeenTrackPackageSensor(Entity):
@@ -153,6 +158,14 @@ class SeventeenTrackPackageSensor(Entity):
         self._data = data
         self._state = package.status
         self._tracking_number = package.tracking_number
+
+    @property
+    def available(self):
+        """Return whether the entity is available."""
+        return bool([
+            p for p in self._data.packages
+            if p.tracking_number == self._tracking_number
+        ])
 
     @property
     def device_state_attributes(self):
@@ -184,12 +197,13 @@ class SeventeenTrackPackageSensor(Entity):
         """Update the sensor."""
         await self._data.async_update()
 
+        if not self._data.packages:
+            return
+
         try:
-            package = next(
-                iter([
-                    p for p in self._data.packages
-                    if p.tracking_number == self._tracking_number
-                ]))
+            package = next((
+                p for p in self._data.packages
+                if p.tracking_number == self._tracking_number))
         except StopIteration:
             # If the package no longer exists in the data, log a message and
             # delete this entity:
@@ -252,8 +266,8 @@ class SeventeenTrackData:
             if not self.show_delivered:
                 packages = [p for p in packages if p.status != VALUE_DELIVERED]
 
-            # Add new packates:
-            to_add = list(set(packages) - set(self.packages))
+            # Add new packages:
+            to_add = set(packages) - set(self.packages)
             if self.packages and to_add:
                 self._async_add_entities([
                     SeventeenTrackPackageSensor(self, package)
