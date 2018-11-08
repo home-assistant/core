@@ -1074,6 +1074,36 @@ async def test_turn_off_when_off(hass, setup_comp_9):
     assert STATE_OFF == \
         state_cool.attributes.get('operation_mode')
 
+@pytest.fixture
+def setup_comp_10(hass):
+    """Initialize components."""
+    hass.config.temperature_unit = TEMP_FAHRENHEIT
+    assert hass.loop.run_until_complete(async_setup_component(
+        hass, climate.DOMAIN, {'climate': {
+            'platform': 'generic_thermostat',
+            'name': 'test',
+            'cold_tolerance': 0.3,
+            'hot_tolerance': 0.3,
+            'target_temp': 25,
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR,
+            'min_cycle_duration': datetime.timedelta(minutes=15),
+            'keep_alive': datetime.timedelta(minutes=10),
+            'precision': 0.1
+        }}))
+
+
+async def test_precision(hass, setup_comp_10):
+    """Test that setting precision to tenths works as intended."""
+    common.async_set_operation_mode(hass, STATE_OFF)
+    await hass.async_block_till_done()
+    await hass.services.async_call('climate', SERVICE_TURN_OFF)
+    await hass.async_block_till_done()
+    common.async_set_temperature(hass, 23.27)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert 23.3 == state.attributes.get('temperature')
+
 
 @pytest.fixture
 def setup_comp_10(hass):
