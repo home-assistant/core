@@ -305,7 +305,10 @@ class NetAtmoData:
         return self.data.keys()
 
     def _detect_platform_type(self):
-        """Return a WeatherStationData or HomeCoachData (pyatmo objs) or the specified platform."""
+        """Return the XXXData object corresponding to the specified platform.
+
+        The return can be a WeatherStationData or a HomeCoachData.
+        """
         import pyatmo
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
             try:
