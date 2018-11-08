@@ -101,7 +101,7 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def available(self):
         """Return whether the entity is available."""
-        return self._data.summary.get(self._status) is not None
+        return self._state is not None
 
     @property
     def device_state_attributes(self):
