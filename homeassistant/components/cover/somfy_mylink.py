@@ -18,7 +18,10 @@ DEPENDENCIES = ['somfy_mylink']
 DEFAULT_SUPPORTED_FEATURES = (SUPPORT_OPEN | SUPPORT_STOP | SUPPORT_CLOSE)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass,
+                               config,
+                               async_add_entities,
+                               discovery_info=None):
     """Discover and configure Somfy covers."""
     somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
     cover_options = discovery_info.get(CONF_COVER_OPTIONS, [])

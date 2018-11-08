@@ -13,7 +13,10 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['somfy_mylink']
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass,
+                               config,
+                               async_add_entities,
+                               discovery_info=None):
     """Discover and configure Somfy MyLink scenes."""
     somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
     scene_list = list()

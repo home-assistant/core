@@ -31,11 +31,11 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, hass_config):
+async def async_setup(hass, config):
     """Set up the Demo covers."""
-    host = hass_config[DOMAIN][CONF_HOST]
-    port = hass_config[DOMAIN][CONF_PORT]
-    system_id = hass_config[DOMAIN][CONF_PASSWORD]
+    host = config[DOMAIN][CONF_HOST]
+    port = config[DOMAIN][CONF_PORT]
+    system_id = config[DOMAIN][CONF_PASSWORD]
     try:
         somfy_mylink = SomfyMyLinkSynergy(system_id, host, port)
     except TimeoutError:
@@ -44,5 +44,5 @@ async def async_setup(hass, hass_config):
         return False
     hass.data[DATA_SOMFY_MYLINK] = somfy_mylink
     for component in SOMFY_MYLINK_COMPONENTS:
-        load_platform(hass, component, DOMAIN, hass_config[DOMAIN], hass_config)
+        load_platform(hass, component, DOMAIN, config[DOMAIN], config)
     return True
