@@ -310,11 +310,13 @@ class AuthStore:
 
         # This is part of migrating from state 1 and 2
         if not has_admin_group:
-            _add_system_admin_group(groups)
+            admin_group = _system_admin_group()
+            groups[admin_group.id] = admin_group
 
         # This is part of migrating from state 1 and 2
         if not has_read_only_group:
-            _add_system_read_only_group(groups)
+            read_only_group = _system_read_only_group()
+            groups[read_only_group.id] = read_only_group
 
         for user_dict in data['users']:
             # Collect the users group.
@@ -479,14 +481,16 @@ class AuthStore:
         self._users = OrderedDict()  # type: Dict[str, models.User]
 
         groups = OrderedDict()  # type: Dict[str, models.Group]
-        _add_system_admin_group(groups)
-        _add_system_read_only_group(groups)
+        admin_group = _system_admin_group()
+        groups[admin_group.id] = admin_group
+        read_only_group = _system_read_only_group()
+        groups[read_only_group.id] = read_only_group
         self._groups = groups
 
 
-def _add_system_admin_group(groups: Dict[str, models.Group]) -> None:
-    """Add system admin group."""
-    groups[GROUP_ID_ADMIN] = models.Group(
+def _system_admin_group() -> None:
+    """Create system admin group."""
+    return models.Group(
         name=GROUP_NAME_ADMIN,
         id=GROUP_ID_ADMIN,
         policy=system_policies.ADMIN_POLICY,
@@ -494,9 +498,9 @@ def _add_system_admin_group(groups: Dict[str, models.Group]) -> None:
     )
 
 
-def _add_system_read_only_group(groups: Dict[str, models.Group]) -> None:
-    """Add system admin group."""
-    groups[GROUP_ID_READ_ONLY] = models.Group(
+def _system_read_only_group() -> None:
+    """Create read only group."""
+    return models.Group(
         name=GROUP_NAME_READ_ONLY,
         id=GROUP_ID_READ_ONLY,
         policy=system_policies.READ_ONLY_POLICY,
