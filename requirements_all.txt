@@ -1401,7 +1401,7 @@ speedtest-cli==2.0.2
 spiderpy==1.2.0
 
 # homeassistant.components.somfy_mylink
-somfy-mylink-synergy==1.0.1
+somfy-mylink-synergy==1.0.2
 
 # homeassistant.components.sensor.spotcrime
 spotcrime==1.0.3

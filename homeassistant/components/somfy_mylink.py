@@ -5,15 +5,13 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/somfy_mylink/
 """
 import logging
-
-from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
-
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 _LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['somfy-mylink-synergy==1.0.2']
 CONF_COVER_OPTIONS = 'cover_options'
 DATA_SOMFY_MYLINK = 'somfy_mylink_data'
 DOMAIN = 'somfy_mylink'
@@ -33,6 +31,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the Demo covers."""
+    from somfy_mylink_synergy import SomfyMyLinkSynergy
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
     system_id = config[DOMAIN][CONF_PASSWORD]
