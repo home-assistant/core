@@ -168,7 +168,6 @@ class KNXLight(Light):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-
         # initialize with current values
         brightness = self.brightness
         hs_color = self.hs_color
