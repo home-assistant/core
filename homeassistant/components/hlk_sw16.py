@@ -94,11 +94,10 @@ async def async_setup(hass, config):
             hass.data[DATA_DEVICE_REGISTER][device] = client
 
             # Load platforms
-            for comp_name, comp_conf in switches.items():
-                hass.async_create_task(
-                    async_load_platform(hass, 'switch', DOMAIN,
-                                        (comp_name, comp_conf, device),
-                                        config))
+            hass.async_create_task(
+                async_load_platform(hass, 'switch', DOMAIN,
+                                    (switches, device),
+                                    config))
 
             # handle shutdown of HLK-SW16 asyncio transport
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
