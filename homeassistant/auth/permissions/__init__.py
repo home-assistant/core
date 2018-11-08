@@ -7,17 +7,10 @@ import voluptuous as vol
 
 from homeassistant.core import State
 
-from .common import CategoryType, PolicyType
+from .const import CAT_ENTITIES
+from .types import CategoryType, PolicyType
 from .entities import ENTITY_POLICY_SCHEMA, compile_entities
 from .merge import merge_policies  # noqa
-
-
-# Default policy if group has no policy applied.
-DEFAULT_POLICY = {
-    "entities": True
-}  # type: PolicyType
-
-CAT_ENTITIES = 'entities'
 
 POLICY_SCHEMA = vol.Schema({
     vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA
