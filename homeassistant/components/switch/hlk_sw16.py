@@ -23,9 +23,9 @@ def devices_from_config(hass, domain_config):
     device_port = domain_config[0]
     device_config = domain_config[1]
     device_id = domain_config[2]
-    device_protocol = hass.data[DATA_DEVICE_REGISTER][device_id]
+    device_client = hass.data[DATA_DEVICE_REGISTER][device_id]
     device_name = device_config.get(CONF_NAME, device_port)
-    device = SW16Switch(device_name, device_port, device_id, device_protocol)
+    device = SW16Switch(device_name, device_port, device_id, device_client)
     return [device]
 
 

@@ -466,7 +466,7 @@ hikvision==0.4
 hipnotify==1.0.8
 
 # homeassistant.components.hlk_sw16
-hlk-sw16==0.0.3
+hlk-sw16==0.0.4
 
 # homeassistant.components.sensor.pi_hole
 hole==0.3.0

@@ -4,23 +4,21 @@ Support for HLK-SW16 relay switch.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/hlk_sw16/
 """
-import asyncio
 import logging
-import async_timeout
 
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST, CONF_PORT,
     EVENT_HOMEASSISTANT_STOP, CONF_SWITCHES, CONF_NAME)
-from homeassistant.core import CoreState, callback
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 
-REQUIREMENTS = ['hlk-sw16==0.0.3']
+REQUIREMENTS = ['hlk-sw16==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,44 +71,32 @@ async def async_setup(hass, config):
         port = config[DOMAIN][device][CONF_PORT]
 
         @callback
-        def reconnect():
+        def disconnected():
             """Schedule reconnect after connection has been lost."""
+            _LOGGER.warning('HLK-SW16 disconnected')
             async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
-            # If HA is not stopping, initiate new connection
-            if hass.state != CoreState.stopping:
-                _LOGGER.warning('disconnected from HLK-SW16, reconnecting')
-                hass.async_create_task(connect())
+        @callback
+        def reconnected():
+            """Schedule reconnect after connection has been lost."""
+            _LOGGER.warning('HLK-SW16 connected')
+            async_dispatcher_send(hass, SIGNAL_AVAILABILITY, True)
 
         async def connect():
             """Set up connection and hook it into HA for reconnect/shutdown."""
             _LOGGER.info('Initiating HLK-SW16 connection')
 
-            try:
-                with async_timeout.timeout(CONNECTION_TIMEOUT,
-                                           loop=hass.loop):
-                    transport, protocol = await create_hlk_sw16_connection(
-                        host=host,
-                        port=port,
-                        disconnect_callback=reconnect,
-                        loop=hass.loop,
-                        logger=_LOGGER)
-                    _LOGGER.info(transport)
+            client = await create_hlk_sw16_connection(
+                host=host,
+                port=port,
+                disconnect_callback=disconnected,
+                reconnect_callback=reconnected,
+                loop=hass.loop,
+                logger=_LOGGER,
+                timeout=CONNECTION_TIMEOUT,
+                reconnect_interval=DEFAULT_RECONNECT_INTERVAL)
 
-            except (ConnectionRefusedError, TimeoutError, OSError,
-                    asyncio.TimeoutError) as exc:
-                reconnect_interval = config[DOMAIN][device][
-                    CONF_RECONNECT_INTERVAL]
-                _LOGGER.error(
-                    "Error connecting to HLK-SW16, reconnecting in %s",
-                    reconnect_interval)
-                # Connection lost make entities unavailable
-                async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
-
-                hass.loop.call_later(reconnect_interval, reconnect, exc)
-                return
-
-            hass.data[DATA_DEVICE_REGISTER][device] = protocol
+            hass.data[DATA_DEVICE_REGISTER][device] = client
 
             # Load platforms
             for comp_name, comp_conf in switches.items():
@@ -121,11 +107,11 @@ async def async_setup(hass, config):
 
             # handle shutdown of HLK-SW16 asyncio transport
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                       lambda x: transport.close())
+                                       lambda x: client.stop())
 
             _LOGGER.info('Connected to HLK-SW16')
 
-        hass.async_create_task(connect())
+        hass.loop.create_task(connect())
 
     for device in config[DOMAIN]:
         add_device(device)
@@ -138,13 +124,13 @@ class SW16Device(Entity):
     Contains the common logic for HLK-SW16 entities.
     """
 
-    def __init__(self, relay_name, device_port, device_id, protocol):
+    def __init__(self, relay_name, device_port, device_id, client):
         """Initialize the device."""
         # HLK-SW16 specific attributes for every component type
         self._device_id = device_id
         self._device_port = device_port
         self._is_on = None
-        self._protocol = protocol
+        self._client = client
         self._name = relay_name
 
     @callback
@@ -173,7 +159,7 @@ class SW16Device(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self._protocol)
+        return bool(self._client.is_connected)
 
     @callback
     def _availability_callback(self, availability):
@@ -182,9 +168,9 @@ class SW16Device(Entity):
 
     async def async_added_to_hass(self):
         """Register update callback."""
-        self._protocol.register_status_callback(self.handle_event_callback,
-                                                self._device_port)
-        self._is_on = await self._protocol.status(self._device_port)
+        self._client.register_status_callback(self.handle_event_callback,
+                                              self._device_port)
+        self._is_on = await self._client.status(self._device_port)
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
                                  self._availability_callback)
 
@@ -197,18 +183,18 @@ class SwitchableSW16Device(SW16Device):
         if not self.available:
             _LOGGER.error('Cannot send command, not connected!')
             return
-        await self._protocol.status(self._device_port)
+        await self._client.status(self._device_port)
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         if not self.available:
             _LOGGER.error('Cannot send command, not connected!')
             return
-        await self._protocol.turn_on(self._device_port)
+        await self._client.turn_on(self._device_port)
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if not self.available:
             _LOGGER.error('Cannot send command, not connected!')
             return
-        await self._protocol.turn_off(self._device_port)
+        await self._client.turn_off(self._device_port)
