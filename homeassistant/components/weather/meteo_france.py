@@ -140,7 +140,8 @@ class MeteoFranceWeather(WeatherEntity):
                 ATTR_FORECAST_TIME: reftime.isoformat(),
                 ATTR_FORECAST_TEMP: int(value['max_temp']),
                 ATTR_FORECAST_TEMP_LOW: int(value['min_temp']),
-                ATTR_FORECAST_CONDITION: self.format_condition(value["weather"])
+                ATTR_FORECAST_CONDITION:
+                    self.format_condition(value["weather"])
             }
             reftime = reftime + timedelta(hours=24)
             forecast_data.append(data_dict)
