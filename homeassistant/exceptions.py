@@ -5,19 +5,13 @@ import jinja2
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
 
-    pass
-
 
 class InvalidEntityFormatError(HomeAssistantError):
     """When an invalid formatted entity is encountered."""
 
-    pass
-
 
 class NoEntitySpecifiedError(HomeAssistantError):
     """When no entity is specified."""
-
-    pass
 
 
 class TemplateError(HomeAssistantError):
@@ -32,16 +26,27 @@ class TemplateError(HomeAssistantError):
 class PlatformNotReady(HomeAssistantError):
     """Error to indicate that platform is not ready."""
 
-    pass
-
 
 class ConfigEntryNotReady(HomeAssistantError):
     """Error to indicate that config entry is not ready."""
-
-    pass
 
 
 class InvalidStateError(HomeAssistantError):
     """When an invalid state is encountered."""
 
-    pass
+
+class Unauthorized(HomeAssistantError):
+    """When an action is unauthorized."""
+
+    def __init__(self, context=None, user_id=None, entity_id=None,
+                 permission=None):
+        """Unauthorized error."""
+        super().__init__(self.__class__.__name__)
+        self.context = context
+        self.user_id = user_id
+        self.entity_id = entity_id
+        self.permission = permission
+
+
+class UnknownUser(Unauthorized):
+    """When call is made with user ID that doesn't exist."""
