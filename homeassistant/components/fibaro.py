@@ -42,10 +42,10 @@ CONF_PLUGINS = "plugins"
 
 FIBARO_COMPONENTS = [
     'binary_sensor',
-#    'sensor',
-#    'light',
-#    'switch',
-#    'cover',
+    # 'sensor',
+    # 'light',
+    # 'switch',
+    # 'cover',
 ]
 
 FIBARO_TYPEMAP = {
