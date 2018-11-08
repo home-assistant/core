@@ -47,7 +47,6 @@ async def async_setup(hass, config):
         modules = controller.get_modules()
         discovery_info = {
             'switch': [],
-            'climate': [],
             'binary_sensor': [],
             'sensor': []
         }
@@ -61,8 +60,6 @@ async def async_setup(hass, config):
                         ))
         load_platform(hass, 'switch', DOMAIN,
                       discovery_info['switch'], config)
-        load_platform(hass, 'climate', DOMAIN,
-                      discovery_info['climate'], config)
         load_platform(hass, 'binary_sensor', DOMAIN,
                       discovery_info['binary_sensor'], config)
         load_platform(hass, 'sensor', DOMAIN,
