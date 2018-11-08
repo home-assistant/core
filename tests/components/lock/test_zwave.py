@@ -248,8 +248,9 @@ def test_lock_get_usercode_service(hass, mock_openzwave):
     node = MockNode(node_id=12)
     value0 = MockValue(data=None, node=node, index=0)
     value1 = MockValue(data='1234', node=node, index=1)
-    yield from zwave.async_setup_platform(
-        hass, {}, MagicMock())
+
+    yield from setup_ozw(hass, mock_openzwave)
+    yield from hass.async_block_till_done()
 
     node.get_values.return_value = {
         value0.value_id: value0,
@@ -277,8 +278,9 @@ def test_lock_clear_usercode_service(hass, mock_openzwave):
     node = MockNode(node_id=12)
     value0 = MockValue(data=None, node=node, index=0)
     value1 = MockValue(data='123', node=node, index=1)
-    yield from zwave.async_setup_platform(
-        hass, {}, MagicMock())
+
+    yield from setup_ozw(hass, mock_openzwave)
+    yield from hass.async_block_till_done()
 
     node.get_values.return_value = {
         value0.value_id: value0,
