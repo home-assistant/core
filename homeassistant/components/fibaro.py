@@ -90,11 +90,12 @@ class FibaroController():
     _import_plugins = None      # Whether to import devices from plugins
 
     def __init__(self, username, password, url, import_plugins):
-        """Initialize the communication with the Fibaro controller."""
+        """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
         self._client = FibaroClient(url, username, password)
 
     def connect(self):
+        """Start the communication with the Fibaro controller."""
         try:
             login = self._client.login.get()
         except AssertionError:
