@@ -488,7 +488,7 @@ class AuthStore:
         self._groups = groups
 
 
-def _system_admin_group() -> None:
+def _system_admin_group() -> models.Group:
     """Create system admin group."""
     return models.Group(
         name=GROUP_NAME_ADMIN,
@@ -498,7 +498,7 @@ def _system_admin_group() -> None:
     )
 
 
-def _system_read_only_group() -> None:
+def _system_read_only_group() -> models.Group:
     """Create read only group."""
     return models.Group(
         name=GROUP_NAME_READ_ONLY,
