@@ -25,8 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_EVENT = 'event'
 ATTR_STATE = 'state'
 
-CONF_RECONNECT_INTERVAL = 'reconnect_interval'
-
 DATA_DEVICE_REGISTER = 'hlk_sw16_device_register'
 DEFAULT_RECONNECT_INTERVAL = 10
 CONNECTION_TIMEOUT = 10
@@ -50,8 +48,6 @@ CONFIG_SCHEMA = vol.Schema({
         cv.string: vol.Schema({
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_RECONNECT_INTERVAL,
-                         default=DEFAULT_RECONNECT_INTERVAL): int,
             vol.Required(CONF_SWITCHES): vol.Schema({RELAY_ID: SWITCH_SCHEMA}),
         }),
     }),
@@ -73,18 +69,18 @@ async def async_setup(hass, config):
         @callback
         def disconnected():
             """Schedule reconnect after connection has been lost."""
-            _LOGGER.warning('HLK-SW16 disconnected')
+            _LOGGER.warning('HLK-SW16 %s disconnected', device)
             async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
         @callback
         def reconnected():
             """Schedule reconnect after connection has been lost."""
-            _LOGGER.warning('HLK-SW16 connected')
+            _LOGGER.warning('HLK-SW16 %s connected', device)
             async_dispatcher_send(hass, SIGNAL_AVAILABILITY, True)
 
         async def connect():
             """Set up connection and hook it into HA for reconnect/shutdown."""
-            _LOGGER.info('Initiating HLK-SW16 connection')
+            _LOGGER.info('Initiating HLK-SW16 connection to %s', device)
 
             client = await create_hlk_sw16_connection(
                 host=host,
@@ -92,7 +88,6 @@ async def async_setup(hass, config):
                 disconnect_callback=disconnected,
                 reconnect_callback=reconnected,
                 loop=hass.loop,
-                logger=_LOGGER,
                 timeout=CONNECTION_TIMEOUT,
                 reconnect_interval=DEFAULT_RECONNECT_INTERVAL)
 
@@ -109,7 +104,7 @@ async def async_setup(hass, config):
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                        lambda x: client.stop())
 
-            _LOGGER.info('Connected to HLK-SW16')
+            _LOGGER.info('Connected to HLK-SW16 device: %s', device)
 
         hass.loop.create_task(connect())
 
@@ -124,10 +119,9 @@ class SW16Device(Entity):
     Contains the common logic for HLK-SW16 entities.
     """
 
-    def __init__(self, relay_name, device_port, device_id, client):
+    def __init__(self, relay_name, device_port, client):
         """Initialize the device."""
         # HLK-SW16 specific attributes for every component type
-        self._device_id = device_id
         self._device_port = device_port
         self._is_on = None
         self._client = client
@@ -152,11 +146,6 @@ class SW16Device(Entity):
         return self._name
 
     @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._is_on
-
-    @property
     def available(self):
         """Return True if entity is available."""
         return bool(self._client.is_connected)
@@ -173,28 +162,3 @@ class SW16Device(Entity):
         self._is_on = await self._client.status(self._device_port)
         async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
                                  self._availability_callback)
-
-
-class SwitchableSW16Device(SW16Device):
-    """HLK-SW16 entity which can switch on/off (eg: light, switch)."""
-
-    async def async_update(self):
-        """Get current switch status from the device."""
-        if not self.available:
-            _LOGGER.error('Cannot send command, not connected!')
-            return
-        await self._client.status(self._device_port)
-
-    async def async_turn_on(self, **kwargs):
-        """Turn the device on."""
-        if not self.available:
-            _LOGGER.error('Cannot send command, not connected!')
-            return
-        await self._client.turn_on(self._device_port)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn the device off."""
-        if not self.available:
-            _LOGGER.error('Cannot send command, not connected!')
-            return
-        await self._client.turn_off(self._device_port)
