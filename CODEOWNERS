@@ -120,6 +120,7 @@ homeassistant/components/sensor/pvoutput.py @fabaff
 homeassistant/components/sensor/qnap.py @colinodell
 homeassistant/components/sensor/scrape.py @fabaff
 homeassistant/components/sensor/serial.py @fabaff
+homeassistant/components/sensor/seventeentrack.py @bachya
 homeassistant/components/sensor/shodan.py @fabaff
 homeassistant/components/sensor/sma.py @kellerza
 homeassistant/components/sensor/sql.py @dgomes
