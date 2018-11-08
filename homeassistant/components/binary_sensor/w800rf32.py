@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.components.w800rf32 import (W800RF32_DEVICE, CONF_OFF_DELAY)
+from homeassistant.components.w800rf32 import (W800RF32_DEVICE)
 from homeassistant.const import (CONF_DEVICE_CLASS, CONF_NAME, CONF_DEVICES)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -22,6 +22,7 @@ from homeassistant.helpers.dispatcher import (async_dispatcher_connect)
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['w800rf32']
+CONF_OFF_DELAY = 'off_delay'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES): {

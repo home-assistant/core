@@ -21,7 +21,6 @@ REQUIREMENTS = ['pyW800rf32==0.1']
 DOMAIN = 'w800rf32'
 DATA_W800RF32 = 'data_w800rf32'
 W800RF32_DEVICE = 'w800rf32_{}'
-CONF_OFF_DELAY = 'off_delay'
 
 _LOGGER = logging.getLogger(__name__)
 
