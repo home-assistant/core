@@ -29,5 +29,3 @@ CategoryType = Union[
 
 # Example: { entities: … }
 PolicyType = Mapping[str, CategoryType]
-
-SUBCAT_ALL = 'all'
