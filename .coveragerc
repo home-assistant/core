@@ -371,6 +371,9 @@ omit =
 
     homeassistant/components/*/webostv.py
 
+    homeassistant/components/w800rf32.py
+    homeassistant/components/*/w800rf32.py
+
     homeassistant/components/wemo.py
     homeassistant/components/*/wemo.py
 
