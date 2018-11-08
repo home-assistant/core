@@ -15,11 +15,11 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['pylaunches==0.1.1']
+REQUIREMENTS = ['pylaunches==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by Launch Library."
+ATTRIBUTION = "Data provided by Launch Library."
 
 DEFAULT_NAME = 'Launch'
 
@@ -57,17 +57,17 @@ class LaunchSensor(Entity):
         """Get the latest data."""
         await self.launches.get_launches()
         if self.launches.launches is None:
-            _LOGGER.error("No data recieved.")
+            _LOGGER.error("No data recieved")
             return
         try:
             data = self.launches.launches[0]
             self._state = data['name']
             self._attributes['launch_time'] = data['start']
             self._attributes['agency'] = data['agency']
-            self._attributes['agency_country_code'] = (data
-                                                       ['agency_country_code'])
+            agency_country_code = data['agency_country_code']
+            self._attributes['agency_country_code'] = agency_country_code
             self._attributes['stream'] = data['stream']
-            self._attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+            self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         except (KeyError, IndexError) as error:
             _LOGGER.debug("Error getting data, %s", error)
 
