@@ -580,7 +580,7 @@ omit =
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/lg_netcast.py
-    homeassistant/components/media_player/lg_soundbar.py    
+    homeassistant/components/media_player/lg_soundbar.py
     homeassistant/components/media_player/liveboxplaytv.py
     homeassistant/components/media_player/mediaroom.py
     homeassistant/components/media_player/mpchc.py
@@ -776,6 +776,7 @@ omit =
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/serial.py
+    homeassistant/components/sensor/seventeentrack.py
     homeassistant/components/sensor/sht31.py
     homeassistant/components/sensor/shodan.py
     homeassistant/components/sensor/sigfox.py
