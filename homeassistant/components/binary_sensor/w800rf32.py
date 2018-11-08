@@ -12,8 +12,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.components.w800rf32 import (W800RF32_DEVICE, CONF_OFF_DELAY)
-from homeassistant.const import (CONF_DEVICE_CLASS, CONF_NAME,
-                                 ATTR_NAME, CONF_DEVICES)
+from homeassistant.const import (CONF_DEVICE_CLASS, CONF_NAME, CONF_DEVICES)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import event as evt
@@ -25,12 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['w800rf32']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {
+    vol.Required(CONF_DEVICES): {
         cv.string: vol.Schema({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_OFF_DELAY):
-            vol.Any(cv.time_period, cv.positive_timedelta)
+            vol.All(cv.time_period, cv.positive_timedelta)
         })
     },
 }, extra=vol.ALLOW_EXTRA)
@@ -45,7 +44,7 @@ async def async_setup_platform(hass, config,
     for device_id, entity in config[CONF_DEVICES].items():
 
         _LOGGER.debug("Add %s w800rf32.binary_sensor (class %s)",
-                      entity[ATTR_NAME], entity.get(CONF_DEVICE_CLASS))
+                      entity[CONF_NAME], entity.get(CONF_DEVICE_CLASS))
 
         device = W800rf32BinarySensor(
             device_id, entity.get(CONF_NAME), entity.get(CONF_DEVICE_CLASS),
@@ -61,8 +60,7 @@ class W800rf32BinarySensor(BinarySensorDevice):
 
     def __init__(self, device_id, name, device_class=None, off_delay=None):
         """Initialize the w800rf32 sensor."""
-        self._device_id = device_id
-        self._signal = W800RF32_DEVICE.format(self._device_id)
+        self._signal = W800RF32_DEVICE.format(device_id)
         self._name = name
         self._device_class = device_class
         self._off_delay = off_delay
