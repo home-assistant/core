@@ -22,9 +22,9 @@ def devices_from_config(hass, domain_config):
     """Parse configuration and add HLK-SW16 switch devices."""
     switches = domain_config[0]
     device_id = domain_config[1]
+    device_client = hass.data[DATA_DEVICE_REGISTER][device_id]
     devices = []
     for device_port, device_config in switches.items():
-        device_client = hass.data[DATA_DEVICE_REGISTER][device_id]
         device_name = device_config.get(CONF_NAME, device_port)
         device = SW16Switch(device_name, device_port, device_id, device_client)
         devices.append(device)
