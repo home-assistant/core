@@ -151,9 +151,6 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
 
         self._unique_id = config.get(CONF_UNIQUE_ID)
 
-        # TODO: Handle changed device?
-        # config.get(CONF_DEVICE),
-
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         @callback
