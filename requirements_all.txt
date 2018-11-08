@@ -932,7 +932,7 @@ pygtfs-homeassistant==0.1.3.dev0
 pyharmony==1.0.20
 
 # homeassistant.components.sensor.version
-pyhaversion==2.0.1
+pyhaversion==2.0.2
 
 # homeassistant.components.binary_sensor.hikvision
 pyhik==0.1.8
