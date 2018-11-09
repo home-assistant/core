@@ -165,6 +165,5 @@ class PushCamera(Camera):
             name: value for name, value in (
                 (ATTR_LAST_TRIP, self._last_trip),
                 (ATTR_FILENAME, self._filename),
-                (ATTR_WEBHOOK_URL, self.webhook_url),
             ) if value is not None
         }
