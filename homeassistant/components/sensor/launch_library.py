@@ -2,7 +2,7 @@
 A sensor platform that give you information about the next space launch.
 
 For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.launch/
+https://www.home-assistant.io/components/sensor.launch_library/
 """
 from datetime import timedelta
 import logging
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Launch Library."
 
-DEFAULT_NAME = 'Launch'
+DEFAULT_NAME = 'Next launch'
 
 SCAN_INTERVAL = timedelta(hours=1)
 
@@ -39,12 +39,12 @@ async def async_setup_platform(
 
     session = async_get_clientsession(hass)
     launches = Launches(hass.loop, session)
-    sensor = [LaunchSensor(launches, name)]
+    sensor = [LaunchLibrarySensor(launches, name)]
     async_add_entities(sensor, True)
 
 
-class LaunchSensor(Entity):
-    """Representation of a launch Sensor."""
+class LaunchLibrarySensor(Entity):
+    """Representation of a launch_library Sensor."""
 
     def __init__(self, launches, name):
         """Initialize the sensor."""
