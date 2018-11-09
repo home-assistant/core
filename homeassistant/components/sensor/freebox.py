@@ -14,8 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-    """Set up the sensors"""
         hass, config, add_entities, discovery_info=None):
+    """Set up the sensors"""
     fbx = hass.data[DATA_FREEBOX]
     add_entities([
         FbxRXSensor(fbx),
