@@ -1517,7 +1517,7 @@ todoist-python==7.0.17
 toonlib==1.1.3
 
 # homeassistant.components.alarm_control_panel.totalconnect
-total_connect_client==0.20
+total_connect_client==0.21
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
