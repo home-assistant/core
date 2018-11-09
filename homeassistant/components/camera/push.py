@@ -31,7 +31,6 @@ DEFAULT_NAME = "Push Camera"
 
 ATTR_FILENAME = 'filename'
 ATTR_LAST_TRIP = 'last_trip'
-ATTR_WEBHOOK_URL = 'post_camera_to'
 
 PUSH_CAMERA_DATA = 'push_camera'
 
