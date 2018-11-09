@@ -694,9 +694,9 @@ class _AlexaThermostatController(_AlexaInterface):
             ha_mode = self.entity.attributes.get(climate.ATTR_OPERATION_MODE)
             mode = API_THERMOSTAT_MODES.get(ha_mode)
             if mode is None:
-                _LOGGER.error("%s (%s) has unsupported %s value '%s'",
-                              self.entity.entity_id, type(self.entity),
-                              climate.ATTR_OPERATION_MODE, ha_mode)
+                _LOGGER.error("{} ({}) has unsupported {} value '{}'".format(
+                    self.entity.entity_id, type(self.entity),
+                    climate.ATTR_OPERATION_MODE, ha_mode))
                 raise _UnsupportedProperty(name)
             return mode
 
@@ -1042,11 +1042,11 @@ class SmartHomeView(http.HomeAssistantView):
         hass = request.app['hass']
         message = await request.json()
 
-        _LOGGER.debug("Received Alexa Smart Home request: %s", message)
+        _LOGGER.debug("Received Alexa Smart Home request: {}".format(message))
 
         response = await async_handle_message(
             hass, self.smart_home_config, message)
-        _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
+        _LOGGER.debug("Sending Alexa Smart Home response: {}".format(response))
         return b'' if response is None else self.json(response)
 
 
@@ -1118,10 +1118,10 @@ class _AlexaDirective:
         payload['type'] = error_type
         payload['message'] = error_message
 
-        _LOGGER.info("Request %s/%s error %s: %s",
-                     self._directive[API_HEADER]['namespace'],
-                     self._directive[API_HEADER]['name'],
-                     error_type, error_message)
+        _LOGGER.info("Request {}/{} error {}: {}".format(
+            self._directive[API_HEADER]['namespace'],
+            self._directive[API_HEADER]['name'],
+            error_type, error_message))
 
         return self.response(
             name='ErrorResponse',
@@ -1261,11 +1261,9 @@ async def async_handle_message(
             if directive.has_endpoint:
                 response.merge_context_properties(directive.endpoint)
         else:
-            _LOGGER.warning(
-                "Unsupported API request %s/%s",
+            _LOGGER.warning("Unsupported API request {}/{}".format(
                 directive.namespace,
-                directive.name,
-            )
+                directive.name))
             response = directive.error()
     except _AlexaError as err:
         response = directive.error(
@@ -1364,8 +1362,8 @@ async def async_api_discovery(hass, config, directive, context):
             continue
 
         if not config.should_expose(entity.entity_id):
-            _LOGGER.debug("Not exposing %s because filtered by config",
-                          entity.entity_id)
+            _LOGGER.debug("Not exposing {} because filtered by config".format(
+                          entity.entity_id))
             continue
 
         if entity.domain not in ENTITY_ADAPTERS:
