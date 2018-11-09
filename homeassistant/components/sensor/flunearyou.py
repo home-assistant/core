@@ -28,7 +28,9 @@ ATTR_REPORTED_LONGITUDE = 'reported_longitude'
 ATTR_ZIP_CODE = 'zip_code'
 
 DEFAULT_ATTRIBUTION = 'Data provided by Flu Near You'
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 CATEGORY_CDC_REPORT = 'cdc_report'
 CATEGORY_USER_REPORT = 'user_report'
@@ -85,7 +87,7 @@ async def async_setup_platform(
         client = await create_client(latitude, longitude, websession)
     except FluNearYouError as err:
         _LOGGER.error('There was an error while setting up: %s', err)
-        return False
+        return
 
     fny = FluNearYouData(client, config[CONF_MONITORED_CONDITIONS])
     await fny.async_update()
@@ -153,29 +155,30 @@ class FluNearYouSensor(Entity):
         """Update the sensor."""
         await self.fny.async_update()
 
-        if self._category == CATEGORY_CDC_REPORT:
-            data = self.fny.data[CATEGORY_CDC_REPORT]
+        cdc_data = self.fny.data[CATEGORY_CDC_REPORT]
+        user_data = self.fny.data[CATEGORY_USER_REPORT]
+
+        if self._category == CATEGORY_CDC_REPORT and cdc_data:
             self._attrs.update({
-                ATTR_REPORTED_DATE: data['week_date'],
-                ATTR_STATE: data['name'],
+                ATTR_REPORTED_DATE: cdc_data['week_date'],
+                ATTR_STATE: cdc_data['name'],
             })
-            self._state = data[self._kind]
-        elif self._category == CATEGORY_USER_REPORT:
-            data = self.fny.data[CATEGORY_USER_REPORT]
+            self._state = cdc_data[self._kind]
+        elif self._category == CATEGORY_USER_REPORT and user_data:
             self._attrs.update({
-                ATTR_CITY: data['city'].split('(')[0],
-                ATTR_REPORTED_LATITUDE: data['latitude'],
-                ATTR_REPORTED_LONGITUDE: data['longitude'],
-                ATTR_ZIP_CODE: data['zip'],
+                ATTR_CITY: user_data['city'].split('(')[0],
+                ATTR_REPORTED_LATITUDE: user_data['latitude'],
+                ATTR_REPORTED_LONGITUDE: user_data['longitude'],
+                ATTR_ZIP_CODE: user_data['zip'],
             })
 
             if self._kind == TYPE_USER_TOTAL:
                 self._state = sum(
-                    v for k, v in data.items() if k in (
+                    v for k, v in user_data.items() if k in (
                         TYPE_USER_CHICK, TYPE_USER_DENGUE, TYPE_USER_FLU,
                         TYPE_USER_LEPTO, TYPE_USER_SYMPTOMS))
             else:
-                self._state = data[self._kind]
+                self._state = user_data[self._kind]
 
 
 class FluNearYouData:
@@ -198,7 +201,7 @@ class FluNearYouData:
                 'There was an error with "%s" data: %s', category, err)
             self.data[category] = {}
 
-    @Throttle(DEFAULT_SCAN_INTERVAL)
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update Flu Near You data."""
         if CATEGORY_CDC_REPORT in self._sensor_types:
