@@ -1,5 +1,6 @@
 {
   "state": {
+    "auto": "Automatico",
     "day": "Giorno",
     "night": "Notte"
   }
