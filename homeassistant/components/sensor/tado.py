@@ -24,7 +24,9 @@ HOT_WATER_ZONE = 'HOT_WATER'
 HOT_WATER_SENSOR_TYPES = ['power', 'link', 'tado mode', 'overlay']
 
 AIR_CONDITIONING_ZONE = 'AIR_CONDITIONING'
-AIR_CONDITIONING_SENSOR_TYPES = ['temperature', 'humidity', 'power', 'link', 'ac', 'tado mode', 'overlay']
+AIR_CONDITIONING_SENSOR_TYPES = ['temperature', 'humidity',
+                                 'power', 'link', 'ac',
+                                 'tado mode', 'overlay']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
