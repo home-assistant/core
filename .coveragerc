@@ -707,6 +707,7 @@ omit =
     homeassistant/components/sensor/fints.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
+    homeassistant/components/sensor/flunearyou.py
     homeassistant/components/sensor/folder.py
     homeassistant/components/sensor/foobot.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
