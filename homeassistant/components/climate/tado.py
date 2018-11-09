@@ -147,6 +147,7 @@ def create_climate_device(tado, hass, zone, name, zone_id):
 
     return device
 
+
 class TadoClimate(ClimateDevice):
     """Representation of a tado climate device."""
 

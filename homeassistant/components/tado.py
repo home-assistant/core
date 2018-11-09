@@ -126,7 +126,6 @@ class TadoDataStore:
             self, zone_id, device_type, overlay_mode,
             temperature=None, duration=None, mode=None, device_is_active=True):
         """Wrap for setZoneOverlay(..)."""
-
         power = "ON"
         if device_type == "HOT_WATER":
             if device_is_active:

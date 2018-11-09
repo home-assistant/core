@@ -28,6 +28,7 @@ AIR_CONDITIONING_SENSOR_TYPES = ['temperature', 'humidity',
                                  'power', 'link', 'ac',
                                  'tado mode', 'overlay']
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     tado = hass.data[DATA_TADO]
