@@ -1,11 +1,11 @@
 """Support for Alexa skill auth."""
 
-import aiohttp
-import async_timeout
 import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
+import aiohttp
+import async_timeout
 
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -27,9 +27,10 @@ STORAGE_REFRESH_TOKEN = "refresh_token"
 
 
 class Auth:
-    """Handle authentication to send events to Alexa"""
+    """Handle authentication to send events to Alexa."""
 
     def __init__(self, hass, client_id, client_secret):
+        """Initialize the Auth class."""
         self.hass = hass
 
         self.client_id = client_id
@@ -39,6 +40,7 @@ class Auth:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     async def async_do_auth(self, accept_grant_code):
+        """Do authentication with an AcceptGrant code."""
         # access token not retrieved yet for the first time, so this should
         # be an access token request
 
@@ -49,14 +51,12 @@ class Auth:
             "client_secret": self.client_secret
         }
         _LOGGER.debug("Calling LWA to get the access token (first time), "
-                      "with: {0}".format(json.dumps(lwa_params)))
+                      "with: %s", json.dumps(lwa_params))
 
         return await self._async_request_new_token(lwa_params)
 
     async def async_get_access_token(self):
-        """Performs access token or token refresh request as needed and returns
-        valid access token """
-
+        """Perform access token or token refresh request."""
         if self._prefs is None:
             await self.async_load_preferences()
 
@@ -80,8 +80,7 @@ class Auth:
 
     @callback
     def is_token_valid(self):
-        """Checks if a token is already loaded and if it is still valid"""
-
+        """Check if a token is already loaded and if it is still valid."""
         if not self._prefs[STORAGE_ACCESS_TOKEN]:
             return False
 
@@ -108,9 +107,9 @@ class Auth:
 
         response_text = await response.text()
 
-        _LOGGER.debug("LWA response header: {0}".format(response.headers))
-        _LOGGER.debug("LWA response status: {0}".format(response.status))
-        _LOGGER.debug("LWA response body  : {0}".format(response_text))
+        _LOGGER.debug("LWA response header: %s", response.headers)
+        _LOGGER.debug("LWA response status: %s", response.status)
+        _LOGGER.debug("LWA response body  : %s", response_text)
 
         if response.status != 200:
             _LOGGER.error("Error calling LWA to get auth token.")

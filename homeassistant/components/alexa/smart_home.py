@@ -4,8 +4,7 @@ API documentation:
 https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html
 https://developer.amazon.com/docs/device-apis/message-guide.html
 """
-import aiohttp
-import async_timeout
+
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
@@ -13,6 +12,9 @@ import json
 import logging
 import math
 from uuid import uuid4
+
+import aiohttp
+import async_timeout
 
 from homeassistant.components import (
     alert, automation, binary_sensor, climate, cover, fan, group, http,
@@ -967,7 +969,6 @@ def async_setup(hass, config):
     Even if that's disabled, the functionality in this module may still be used
     by the cloud component which will call async_handle_message directly.
     """
-
     if config.get(CONF_CLIENT_ID) and config.get(CONF_CLIENT_SECRET):
         global AUTH
         AUTH = Auth(hass, config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET])
@@ -988,6 +989,10 @@ def async_setup(hass, config):
 
 
 async def async_enable_proactive_mode(hass, smart_home_config):
+    """Enable the proactive mode.
+
+    Proactive mode makes this component report state changes to Alexa.
+    """
     if smart_home_config.async_get_access_token is None:
         # no function to call to get token
         return
@@ -999,8 +1004,8 @@ async def async_enable_proactive_mode(hass, smart_home_config):
     @ha.callback
     def async_entity_state_listener(changed_entity, old_state, new_state):
         if not smart_home_config.should_expose(changed_entity):
-            _LOGGER.debug("Not exposing {} because filtered by config".format(
-                changed_entity))
+            _LOGGER.debug("Not exposing %s because filtered by config",
+                          changed_entity)
             return
 
         if new_state.domain not in ENTITY_ADAPTERS:
@@ -1164,10 +1169,10 @@ class _AlexaResponse:
         self._response[API_EVENT][API_HEADER]['correlationToken'] = token
 
     def set_endpoint_full(self, bearer_token, endpoint_id, cookie=None):
-        """Sets the endpoint dictionary used to send proactive messages to
-        Alexa.
-        """
+        """Set the endpoint dictionary.
 
+        This is used to send proactive messages to Alexa.
+        """
         self._response[API_EVENT][API_ENDPOINT] = {
             API_SCOPE: {
                 'type': 'BearerToken',
@@ -1293,7 +1298,6 @@ async def async_handle_message(
 
 async def async_send_changereport_message(hass, config, alexa_entity):
     """Send a ChangeReport message for an Alexa entity."""
-
     token = await config.async_get_access_token()
     if not token:
         _LOGGER.error("Invalid access token.")
@@ -1338,15 +1342,14 @@ async def async_send_changereport_message(hass, config, alexa_entity):
 
     response_text = await response.text()
 
-    _LOGGER.debug("Sent: {0}".format(message_str))
-    _LOGGER.debug("Received ({0}): {1}".format(response.status,
-                                               response_text))
+    _LOGGER.debug("Sent: %s", message_str)
+    _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status != 202:
         response_json = json.loads(response_text)
-        _LOGGER.error("Error when sending ChangeReport to Alexa: {0}: {1}"
-                      .format(response_json["payload"]["code"],
-                              response_json["payload"]["description"]))
+        _LOGGER.error("Error when sending ChangeReport to Alexa: %s: %s",
+                      response_json["payload"]["code"],
+                      response_json["payload"]["description"])
 
 
 @HANDLERS.register(('Alexa.Discovery', 'Discover'))
@@ -1386,8 +1389,8 @@ async def async_api_discovery(hass, config, directive, context):
 
         if not endpoint['capabilities']:
             _LOGGER.debug(
-                "Not exposing {} because it has no capabilities".format(
-                    entity.entity_id))
+                "Not exposing %s because it has no capabilities",
+                entity.entity_id)
             continue
         discovery_endpoints.append(endpoint)
 
@@ -1405,7 +1408,7 @@ async def async_api_accept_grant(hass, config, directive, context):
     Async friendly.
     """
     auth_code = directive.payload['grant']['code']
-    _LOGGER.debug("AcceptGrant code: {0}".format(auth_code))
+    _LOGGER.debug("AcceptGrant code: %s", auth_code)
 
     if AUTH:
         await AUTH.async_do_auth(auth_code)
