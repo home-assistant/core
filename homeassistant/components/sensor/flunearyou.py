@@ -62,10 +62,8 @@ SENSORS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LATITUDE):
-        cv.latitude,
-    vol.Optional(CONF_LONGITUDE):
-        cv.longitude,
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
         vol.All(cv.ensure_list, [vol.In(SENSORS)])
 })
@@ -155,8 +153,8 @@ class FluNearYouSensor(Entity):
         """Update the sensor."""
         await self.fny.async_update()
 
-        cdc_data = self.fny.data[CATEGORY_CDC_REPORT]
-        user_data = self.fny.data[CATEGORY_USER_REPORT]
+        cdc_data = self.fny.data.get(CATEGORY_CDC_REPORT)
+        user_data = self.fny.data.get(CATEGORY_USER_REPORT)
 
         if self._category == CATEGORY_CDC_REPORT and cdc_data:
             self._attrs.update({
