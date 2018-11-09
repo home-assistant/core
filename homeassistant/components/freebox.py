@@ -1,14 +1,17 @@
+"""
+Support for Freebox devices (Freebox v6 and Freebox mini 4K).
+ For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/freebox/
+"""
 import logging
 import socket
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP)
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.components.discovery import SERVICE_FREEBOX
-from homeassistant.helpers import discovery
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.discovery import async_load_platform
 
 REQUIREMENTS = ['aiofreepybox==0.0.5']
 
@@ -28,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-
+    """Set up the Freebox component"""
     conf = config.get(DOMAIN)
 
     async def discovery_dispatch(service, discovery_info):
@@ -42,7 +45,6 @@ async def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_FREEBOX, discovery_dispatch)
 
-
     if conf is not None:
         host = conf.get(CONF_HOST)
         port = conf.get(CONF_PORT)
@@ -50,7 +52,9 @@ async def async_setup(hass, config):
 
     return True
 
+
 async def async_setup_freebox(hass, config, host, port):
+    """Start up the Freebox component platforms"""
     from aiofreepybox import Freepybox
     from aiofreepybox.exceptions import HttpRequestError
 

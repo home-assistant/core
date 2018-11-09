@@ -1,10 +1,13 @@
-import logging
-import asyncio
-
+"""
+Support for Freebox devices (Freebox v6 and Freebox mini 4K).
+ For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/device_tracker/freebox/
+"""
 from collections import namedtuple
+import logging
 
-from homeassistant.components.freebox import DATA_FREEBOX
 from homeassistant.components.device_tracker import DeviceScanner
+from homeassistant.components.freebox import DATA_FREEBOX
 
 DEPENDENCIES = ['freebox']
 
@@ -26,8 +29,9 @@ def _build_device(device_dict):
         device_dict['primary_name'],
         device_dict['l3connectivities'][0]['addr'])
 
-class FreeboxDeviceScanner(DeviceScanner):
 
+class FreeboxDeviceScanner(DeviceScanner):
+    """Queries the Freebox device."""
     def __init__(self, fbx):
         """Initialize the scanner."""
         self.last_results = {}
@@ -46,6 +50,7 @@ class FreeboxDeviceScanner(DeviceScanner):
         return [device.id for device in self.last_results]
 
     async def get_device_name(self, device):
+        """Return the name of the given device or None if we don't know."""
         filter_named = [result.name for result in self.last_results if
                         result.id == device]
 
@@ -60,8 +65,8 @@ class FreeboxDeviceScanner(DeviceScanner):
         hosts = await self.connection.lan.get_hosts_list()
 
         last_results = [_build_device(device)
-                              for device in hosts
-                              if device['active']]
+                            for device in hosts
+                            if device['active']]
 
         self.last_results = last_results
         return True

@@ -1,7 +1,12 @@
+"""
+Support for Freebox devices (Freebox v6 and Freebox mini 4K).
+ For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/sensor/freebox/
+"""
 import logging
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.freebox import DATA_FREEBOX
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['freebox']
 
@@ -9,6 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
+    """Set up the sensors"""
         hass, config, add_entities, discovery_info=None):
     fbx = hass.data[DATA_FREEBOX]
     add_entities([
@@ -44,6 +50,7 @@ class FbxSensor(Entity):
 
 
 class FbxRXSensor(FbxSensor):
+    """Update the Freebox RxSensor"""
     _name = 'Freebox download speed'
     _unit = 'KB/s'
 
@@ -57,8 +64,8 @@ class FbxRXSensor(FbxSensor):
             self._state = round(self._datas['rate_down'] / 1000, 2)
 
 
-
 class FbxTXSensor(FbxSensor):
+    """Update the Freebox TxSensor"""
     _name = 'Freebox upload speed'
     _unit = 'KB/s'
 

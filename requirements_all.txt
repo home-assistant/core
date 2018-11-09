@@ -94,7 +94,7 @@ aioautomatic==0.6.5
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
 
-# homeassistant.components.device_tracker.freebox
+# homeassistant.components.freebox
 aiofreepybox==0.0.5
 
 # homeassistant.components.camera.yi
