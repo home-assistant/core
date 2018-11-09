@@ -44,6 +44,7 @@ SERVICE_SABNZBD = 'sabnzbd'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 SERVICE_HOMEKIT = 'homekit'
 SERVICE_OCTOPRINT = 'octoprint'
+SERVICE_FREEBOX = 'freebox'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
@@ -68,6 +69,7 @@ SERVICE_HANDLERS = {
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     SERVICE_KONNECTED: ('konnected', None),
     SERVICE_OCTOPRINT: ('octoprint', None),
+    SERVICE_FREEBOX: ('freebox', None),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
     'roku': ('media_player', 'roku'),
@@ -87,7 +89,6 @@ SERVICE_HANDLERS = {
     'volumio': ('media_player', 'volumio'),
     'lg_smart_device': ('media_player', 'lg_soundbar'),
     'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
-    'freebox': ('device_tracker', 'freebox'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {

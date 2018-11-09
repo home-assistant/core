@@ -111,6 +111,9 @@ omit =
     homeassistant/components/evohome.py
     homeassistant/components/*/evohome.py
 
+    homeassistant/components/freebox.py
+    homeassistant/components/*/freebox.py
+
     homeassistant/components/fritzbox.py
     homeassistant/components/*/fritzbox.py
 
@@ -496,7 +499,6 @@ omit =
     homeassistant/components/device_tracker/bt_smarthub.py
     homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/ddwrt.py
-    homeassistant/components/device_tracker/freebox.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/google_maps.py
     homeassistant/components/device_tracker/googlehome.py
