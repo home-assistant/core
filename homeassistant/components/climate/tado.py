@@ -103,20 +103,26 @@ def create_climate_device(tado, hass, zone, name, zone_id):
         is_device_climate_controllable = True
         is_manual_temperature = True
         temperatures = capabilities[CONST_MODE_COOL]['temperatures']
-        min_temp[CONST_MODE_COOL]=hass.config.units.temperature(float(temperatures['celsius']['min']), unit)
-        max_temp[CONST_MODE_COOL]=hass.config.units.temperature(float(temperatures['celsius']['max']), unit)
+        min_temp[CONST_MODE_COOL] = hass.config.units.temperature(
+            float(temperatures['celsius']['min']), unit)
+        max_temp[CONST_MODE_COOL] = hass.config.units.temperature(
+            float(temperatures['celsius']['max']), unit)
     if CONST_MODE_HEAT in capabilities:
         is_device_climate_controllable = True
         is_manual_temperature = True
         temperatures = capabilities[CONST_MODE_HEAT]['temperatures']
-        min_temp[CONST_MODE_HEAT]=hass.config.units.temperature(float(temperatures['celsius']['min']), unit)
-        max_temp[CONST_MODE_HEAT]=hass.config.units.temperature(float(temperatures['celsius']['max']), unit)
+        min_temp[CONST_MODE_HEAT] = hass.config.units.temperature(
+            float(temperatures['celsius']['min']), unit)
+        max_temp[CONST_MODE_HEAT] = hass.config.units.temperature(
+            float(temperatures['celsius']['max']), unit)
     if 'temperatures' in capabilities:
         is_device_climate_controllable = True
         is_manual_temperature = True
         temperatures = capabilities['temperatures']
-        min_temp[CONST_MODE_HEAT]=hass.config.units.temperature(float(temperatures['celsius']['min']), unit)
-        max_temp[CONST_MODE_HEAT]=hass.config.units.temperature(float(temperatures['celsius']['max']), unit)
+        min_temp[CONST_MODE_HEAT] = hass.config.units.temperature(
+            float(temperatures['celsius']['min']), unit)
+        max_temp[CONST_MODE_HEAT] = hass.config.units.temperature(
+            float(temperatures['celsius']['max']), unit)
     if device_type == "HOT_WATER" and 'temperatures' not in capabilities:
         is_device_climate_controllable = True
         is_manual_temperature = False
@@ -419,7 +425,12 @@ class TadoClimate(ClimateDevice):
         _LOGGER.info("Switching mytado.com to %s mode for zone %s",
                      self._current_operation, self.zone_name)
 
-        self._store.set_zone_overlay(
-            self.zone_id, self._device_type, self._current_operation, self._target_temp, None, self._mode, self._device_is_active)
+        self._store.set_zone_overlay(self.zone_id,
+                                     self._device_type,
+                                     self._current_operation,
+                                     self._target_temp,
+                                     None,
+                                     self._mode,
+                                     self._device_is_active)
 
         self._overlay_mode = self._current_operation
