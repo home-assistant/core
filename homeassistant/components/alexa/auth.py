@@ -7,6 +7,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from .const import DATE_FORMAT, DEFAULT_TIMEOUT
 
@@ -77,6 +78,7 @@ class Auth:
         _LOGGER.debug("Calling LWA to refresh the access token.")
         return await self._async_request_new_token(lwa_params)
 
+    @callback
     def is_token_valid(self):
         """Checks if a token is already loaded and if it is still valid"""
 
@@ -88,10 +90,7 @@ class Auth:
         preemptive_expire_time = expire_time - timedelta(
             seconds=PREEMPTIVE_REFRESH_TTL_IN_SECONDS)
 
-        if datetime.utcnow() > preemptive_expire_time:
-            return False
-
-        return True
+        return datetime.utcnow() < preemptive_expire_time
 
     async def _async_request_new_token(self, lwa_params):
 
