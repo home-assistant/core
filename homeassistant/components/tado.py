@@ -13,10 +13,9 @@ import voluptuous as vol
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-tado==0.2.5']
+REQUIREMENTS = ['python-tado==0.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,18 +122,15 @@ class TadoDataStore:
         self.tado.resetZoneOverlay(zone_id)
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
 
-    def set_zone_overlay(self, zone_id, ac_mode, overlay_mode, temperature=None, duration=None):
+    def set_zone_overlay(self, zone_id, device_type, overlay_mode, temperature=None, duration=None, mode=None, device_is_active=True):
         """Wrap for setZoneOverlay(..)."""
-        device_type = 'HEATING'
-
-        if ac_mode:
-            device_type = 'AIR_CONDITIONING'
 
         power = "ON" 
-        if temperature is None:
+        if device_type == "HOT_WATER":
+            if device_is_active:
+                power = "OFF"
+        elif temperature is None:
             power = "OFF"
-        
-        mode = None
 
         self.tado.setZoneOverlay(zone_id, overlay_mode, temperature, duration, device_type, power, mode)
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
