@@ -69,7 +69,7 @@ DEFAULT_ON_COMMAND_TYPE = 'last'
 
 VALUES_ON_COMMAND_TYPE = ['first', 'last', 'brightness']
 
-PLATFORM_SCHEMA_BASIC = vol.Schema({
+PLATFORM_SCHEMA_BASIC = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -105,7 +105,7 @@ PLATFORM_SCHEMA_BASIC = vol.Schema({
     vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE):
         vol.In(VALUES_ON_COMMAND_TYPE),
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 async def async_setup_entity_basic(hass, config, async_add_entities,

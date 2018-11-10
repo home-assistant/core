@@ -6,7 +6,9 @@ https://home-assistant.io/components/light.mqtt/
 """
 import logging
 
-from homeassistant.components import mqtt, light
+import voluptuous as vol
+
+from homeassistant.components import light
 from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,11 +22,23 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
-    schema_basic.PLATFORM_SCHEMA_BASIC.schema).extend(
-        schema_json.PLATFORM_SCHEMA_JSON.schema).extend(
-            schema_template.PLATFORM_SCHEMA_TEMPLATE.schema).extend(
-                mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+CONF_SCHEMA = 'schema'
+
+
+def validate_mqtt_light(value):
+    """Validate MQTT light schema."""
+    schemas = {
+        'basic': schema_basic.PLATFORM_SCHEMA_BASIC,
+        'json': schema_json.PLATFORM_SCHEMA_JSON,
+        'template': schema_template.PLATFORM_SCHEMA_TEMPLATE,
+    }
+    return schemas[value[CONF_SCHEMA]](value)
+
+
+PLATFORM_SCHEMA = vol.All(vol.Schema({
+    vol.Optional(CONF_SCHEMA, default='basic'): vol.All(
+        vol.Lower, vol.Any('basic', 'json', 'template'))
+}, extra=vol.ALLOW_EXTRA), validate_mqtt_light)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -49,14 +63,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def _async_setup_entity(hass, config, async_add_entities,
                               discovery_hash=None):
     """Set up a MQTT Light."""
-    schema = config.get('schema', 'basic')
-
-    if schema == 'basic':
-        await schema_basic.async_setup_entity_basic(
-            hass, config, async_add_entities, discovery_hash)
-    elif schema == 'json':
-        await schema_json.async_setup_entity_json(
-            hass, config, async_add_entities, discovery_hash)
-    elif schema == 'template':
-        await schema_template.async_setup_entity_template(
-            hass, config, async_add_entities, discovery_hash)
+    setup_entity = {
+        'basic': schema_basic.async_setup_entity_basic,
+        'json': schema_json.async_setup_entity_json,
+        'template': schema_template.async_setup_entity_template,
+    }
+    await setup_entity[config['schema']](
+        hass, config, async_add_entities, discovery_hash)

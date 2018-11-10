@@ -58,7 +58,7 @@ CONF_HS = 'hs'
 CONF_UNIQUE_ID = 'unique_id'
 
 # Stealing some of these from the base MQTT configs.
-PLATFORM_SCHEMA_JSON = vol.Schema({
+PLATFORM_SCHEMA_JSON = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
     vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -81,7 +81,7 @@ PLATFORM_SCHEMA_JSON = vol.Schema({
     vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
     vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 async def async_setup_entity_json(hass: HomeAssistantType, config: ConfigType,

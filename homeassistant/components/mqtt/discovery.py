@@ -40,6 +40,13 @@ CONFIG_ENTRY_COMPONENTS = [
     'fan',
 ]
 
+DEPRECATED_PLATFORM_TO_SCHEMA = {
+    'mqtt': 'basic',
+    'mqtt_json': 'json',
+    'mqtt_template': 'template',
+}
+
+
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
 DATA_CONFIG_ENTRY_LOCK = 'mqtt_config_entry_lock'
 CONFIG_ENTRY_IS_SETUP = 'mqtt_config_entry_is_setup'
@@ -203,8 +210,15 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         discovery_hash = (component, discovery_id)
 
         if payload:
-            platform = 'mqtt'
-            payload[CONF_PLATFORM] = platform
+            if CONF_PLATFORM in payload:
+                platform = payload[CONF_PLATFORM]
+                if platform in DEPRECATED_PLATFORM_TO_SCHEMA:
+                    schema = DEPRECATED_PLATFORM_TO_SCHEMA[platform]
+                    payload['schema'] = schema
+                    _LOGGER.warning('"platform": "%s" is deprecated, '
+                                    'replace with "schema":"%s"',
+                                    platform, schema)
+            payload[CONF_PLATFORM] = 'mqtt'
 
             if CONF_STATE_TOPIC not in payload:
                 payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
@@ -229,10 +243,10 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
 
             if component not in CONFIG_ENTRY_COMPONENTS:
                 await async_load_platform(
-                    hass, component, platform, payload, hass_config)
+                    hass, component, 'mqtt', payload, hass_config)
                 return
 
-            config_entries_key = '{}.{}'.format(component, platform)
+            config_entries_key = '{}.{}'.format(component, 'mqtt')
             async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     await hass.config_entries.async_forward_entry_setup(
@@ -240,7 +254,7 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                     hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
             async_dispatcher_send(hass, MQTT_DISCOVERY_NEW.format(
-                component, platform), payload)
+                component, 'mqtt'), payload)
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
