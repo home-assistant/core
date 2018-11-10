@@ -51,7 +51,6 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_HUE: 'hue',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
-    'igd': 'upnp',
 }
 
 SERVICE_HANDLERS = {

@@ -81,10 +81,9 @@ async def async_setup_platform(
     location = config.get(CONF_LOCATION)
     verify_tls = config.get(CONF_VERIFY_SSL)
 
-    session = async_get_clientsession(hass)
+    session = async_get_clientsession(hass, verify_tls)
     pi_hole = PiHoleData(Hole(
-        host, hass.loop, session, location=location, tls=use_tls,
-        verify_tls=verify_tls))
+        host, hass.loop, session, location=location, tls=use_tls))
 
     await pi_hole.async_update()
 

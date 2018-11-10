@@ -40,14 +40,14 @@ class TestNotifyFile(unittest.TestCase):
         filename = 'mock_file'
         message = 'one, two, testing, testing'
         with assert_setup_component(1) as handle_config:
-            self.assertTrue(setup_component(self.hass, notify.DOMAIN, {
+            assert setup_component(self.hass, notify.DOMAIN, {
                 'notify': {
                     'name': 'test',
                     'platform': 'file',
                     'filename': filename,
                     'timestamp': timestamp,
                 }
-            }))
+            })
         assert handle_config[notify.DOMAIN]
 
         m_open = mock_open()
@@ -68,21 +68,17 @@ class TestNotifyFile(unittest.TestCase):
                                     blocking=True)
 
             full_filename = os.path.join(self.hass.config.path(), filename)
-            self.assertEqual(m_open.call_count, 1)
-            self.assertEqual(m_open.call_args, call(full_filename, 'a'))
+            assert m_open.call_count == 1
+            assert m_open.call_args == call(full_filename, 'a')
 
-            self.assertEqual(m_open.return_value.write.call_count, 2)
+            assert m_open.return_value.write.call_count == 2
             if not timestamp:
-                self.assertEqual(
-                    m_open.return_value.write.call_args_list,
+                assert m_open.return_value.write.call_args_list == \
                     [call(title), call('{}\n'.format(message))]
-                )
             else:
-                self.assertEqual(
-                    m_open.return_value.write.call_args_list,
+                assert m_open.return_value.write.call_args_list == \
                     [call(title), call('{} {}\n'.format(
                         dt_util.utcnow().isoformat(), message))]
-                )
 
     def test_notify_file(self):
         """Test the notify file output without timestamp."""

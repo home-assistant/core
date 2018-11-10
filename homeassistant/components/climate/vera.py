@@ -8,9 +8,12 @@ import logging
 
 from homeassistant.util import convert
 from homeassistant.components.climate import (
-    ClimateDevice, ENTITY_ID_FORMAT, SUPPORT_TARGET_TEMPERATURE,
+    ClimateDevice, STATE_AUTO, STATE_COOL,
+    STATE_HEAT, ENTITY_ID_FORMAT, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE)
 from homeassistant.const import (
+    STATE_ON,
+    STATE_OFF,
     TEMP_FAHRENHEIT,
     TEMP_CELSIUS,
     ATTR_TEMPERATURE)
@@ -22,8 +25,8 @@ DEPENDENCIES = ['vera']
 
 _LOGGER = logging.getLogger(__name__)
 
-OPERATION_LIST = ['Heat', 'Cool', 'Auto Changeover', 'Off']
-FAN_OPERATION_LIST = ['On', 'Auto', 'Cycle']
+OPERATION_LIST = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_OFF]
+FAN_OPERATION_LIST = [STATE_ON, STATE_AUTO]
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                  SUPPORT_FAN_MODE)
@@ -54,13 +57,13 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         mode = self.vera_device.get_hvac_mode()
         if mode == 'HeatOn':
-            return OPERATION_LIST[0]  # heat
+            return OPERATION_LIST[0]  # Heat
         if mode == 'CoolOn':
-            return OPERATION_LIST[1]  # cool
+            return OPERATION_LIST[1]  # Cool
         if mode == 'AutoChangeOver':
-            return OPERATION_LIST[2]  # auto
+            return OPERATION_LIST[2]  # Auto
         if mode == 'Off':
-            return OPERATION_LIST[3]  # off
+            return OPERATION_LIST[3]  # Off
         return 'Off'
 
     @property
@@ -76,8 +79,6 @@ class VeraThermostat(VeraDevice, ClimateDevice):
             return FAN_OPERATION_LIST[0]  # on
         if mode == "Auto":
             return FAN_OPERATION_LIST[1]  # auto
-        if mode == "PeriodicOn":
-            return FAN_OPERATION_LIST[2]  # cycle
         return "Auto"
 
     @property
@@ -89,10 +90,8 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         """Set new target temperature."""
         if fan_mode == FAN_OPERATION_LIST[0]:
             self.vera_device.fan_on()
-        elif fan_mode == FAN_OPERATION_LIST[1]:
+        else:
             self.vera_device.fan_auto()
-        elif fan_mode == FAN_OPERATION_LIST[2]:
-            return self.vera_device.fan_cycle()
 
     @property
     def current_power_w(self):

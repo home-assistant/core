@@ -50,17 +50,13 @@ class TestAuroraSensorSetUp(unittest.TestCase):
         aurora.setup_platform(self.hass, config, mock_add_entities)
 
         aurora_component = entities[0]
-        self.assertEqual(len(entities), 1)
-        self.assertEqual(aurora_component.name, "Test")
-        self.assertEqual(
-            aurora_component.device_state_attributes["visibility_level"],
-            '0'
-        )
-        self.assertEqual(
-            aurora_component.device_state_attributes["message"],
+        assert len(entities) == 1
+        assert aurora_component.name == "Test"
+        assert \
+            aurora_component.device_state_attributes["visibility_level"] == '0'
+        assert aurora_component.device_state_attributes["message"] == \
             "nothing's out"
-        )
-        self.assertFalse(aurora_component.is_on)
+        assert not aurora_component.is_on
 
     @requests_mock.Mocker()
     def test_custom_threshold_works(self, mock_req):
@@ -91,5 +87,5 @@ class TestAuroraSensorSetUp(unittest.TestCase):
         aurora.setup_platform(self.hass, config, mock_add_entities)
 
         aurora_component = entities[0]
-        self.assertEqual(aurora_component.aurora_data.visibility_level, '5')
-        self.assertTrue(aurora_component.is_on)
+        assert aurora_component.aurora_data.visibility_level == '5'
+        assert aurora_component.is_on

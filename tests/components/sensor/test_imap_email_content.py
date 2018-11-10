@@ -60,14 +60,14 @@ class EmailContentSensor(unittest.TestCase):
         sensor.entity_id = 'sensor.emailtest'
         sensor.schedule_update_ha_state(True)
         self.hass.block_till_done()
-        self.assertEqual('Test', sensor.state)
-        self.assertEqual("Test Message",
-                         sensor.device_state_attributes['body'])
-        self.assertEqual('sender@test.com',
-                         sensor.device_state_attributes['from'])
-        self.assertEqual('Test', sensor.device_state_attributes['subject'])
-        self.assertEqual(datetime.datetime(2016, 1, 1, 12, 44, 57),
-                         sensor.device_state_attributes['date'])
+        assert 'Test' == sensor.state
+        assert "Test Message" == \
+            sensor.device_state_attributes['body']
+        assert 'sender@test.com' == \
+            sensor.device_state_attributes['from']
+        assert 'Test' == sensor.device_state_attributes['subject']
+        assert datetime.datetime(2016, 1, 1, 12, 44, 57) == \
+            sensor.device_state_attributes['date']
 
     def test_multi_part_with_text(self):
         """Test multi part emails."""
@@ -91,9 +91,9 @@ class EmailContentSensor(unittest.TestCase):
         sensor.entity_id = "sensor.emailtest"
         sensor.schedule_update_ha_state(True)
         self.hass.block_till_done()
-        self.assertEqual('Link', sensor.state)
-        self.assertEqual("Test Message",
-                         sensor.device_state_attributes['body'])
+        assert 'Link' == sensor.state
+        assert "Test Message" == \
+            sensor.device_state_attributes['body']
 
     def test_multi_part_only_html(self):
         """Test multi part emails with only HTML."""
@@ -117,10 +117,9 @@ class EmailContentSensor(unittest.TestCase):
         sensor.entity_id = 'sensor.emailtest'
         sensor.schedule_update_ha_state(True)
         self.hass.block_till_done()
-        self.assertEqual('Link', sensor.state)
-        self.assertEqual(
-            "<html><head></head><body>Test Message</body></html>",
-            sensor.device_state_attributes['body'])
+        assert 'Link' == sensor.state
+        assert "<html><head></head><body>Test Message</body></html>" == \
+            sensor.device_state_attributes['body']
 
     def test_multi_part_only_other_text(self):
         """Test multi part emails with only other text."""
@@ -141,9 +140,9 @@ class EmailContentSensor(unittest.TestCase):
         sensor.entity_id = 'sensor.emailtest'
         sensor.schedule_update_ha_state(True)
         self.hass.block_till_done()
-        self.assertEqual('Link', sensor.state)
-        self.assertEqual("Test Message",
-                         sensor.device_state_attributes['body'])
+        assert 'Link' == sensor.state
+        assert "Test Message" == \
+            sensor.device_state_attributes['body']
 
     def test_multiple_emails(self):
         """Test multiple emails."""
@@ -179,11 +178,11 @@ class EmailContentSensor(unittest.TestCase):
         sensor.schedule_update_ha_state(True)
         self.hass.block_till_done()
 
-        self.assertEqual("Test", states[0].state)
-        self.assertEqual("Test 2", states[1].state)
+        assert "Test" == states[0].state
+        assert "Test 2" == states[1].state
 
-        self.assertEqual("Test Message 2",
-                         sensor.device_state_attributes['body'])
+        assert "Test Message 2" == \
+            sensor.device_state_attributes['body']
 
     def test_sender_not_allowed(self):
         """Test not whitelisted emails."""
@@ -200,7 +199,7 @@ class EmailContentSensor(unittest.TestCase):
         sensor.entity_id = 'sensor.emailtest'
         sensor.schedule_update_ha_state(True)
         self.hass.block_till_done()
-        self.assertEqual(None, sensor.state)
+        assert sensor.state is None
 
     def test_template(self):
         """Test value template."""
@@ -219,6 +218,5 @@ class EmailContentSensor(unittest.TestCase):
         sensor.entity_id = 'sensor.emailtest'
         sensor.schedule_update_ha_state(True)
         self.hass.block_till_done()
-        self.assertEqual(
-            "Test from sender@test.com with message Test Message",
-            sensor.state)
+        assert "Test from sender@test.com with message Test Message" == \
+            sensor.state

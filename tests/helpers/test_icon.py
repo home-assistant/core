@@ -9,20 +9,20 @@ class TestIconUtil(unittest.TestCase):
         """Test icon generator for battery sensor."""
         from homeassistant.helpers.icon import icon_for_battery_level
 
-        self.assertEqual('mdi:battery-unknown',
-                         icon_for_battery_level(None, True))
-        self.assertEqual('mdi:battery-unknown',
-                         icon_for_battery_level(None, False))
+        assert 'mdi:battery-unknown' == \
+            icon_for_battery_level(None, True)
+        assert 'mdi:battery-unknown' == \
+            icon_for_battery_level(None, False)
 
-        self.assertEqual('mdi:battery-outline',
-                         icon_for_battery_level(5, True))
-        self.assertEqual('mdi:battery-alert',
-                         icon_for_battery_level(5, False))
+        assert 'mdi:battery-outline' == \
+            icon_for_battery_level(5, True)
+        assert 'mdi:battery-alert' == \
+            icon_for_battery_level(5, False)
 
-        self.assertEqual('mdi:battery-charging-100',
-                         icon_for_battery_level(100, True))
-        self.assertEqual('mdi:battery',
-                         icon_for_battery_level(100, False))
+        assert 'mdi:battery-charging-100' == \
+            icon_for_battery_level(100, True)
+        assert 'mdi:battery' == \
+            icon_for_battery_level(100, False)
 
         iconbase = 'mdi:battery'
         for level in range(0, 100, 5):
@@ -47,7 +47,7 @@ class TestIconUtil(unittest.TestCase):
                 postfix = '-alert'
             else:
                 postfix = ''
-            self.assertEqual(iconbase + postfix,
-                             icon_for_battery_level(level, False))
-            self.assertEqual(iconbase + postfix_charging,
-                             icon_for_battery_level(level, True))
+            assert iconbase + postfix == \
+                icon_for_battery_level(level, False)
+            assert iconbase + postfix_charging == \
+                icon_for_battery_level(level, True)

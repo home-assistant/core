@@ -225,8 +225,17 @@ class AugustData:
         for doorbell in self._doorbells:
             _LOGGER.debug("Updating status for %s",
                           doorbell.device_name)
-            detail_by_id[doorbell.device_id] = self._api.get_doorbell_detail(
-                self._access_token, doorbell.device_id)
+            try:
+                detail_by_id[doorbell.device_id] =\
+                    self._api.get_doorbell_detail(
+                        self._access_token, doorbell.device_id)
+            except RequestException as ex:
+                _LOGGER.error("Request error trying to retrieve doorbell"
+                              " status for %s. %s", doorbell.device_name, ex)
+                detail_by_id[doorbell.device_id] = None
+            except Exception:
+                detail_by_id[doorbell.device_id] = None
+                raise
 
         _LOGGER.debug("Completed retrieving doorbell details")
         self._doorbell_detail_by_id = detail_by_id
@@ -260,8 +269,17 @@ class AugustData:
         for lock in self._locks:
             _LOGGER.debug("Updating status for %s",
                           lock.device_name)
-            state_by_id[lock.device_id] = self._api.get_lock_door_status(
-                self._access_token, lock.device_id)
+
+            try:
+                state_by_id[lock.device_id] = self._api.get_lock_door_status(
+                    self._access_token, lock.device_id)
+            except RequestException as ex:
+                _LOGGER.error("Request error trying to retrieve door"
+                              " status for %s. %s", lock.device_name, ex)
+                state_by_id[lock.device_id] = None
+            except Exception:
+                state_by_id[lock.device_id] = None
+                raise
 
         _LOGGER.debug("Completed retrieving door status")
         self._door_state_by_id = state_by_id
@@ -275,10 +293,27 @@ class AugustData:
         for lock in self._locks:
             _LOGGER.debug("Updating status for %s",
                           lock.device_name)
-            status_by_id[lock.device_id] = self._api.get_lock_status(
-                self._access_token, lock.device_id)
-            detail_by_id[lock.device_id] = self._api.get_lock_detail(
-                self._access_token, lock.device_id)
+            try:
+                status_by_id[lock.device_id] = self._api.get_lock_status(
+                    self._access_token, lock.device_id)
+            except RequestException as ex:
+                _LOGGER.error("Request error trying to retrieve door"
+                              " status for %s. %s", lock.device_name, ex)
+                status_by_id[lock.device_id] = None
+            except Exception:
+                status_by_id[lock.device_id] = None
+                raise
+
+            try:
+                detail_by_id[lock.device_id] = self._api.get_lock_detail(
+                    self._access_token, lock.device_id)
+            except RequestException as ex:
+                _LOGGER.error("Request error trying to retrieve door"
+                              " details for %s. %s", lock.device_name, ex)
+                detail_by_id[lock.device_id] = None
+            except Exception:
+                detail_by_id[lock.device_id] = None
+                raise
 
         _LOGGER.debug("Completed retrieving locks status")
         self._lock_status_by_id = status_by_id

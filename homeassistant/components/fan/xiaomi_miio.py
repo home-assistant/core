@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.3', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -348,7 +348,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         device = XiaomiAirPurifier(name, air_purifier, model, unique_id)
     elif model.startswith('zhimi.humidifier.'):
         from miio import AirHumidifier
-        air_humidifier = AirHumidifier(host, token)
+        air_humidifier = AirHumidifier(host, token, model=model)
         device = XiaomiAirHumidifier(name, air_humidifier, model, unique_id)
     else:
         _LOGGER.error(

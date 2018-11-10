@@ -96,9 +96,9 @@ class TestComponentsCore(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.assertTrue(run_coroutine_threadsafe(
+        assert run_coroutine_threadsafe(
             comps.async_setup(self.hass, {}), self.hass.loop
-        ).result())
+        ).result()
 
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
@@ -110,38 +110,38 @@ class TestComponentsCore(unittest.TestCase):
 
     def test_is_on(self):
         """Test is_on method."""
-        self.assertTrue(comps.is_on(self.hass, 'light.Bowl'))
-        self.assertFalse(comps.is_on(self.hass, 'light.Ceiling'))
-        self.assertTrue(comps.is_on(self.hass))
-        self.assertFalse(comps.is_on(self.hass, 'non_existing.entity'))
+        assert comps.is_on(self.hass, 'light.Bowl')
+        assert not comps.is_on(self.hass, 'light.Ceiling')
+        assert comps.is_on(self.hass)
+        assert not comps.is_on(self.hass, 'non_existing.entity')
 
     def test_turn_on_without_entities(self):
         """Test turn_on method without entities."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
         turn_on(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(0, len(calls))
+        assert 0 == len(calls)
 
     def test_turn_on(self):
         """Test turn_on method."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
         turn_on(self.hass, 'light.Ceiling')
         self.hass.block_till_done()
-        self.assertEqual(1, len(calls))
+        assert 1 == len(calls)
 
     def test_turn_off(self):
         """Test turn_off method."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_OFF)
         turn_off(self.hass, 'light.Bowl')
         self.hass.block_till_done()
-        self.assertEqual(1, len(calls))
+        assert 1 == len(calls)
 
     def test_toggle(self):
         """Test toggle method."""
         calls = mock_service(self.hass, 'light', SERVICE_TOGGLE)
         toggle(self.hass, 'light.Bowl')
         self.hass.block_till_done()
-        self.assertEqual(1, len(calls))
+        assert 1 == len(calls)
 
     @patch('homeassistant.config.os.path.isfile', Mock(return_value=True))
     def test_reload_core_conf(self):

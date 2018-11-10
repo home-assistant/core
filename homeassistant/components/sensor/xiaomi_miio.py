@@ -14,7 +14,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.3', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 

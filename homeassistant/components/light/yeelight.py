@@ -276,10 +276,13 @@ class YeelightLight(Light):
 
     @property
     def _properties(self) -> dict:
-        return self._bulb.last_properties
+        if self._bulb_device is None:
+            return {}
+        return self._bulb_device.last_properties
 
+    # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
-    def _bulb(self) -> 'yeelight.Bulb':
+    def _bulb(self) -> 'yeelight.Bulb':  # noqa: F821
         import yeelight
         if self._bulb_device is None:
             try:
