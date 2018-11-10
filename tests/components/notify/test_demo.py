@@ -56,10 +56,9 @@ class TestNotifyDemo(unittest.TestCase):
             self._setup_notify()
         self.hass.block_till_done()
         assert mock_demo_get_service.called
-        self.assertEqual(
-            log_handle.output,
+        assert log_handle.output == \
             ['ERROR:homeassistant.components.notify:'
-             'Failed to initialize notification service demo'])
+             'Failed to initialize notification service demo']
 
     @patch('homeassistant.components.notify.demo.get_service', autospec=True)
     def test_discover_notify(self, mock_demo_get_service):
@@ -84,7 +83,7 @@ class TestNotifyDemo(unittest.TestCase):
         self._setup_notify()
         common.send_message(self.hass, None)
         self.hass.block_till_done()
-        self.assertTrue(len(self.events) == 0)
+        assert len(self.events) == 0
 
     def test_sending_templated_message(self):
         """Send a templated message."""
@@ -94,8 +93,8 @@ class TestNotifyDemo(unittest.TestCase):
                             '{{ states.sensor.temperature.name }}')
         self.hass.block_till_done()
         last_event = self.events[-1]
-        self.assertEqual(last_event.data[notify.ATTR_TITLE], 'temperature')
-        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], '10')
+        assert last_event.data[notify.ATTR_TITLE] == 'temperature'
+        assert last_event.data[notify.ATTR_MESSAGE] == '10'
 
     def test_method_forwards_correct_data(self):
         """Test that all data from the service gets forwarded to service."""
@@ -103,7 +102,7 @@ class TestNotifyDemo(unittest.TestCase):
         common.send_message(self.hass, 'my message', 'my title',
                             {'hello': 'world'})
         self.hass.block_till_done()
-        self.assertTrue(len(self.events) == 1)
+        assert len(self.events) == 1
         data = self.events[0].data
         assert {
             'message': 'my message',
@@ -129,7 +128,7 @@ class TestNotifyDemo(unittest.TestCase):
 
         script.call_from_config(self.hass, conf)
         self.hass.block_till_done()
-        self.assertTrue(len(self.events) == 1)
+        assert len(self.events) == 1
         assert {
             'message': 'Test 123 4',
             'data': {
@@ -159,7 +158,7 @@ class TestNotifyDemo(unittest.TestCase):
 
         script.call_from_config(self.hass, conf)
         self.hass.block_till_done()
-        self.assertTrue(len(self.events) == 1)
+        assert len(self.events) == 1
         assert {
             'message': 'Test 123 4',
             'title': 'Test',
@@ -172,9 +171,9 @@ class TestNotifyDemo(unittest.TestCase):
     def test_targets_are_services(self):
         """Test that all targets are exposed as individual services."""
         self._setup_notify()
-        self.assertIsNotNone(self.hass.services.has_service("notify", "demo"))
+        assert self.hass.services.has_service("notify", "demo") is not None
         service = "demo_test_target_name"
-        self.assertIsNotNone(self.hass.services.has_service("notify", service))
+        assert self.hass.services.has_service("notify", service) is not None
 
     def test_messages_to_targets_route(self):
         """Test message routing to specific target services."""

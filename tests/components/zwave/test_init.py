@@ -566,10 +566,8 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert values.primary is self.primary
         assert len(list(values)) == 3
-        self.assertEqual(sorted(list(values),
-                                key=lambda a: id(a)),
-                         sorted([self.primary, None, None],
-                                key=lambda a: id(a)))
+        assert sorted(list(values), key=lambda a: id(a)) == \
+            sorted([self.primary, None, None], key=lambda a: id(a))
         assert not discovery.async_load_platform.called
 
         values.check_value(self.secondary)
@@ -577,10 +575,8 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert values.secondary is self.secondary
         assert len(list(values)) == 3
-        self.assertEqual(sorted(list(values),
-                                key=lambda a: id(a)),
-                         sorted([self.primary, self.secondary, None],
-                                key=lambda a: id(a)))
+        assert sorted(list(values), key=lambda a: id(a)) == \
+            sorted([self.primary, self.secondary, None], key=lambda a: id(a))
 
         assert discovery.async_load_platform.called
         assert len(discovery.async_load_platform.mock_calls) == 1
@@ -588,7 +584,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert args[0] == self.hass
         assert args[1] == 'mock_component'
         assert args[2] == 'zwave'
-        assert args[3] == {const.DISCOVERY_DEVICE: id(values)}
+        assert args[3] == {const.DISCOVERY_DEVICE: mock_device.unique_id}
         assert args[4] == self.zwave_config
 
         discovery.async_load_platform.reset_mock()
@@ -599,10 +595,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert values.optional is self.optional
         assert len(list(values)) == 3
-        self.assertEqual(sorted(list(values),
-                                key=lambda a: id(a)),
-                         sorted([self.primary, self.secondary, self.optional],
-                                key=lambda a: id(a)))
+        assert sorted(list(values), key=lambda a: id(a)) == \
+            sorted([self.primary, self.secondary, self.optional],
+                   key=lambda a: id(a))
         assert not discovery.async_load_platform.called
 
         assert values._entity.value_added.called
@@ -641,10 +636,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert values.secondary is self.secondary
         assert values.optional is self.optional
         assert len(list(values)) == 3
-        self.assertEqual(sorted(list(values),
-                                key=lambda a: id(a)),
-                         sorted([self.primary, self.secondary, self.optional],
-                                key=lambda a: id(a)))
+        assert sorted(list(values), key=lambda a: id(a)) == \
+            sorted([self.primary, self.secondary, self.optional],
+                   key=lambda a: id(a))
 
         assert discovery.async_load_platform.called
         assert len(discovery.async_load_platform.mock_calls) == 1
@@ -652,7 +646,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert args[0] == self.hass
         assert args[1] == 'mock_component'
         assert args[2] == 'zwave'
-        assert args[3] == {const.DISCOVERY_DEVICE: id(values)}
+        assert args[3] == {const.DISCOVERY_DEVICE: mock_device.unique_id}
         assert args[4] == self.zwave_config
         assert not self.primary.enable_poll.called
 
@@ -869,8 +863,7 @@ class TestZwave(unittest.TestCase):
         """Test that device_config_glob preserves order."""
         conf = CONFIG_SCHEMA(
             {'zwave': {CONF_DEVICE_CONFIG_GLOB: OrderedDict()}})
-        self.assertIsInstance(
-            conf['zwave'][CONF_DEVICE_CONFIG_GLOB], OrderedDict)
+        assert isinstance(conf['zwave'][CONF_DEVICE_CONFIG_GLOB], OrderedDict)
 
 
 class TestZWaveServices(unittest.TestCase):
@@ -1228,7 +1221,7 @@ class TestZWaveServices(unittest.TestCase):
             })
             self.hass.block_till_done()
 
-            self.assertIn("FOUND NODE ", mock_logger.output[1])
+            assert "FOUND NODE " in mock_logger.output[1]
 
     def test_set_wakeup(self):
         """Test zwave set_wakeup service."""
@@ -1385,9 +1378,9 @@ class TestZWaveServices(unittest.TestCase):
 
         assert node.refresh_value.called
         assert len(node.refresh_value.mock_calls) == 2
-        self.assertEqual(sorted([node.refresh_value.mock_calls[0][1][0],
-                                 node.refresh_value.mock_calls[1][1][0]]),
-                         sorted([value.value_id, power_value.value_id]))
+        assert sorted([node.refresh_value.mock_calls[0][1][0],
+                       node.refresh_value.mock_calls[1][1][0]]) == \
+            sorted([value.value_id, power_value.value_id])
 
     def test_refresh_node(self):
         """Test zwave refresh_node service."""

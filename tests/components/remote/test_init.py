@@ -3,7 +3,6 @@
 
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
     SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -32,16 +31,16 @@ class TestRemote(unittest.TestCase):
     def test_is_on(self):
         """Test is_on."""
         self.hass.states.set('remote.test', STATE_ON)
-        self.assertTrue(remote.is_on(self.hass, 'remote.test'))
+        assert remote.is_on(self.hass, 'remote.test')
 
         self.hass.states.set('remote.test', STATE_OFF)
-        self.assertFalse(remote.is_on(self.hass, 'remote.test'))
+        assert not remote.is_on(self.hass, 'remote.test')
 
         self.hass.states.set(remote.ENTITY_ID_ALL_REMOTES, STATE_ON)
-        self.assertTrue(remote.is_on(self.hass))
+        assert remote.is_on(self.hass)
 
         self.hass.states.set(remote.ENTITY_ID_ALL_REMOTES, STATE_OFF)
-        self.assertFalse(remote.is_on(self.hass))
+        assert not remote.is_on(self.hass)
 
     def test_turn_on(self):
         """Test turn_on."""
@@ -54,10 +53,10 @@ class TestRemote(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(turn_on_calls))
+        assert 1 == len(turn_on_calls)
         call = turn_on_calls[-1]
 
-        self.assertEqual(remote.DOMAIN, call.domain)
+        assert remote.DOMAIN == call.domain
 
     def test_turn_off(self):
         """Test turn_off."""
@@ -69,12 +68,12 @@ class TestRemote(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(turn_off_calls))
+        assert 1 == len(turn_off_calls)
         call = turn_off_calls[-1]
 
-        self.assertEqual(remote.DOMAIN, call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
+        assert remote.DOMAIN == call.domain
+        assert SERVICE_TURN_OFF == call.service
+        assert 'entity_id_val' == call.data[ATTR_ENTITY_ID]
 
     def test_send_command(self):
         """Test send_command."""
@@ -88,14 +87,9 @@ class TestRemote(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(send_command_calls))
+        assert 1 == len(send_command_calls)
         call = send_command_calls[-1]
 
-        self.assertEqual(remote.DOMAIN, call.domain)
-        self.assertEqual(SERVICE_SEND_COMMAND, call.service)
-        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
-
-    def test_services(self):
-        """Test the provided services."""
-        self.assertTrue(setup_component(self.hass, remote.DOMAIN,
-                                        TEST_PLATFORM))
+        assert remote.DOMAIN == call.domain
+        assert SERVICE_SEND_COMMAND == call.service
+        assert 'entity_id_val' == call.data[ATTR_ENTITY_ID]

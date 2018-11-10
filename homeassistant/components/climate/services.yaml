@@ -116,6 +116,22 @@ ecobee_resume_program:
       description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
       example: true
 
+mill_set_room_temperature:
+  description: Set Mill room temperatures.
+  fields:
+    room_name:
+      description: Name of room to change.
+      example: 'kitchen'
+    away_temp:
+      description: Away temp.
+      example: 12
+    comfort_temp:
+      description: Comfort temp.
+      example: 22
+    sleep_temp:
+      description: Sleep temp.
+      example: 17
+
 nuheat_resume_program:
   description: Resume the programmed schedule.
   fields:

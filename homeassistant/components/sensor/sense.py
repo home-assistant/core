@@ -5,24 +5,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sense/
 """
 import logging
+
 from datetime import timedelta
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD,
-                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sense import SENSE_DATA
 
-REQUIREMENTS = ['sense_energy==0.4.2']
+DEPENDENCIES = ['sense']
 
 _LOGGER = logging.getLogger(__name__)
 
-ACTIVE_NAME = "Energy"
-PRODUCTION_NAME = "Production"
-CONSUMPTION_NAME = "Usage"
+ACTIVE_NAME = 'Energy'
+PRODUCTION_NAME = 'Production'
+CONSUMPTION_NAME = 'Usage'
 
 ACTIVE_TYPE = 'active'
 
@@ -46,55 +42,39 @@ SENSOR_TYPES = {'active': SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
 # Production/consumption variants
 SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
 
-# Valid sensors for configuration
-VALID_SENSORS = ['%s_%s' % (typ, var)
-                 for typ in SENSOR_TYPES
-                 for var in SENSOR_VARIANTS]
-
 ICON = 'mdi:flash'
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
-MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=60)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(VALID_SENSORS)]),
-})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
-    from sense_energy import Senseable
+    if discovery_info is None:
+        return
 
-    username = config.get(CONF_EMAIL)
-    password = config.get(CONF_PASSWORD)
-
-    data = Senseable(username, password)
+    data = hass.data[SENSE_DATA]
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
     def update_trends():
         """Update the daily power usage."""
         data.update_trend_data()
 
-    @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
     def update_active():
         """Update the active power usage."""
         data.get_realtime()
 
     devices = []
-    for sensor in config.get(CONF_MONITORED_CONDITIONS):
-        config_name, prod = sensor.rsplit('_', 1)
-        name = SENSOR_TYPES[config_name].name
-        sensor_type = SENSOR_TYPES[config_name].sensor_type
-        is_production = prod == PRODUCTION_NAME.lower()
-        if sensor_type == ACTIVE_TYPE:
-            update_call = update_active
-        else:
-            update_call = update_trends
-        devices.append(Sense(data, name, sensor_type,
-                             is_production, update_call))
+    for typ in SENSOR_TYPES.values():
+        for var in SENSOR_VARIANTS:
+            name = typ.name
+            sensor_type = typ.sensor_type
+            is_production = var == PRODUCTION_NAME.lower()
+            if sensor_type == ACTIVE_TYPE:
+                update_call = update_active
+            else:
+                update_call = update_trends
+            devices.append(Sense(data, name, sensor_type,
+                                 is_production, update_call))
 
     add_entities(devices)
 

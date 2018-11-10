@@ -51,6 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         known_devices = set()
         hass.data[KNOWN_DEVICES_KEY] = known_devices
 
+    uuid = None
     # Is this a manual configuration?
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
@@ -66,6 +67,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         port = DEFAULT_PORT
         timeout = DEFAULT_TIMEOUT
         mac = None
+        udn = discovery_info.get('udn')
+        if udn and udn.startswith('uuid:'):
+            uuid = udn[len('uuid:'):]
     else:
         _LOGGER.warning("Cannot determine device")
         return
@@ -75,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ip_addr = socket.gethostbyname(host)
     if ip_addr not in known_devices:
         known_devices.add(ip_addr)
-        add_entities([SamsungTVDevice(host, port, name, timeout, mac)])
+        add_entities([SamsungTVDevice(host, port, name, timeout, mac, uuid)])
         _LOGGER.info("Samsung TV %s:%d added as '%s'", host, port, name)
     else:
         _LOGGER.info("Ignoring duplicate Samsung TV %s:%d", host, port)
@@ -84,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, host, port, name, timeout, mac):
+    def __init__(self, host, port, name, timeout, mac, uuid):
         """Initialize the Samsung device."""
         from samsungctl import exceptions
         from samsungctl import Remote
@@ -94,6 +98,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._remote_class = Remote
         self._name = name
         self._mac = mac
+        self._uuid = uuid
         self._wol = wakeonlan
         # Assume that the TV is not muted
         self._muted = False
@@ -165,6 +170,11 @@ class SamsungTVDevice(MediaPlayerDevice):
     def _power_off_in_progress(self):
         return self._end_of_power_off is not None and \
                self._end_of_power_off > dt_util.utcnow()
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the device."""
+        return self._uuid
 
     @property
     def name(self):

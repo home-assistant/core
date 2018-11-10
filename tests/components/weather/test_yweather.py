@@ -97,12 +97,11 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
     def test_setup(self, mock_yahooweather):
         """Test for typical weather data attributes."""
-        self.assertTrue(
-            setup_component(self.hass, 'weather', {
+        assert setup_component(self.hass, 'weather', {
                 'weather': {
                     'platform': 'yweather',
                     }
-                }))
+                })
 
         state = self.hass.states.get('weather.yweather')
         assert state is not None
@@ -110,12 +109,12 @@ class TestWeather(unittest.TestCase):
         assert state.state == 'cloudy'
 
         data = state.attributes
-        self.assertEqual(data.get(ATTR_WEATHER_TEMPERATURE), 18.0)
-        self.assertEqual(data.get(ATTR_WEATHER_HUMIDITY), 71)
-        self.assertEqual(data.get(ATTR_WEATHER_PRESSURE), 1000.0)
-        self.assertEqual(data.get(ATTR_WEATHER_WIND_SPEED), 3.94)
-        self.assertEqual(data.get(ATTR_WEATHER_WIND_BEARING), 0)
-        self.assertEqual(state.attributes.get('friendly_name'), 'Yweather')
+        assert data.get(ATTR_WEATHER_TEMPERATURE) == 18.0
+        assert data.get(ATTR_WEATHER_HUMIDITY) == 71
+        assert data.get(ATTR_WEATHER_PRESSURE) == 1000.0
+        assert data.get(ATTR_WEATHER_WIND_SPEED) == 3.94
+        assert data.get(ATTR_WEATHER_WIND_BEARING) == 0
+        assert state.attributes.get('friendly_name') == 'Yweather'
 
     @MockDependency('yahooweather')
     @patch('yahooweather._yql_query', new=_yql_queryMock)
@@ -123,13 +122,12 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
     def test_setup_no_data(self, mock_yahooweather):
         """Test for note receiving data."""
-        self.assertTrue(
-            setup_component(self.hass, 'weather', {
+        assert setup_component(self.hass, 'weather', {
                 'weather': {
                     'platform': 'yweather',
                     'woeid': '12345',
                     }
-                }))
+                })
 
         state = self.hass.states.get('weather.yweather')
         assert state is not None
@@ -140,13 +138,12 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
     def test_setup_bad_data(self, mock_yahooweather):
         """Test for bad forecast data."""
-        self.assertTrue(
-            setup_component(self.hass, 'weather', {
+        assert setup_component(self.hass, 'weather', {
                 'weather': {
                     'platform': 'yweather',
                     'woeid': '123123',
                     }
-                }))
+                })
 
         state = self.hass.states.get('weather.yweather')
         assert state is None
@@ -157,13 +154,12 @@ class TestWeather(unittest.TestCase):
     @patch('yahooweather.YahooWeather', new=YahooWeatherMock)
     def test_setup_condition_error(self, mock_yahooweather):
         """Test for bad forecast data."""
-        self.assertTrue(
-            setup_component(self.hass, 'weather', {
+        assert setup_component(self.hass, 'weather', {
                 'weather': {
                     'platform': 'yweather',
                     'woeid': '111',
                     }
-                }))
+                })
 
         state = self.hass.states.get('weather.yweather')
         assert state is None
