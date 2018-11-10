@@ -3,6 +3,7 @@ import unittest
 import statistics
 
 from homeassistant.setup import setup_component
+from homeassistant.components.sensor.statistics import StatisticsSensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, STATE_UNKNOWN)
 from homeassistant.util import dt as dt_util
@@ -54,7 +55,7 @@ class TestStatisticsSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_count')
 
-        self.assertEqual(str(len(values)), state.state)
+        assert str(len(values)) == state.state
 
     def test_sensor_source(self):
         """Test if source is a sensor."""
@@ -73,20 +74,20 @@ class TestStatisticsSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(str(self.mean), state.state)
-        self.assertEqual(self.min, state.attributes.get('min_value'))
-        self.assertEqual(self.max, state.attributes.get('max_value'))
-        self.assertEqual(self.variance, state.attributes.get('variance'))
-        self.assertEqual(self.median, state.attributes.get('median'))
-        self.assertEqual(self.deviation,
-                         state.attributes.get('standard_deviation'))
-        self.assertEqual(self.mean, state.attributes.get('mean'))
-        self.assertEqual(self.count, state.attributes.get('count'))
-        self.assertEqual(self.total, state.attributes.get('total'))
-        self.assertEqual('°C', state.attributes.get('unit_of_measurement'))
-        self.assertEqual(self.change, state.attributes.get('change'))
-        self.assertEqual(self.average_change,
-                         state.attributes.get('average_change'))
+        assert str(self.mean) == state.state
+        assert self.min == state.attributes.get('min_value')
+        assert self.max == state.attributes.get('max_value')
+        assert self.variance == state.attributes.get('variance')
+        assert self.median == state.attributes.get('median')
+        assert self.deviation == \
+            state.attributes.get('standard_deviation')
+        assert self.mean == state.attributes.get('mean')
+        assert self.count == state.attributes.get('count')
+        assert self.total == state.attributes.get('total')
+        assert '°C' == state.attributes.get('unit_of_measurement')
+        assert self.change == state.attributes.get('change')
+        assert self.average_change == \
+            state.attributes.get('average_change')
 
     def test_sampling_size(self):
         """Test rotation."""
@@ -106,8 +107,8 @@ class TestStatisticsSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(3.8, state.attributes.get('min_value'))
-        self.assertEqual(14, state.attributes.get('max_value'))
+        assert 3.8 == state.attributes.get('min_value')
+        assert 14 == state.attributes.get('max_value')
 
     def test_sampling_size_1(self):
         """Test validity of stats requiring only one sample."""
@@ -128,18 +129,18 @@ class TestStatisticsSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.test_mean')
 
         # require only one data point
-        self.assertEqual(self.values[-1], state.attributes.get('min_value'))
-        self.assertEqual(self.values[-1], state.attributes.get('max_value'))
-        self.assertEqual(self.values[-1], state.attributes.get('mean'))
-        self.assertEqual(self.values[-1], state.attributes.get('median'))
-        self.assertEqual(self.values[-1], state.attributes.get('total'))
-        self.assertEqual(0, state.attributes.get('change'))
-        self.assertEqual(0, state.attributes.get('average_change'))
+        assert self.values[-1] == state.attributes.get('min_value')
+        assert self.values[-1] == state.attributes.get('max_value')
+        assert self.values[-1] == state.attributes.get('mean')
+        assert self.values[-1] == state.attributes.get('median')
+        assert self.values[-1] == state.attributes.get('total')
+        assert 0 == state.attributes.get('change')
+        assert 0 == state.attributes.get('average_change')
 
         # require at least two data points
-        self.assertEqual(STATE_UNKNOWN, state.attributes.get('variance'))
-        self.assertEqual(STATE_UNKNOWN,
-                         state.attributes.get('standard_deviation'))
+        assert STATE_UNKNOWN == state.attributes.get('variance')
+        assert STATE_UNKNOWN == \
+            state.attributes.get('standard_deviation')
 
     def test_max_age(self):
         """Test value deprecation."""
@@ -170,8 +171,8 @@ class TestStatisticsSensor(unittest.TestCase):
 
             state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(6, state.attributes.get('min_value'))
-        self.assertEqual(14, state.attributes.get('max_value'))
+        assert 6 == state.attributes.get('min_value')
+        assert 14 == state.attributes.get('max_value')
 
     def test_change_rate(self):
         """Test min_age/max_age and change_rate."""
@@ -202,12 +203,12 @@ class TestStatisticsSensor(unittest.TestCase):
 
             state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(datetime(2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC),
-                         state.attributes.get('min_age'))
-        self.assertEqual(datetime(2017, 8, 2, 12, 23 + self.count - 1, 42,
-                                  tzinfo=dt_util.UTC),
-                         state.attributes.get('max_age'))
-        self.assertEqual(self.change_rate, state.attributes.get('change_rate'))
+        assert datetime(2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC) == \
+            state.attributes.get('min_age')
+        assert datetime(2017, 8, 2, 12, 23 + self.count - 1, 42,
+                        tzinfo=dt_util.UTC) == \
+            state.attributes.get('max_age')
+        assert self.change_rate == state.attributes.get('change_rate')
 
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
@@ -232,4 +233,62 @@ class TestStatisticsSensor(unittest.TestCase):
         })
         # check if the result is as in test_sensor_source()
         state = self.hass.states.get('sensor.test_mean')
-        self.assertEqual(str(self.mean), state.state)
+        assert str(self.mean) == state.state
+
+    def test_initialize_from_database_with_maxage(self):
+        """Test initializing the statistics from the database."""
+        mock_data = {
+            'return_time': datetime(2017, 8, 2, 12, 23, 42,
+                                    tzinfo=dt_util.UTC),
+        }
+
+        def mock_now():
+            return mock_data['return_time']
+
+        # Testing correct retrieval from recorder, thus we do not
+        # want purging to occur within the class itself.
+        def mock_purge(self):
+            return
+
+        # Set maximum age to 3 hours.
+        max_age = 3
+        # Determine what our minimum age should be based on test values.
+        expected_min_age = mock_data['return_time'] + \
+            timedelta(hours=len(self.values) - max_age)
+
+        # enable the recorder
+        init_recorder_component(self.hass)
+
+        with patch('homeassistant.components.sensor.statistics.dt_util.utcnow',
+                   new=mock_now), \
+                patch.object(StatisticsSensor, '_purge_old', mock_purge):
+            # store some values
+            for value in self.values:
+                self.hass.states.set('sensor.test_monitored', value,
+                                     {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                self.hass.block_till_done()
+                # insert the next value 1 hour later
+                mock_data['return_time'] += timedelta(hours=1)
+
+            # wait for the recorder to really store the data
+            self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+            # only now create the statistics component, so that it must read
+            # the data from the database
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'statistics',
+                    'name': 'test',
+                    'entity_id': 'sensor.test_monitored',
+                    'sampling_size': 100,
+                    'max_age': {'hours': max_age}
+                }
+            })
+
+            # check if the result is as in test_sensor_source()
+            state = self.hass.states.get('sensor.test_mean')
+
+        assert expected_min_age == state.attributes.get('min_age')
+        # The max_age timestamp should be 1 hour before what we have right
+        # now in mock_data['return_time'].
+        assert mock_data['return_time'] == state.attributes.get('max_age') +\
+            timedelta(hours=1)

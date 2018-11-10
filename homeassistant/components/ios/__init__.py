@@ -4,12 +4,10 @@ Native Home Assistant iOS app component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/ecosystem/ios/
 """
-import asyncio
 import logging
 import datetime
 
 import voluptuous as vol
-# from voluptuous.humanize import humanize_error
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
@@ -260,11 +258,10 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         """Initiliaze the view."""
         self._config_path = config_path
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle the POST request for device identification."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
@@ -274,8 +271,9 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         # try:
         #     data = IDENTIFY_SCHEMA(req_data)
         # except vol.Invalid as ex:
-        #     return self.json_message(humanize_error(request.json, ex),
-        #                              HTTP_BAD_REQUEST)
+        #     return self.json_message(
+        #         vol.humanize.humanize_error(request.json, ex),
+        #         HTTP_BAD_REQUEST)
 
         data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 
@@ -293,4 +291,5 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN, 'Home Assistant iOS', lambda *_: True)
+    DOMAIN, 'Home Assistant iOS', lambda *_: True,
+    config_entries.CONN_CLASS_CLOUD_PUSH)

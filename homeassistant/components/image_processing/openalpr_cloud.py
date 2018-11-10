@@ -48,9 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the OpenALPR cloud API platform."""
     confidence = config[CONF_CONFIDENCE]
     params = {
@@ -101,8 +100,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         """Return the name of the entity."""
         return self._name
 
-    @asyncio.coroutine
-    def async_process_image(self, image):
+    async def async_process_image(self, image):
         """Process image.
 
         This method is a coroutine.
@@ -116,11 +114,11 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
 
         try:
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
-                request = yield from websession.post(
+                request = await websession.post(
                     OPENALPR_API_URL, params=params, data=body
                 )
 
-                data = yield from request.json()
+                data = await request.json()
 
                 if request.status != 200:
                     _LOGGER.error("Error %d -> %s.",

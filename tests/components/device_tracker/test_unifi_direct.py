@@ -66,7 +66,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
             assert setup_component(self.hass, DOMAIN, conf_dict)
 
         conf_dict[DOMAIN][CONF_PORT] = 22
-        self.assertEqual(unifi_mock.call_args, mock.call(conf_dict[DOMAIN]))
+        assert unifi_mock.call_args == mock.call(conf_dict[DOMAIN])
 
     @patch('pexpect.pxssh.pxssh')
     def test_get_device_name(self, mock_ssh):
@@ -85,11 +85,11 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
         mock_ssh.return_value.before = load_fixture('unifi_direct.txt')
         scanner = get_scanner(self.hass, conf_dict)
         devices = scanner.scan_devices()
-        self.assertEqual(23, len(devices))
-        self.assertEqual("iPhone",
-                         scanner.get_device_name("98:00:c6:56:34:12"))
-        self.assertEqual("iPhone",
-                         scanner.get_device_name("98:00:C6:56:34:12"))
+        assert 23 == len(devices)
+        assert "iPhone" == \
+            scanner.get_device_name("98:00:c6:56:34:12")
+        assert "iPhone" == \
+            scanner.get_device_name("98:00:C6:56:34:12")
 
     @patch('pexpect.pxssh.pxssh.logout')
     @patch('pexpect.pxssh.pxssh.login')
@@ -111,7 +111,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
 
         mock_login.side_effect = exceptions.EOF("Test")
         scanner = get_scanner(self.hass, conf_dict)
-        self.assertFalse(scanner)
+        assert not scanner
 
     @patch('pexpect.pxssh.pxssh.logout')
     @patch('pexpect.pxssh.pxssh.login', autospec=True)
@@ -136,16 +136,16 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
         # mock_sendline.side_effect = AssertionError("Test")
         mock_prompt.side_effect = AssertionError("Test")
         devices = scanner._get_update()  # pylint: disable=protected-access
-        self.assertTrue(devices is None)
+        assert devices is None
 
     def test_good_response_parses(self):
         """Test that the response form the AP parses to JSON correctly."""
         response = _response_to_json(load_fixture('unifi_direct.txt'))
-        self.assertTrue(response != {})
+        assert response != {}
 
     def test_bad_response_returns_none(self):
         """Test that a bad response form the AP parses to JSON correctly."""
-        self.assertTrue(_response_to_json("{(}") == {})
+        assert _response_to_json("{(}") == {}
 
 
 def test_config_error():

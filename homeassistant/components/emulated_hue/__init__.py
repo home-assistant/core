@@ -18,6 +18,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
+from homeassistant.components.http import real_ip
+
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
     HueOneLightChangeView, HueGroupView)
@@ -81,12 +83,20 @@ ATTR_EMULATED_HUE_NAME = 'emulated_hue_name'
 ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
 
 
-def setup(hass, yaml_config):
+async def async_setup(hass, yaml_config):
     """Activate the emulated_hue component."""
     config = Config(hass, yaml_config.get(DOMAIN, {}))
 
     app = web.Application()
     app['hass'] = hass
+
+    real_ip.setup_real_ip(app, False, [])
+    # We misunderstood the startup signal. You're not allowed to change
+    # anything during startup. Temp workaround.
+    # pylint: disable=protected-access
+    app._on_startup.freeze()
+    await app.startup()
+
     handler = None
     server = None
 
@@ -131,7 +141,8 @@ def setup(hass, yaml_config):
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                               start_emulated_hue_bridge)
 
     return True
 

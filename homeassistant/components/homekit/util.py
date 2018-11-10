@@ -11,8 +11,8 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
 from .const import (
     CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, TYPE_OUTLET,
-    TYPE_SWITCH)
+    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, TYPE_FAUCET,
+    TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +38,17 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({
 
 SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend({
     vol.Optional(CONF_TYPE, default=TYPE_SWITCH): vol.All(
-        cv.string, vol.In((TYPE_OUTLET, TYPE_SWITCH))),
+        cv.string, vol.In((
+            TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER,
+            TYPE_SWITCH, TYPE_VALVE))),
 })
 
 
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
+    if not isinstance(values, dict):
+        raise vol.Invalid('expected a dictionary')
+
     entities = {}
     for entity_id, config in values.items():
         entity = cv.entity_id(entity_id)
@@ -99,7 +104,7 @@ def validate_media_player_features(state, feature_list):
             error_list.append(feature)
 
     if error_list:
-        _LOGGER.error("%s does not support features: %s",
+        _LOGGER.error('%s does not support features: %s',
                       state.entity_id, error_list)
         return False
     return True
@@ -130,12 +135,12 @@ def convert_to_float(state):
 
 def temperature_to_homekit(temperature, unit):
     """Convert temperature to Celsius for HomeKit."""
-    return round(temp_util.convert(temperature, unit, TEMP_CELSIUS), 1)
+    return round(temp_util.convert(temperature, unit, TEMP_CELSIUS) * 2) / 2
 
 
 def temperature_to_states(temperature, unit):
     """Convert temperature back from Celsius to Home Assistant unit."""
-    return round(temp_util.convert(temperature, TEMP_CELSIUS, unit), 1)
+    return round(temp_util.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
 
 
 def density_to_air_quality(density):

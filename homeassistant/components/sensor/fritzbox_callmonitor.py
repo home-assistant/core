@@ -63,8 +63,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     port = config.get(CONF_PORT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    phonebook_id = config.get('phonebook')
-    prefixes = config.get('prefixes')
+    phonebook_id = config.get(CONF_PHONEBOOK)
+    prefixes = config.get(CONF_PREFIXES)
 
     try:
         phonebook = FritzBoxPhonebook(
@@ -156,8 +156,10 @@ class FritzBoxCallMonitor:
 
     def connect(self):
         """Connect to the Fritz!Box."""
+        _LOGGER.debug('Setting up socket...')
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(10)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         try:
             self.sock.connect((self.host, self.port))
             threading.Thread(target=self._listen).start()
@@ -168,6 +170,7 @@ class FritzBoxCallMonitor:
 
     def _listen(self):
         """Listen to incoming or outgoing calls."""
+        _LOGGER.debug('Connection established, waiting for response...')
         while not self.stopped.isSet():
             try:
                 response = self.sock.recv(2048)
@@ -175,10 +178,12 @@ class FritzBoxCallMonitor:
                 # if no response after 10 seconds, just recv again
                 continue
             response = str(response, "utf-8")
+            _LOGGER.debug('Received %s', response)
 
             if not response:
                 # if the response is empty, the connection has been lost.
                 # try to reconnect
+                _LOGGER.warning('Connection lost, reconnecting...')
                 self.sock = None
                 while self.sock is None:
                     self.connect()
@@ -239,8 +244,7 @@ class FritzBoxPhonebook:
         self.number_dict = None
         self.prefixes = prefixes or []
 
-        # pylint: disable=import-error
-        import fritzconnection as fc
+        import fritzconnection as fc  # pylint: disable=import-error
         # Establish a connection to the FRITZ!Box.
         self.fph = fc.FritzPhonebook(
             address=self.host, user=self.username, password=self.password)

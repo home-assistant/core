@@ -131,7 +131,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component.setup({})
 
         discovery.load_platform(self.hass, DOMAIN, 'platform_test',
-                                {'msg': 'discovery_info'})
+                                {'msg': 'discovery_info'}, {DOMAIN: {}})
 
         self.hass.block_till_done()
 
@@ -415,3 +415,19 @@ async def test_unload_entry_fails_if_never_loaded(hass):
 
     with pytest.raises(ValueError):
         await component.async_unload_entry(entry)
+
+
+async def test_update_entity(hass):
+    """Test that we can update an entity with the helper."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity = MockEntity()
+    entity.async_update_ha_state = Mock(return_value=mock_coro())
+    await component.async_add_entities([entity])
+
+    # Called as part of async_add_entities
+    assert len(entity.async_update_ha_state.mock_calls) == 1
+
+    await hass.helpers.entity_component.async_update_entity(entity.entity_id)
+
+    assert len(entity.async_update_ha_state.mock_calls) == 2
+    assert entity.async_update_ha_state.mock_calls[-1][1][0] is True

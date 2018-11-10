@@ -5,6 +5,10 @@ DOMAIN = 'homekit'
 HOMEKIT_FILE = '.homekit.state'
 HOMEKIT_NOTIFY_ID = 4663548
 
+# #### Attributes ####
+ATTR_DISPLAY_NAME = 'display_name'
+ATTR_VALUE = 'value'
+
 # #### Config ####
 CONF_AUTO_START = 'auto_start'
 CONF_ENTITY_CONFIG = 'entity_config'
@@ -22,6 +26,9 @@ FEATURE_PLAY_PAUSE = 'play_pause'
 FEATURE_PLAY_STOP = 'play_stop'
 FEATURE_TOGGLE_MUTE = 'toggle_mute'
 
+# #### HomeKit Component Event ####
+EVENT_HOMEKIT_CHANGED = 'homekit_state_change'
+
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = 'start'
 
@@ -32,8 +39,12 @@ BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
 MANUFACTURER = 'Home Assistant'
 
 # #### Switch Types ####
+TYPE_FAUCET = 'faucet'
 TYPE_OUTLET = 'outlet'
+TYPE_SHOWER = 'shower'
+TYPE_SPRINKLER = 'sprinkler'
 TYPE_SWITCH = 'switch'
+TYPE_VALVE = 'valve'
 
 # #### Services ####
 SERV_ACCESSORY_INFO = 'AccessoryInformation'
@@ -57,6 +68,7 @@ SERV_SMOKE_SENSOR = 'SmokeSensor'
 SERV_SWITCH = 'Switch'
 SERV_TEMPERATURE_SENSOR = 'TemperatureSensor'
 SERV_THERMOSTAT = 'Thermostat'
+SERV_VALVE = 'Valve'
 SERV_WINDOW_COVERING = 'WindowCovering'
 
 # #### Characteristics ####
@@ -69,6 +81,8 @@ CHAR_CARBON_DIOXIDE_DETECTED = 'CarbonDioxideDetected'
 CHAR_CARBON_DIOXIDE_LEVEL = 'CarbonDioxideLevel'
 CHAR_CARBON_DIOXIDE_PEAK_LEVEL = 'CarbonDioxidePeakLevel'
 CHAR_CARBON_MONOXIDE_DETECTED = 'CarbonMonoxideDetected'
+CHAR_CARBON_MONOXIDE_LEVEL = 'CarbonMonoxideLevel'
+CHAR_CARBON_MONOXIDE_PEAK_LEVEL = 'CarbonMonoxidePeakLevel'
 CHAR_CHARGING_STATE = 'ChargingState'
 CHAR_COLOR_TEMPERATURE = 'ColorTemperature'
 CHAR_CONTACT_SENSOR_STATE = 'ContactSensorState'
@@ -83,6 +97,7 @@ CHAR_CURRENT_TEMPERATURE = 'CurrentTemperature'
 CHAR_FIRMWARE_REVISION = 'FirmwareRevision'
 CHAR_HEATING_THRESHOLD_TEMPERATURE = 'HeatingThresholdTemperature'
 CHAR_HUE = 'Hue'
+CHAR_IN_USE = 'InUse'
 CHAR_LEAK_DETECTED = 'LeakDetected'
 CHAR_LOCK_CURRENT_STATE = 'LockCurrentState'
 CHAR_LOCK_TARGET_STATE = 'LockTargetState'
@@ -107,13 +122,16 @@ CHAR_TARGET_POSITION = 'TargetPosition'
 CHAR_TARGET_SECURITY_STATE = 'SecuritySystemTargetState'
 CHAR_TARGET_TEMPERATURE = 'TargetTemperature'
 CHAR_TEMP_DISPLAY_UNITS = 'TemperatureDisplayUnits'
+CHAR_VALVE_TYPE = 'ValveType'
 
 # #### Properties ####
 PROP_MAX_VALUE = 'maxValue'
 PROP_MIN_VALUE = 'minValue'
+PROP_MIN_STEP = 'minStep'
 PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
 
 # #### Device Classes ####
+DEVICE_CLASS_CO = 'co'
 DEVICE_CLASS_CO2 = 'co2'
 DEVICE_CLASS_DOOR = 'door'
 DEVICE_CLASS_GARAGE_DOOR = 'garage_door'
@@ -125,3 +143,11 @@ DEVICE_CLASS_OPENING = 'opening'
 DEVICE_CLASS_PM25 = 'pm25'
 DEVICE_CLASS_SMOKE = 'smoke'
 DEVICE_CLASS_WINDOW = 'window'
+
+# #### Thresholds ####
+THRESHOLD_CO = 25
+THRESHOLD_CO2 = 1000
+
+# #### Default values ####
+DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C
+DEFAULT_MAX_TEMP_WATER_HEATER = 60  # °C

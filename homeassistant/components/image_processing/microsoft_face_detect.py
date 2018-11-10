@@ -4,7 +4,6 @@ Component that will help set the Microsoft face detect processing.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.microsoft_face_detect/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -45,9 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Microsoft Face detection platform."""
     api = hass.data[DATA_MICROSOFT_FACE]
     attributes = config[CONF_ATTRIBUTES]
@@ -88,15 +86,14 @@ class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
         """Return the name of the entity."""
         return self._name
 
-    @asyncio.coroutine
-    def async_process_image(self, image):
+    async def async_process_image(self, image):
         """Process image.
 
         This method is a coroutine.
         """
         face_data = None
         try:
-            face_data = yield from self._api.call_api(
+            face_data = await self._api.call_api(
                 'post', 'detect', image, binary=True,
                 params={'returnFaceAttributes': ",".join(self._attributes)})
 
@@ -105,7 +102,7 @@ class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
             return
 
         if not face_data:
-            return
+            face_data = []
 
         faces = []
         for face in face_data:

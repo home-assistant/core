@@ -11,7 +11,7 @@ from homeassistant.components.tts import Provider, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['boto3==1.4.7']
+REQUIREMENTS = ['boto3==1.9.16']
 
 CONF_REGION = 'region_name'
 CONF_ACCESS_KEY_ID = 'aws_access_key_id'
@@ -87,7 +87,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_engine(hass, config):
     """Set up Amazon Polly speech component."""
-    # pylint: disable=import-error
     output_format = config.get(CONF_OUTPUT_FORMAT)
     sample_rate = config.get(CONF_SAMPLE_RATE,
                              DEFAULT_SAMPLE_RATES[output_format])

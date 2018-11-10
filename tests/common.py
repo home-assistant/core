@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from homeassistant import auth, core as ha, config_entries
 from homeassistant.auth import (
     models as auth_models, auth_store, providers as auth_providers)
+from homeassistant.auth.permissions import system_policies
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -251,7 +252,7 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 @ha.callback
 def async_fire_time_changed(hass, time):
     """Fire a time changes event."""
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {'now': time})
+    hass.bus.async_fire(EVENT_TIME_CHANGED, {'now': date_util.as_utc(time)})
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
@@ -322,7 +323,7 @@ def mock_component(hass, component):
 def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
-    registry.entities = mock_entries or {}
+    registry.entities = mock_entries or OrderedDict()
 
     async def _get_reg():
         return registry
@@ -345,17 +346,44 @@ def mock_device_registry(hass, mock_entries=None):
     return registry
 
 
+class MockGroup(auth_models.Group):
+    """Mock a group in Home Assistant."""
+
+    def __init__(self, id=None, name='Mock Group',
+                 policy=system_policies.ADMIN_POLICY):
+        """Mock a group."""
+        kwargs = {
+            'name': name,
+            'policy': policy,
+        }
+        if id is not None:
+            kwargs['id'] = id
+
+        super().__init__(**kwargs)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        return self.add_to_auth_manager(hass.auth)
+
+    def add_to_auth_manager(self, auth_mgr):
+        """Test helper to add entry to hass."""
+        ensure_auth_manager_loaded(auth_mgr)
+        auth_mgr._store._groups[self.id] = self
+        return self
+
+
 class MockUser(auth_models.User):
     """Mock a user in Home Assistant."""
 
     def __init__(self, id=None, is_owner=False, is_active=True,
-                 name='Mock User', system_generated=False):
+                 name='Mock User', system_generated=False, groups=None):
         """Initialize mock user."""
         kwargs = {
             'is_owner': is_owner,
             'is_active': is_active,
             'name': name,
             'system_generated': system_generated,
+            'groups': groups or [],
         }
         if id is not None:
             kwargs['id'] = id
@@ -392,7 +420,7 @@ def ensure_auth_manager_loaded(auth_mgr):
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
     if store._users is None:
-        store._users = OrderedDict()
+        store._set_defaults()
 
 
 class MockModule:
@@ -550,14 +578,16 @@ class MockConfigEntry(config_entries.ConfigEntry):
 
     def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
                  source=config_entries.SOURCE_USER, title='Mock Title',
-                 state=None):
+                 state=None,
+                 connection_class=config_entries.CONN_CLASS_UNKNOWN):
         """Initialize a mock config entry."""
         kwargs = {
             'entry_id': entry_id or 'mock-id',
             'domain': domain,
             'data': data or {},
             'version': version,
-            'title': title
+            'title': title,
+            'connection_class': connection_class,
         }
         if source is not None:
             kwargs['source'] = source
@@ -607,16 +637,18 @@ def patch_yaml_files(files_dict, endswith=True):
     return patch.object(yaml, 'open', mock_open_f, create=True)
 
 
-def mock_coro(return_value=None):
-    """Return a coro that returns a value."""
-    return mock_coro_func(return_value)()
+def mock_coro(return_value=None, exception=None):
+    """Return a coro that returns a value or raise an exception."""
+    return mock_coro_func(return_value, exception)()
 
 
-def mock_coro_func(return_value=None):
+def mock_coro_func(return_value=None, exception=None):
     """Return a method to create a coro function that returns a value."""
     @asyncio.coroutine
     def coro(*args, **kwargs):
         """Fake coroutine."""
+        if exception:
+            raise exception
         return return_value
 
     return coro
@@ -760,6 +792,11 @@ class MockEntity(entity.Entity):
     def available(self):
         """Return True if entity is available."""
         return self._handle('available')
+
+    @property
+    def device_info(self):
+        """Info how it links to a device."""
+        return self._handle('device_info')
 
     def _handle(self, attr):
         """Return attribute value."""

@@ -4,7 +4,6 @@ This component provides basic support for Amcrest IP cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.amcrest/
 """
-import asyncio
 import logging
 
 from homeassistant.components.amcrest import (
@@ -21,9 +20,8 @@ DEPENDENCIES = ['amcrest', 'ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up an Amcrest IP Camera."""
     if discovery_info is None:
         return
@@ -57,13 +55,11 @@ class AmcrestCam(Camera):
         response = self._camera.snapshot(channel=self._resolution)
         return response.data
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Return an MJPEG stream."""
         # The snapshot implementation is handled by the parent class
         if self._stream_source == STREAM_SOURCE_LIST['snapshot']:
-            yield from super().handle_async_mjpeg_stream(request)
-            return
+            return await super().handle_async_mjpeg_stream(request)
 
         if self._stream_source == STREAM_SOURCE_LIST['mjpeg']:
             # stream an MJPEG image stream directly from the camera
@@ -72,21 +68,23 @@ class AmcrestCam(Camera):
             stream_coro = websession.get(
                 streaming_url, auth=self._token, timeout=TIMEOUT)
 
-            yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
+            return await async_aiohttp_proxy_web(
+                self.hass, request, stream_coro)
 
-        else:
-            # streaming via fmpeg
-            from haffmpeg import CameraMjpeg
+        # streaming via ffmpeg
+        from haffmpeg import CameraMjpeg
 
-            streaming_url = self._camera.rtsp_url(typeno=self._resolution)
-            stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
-            yield from stream.open_camera(
-                streaming_url, extra_cmd=self._ffmpeg_arguments)
+        streaming_url = self._camera.rtsp_url(typeno=self._resolution)
+        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        await stream.open_camera(
+            streaming_url, extra_cmd=self._ffmpeg_arguments)
 
-            yield from async_aiohttp_proxy_stream(
+        try:
+            return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
                 'multipart/x-mixed-replace;boundary=ffserver')
-            yield from stream.close()
+        finally:
+            await stream.close()
 
     @property
     def name(self):

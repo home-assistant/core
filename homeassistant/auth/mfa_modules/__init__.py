@@ -1,5 +1,4 @@
 """Plugable auth modules for Home Assistant."""
-from datetime import timedelta
 import importlib
 import logging
 import types
@@ -23,8 +22,6 @@ MULTI_FACTOR_AUTH_MODULE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ID): str,
 }, extra=vol.ALLOW_EXTRA)
 
-SESSION_EXPIRATION = timedelta(minutes=5)
-
 DATA_REQS = 'mfa_auth_module_reqs_processed'
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +31,7 @@ class MultiFactorAuthModule:
     """Multi-factor Auth Module of validation function."""
 
     DEFAULT_TITLE = 'Unnamed auth module'
+    MAX_RETRY_TIME = 3
 
     def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
         """Initialize an auth module."""
@@ -84,7 +82,7 @@ class MultiFactorAuthModule:
         """Return whether user is setup."""
         raise NotImplementedError
 
-    async def async_validation(
+    async def async_validate(
             self, user_id: str, user_input: Dict[str, Any]) -> bool:
         """Return True if validation passed."""
         raise NotImplementedError
@@ -106,7 +104,7 @@ class SetupFlow(data_entry_flow.FlowHandler):
             -> Dict[str, Any]:
         """Handle the first step of setup flow.
 
-        Return self.async_show_form(step_id='init') if user_input == None.
+        Return self.async_show_form(step_id='init') if user_input is None.
         Return self.async_create_entry(data={'result': result}) if finish.
         """
         errors = {}  # type: Dict[str, str]

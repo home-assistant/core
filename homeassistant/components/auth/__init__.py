@@ -105,7 +105,6 @@ Home Assistant. User need to record the token in secure place.
     "id": 11,
     "type": "auth/long_lived_access_token",
     "client_name": "GPS Logger",
-    "client_icon": null,
     "lifespan": 365
 }
 
@@ -130,6 +129,7 @@ from homeassistant.auth.models import User, Credentials, \
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_REAL_IP
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
@@ -170,6 +170,14 @@ SCHEMA_WS_DELETE_REFRESH_TOKEN = \
         vol.Required('refresh_token_id'): str,
     })
 
+WS_TYPE_SIGN_PATH = 'auth/sign_path'
+SCHEMA_WS_SIGN_PATH = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_SIGN_PATH,
+        vol.Required('path'): str,
+        vol.Optional('expires', default=30): int,
+    })
+
 RESULT_TYPE_CREDENTIALS = 'credentials'
 RESULT_TYPE_USER = 'user'
 
@@ -201,6 +209,11 @@ async def async_setup(hass, config):
         WS_TYPE_DELETE_REFRESH_TOKEN,
         websocket_delete_refresh_token,
         SCHEMA_WS_DELETE_REFRESH_TOKEN
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_SIGN_PATH,
+        websocket_sign_path,
+        SCHEMA_WS_SIGN_PATH
     )
 
     await login_flow.async_setup(hass, store_result)
@@ -425,54 +438,46 @@ def _create_auth_code_store():
 
 
 @websocket_api.ws_require_user()
-@callback
-def websocket_current_user(
+@websocket_api.async_response
+async def websocket_current_user(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return the current user."""
-    async def async_get_current_user(user):
-        """Get current user."""
-        enabled_modules = await hass.auth.async_get_enabled_mfa(user)
+    user = connection.user
+    enabled_modules = await hass.auth.async_get_enabled_mfa(user)
 
-        connection.send_message_outside(
-            websocket_api.result_message(msg['id'], {
-                'id': user.id,
-                'name': user.name,
-                'is_owner': user.is_owner,
-                'credentials': [{'auth_provider_type': c.auth_provider_type,
-                                 'auth_provider_id': c.auth_provider_id}
-                                for c in user.credentials],
-                'mfa_modules': [{
-                    'id': module.id,
-                    'name': module.name,
-                    'enabled': module.id in enabled_modules,
-                } for module in hass.auth.auth_mfa_modules],
-            }))
-
-    hass.async_create_task(async_get_current_user(connection.user))
+    connection.send_message(
+        websocket_api.result_message(msg['id'], {
+            'id': user.id,
+            'name': user.name,
+            'is_owner': user.is_owner,
+            'credentials': [{'auth_provider_type': c.auth_provider_type,
+                             'auth_provider_id': c.auth_provider_id}
+                            for c in user.credentials],
+            'mfa_modules': [{
+                'id': module.id,
+                'name': module.name,
+                'enabled': module.id in enabled_modules,
+            } for module in hass.auth.auth_mfa_modules],
+        }))
 
 
 @websocket_api.ws_require_user()
-@callback
-def websocket_create_long_lived_access_token(
+@websocket_api.async_response
+async def websocket_create_long_lived_access_token(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Create or a long-lived access token."""
-    async def async_create_long_lived_access_token(user):
-        """Create or a long-lived access token."""
-        refresh_token = await hass.auth.async_create_refresh_token(
-            user,
-            client_name=msg['client_name'],
-            client_icon=msg.get('client_icon'),
-            token_type=TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
-            access_token_expiration=timedelta(days=msg['lifespan']))
+    refresh_token = await hass.auth.async_create_refresh_token(
+        connection.user,
+        client_name=msg['client_name'],
+        client_icon=msg.get('client_icon'),
+        token_type=TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        access_token_expiration=timedelta(days=msg['lifespan']))
 
-        access_token = hass.auth.async_create_access_token(
-            refresh_token)
+    access_token = hass.auth.async_create_access_token(
+        refresh_token)
 
-        connection.send_message_outside(
-            websocket_api.result_message(msg['id'], access_token))
-
-    hass.async_create_task(
-        async_create_long_lived_access_token(connection.user))
+    connection.send_message(
+        websocket_api.result_message(msg['id'], access_token))
 
 
 @websocket_api.ws_require_user()
@@ -480,8 +485,8 @@ def websocket_create_long_lived_access_token(
 def websocket_refresh_tokens(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return metadata of users refresh tokens."""
-    current_id = connection.request.get('refresh_token_id')
-    connection.to_write.put_nowait(websocket_api.result_message(msg['id'], [{
+    current_id = connection.refresh_token_id
+    connection.send_message(websocket_api.result_message(msg['id'], [{
         'id': refresh.id,
         'client_id': refresh.client_id,
         'client_name': refresh.client_name,
@@ -495,22 +500,28 @@ def websocket_refresh_tokens(
 
 
 @websocket_api.ws_require_user()
-@callback
-def websocket_delete_refresh_token(
+@websocket_api.async_response
+async def websocket_delete_refresh_token(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Handle a delete refresh token request."""
-    async def async_delete_refresh_token(user, refresh_token_id):
-        """Delete a refresh token."""
-        refresh_token = connection.user.refresh_tokens.get(refresh_token_id)
+    refresh_token = connection.user.refresh_tokens.get(msg['refresh_token_id'])
 
-        if refresh_token is None:
-            return websocket_api.error_message(
-                msg['id'], 'invalid_token_id', 'Received invalid token')
+    if refresh_token is None:
+        return websocket_api.error_message(
+            msg['id'], 'invalid_token_id', 'Received invalid token')
 
-        await hass.auth.async_remove_refresh_token(refresh_token)
+    await hass.auth.async_remove_refresh_token(refresh_token)
 
-        connection.send_message_outside(
-            websocket_api.result_message(msg['id'], {}))
+    connection.send_message(
+        websocket_api.result_message(msg['id'], {}))
 
-    hass.async_create_task(
-        async_delete_refresh_token(connection.user, msg['refresh_token_id']))
+
+@websocket_api.ws_require_user()
+@callback
+def websocket_sign_path(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
+    """Handle a sign path request."""
+    connection.send_message(websocket_api.result_message(msg['id'], {
+        'path': async_sign_path(hass, connection.refresh_token_id, msg['path'],
+                                timedelta(seconds=msg['expires']))
+        }))

@@ -51,7 +51,7 @@ class DysonTest(unittest.TestCase):
             dyson.CONF_PASSWORD: "password",
             dyson.CONF_LANGUAGE: "FR"
         }})
-        self.assertEqual(mocked_login.call_count, 1)
+        assert mocked_login.call_count == 1
 
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices', return_value=[])
     @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
@@ -62,9 +62,9 @@ class DysonTest(unittest.TestCase):
             dyson.CONF_PASSWORD: "password",
             dyson.CONF_LANGUAGE: "FR"
         }})
-        self.assertEqual(mocked_login.call_count, 1)
-        self.assertEqual(mocked_devices.call_count, 1)
-        self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 0)
+        assert mocked_login.call_count == 1
+        assert mocked_devices.call_count == 1
+        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
 
     @mock.patch('homeassistant.helpers.discovery.load_platform')
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
@@ -84,10 +84,10 @@ class DysonTest(unittest.TestCase):
                 }
             ]
         }})
-        self.assertEqual(mocked_login.call_count, 1)
-        self.assertEqual(mocked_devices.call_count, 1)
-        self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 1)
-        self.assertEqual(mocked_discovery.call_count, 3)
+        assert mocked_login.call_count == 1
+        assert mocked_devices.call_count == 1
+        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
+        assert mocked_discovery.call_count == 4
 
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])
@@ -106,9 +106,9 @@ class DysonTest(unittest.TestCase):
                 }
             ]
         }})
-        self.assertEqual(mocked_login.call_count, 1)
-        self.assertEqual(mocked_devices.call_count, 1)
-        self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 0)
+        assert mocked_login.call_count == 1
+        assert mocked_devices.call_count == 1
+        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
 
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_error()])
@@ -127,9 +127,9 @@ class DysonTest(unittest.TestCase):
                 }
             ]
         }})
-        self.assertEqual(mocked_login.call_count, 1)
-        self.assertEqual(mocked_devices.call_count, 1)
-        self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 0)
+        assert mocked_login.call_count == 1
+        assert mocked_devices.call_count == 1
+        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
 
     @mock.patch('homeassistant.helpers.discovery.load_platform')
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
@@ -150,10 +150,10 @@ class DysonTest(unittest.TestCase):
                 }
             ]
         }})
-        self.assertEqual(mocked_login.call_count, 1)
-        self.assertEqual(mocked_devices.call_count, 1)
-        self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 0)
-        self.assertEqual(mocked_discovery.call_count, 0)
+        assert mocked_login.call_count == 1
+        assert mocked_devices.call_count == 1
+        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
+        assert mocked_discovery.call_count == 0
 
     @mock.patch('homeassistant.helpers.discovery.load_platform')
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
@@ -169,10 +169,10 @@ class DysonTest(unittest.TestCase):
             dyson.CONF_TIMEOUT: 5,
             dyson.CONF_RETRY: 2
         }})
-        self.assertEqual(mocked_login.call_count, 1)
-        self.assertEqual(mocked_devices.call_count, 1)
-        self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 1)
-        self.assertEqual(mocked_discovery.call_count, 3)
+        assert mocked_login.call_count == 1
+        assert mocked_devices.call_count == 1
+        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
+        assert mocked_discovery.call_count == 4
 
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])
@@ -187,6 +187,6 @@ class DysonTest(unittest.TestCase):
             dyson.CONF_TIMEOUT: 5,
             dyson.CONF_RETRY: 2
         }})
-        self.assertEqual(mocked_login.call_count, 1)
-        self.assertEqual(mocked_devices.call_count, 1)
-        self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 0)
+        assert mocked_login.call_count == 1
+        assert mocked_devices.call_count == 1
+        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0

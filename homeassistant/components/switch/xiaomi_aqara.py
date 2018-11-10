@@ -16,6 +16,7 @@ ATTR_IN_USE = 'in_use'
 
 LOAD_POWER = 'load_power'
 POWER_CONSUMED = 'power_consumed'
+ENERGY_CONSUMED = 'energy_consumed'
 IN_USE = 'inuse'
 
 
@@ -57,8 +58,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                                    'channel_1',
                                                    False, gateway))
             elif model in ['86plug', 'ctrl_86plug', 'ctrl_86plug.aq1']:
+                if 'proto' not in device or int(device['proto'][0:1]) == 1:
+                    data_key = 'status'
+                else:
+                    data_key = 'channel_0'
                 devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
-                                                   'status', True, gateway))
+                                                   data_key, True, gateway))
     add_entities(devices)
 
 
@@ -99,6 +104,11 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
         attrs.update(super().device_state_attributes)
         return attrs
 
+    @property
+    def should_poll(self):
+        """Return the polling state. Polling needed for Zigbee plug only."""
+        return self._supports_power_consumption
+
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         if self._write_to_hub(self._sid, **{self._data_key: 'on'}):
@@ -117,13 +127,17 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             self._in_use = int(data[IN_USE])
             if not self._in_use:
                 self._load_power = 0
-        if POWER_CONSUMED in data:
-            self._power_consumed = round(float(data[POWER_CONSUMED]), 2)
+
+        for key in [POWER_CONSUMED, ENERGY_CONSUMED]:
+            if key in data:
+                self._power_consumed = round(float(data[key]), 2)
+                break
+
         if LOAD_POWER in data:
             self._load_power = round(float(data[LOAD_POWER]), 2)
 
         value = data.get(self._data_key)
-        if value is None:
+        if value not in ['on', 'off']:
             return False
 
         state = value == 'on'
@@ -131,3 +145,8 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             return False
         self._state = state
         return True
+
+    def update(self):
+        """Get data from hub."""
+        _LOGGER.debug("Update data from hub: %s", self._name)
+        self._get_from_hub(self._sid)

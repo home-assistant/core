@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Accesspunkten \u00e4r redan konfigurerad",
-            "conection_aborted": "Kunde inte ansluta till HMIP server",
             "connection_aborted": "Det gick inte att ansluta till HMIP-servern",
             "unknown": "Ett ok\u00e4nt fel har intr\u00e4ffat"
         },

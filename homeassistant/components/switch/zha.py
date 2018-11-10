@@ -44,7 +44,10 @@ class Switch(zha.Entity, SwitchDevice):
 
     def attribute_updated(self, attribute, value):
         """Handle attribute update from device."""
-        _LOGGER.debug("Attribute updated: %s %s %s", self, attribute, value)
+        cluster = self._endpoint.on_off
+        attr_name = cluster.attributes.get(attribute, [attribute])[0]
+        _LOGGER.debug("%s: Attribute '%s' on cluster '%s' updated to %s",
+                      self.entity_id, attr_name, cluster.ep_attribute, value)
         if attribute == self.value_attribute:
             self._state = value
             self.async_schedule_update_ha_state()
@@ -65,23 +68,29 @@ class Switch(zha.Entity, SwitchDevice):
         """Turn the entity on."""
         from zigpy.exceptions import DeliveryError
         try:
-            await self._endpoint.on_off.on()
+            res = await self._endpoint.on_off.on()
+            _LOGGER.debug("%s: turned 'on': %s", self.entity_id, res[1])
         except DeliveryError as ex:
-            _LOGGER.error("Unable to turn the switch on: %s", ex)
+            _LOGGER.error("%s: Unable to turn the switch on: %s",
+                          self.entity_id, ex)
             return
 
         self._state = 1
+        self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         from zigpy.exceptions import DeliveryError
         try:
-            await self._endpoint.on_off.off()
+            res = await self._endpoint.on_off.off()
+            _LOGGER.debug("%s: turned 'off': %s", self.entity_id, res[1])
         except DeliveryError as ex:
-            _LOGGER.error("Unable to turn the switch off: %s", ex)
+            _LOGGER.error("%s: Unable to turn the switch off: %s",
+                          self.entity_id, ex)
             return
 
         self._state = 0
+        self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Retrieve latest state."""
