@@ -870,8 +870,10 @@ class MqttAvailability(Entity):
 
         self._availability_sub_state = await async_subscribe_topics(
             self.hass, self._availability_sub_state,
-            {'availability_topic': self._availability_topic},
-            availability_message_received, self._availability_qos)
+            {'availability_topic': {
+                'topic': self._availability_topic,
+                'msg_callback': availability_message_received,
+                'qos': self._availability_qos}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""

@@ -186,8 +186,10 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
             self.async_schedule_update_ha_state()
 
         self._sub_state = await subscription.async_subscribe_topics(
-            self.hass, self._sub_state, {'state_topic': self._state_topic},
-            state_message_received, self._qos)
+            self.hass, self._sub_state,
+            {'state_topic': {'topic': self._state_topic,
+                             'msg_callback': state_message_received,
+                             'qos': self._qos}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""

@@ -7,38 +7,41 @@ https://home-assistant.io/components/mqtt/
 import logging
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import DEFAULT_QOS, MessageCallbackType
+from homeassistant.components.mqtt import DEFAULT_QOS
 from homeassistant.loader import bind_hass
-from homeassistant.helpers.typing import (
-    HomeAssistantType)
+from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
 async def async_subscribe_topics(hass: HomeAssistantType, sub_state: dict,
-                                 new_topics: dict,
-                                 msg_callback: MessageCallbackType,
-                                 qos: int = DEFAULT_QOS,
-                                 encoding: str = 'utf-8'):
+                                 topics: dict):
     """(Re)Subscribe to a set of MQTT topics.
 
     State is kept in sub_state.
     """
-    if sub_state is None:
-        sub_state = {'topics': {}}
-    old_topics = sub_state['topics']
-    for key, sub in list(old_topics.items()):
-        topic = sub[0]
-        unsub = sub[1]
-        if key not in new_topics or topic != new_topics[key]:
+    cur_state = sub_state if sub_state is not None else {}
+    sub_state = {}
+    for key in topics:
+        topic = topics[key].get('topic', None)
+        msg_callback = topics[key].get('msg_callback', None)
+        qos = topics[key].get('qos', DEFAULT_QOS)
+        encoding = topics[key].get('encoding', 'utf-8')
+        topic = (topic, msg_callback, qos, encoding)
+        (cur_topic, unsub) = cur_state.pop(
+            key, ((None, None, None, None), None))
+
+        if topic != cur_topic and topic[0] is not None:
             if unsub is not None:
                 unsub()
-            del old_topics[key]
-    for key, topic in new_topics.items():
-        if key not in old_topics and topic is not None:
-            unsub = await mqtt.async_subscribe(hass, topic, msg_callback, qos)
-            old_topics[key] = (topic, unsub)
+            unsub = await mqtt.async_subscribe(
+                hass, topic[0], topic[1], topic[2], topic[3])
+        sub_state[key] = (topic, unsub)
+
+    for key, (topic, unsub) in list(cur_state.items()):
+        if unsub is not None:
+            unsub()
 
     return sub_state
 
@@ -46,6 +49,6 @@ async def async_subscribe_topics(hass: HomeAssistantType, sub_state: dict,
 @bind_hass
 async def async_unsubscribe_topics(hass: HomeAssistantType, sub_state: dict):
     """Unsubscribe from all MQTT topics managed by async_subscribe_topics."""
-    await async_subscribe_topics(hass, sub_state, {}, None)
+    await async_subscribe_topics(hass, sub_state, {})
 
     return sub_state
