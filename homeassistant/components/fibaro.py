@@ -2,7 +2,7 @@
 Support for the Fibaro devices.
 
 To enable, add the following section to configuration.yaml:
-[fibaro]
+fibaro:
     url: "http://yourfibarohc/api/"
     username: "your@superuseremail.com"
     password: "YourPassword1"
@@ -14,7 +14,7 @@ in HA directly.
 
 For more detailed debugging, you can enable it in the [logger] section of you
 configuration.yaml, like this:
-[logger]
+logger:
     logs:
         homeassistant.components.fibaro: debug
 """
@@ -42,10 +42,6 @@ CONF_PLUGINS = "plugins"
 
 FIBARO_COMPONENTS = [
     'binary_sensor',
-    # 'sensor',
-    # 'light',
-    # 'switch',
-    # 'cover',
 ]
 
 FIBARO_TYPEMAP = {
@@ -69,7 +65,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_URL): cv.string,
+        vol.Required(CONF_URL): cv.url,
         vol.Optional(CONF_PLUGINS, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -103,14 +99,10 @@ class FibaroController():
             _LOGGER.error("Invalid login for Fibaro HC. "
                           "Please check username and password.")
             return False
-        self._read_rooms()
+
+        self._room_map = {room.id: room for room in self._client.rooms.list()}
         self._read_devices()
         return True
-
-    def __del__(self):
-        """Deinitialize the Fibaro Controller."""
-        if self._state_handler:
-            self.disable_state_handler()
 
     def enable_state_handler(self):
         """Start StateHandler thread for monitoring updates."""
@@ -147,7 +139,7 @@ class FibaroController():
                     _LOGGER.warning("Error updating %s data of %s, not found",
                                     property_name,
                                     self._device_map[device_id].ha_id)
-                if self._callbacks.get(device_id, None):
+                if device_id in self._callbacks:
                     callback_set.add(device_id)
         for item in callback_set:
             self._callbacks[item]()
@@ -156,20 +148,12 @@ class FibaroController():
         """Register device with a callback for updates."""
         self._callbacks[device_id] = callback
 
-    def _read_rooms(self):
-        """Read and process the room list."""
-        rooms = self._client.rooms.list()
-        self._room_map = {}
-        for room in rooms:
-            self._room_map[room.id] = room
-        return True
-
     @staticmethod
     def _map_device_to_type(device):
         """Map device to HA device type."""
         # Use our lookup table to identify device type
         device_type = FIBARO_TYPEMAP.get(
-            device.type, FIBARO_TYPEMAP.get(device.baseType, None))
+            device.type, FIBARO_TYPEMAP.get(device.baseType))
 
         # We can also identify device type by its capabilities
         if device_type is None:
@@ -180,8 +164,7 @@ class FibaroController():
             elif 'open' in device.actions:
                 device_type = 'cover'
             elif 'value' in device.properties:
-                if device.properties.value == 'true' or \
-                        device.properties.value == 'false':
+                if device.properties.value in ('true', 'false'):
                     device_type = 'binary_sensor'
                 else:
                     device_type = 'sensor'
@@ -207,9 +190,9 @@ class FibaroController():
                 slugify(room_name), slugify(device.name), device.id)
             self._device_map[device.id] = device
         self.fibaro_devices = defaultdict(list)
-        for _, device in self._device_map.items():
-            if (device.enabled is True) and \
-                    (self._import_plugins is True or device.isPlugin is False):
+        for device in self._device_map.values():
+            if device.enabled and \
+                    (not device.isPlugin or self._import_plugins):
                 device.mapped_type = self._map_device_to_type(device)
                 if device.mapped_type:
                     self.fibaro_devices[device.mapped_type].append(device)
@@ -279,7 +262,7 @@ class FibaroDevice(Entity):
             self.fibaro_device.properties.brightness = level
 
     def set_color(self, red, green, blue, white):
-        """Set the tilt level of Fibaro device."""
+        """Set the color of Fibaro device."""
         color_str = "{},{},{},{}".format(int(red), int(green),
                                          int(blue), int(white))
         self.fibaro_device.properties.color = color_str
@@ -308,7 +291,7 @@ class FibaroDevice(Entity):
             if power:
                 return convert(power, float, 0.0)
         else:
-            return 0
+            return None
 
     @property
     def current_binary_state(self):
@@ -344,8 +327,7 @@ class FibaroDevice(Entity):
                 attr[ATTR_BATTERY_LEVEL] = \
                     int(self.fibaro_device.properties.batteryLevel)
             if 'fibaroAlarmArm' in self.fibaro_device.interfaces:
-                attr[ATTR_ARMED] = True if \
-                    self.fibaro_device.properties.armed else False
+                attr[ATTR_ARMED] = bool(self.fibaro_device.properties.armed)
             if 'power' in self.fibaro_device.interfaces:
                 attr[ATTR_CURRENT_POWER_W] = convert(
                     self.fibaro_device.properties.power, float, 0.0)
