@@ -43,14 +43,14 @@ class TestYaml(unittest.TestCase):
     def test_unhashable_key(self):
         """Test an unhasable key."""
         files = {YAML_CONFIG_FILE: 'message:\n  {{ states.state }}'}
-        with self.assertRaises(HomeAssistantError), \
+        with pytest.raises(HomeAssistantError), \
                 patch_yaml_files(files):
             load_yaml_config_file(YAML_CONFIG_FILE)
 
     def test_no_key(self):
         """Test item without a key."""
         files = {YAML_CONFIG_FILE: 'a: a\nnokeyhere'}
-        with self.assertRaises(HomeAssistantError), \
+        with pytest.raises(HomeAssistantError), \
                 patch_yaml_files(files):
             yaml.load_yaml(YAML_CONFIG_FILE)
 
@@ -73,7 +73,7 @@ class TestYaml(unittest.TestCase):
     def test_invalid_environment_variable(self):
         """Test config file with no environment variable sat."""
         conf = "password: !env_var PASSWORD"
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             with io.StringIO(conf) as file:
                 yaml.yaml.safe_load(file)
 
@@ -261,7 +261,8 @@ class TestYaml(unittest.TestCase):
     def test_load_yaml_encoding_error(self, mock_open):
         """Test raising a UnicodeDecodeError."""
         mock_open.side_effect = UnicodeDecodeError('', b'', 1, 0, '')
-        self.assertRaises(HomeAssistantError, yaml.load_yaml, 'test')
+        with pytest.raises(HomeAssistantError):
+            yaml.load_yaml('test')
 
     def test_dump(self):
         """The that the dump method returns empty None values."""
@@ -332,12 +333,12 @@ class TestSecrets(unittest.TestCase):
     def test_secrets_from_yaml(self):
         """Did secrets load ok."""
         expected = {'api_password': 'pwhttp'}
-        self.assertEqual(expected, self._yaml['http'])
+        assert expected == self._yaml['http']
 
         expected = {
             'username': 'un1',
             'password': 'pw1'}
-        self.assertEqual(expected, self._yaml['component'])
+        assert expected == self._yaml['component']
 
     def test_secrets_from_parent_folder(self):
         """Test loading secrets from parent foler."""
@@ -350,7 +351,7 @@ class TestSecrets(unittest.TestCase):
                                '  password: !secret comp1_pw\n'
                                '')
 
-        self.assertEqual(expected, self._yaml['http'])
+        assert expected == self._yaml['http']
 
     def test_secret_overrides_parent(self):
         """Test loading current directory secret overrides the parent."""
@@ -365,13 +366,13 @@ class TestSecrets(unittest.TestCase):
                                '  password: !secret comp1_pw\n'
                                '')
 
-        self.assertEqual(expected, self._yaml['http'])
+        assert expected == self._yaml['http']
 
     def test_secrets_from_unrelated_fails(self):
         """Test loading secrets from unrelated folder fails."""
         load_yaml(os.path.join(self._unrelated_path, yaml.SECRET_YAML),
                   'test: failure')
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
                       'http:\n'
                       '  api_password: !secret test')
@@ -380,12 +381,12 @@ class TestSecrets(unittest.TestCase):
         """Test keyring fallback & get_password."""
         yaml.keyring = None  # Ensure its not there
         yaml_str = 'http:\n  api_password: !secret http_pw_keyring'
-        with self.assertRaises(yaml.HomeAssistantError):
+        with pytest.raises(yaml.HomeAssistantError):
             load_yaml(self._yaml_path, yaml_str)
 
         yaml.keyring = FakeKeyring({'http_pw_keyring': 'yeah'})
         _yaml = load_yaml(self._yaml_path, yaml_str)
-        self.assertEqual({'http': {'api_password': 'yeah'}}, _yaml)
+        assert {'http': {'api_password': 'yeah'}} == _yaml
 
     @patch.object(yaml, 'credstash')
     def test_secrets_credstash(self, mock_credstash):
@@ -395,11 +396,11 @@ class TestSecrets(unittest.TestCase):
         _yaml = load_yaml(self._yaml_path, yaml_str)
         log = logging.getLogger()
         log.error(_yaml['http'])
-        self.assertEqual({'api_password': 'yeah'}, _yaml['http'])
+        assert {'api_password': 'yeah'} == _yaml['http']
 
     def test_secrets_logger_removed(self):
         """Ensure logger: debug was removed."""
-        with self.assertRaises(yaml.HomeAssistantError):
+        with pytest.raises(yaml.HomeAssistantError):
             load_yaml(self._yaml_path, 'api_password: !secret logger')
 
     @patch('homeassistant.util.yaml._LOGGER.error')
@@ -418,7 +419,7 @@ class TestSecrets(unittest.TestCase):
                   '  comp1_un: un1\n'
                   '  comp1_pw: pw1\n')
         yaml.clear_secret_cache()
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             load_yaml(self._yaml_path,
                       'http:\n'
                       '  api_password: !secret http_pw\n'

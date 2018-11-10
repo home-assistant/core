@@ -43,8 +43,8 @@ class TestRMVtransportSensor(unittest.TestCase):
         """Test minimal TransportNSW configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG)
         state = self.hass.states.get('sensor.next_bus')
-        self.assertEqual(state.state, '16')
-        self.assertEqual(state.attributes['stop_id'], '209516')
-        self.assertEqual(state.attributes['route'], '199')
-        self.assertEqual(state.attributes['delay'], 6)
-        self.assertEqual(state.attributes['real_time'], 'y')
+        assert state.state == '16'
+        assert state.attributes['stop_id'] == '209516'
+        assert state.attributes['route'] == '199'
+        assert state.attributes['delay'] == 6
+        assert state.attributes['real_time'] == 'y'

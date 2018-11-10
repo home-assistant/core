@@ -4,18 +4,15 @@ Support to trigger Maker IFTTT recipes.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ifttt/
 """
-from ipaddress import ip_address
 import json
 import logging
-from urllib.parse import urlparse
 
 import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.util.network import is_local
+from homeassistant.helpers import config_entry_flow
 
 REQUIREMENTS = ['pyfttt==0.3']
 DEPENDENCIES = ['webhook']
@@ -100,43 +97,11 @@ async def async_unload_entry(hass, entry):
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     return True
 
-
-@config_entries.HANDLERS.register(DOMAIN)
-class ConfigFlow(config_entries.ConfigFlow):
-    """Handle an IFTTT config flow."""
-
-    async def async_step_user(self, user_input=None):
-        """Handle a user initiated set up flow."""
-        if self._async_current_entries():
-            return self.async_abort(reason='one_instance_allowed')
-
-        try:
-            url_parts = urlparse(self.hass.config.api.base_url)
-
-            if is_local(ip_address(url_parts.hostname)):
-                return self.async_abort(reason='not_internet_accessible')
-        except ValueError:
-            # If it's not an IP address, it's very likely publicly accessible
-            pass
-
-        if user_input is None:
-            return self.async_show_form(
-                step_id='user',
-            )
-
-        webhook_id = self.hass.components.webhook.async_generate_id()
-        webhook_url = \
-            self.hass.components.webhook.async_generate_url(webhook_id)
-
-        return self.async_create_entry(
-            title='IFTTT Webhook',
-            data={
-                CONF_WEBHOOK_ID: webhook_id
-            },
-            description_placeholders={
-                'applet_url': 'https://ifttt.com/maker_webhooks',
-                'webhook_url': webhook_url,
-                'docs_url':
-                'https://www.home-assistant.io/components/ifttt/'
-            }
-        )
+config_entry_flow.register_webhook_flow(
+    DOMAIN,
+    'IFTTT Webhook',
+    {
+        'applet_url': 'https://ifttt.com/maker_webhooks',
+        'docs_url': 'https://www.home-assistant.io/components/ifttt/'
+    }
+)

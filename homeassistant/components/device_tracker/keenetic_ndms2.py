@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_PASSWORD, CONF_USERNAME
 )
 
-REQUIREMENTS = ['ndms2_client==0.0.4']
+REQUIREMENTS = ['ndms2_client==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

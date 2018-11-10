@@ -134,8 +134,7 @@ class MjpegCamera(Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         # aiohttp don't support DigestAuth -> Fallback
         if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-            await super().handle_async_mjpeg_stream(request)
-            return
+            return await super().handle_async_mjpeg_stream(request)
 
         # connect to stream
         websession = async_get_clientsession(self.hass)

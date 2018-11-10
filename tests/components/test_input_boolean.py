@@ -69,38 +69,34 @@ class TestInputBoolean(unittest.TestCase):
         ]
 
         for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+            assert not setup_component(self.hass, DOMAIN, {DOMAIN: cfg})
 
     def test_methods(self):
         """Test is_on, turn_on, turn_off methods."""
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+        assert setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_1': None,
-        }}))
+        }})
         entity_id = 'input_boolean.test_1'
 
-        self.assertFalse(
-            is_on(self.hass, entity_id))
+        assert not is_on(self.hass, entity_id)
 
         turn_on(self.hass, entity_id)
 
         self.hass.block_till_done()
 
-        self.assertTrue(
-            is_on(self.hass, entity_id))
+        assert is_on(self.hass, entity_id)
 
         turn_off(self.hass, entity_id)
 
         self.hass.block_till_done()
 
-        self.assertFalse(
-            is_on(self.hass, entity_id))
+        assert not is_on(self.hass, entity_id)
 
         toggle(self.hass, entity_id)
 
         self.hass.block_till_done()
 
-        self.assertTrue(is_on(self.hass, entity_id))
+        assert is_on(self.hass, entity_id)
 
     def test_config_options(self):
         """Test configuration options."""
@@ -108,33 +104,33 @@ class TestInputBoolean(unittest.TestCase):
 
         _LOGGER.debug('ENTITIES @ start: %s', self.hass.states.entity_ids())
 
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+        assert setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_1': None,
             'test_2': {
                 'name': 'Hello World',
                 'icon': 'mdi:work',
                 'initial': True,
             },
-        }}))
+        }})
 
         _LOGGER.debug('ENTITIES: %s', self.hass.states.entity_ids())
 
-        self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
+        assert count_start + 2 == len(self.hass.states.entity_ids())
 
         state_1 = self.hass.states.get('input_boolean.test_1')
         state_2 = self.hass.states.get('input_boolean.test_2')
 
-        self.assertIsNotNone(state_1)
-        self.assertIsNotNone(state_2)
+        assert state_1 is not None
+        assert state_2 is not None
 
-        self.assertEqual(STATE_OFF, state_1.state)
-        self.assertNotIn(ATTR_ICON, state_1.attributes)
-        self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
+        assert STATE_OFF == state_1.state
+        assert ATTR_ICON not in state_1.attributes
+        assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-        self.assertEqual(STATE_ON, state_2.state)
-        self.assertEqual('Hello World',
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME))
-        self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
+        assert STATE_ON == state_2.state
+        assert 'Hello World' == \
+            state_2.attributes.get(ATTR_FRIENDLY_NAME)
+        assert 'mdi:work' == state_2.attributes.get(ATTR_ICON)
 
 
 @asyncio.coroutine
