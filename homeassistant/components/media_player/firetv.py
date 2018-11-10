@@ -53,11 +53,11 @@ PACKAGE_SETTINGS = "com.amazon.tv.settings"
 # pylint: disable=protected-access
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the FireTV platform."""
-    host = '{0}:{1}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
-    name = config.get(CONF_NAME)
-    adbkey = config.get(CONF_ADBKEY)
-    get_source = config.get(CONF_GET_SOURCE)
-    get_sources = config.get(CONF_GET_SOURCES)
+    host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
+    name = config[CONF_NAME]
+    adbkey = config[CONF_ADBKEY]
+    get_source = config[CONF_GET_SOURCE]
+    get_sources = config[CONF_GET_SOURCES]
 
     device = FireTVDevice(host, name, adbkey, get_source, get_sources)
     adb_log = " using adbkey='{0}'".format(adbkey) if adbkey else ""
