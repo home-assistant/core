@@ -92,9 +92,44 @@ class MqttSensor(MqttAvailability, Entity):
                 'unique_id': slugify(name),
                 'state_topic': conf_state_topic,
                 'device_class': 'humidity',
-                'icon': 'mdi:temperature-celsius',
+                'icon': 'mdi:water-percent',
                 'unit_of_measurement': '%',
                 'value_template': "{{ value_json['SI7021'].Humidity | round(2)}}"
+            }
+            self.hass.async_create_task(
+                self.hass.services.async_call('mqtt', 'publish', {
+                    'topic': configuration_topic,
+                    'payload': json.dumps(j_payload)
+                })
+            )
+        elif sensor == "AM2301":
+            configuration_topic = "core_homeassistant/sensor/" + topic + "_9/config"
+            name = 'Temperatura ' + topic[-6:]
+            j_payload = {
+                'name': name,
+                'unique_id': slugify(name),
+                'state_topic': conf_state_topic,
+                'device_class': 'temperature',
+                'icon': 'mdi:temperature-celsius',
+                'unit_of_measurement': '°C',
+                'value_template': "{{ value_json['AM2301'].Temperature | round(2)}}"
+            }
+            self.hass.async_create_task(
+                self.hass.services.async_call('mqtt', 'publish', {
+                    'topic': configuration_topic,
+                    'payload': json.dumps(j_payload)
+                })
+            )
+            configuration_topic = "core_homeassistant/sensor/" + topic + "_10/config"
+            name = 'Wilgotność ' + topic[-6:]
+            j_payload = {
+                'name': name,
+                'unique_id': slugify(name),
+                'state_topic': conf_state_topic,
+                'device_class': 'humidity',
+                'icon': 'mdi:water-percent',
+                'unit_of_measurement': '%',
+                'value_template': "{{ value_json['AM2301'].Humidity | round(2)}}"
             }
             self.hass.async_create_task(
                 self.hass.services.async_call('mqtt', 'publish', {
@@ -244,7 +279,7 @@ class MqttSensor(MqttAvailability, Entity):
                             d["Sensors"] = sensors
                             # since we have message about sensors, we can try to discover this sensor in home assistant
                             for s, v in sensors.items():
-                                if s in ('SI7021', 'ENERGY'):
+                                if s in ('SI7021', 'ENERGY', 'AM2301'):
                                     self.discover_sensors(s, topic)
                 if device_not_exist:
                     MQTT_DEVICES.append(
