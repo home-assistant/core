@@ -267,7 +267,7 @@ concord232==0.15
 construct==2.9.45
 
 # homeassistant.scripts.credstash
-# credstash==1.14.0
+# credstash==1.15.0
 
 # homeassistant.components.sensor.crimereports
 crimereports==1.0.0
