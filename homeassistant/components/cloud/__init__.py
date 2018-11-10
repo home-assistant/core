@@ -122,7 +122,7 @@ class Cloud:
         self.hass = hass
         self.mode = mode
         self.alexa_config = alexa
-        self._google_actions = google_actions
+        self.google_actions_user_conf = google_actions
         self._gactions_config = None
         self._prefs = None
         self.id_token = None
@@ -180,7 +180,7 @@ class Cloud:
     def gactions_config(self):
         """Return the Google Assistant config."""
         if self._gactions_config is None:
-            conf = self._google_actions
+            conf = self.google_actions_user_conf
 
             def should_expose(entity):
                 """If an entity should be exposed."""

@@ -74,7 +74,7 @@ def _create_index(engine, table_name, index_name):
         if 'already exists' not in str(err).lower():
             raise
 
-        _LOGGER.warning('Index %s already exists on %s, continueing',
+        _LOGGER.warning('Index %s already exists on %s, continuing',
                         index_name, table_name)
 
     _LOGGER.debug("Finished creating %s", index_name)
@@ -157,7 +157,7 @@ def _add_columns(engine, table_name, columns_def):
         return
     except OperationalError:
         # Some engines support adding all columns at once,
-        # this error is when they dont'
+        # this error is when they don't
         _LOGGER.info('Unable to use quick column add. Adding 1 by 1.')
 
     for column_def in columns_def:

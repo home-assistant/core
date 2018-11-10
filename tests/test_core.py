@@ -253,19 +253,17 @@ class TestEvent(unittest.TestCase):
             for _ in range(2)
         ]
 
-        self.assertEqual(event1, event2)
+        assert event1 == event2
 
     def test_repr(self):
         """Test that repr method works."""
-        self.assertEqual(
-            "<Event TestEvent[L]>",
-            str(ha.Event("TestEvent")))
+        assert "<Event TestEvent[L]>" == \
+            str(ha.Event("TestEvent"))
 
-        self.assertEqual(
-            "<Event TestEvent[R]: beer=nice>",
+        assert "<Event TestEvent[R]: beer=nice>" == \
             str(ha.Event("TestEvent",
                          {"beer": "nice"},
-                         ha.EventOrigin.remote)))
+                         ha.EventOrigin.remote))
 
     def test_as_dict(self):
         """Test as dictionary."""
@@ -284,7 +282,7 @@ class TestEvent(unittest.TestCase):
                 'user_id': event.context.user_id,
             },
         }
-        self.assertEqual(expected, event.as_dict())
+        assert expected == event.as_dict()
 
 
 class TestEventBus(unittest.TestCase):
@@ -310,11 +308,11 @@ class TestEventBus(unittest.TestCase):
 
         unsub = self.bus.listen('test', listener)
 
-        self.assertEqual(old_count + 1, len(self.bus.listeners))
+        assert old_count + 1 == len(self.bus.listeners)
 
         # Remove listener
         unsub()
-        self.assertEqual(old_count, len(self.bus.listeners))
+        assert old_count == len(self.bus.listeners)
 
         # Should do nothing now
         unsub()
@@ -357,7 +355,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire('test_event')
 
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
+        assert 1 == len(runs)
 
     def test_listen_once_event_with_coroutine(self):
         """Test listen_once_event method."""
@@ -374,7 +372,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire('test_event')
 
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
+        assert 1 == len(runs)
 
     def test_listen_once_event_with_thread(self):
         """Test listen_once_event method."""
@@ -390,7 +388,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire('test_event')
 
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
+        assert 1 == len(runs)
 
     def test_thread_event_listener(self):
         """Test thread event listener."""
@@ -436,59 +434,56 @@ class TestState(unittest.TestCase):
 
     def test_init(self):
         """Test state.init."""
-        self.assertRaises(
-            InvalidEntityFormatError, ha.State,
-            'invalid_entity_format', 'test_state')
+        with pytest.raises(InvalidEntityFormatError):
+            ha.State('invalid_entity_format', 'test_state')
 
-        self.assertRaises(
-            InvalidStateError, ha.State,
-            'domain.long_state', 't' * 256)
+        with pytest.raises(InvalidStateError):
+            ha.State('domain.long_state', 't' * 256)
 
     def test_domain(self):
         """Test domain."""
         state = ha.State('some_domain.hello', 'world')
-        self.assertEqual('some_domain', state.domain)
+        assert 'some_domain' == state.domain
 
     def test_object_id(self):
         """Test object ID."""
         state = ha.State('domain.hello', 'world')
-        self.assertEqual('hello', state.object_id)
+        assert 'hello' == state.object_id
 
     def test_name_if_no_friendly_name_attr(self):
         """Test if there is no friendly name."""
         state = ha.State('domain.hello_world', 'world')
-        self.assertEqual('hello world', state.name)
+        assert 'hello world' == state.name
 
     def test_name_if_friendly_name_attr(self):
         """Test if there is a friendly name."""
         name = 'Some Unique Name'
         state = ha.State('domain.hello_world', 'world',
                          {ATTR_FRIENDLY_NAME: name})
-        self.assertEqual(name, state.name)
+        assert name == state.name
 
     def test_dict_conversion(self):
         """Test conversion of dict."""
         state = ha.State('domain.hello', 'world', {'some': 'attr'})
-        self.assertEqual(state, ha.State.from_dict(state.as_dict()))
+        assert state == ha.State.from_dict(state.as_dict())
 
     def test_dict_conversion_with_wrong_data(self):
         """Test conversion with wrong data."""
-        self.assertIsNone(ha.State.from_dict(None))
-        self.assertIsNone(ha.State.from_dict({'state': 'yes'}))
-        self.assertIsNone(ha.State.from_dict({'entity_id': 'yes'}))
+        assert ha.State.from_dict(None) is None
+        assert ha.State.from_dict({'state': 'yes'}) is None
+        assert ha.State.from_dict({'entity_id': 'yes'}) is None
 
     def test_repr(self):
         """Test state.repr."""
-        self.assertEqual("<state happy.happy=on @ 1984-12-08T12:00:00+00:00>",
-                         str(ha.State(
-                             "happy.happy", "on",
-                             last_changed=datetime(1984, 12, 8, 12, 0, 0))))
+        assert "<state happy.happy=on @ 1984-12-08T12:00:00+00:00>" == \
+            str(ha.State(
+                "happy.happy", "on",
+                last_changed=datetime(1984, 12, 8, 12, 0, 0)))
 
-        self.assertEqual(
-            "<state happy.happy=on; brightness=144 @ "
-            "1984-12-08T12:00:00+00:00>",
+        assert "<state happy.happy=on; brightness=144 @ " \
+            "1984-12-08T12:00:00+00:00>" == \
             str(ha.State("happy.happy", "on", {"brightness": 144},
-                         datetime(1984, 12, 8, 12, 0, 0))))
+                         datetime(1984, 12, 8, 12, 0, 0)))
 
 
 class TestStateMachine(unittest.TestCase):
@@ -509,25 +504,25 @@ class TestStateMachine(unittest.TestCase):
 
     def test_is_state(self):
         """Test is_state method."""
-        self.assertTrue(self.states.is_state('light.Bowl', 'on'))
-        self.assertFalse(self.states.is_state('light.Bowl', 'off'))
-        self.assertFalse(self.states.is_state('light.Non_existing', 'on'))
+        assert self.states.is_state('light.Bowl', 'on')
+        assert not self.states.is_state('light.Bowl', 'off')
+        assert not self.states.is_state('light.Non_existing', 'on')
 
     def test_entity_ids(self):
         """Test get_entity_ids method."""
         ent_ids = self.states.entity_ids()
-        self.assertEqual(2, len(ent_ids))
-        self.assertTrue('light.bowl' in ent_ids)
-        self.assertTrue('switch.ac' in ent_ids)
+        assert 2 == len(ent_ids)
+        assert 'light.bowl' in ent_ids
+        assert 'switch.ac' in ent_ids
 
         ent_ids = self.states.entity_ids('light')
-        self.assertEqual(1, len(ent_ids))
-        self.assertTrue('light.bowl' in ent_ids)
+        assert 1 == len(ent_ids)
+        assert 'light.bowl' in ent_ids
 
     def test_all(self):
         """Test everything."""
         states = sorted(state.entity_id for state in self.states.all())
-        self.assertEqual(['light.bowl', 'switch.ac'], states)
+        assert ['light.bowl', 'switch.ac'] == states
 
     def test_remove(self):
         """Test remove method."""
@@ -539,21 +534,21 @@ class TestStateMachine(unittest.TestCase):
 
         self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
-        self.assertIn('light.bowl', self.states.entity_ids())
-        self.assertTrue(self.states.remove('light.bowl'))
+        assert 'light.bowl' in self.states.entity_ids()
+        assert self.states.remove('light.bowl')
         self.hass.block_till_done()
 
-        self.assertNotIn('light.bowl', self.states.entity_ids())
-        self.assertEqual(1, len(events))
-        self.assertEqual('light.bowl', events[0].data.get('entity_id'))
-        self.assertIsNotNone(events[0].data.get('old_state'))
-        self.assertEqual('light.bowl', events[0].data['old_state'].entity_id)
-        self.assertIsNone(events[0].data.get('new_state'))
+        assert 'light.bowl' not in self.states.entity_ids()
+        assert 1 == len(events)
+        assert 'light.bowl' == events[0].data.get('entity_id')
+        assert events[0].data.get('old_state') is not None
+        assert 'light.bowl' == events[0].data['old_state'].entity_id
+        assert events[0].data.get('new_state') is None
 
         # If it does not exist, we should get False
-        self.assertFalse(self.states.remove('light.Bowl'))
+        assert not self.states.remove('light.Bowl')
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
     def test_case_insensitivty(self):
         """Test insensitivty."""
@@ -568,8 +563,8 @@ class TestStateMachine(unittest.TestCase):
         self.states.set('light.BOWL', 'off')
         self.hass.block_till_done()
 
-        self.assertTrue(self.states.is_state('light.bowl', 'off'))
-        self.assertEqual(1, len(runs))
+        assert self.states.is_state('light.bowl', 'off')
+        assert 1 == len(runs)
 
     def test_last_changed_not_updated_on_same_state(self):
         """Test to not update the existing, same state."""
@@ -597,11 +592,11 @@ class TestStateMachine(unittest.TestCase):
 
         self.states.set('light.bowl', 'on')
         self.hass.block_till_done()
-        self.assertEqual(0, len(events))
+        assert 0 == len(events)
 
         self.states.set('light.bowl', 'on', None, True)
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
 
 def test_service_call_repr():
@@ -647,12 +642,9 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_has_service(self):
         """Test has_service method."""
-        self.assertTrue(
-            self.services.has_service("tesT_domaiN", "tesT_servicE"))
-        self.assertFalse(
-            self.services.has_service("test_domain", "non_existing"))
-        self.assertFalse(
-            self.services.has_service("non_existing", "test_service"))
+        assert self.services.has_service("tesT_domaiN", "tesT_servicE")
+        assert not self.services.has_service("test_domain", "non_existing")
+        assert not self.services.has_service("non_existing", "test_service")
 
     def test_services(self):
         """Test services."""
@@ -675,9 +667,9 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data['domain'] == 'test_domain'
         assert self.calls_register[-1].data['service'] == 'register_calls'
 
-        self.assertTrue(
-            self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
-        self.assertEqual(1, len(calls))
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
+        assert 1 == len(calls)
 
     def test_call_non_existing_with_blocking(self):
         """Test non-existing with blocking."""
@@ -706,10 +698,10 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data['domain'] == 'test_domain'
         assert self.calls_register[-1].data['service'] == 'register_calls'
 
-        self.assertTrue(
-            self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
         self.hass.block_till_done()
-        self.assertEqual(1, len(calls))
+        assert 1 == len(calls)
 
     def test_callback_service(self):
         """Test registering and calling an async service."""
@@ -728,10 +720,10 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data['domain'] == 'test_domain'
         assert self.calls_register[-1].data['service'] == 'register_calls'
 
-        self.assertTrue(
-            self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
         self.hass.block_till_done()
-        self.assertEqual(1, len(calls))
+        assert 1 == len(calls)
 
     def test_remove_service(self):
         """Test remove service."""
@@ -778,19 +770,19 @@ class TestConfig(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.config = ha.Config()
-        self.assertIsNone(self.config.config_dir)
+        assert self.config.config_dir is None
 
     def test_path_with_file(self):
         """Test get_config_path method."""
         self.config.config_dir = '/tmp/ha-config'
-        self.assertEqual("/tmp/ha-config/test.conf",
-                         self.config.path("test.conf"))
+        assert "/tmp/ha-config/test.conf" == \
+            self.config.path("test.conf")
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
         self.config.config_dir = '/tmp/ha-config'
-        self.assertEqual("/tmp/ha-config/dir/test.conf",
-                         self.config.path("dir", "test.conf"))
+        assert "/tmp/ha-config/dir/test.conf" == \
+            self.config.path("dir", "test.conf")
 
     def test_as_dict(self):
         """Test as dict."""
@@ -808,7 +800,7 @@ class TestConfig(unittest.TestCase):
             'version': __version__,
         }
 
-        self.assertEqual(expected, self.config.as_dict())
+        assert expected == self.config.as_dict()
 
     def test_is_allowed_path(self):
         """Test is_allowed_path method."""
@@ -843,7 +835,7 @@ class TestConfig(unittest.TestCase):
             for path in unvalid:
                 assert not self.config.is_allowed_path(path)
 
-            with self.assertRaises(AssertionError):
+            with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
 
 

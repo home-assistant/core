@@ -20,7 +20,7 @@ async def test_flow_works(hass, aioclient_mock):
 
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
-    await flow.async_step_init()
+    await flow.async_step_user()
     await flow.async_step_link(user_input={})
     result = await flow.async_step_options(
         user_input={'allow_clip_sensor': True, 'allow_deconz_groups': True})
@@ -45,7 +45,7 @@ async def test_flow_already_registered_bridge(hass):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
     assert result['type'] == 'abort'
 
 
@@ -55,7 +55,7 @@ async def test_flow_no_discovered_bridges(hass, aioclient_mock):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
     assert result['type'] == 'abort'
 
 
@@ -67,7 +67,7 @@ async def test_flow_one_bridge_discovered(hass, aioclient_mock):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
 
@@ -81,15 +81,30 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
     assert result['type'] == 'form'
-    assert result['step_id'] == 'init'
+    assert result['step_id'] == 'user'
 
     with pytest.raises(vol.Invalid):
         assert result['data_schema']({'host': '0.0.0.0'})
 
     result['data_schema']({'host': '1.2.3.4'})
     result['data_schema']({'host': '5.6.7.8'})
+
+
+async def test_flow_two_bridges_selection(hass, aioclient_mock):
+    """Test config flow selection of one of two bridges."""
+    flow = config_flow.DeconzFlowHandler()
+    flow.hass = hass
+    flow.bridges = [
+        {'bridgeid': 'id1', 'host': '1.2.3.4', 'port': 80},
+        {'bridgeid': 'id2', 'host': '5.6.7.8', 'port': 80}
+    ]
+
+    result = await flow.async_step_user(user_input={'host': '1.2.3.4'})
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'link'
+    assert flow.deconz_config['host'] == '1.2.3.4'
 
 
 async def test_link_no_api_key(hass, aioclient_mock):

@@ -21,9 +21,9 @@ class TestScene(unittest.TestCase):
         test_light = loader.get_component(self.hass, 'light.test')
         test_light.init()
 
-        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
+        assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {'platform': 'test'}
-        }))
+        })
 
         self.light_1, self.light_2 = test_light.DEVICES[0:2]
 
@@ -32,8 +32,8 @@ class TestScene(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertFalse(self.light_1.is_on)
-        self.assertFalse(self.light_2.is_on)
+        assert not self.light_1.is_on
+        assert not self.light_2.is_on
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -60,7 +60,7 @@ class TestScene(unittest.TestCase):
             'state': 'on',
             'brightness': 100,
         }
-        self.assertTrue(setup_component(self.hass, scene.DOMAIN, {
+        assert setup_component(self.hass, scene.DOMAIN, {
             'scene': [{
                 'name': 'test',
                 'entities': {
@@ -68,17 +68,15 @@ class TestScene(unittest.TestCase):
                     self.light_2.entity_id: entity_state,
                 }
             }]
-        }))
+        })
 
         common.activate(self.hass, 'scene.test')
         self.hass.block_till_done()
 
-        self.assertTrue(self.light_1.is_on)
-        self.assertTrue(self.light_2.is_on)
-        self.assertEqual(
-            100, self.light_1.last_call('turn_on')[1].get('brightness'))
-        self.assertEqual(
-            100, self.light_2.last_call('turn_on')[1].get('brightness'))
+        assert self.light_1.is_on
+        assert self.light_2.is_on
+        assert 100 == self.light_1.last_call('turn_on')[1].get('brightness')
+        assert 100 == self.light_2.last_call('turn_on')[1].get('brightness')
 
     def test_config_yaml_bool(self):
         """Test parsing of booleans in yaml config."""
@@ -95,18 +93,17 @@ class TestScene(unittest.TestCase):
         with io.StringIO(config) as file:
             doc = yaml.yaml.safe_load(file)
 
-        self.assertTrue(setup_component(self.hass, scene.DOMAIN, doc))
+        assert setup_component(self.hass, scene.DOMAIN, doc)
         common.activate(self.hass, 'scene.test')
         self.hass.block_till_done()
 
-        self.assertTrue(self.light_1.is_on)
-        self.assertTrue(self.light_2.is_on)
-        self.assertEqual(
-            100, self.light_2.last_call('turn_on')[1].get('brightness'))
+        assert self.light_1.is_on
+        assert self.light_2.is_on
+        assert 100 == self.light_2.last_call('turn_on')[1].get('brightness')
 
     def test_activate_scene(self):
         """Test active scene."""
-        self.assertTrue(setup_component(self.hass, scene.DOMAIN, {
+        assert setup_component(self.hass, scene.DOMAIN, {
             'scene': [{
                 'name': 'test',
                 'entities': {
@@ -117,12 +114,11 @@ class TestScene(unittest.TestCase):
                     }
                 }
             }]
-        }))
+        })
 
         common.activate(self.hass, 'scene.test')
         self.hass.block_till_done()
 
-        self.assertTrue(self.light_1.is_on)
-        self.assertTrue(self.light_2.is_on)
-        self.assertEqual(
-            100, self.light_2.last_call('turn_on')[1].get('brightness'))
+        assert self.light_1.is_on
+        assert self.light_2.is_on
+        assert 100 == self.light_2.last_call('turn_on')[1].get('brightness')

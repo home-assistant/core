@@ -216,7 +216,7 @@ class OpenUV:
             if data.get('from_time') and data.get('to_time'):
                 self.data[DATA_PROTECTION_WINDOW] = data
             else:
-                _LOGGER.error(
+                _LOGGER.debug(
                     'No valid protection window data for this location')
                 self.data[DATA_PROTECTION_WINDOW] = {}
 

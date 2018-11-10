@@ -6,19 +6,18 @@ https://home-assistant.io/components/vacuum.roomba/
 """
 import asyncio
 import logging
-import voluptuous as vol
 
 import async_timeout
+import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    VacuumDevice, PLATFORM_SCHEMA, SUPPORT_BATTERY, SUPPORT_FAN_SPEED,
-    SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS,
-    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    PLATFORM_SCHEMA, SUPPORT_BATTERY, SUPPORT_FAN_SPEED, SUPPORT_PAUSE,
+    SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VacuumDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
 
 REQUIREMENTS = ['roombapy==1.3.1']
 
@@ -68,8 +67,8 @@ SUPPORT_ROOMBA = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
 SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the iRobot Roomba vacuum cleaner platform."""
     from roomba import Roomba
     if PLATFORM not in hass.data:
@@ -82,16 +81,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     certificate = config.get(CONF_CERT)
     continuous = config.get(CONF_CONTINUOUS)
 
-    # Create handler
     roomba = Roomba(
-        address=host,
-        blid=username,
-        password=password,
-        cert_name=certificate,
-        continuous=continuous
-    )
-    _LOGGER.info("Initializing communication with host %s (username: %s)",
-                 host, username)
+        address=host, blid=username, password=password, cert_name=certificate,
+        continuous=continuous)
+    _LOGGER.debug("Initializing communication with host %s", host)
 
     try:
         with async_timeout.timeout(9):
@@ -102,7 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     roomba_vac = RoombaVacuum(name, roomba)
     hass.data[PLATFORM][host] = roomba_vac
 
-    async_add_entities([roomba_vac], update_before_add=True)
+    async_add_entities([roomba_vac], True)
 
 
 class RoombaVacuum(VacuumDevice):
@@ -248,8 +241,7 @@ class RoombaVacuum(VacuumDevice):
         """Fetch state from the device."""
         # No data, no update
         if not self.vacuum.master_state:
-            _LOGGER.debug("Roomba %s has no data yet. Skip update.",
-                          self.name)
+            _LOGGER.debug("Roomba %s has no data yet. Skip update", self.name)
             return
         state = self.vacuum.master_state.get('state', {}).get('reported', {})
         _LOGGER.debug("Got new state from the vacuum: %s", state)
