@@ -15,7 +15,10 @@ from homeassistant.helpers import entityfilter
 
 from tests.common import async_mock_service
 
-DEFAULT_CONFIG = smart_home.Config(should_expose=lambda entity_id: True)
+DEFAULT_CONFIG = smart_home.Config(
+    endpoint=None,
+    async_get_access_token=None,
+    should_expose=lambda entity_id: True)
 
 
 @pytest.fixture
@@ -940,12 +943,15 @@ async def test_exclude_filters(hass):
     hass.states.async_set(
         'cover.deny', 'off', {'friendly_name': "Blocked cover"})
 
-    config = smart_home.Config(should_expose=entityfilter.generate_filter(
-        include_domains=[],
-        include_entities=[],
-        exclude_domains=['script'],
-        exclude_entities=['cover.deny'],
-    ))
+    config = smart_home.Config(
+        endpoint=None,
+        async_get_access_token=None,
+        should_expose=entityfilter.generate_filter(
+            include_domains=[],
+            include_entities=[],
+            exclude_domains=['script'],
+            exclude_entities=['cover.deny'],
+        ))
 
     msg = await smart_home.async_handle_message(hass, config, request)
     await hass.async_block_till_done()
@@ -972,12 +978,15 @@ async def test_include_filters(hass):
     hass.states.async_set(
         'group.allow', 'off', {'friendly_name': "Allowed group"})
 
-    config = smart_home.Config(should_expose=entityfilter.generate_filter(
-        include_domains=['automation', 'group'],
-        include_entities=['script.deny'],
-        exclude_domains=[],
-        exclude_entities=[],
-    ))
+    config = smart_home.Config(
+        endpoint=None,
+        async_get_access_token=None,
+        should_expose=entityfilter.generate_filter(
+            include_domains=['automation', 'group'],
+            include_entities=['script.deny'],
+            exclude_domains=[],
+            exclude_entities=[],
+        ))
 
     msg = await smart_home.async_handle_message(hass, config, request)
     await hass.async_block_till_done()
@@ -998,12 +1007,15 @@ async def test_never_exposed_entities(hass):
     hass.states.async_set(
         'group.allow', 'off', {'friendly_name': "Allowed group"})
 
-    config = smart_home.Config(should_expose=entityfilter.generate_filter(
-        include_domains=['group'],
-        include_entities=[],
-        exclude_domains=[],
-        exclude_entities=[],
-    ))
+    config = smart_home.Config(
+        endpoint=None,
+        async_get_access_token=None,
+        should_expose=entityfilter.generate_filter(
+            include_domains=['group'],
+            include_entities=[],
+            exclude_domains=[],
+            exclude_entities=[],
+        ))
 
     msg = await smart_home.async_handle_message(hass, config, request)
     await hass.async_block_till_done()
@@ -1367,6 +1379,8 @@ async def test_entity_config(hass):
         'light.test_1', 'on', {'friendly_name': "Test light 1"})
 
     config = smart_home.Config(
+        endpoint=None,
+        async_get_access_token=None,
         should_expose=lambda entity_id: True,
         entity_config={
             'light.test_1': {

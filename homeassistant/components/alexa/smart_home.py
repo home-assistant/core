@@ -1017,9 +1017,6 @@ async def async_enable_proactive_mode(hass, smart_home_config):
 
         for interface in alexa_changed_entity.interfaces():
             if interface.properties_proactively_reported():
-                # TODO: we should check if this entity was already discovered
-                # by Alexa (store them in the prefs?) and, if not, send a
-                # proactive discovery message instead.
                 hass.async_add_job(async_send_changereport_message, hass,
                                    smart_home_config, alexa_changed_entity)
                 return
