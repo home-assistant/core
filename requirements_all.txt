@@ -140,9 +140,6 @@ anel_pwrctrl-homeassistant==0.0.1.dev2
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
 
-# homeassistant.components.light.avion
-# antsar-avion==0.9.1
-
 # homeassistant.components.apcupsd
 apcaccess==0.0.13
 
@@ -158,6 +155,9 @@ asterisk_mbox==0.5.0
 # homeassistant.components.upnp
 # homeassistant.components.media_player.dlna_dmr
 async-upnp-client==0.13.1
+
+# homeassistant.components.light.avion
+# avion==0.10
 
 # homeassistant.components.axis
 axis==16
