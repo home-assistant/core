@@ -16,6 +16,7 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
             'name': 'config_test',
             'webhook_id': 'camera.config_test'
         }})
+    await hass.async_block_till_done()
     client = await aiohttp_client(hass.http.app)
 
     # wrong webhook
@@ -42,6 +43,7 @@ async def test_posting_url(hass, aiohttp_client):
             'name': 'config_test',
             'webhook_id': 'camera.config_test'
         }})
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
     files = {'image': io.BytesIO(b'fake')}
