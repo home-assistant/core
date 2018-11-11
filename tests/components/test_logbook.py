@@ -137,7 +137,8 @@ class TestComponentLogbook(unittest.TestCase):
         eventA.data['old_state'] = None
 
         events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), {})
+                                          eventA, eventB),
+                                         logbook.DomainsAndEntitiesFilter({}))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -159,7 +160,8 @@ class TestComponentLogbook(unittest.TestCase):
         eventA.data['new_state'] = None
 
         events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), {})
+                                          eventA, eventB),
+                                         logbook.DomainsAndEntitiesFilter({}))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -181,7 +183,8 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
         events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), {})
+                                          eventA, eventB),
+                                         logbook.DomainsAndEntitiesFilter({}))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -207,7 +210,7 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.CONF_ENTITIES: [entity_id, ]}}})
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
-            config[logbook.DOMAIN])
+            logbook.DomainsAndEntitiesFilter(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -233,7 +236,7 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.CONF_DOMAINS: ['switch', ]}}})
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_START), eventA, eventB),
-            config[logbook.DOMAIN])
+            logbook.DomainsAndEntitiesFilter(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -270,7 +273,7 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.CONF_ENTITIES: [entity_id, ]}}})
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
-            config[logbook.DOMAIN])
+            logbook.DomainsAndEntitiesFilter(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -296,7 +299,7 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.CONF_ENTITIES: [entity_id2, ]}}})
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
-            config[logbook.DOMAIN])
+            logbook.DomainsAndEntitiesFilter(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -322,7 +325,7 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.CONF_DOMAINS: ['sensor', ]}}})
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_START), eventA, eventB),
-            config[logbook.DOMAIN])
+            logbook.DomainsAndEntitiesFilter(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 2 == len(entries)
@@ -356,7 +359,8 @@ class TestComponentLogbook(unittest.TestCase):
                     logbook.CONF_ENTITIES: ['sensor.bli', ]}}})
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_START), eventA1, eventA2, eventA3,
-             eventB1, eventB2), config[logbook.DOMAIN])
+             eventB1, eventB2),
+            logbook.DomainsAndEntitiesFilter(config[logbook.DOMAIN]))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 3 == len(entries)
@@ -377,7 +381,8 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(pointA, entity_id2, 20,
                                                  {'auto': True})
 
-        events = logbook._exclude_events((eventA, eventB), {})
+        events = logbook._exclude_events((eventA, eventB),
+                                         logbook.DomainsAndEntitiesFilter({}))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 1 == len(entries)
@@ -395,7 +400,8 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(
             pointA, entity_id2, 20, last_changed=pointA, last_updated=pointB)
 
-        events = logbook._exclude_events((eventA, eventB), {})
+        events = logbook._exclude_events((eventA, eventB),
+                                         logbook.DomainsAndEntitiesFilter({}))
         entries = list(logbook.humanify(self.hass, events))
 
         assert 1 == len(entries)

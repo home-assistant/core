@@ -116,6 +116,8 @@ async def async_setup(hass, config):
 
 
 class DomainsAndEntitiesFilter:
+    """Helper class to filter events based on user preferences."""
+
     def __init__(self, config):
         """Get list of filtered events."""
         self.excluded_entities = []
@@ -132,34 +134,40 @@ class DomainsAndEntitiesFilter:
             self.included_domains = include[CONF_DOMAINS]
 
     def is_included(self, domain, entity_id):
+        """Return true if domain/entity_id pair should be included."""
         if not domain and not entity_id:
-            return False
+            return True
 
         # filter if only excluded is configured for this domain
-        if self.excluded_domains and domain in self.excluded_domains and \
-                not self.included_domains:
-            if (self.included_entities and entity_id not in self.included_entities) \
+        if self.excluded_domains and domain in self.excluded_domains \
+                and not self.included_domains:
+            if (self.included_entities and
+                entity_id not in self.included_entities) \
                     or not self.included_entities:
                 return False
 
         # filter if only included is configured for this domain
-        elif not self.excluded_domains and self.included_domains and \
-                domain not in self.included_domains:
-            if (self.included_entities and entity_id not in self.included_entities) \
+        elif not self.excluded_domains and self.included_domains \
+                and domain not in self.included_domains:
+            if (self.included_entities and
+                entity_id not in self.included_entities) \
                     or not self.included_entities:
                 return False
 
         # filter if included and excluded is configured for this domain
-        elif self.excluded_domains and self.included_domains and \
-                (domain not in self.included_domains or
-                 domain in self.excluded_domains):
-            if (self.included_entities and entity_id not in self.included_entities) \
-                    or not self.included_entities or domain in self.excluded_domains:
+        elif self.excluded_domains and self.included_domains \
+                and (domain not in self.included_domains
+                     or domain in self.excluded_domains):
+            if (self.included_entities
+                and entity_id not in self.included_entities) \
+                    or not self.included_entities \
+                    or domain in self.excluded_domains:
                 return False
 
         # filter if only included is configured for this entity
-        elif not self.excluded_domains and not self.included_domains and \
-                self.included_entities and entity_id not in self.included_entities:
+        elif not self.excluded_domains and not self.included_domains \
+                and self.included_entities \
+                and entity_id not in self.included_entities:
             return False
 
         # check if logbook entry is excluded for this entity
@@ -262,12 +270,12 @@ def humanify(hass, events):
 
                 # Skip all but the last sensor state
                 if domain in CONTINUOUS_DOMAINS and \
-                   event != last_sensor_event[to_state.entity_id]:
+                        event != last_sensor_event[to_state.entity_id]:
                     continue
 
                 # Don't show continuous sensor value changes in the logbook
                 if domain in CONTINUOUS_DOMAINS and \
-                   to_state.attributes.get('unit_of_measurement'):
+                        to_state.attributes.get('unit_of_measurement'):
                     continue
 
                 yield {
@@ -373,13 +381,15 @@ def humanify(hass, events):
 
 def _get_related_entity_ids(session, events_filter):
     from homeassistant.components.recorder.models import States
-    from homeassistant.components.recorder.util import RETRIES, QUERY_RETRY_WAIT
+    from homeassistant.components.recorder.util import \
+        RETRIES, QUERY_RETRY_WAIT
     from sqlalchemy.exc import SQLAlchemyError
     import time
 
     timer_start = time.perf_counter()
 
-    query = session.query(States).with_entities(States.domain, States.entity_id).distinct()
+    query = session.query(States).with_entities(States.domain,
+                                                States.entity_id).distinct()
 
     for tryno in range(0, RETRIES):
         try:
@@ -389,9 +399,10 @@ def _get_related_entity_ids(session, events_filter):
 
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 elapsed = time.perf_counter() - timer_start
-                _LOGGER.debug('fetching %d distinct domain/entity_id pairs took %fs',
-                              len(result),
-                              elapsed)
+                _LOGGER.debug(
+                    'fetching %d distinct domain/entity_id pairs took %fs',
+                    len(result),
+                    elapsed)
 
             return result
         except SQLAlchemyError as err:
@@ -418,12 +429,12 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
             entity_ids = _get_related_entity_ids(session, filter)
 
         query = session.query(Events).order_by(Events.time_fired) \
-            .outerjoin(States, (Events.event_id == States.event_id))  \
+            .outerjoin(States, (Events.event_id == States.event_id)) \
             .filter(Events.event_type.in_(ALL_EVENT_TYPES)) \
             .filter((Events.time_fired > start_day)
                     & (Events.time_fired < end_day)) \
             .filter((States.last_updated == States.last_changed)
-                    | (States.state_id.is_(None)))\
+                    | (States.state_id.is_(None))) \
             .filter(States.entity_id.in_(entity_ids))
 
         events = execute(query)
