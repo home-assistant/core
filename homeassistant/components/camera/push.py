@@ -73,6 +73,10 @@ async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook POST with image files."""
     data = dict(await request.post())
     camera = hass.data[PUSH_CAMERA_DATA][webhook_id]
+    
+    if camera.image_field not in data:
+        _LOGGER.warning("Webhook call without POST parameter <%s>", camera.image_field)
+        return
 
     await camera.update_image(data[camera.image_field].file.read(),
                               data[camera.image_field].filename)
