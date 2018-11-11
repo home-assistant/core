@@ -801,11 +801,80 @@ async def test_fan_speed(hass):
     assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED)
 
     trt = trait.FanSpeedTrait(
-        hass, State('fan.living_room_fan', fan.ATTR_SPEED), BASIC_CONFIG)
+        hass, State(
+            'fan.living_room_fan', fan.SPEED_HIGH, attributes={
+                'speed_list': [
+                    fan.SPEED_OFF, fan.SPEED_LOW, fan.SPEED_MEDIUM,
+                    fan.SPEED_HIGH
+                ],
+                'speed': 'low'
+            }), BASIC_CONFIG)
 
-    assert trt.sync_attributes() is None
+    assert trt.sync_attributes() == {
+        'availableFanSpeeds': {
+            'ordered': True,
+            'speeds': [
+                {
+                    'speed_name': 'off',
+                    'speed_values': [
+                        {
+                            'speed_synonym': ['stop', 'off'],
+                            'lang': 'en'
+                        }
+                    ]
+                },
+                {
+                    'speed_name': 'low',
+                    'speed_values': [
+                        {
+                            'speed_synonym': [
+                                'slow', 'low', 'slowest', 'lowest'],
+                            'lang': 'en'
+                        }
+                    ]
+                },
+                {
+                    'speed_name': 'medium',
+                    'speed_values': [
+                        {
+                            'speed_synonym': ['medium', 'mid', 'middle'],
+                            'lang': 'en'
+                        }
+                    ]
+                },
+                {
+                    'speed_name': 'high',
+                    'speed_values': [
+                        {
+                            'speed_synonym': [
+                                'high', 'max', 'fast', 'highest', 'fastest',
+                                'maximum'],
+                            'lang': 'en'
+                        }
+                    ]
+                }
+            ]
+        },
+        'reversible': False
+    }
 
-    assert trt.query_attributes() is None
+    assert trt.query_attributes() == {
+        'currentFanSpeedSetting': 'low',
+        'on': True,
+        'online': True
+    }
 
-    trt = trait.FanSpeedTrait(hass, State(
-        'fan.living_room_fan', fan.ATTR_SPEED), UNSAFE_CONFIG)
+    assert trt.can_execute(
+        trait.COMMAND_FANSPEED, params={'fanSpeed': 'medium'})
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_SPEED)
+    await trt.execute(trait.COMMAND_FANSPEED, params={'fanSpeed': 'medium'})
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        'entity_id': 'fan.living_room_fan',
+        'speed': 'medium'
+    }
+
+
+
