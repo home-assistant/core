@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['antsar-avion==0.9.1']
+REQUIREMENTS = ['avion==0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
