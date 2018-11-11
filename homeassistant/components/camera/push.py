@@ -11,7 +11,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
-    STATE_IDLE, STATE_RECORDING
+    STATE_IDLE, STATE_RECORDING, DOMAIN
 from homeassistant.core import callback
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv
@@ -60,7 +60,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                           webhook_id)]
 
     try:
-        hass.components.webhook.async_register(webhook_id, handle_webhook)
+        hass.components.webhook.async_register(DOMAIN, 'push', webhook_id, handle_webhook)
     except ValueError:
         _LOGGER.error("In <%s>, webhook_id <%s> already used",
                       config[CONF_NAME], webhook_id)
