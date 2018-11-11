@@ -1,3 +1,4 @@
+import datetime
 import logging
 import time
 
@@ -8,7 +9,7 @@ global_log = logging.getLogger(__name__)
 global_log.setLevel(logging.DEBUG)
 
 class ECoalControler:
-    crcTable = (0, 49, 98, 83, 196, 245,166, 151,185, 136,219, 234,125, 76, 31, 46, 67, 114,33, 16,
+    CRCTABLE = (0, 49, 98, 83, 196, 245,166, 151,185, 136,219, 234,125, 76, 31, 46, 67, 114,33, 16,
                 135, 182,229, 212,250, 203,152, 169,62, 15, 92, 109,134, 183,228, 213,66, 115,32, 17,
                 63, 14, 93, 108,251, 202,153, 168,197, 244,167, 150,1, 48, 99, 82, 124, 77, 30, 47,
                 184, 137,218, 235,61, 12, 95, 110,249, 200,155, 170,132, 181,230, 215,64, 113,34, 19,
@@ -81,7 +82,8 @@ class ECoalControler:
                 txt += " Air (%d%%):On" % (self.air_pump_power)
             else:
                 txt += " Air (%d%%):Off" % (self.air_pump_power)  # Seems always be 0 if off ?
-            txt += " %02d:%02d:%02d" % (self.hours, self.minutes, self.seconds, )
+            ## txt += " %02d:%02d:%02d" % (self.hours, self.minutes, self.seconds, )
+            txt += " %s" % (self.datetime, )
             return txt
 
 
@@ -96,6 +98,7 @@ class ECoalControler:
         self.status = None
         self.status_time = 0
 
+        self.version = None # "BRULI" / "ECOAL"
         self.get_version()
 
 
@@ -152,7 +155,7 @@ class ECoalControler:
 
 
     def get_status(self):
-        """Pobiera status ze sterownika i zapamiętuje go"""
+        """Gets and parses controller status"""
         self.status = None
         resp = self._get_request("02010006000000006103")
 
@@ -164,10 +167,13 @@ class ECoalControler:
         status_vals = self._parse_seq_of_ints(buf)
         self.log.debug("Receiveed status vals: %r", status_vals)
 
-        old_status_vals = [2, 1, 6, 6, 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 0, 0, 214, 0, 211, 0, 98, 0, 95, 1, 166, 0, 159, 0, 204, 0, 170, 0, 0, 0, 0, 1, 2, 55, 48, 0, 0, 0, 2, 2, 18, 11, 7, 18, 54, 6, 1, 0, 0, 1, 0, 225, 0, 215, 0, 10, 8, 2, 0, 0, 195, 85, 0, 0, 18, 3, 17, 12, 5, 106, 55, 16, 0, 6, 225, 0, 210, 0, 0, 0, 49, 3]
+        old_status_vals = [2, 1, 6, 6, 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 0, 0, 215, 0, 214, 0, 103, 0, 165, 1, 163, 0, 155, 0, 219, 0, 165, 0, 0, 0, 0, 0, 2, 61, 48, 0, 0, 0, 2, 2, 18, 11, 11, 15, 13, 30, 1, 0, 0, 1, 0, 225, 0, 215, 0, 10, 8, 2, 0, 0, 195, 85, 0, 0, 18, 3, 17, 12, 5, 112, 81, 16, 0, 6, 225, 0, 210, 0, 0, 0, 36, 3]
+        # 2018/11/11 diffs:
+        # pos: 73 diff: 112 -> 113   pos: 84 diff: 36 -> 204
+
         for i, val in enumerate(status_vals):
             # Skip list of values we know about
-            if i in (16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 37, 38, 39, 47, 48, 49, 64, 65   ):
+            if i in (16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 37, 38, 39, 44, 45, 46, 47, 48, 49, 64, 65   ):
                 continue
             if val != old_status_vals[i]:
                 self.log.debug("Diff pos: %d diff: %r -> %r", i, old_status_vals[i], val)
@@ -198,9 +204,8 @@ class ECoalControler:
         status.target_domestic_hot_water_temp = status_vals[38]
         status.air_pump_power = status_vals[39]
 
-        status.hours = status_vals[47]
-        status.minutes = status_vals[48]
-        status.seconds = status_vals[49]
+        status.datetime = datetime.datetime(2000+status_vals[44], status_vals[45], status_vals[46],
+                            status_vals[47],  status_vals[48], status_vals[49])
 
         status.feeder_work_time =  (status_vals[65] << 8 | status_vals[64])
 
@@ -231,6 +236,9 @@ class ECoalControler:
         return resp
 
     def set_central_heating_pump2(self, state):
+        """ third pump can be configured as mixing feedwater pump,
+        domestic hot water pump or 2nd heating pump
+        """
         if state:
             v = 1
             # 02010005000f0100018a03
@@ -244,7 +252,6 @@ class ECoalControler:
         self.warn("set_central_heating_pump2() failed: %s", resp)
         return resp
 
-
     def set_domestic_hot_water_pump(self, state):
         if state:
             resp = self._get_request("02010005000E0100011103")
@@ -255,14 +262,15 @@ class ECoalControler:
         self.warn("set_domestic_hot_water_pump() failed: %s", resp)
         return resp
 
-
-
     def set_target_feedwater_temp(self, value):
         v = int(value)
         buf = [0x01, 0x00, 0x02, 0x00, 0x28, 0x02, 0x00, v & 0xff, 0x00];
         self._calc_crc_get_request(buf)
 
     def _calc_crc_get_request(self, buf):
+        """
+        Calculates CRC and expands buf command to be sent to controller
+        """
         crc = self._calc_crc(buf);
         buf.insert(0, 0x02);
         buf.append(crc);
@@ -274,7 +282,7 @@ class ECoalControler:
     def _calc_crc(self, buf):
         crc = 0
         for b in buf:
-            crc = self.crcTable[crc & 0xFF ^ b & 0xFF]
+            crc = self.CRCTABLE[crc & 0xFF ^ b & 0xFF]
         return crc
 
 
