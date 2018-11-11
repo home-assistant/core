@@ -10,9 +10,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (DOMAIN, PLATFORM_SCHEMA,
-        SwitchDevice)
+                                             SwitchDevice)
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME,
-        CONF_USERNAME, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL)
+                                 CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_SSL, CONF_VERIFY_SSL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -68,7 +69,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         _LOGGER.info("Restarting %s", container)
         await api.container_restart(container)
 
-    hass.services.async_register(DOMAIN, 'hadockermon_restart', restart_container)
+    hass.services.async_register(DOMAIN, 'hadockermon_restart',
+                                 restart_container)
 
     async_add_entities(devices, True)
 
