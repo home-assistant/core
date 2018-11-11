@@ -737,7 +737,7 @@ class FanSpeedTrait(_Trait):
 
         speed = attrs.get(fan.ATTR_SPEED)
         if speed is not None:
-            response['on'] = attrs.get(fan.ATTR_SPEED) != 'off'
+            response['on'] = speed != 'off'
             response['online'] = True
             response['currentFanSpeedSetting'] = speed
 
