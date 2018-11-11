@@ -4,20 +4,20 @@ Support for Dark Sky weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.darksky/
 """
-import logging
 from datetime import timedelta
+import logging
 
+from requests.exceptions import (
+    ConnectionError as ConnectError, HTTPError, Timeout)
 import voluptuous as vol
-from requests.exceptions import ConnectionError as ConnectError, \
-    HTTPError, Timeout
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION,
-    CONF_LATITUDE, CONF_LONGITUDE, UNIT_UV_INDEX)
+    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-forecastio==1.4.0']
 
@@ -43,7 +43,7 @@ DEPRECATED_SENSOR_TYPES = {
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
-    'summary': ['Summary', None, None, None, None, None, None, []],
+    'summary': ['Summary', None, None, None, None, None, None, ['daily']],
     'minutely_summary': ['Minutely Summary',
                          None, None, None, None, None, None, []],
     'hourly_summary': ['Hourly Summary', None, None, None, None, None, None,
@@ -82,6 +82,9 @@ SENSOR_TYPES = {
                    'mdi:weather-windy', ['currently', 'hourly', 'daily']],
     'wind_bearing': ['Wind Bearing', '°', '°', '°', '°', '°', 'mdi:compass',
                      ['currently', 'hourly', 'daily']],
+    'wind_gust': ['Wind Gust', 'm/s', 'mph', 'km/h', 'mph', 'mph',
+                  'mdi:weather-windy-variant',
+                  ['currently', 'hourly', 'daily']],
     'cloud_cover': ['Cloud Coverage', '%', '%', '%', '%', '%',
                     'mdi:weather-partlycloudy',
                     ['currently', 'hourly', 'daily']],
@@ -146,12 +149,9 @@ CONDITION_PICTURES = {
 
 # Language Supported Codes
 LANGUAGE_CODES = [
-    'ar', 'az', 'be', 'bg', 'bs', 'ca',
-    'cs', 'da', 'de', 'el', 'en', 'es',
-    'et', 'fi', 'fr', 'hr', 'hu', 'id',
-    'is', 'it', 'ja', 'ka', 'kw', 'nb',
-    'nl', 'pl', 'pt', 'ro', 'ru', 'sk',
-    'sl', 'sr', 'sv', 'tet', 'tr', 'uk',
+    'ar', 'az', 'be', 'bg', 'bs', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
+    'et', 'fi', 'fr', 'hr', 'hu', 'id', 'is', 'it', 'ja', 'ka', 'kw', 'nb',
+    'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv', 'tet', 'tr', 'uk',
     'x-pig-latin', 'zh', 'zh-tw',
 ]
 
@@ -179,6 +179,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     language = config.get(CONF_LANGUAGE)
+    interval = config.get(CONF_UPDATE_INTERVAL)
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
@@ -188,18 +189,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         units = 'us'
 
     forecast_data = DarkSkyData(
-        api_key=config.get(CONF_API_KEY, None),
-        latitude=latitude,
-        longitude=longitude,
-        units=units,
-        language=language,
-        interval=config.get(CONF_UPDATE_INTERVAL))
+        api_key=config.get(CONF_API_KEY, None), latitude=latitude,
+        longitude=longitude, units=units, language=language, interval=interval)
     forecast_data.update()
     forecast_data.update_currently()
 
     # If connection failed don't setup platform.
     if forecast_data.data is None:
-        return False
+        return
 
     name = config.get(CONF_NAME)
 
@@ -207,8 +204,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         if variable in DEPRECATED_SENSOR_TYPES:
-            _LOGGER.warning("Monitored condition %s is deprecated",
-                            variable)
+            _LOGGER.warning("Monitored condition %s is deprecated", variable)
         sensors.append(DarkSkySensor(forecast_data, variable, name))
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
@@ -358,11 +354,12 @@ class DarkSkySensor(Entity):
         if self.type in ['precip_probability', 'cloud_cover', 'humidity']:
             return round(state * 100, 1)
         if self.type in ['dew_point', 'temperature', 'apparent_temperature',
-                         'temperature_min', 'temperature_max',
-                         'apparent_temperature_min',
-                         'apparent_temperature_max',
-                         'precip_accumulation',
-                         'pressure', 'ozone', 'uvIndex']:
+                         'temperature_low', 'apparent_temperature_low',
+                         'temperature_min', 'apparent_temperature_min',
+                         'temperature_high', 'apparent_temperature_high',
+                         'temperature_max', 'apparent_temperature_max'
+                         'precip_accumulation', 'pressure', 'ozone',
+                         'uvIndex']:
             return round(state, 1)
         return state
 
@@ -371,7 +368,7 @@ def convert_to_camel(data):
     """
     Convert snake case (foo_bar_bat) to camel case (fooBarBat).
 
-    This is not pythonic, but needed for certain situations
+    This is not pythonic, but needed for certain situations.
     """
     components = data.split('_')
     return components[0] + "".join(x.title() for x in components[1:])
@@ -380,8 +377,8 @@ def convert_to_camel(data):
 class DarkSkyData:
     """Get the latest data from Darksky."""
 
-    def __init__(self, api_key, latitude, longitude, units, language,
-                 interval):
+    def __init__(
+            self, api_key, latitude, longitude, units, language, interval):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude

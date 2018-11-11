@@ -37,8 +37,7 @@ class TestDemoPlatform(unittest.TestCase):
         # Patching 'utcnow' to gain more control over the timed update.
         with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
             with assert_setup_component(1, geo_location.DOMAIN):
-                self.assertTrue(setup_component(self.hass, geo_location.DOMAIN,
-                                                CONFIG))
+                assert setup_component(self.hass, geo_location.DOMAIN, CONFIG)
 
             # In this test, only entities of the geo location domain have been
             # generated.
@@ -47,10 +46,14 @@ class TestDemoPlatform(unittest.TestCase):
 
             # Check a single device's attributes.
             state_first_entry = all_states[0]
-            self.assertAlmostEqual(state_first_entry.attributes['latitude'],
-                                   self.hass.config.latitude, delta=1.0)
-            self.assertAlmostEqual(state_first_entry.attributes['longitude'],
-                                   self.hass.config.longitude, delta=1.0)
+            assert abs(
+                state_first_entry.attributes['latitude'] -
+                self.hass.config.latitude
+            ) < 1.0
+            assert abs(
+                state_first_entry.attributes['longitude'] -
+                self.hass.config.longitude
+            ) < 1.0
             assert state_first_entry.attributes['unit_of_measurement'] == \
                 DEFAULT_UNIT_OF_MEASUREMENT
             # Update (replaces 1 device).
@@ -60,4 +63,4 @@ class TestDemoPlatform(unittest.TestCase):
             # the same, but the lists are different.
             all_states_updated = self.hass.states.all()
             assert len(all_states_updated) == NUMBER_OF_DEMO_DEVICES
-            self.assertNotEqual(all_states, all_states_updated)
+            assert all_states != all_states_updated

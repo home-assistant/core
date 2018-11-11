@@ -76,16 +76,13 @@ omit =
     homeassistant/components/daikin.py
     homeassistant/components/*/daikin.py
 
-    homeassistant/components/deconz/*
-    homeassistant/components/*/deconz.py
-
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
 
     homeassistant/components/dominos.py
 
-	homeassistant/components/doorbird.py
-	homeassistant/components/*/doorbird.py
+    homeassistant/components/doorbird.py
+    homeassistant/components/*/doorbird.py
 
     homeassistant/components/dweet.py
     homeassistant/components/*/dweet.py
@@ -128,6 +125,9 @@ omit =
 
     homeassistant/components/google.py
     homeassistant/components/*/google.py
+
+    homeassistant/components/greeneye_monitor.py
+    homeassistant/components/sensor/greeneye_monitor.py
 
     homeassistant/components/habitica/*
     homeassistant/components/*/habitica.py
@@ -209,7 +209,6 @@ omit =
     homeassistant/components/lutron_caseta.py
     homeassistant/components/*/lutron_caseta.py
 
-    homeassistant/components/mailgun.py
     homeassistant/components/*/mailgun.py
 
     homeassistant/components/matrix.py
@@ -248,7 +247,7 @@ omit =
     homeassistant/components/opencv.py
     homeassistant/components/*/opencv.py
 
-    homeassistant/components/opentherm_gw.py
+    homeassistant/components/opentherm_gw/*
     homeassistant/components/*/opentherm_gw.py
 
     homeassistant/components/openuv/__init__.py
@@ -289,6 +288,9 @@ omit =
 
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
+
+    homeassistant/components/sense.py
+    homeassistant/components/*/sense.py
 
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/*/simplisafe.py
@@ -334,7 +336,6 @@ omit =
     homeassistant/components/tradfri.py
     homeassistant/components/*/tradfri.py
 
-    homeassistant/components/twilio.py
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twilio_call.py
 
@@ -467,6 +468,7 @@ omit =
     homeassistant/components/device_tracker/bluetooth_le_tracker.py
     homeassistant/components/device_tracker/bluetooth_tracker.py
     homeassistant/components/device_tracker/bt_home_hub_5.py
+    homeassistant/components/device_tracker/bt_smarthub.py
     homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/freebox.py
@@ -500,6 +502,7 @@ omit =
     homeassistant/components/emoncms_history.py
     homeassistant/components/emulated_hue/upnp.py
     homeassistant/components/fan/mqtt.py
+    homeassistant/components/fan/wemo.py
     homeassistant/components/folder_watcher.py
     homeassistant/components/foursquare.py
     homeassistant/components/goalfeed.py
@@ -507,6 +510,7 @@ omit =
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
     homeassistant/components/image_processing/seven_segments.py
+    homeassistant/components/image_processing/tensorflow.py
     homeassistant/components/keyboard_remote.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/avion.py
@@ -722,6 +726,7 @@ omit =
     homeassistant/components/sensor/luftdaten.py
     homeassistant/components/sensor/lyft.py
     homeassistant/components/sensor/magicseaweed.py
+    homeassistant/components/sensor/meteo_france.py
     homeassistant/components/sensor/metoffice.py
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/mitemp_bt.py
@@ -759,7 +764,6 @@ omit =
     homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/rtorrent.py
     homeassistant/components/sensor/scrape.py
-    homeassistant/components/sensor/sense.py
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/serial.py

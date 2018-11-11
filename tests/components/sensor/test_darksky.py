@@ -140,7 +140,7 @@ class TestDarkSkySetup(unittest.TestCase):
 
         response = darksky.setup_platform(self.hass, VALID_CONFIG_MINIMAL,
                                           MagicMock())
-        self.assertFalse(response)
+        assert not response
 
     @requests_mock.Mocker()
     @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)
@@ -152,12 +152,12 @@ class TestDarkSkySetup(unittest.TestCase):
 
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
 
-        self.assertTrue(mock_get_forecast.called)
-        self.assertEqual(mock_get_forecast.call_count, 1)
-        self.assertEqual(len(self.hass.states.entity_ids()), 7)
+        assert mock_get_forecast.called
+        assert mock_get_forecast.call_count == 1
+        assert len(self.hass.states.entity_ids()) == 9
 
         state = self.hass.states.get('sensor.dark_sky_summary')
         assert state is not None
-        self.assertEqual(state.state, 'Clear')
-        self.assertEqual(state.attributes.get('friendly_name'),
-                         'Dark Sky Summary')
+        assert state.state == 'Clear'
+        assert state.attributes.get('friendly_name') == \
+            'Dark Sky Summary'

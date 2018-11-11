@@ -56,7 +56,8 @@ def brightness_from_percentage(percent):
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb: 'SmartBulb', name) -> None:
+    # F821: https://github.com/PyCQA/pyflakes/issues/373
+    def __init__(self, smartbulb: 'SmartBulb', name) -> None:  # noqa: F821
         """Initialize the bulb."""
         self.smartbulb = smartbulb
         self._name = name
