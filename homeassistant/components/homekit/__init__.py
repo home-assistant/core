@@ -29,7 +29,7 @@ from .const import (
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
-REQUIREMENTS = ['HAP-python==2.2.2']
+REQUIREMENTS = ['HAP-python==2.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +170,8 @@ def get_accessory(hass, driver, state, aid, config):
         switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
         a_type = SWITCH_TYPES[switch_type]
 
-    elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
+    elif state.domain in ('automation', 'input_boolean', 'remote', 'scene',
+                          'script'):
         a_type = 'Switch'
 
     elif state.domain == 'water_heater':

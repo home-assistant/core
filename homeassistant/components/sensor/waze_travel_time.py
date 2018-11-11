@@ -37,7 +37,7 @@ DEFAULT_REALTIME = True
 
 ICON = 'mdi:car'
 
-REGIONS = ['US', 'NA', 'EU', 'IL']
+REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

@@ -12,7 +12,8 @@ import os
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_NAME)
+    EVENT_HOMEASSISTANT_START, CLOUD_NEVER_EXPOSED_ENTITIES, CONF_REGION,
+    CONF_MODE, CONF_NAME)
 from homeassistant.helpers import entityfilter, config_validation as cv
 from homeassistant.util import dt as dt_util
 from homeassistant.components.alexa import smart_home as alexa_sh
@@ -68,7 +69,9 @@ ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
 })
 
 GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}
+    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA},
+    vol.Optional(ga_c.CONF_ALLOW_UNLOCK,
+                 default=ga_c.DEFAULT_ALLOW_UNLOCK): cv.boolean
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -122,7 +125,7 @@ class Cloud:
         self.hass = hass
         self.mode = mode
         self.alexa_config = alexa
-        self._google_actions = google_actions
+        self.google_actions_user_conf = google_actions
         self._gactions_config = None
         self._prefs = None
         self.id_token = None
@@ -180,16 +183,20 @@ class Cloud:
     def gactions_config(self):
         """Return the Google Assistant config."""
         if self._gactions_config is None:
-            conf = self._google_actions
+            conf = self.google_actions_user_conf
 
             def should_expose(entity):
                 """If an entity should be exposed."""
+                if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+                    return False
+
                 return conf['filter'](entity.entity_id)
 
             self._gactions_config = ga_h.Config(
                 should_expose=should_expose,
                 agent_user_id=self.claims['cognito:username'],
                 entity_config=conf.get(CONF_ENTITY_CONFIG),
+                allow_unlock=conf.get(ga_c.CONF_ALLOW_UNLOCK),
             )
 
         return self._gactions_config

@@ -14,10 +14,10 @@ from homeassistant.components.media_player import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['ziggo-mediabox-xl==1.0.0']
+REQUIREMENTS = ['ziggo-mediabox-xl==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,9 +43,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
+        manual_config = True
     elif discovery_info is not None:
         host = discovery_info.get('host')
         name = discovery_info.get('name')
+        manual_config = False
     else:
         _LOGGER.error("Cannot determine device")
         return
@@ -53,15 +55,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Only add a device once, so discovered devices do not override manual
     # config.
     hosts = []
+    connection_successful = False
     ip_addr = socket.gethostbyname(host)
     if ip_addr not in known_devices:
         try:
-            mediabox = ZiggoMediaboxXL(ip_addr)
+            # Mediabox instance with a timeout of 3 seconds.
+            mediabox = ZiggoMediaboxXL(ip_addr, 3)
+            # Check if a connection can be established to the device.
             if mediabox.test_connection():
-                hosts.append(ZiggoMediaboxXLDevice(mediabox, host, name))
-                known_devices.add(ip_addr)
+                connection_successful = True
             else:
-                _LOGGER.error("Can't connect to %s", host)
+                if manual_config:
+                    _LOGGER.info("Can't connect to %s", host)
+                else:
+                    _LOGGER.error("Can't connect to %s", host)
+            # When the device is in eco mode it's not connected to the network
+            # so it needs to be added anyway if it's configured manually.
+            if manual_config or connection_successful:
+                hosts.append(ZiggoMediaboxXLDevice(mediabox, host, name,
+                                                   connection_successful))
+                known_devices.add(ip_addr)
         except socket.error as error:
             _LOGGER.error("Can't connect to %s: %s", host, error)
     else:
@@ -72,24 +85,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ZiggoMediaboxXLDevice(MediaPlayerDevice):
     """Representation of a Ziggo Mediabox XL Device."""
 
-    def __init__(self, mediabox, host, name):
+    def __init__(self, mediabox, host, name, available):
         """Initialize the device."""
-        # Generate a configuration for the Samsung library
         self._mediabox = mediabox
         self._host = host
         self._name = name
+        self._available = available
         self._state = None
 
     def update(self):
         """Retrieve the state of the device."""
         try:
-            if self._mediabox.turned_on():
-                if self._state != STATE_PAUSED:
-                    self._state = STATE_PLAYING
+            if self._mediabox.test_connection():
+                if self._mediabox.turned_on():
+                    if self._state != STATE_PAUSED:
+                        self._state = STATE_PLAYING
+                else:
+                    self._state = STATE_OFF
+                self._available = True
             else:
-                self._state = STATE_OFF
+                self._available = False
         except socket.error:
             _LOGGER.error("Couldn't fetch state from %s", self._host)
+            self._available = False
 
     def send_keys(self, keys):
         """Send keys to the device and handle exceptions."""
@@ -109,6 +127,11 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
         return self._state
 
     @property
+    def available(self):
+        """Return True if the device is available."""
+        return self._available
+
+    @property
     def source_list(self):
         """List of available sources (channels)."""
         return [self._mediabox.channels()[c]
@@ -122,12 +145,10 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self.send_keys(['POWER'])
-        self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
         self.send_keys(['POWER'])
-        self._state = STATE_OFF
 
     def media_play(self):
         """Send play command."""

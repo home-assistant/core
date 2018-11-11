@@ -35,10 +35,13 @@ GROUPS = ['user', 'installer']
 
 def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
-    import pysma
+    try:
+        import pysma
+        valid = [s.name for s in pysma.SENSORS]
+    except (ImportError, AttributeError):
+        return conf
 
-    valid = list(conf[CONF_CUSTOM].keys())
-    valid.extend([s.name for s in pysma.SENSORS])
+    valid.extend(conf[CONF_CUSTOM].keys())
     for sname, attrs in conf[CONF_SENSORS].items():
         if sname not in valid:
             raise vol.Invalid("{} does not exist".format(sname))
@@ -72,6 +75,9 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up SMA WebConnect sensor."""
     import pysma
+
+    # Check config again during load - dependency available
+    config = _check_sensor_schema(config)
 
     # Sensor_defs from the custom config
     for name, prop in config[CONF_CUSTOM].items():
@@ -107,18 +113,24 @@ async def async_setup_platform(
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_close_session)
 
     backoff = 0
+    backoff_step = 0
 
     async def async_sma(event):
         """Update all the SMA sensors."""
-        nonlocal backoff
+        nonlocal backoff, backoff_step
         if backoff > 1:
             backoff -= 1
             return
 
         values = await sma.read(used_sensors)
-        if values is None:
-            backoff = 10
+        if not values:
+            try:
+                backoff = [1, 1, 1, 6, 30][backoff_step]
+                backoff_step += 1
+            except IndexError:
+                backoff = 60
             return
+        backoff_step = 0
 
         tasks = []
         for sensor in hass_sensors:
