@@ -725,7 +725,7 @@ class FanSpeedTrait(_Trait):
                 'ordered': True
             },
             "reversible": self.state.attributes.get(
-                ATTR_SUPPORTED_FEATURES) & fan.SUPPORT_DIRECTION
+                ATTR_SUPPORTED_FEATURES, 0) & fan.SUPPORT_DIRECTION
         }
 
     def query_attributes(self):
