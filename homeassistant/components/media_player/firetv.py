@@ -15,10 +15,10 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, )
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_PAUSED,
-    STATE_PLAYING, STATE_STANDBY, STATE_UNKNOWN)
+    STATE_PLAYING, STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['firetv==1.0.6']
+REQUIREMENTS = ['firetv==1.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,6 @@ PACKAGE_LAUNCHER = "com.amazon.tv.launcher"
 PACKAGE_SETTINGS = "com.amazon.tv.settings"
 
 
-# pylint: disable=protected-access
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the FireTV platform."""
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
@@ -61,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     device = FireTVDevice(host, name, adbkey, get_source, get_sources)
     adb_log = " using adbkey='{0}'".format(adbkey) if adbkey else ""
-    if not device._firetv._adb:
+    if not device.firetv.adb:
         _LOGGER.warning("Could not connect to Fire TV at %s%s", host, adb_log)
 
         # Configuration troubleshooting for `adbkey`
@@ -90,22 +89,22 @@ def adb_wrapper(func):
     @functools.wraps(func)
     def _adb_wrapper(self, *args, **kwargs):
         # If an ADB command is already running, don't execute this command
-        if self._firetv._adb and self._adb_lock:
+        if self.firetv.adb and self.adb_lock:
             _LOGGER.info('Skipping an ADB command because a previous command '
                          'is still running')
             return
 
         # Prevent additional ADB commands while trying to run this command
-        self._adb_lock = True
+        self.adb_lock = True
         try:
             returns = func(self, *args, **kwargs)
-        except self._exceptions:
+        except self.exceptions:
             _LOGGER.error('Failed to execute an ADB command; will attempt to '
                           're-establish the ADB connection in the next update')
             returns = None
-            self._firetv._adb = None
+            self.firetv.adb = None
         finally:
-            self._adb_lock = False
+            self.adb_lock = False
 
         return returns
 
@@ -122,20 +121,25 @@ class FireTVDevice(MediaPlayerDevice):
             InvalidCommandError, InvalidResponseError, InvalidChecksumError)
 
         self._host = host
-        self._adbkey = adbkey
-        self._firetv = FireTV(host, adbkey)
-        self._adb_lock = False
-
-        self._exceptions = (TypeError, ValueError, AttributeError,
-                            InvalidCommandError, InvalidResponseError,
-                            InvalidChecksumError)
-
         self._name = name
-        self._state = STATE_UNKNOWN
-        self._running_apps = None
-        self._current_app = None
+        self._adbkey = adbkey
         self._get_source = get_source
         self._get_sources = get_sources
+
+        self.firetv = FireTV(host, adbkey)
+
+        # whether or not the ADB connection is currently in use
+        self.adb_lock = False
+
+        # ADB exceptions to catch
+        self.exceptions = (TypeError, ValueError, AttributeError,
+                           InvalidCommandError, InvalidResponseError,
+                           InvalidChecksumError)
+
+        self._state = None
+        self._available = bool(self.firetv.adb)
+        self._current_app = None
+        self._running_apps = None
 
     @property
     def name(self):
@@ -158,6 +162,11 @@ class FireTVDevice(MediaPlayerDevice):
         return self._state
 
     @property
+    def available(self):
+        """Return whether or not the ADB connection is valid."""
+        return self._available
+
+    @property
     def source(self):
         """Return the current app."""
         return self._current_app
@@ -171,117 +180,120 @@ class FireTVDevice(MediaPlayerDevice):
     def update(self):
         """Get the latest date and update device state."""
         # Check if device is disconnected.
-        if not self._firetv._adb:
-            self._state = STATE_UNKNOWN
+        if not self.firetv.adb:
+            self._available = False
             self._running_apps = None
             self._current_app = None
 
             # Try to connect
-            self._firetv.connect()
-
-        # Check if device is off.
-        elif not self._firetv._screen_on:
-            self._state = STATE_OFF
-            self._running_apps = None
-            self._current_app = None
-
-        # Check if screen saver is on.
-        elif not self._firetv._awake:
-            self._state = STATE_IDLE
-            self._running_apps = None
-            self._current_app = None
+            self.firetv.connect()
 
         else:
-            # Get the running apps.
-            if self._get_sources:
-                self._running_apps = self._firetv.running_apps()
+            self._available = True
 
-            # Get the current app.
-            if self._get_source:
-                current_app = self._firetv.current_app
-                if isinstance(current_app, dict)\
-                        and 'package' in current_app:
-                    self._current_app = current_app['package']
-                else:
-                    self._current_app = current_app
+            # Check if device is off.
+            if not self.firetv.screen_on:
+                self._state = STATE_OFF
+                self._running_apps = None
+                self._current_app = None
 
-                # Show the current app as the only running app.
-                if not self._get_sources:
-                    if self._current_app:
-                        self._running_apps = [self._current_app]
-                    else:
-                        self._running_apps = None
+            # Check if screen saver is on.
+            elif not self.firetv.awake:
+                self._state = STATE_IDLE
+                self._running_apps = None
+                self._current_app = None
 
-                # Check if the launcher is active.
-                if self._current_app in [PACKAGE_LAUNCHER,
-                                         PACKAGE_SETTINGS]:
-                    self._state = STATE_STANDBY
-
-                # Check for a wake lock (device is playing).
-                elif self._firetv._wake_lock:
-                    self._state = STATE_PLAYING
-
-                # Otherwise, device is paused.
-                else:
-                    self._state = STATE_PAUSED
-
-            # Don't get the current app.
-            elif self._firetv._wake_lock:
-                # Check for a wake lock (device is playing).
-                self._state = STATE_PLAYING
             else:
-                # Assume the devices is on standby.
-                self._state = STATE_STANDBY
+                # Get the running apps.
+                if self._get_sources:
+                    self._running_apps = self.firetv.running_apps
+
+                # Get the current app.
+                if self._get_source:
+                    current_app = self.firetv.current_app
+                    if isinstance(current_app, dict)\
+                            and 'package' in current_app:
+                        self._current_app = current_app['package']
+                    else:
+                        self._current_app = current_app
+
+                    # Show the current app as the only running app.
+                    if not self._get_sources:
+                        if self._current_app:
+                            self._running_apps = [self._current_app]
+                        else:
+                            self._running_apps = None
+
+                    # Check if the launcher is active.
+                    if self._current_app in [PACKAGE_LAUNCHER,
+                                             PACKAGE_SETTINGS]:
+                        self._state = STATE_STANDBY
+
+                    # Check for a wake lock (device is playing).
+                    elif self.firetv.wake_lock:
+                        self._state = STATE_PLAYING
+
+                    # Otherwise, device is paused.
+                    else:
+                        self._state = STATE_PAUSED
+
+                # Don't get the current app.
+                elif self.firetv.wake_lock:
+                    # Check for a wake lock (device is playing).
+                    self._state = STATE_PLAYING
+                else:
+                    # Assume the devices is on standby.
+                    self._state = STATE_STANDBY
 
     @adb_wrapper
     def turn_on(self):
         """Turn on the device."""
-        self._firetv.turn_on()
+        self.firetv.turn_on()
 
     @adb_wrapper
     def turn_off(self):
         """Turn off the device."""
-        self._firetv.turn_off()
+        self.firetv.turn_off()
 
     @adb_wrapper
     def media_play(self):
         """Send play command."""
-        self._firetv.media_play()
+        self.firetv.media_play()
 
     @adb_wrapper
     def media_pause(self):
         """Send pause command."""
-        self._firetv.media_pause()
+        self.firetv.media_pause()
 
     @adb_wrapper
     def media_play_pause(self):
         """Send play/pause command."""
-        self._firetv.media_play_pause()
+        self.firetv.media_play_pause()
 
     @adb_wrapper
     def media_stop(self):
         """Send stop (back) command."""
-        self._firetv.back()
+        self.firetv.back()
 
     @adb_wrapper
     def volume_up(self):
         """Send volume up command."""
-        self._firetv.volume_up()
+        self.firetv.volume_up()
 
     @adb_wrapper
     def volume_down(self):
         """Send volume down command."""
-        self._firetv.volume_down()
+        self.firetv.volume_down()
 
     @adb_wrapper
     def media_previous_track(self):
         """Send previous track command (results in rewind)."""
-        self._firetv.media_previous()
+        self.firetv.media_previous()
 
     @adb_wrapper
     def media_next_track(self):
         """Send next track command (results in fast-forward)."""
-        self._firetv.media_next()
+        self.firetv.media_next()
 
     @adb_wrapper
     def select_source(self, source):
@@ -292,6 +304,6 @@ class FireTVDevice(MediaPlayerDevice):
         """
         if isinstance(source, str):
             if not source.startswith('!'):
-                self._firetv.launch_app(source)
+                self.firetv.launch_app(source)
             else:
-                self._firetv.stop_app(source[1:].lstrip())
+                self.firetv.stop_app(source[1:].lstrip())
