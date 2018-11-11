@@ -142,7 +142,7 @@ class DomainsAndEntitiesFilter:
         if self.excluded_domains and domain in self.excluded_domains \
                 and not self.included_domains:
             if (self.included_entities and
-                entity_id not in self.included_entities) \
+                    entity_id not in self.included_entities) \
                     or not self.included_entities:
                 return False
 
@@ -150,7 +150,7 @@ class DomainsAndEntitiesFilter:
         elif not self.excluded_domains and self.included_domains \
                 and domain not in self.included_domains:
             if (self.included_entities and
-                entity_id not in self.included_entities) \
+                    entity_id not in self.included_entities) \
                     or not self.included_entities:
                 return False
 
@@ -159,7 +159,7 @@ class DomainsAndEntitiesFilter:
                 and (domain not in self.included_domains
                      or domain in self.excluded_domains):
             if (self.included_entities
-                and entity_id not in self.included_entities) \
+                    and entity_id not in self.included_entities) \
                     or not self.included_entities \
                     or domain in self.excluded_domains:
                 return False
@@ -420,13 +420,13 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
     from homeassistant.components.recorder.util import (
         execute, session_scope)
 
-    filter = DomainsAndEntitiesFilter(config)
+    entities_filter = DomainsAndEntitiesFilter(config)
 
     with session_scope(hass=hass) as session:
         if entity_id is not None:
             entity_ids = [entity_id.lower()]
         else:
-            entity_ids = _get_related_entity_ids(session, filter)
+            entity_ids = _get_related_entity_ids(session, entities_filter)
 
         query = session.query(Events).order_by(Events.time_fired) \
             .outerjoin(States, (Events.event_id == States.event_id)) \
@@ -439,10 +439,10 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
 
         events = execute(query)
 
-    return humanify(hass, _exclude_events(events, filter))
+    return humanify(hass, _exclude_events(events, entities_filter))
 
 
-def _exclude_events(events, filter):
+def _exclude_events(events, entities_filter):
     filtered_events = []
     for event in events:
         domain, entity_id = None, None
@@ -487,7 +487,7 @@ def _exclude_events(events, filter):
             domain = event.data.get(ATTR_DOMAIN)
             entity_id = event.data.get(ATTR_ENTITY_ID)
 
-        if filter.is_included(domain, entity_id):
+        if entities_filter.is_included(domain, entity_id):
             filtered_events.append(event)
 
     return filtered_events
