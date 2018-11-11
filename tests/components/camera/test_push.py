@@ -19,6 +19,8 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
             'webhook_id': 'camera.config_test'
         }})
     await hass.async_block_till_done()
+    assert hass.states.get('camera.config_test') is not None
+
     client = await aiohttp_client(hass.http.app)
 
     # wrong webhook
