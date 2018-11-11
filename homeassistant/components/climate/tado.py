@@ -210,7 +210,9 @@ class TadoClimate(ClimateDevice):
                     not self._is_manual_temperature:
                 return OPERATION_MANUAL_HOT_WATER_ON.get(
                     self._current_operation)
-        return OPERATION_MANUAL.get(self._current_operation)
+            else:
+                return OPERATION_MANUAL.get(self._current_operation)
+        return OPERATION_LIST.get(self._current_operation)
 
     @property
     def operation_list(self):
