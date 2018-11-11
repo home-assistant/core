@@ -4,12 +4,14 @@ import io
 from datetime import timedelta
 
 from homeassistant import core as ha
+from homeassistant.components import webhook
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 
 async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
     """Test that posting to wrong api endpoint fails."""
+    await async_setup_component(hass, webhook.DOMAIN, {})
     await async_setup_component(hass, 'camera', {
         'camera': {
             'platform': 'push',
@@ -21,7 +23,7 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
 
     # wrong webhook
     files = {'image': io.BytesIO(b'fake')}
-    resp = await client.post('/api/camera_push/camera.wrong', data=files)
+    resp = await client.post('/api/webhood/camera.wrong', data=files)
     assert resp.status == 404
 
     # missing file
@@ -37,6 +39,7 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
 
 async def test_posting_url(hass, aiohttp_client):
     """Test that posting to api endpoint works."""
+    await async_setup_component(hass, webhook.DOMAIN, {})
     await async_setup_component(hass, 'camera', {
         'camera': {
             'platform': 'push',
