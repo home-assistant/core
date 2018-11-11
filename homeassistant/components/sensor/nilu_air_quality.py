@@ -12,20 +12,28 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
+    CONF_NAME, CONF_SHOW_ON_MAP, CONF_UNIT_OF_MEASUREMENT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle
 
-REQUIREMENTS = ['niluclient==0.1.0']
+REQUIREMENTS = ['niluclient==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
-CONF_AREAS = 'areas'
+CONF_AREA = 'area'
+CONF_STATION = 'station'
+DEFAULT_NAME = 'NILU'
 
-AREAS = [
+CONF_ATTRIBUTION = "Data provided by luftkvalitet.info and nilu.no"
+ATTR_POLLUTION_INDEX = "pollution_index"
+ATTR_MAX_POLLUTION_INDEX = 'max_pollution_index'
+
+CONF_ALLOWED_AREAS = [
     'Ålesund',
     'Zeppelinfjellet',
     'Tustervatn',
@@ -63,12 +71,17 @@ AREAS = [
     'Bergen'
 ]
 
-POLLUTION_INDEX = [
-    "No data",
-    'Low',
-    'Moderate',
-    'High',
-    "Extremely high"
+CONF_ALLOWED_MEASURABLE_COMPONENTS = [
+    'index',
+    'PM1',
+    'PM10',
+    'PM2.5',
+    'NO',
+    'NO2',
+    'NOx',
+    'O3',
+    'CO',
+    'SO2'
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -76,8 +89,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                   'Latitude and longitude must exist together'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.longitude,
-    vol.Optional(CONF_AREAS):
-        vol.All(cv.ensure_list, [vol.In(AREAS)]),
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(CONF_ALLOWED_MEASURABLE_COMPONENTS)]),
+    vol.Exclusive(CONF_AREA, 'station_collection',
+                  'Can only configure one specific station or '
+                  'stations in a specific area pr sensor. '
+                  'Please only configure station or area.'):
+        vol.All(cv.string, vol.In(CONF_ALLOWED_AREAS)),
+    vol.Exclusive(CONF_STATION, 'station_collection',
+                  'Can only configure one specific station or '
+                  'stations in a specific area pr sensor. '
+                  'Please only configure station or area.'):
+        cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
 })
 
 
@@ -85,23 +110,55 @@ async def async_setup_platform(hass, config, add_entities,
                                discovery_info=None):
     """Set up the NILU air quality sensors."""
     import niluclient as nilu
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    areas = config.get(CONF_AREAS)
-
-    location_client = nilu.create_location_client(latitude, longitude)
+    name = config.get(CONF_NAME)
+    area = config.get(CONF_AREA)
+    station = config.get(CONF_STATION)
+    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+    show_on_map = config.get(CONF_SHOW_ON_MAP)
 
     sensors = []
-    for key in location_client.station_names:
-        sensors.append(NiluSensor(nilu.create_station_client(key)))
 
-    if areas:
-        for area in areas:
-            stations = nilu.lookup_stations_in_area(area)
-            for station in stations:
-                sensors.append(NiluSensor(nilu.create_station_client(station)))
+    if station:
+        stations = [station]
+    elif area:
+        stations = nilu.lookup_stations_in_area(area)
+    else:
+        latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+        longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+        location_client = nilu.create_location_client(latitude, longitude)
+        stations = location_client.station_names
+
+    for station in stations:
+        client = NiluData(nilu.create_station_client(station))
+        client.update()
+        for condition in monitored_conditions:
+            if condition in client.data.sensors or condition == 'index':
+                sensors.append(
+                    NiluSensor(client, name, condition, show_on_map))
+            else:
+                _LOGGER.warning(
+                    "%s doesn't seem to be measured on %s station.",
+                    condition, station)
 
     add_entities(sensors, True)
+
+
+class NiluData:
+    """Class for handling the data retrieval."""
+
+    def __init__(self, api):
+        """Initialize the data object."""
+        self.api = api
+
+    @property
+    def data(self):
+        """Get data cached in client."""
+        return self.api.data
+
+    @Throttle(SCAN_INTERVAL)
+    def update(self):
+        """Get the latest data from nilu apis."""
+        self.api.update()
 
 
 class NiluSensor(Entity):
@@ -109,17 +166,24 @@ class NiluSensor(Entity):
 
     ICON = 'mdi:cloud-outline'
 
-    def __init__(self, api_data):
+    def __init__(self,
+                 api_data: NiluData,
+                 name: str,
+                 condition: str,
+                 show_on_map: bool):
         """Initialize the sensor."""
-        self._api_data = api_data
-        self._name = "NILU " + api_data.data.area + " " + api_data.data.name
-        self._site_data = None
+        self._api = api_data
+        self._name = "{} {} {}".format(name, api_data.data.name, condition)
+        self._condition = condition
         self._state = None
-        self._updated = None
+        self._unit_of_measurement = None
         self._attrs = {
-            ATTR_ATTRIBUTION: "Data provided by luftkvalitet.info and nilu.no"
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION
         }
-        self.update()
+
+        if show_on_map:
+            self._attrs[CONF_LATITUDE] = api_data.data.latitude
+            self._attrs[CONF_LONGITUDE] = api_data.data.longitude
 
     @property
     def name(self) -> str:
@@ -137,26 +201,38 @@ class NiluSensor(Entity):
         return self.ICON
 
     @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity, if any."""
+        return self._unit_of_measurement
+
+    @property
     def device_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return self._attrs
 
     def update(self) -> None:
         """Update the sensor."""
-        self._api_data.update()
-        self._attrs['updated'] = dt_util.now()
+        import niluclient as nilu
+        self._api.update()
 
-        sensors = self._api_data.data.sensors.values()
+        if self._condition == 'index':
+            sensors = self._api.data.sensors.values()
+            max_index = max([s.pollution_index for s in sensors])
+            self._state = nilu.POLLUTION_INDEX[max_index]
 
-        max_index = max([s.pollution_index for s in sensors])
-        self._state = POLLUTION_INDEX[max_index]
+            self._attrs[ATTR_MAX_POLLUTION_INDEX] = max_index
+            self._attrs[CONF_AREA] = self._api.data.area
 
-        self._attrs['max_pollution_index'] = max_index
-
-        for sensor in sensors:
-            attr_name = sensor.component
-            self._attrs[attr_name + "_value"] = sensor.value
-            self._attrs[attr_name + "_unit_of_measurement"] = \
-                sensor.unit_of_measurement
-            self._attrs[attr_name + "_pollution_index"] = \
-                sensor.pollution_index
+            for sensor in sensors:
+                attr_name = sensor.component
+                self._attrs[attr_name] = "{0:.2f}".format(sensor.value)
+                self._attrs[attr_name + "_" + CONF_UNIT_OF_MEASUREMENT] = \
+                    sensor.unit_of_measurement
+                self._attrs[attr_name + "_" + ATTR_POLLUTION_INDEX] = \
+                    sensor.pollution_index
+        else:
+            sensor = self._api.data.sensors[self._condition]
+            self._state = "{0:.2f}".format(sensor.value)
+            self._unit_of_measurement = sensor.unit_of_measurement
+            self._attrs[CONF_AREA] = self._api.data.area
+            self._attrs[ATTR_POLLUTION_INDEX] = sensor.pollution_index

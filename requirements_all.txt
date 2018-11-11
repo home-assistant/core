@@ -686,7 +686,7 @@ neurio==0.3.1
 niko-home-control==0.1.8
 
 # homeassistant.components.sensor.nilu_air_quality
-niluclient==0.1.0
+niluclient==0.1.1
 
 # homeassistant.components.sensor.nederlandse_spoorwegen
 nsapi==2.7.4
