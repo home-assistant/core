@@ -171,8 +171,16 @@ class TibberSensorRT(Entity):
 
     async def _async_callback(self, payload):
         """Handle received data."""
-        data = payload.get('data', {})
-        live_measurement = data.get('liveMeasurement', {})
+        errors = payload.get('errors')
+        if errors:
+            _LOGGER.error(errors[0])
+            return
+        data = payload.get('data')
+        if data is None:
+            return
+        live_measurement = data.get('liveMeasurement')
+        if live_measurement is None:
+            return
         self._state = live_measurement.pop('power', None)
         self._device_state_attributes = live_measurement
         self.async_schedule_update_ha_state()
