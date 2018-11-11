@@ -89,11 +89,11 @@ class HADockermonSwitch(SwitchDevice):
         self._status = None
         self._image = None
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
         await self.api.container_start(self.container)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
         await self.api.container_stop(self.container)
 
