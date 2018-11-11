@@ -109,11 +109,6 @@ class PushCamera(Camera):
         self.hass.data[PUSH_CAMERA_DATA][self.webhook_id] = self
 
     @property
-    def image_field(self):
-        """HTTP field containing the image file."""
-        return self._image_field
-
-    @property
     def state(self):
         """Return current state of the camera."""
         return self._state
