@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     device = FireTVDevice(host, name, adbkey, get_source, get_sources)
     adb_log = " using adbkey='{0}'".format(adbkey) if adbkey else ""
-    if not device.firetv.adb:
+    if not device.firetv.available:
         _LOGGER.warning("Could not connect to Fire TV at %s%s", host, adb_log)
 
         # Configuration troubleshooting for `adbkey`
@@ -84,31 +84,38 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([device])
 
 
-def adb_wrapper(func):
-    """Wait if previous ADB commands haven't finished."""
-    @functools.wraps(func)
-    def _adb_wrapper(self, *args, **kwargs):
-        # If an ADB command is already running, don't execute this command
-        if self.firetv.adb and self.adb_lock:
-            _LOGGER.info('Skipping an ADB command because a previous command '
-                         'is still running')
-            return
+def adb_decorator(override_available=False):
+    """Send an ADB command if the device is available and not locked."""
+    def adb_wrapper(func):
+        """Wait if previous ADB commands haven't finished."""
+        @functools.wraps(func)
+        def _adb_wrapper(self, *args, **kwargs):
+            # Only proceed if the device is available
+            if self.available or override_available:
+                # If an ADB command is already running, skip this command
+                if self.adb_lock:
+                    _LOGGER.info('Skipping an ADB command because a previous '
+                                 'command is still running')
+                    return
 
-        # Prevent additional ADB commands while trying to run this command
-        self.adb_lock = True
-        try:
-            returns = func(self, *args, **kwargs)
-        except self.exceptions:
-            _LOGGER.error('Failed to execute an ADB command; will attempt to '
-                          're-establish the ADB connection in the next update')
-            returns = None
-            self.firetv.adb = None
-        finally:
-            self.adb_lock = False
+                # Prevent additional ADB commands while trying to run this one
+                self.adb_lock = True
+                try:
+                    returns = func(self, *args, **kwargs)
+                except self.exceptions:
+                    _LOGGER.error('Failed to execute an ADB command; will '
+                                  'attempt to re-establish the ADB connection '
+                                  'in the next update')
+                    returns = None
+                    self._available = False  # pylint: disable=protected-access
+                finally:
+                    self.adb_lock = False
 
-        return returns
+                return returns
 
-    return _adb_wrapper
+        return _adb_wrapper
+
+    return adb_wrapper
 
 
 class FireTVDevice(MediaPlayerDevice):
@@ -137,7 +144,7 @@ class FireTVDevice(MediaPlayerDevice):
                            InvalidChecksumError)
 
         self._state = None
-        self._available = bool(self.firetv.adb)
+        self._available = self.firetv.available
         self._current_app = None
         self._running_apps = None
 
@@ -176,21 +183,19 @@ class FireTVDevice(MediaPlayerDevice):
         """Return a list of running apps."""
         return self._running_apps
 
-    @adb_wrapper
+    @adb_decorator(override_available=True)
     def update(self):
         """Get the latest date and update device state."""
         # Check if device is disconnected.
-        if not self.firetv.adb:
-            self._available = False
+        if not self._available:
             self._running_apps = None
             self._current_app = None
 
             # Try to connect
             self.firetv.connect()
-
-        else:
             self._available = True
 
+        else:
             # Check if device is off.
             if not self.firetv.screen_on:
                 self._state = STATE_OFF
@@ -245,57 +250,57 @@ class FireTVDevice(MediaPlayerDevice):
                     # Assume the devices is on standby.
                     self._state = STATE_STANDBY
 
-    @adb_wrapper
+    @adb_decorator()
     def turn_on(self):
         """Turn on the device."""
         self.firetv.turn_on()
 
-    @adb_wrapper
+    @adb_decorator()
     def turn_off(self):
         """Turn off the device."""
         self.firetv.turn_off()
 
-    @adb_wrapper
+    @adb_decorator()
     def media_play(self):
         """Send play command."""
         self.firetv.media_play()
 
-    @adb_wrapper
+    @adb_decorator()
     def media_pause(self):
         """Send pause command."""
         self.firetv.media_pause()
 
-    @adb_wrapper
+    @adb_decorator()
     def media_play_pause(self):
         """Send play/pause command."""
         self.firetv.media_play_pause()
 
-    @adb_wrapper
+    @adb_decorator()
     def media_stop(self):
         """Send stop (back) command."""
         self.firetv.back()
 
-    @adb_wrapper
+    @adb_decorator()
     def volume_up(self):
         """Send volume up command."""
         self.firetv.volume_up()
 
-    @adb_wrapper
+    @adb_decorator()
     def volume_down(self):
         """Send volume down command."""
         self.firetv.volume_down()
 
-    @adb_wrapper
+    @adb_decorator()
     def media_previous_track(self):
         """Send previous track command (results in rewind)."""
         self.firetv.media_previous()
 
-    @adb_wrapper
+    @adb_decorator()
     def media_next_track(self):
         """Send next track command (results in fast-forward)."""
         self.firetv.media_next()
 
-    @adb_wrapper
+    @adb_decorator()
     def select_source(self, source):
         """Select input source.
 
