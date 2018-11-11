@@ -74,10 +74,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 class HADockermonSwitch(SwitchDevice):
-    """Representation of a recswitch device."""
+    """Representation of a HA Dockermon switch."""
 
     def __init__(self, api, device_name, container):
-        """Initialize a recswitch device."""
+        """Initialize a HA Dockermon switch."""
         self.api = api
         self.device_name = device_name
         self.container = container
