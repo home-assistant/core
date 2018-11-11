@@ -16,13 +16,12 @@ from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pydockermon==1.0.0']
 DEFAULT_NAME = 'HA Dockermon {0}'
 
-CONFCONTAINERS = 'containers'
+CONF_CONTAINERS = 'containers'
 
 ATTR_CONTAINER = 'container'
 ATTR_STATUS = 'status'
@@ -36,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
-    vol.Optional(CONFCONTAINERS, default=None):
+    vol.Optional(CONF_CONTAINERS, default=None):
         vol.All(cv.ensure_list, [cv.string]),
 })
 
@@ -53,7 +52,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     ssl = config[CONF_SSL]
     verify_ssl = config[CONF_VERIFY_SSL]
     device_name = config.get(CONF_NAME)
-    containers = config[CONFCONTAINERS]
+    containers = config[CONF_CONTAINERS]
     session = async_get_clientsession(hass, verify_ssl)
     api = API(hass.loop, session, host, port, username, password, ssl)
     devices = []
