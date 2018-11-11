@@ -691,10 +691,12 @@ class FanSpeedTrait(_Trait):
     ]
 
     speed_synonyms = {
-        "off": ['stop', 'off'],
-        "low": ['slow', 'low', 'slowest', 'lowest'],
-        "medium": ['medium', 'mid', 'middle'],
-        "high": ['high', 'max', 'fast', 'highest', 'fastest', 'maximum']
+        fan.SPEED_OFF: ['stop', 'off'],
+        fan.SPEED_LOW: ['slow', 'low', 'slowest', 'lowest'],
+        fan.SPEED_MEDIUM: ['medium', 'mid', 'middle'],
+        fan.SPEED_HIGH: [
+            'high', 'max', 'fast', 'highest', 'fastest', 'maximum'
+        ]
     }
 
     @staticmethod
@@ -724,10 +726,8 @@ class FanSpeedTrait(_Trait):
                 'speeds': speeds,
                 'ordered': True
             },
-            "reversible": True if (
-                    self.state.attributes.get(
-                        ATTR_SUPPORTED_FEATURES, 0) & fan.SUPPORT_DIRECTION)
-            else False
+            "reversible": bool(self.state.attributes.get(
+                ATTR_SUPPORTED_FEATURES, 0) & fan.SUPPORT_DIRECTION)
         }
 
     def query_attributes(self):
