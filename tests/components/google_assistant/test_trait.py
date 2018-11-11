@@ -1,10 +1,6 @@
 """Tests for the Google Assistant traits."""
 import pytest
 
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES)
-from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.components import (
     climate,
     cover,
@@ -20,8 +16,11 @@ from homeassistant.components import (
     group,
 )
 from homeassistant.components.google_assistant import trait, helpers, const
+from homeassistant.const import (
+    STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES)
+from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.util import color
-
 from tests.common import async_mock_service
 
 BASIC_CONFIG = helpers.Config(
@@ -795,3 +794,15 @@ async def test_lock_unlock_unlock(hass):
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'lock.front_door'
     }
+
+
+async def test_fan_speed(hass):
+    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED)
+
+    trt = trait.FanSpeedTrait(hass, State('fan.living_room_fan', fan.ATTR_SPEED), BASIC_CONFIG)
+
+    assert trt.sync_attributes() is None
+
+    assert trt.query_attributes() is None
+
+    trt = trait.FanSpeedTrait(hass, State('fan.living_room_fan', fan.ATTR_SPEED), UNSAFE_CONFIG)
