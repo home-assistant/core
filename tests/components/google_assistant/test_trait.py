@@ -875,6 +875,3 @@ async def test_fan_speed(hass):
         'entity_id': 'fan.living_room_fan',
         'speed': 'medium'
     }
-
-
-
