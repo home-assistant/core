@@ -1328,6 +1328,32 @@ async def test_report_dimmable_light_state(hass):
     properties.assert_equal('Alexa.BrightnessController', 'brightness', 0)
 
 
+async def test_report_colored_light_state(hass):
+    """Test ColorController reports color correctly."""
+    hass.states.async_set(
+        'light.test_on', 'on', {'friendly_name': "Test light On",
+                                'hs_color': (180, 75),
+                                'brightness': 128,
+                                'supported_features': 17})
+    hass.states.async_set(
+        'light.test_off', 'off', {'friendly_name': "Test light Off",
+                                  'supported_features': 17})
+
+    properties = await reported_properties(hass, 'light.test_on')
+    properties.assert_equal('Alexa.ColorController', 'color', {
+        'hue': 180,
+        'saturation': 0.75,
+        'brightness': 128 / 255.0,
+    })
+
+    properties = await reported_properties(hass, 'light.test_off')
+    properties.assert_equal('Alexa.ColorController', 'color', {
+        'hue': 0,
+        'saturation': 0,
+        'brightness': 0,
+    })
+
+
 async def reported_properties(hass, endpoint):
     """Use ReportState to get properties and return them.
 
