@@ -62,11 +62,11 @@ SENSORS = {
         'IndexSensor', 'Allergy Index: Tomorrow', 'mdi:flower'),
     TYPE_ALLERGY_YESTERDAY: (
         'IndexSensor', 'Allergy Index: Yesterday', 'mdi:flower'),
-    TYPE_ASTHMA_TODAY: ('IndexSensor', 'Ashma Index: Today', 'mdi:flower'),
+    TYPE_ASTHMA_TODAY: ('IndexSensor', 'Asthma Index: Today', 'mdi:flower'),
     TYPE_ASTHMA_TOMORROW: (
-        'IndexSensor', 'Ashma Index: Tomorrow', 'mdi:flower'),
+        'IndexSensor', 'Asthma Index: Tomorrow', 'mdi:flower'),
     TYPE_ASTHMA_YESTERDAY: (
-        'IndexSensor', 'Ashma Index: Yesterday', 'mdi:flower'),
+        'IndexSensor', 'Asthma Index: Yesterday', 'mdi:flower'),
     TYPE_ASTHMA_FORECAST: (
         'ForecastSensor', 'Asthma Index: Forecasted Average', 'mdi:flower'),
     TYPE_ASTHMA_HISTORIC: (
