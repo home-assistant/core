@@ -174,6 +174,7 @@ class TibberSensorRT(Entity):
         errors = payload.get('errors')
         if errors:
             _LOGGER.error(errors[0])
+            return
         data = payload.get('data')
         if data is None:
             return
