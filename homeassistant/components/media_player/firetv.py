@@ -127,9 +127,7 @@ class FireTVDevice(MediaPlayerDevice):
         from adb.adb_protocol import (
             InvalidCommandError, InvalidResponseError, InvalidChecksumError)
 
-        self._host = host
         self._name = name
-        self._adbkey = adbkey
         self._get_source = get_source
         self._get_sources = get_sources
 
