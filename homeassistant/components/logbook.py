@@ -115,6 +115,60 @@ async def async_setup(hass, config):
     return True
 
 
+class DomainsAndEntitiesFilter:
+    def __init__(self, config):
+        """Get list of filtered events."""
+        self.excluded_entities = []
+        self.excluded_domains = []
+        self.included_entities = []
+        self.included_domains = []
+        exclude = config.get(CONF_EXCLUDE)
+        if exclude:
+            self.excluded_entities = exclude[CONF_ENTITIES]
+            self.excluded_domains = exclude[CONF_DOMAINS]
+        include = config.get(CONF_INCLUDE)
+        if include:
+            self.included_entities = include[CONF_ENTITIES]
+            self.included_domains = include[CONF_DOMAINS]
+
+    def is_included(self, domain, entity_id):
+        if not domain and not entity_id:
+            return False
+
+        # filter if only excluded is configured for this domain
+        if self.excluded_domains and domain in self.excluded_domains and \
+                not self.included_domains:
+            if (self.included_entities and entity_id not in self.included_entities) \
+                    or not self.included_entities:
+                return False
+
+        # filter if only included is configured for this domain
+        elif not self.excluded_domains and self.included_domains and \
+                domain not in self.included_domains:
+            if (self.included_entities and entity_id not in self.included_entities) \
+                    or not self.included_entities:
+                return False
+
+        # filter if included and excluded is configured for this domain
+        elif self.excluded_domains and self.included_domains and \
+                (domain not in self.included_domains or
+                 domain in self.excluded_domains):
+            if (self.included_entities and entity_id not in self.included_entities) \
+                    or not self.included_entities or domain in self.excluded_domains:
+                return False
+
+        # filter if only included is configured for this entity
+        elif not self.excluded_domains and not self.included_domains and \
+                self.included_entities and entity_id not in self.included_entities:
+            return False
+
+        # check if logbook entry is excluded for this entity
+        if entity_id in self.excluded_entities:
+            return False
+
+        return True
+
+
 class LogbookView(HomeAssistantView):
     """Handle logbook view requests."""
 
@@ -317,43 +371,67 @@ def humanify(hass, events):
                 }
 
 
+def _get_related_entity_ids(session, events_filter):
+    from homeassistant.components.recorder.models import States
+    from homeassistant.components.recorder.util import RETRIES, QUERY_RETRY_WAIT
+    from sqlalchemy.exc import SQLAlchemyError
+    import time
+
+    timer_start = time.perf_counter()
+
+    query = session.query(States).with_entities(States.domain, States.entity_id).distinct()
+
+    for tryno in range(0, RETRIES):
+        try:
+            result = [
+                row.entity_id for row in query
+                if events_filter.is_included(row.domain, row.entity_id)]
+
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                elapsed = time.perf_counter() - timer_start
+                _LOGGER.debug('fetching %d distinct domain/entity_id pairs took %fs',
+                              len(result),
+                              elapsed)
+
+            return result
+        except SQLAlchemyError as err:
+            _LOGGER.error("Error executing query: %s", err)
+
+            if tryno == RETRIES - 1:
+                raise
+            else:
+                time.sleep(QUERY_RETRY_WAIT)
+
+
 def _get_events(hass, config, start_day, end_day, entity_id=None):
     """Get events for a period of time."""
     from homeassistant.components.recorder.models import Events, States
     from homeassistant.components.recorder.util import (
         execute, session_scope)
 
+    filter = DomainsAndEntitiesFilter(config)
+
     with session_scope(hass=hass) as session:
+        if entity_id is not None:
+            entity_ids = [entity_id.lower()]
+        else:
+            entity_ids = _get_related_entity_ids(session, filter)
+
         query = session.query(Events).order_by(Events.time_fired) \
             .outerjoin(States, (Events.event_id == States.event_id))  \
             .filter(Events.event_type.in_(ALL_EVENT_TYPES)) \
             .filter((Events.time_fired > start_day)
                     & (Events.time_fired < end_day)) \
             .filter((States.last_updated == States.last_changed)
-                    | (States.state_id.is_(None)))
-
-        if entity_id is not None:
-            query = query.filter(States.entity_id == entity_id.lower())
+                    | (States.state_id.is_(None)))\
+            .filter(States.entity_id.in_(entity_ids))
 
         events = execute(query)
-    return humanify(hass, _exclude_events(events, config))
+
+    return humanify(hass, _exclude_events(events, filter))
 
 
-def _exclude_events(events, config):
-    """Get list of filtered events."""
-    excluded_entities = []
-    excluded_domains = []
-    included_entities = []
-    included_domains = []
-    exclude = config.get(CONF_EXCLUDE)
-    if exclude:
-        excluded_entities = exclude[CONF_ENTITIES]
-        excluded_domains = exclude[CONF_DOMAINS]
-    include = config.get(CONF_INCLUDE)
-    if include:
-        included_entities = include[CONF_ENTITIES]
-        included_domains = include[CONF_DOMAINS]
-
+def _exclude_events(events, filter):
     filtered_events = []
     for event in events:
         domain, entity_id = None, None
@@ -398,34 +476,9 @@ def _exclude_events(events, config):
             domain = event.data.get(ATTR_DOMAIN)
             entity_id = event.data.get(ATTR_ENTITY_ID)
 
-        if domain or entity_id:
-            # filter if only excluded is configured for this domain
-            if excluded_domains and domain in excluded_domains and \
-                    not included_domains:
-                if (included_entities and entity_id not in included_entities) \
-                        or not included_entities:
-                    continue
-            # filter if only included is configured for this domain
-            elif not excluded_domains and included_domains and \
-                    domain not in included_domains:
-                if (included_entities and entity_id not in included_entities) \
-                        or not included_entities:
-                    continue
-            # filter if included and excluded is configured for this domain
-            elif excluded_domains and included_domains and \
-                    (domain not in included_domains or
-                     domain in excluded_domains):
-                if (included_entities and entity_id not in included_entities) \
-                        or not included_entities or domain in excluded_domains:
-                    continue
-            # filter if only included is configured for this entity
-            elif not excluded_domains and not included_domains and \
-                    included_entities and entity_id not in included_entities:
-                continue
-            # check if logbook entry is excluded for this entity
-            if entity_id in excluded_entities:
-                continue
-        filtered_events.append(event)
+        if filter.is_included(domain, entity_id):
+            filtered_events.append(event)
+
     return filtered_events
 
 

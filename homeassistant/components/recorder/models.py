@@ -17,7 +17,7 @@ from homeassistant.helpers.json import JSONEncoder
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +86,12 @@ class States(Base):   # type: ignore
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index(
-            'ix_states_entity_id_last_updated', 'entity_id', 'last_updated'),)
+            'ix_states_entity_id_last_updated', 'entity_id', 'last_updated'),
+        # Used for filtering logbook entries
+        # (_get_related_entity_ids in logbook.py)
+        Index(
+            'ix_states_domain_entity_id', 'domain', 'entity_id'),
+    )
 
     @staticmethod
     def from_event(event):
