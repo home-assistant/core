@@ -684,6 +684,7 @@ class FanSpeedTrait(_Trait):
 
     https://developers.google.com/actions/smarthome/traits/fanspeed
     """
+
     name = TRAIT_FANSPEED
     commands = [
         COMMAND_FANSPEED
@@ -723,7 +724,8 @@ class FanSpeedTrait(_Trait):
                 'speeds': speeds,
                 'ordered': True
             },
-            "reversible": self.state.attributes.get(ATTR_SUPPORTED_FEATURES) & fan.SUPPORT_DIRECTION
+            "reversible": self.state.attributes.get(
+                ATTR_SUPPORTED_FEATURES) & fan.SUPPORT_DIRECTION
         }
 
     def query_attributes(self):
@@ -741,7 +743,8 @@ class FanSpeedTrait(_Trait):
 
     async def execute(self, command, params):
         """Execute an SetFanSpeed command."""
-
-        await self.hass.services.async_call(fan.DOMAIN, fan.SERVICE_SET_SPEED, {
-            ATTR_ENTITY_ID: self.state.entity_id, fan.ATTR_SPEED: params['fanSpeed']
-        }, blocking=True)
+        await self.hass.services.async_call(
+            fan.DOMAIN, fan.SERVICE_SET_SPEED, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                fan.ATTR_SPEED: params['fanSpeed']
+            }, blocking=True)

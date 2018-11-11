@@ -797,12 +797,15 @@ async def test_lock_unlock_unlock(hass):
 
 
 async def test_fan_speed(hass):
+    """Test FanSpeed trait speed control support for fan domain."""
     assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED)
 
-    trt = trait.FanSpeedTrait(hass, State('fan.living_room_fan', fan.ATTR_SPEED), BASIC_CONFIG)
+    trt = trait.FanSpeedTrait(
+        hass, State('fan.living_room_fan', fan.ATTR_SPEED), BASIC_CONFIG)
 
     assert trt.sync_attributes() is None
 
     assert trt.query_attributes() is None
 
-    trt = trait.FanSpeedTrait(hass, State('fan.living_room_fan', fan.ATTR_SPEED), UNSAFE_CONFIG)
+    trt = trait.FanSpeedTrait(hass, State(
+        'fan.living_room_fan', fan.ATTR_SPEED), UNSAFE_CONFIG)
