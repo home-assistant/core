@@ -55,8 +55,9 @@ class HangoutsNotificationService(BaseNotificationService):
         service_data = {
             ATTR_TARGET: target_conversations,
             ATTR_MESSAGE: messages,
-            ATTR_DATA: kwargs[ATTR_DATA]
         }
+        if kwargs[ATTR_DATA]:
+            service_data[ATTR_DATA] = kwargs[ATTR_DATA]
 
         return self.hass.services.call(
             DOMAIN, SERVICE_SEND_MESSAGE, service_data=service_data)
