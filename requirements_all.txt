@@ -377,7 +377,7 @@ feedparser==5.2.1
 fints==1.0.1
 
 # homeassistant.components.media_player.firetv
-firetv==1.0.6
+firetv==1.0.7
 
 # homeassistant.components.sensor.fitbit
 fitbit==0.3.0
