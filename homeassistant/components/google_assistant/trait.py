@@ -724,8 +724,10 @@ class FanSpeedTrait(_Trait):
                 'speeds': speeds,
                 'ordered': True
             },
-            "reversible": self.state.attributes.get(
-                ATTR_SUPPORTED_FEATURES, 0) & fan.SUPPORT_DIRECTION
+            "reversible": True if (
+                    self.state.attributes.get(
+                        ATTR_SUPPORTED_FEATURES, 0) & fan.SUPPORT_DIRECTION)
+            else False
         }
 
     def query_attributes(self):
