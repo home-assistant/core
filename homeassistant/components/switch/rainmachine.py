@@ -157,6 +157,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
                 self.rainmachine.client.api_version),
             'sw_version': self.rainmachine.client.software_version,
         }
+
     @property
     def icon(self) -> str:
         """Return the icon."""
