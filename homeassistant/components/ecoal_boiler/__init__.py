@@ -3,14 +3,6 @@ Support for ecoal/esterownik.pl coal/wood boiler controller
 """
 import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-
-## from homeassistant.const import CONF_HOST
-
-## from homeassistant.components.light import PLATFORM_SCHEMA
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ecoal_boiler"

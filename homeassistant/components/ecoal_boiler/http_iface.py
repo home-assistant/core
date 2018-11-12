@@ -355,7 +355,6 @@ class ECoalControler:
             else:
                 # Seems always be 0 if off ?
                 txt += " Air (%d%%):Off" % (self.air_pump_power)
-            ## txt += " %02d:%02d:%02d" % (self.hours, self.minutes, self.seconds, )
             txt += " %s" % (self.datetime,)
             return txt
 
@@ -380,7 +379,6 @@ class ECoalControler:
         return ((hi << 8 | lo) - (hi >> 7 << 16)) / 10.0
 
     def _get_request(self, req):
-        ## r = requests.get('https://api.github.com/events')
         url = "http://%s/?com=%s" % (self.host, req)
         self.log.debug("_get_request(): request: %s", url)
         resp = requests.get(url, timeout=self.timeout, auth=self.requests_auth)
@@ -393,8 +391,7 @@ class ECoalControler:
         end_pos = buf.find(b"]")
         if start_pos < 0 or end_pos < 0 or start_pos >= end_pos:
             raise ValueError("Unable to parse as seqeuence of ints.", bytes)
-        txt = buf[start_pos + 1 : end_pos]
-        ## self.log.debug("txt: %r", txt)
+        txt = buf[start_pos+1:end_pos]
         status_vals = []
         for val in txt.split(b","):
             try:
@@ -432,7 +429,6 @@ class ECoalControler:
 
         if resp.status_code != 200:
             return
-        ## txt = str(resp.content);
         buf = resp.content
         # status: b'[2,1,6,6,0,0,76,0,0,0,0,0
         status_vals = self._parse_seq_of_ints(buf)
@@ -598,7 +594,8 @@ class ECoalControler:
         status.mode_auto = status_vals[34] == 1
 
         # DEBUG:__main__:Diff
-        # pos: 35 diff: 1 -> 0  # programator CO: 1 - pogodowy,  0 - programator CO ?
+        # pos: 35 diff: 1 -> 0
+        #   programator CO: 1 - pogodowy,  0 - programator CO ?
         status.target_feedwater_temp = status_vals[37]
         status.target_domestic_hot_water_temp = status_vals[38]
         status.air_pump_power = status_vals[39]

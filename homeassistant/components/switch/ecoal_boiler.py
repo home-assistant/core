@@ -51,8 +51,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switches based on ecoal interface."""
     from ..ecoal_boiler import g_ecoal_contr
 
-    ## invert_logic = config.get(CONF_INVERT_LOGIC)
-
     config_enable = config.get(CONF_ENABLE, {})
     # _LOGGER.debug("config_enable: %r", config_enable)
     switches = []
@@ -71,7 +69,8 @@ class EcoalSwitch(ToggleEntity):
         self._ecoal_contr = ecoal_contr
         self._name = name
         self._state_attr = state_attr
-        # NOTE: Convetion set_<attr> and status.<attr> is held inside ecoal_boiler.http_interface
+        # NOTE: Convetion set_<attr> and status.<attr>
+        # is held inside ecoal_boiler.http_interface
         self._contr_set_fun = getattr(self._ecoal_contr, "set_" + state_attr)
         # No setting value, read instead
         self._state = self.is_on
@@ -91,7 +90,6 @@ class EcoalSwitch(ToggleEntity):
         """Return true if device is on."""
         status = self._ecoal_contr.get_cached_status(max_cache_period=1)
         self._state = getattr(status, self._state_attr)
-        ## self._state = bool(status.domestic_hot_water_pump)
         return self._state
 
     def turn_on(self, **kwargs) -> None:
