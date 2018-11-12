@@ -3,12 +3,13 @@
 import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 import aiohttp
 import async_timeout
 
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.util import dt
 from .const import DATE_FORMAT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,12 +85,11 @@ class Auth:
         if not self._prefs[STORAGE_ACCESS_TOKEN]:
             return False
 
-        expire_time = datetime.strptime(self._prefs[STORAGE_EXPIRE_TIME],
-                                        DATE_FORMAT)
+        expire_time = dt.parse_datetime(self._prefs[STORAGE_EXPIRE_TIME])
         preemptive_expire_time = expire_time - timedelta(
             seconds=PREEMPTIVE_REFRESH_TTL_IN_SECONDS)
 
-        return datetime.utcnow() < preemptive_expire_time
+        return dt.utcnow() < preemptive_expire_time
 
     async def _async_request_new_token(self, lwa_params):
 
@@ -105,23 +105,23 @@ class Auth:
             _LOGGER.error("Timeout calling LWA to get auth token.")
             return None
 
-        response_text = await response.text()
-
         _LOGGER.debug("LWA response header: %s", response.headers)
         _LOGGER.debug("LWA response status: %s", response.status)
-        _LOGGER.debug("LWA response body  : %s", response_text)
 
         if response.status != 200:
             _LOGGER.error("Error calling LWA to get auth token.")
             return None
 
-        access_token = json.loads(response_text)["access_token"]
-        refresh_token = json.loads(response_text)["refresh_token"]
-        expires_in = json.loads(response_text)["expires_in"]
-        expire_time = datetime.utcnow() + timedelta(seconds=expires_in)
+        response_json = await response.json()
+        _LOGGER.debug("LWA response body  : %s", response_json)
+
+        access_token = response_json["access_token"]
+        refresh_token = response_json["refresh_token"]
+        expires_in = response_json["expires_in"]
+        expire_time = dt.utcnow() + timedelta(seconds=expires_in)
 
         await self._async_update_preferences(access_token, refresh_token,
-                                             expire_time.strftime(DATE_FORMAT))
+                                             expire_time.isoformat())
 
         return access_token
 
