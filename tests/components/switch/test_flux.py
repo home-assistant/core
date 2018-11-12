@@ -4,7 +4,8 @@ from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 from homeassistant.components import switch, light
-from homeassistant.const import CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON
+from homeassistant.const import (
+    CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SUN_EVENT_SUNRISE)
 import homeassistant.loader as loader
 import homeassistant.util.dt as dt_util
 
@@ -75,24 +76,23 @@ class TestSwitchFlux(unittest.TestCase):
         """Test the flux switch when it is off."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=10, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -110,30 +110,29 @@ class TestSwitchFlux(unittest.TestCase):
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
-        self.assertEqual(0, len(turn_on_calls))
+        assert 0 == len(turn_on_calls)
 
     def test_flux_before_sunrise(self):
         """Test the flux switch before sunrise."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=2, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -154,32 +153,31 @@ class TestSwitchFlux(unittest.TestCase):
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 112)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.606, 0.379])
+        assert call.data[light.ATTR_BRIGHTNESS] == 112
+        assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
     # pylint: disable=invalid-name
     def test_flux_after_sunrise_before_sunset(self):
         """Test the flux switch after sunrise and before sunset."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=8, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -201,32 +199,31 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 173)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.439, 0.37])
+        assert call.data[light.ATTR_BRIGHTNESS] == 173
+        assert call.data[light.ATTR_XY_COLOR] == [0.439, 0.37]
 
     # pylint: disable=invalid-name
     def test_flux_after_sunset_before_stop(self):
         """Test the flux switch after sunset and before stop."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=17, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -249,32 +246,31 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 146)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.506, 0.385])
+        assert call.data[light.ATTR_BRIGHTNESS] == 146
+        assert call.data[light.ATTR_XY_COLOR] == [0.506, 0.385]
 
     # pylint: disable=invalid-name
     def test_flux_after_stop_before_sunrise(self):
         """Test the flux switch after stop and before sunrise."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=23, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -295,32 +291,31 @@ class TestSwitchFlux(unittest.TestCase):
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 112)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.606, 0.379])
+        assert call.data[light.ATTR_BRIGHTNESS] == 112
+        assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
     # pylint: disable=invalid-name
     def test_flux_with_custom_start_stop_times(self):
         """Test the flux with custom start and stop times."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=17, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -344,8 +339,8 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 147)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.504, 0.385])
+        assert call.data[light.ATTR_BRIGHTNESS] == 147
+        assert call.data[light.ATTR_XY_COLOR] == [0.504, 0.385]
 
     def test_flux_before_sunrise_stop_next_day(self):
         """Test the flux switch before sunrise.
@@ -354,24 +349,23 @@ class TestSwitchFlux(unittest.TestCase):
         """
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=2, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -394,8 +388,8 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 112)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.606, 0.379])
+        assert call.data[light.ATTR_BRIGHTNESS] == 112
+        assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
     # pylint: disable=invalid-name
     def test_flux_after_sunrise_before_sunset_stop_next_day(self):
@@ -406,24 +400,23 @@ class TestSwitchFlux(unittest.TestCase):
         """
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=8, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -446,8 +439,8 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 173)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.439, 0.37])
+        assert call.data[light.ATTR_BRIGHTNESS] == 173
+        assert call.data[light.ATTR_XY_COLOR] == [0.439, 0.37]
 
     # pylint: disable=invalid-name
     def test_flux_after_sunset_before_midnight_stop_next_day(self):
@@ -457,24 +450,23 @@ class TestSwitchFlux(unittest.TestCase):
         """
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=23, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -496,8 +488,8 @@ class TestSwitchFlux(unittest.TestCase):
                 fire_time_changed(self.hass, test_time)
                 self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.588, 0.386])
+        assert call.data[light.ATTR_BRIGHTNESS] == 119
+        assert call.data[light.ATTR_XY_COLOR] == [0.588, 0.386]
 
     # pylint: disable=invalid-name
     def test_flux_after_sunset_after_midnight_stop_next_day(self):
@@ -507,24 +499,23 @@ class TestSwitchFlux(unittest.TestCase):
         """
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=00, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -547,8 +538,8 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 114)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.601, 0.382])
+        assert call.data[light.ATTR_BRIGHTNESS] == 114
+        assert call.data[light.ATTR_XY_COLOR] == [0.601, 0.382]
 
     # pylint: disable=invalid-name
     def test_flux_after_stop_before_sunrise_stop_next_day(self):
@@ -558,24 +549,23 @@ class TestSwitchFlux(unittest.TestCase):
         """
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=2, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -598,32 +588,31 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 112)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.606, 0.379])
+        assert call.data[light.ATTR_BRIGHTNESS] == 112
+        assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
     # pylint: disable=invalid-name
     def test_flux_with_custom_colortemps(self):
         """Test the flux with custom start and stop colortemps."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=17, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -648,32 +637,31 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 159)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.469, 0.378])
+        assert call.data[light.ATTR_BRIGHTNESS] == 159
+        assert call.data[light.ATTR_XY_COLOR] == [0.469, 0.378]
 
     # pylint: disable=invalid-name
     def test_flux_with_custom_brightness(self):
         """Test the flux with custom start and stop colortemps."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=17, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -697,16 +685,15 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 255)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.506, 0.385])
+        assert call.data[light.ATTR_BRIGHTNESS] == 255
+        assert call.data[light.ATTR_XY_COLOR] == [0.506, 0.385]
 
     def test_flux_with_multiple_lights(self):
         """Test the flux switch with multiple light entities."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1, dev2, dev3 = platform.DEVICES
         common_light.turn_on(self.hass, entity_id=dev2.entity_id)
@@ -715,26 +702,26 @@ class TestSwitchFlux(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         state = self.hass.states.get(dev2.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         state = self.hass.states.get(dev3.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get('brightness'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('xy_color') is None
+        assert state.attributes.get('brightness') is None
 
         test_time = dt_util.utcnow().replace(hour=12, minute=0, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 print('sunrise {}'.format(sunrise_time))
                 return sunrise_time
             print('sunset {}'.format(sunset_time))
@@ -760,36 +747,35 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 163)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.46, 0.376])
+        assert call.data[light.ATTR_BRIGHTNESS] == 163
+        assert call.data[light.ATTR_XY_COLOR] == [0.46, 0.376]
         call = turn_on_calls[-2]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 163)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.46, 0.376])
+        assert call.data[light.ATTR_BRIGHTNESS] == 163
+        assert call.data[light.ATTR_XY_COLOR] == [0.46, 0.376]
         call = turn_on_calls[-3]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 163)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.46, 0.376])
+        assert call.data[light.ATTR_BRIGHTNESS] == 163
+        assert call.data[light.ATTR_XY_COLOR] == [0.46, 0.376]
 
     def test_flux_with_mired(self):
         """Test the flux switch´s mode mired."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('color_temp'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('color_temp') is None
 
         test_time = dt_util.utcnow().replace(hour=8, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -812,29 +798,28 @@ class TestSwitchFlux(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 269)
+        assert call.data[light.ATTR_COLOR_TEMP] == 269
 
     def test_flux_with_rgb(self):
         """Test the flux switch´s mode rgb."""
         platform = loader.get_component(self.hass, 'light.test')
         platform.init()
-        self.assertTrue(
-            setup_component(self.hass, light.DOMAIN,
-                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+        assert setup_component(self.hass, light.DOMAIN,
+                               {light.DOMAIN: {CONF_PLATFORM: 'test'}})
 
         dev1 = platform.DEVICES[0]
 
         # Verify initial state of light
         state = self.hass.states.get(dev1.entity_id)
-        self.assertEqual(STATE_ON, state.state)
-        self.assertIsNone(state.attributes.get('color_temp'))
+        assert STATE_ON == state.state
+        assert state.attributes.get('color_temp') is None
 
         test_time = dt_util.utcnow().replace(hour=8, minute=30, second=0)
         sunset_time = test_time.replace(hour=17, minute=0, second=0)
         sunrise_time = test_time.replace(hour=5, minute=0, second=0)
 
         def event_date(hass, event, now=None):
-            if event == 'sunrise':
+            if event == SUN_EVENT_SUNRISE:
                 return sunrise_time
             return sunset_time
 
@@ -859,4 +844,4 @@ class TestSwitchFlux(unittest.TestCase):
         call = turn_on_calls[-1]
         rgb = (255, 198, 152)
         rounded_call = tuple(map(round, call.data[light.ATTR_RGB_COLOR]))
-        self.assertEqual(rounded_call, rgb)
+        assert rounded_call == rgb

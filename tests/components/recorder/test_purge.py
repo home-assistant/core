@@ -124,13 +124,13 @@ class TestRecorderPurge(unittest.TestCase):
         # make sure we start with 7 states
         with session_scope(hass=self.hass) as session:
             states = session.query(States)
-            self.assertEqual(states.count(), 7)
+            assert states.count() == 7
 
             # run purge_old_data()
             purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
 
             # we should only have 3 states left after purging
-            self.assertEqual(states.count(), 3)
+            assert states.count() == 3
 
     def test_purge_old_events(self):
         """Test deleting old events."""
@@ -139,13 +139,13 @@ class TestRecorderPurge(unittest.TestCase):
         with session_scope(hass=self.hass) as session:
             events = session.query(Events).filter(
                 Events.event_type.like("EVENT_TEST%"))
-            self.assertEqual(events.count(), 7)
+            assert events.count() == 7
 
             # run purge_old_data()
             purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
 
             # no state to protect, now we should only have 2 events left
-            self.assertEqual(events.count(), 2)
+            assert events.count() == 2
 
     def test_purge_method(self):
         """Test purge method."""
@@ -156,11 +156,11 @@ class TestRecorderPurge(unittest.TestCase):
         # make sure we start with 6 states
         with session_scope(hass=self.hass) as session:
             states = session.query(States)
-            self.assertEqual(states.count(), 7)
+            assert states.count() == 7
 
             events = session.query(Events).filter(
                 Events.event_type.like("EVENT_TEST%"))
-            self.assertEqual(events.count(), 7)
+            assert events.count() == 7
 
             self.hass.data[DATA_INSTANCE].block_till_done()
 
@@ -172,8 +172,8 @@ class TestRecorderPurge(unittest.TestCase):
             self.hass.data[DATA_INSTANCE].block_till_done()
 
             # only purged old events
-            self.assertEqual(states.count(), 5)
-            self.assertEqual(events.count(), 5)
+            assert states.count() == 5
+            assert events.count() == 5
 
             # run purge method - correct service data
             self.hass.services.call('recorder', 'purge',
@@ -184,19 +184,19 @@ class TestRecorderPurge(unittest.TestCase):
             self.hass.data[DATA_INSTANCE].block_till_done()
 
             # we should only have 3 states left after purging
-            self.assertEqual(states.count(), 3)
+            assert states.count() == 3
 
             # the protected state is among them
-            self.assertTrue('iamprotected' in (
-                state.state for state in states))
+            assert 'iamprotected' in (
+                state.state for state in states)
 
             # now we should only have 3 events left
-            self.assertEqual(events.count(), 3)
+            assert events.count() == 3
 
             # and the protected event is among them
-            self.assertTrue('EVENT_TEST_FOR_PROTECTED' in (
-                event.event_type for event in events.all()))
-            self.assertFalse('EVENT_TEST_PURGE' in (
+            assert 'EVENT_TEST_FOR_PROTECTED' in (
+                event.event_type for event in events.all())
+            assert not ('EVENT_TEST_PURGE' in (
                 event.event_type for event in events.all()))
 
             # run purge method - correct service data, with repack
@@ -207,5 +207,5 @@ class TestRecorderPurge(unittest.TestCase):
                                         service_data=service_data)
                 self.hass.block_till_done()
                 self.hass.data[DATA_INSTANCE].block_till_done()
-                self.assertEqual(mock_logger.debug.mock_calls[4][1][0],
-                                 "Vacuuming SQLite to free space")
+                assert mock_logger.debug.mock_calls[4][1][0] == \
+                    "Vacuuming SQLite to free space"

@@ -144,7 +144,7 @@ def _authenticate(cloud, email, password):
         cognito.authenticate(password=password)
         return cognito
 
-    except ForceChangePasswordException as err:
+    except ForceChangePasswordException:
         raise PasswordChangeRequired
 
     except ClientError as err:

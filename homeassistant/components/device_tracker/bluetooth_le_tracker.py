@@ -44,7 +44,10 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 new_devices[address] = 1
                 return
 
-        see(mac=BLE_PREFIX + address, host_name=name.strip("\x00"),
+        if name is not None:
+            name = name.strip("\x00")
+
+        see(mac=BLE_PREFIX + address, host_name=name,
             source_type=SOURCE_TYPE_BLUETOOTH_LE)
 
     def discover_ble_devices():

@@ -5,8 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.deconz/
 """
 from homeassistant.components.deconz.const import (
-    COVER_TYPES, DAMPERS, DOMAIN as DATA_DECONZ, DATA_DECONZ_ID,
-    DATA_DECONZ_UNSUB, DECONZ_DOMAIN, WINDOW_COVERS)
+    COVER_TYPES, DAMPERS, DOMAIN as DATA_DECONZ, DECONZ_DOMAIN, WINDOW_COVERS)
 from homeassistant.components.cover import (
     ATTR_POSITION, CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP,
     SUPPORT_SET_POSITION)
@@ -42,10 +41,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     entities.append(DeconzCover(light))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    hass.data[DATA_DECONZ].listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_cover))
 
-    async_add_cover(hass.data[DATA_DECONZ].lights.values())
+    async_add_cover(hass.data[DATA_DECONZ].api.lights.values())
 
 
 class DeconzCover(CoverDevice):
@@ -62,7 +61,8 @@ class DeconzCover(CoverDevice):
     async def async_added_to_hass(self):
         """Subscribe to covers events."""
         self._cover.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._cover.deconz_id
+        self.hass.data[DATA_DECONZ].deconz_ids[self.entity_id] = \
+            self._cover.deconz_id
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect cover object when removed."""
@@ -103,7 +103,6 @@ class DeconzCover(CoverDevice):
             return 'damper'
         if self._cover.type in WINDOW_COVERS:
             return 'window'
-        return None
 
     @property
     def supported_features(self):
@@ -151,7 +150,7 @@ class DeconzCover(CoverDevice):
                 self._cover.uniqueid.count(':') != 7):
             return None
         serial = self._cover.uniqueid.split('-', 1)[0]
-        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
+        bridgeid = self.hass.data[DATA_DECONZ].api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},

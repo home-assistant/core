@@ -5,14 +5,16 @@ For more details about this component, please refer to the documentation at
 http://home-assistant.io/components/opentherm_gw/
 """
 import logging
+from datetime import datetime, date
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
-from homeassistant.const import (CONF_DEVICE, CONF_MONITORED_VARIABLES,
-                                 CONF_NAME, PRECISION_HALVES, PRECISION_TENTHS,
-                                 PRECISION_WHOLE)
+from homeassistant.const import (
+    ATTR_DATE, ATTR_ID, ATTR_TEMPERATURE, ATTR_TIME, CONF_DEVICE,
+    CONF_MONITORED_VARIABLES, CONF_NAME, EVENT_HOMEASSISTANT_STOP,
+    PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE)
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -20,15 +22,71 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'opentherm_gw'
 
+ATTR_MODE = 'mode'
+ATTR_LEVEL = 'level'
+
 CONF_CLIMATE = 'climate'
 CONF_FLOOR_TEMP = 'floor_temperature'
 CONF_PRECISION = 'precision'
 
 DATA_DEVICE = 'device'
 DATA_GW_VARS = 'gw_vars'
+DATA_LATEST_STATUS = 'latest_status'
 DATA_OPENTHERM_GW = 'opentherm_gw'
 
 SIGNAL_OPENTHERM_GW_UPDATE = 'opentherm_gw_update'
+
+SERVICE_RESET_GATEWAY = 'reset_gateway'
+
+SERVICE_SET_CLOCK = 'set_clock'
+SERVICE_SET_CLOCK_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_DATE, default=date.today()): cv.date,
+    vol.Optional(ATTR_TIME, default=datetime.now().time()): cv.time,
+})
+
+SERVICE_SET_CONTROL_SETPOINT = 'set_control_setpoint'
+SERVICE_SET_CONTROL_SETPOINT_SCHEMA = vol.Schema({
+    vol.Required(ATTR_TEMPERATURE): vol.All(vol.Coerce(float),
+                                            vol.Range(min=0, max=90)),
+})
+
+SERVICE_SET_GPIO_MODE = 'set_gpio_mode'
+SERVICE_SET_GPIO_MODE_SCHEMA = vol.Schema(vol.Any(
+    vol.Schema({
+        vol.Required(ATTR_ID): vol.Equal('A'),
+        vol.Required(ATTR_MODE): vol.All(vol.Coerce(int),
+                                         vol.Range(min=0, max=6)),
+    }),
+    vol.Schema({
+        vol.Required(ATTR_ID): vol.Equal('B'),
+        vol.Required(ATTR_MODE): vol.All(vol.Coerce(int),
+                                         vol.Range(min=0, max=7)),
+    }),
+))
+
+SERVICE_SET_LED_MODE = 'set_led_mode'
+SERVICE_SET_LED_MODE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ID): vol.In('ABCDEF'),
+    vol.Required(ATTR_MODE): vol.In('RXTBOFHWCEMP'),
+})
+
+SERVICE_SET_MAX_MOD = 'set_max_modulation'
+SERVICE_SET_MAX_MOD_SCHEMA = vol.Schema({
+    vol.Required(ATTR_LEVEL): vol.All(vol.Coerce(int),
+                                      vol.Range(min=-1, max=100))
+})
+
+SERVICE_SET_OAT = 'set_outside_temperature'
+SERVICE_SET_OAT_SCHEMA = vol.Schema({
+    vol.Required(ATTR_TEMPERATURE): vol.All(vol.Coerce(float),
+                                            vol.Range(min=-40, max=99)),
+})
+
+SERVICE_SET_SB_TEMP = 'set_setback_temperature'
+SERVICE_SET_SB_TEMP_SCHEMA = vol.Schema({
+    vol.Required(ATTR_TEMPERATURE): vol.All(vol.Coerce(float),
+                                            vol.Range(min=0, max=30)),
+})
 
 CLIMATE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default="OpenTherm Gateway"): cv.string,
@@ -46,7 +104,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-REQUIREMENTS = ['pyotgw==0.2b1']
+REQUIREMENTS = ['pyotgw==0.3b1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,9 +118,11 @@ async def async_setup(hass, config):
     hass.data[DATA_OPENTHERM_GW] = {
         DATA_DEVICE: gateway,
         DATA_GW_VARS: pyotgw.vars,
+        DATA_LATEST_STATUS: {}
     }
     hass.async_create_task(connect_and_subscribe(
         hass, conf[CONF_DEVICE], gateway))
+    hass.async_create_task(register_services(hass, gateway))
     hass.async_create_task(async_load_platform(
         hass, 'climate', DOMAIN, conf.get(CONF_CLIMATE), config))
     if monitored_vars:
@@ -76,11 +136,108 @@ async def connect_and_subscribe(hass, device_path, gateway):
     await gateway.connect(hass.loop, device_path)
     _LOGGER.debug("Connected to OpenTherm Gateway at %s", device_path)
 
+    async def cleanup(event):
+        """Reset overrides on the gateway."""
+        await gateway.set_control_setpoint(0)
+        await gateway.set_max_relative_mod('-')
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, cleanup)
+
     async def handle_report(status):
         """Handle reports from the OpenTherm Gateway."""
         _LOGGER.debug("Received report: %s", status)
+        hass.data[DATA_OPENTHERM_GW][DATA_LATEST_STATUS] = status
         async_dispatcher_send(hass, SIGNAL_OPENTHERM_GW_UPDATE, status)
     gateway.subscribe(handle_report)
+
+
+async def register_services(hass, gateway):
+    """Register services for the component."""
+    gw_vars = hass.data[DATA_OPENTHERM_GW][DATA_GW_VARS]
+
+    async def reset_gateway(call):
+        """Reset the OpenTherm Gateway."""
+        mode_rst = gw_vars.OTGW_MODE_RESET
+        status = await gateway.set_mode(mode_rst)
+        hass.data[DATA_OPENTHERM_GW][DATA_LATEST_STATUS] = status
+        async_dispatcher_send(hass, SIGNAL_OPENTHERM_GW_UPDATE, status)
+    hass.services.async_register(DOMAIN, SERVICE_RESET_GATEWAY, reset_gateway)
+
+    async def set_control_setpoint(call):
+        """Set the control setpoint on the OpenTherm Gateway."""
+        gw_var = gw_vars.DATA_CONTROL_SETPOINT
+        value = await gateway.set_control_setpoint(call.data[ATTR_TEMPERATURE])
+        status = hass.data[DATA_OPENTHERM_GW][DATA_LATEST_STATUS]
+        status.update({gw_var: value})
+        async_dispatcher_send(hass, SIGNAL_OPENTHERM_GW_UPDATE, status)
+    hass.services.async_register(DOMAIN, SERVICE_SET_CONTROL_SETPOINT,
+                                 set_control_setpoint,
+                                 SERVICE_SET_CONTROL_SETPOINT_SCHEMA)
+
+    async def set_device_clock(call):
+        """Set the clock on the OpenTherm Gateway."""
+        attr_date = call.data[ATTR_DATE]
+        attr_time = call.data[ATTR_TIME]
+        await gateway.set_clock(datetime.combine(attr_date, attr_time))
+    hass.services.async_register(DOMAIN, SERVICE_SET_CLOCK, set_device_clock,
+                                 SERVICE_SET_CLOCK_SCHEMA)
+
+    async def set_gpio_mode(call):
+        """Set the OpenTherm Gateway GPIO modes."""
+        gpio_id = call.data[ATTR_ID]
+        gpio_mode = call.data[ATTR_MODE]
+        mode = await gateway.set_gpio_mode(gpio_id, gpio_mode)
+        gpio_var = getattr(gw_vars, 'OTGW_GPIO_{}'.format(gpio_id))
+        status = hass.data[DATA_OPENTHERM_GW][DATA_LATEST_STATUS]
+        status.update({gpio_var: mode})
+        async_dispatcher_send(hass, SIGNAL_OPENTHERM_GW_UPDATE, status)
+    hass.services.async_register(DOMAIN, SERVICE_SET_GPIO_MODE, set_gpio_mode,
+                                 SERVICE_SET_GPIO_MODE_SCHEMA)
+
+    async def set_led_mode(call):
+        """Set the OpenTherm Gateway LED modes."""
+        led_id = call.data[ATTR_ID]
+        led_mode = call.data[ATTR_MODE]
+        mode = await gateway.set_led_mode(led_id, led_mode)
+        led_var = getattr(gw_vars, 'OTGW_LED_{}'.format(led_id))
+        status = hass.data[DATA_OPENTHERM_GW][DATA_LATEST_STATUS]
+        status.update({led_var: mode})
+        async_dispatcher_send(hass, SIGNAL_OPENTHERM_GW_UPDATE, status)
+    hass.services.async_register(DOMAIN, SERVICE_SET_LED_MODE, set_led_mode,
+                                 SERVICE_SET_LED_MODE_SCHEMA)
+
+    async def set_max_mod(call):
+        """Set the max modulation level."""
+        gw_var = gw_vars.DATA_SLAVE_MAX_RELATIVE_MOD
+        level = call.data[ATTR_LEVEL]
+        if level == -1:
+            # Backend only clears setting on non-numeric values.
+            level = '-'
+        value = await gateway.set_max_relative_mod(level)
+        status = hass.data[DATA_OPENTHERM_GW][DATA_LATEST_STATUS]
+        status.update({gw_var: value})
+        async_dispatcher_send(hass, SIGNAL_OPENTHERM_GW_UPDATE, status)
+    hass.services.async_register(DOMAIN, SERVICE_SET_MAX_MOD, set_max_mod,
+                                 SERVICE_SET_MAX_MOD_SCHEMA)
+
+    async def set_outside_temp(call):
+        """Provide the outside temperature to the OpenTherm Gateway."""
+        gw_var = gw_vars.DATA_OUTSIDE_TEMP
+        value = await gateway.set_outside_temp(call.data[ATTR_TEMPERATURE])
+        status = hass.data[DATA_OPENTHERM_GW][DATA_LATEST_STATUS]
+        status.update({gw_var: value})
+        async_dispatcher_send(hass, SIGNAL_OPENTHERM_GW_UPDATE, status)
+    hass.services.async_register(DOMAIN, SERVICE_SET_OAT, set_outside_temp,
+                                 SERVICE_SET_OAT_SCHEMA)
+
+    async def set_setback_temp(call):
+        """Set the OpenTherm Gateway SetBack temperature."""
+        gw_var = gw_vars.OTGW_SB_TEMP
+        value = await gateway.set_setback_temp(call.data[ATTR_TEMPERATURE])
+        status = hass.data[DATA_OPENTHERM_GW][DATA_LATEST_STATUS]
+        status.update({gw_var: value})
+        async_dispatcher_send(hass, SIGNAL_OPENTHERM_GW_UPDATE, status)
+    hass.services.async_register(DOMAIN, SERVICE_SET_SB_TEMP, set_setback_temp,
+                                 SERVICE_SET_SB_TEMP_SCHEMA)
 
 
 async def setup_monitored_vars(hass, config, monitored_vars):
@@ -203,4 +360,5 @@ async def setup_monitored_vars(hass, config, monitored_vars):
         hass.async_create_task(async_load_platform(
             hass, COMP_BINARY_SENSOR, DOMAIN, binary_sensors, config))
     if sensors:
-        await async_load_platform(hass, COMP_SENSOR, DOMAIN, sensors, config)
+        hass.async_create_task(async_load_platform(
+            hass, COMP_SENSOR, DOMAIN, sensors, config))

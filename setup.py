@@ -33,7 +33,7 @@ PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
     'aiohttp==3.4.4',
-    'astral==1.6.1',
+    'astral==1.7.1',
     'async_timeout==3.0.1',
     'attrs==18.2.0',
     'bcrypt==3.1.4',
@@ -46,6 +46,7 @@ REQUIRES = [
     'pytz>=2018.04',
     'pyyaml>=3.13,<4',
     'requests==2.20.0',
+    'ruamel.yaml==0.15.72',
     'voluptuous==0.11.5',
     'voluptuous-serialize==2.0.0',
 ]

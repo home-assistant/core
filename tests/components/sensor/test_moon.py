@@ -37,7 +37,7 @@ class TestMoonSensor(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', config)
 
         state = self.hass.states.get('sensor.moon_day1')
-        self.assertEqual(state.state, 'waxing_crescent')
+        assert state.state == 'waxing_crescent'
 
     @patch('homeassistant.components.sensor.moon.dt_util.utcnow',
            return_value=DAY2)
@@ -53,4 +53,4 @@ class TestMoonSensor(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', config)
 
         state = self.hass.states.get('sensor.moon_day2')
-        self.assertEqual(state.state, 'waning_gibbous')
+        assert state.state == 'waning_gibbous'
