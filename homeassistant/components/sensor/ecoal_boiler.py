@@ -9,9 +9,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([
 
-            EcoalTempSensor(g_ecoal_contr,"Outside", 'external_temp'),
-            EcoalTempSensor(g_ecoal_contr,"Inside", 'internal_temp'),
-            EcoalTempSensor(g_ecoal_contr,"2nd inside", 'internal2_temp'),
+            EcoalTempSensor(g_ecoal_contr,"Outside", 'outdoor_temp'),
+            EcoalTempSensor(g_ecoal_contr,"Indoor", 'indoor_temp'),
+            EcoalTempSensor(g_ecoal_contr,"Indoor 2", 'indoor2_temp'),
 
             EcoalTempSensor(g_ecoal_contr,"Domestic water", 'domestic_hot_water_temp'),
             EcoalTempSensor(g_ecoal_contr,"Domestic water target", 'target_domestic_hot_water_temp'),
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             EcoalTempSensor(g_ecoal_contr,"Feedwater target", 'target_feedwater_temp'),
 
             EcoalTempSensor(g_ecoal_contr,"Fuel feeder", 'coal_feeder_temp'),
-            EcoalTempSensor(g_ecoal_contr,"Exhaust gas", 'chimney_temp'),
+            EcoalTempSensor(g_ecoal_contr,"Exhaust gas", 'exhaust_temp'),
         ])
 
 

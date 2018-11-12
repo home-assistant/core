@@ -26,16 +26,16 @@ class ECoalControler:
     class Status:
         mode_auto = None  # on/off
 
-        internal_temp = None
-        internal2_temp = None
-        external_temp = None
+        indoor_temp = None
+        indoor2_temp = None
+        outdoor_temp = None
         domestic_hot_water_temp = None
         target_domestic_hot_water_temp = None
         feedwater_in_temp = None
         feedwater_out_temp = None
         target_feedwater_temp = None
         coal_feeder_temp = None
-        chimney_temp = None
+        exhaust_temp = None
 
         central_heating_pump = None # on/off
         domestic_hot_water_pump = None # on/off
@@ -54,11 +54,11 @@ class ECoalControler:
                 txt += " auto"
             else:
                 txt += " manual"
-            txt += " external: %.1f°C" % (self.external_temp, )
-            txt += " internal: %.1f°C %.1f°C" % (self.internal_temp, self.internal2_temp, )
+            txt += " outdoor: %.1f°C" % (self.outdoor_temp, )
+            txt += " indoor: %.1f°C %.1f°C" % (self.indoor_temp, self.indoor2_temp, )
             txt += " DHW: %.1f°C (target: %.1f°C)" % (self.domestic_hot_water_temp, self.target_domestic_hot_water_temp, )
             txt += " feedwater: %.1f°C -> %.1f°C (target: %.1f°C)" % (self.feedwater_in_temp, self.feedwater_out_temp, self.target_feedwater_temp)
-            txt += " chimney: %.1f°C" % (self.chimney_temp, )
+            txt += " exhaust: %.1f°C" % (self.exhaust_temp, )
             if self.central_heating_pump:
                 txt += " CH:On"
             else:
@@ -180,14 +180,14 @@ class ECoalControler:
         status = self.Status()
 
         ## return self.__temp(self.s_statusdata[19],self.s_statusdata[18]);
-        status.internal2_temp = self._calc_temp(status_vals[17],status_vals[16]) # Guess
-        status.internal_temp = self._calc_temp(status_vals[19],status_vals[18])
-        status.external_temp = self._calc_temp(status_vals[21],status_vals[20])
+        status.indoor2_temp = self._calc_temp(status_vals[17],status_vals[16]) # Guess
+        status.indoor_temp = self._calc_temp(status_vals[19],status_vals[18])
+        status.outdoor_temp = self._calc_temp(status_vals[21],status_vals[20])
         status.domestic_hot_water_temp = self._calc_temp(status_vals[23],status_vals[22])
         status.feedwater_in_temp = self._calc_temp(status_vals[25],status_vals[24])
         status.coal_feeder_temp = self._calc_temp(status_vals[27],status_vals[26])
         status.feedwater_out_temp = self._calc_temp(status_vals[29],status_vals[28])
-        status.chimney_temp = self._calc_temp(status_vals[31],status_vals[30])
+        status.exhaust_temp = self._calc_temp(status_vals[31],status_vals[30])
 
         status.air_pump = status_vals[32] & (1 << 0) != 0
         status.coal_feeder = status_vals[32] & (1 << 1) != 0
