@@ -59,7 +59,7 @@ PACKAGE_SETTINGS = "com.amazon.tv.settings"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FireTV platform."""
-    from firetv import FireTV  # pylint: disable=no-name-in-module
+    from firetv import FireTV
 
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
 
