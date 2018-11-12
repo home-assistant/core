@@ -139,10 +139,9 @@ class PointFlowHandler(config_entries.ConfigFlow):
                       self.hass.config_entries.flow.async_progress())
         # Remove notification if no other discovery config entries in progress
 
-        return self._create_session(code)
+        return await self._async_create_session(code)
 
-    @callback
-    def _create_session(self, code):
+    async def _async_create_session(self, code):
         """Create point session and entries."""
         from pypoint import PointSession
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
@@ -152,7 +151,8 @@ class PointFlowHandler(config_entries.ConfigFlow):
             client_id,
             client_secret=client_secret,
         )
-        token = point_session.get_access_token(code)
+        token = await self.hass.async_add_executor_job(
+            point_session.get_access_token, code)
         _LOGGER.debug("Got new token")
         if not point_session.is_authorized:
             _LOGGER.error('Authentication Error')
