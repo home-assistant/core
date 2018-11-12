@@ -47,8 +47,7 @@ def setup(hass, config):
     access_token = conf.get(CONF_ACCESS_TOKEN)
     entity = Wunderlist(access_token, client_id)
     if not entity.check_credentials():
-        _LOGGER.error("Invalid credentials:\n client_id=%s\n "
-                      "access_token=%s", client_id, access_token)
+        _LOGGER.error("Invalid credentials")
         return False
 
     hass.services.register(DOMAIN, 'create_task', entity.create_task)
