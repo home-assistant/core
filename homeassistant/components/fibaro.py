@@ -120,7 +120,7 @@ class FibaroController():
         callback_set = set()
         for change in state.get('changes', []):
             device_id = change.pop('id')
-            for property_name, value in list(change.items()):
+            for property_name, value in change.items():
                 if property_name == 'log':
                     if value and value != "transfer OK":
                         _LOGGER.info("LOG %s: %s",
