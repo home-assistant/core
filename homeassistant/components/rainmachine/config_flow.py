@@ -10,8 +10,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SSL)
 from homeassistant.helpers import aiohttp_client
 
-from .const import (
-    DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN, LOGGER)
+from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN
 
 
 @callback
@@ -34,8 +33,8 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
         self.data_schema = OrderedDict()
         self.data_schema[vol.Required(CONF_IP_ADDRESS)] = str
         self.data_schema[vol.Required(CONF_PASSWORD)] = str
-        self.data_schema[vol.Optional(CONF_PORT)] = int
-        self.data_schema[vol.Optional(CONF_SSL)] = bool
+        self.data_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
+        self.data_schema[vol.Optional(CONF_SSL, default=True)] = bool
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
@@ -81,7 +80,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
         user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
 
         # Unfortunately, RainMachine doesn't provide a way to refresh the
-        # access token without using the IP address and pasword, so we have to
+        # access token without using the IP address and password, so we have to
         # store it:
         return self.async_create_entry(
             title=user_input[CONF_IP_ADDRESS],

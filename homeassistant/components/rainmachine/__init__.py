@@ -25,7 +25,6 @@ from .const import (
     DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
 
 REQUIREMENTS = ['regenmaschine==1.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_LISTENER = 'listener'
@@ -97,9 +96,8 @@ SERVICE_STOP_ZONE_SCHEMA = vol.Schema({
 
 SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int})
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN:
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN:
         vol.Schema({
             vol.Required(CONF_IP_ADDRESS): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
@@ -107,13 +105,14 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
             vol.Optional(CONF_BINARY_SENSORS, default={}):
                 BINARY_SENSOR_SCHEMA,
-            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-            vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
+            vol.Optional(CONF_SENSORS, default={}):
+                SENSOR_SCHEMA,
+            vol.Optional(CONF_SWITCHES, default={}):
+                SWITCH_SCHEMA,
             vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
                 cv.time_period,
         })
-    },
-    extra=vol.ALLOW_EXTRA)
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
@@ -153,78 +152,82 @@ async def async_setup_entry(hass, config_entry):
     from regenmaschine import login
     from regenmaschine.errors import RainMachineError
 
-    _LOGGER.debug("AARON")
-    _LOGGER.debug(config_entry.data)
+    ip_address = config_entry.data[CONF_IP_ADDRESS]
+    password = config_entry.data[CONF_PASSWORD]
+    port = config_entry.data[CONF_PORT]
+    ssl = config_entry.data[CONF_SSL]
 
-    # ip_address = config_entry.data[CONF_IP_ADDRESS]
-    # password = config_entry.data[CONF_PASSWORD]
-    # port = config_entry.data[CONF_PORT]
-    # ssl = config_entry.data[CONF_SSL]
+    websession = aiohttp_client.async_get_clientsession(hass)
 
-    # websession = aiohttp_client.async_get_clientsession(hass)
+    try:
+        client = await login(
+            ip_address, password, websession, port=port, ssl=ssl)
+        rainmachine = RainMachine(
+            client,
+            config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
+                CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
+            config_entry.data.get(CONF_SENSORS, {}).get(
+                CONF_MONITORED_CONDITIONS, list(SENSORS)),
+            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
+        )
+        await rainmachine.async_update()
+    except RainMachineError as err:
+        _LOGGER.error('An error occurred: %s', err)
+        raise ConfigEntryNotReady
 
-    # try:
-    #     client = Client(ip_address, websession, port=port, ssl=ssl)
-    #     await client.authenticate(password)
-    #     rainmachine = RainMachine(client)
-    #     await rainmachine.async_update()
-    # except RainMachineError as err:
-    #     _LOGGER.error('An error occurred: %s', err)
-    #     raise ConfigEntryNotReady
+    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = rainmachine
 
-    # hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = rainmachine
+    for component in ('binary_sensor', 'sensor', 'switch'):
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                config_entry, component))
 
-    # for component in ('binary_sensor', 'sensor', 'switch'):
-    #     hass.async_create_task(
-    #         hass.config_entries.async_forward_entry_setup(
-    #             config_entry, component))
+    async def refresh(event_time):
+        """Refresh RainMachine sensor data."""
+        _LOGGER.debug('Updating RainMachine sensor data')
+        await rainmachine.async_update()
+        async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
 
-    # async def refresh(event_time):
-    #     """Refresh RainMachine sensor data."""
-    #     _LOGGER.debug('Updating RainMachine sensor data')
-    #     await rainmachine.async_update()
-    #     async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
+    hass.data[DOMAIN][DATA_LISTENER][
+        config_entry.entry_id] = async_track_time_interval(
+            hass,
+            refresh,
+            timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
-    # hass.data[DOMAIN][DATA_LISTENER][
-    #     config_entry.entry_id] = async_track_time_interval(
-    #         hass,
-    #         refresh,
-    #         timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
+    async def start_program(service):
+        """Start a particular program."""
+        await rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    # async def start_program(service):
-    #     """Start a particular program."""
-    #     await rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
-    #     async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+    async def start_zone(service):
+        """Start a particular zone for a certain amount of time."""
+        await rainmachine.client.zones.start(
+            service.data[CONF_ZONE_ID], service.data[CONF_ZONE_RUN_TIME])
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    # async def start_zone(service):
-    #     """Start a particular zone for a certain amount of time."""
-    #     await rainmachine.client.zones.start(service.data[CONF_ZONE_ID],
-    #                                          service.data[CONF_ZONE_RUN_TIME])
-    #     async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
+    async def stop_all(service):
+        """Stop all watering."""
+        await rainmachine.client.watering.stop_all()
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    # async def stop_all(service):
-    #     """Stop all watering."""
-    #     await rainmachine.client.watering.stop_all()
-    #     async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+    async def stop_program(service):
+        """Stop a program."""
+        await rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    # async def stop_program(service):
-    #     """Stop a program."""
-    #     await rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
-    #     async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+    async def stop_zone(service):
+        """Stop a zone."""
+        await rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    # async def stop_zone(service):
-    #     """Stop a zone."""
-    #     await rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
-    #     async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
-
-    # for service, method, schema in [
-    #         ('start_program', start_program, SERVICE_START_PROGRAM_SCHEMA),
-    #         ('start_zone', start_zone, SERVICE_START_ZONE_SCHEMA),
-    #         ('stop_all', stop_all, {}),
-    #         ('stop_program', stop_program, SERVICE_STOP_PROGRAM_SCHEMA),
-    #         ('stop_zone', stop_zone, SERVICE_STOP_ZONE_SCHEMA)
-    # ]:
-    #     hass.services.async_register(DOMAIN, service, method, schema=schema)
+    for service, method, schema in [
+            ('start_program', start_program, SERVICE_START_PROGRAM_SCHEMA),
+            ('start_zone', start_zone, SERVICE_START_ZONE_SCHEMA),
+            ('stop_all', stop_all, {}),
+            ('stop_program', stop_program, SERVICE_STOP_PROGRAM_SCHEMA),
+            ('stop_zone', stop_zone, SERVICE_STOP_ZONE_SCHEMA)
+    ]:
+        hass.services.async_register(DOMAIN, service, method, schema=schema)
 
     return True
 
@@ -232,11 +235,16 @@ async def async_setup_entry(hass, config_entry):
 class RainMachine:
     """Define a generic RainMachine object."""
 
-    def __init__(self, client):
+    def __init__(
+            self, client, binary_sensor_conditions, sensor_conditions,
+            default_zone_runtime):
         """Initialize."""
+        self.binary_sensor_conditions = binary_sensor_conditions
         self.client = client
+        self.default_zone_runtime = default_zone_runtime
         self.device_mac = self.client.mac
         self.restrictions = {}
+        self.sensor_conditions = sensor_conditions
 
     async def async_update(self):
         """Update sensor/binary sensor data."""

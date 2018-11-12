@@ -8,10 +8,9 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.rainmachine import (
-    BINARY_SENSORS, DATA_RAINMACHINE, SENSOR_UPDATE_TOPIC, TYPE_FREEZE,
+    BINARY_SENSORS, DATA_CLIENT, DOMAIN, SENSOR_UPDATE_TOPIC, TYPE_FREEZE,
     TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS, TYPE_HOURLY, TYPE_MONTH,
     TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY, RainMachineEntity)
-from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -22,14 +21,16 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Set up the RainMachine Switch platform."""
-    if discovery_info is None:
-        return
+    """Set up  RainMachine binary sensors based on the old way."""
+    pass
 
-    rainmachine = hass.data[DATA_RAINMACHINE]
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up RainMachine binary sensors based on a config entry."""
+    rainmachine = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
     binary_sensors = []
-    for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
+    for sensor_type in rainmachine.binary_sensor_conditions:
         name, icon = BINARY_SENSORS[sensor_type]
         binary_sensors.append(
             RainMachineBinarySensor(rainmachine, sensor_type, name, icon))

@@ -1333,7 +1333,7 @@ raincloudy==0.0.5
 # raspihats==2.2.3
 
 # homeassistant.components.rainmachine
-regenmaschine==1.0.2
+regenmaschine==1.0.6
 
 # homeassistant.components.python_script
 restrictedpython==4.0b6

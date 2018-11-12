@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.rainmachine/
 import logging
 
 from homeassistant.components.rainmachine import (
-    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ZONE_RUN,
+    CONF_ZONE_RUN_TIME, DATA_CLIENT, DEFAULT_ZONE_RUN, DOMAIN,
     PROGRAM_UPDATE_TOPIC, ZONE_UPDATE_TOPIC, RainMachineEntity)
 from homeassistant.const import ATTR_ID
 from homeassistant.components.switch import SwitchDevice
@@ -101,15 +101,13 @@ VEGETATION_MAP = {
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Set up the RainMachine Switch platform."""
-    if discovery_info is None:
-        return
+    """Set up RainMachine switches sensor based on the old way."""
+    pass
 
-    _LOGGER.debug('Config received: %s', discovery_info)
 
-    zone_run_time = discovery_info.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
-
-    rainmachine = hass.data[DATA_RAINMACHINE]
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up RainMachine switches based on a config entry."""
+    rainmachine = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
     entities = []
 
@@ -127,7 +125,9 @@ async def async_setup_platform(
             continue
 
         _LOGGER.debug('Adding zone: %s', zone)
-        entities.append(RainMachineZone(rainmachine, zone, zone_run_time))
+        entities.append(
+            RainMachineZone(
+                rainmachine, zone, rainmachine.default_zone_runtime))
 
     async_add_entities(entities, True)
 
