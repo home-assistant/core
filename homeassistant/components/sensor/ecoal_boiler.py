@@ -8,7 +8,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ## contr = ECoalControler("")
 
     add_devices([
-
             EcoalTempSensor(g_ecoal_contr,"Outside", 'outdoor_temp'),
             EcoalTempSensor(g_ecoal_contr,"Indoor", 'indoor_temp'),
             EcoalTempSensor(g_ecoal_contr,"Indoor 2", 'indoor2_temp'),
@@ -25,9 +24,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ])
 
 
-
 class EcoalTempSensor(Entity):
-    """Representation of a Sensor."""
+    """Representation of a temperature sensor using ecoal status data."""
 
     def __init__(self, ecoal_contr, name, status_attr):
         """Initialize the sensor."""
