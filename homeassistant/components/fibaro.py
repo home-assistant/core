@@ -23,7 +23,8 @@ import logging
 from collections import defaultdict
 import voluptuous as vol
 from homeassistant.const import (ATTR_ARMED, ATTR_BATTERY_LEVEL,
-                                 CONF_PASSWORD, CONF_URL, CONF_USERNAME)
+                                 CONF_PASSWORD, CONF_URL, CONF_USERNAME,
+                                 EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import convert, slugify
 from homeassistant.helpers import discovery
@@ -210,12 +211,20 @@ def setup(hass, config):
                          config[DOMAIN][CONF_PASSWORD],
                          config[DOMAIN][CONF_URL],
                          config[DOMAIN][CONF_PLUGINS])
+
+    def stop_fibaro(event):
+        """Stop Fibaro Thread."""
+        _LOGGER.info("Shutting down Fibaro Hub")
+        hass.data[FIBARO_CONTROLLER].disable_state_handler()
+
     if controller.connect():
         hass.data[FIBARO_DEVICES] = controller.fibaro_devices
         for component in FIBARO_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
         controller.enable_state_handler()
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_fibaro)
         return True
+
     return False
 
 

@@ -34,13 +34,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
     """Representation of a Fibaro Binary Sensor."""
 
-    _icon = None
-    _device_class = None
-
     def __init__(self, fibaro_device, controller):
         """Initialize the binary_sensor."""
         self._state = None
-        self.last_changed_time = None
         FibaroDevice.__init__(self, fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         stype = None
@@ -51,6 +47,9 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
         if stype:
             self._device_class = SENSOR_TYPES[stype][2]
             self._icon = SENSOR_TYPES[stype][1]
+        else:
+            self._device_class = None
+            self._icon = None
 
     @property
     def icon(self):
