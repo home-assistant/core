@@ -72,14 +72,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if not ftv.available:
         _LOGGER.warning("Could not connect to Fire TV at %s%s", host, adb_log)
-    else:
-        name = config[CONF_NAME]
-        get_source = config[CONF_GET_SOURCE]
-        get_sources = config[CONF_GET_SOURCES]
+        return None
 
-        device = FireTVDevice(ftv, name, get_source, get_sources)
-        add_entities([device])
-        _LOGGER.info("Setup Fire TV at %s%s", host, adb_log)
+    name = config[CONF_NAME]
+    get_source = config[CONF_GET_SOURCE]
+    get_sources = config[CONF_GET_SOURCES]
+
+    device = FireTVDevice(ftv, name, get_source, get_sources)
+    add_entities([device])
+    _LOGGER.info("Setup Fire TV at %s%s", host, adb_log)
 
 
 def adb_decorator(override_available=False):
