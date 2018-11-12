@@ -214,7 +214,7 @@ def setup(hass, config):
 
     def stop_fibaro(event):
         """Stop Fibaro Thread."""
-        _LOGGER.info("Shutting down Fibaro Hub")
+        _LOGGER.info("Shutting down Fibaro connection.")
         hass.data[FIBARO_CONTROLLER].disable_state_handler()
 
     if controller.connect():
