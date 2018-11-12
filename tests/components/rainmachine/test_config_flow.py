@@ -47,67 +47,65 @@ async def test_invalid_password(hass):
         assert result['errors'] == {CONF_PASSWORD: 'invalid_credentials'}
 
 
-# async def test_show_form(hass):
-#     """Test that the form is served with no input."""
-#     flow = config_flow.RainMachineFlowHandler()
-#     flow.hass = hass
+async def test_show_form(hass):
+    """Test that the form is served with no input."""
+    flow = config_flow.RainMachineFlowHandler()
+    flow.hass = hass
 
-#     result = await flow.async_step_user(user_input=None)
+    result = await flow.async_step_user(user_input=None)
 
-#     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-#     assert result['step_id'] == 'user'
-
-
-# async def test_step_import(hass):
-#     """Test that the import step works."""
-#     conf = {
-#         CONF_API_KEY: '12345abcde',
-#         CONF_ELEVATION: 59.1234,
-#         CONF_LATITUDE: 39.128712,
-#         CONF_LONGITUDE: -104.9812612,
-#     }
-
-#     flow = config_flow.RainMachineFlowHandler()
-#     flow.hass = hass
-
-#     with patch('pyopenuv.util.validate_api_key',
-#                return_value=mock_coro(True)):
-#         result = await flow.async_step_import(import_config=conf)
-
-#         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-#         assert result['title'] == '39.128712, -104.9812612'
-#         assert result['data'] == {
-#             CONF_API_KEY: '12345abcde',
-#             CONF_ELEVATION: 59.1234,
-#             CONF_LATITUDE: 39.128712,
-#             CONF_LONGITUDE: -104.9812612,
-#             CONF_SCAN_INTERVAL: 1800,
-#         }
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'user'
 
 
-# async def test_step_user(hass):
-#     """Test that the user step works."""
-#     conf = {
-#         CONF_API_KEY: '12345abcde',
-#         CONF_ELEVATION: 59.1234,
-#         CONF_LATITUDE: 39.128712,
-#         CONF_LONGITUDE: -104.9812612,
-#         CONF_SCAN_INTERVAL: timedelta(minutes=5)
-#     }
+async def test_step_import(hass):
+    """Test that the import step works."""
+    conf = {
+        CONF_IP_ADDRESS: '192.168.1.100',
+        CONF_PASSWORD: 'password',
+        CONF_PORT: 8080,
+        CONF_SSL: True,
+    }
 
-#     flow = config_flow.RainMachineFlowHandler()
-#     flow.hass = hass
+    flow = config_flow.RainMachineFlowHandler()
+    flow.hass = hass
 
-#     with patch('pyopenuv.util.validate_api_key',
-#                return_value=mock_coro(True)):
-#         result = await flow.async_step_user(user_input=conf)
+    with patch('regenmaschine.login', return_value=mock_coro(True)):
+        result = await flow.async_step_import(import_config=conf)
 
-#         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-#         assert result['title'] == '39.128712, -104.9812612'
-#         assert result['data'] == {
-#             CONF_API_KEY: '12345abcde',
-#             CONF_ELEVATION: 59.1234,
-#             CONF_LATITUDE: 39.128712,
-#             CONF_LONGITUDE: -104.9812612,
-#             CONF_SCAN_INTERVAL: 300,
-#         }
+        assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result['title'] == '192.168.1.100'
+        assert result['data'] == {
+            CONF_IP_ADDRESS: '192.168.1.100',
+            CONF_PASSWORD: 'password',
+            CONF_PORT: 8080,
+            CONF_SSL: True,
+            CONF_SCAN_INTERVAL: 60,
+        }
+
+
+async def test_step_user(hass):
+    """Test that the user step works."""
+    conf = {
+        CONF_IP_ADDRESS: '192.168.1.100',
+        CONF_PASSWORD: 'password',
+        CONF_PORT: 8080,
+        CONF_SSL: True,
+        CONF_SCAN_INTERVAL: timedelta(minutes=5)
+    }
+
+    flow = config_flow.RainMachineFlowHandler()
+    flow.hass = hass
+
+    with patch('regenmaschine.login', return_value=mock_coro(True)):
+        result = await flow.async_step_user(user_input=conf)
+
+        assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result['title'] == '192.168.1.100'
+        assert result['data'] == {
+            CONF_IP_ADDRESS: '192.168.1.100',
+            CONF_PASSWORD: 'password',
+            CONF_PORT: 8080,
+            CONF_SSL: True,
+            CONF_SCAN_INTERVAL: 300,
+        }

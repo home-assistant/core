@@ -7,12 +7,12 @@ https://home-assistant.io/components/sensor.rainmachine/
 import logging
 
 from homeassistant.components.rainmachine import (
-    DATA_CLIENT, DOMAIN, SENSOR_UPDATE_TOPIC, SENSORS, RainMachineEntity)
+    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, SENSOR_UPDATE_TOPIC, SENSORS,
+    RainMachineEntity)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['rainmachine']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -24,7 +24,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine sensors based on a config entry."""
-    rainmachine = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensors = []
     for sensor_type in rainmachine.sensor_conditions:
@@ -47,6 +47,19 @@ class RainMachineSensor(RainMachineEntity):
         self._sensor_type = sensor_type
         self._state = None
         self._unit = unit
+
+    @property
+    def device_info(self):
+        return {
+            'identifiers': {
+                (RAINMACHINE_DOMAIN, self.rainmachine.client.mac)
+            },
+            'name': self.rainmachine.client.name,
+            'manufacturer': 'RainMachine',
+            'model': 'Hardware Version {0}'.format(
+                self.rainmachine.client.hardware_version),
+            'sw_version': self.rainmachine.client.software_version,
+        }
 
     @property
     def icon(self) -> str:

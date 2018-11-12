@@ -7,8 +7,8 @@ https://home-assistant.io/components/switch.rainmachine/
 import logging
 
 from homeassistant.components.rainmachine import (
-    CONF_ZONE_RUN_TIME, DATA_CLIENT, DEFAULT_ZONE_RUN, DOMAIN,
-    PROGRAM_UPDATE_TOPIC, ZONE_UPDATE_TOPIC, RainMachineEntity)
+    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, PROGRAM_UPDATE_TOPIC,
+    ZONE_UPDATE_TOPIC, RainMachineEntity)
 from homeassistant.const import ATTR_ID
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
@@ -107,7 +107,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine switches based on a config entry."""
-    rainmachine = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     entities = []
 
@@ -144,6 +144,19 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
         self._rainmachine_entity_id = obj['uid']
         self._switch_type = switch_type
 
+    @property
+    def device_info(self):
+        return {
+            'identifiers': {
+                (RAINMACHINE_DOMAIN, self.rainmachine.client.mac)
+            },
+            'name': self.rainmachine.client.name,
+            'manufacturer': 'RainMachine',
+            'model': 'Version {0} (API: {1})'.format(
+                self.rainmachine.client.hardware_version,
+                self.rainmachine.client.api_version),
+            'sw_version': self.rainmachine.client.software_version,
+        }
     @property
     def icon(self) -> str:
         """Return the icon."""

@@ -8,14 +8,14 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.rainmachine import (
-    BINARY_SENSORS, DATA_CLIENT, DOMAIN, SENSOR_UPDATE_TOPIC, TYPE_FREEZE,
-    TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS, TYPE_HOURLY, TYPE_MONTH,
-    TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY, RainMachineEntity)
+    BINARY_SENSORS, DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN,
+    SENSOR_UPDATE_TOPIC, TYPE_FREEZE, TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS,
+    TYPE_HOURLY, TYPE_MONTH, TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY,
+    RainMachineEntity)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['rainmachine']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -27,7 +27,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine binary sensors based on a config entry."""
-    rainmachine = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     binary_sensors = []
     for sensor_type in rainmachine.binary_sensor_conditions:
@@ -49,6 +49,19 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
         self._name = name
         self._sensor_type = sensor_type
         self._state = None
+
+    @property
+    def device_info(self):
+        return {
+            'identifiers': {
+                (RAINMACHINE_DOMAIN, self.rainmachine.client.mac)
+            },
+            'name': self.rainmachine.client.name,
+            'manufacturer': 'RainMachine',
+            'model': 'Hardware Version {0}'.format(
+                self.rainmachine.client.hardware_version),
+            'sw_version': self.rainmachine.client.software_version,
+        }
 
     @property
     def icon(self) -> str:
