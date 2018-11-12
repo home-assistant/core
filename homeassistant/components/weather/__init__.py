@@ -33,8 +33,6 @@ ATTR_WEATHER_TEMPERATURE = 'temperature'
 ATTR_WEATHER_VISIBILITY = 'visibility'
 ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
-ATTR_WEATHER_RAIN_FORECAST = 'rain_forecast'
-ATTR_WEATHER_CONDITION_ICON = 'condition_icon'
 
 DOMAIN = 'weather'
 
@@ -110,16 +108,6 @@ class WeatherEntity(Entity):
         return None
 
     @property
-    def rain_forecast(self):
-        """Return the rain forecast."""
-        return None
-
-    @property
-    def condition_icon(self):
-        """Return the condition icon."""
-        return self.condition
-
-    @property
     def forecast(self):
         """Return the forecast."""
         return None
@@ -162,14 +150,6 @@ class WeatherEntity(Entity):
         visibility = self.visibility
         if visibility is not None:
             data[ATTR_WEATHER_VISIBILITY] = visibility
-
-        rain_forecast = self.rain_forecast
-        if rain_forecast is not None:
-            data[ATTR_WEATHER_RAIN_FORECAST] = rain_forecast
-
-        condition_icon = self.condition_icon
-        if condition_icon is not None:
-            data[ATTR_WEATHER_CONDITION_ICON] = condition_icon
 
         attribution = self.attribution
         if attribution is not None:

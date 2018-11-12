@@ -85,14 +85,8 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return self._data["weather"]
-
-    @property
-    def condition_icon(self):
-        """Return the current condition."""
         return self.format_condition(self._data["weather"])
 
-    # Now implement the WeatherEntity interface
     @property
     def temperature(self):
         """Return the platform temperature."""
@@ -107,11 +101,6 @@ class MeteoFranceWeather(WeatherEntity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
-
-    @property
-    def rain_forecast(self):
-        """Return the 1 hour rain forecast."""
-        return self._data["rain_forecast_text"]
 
     @property
     def wind_speed(self):
