@@ -188,7 +188,7 @@ class FireTVDevice(MediaPlayerDevice):
 
             # Try to connect
             self.firetv.connect()
-            self._available = True
+            self._available = self.firetv.available
 
         else:
             # Check if device is off.
