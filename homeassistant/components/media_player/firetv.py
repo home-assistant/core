@@ -190,7 +190,8 @@ class FireTVDevice(MediaPlayerDevice):
             self.firetv.connect()
             self._available = self.firetv.available
 
-        else:
+        # Update the state if the ADB connection is intact.
+        if self._available:
             # Check if device is off.
             if not self.firetv.screen_on:
                 self._state = STATE_OFF
