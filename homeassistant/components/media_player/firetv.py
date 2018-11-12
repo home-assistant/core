@@ -57,7 +57,7 @@ PACKAGE_LAUNCHER = "com.amazon.tv.launcher"
 PACKAGE_SETTINGS = "com.amazon.tv.settings"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FireTV platform."""
     from firetv import FireTV  # pylint: disable=no-name-in-module
 
@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         get_sources = config[CONF_GET_SOURCES]
 
         device = FireTVDevice(ftv, name, get_source, get_sources)
-        add_devices([device])
+        add_entities([device])
         _LOGGER.info("Setup Fire TV at %s%s", host, adb_log)
 
 
