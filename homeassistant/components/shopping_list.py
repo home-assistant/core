@@ -310,6 +310,7 @@ async def websocket_handle_items(hass, connection, msg):
     connection.send_message(websocket_api.result_message(
         msg['id'], hass.data[DOMAIN].items))
 
+
 @websocket_api.async_response
 async def websocket_handle_add(hass, connection, msg):
     """Handle add item to shopping_list"""
@@ -317,6 +318,7 @@ async def websocket_handle_add(hass, connection, msg):
     hass.bus.async_fire(EVENT)
     connection.send_message(websocket_api.result_message(
         msg['id'], item))
+
 
 @websocket_api.async_response
 async def websocket_handle_update(hass, connection, msg):

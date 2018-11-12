@@ -301,7 +301,6 @@ def test_deprecated_api_clear_completed(hass, aiohttp_client):
 
     client = yield from aiohttp_client(hass.http.app)
 
-
     # Mark beer as completed
     resp = yield from client.post(
         '/api/shopping_list/item/{}'.format(beer_id), json={
