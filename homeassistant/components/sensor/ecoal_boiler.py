@@ -1,6 +1,8 @@
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['requests==2.20.1']
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ecoal sensors ."""
