@@ -142,7 +142,6 @@ class LWLink():
             return result
 
         except Exception as ex:
-            _LOGGER.error("LW broker something went wrong!")
             _LOGGER.error(ex)
             raise
 

@@ -1,31 +1,16 @@
 """
-homeassistant.components.light.lightwave.
-
 Implements LightwaveRF lights.
 
-
-My understanding of the LightWave Hub is that devices cannot be discovered
-so must be registered manually. This is done in the configuration file:
-
-switch:
-  - platform: lightwave
-    devices:
-      R1D2:
-        name: Room one Device two
-      R2D1:
-        name: Room two Device one
-
-Each device requires an id and a name. THe id takes the from R#D#
-where R# is the room number and D# is the device number.
-
-For more details on the api see: https://api.lightwaverf.com/
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.lightwave/
 """
 import logging
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA)
-import homeassistant.helpers.config_validation as cv
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string
@@ -55,10 +40,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 class LRFLight(Light):
-    """Provides a LightWave light."""
+    """Representation of a LightWaveRF light."""
 
     def __init__(self, name, device_id, lwlink):
-        """Initilize the component with the name, device_id and link."""
+        """Initialize LRFLight entity."""
         self._name = name
         self._device_id = device_id
         self._state = None
