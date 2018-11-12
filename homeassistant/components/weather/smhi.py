@@ -63,7 +63,8 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, config_entry: ConfigEntry, config_entries) -> bool:
+        hass: HomeAssistant, config_entry: ConfigEntry,
+        config_entries) -> bool:
     """Add a weather entity from map location."""
     location = config_entry.data
     name = slugify(location[CONF_NAME])
