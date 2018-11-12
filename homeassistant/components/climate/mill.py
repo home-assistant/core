@@ -96,7 +96,6 @@ class MillHeater(ClimateDevice):
             return SUPPORT_FLAGS
         return SUPPORT_FLAGS | SUPPORT_ON_OFF
 
-
     @property
     def available(self):
         """Return True if entity is available."""
