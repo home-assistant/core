@@ -88,28 +88,30 @@ def adb_decorator(override_available=False):
         """Wait if previous ADB commands haven't finished."""
         @functools.wraps(func)
         def _adb_wrapper(self, *args, **kwargs):
-            # Only proceed if the device is available
-            if self.available or override_available:
-                # If an ADB command is already running, skip this command
-                if self.adb_lock:
-                    _LOGGER.info('Skipping an ADB command because a previous '
-                                 'command is still running')
-                    return
+            # If the device is unavailable, don't do anything
+            if not self.available and not override_available:
+                return None
 
-                # Prevent additional ADB commands while trying to run this one
-                self.adb_lock = True
-                try:
-                    returns = func(self, *args, **kwargs)
-                except self.exceptions:
-                    _LOGGER.error('Failed to execute an ADB command; will '
-                                  'attempt to re-establish the ADB connection '
-                                  'in the next update')
-                    returns = None
-                    self._available = False  # pylint: disable=protected-access
-                finally:
-                    self.adb_lock = False
+            # If an ADB command is already running, skip this command
+            if self.adb_lock:
+                _LOGGER.info('Skipping an ADB command because a previous '
+                             'command is still running')
+                return None
 
-                return returns
+            # Prevent additional ADB commands while trying to run this one
+            self.adb_lock = True
+            try:
+                returns = func(self, *args, **kwargs)
+            except self.exceptions:
+                _LOGGER.error('Failed to execute an ADB command; will attempt '
+                              'to re-establish the ADB connection in the next '
+                              'update')
+                returns = None
+                self._available = False  # pylint: disable=protected-access
+            finally:
+                self.adb_lock = False
+
+            return returns
 
         return _adb_wrapper
 
