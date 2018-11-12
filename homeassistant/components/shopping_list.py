@@ -66,6 +66,7 @@ SCHEMA_WEBSOCKET_CLEAR_ITEMS = \
         vol.Required('type'): WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS
     })
 
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Initialize the shopping list."""
@@ -306,14 +307,14 @@ class ClearCompletedItemsView(http.HomeAssistantView):
 
 @websocket_api.async_response
 async def websocket_handle_items(hass, connection, msg):
-    """Handle get shopping_list items"""
+    """Handle get shopping_list items."""
     connection.send_message(websocket_api.result_message(
         msg['id'], hass.data[DOMAIN].items))
 
 
 @websocket_api.async_response
 async def websocket_handle_add(hass, connection, msg):
-    """Handle add item to shopping_list"""
+    """Handle add item to shopping_list."""
     item = hass.data[DOMAIN].async_add(msg['name'])
     hass.bus.async_fire(EVENT)
     connection.send_message(websocket_api.result_message(
@@ -322,7 +323,7 @@ async def websocket_handle_add(hass, connection, msg):
 
 @websocket_api.async_response
 async def websocket_handle_update(hass, connection, msg):
-    """Handle update shopping_list item"""
+    """Handle update shopping_list item."""
     try:
         data = {}
         if 'name' in msg:
@@ -340,7 +341,7 @@ async def websocket_handle_update(hass, connection, msg):
 
 @websocket_api.async_response
 async def websocket_handle_clear(hass, connection, msg):
-    """Handle clearing shopping_list items"""
+    """Handle clearing shopping_list items."""
     hass.data[DOMAIN].async_clear_completed()
     hass.bus.async_fire(EVENT)
     connection.send_message(websocket_api.result_message(
