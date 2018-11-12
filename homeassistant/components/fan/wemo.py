@@ -122,7 +122,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
 
             if entity_ids:
-                humidifiers = [device for device in hass.data[DATA_KEY].values() if
+                humidifiers = [device for device in
+                               hass.data[DATA_KEY].values() if
                                device.entity_id in entity_ids]
             else:
                 humidifiers = hass.data[DATA_KEY].values()
@@ -131,7 +132,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 humidifier.set_humidity(target_humidity)
         elif service.service == SERVICE_RESET_FILTER_LIFE:
             if entity_ids:
-                humidifiers = [device for device in hass.data[DATA_KEY].values() if
+                humidifiers = [device for device in
+                               hass.data[DATA_KEY].values() if
                                device.entity_id in entity_ids]
 
                 for humidifier in humidifiers:
