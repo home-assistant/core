@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the NikoHomeControl platform."""
+    """Set up the Niko Home Control light platform."""
     import nikohomecontrol
 
     host = config.get(CONF_HOST)
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             'events': True
         })
     except socket.error as err:
-        _LOGGER.error('Unable to access %s (%s)', host, err)
+        _LOGGER.error("Unable to access %s (%s)", host, err)
         raise PlatformNotReady
 
     add_devices(
