@@ -44,9 +44,7 @@ class ECoalControler:
         air_pump = None # on/off
         air_pump_power = None # perc
 
-        hours = None
-        minutes = None
-        seconds = None
+        datetime = None
 
         def __str__(self):
             if self.mode_auto is None:
