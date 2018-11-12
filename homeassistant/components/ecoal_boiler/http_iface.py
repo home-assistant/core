@@ -24,6 +24,12 @@ class ECoalControler:
                 130, 179,224, 209,70, 119,36, 21, 59, 10, 89, 104,255, 206,157, 172)
 
     class Status:
+        """
+        Controller status
+        Keep convention that for Status.<attribute>
+        name of setting value method is
+        ECoalControler.set_<attribute>
+        """
         mode_auto = None  # on/off
 
         indoor_temp = None
@@ -39,6 +45,7 @@ class ECoalControler:
 
         central_heating_pump = None # on/off
         domestic_hot_water_pump = None # on/off
+        central_heating_pump2 = None # on/off
         coal_feeder = None # on/off
         feeder_work_time = None # seconds
         air_pump = None # on/off
@@ -67,7 +74,7 @@ class ECoalControler:
                 txt += " DHW:On"
             else:
                 txt += " DHW:Off"
-            if self.secondary_central_heating_pump:
+            if self.central_heating_pump2:
                 txt += " CH2:On"
             else:
                 txt += " CH2:Off"
@@ -193,7 +200,7 @@ class ECoalControler:
         status.coal_feeder = status_vals[32] & (1 << 1) != 0
         status.central_heating_pump = status_vals[32] & (1 << 2) != 0
         status.domestic_hot_water_pump = status_vals[32] & (1 << 3) != 0
-        status.secondary_central_heating_pump = status_vals[32] & (1 << 4) != 0
+        status.central_heating_pump2 = status_vals[32] & (1 << 4) != 0
 
         status.mode_auto = status_vals[34] == 1
 
