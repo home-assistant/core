@@ -121,13 +121,21 @@ def async_setup(hass, config):
         'shopping-list', 'shopping_list', 'mdi:cart')
 
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_GET_ITEMS, websocket_handle_items, SCHEMA_WEBSOCKET_GET_ITEMS)
+        WS_TYPE_SHOPPING_LIST_GET_ITEMS,
+        websocket_handle_items,
+        SCHEMA_WEBSOCKET_GET_ITEMS)
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_ADD_ITEM, websocket_handle_add, SCHEMA_WEBSOCKET_ADD_ITEM)
+        WS_TYPE_SHOPPING_LIST_ADD_ITEM,
+        websocket_handle_add,
+        SCHEMA_WEBSOCKET_ADD_ITEM)
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_UPDATE_ITEM, websocket_handle_update, SCHEMA_WEBSOCKET_UPDATE_ITEM)
+        WS_TYPE_SHOPPING_LIST_UPDATE_ITEM,
+        websocket_handle_update,
+        SCHEMA_WEBSOCKET_UPDATE_ITEM)
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS, websocket_handle_clear, SCHEMA_WEBSOCKET_CLEAR_ITEMS)
+        WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS,
+        websocket_handle_clear,
+        SCHEMA_WEBSOCKET_CLEAR_ITEMS)
 
     return True
 

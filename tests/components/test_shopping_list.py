@@ -96,7 +96,7 @@ async def test_ws_get_items(hass, hass_ws_client):
         'type': 'shopping_list/items/get',
     })
     msg = await client.receive_json()
-    assert msg['success'] == True
+    assert msg['success'] is True
 
     assert msg['id'] == 5
     assert msg['type'] == TYPE_RESULT
@@ -186,7 +186,7 @@ async def test_ws_update_item(hass, hass_ws_client):
         'name': 'soda'
     })
     msg = await client.receive_json()
-    assert msg['success'] == True
+    assert msg['success'] is True
 
     data = msg['result']
     assert data == {
@@ -202,7 +202,7 @@ async def test_ws_update_item(hass, hass_ws_client):
         'complete': True
     })
     msg = await client.receive_json()
-    assert msg['success'] == True
+    assert msg['success'] is True
 
     data = msg['result']
     assert data == {
@@ -267,7 +267,7 @@ async def test_ws_update_item_fail(hass, hass_ws_client):
         'name': 'soda'
     })
     msg = await client.receive_json()
-    assert msg['success'] == False
+    assert msg['success'] is False
 
     data = msg['error']
     assert data == {
@@ -281,7 +281,7 @@ async def test_ws_update_item_fail(hass, hass_ws_client):
         'name': 123,
     })
     msg = await client.receive_json()
-    assert msg['success'] == False
+    assert msg['success'] is False
 
 
 @asyncio.coroutine
@@ -300,6 +300,7 @@ def test_deprecated_api_clear_completed(hass, aiohttp_client):
     wine_id = hass.data['shopping_list'].items[1]['id']
 
     client = yield from aiohttp_client(hass.http.app)
+
 
     # Mark beer as completed
     resp = yield from client.post(
@@ -343,14 +344,14 @@ async def test_ws_clear_items(hass, hass_ws_client):
         'complete': True
     })
     msg = await client.receive_json()
-    assert msg['success'] == True
+    assert msg['success'] is True
 
     await client.send_json({
         'id': 6,
         'type': 'shopping_list/items/clear'
     })
     msg = await client.receive_json()
-    assert msg['success'] == True
+    assert msg['success'] is True
 
     items = hass.data['shopping_list'].items
     assert len(items) == 1
@@ -395,7 +396,7 @@ async def test_ws_add_item(hass, hass_ws_client):
         'name': 'soda',
     })
     msg = await client.receive_json()
-    assert msg['success'] == True
+    assert msg['success'] is True
     data = msg['result']
     assert data['name'] == 'soda'
     assert data['complete'] is False
@@ -432,5 +433,5 @@ async def test_ws_add_item_fail(hass, hass_ws_client):
         'name': 123,
     })
     msg = await client.receive_json()
-    assert msg['success'] == False
+    assert msg['success'] is False
     assert len(hass.data['shopping_list'].items) == 0
