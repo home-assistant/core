@@ -1,29 +1,60 @@
+"""
+Allows reading temperatures from ecoal/esterownik.pl controller
+
+Example configuration:
+sensor:
+  - platform: ecoal_boiler
+    enable:
+      outdoor_temp: Outdoor
+      indoor_temp: Konrad room
+      indoor_temp2: Ala room
+      domestic_hot_water_temp: Domestic hot water
+      feedwater_out_temp: Feedwater
+      # more sensors from SENSOR_IDS
+
+ecoal_boiler:
+  host: 192.168.1.123
+  login: admin
+  password: admin
+
+"""
+
+import voluptuous as vol
+
+from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['requests==2.20.1']
+
+# Available temp sensor ids
+SENSOR_IDS = ('outdoor_temp', 'indoor_temp', 'indoor2_temp',
+        'domestic_hot_water_temp', 'target_domestic_hot_water_temp',
+        'feedwater_in_temp', 'feedwater_out_temp',  'target_feedwater_temp',
+        'coal_feeder_temp', 'exhaust_temp', )
+
+ENABLED_SCHEMA = {}
+for tempsensor_id in SENSOR_IDS:
+    ENABLED_SCHEMA[vol.Optional(tempsensor_id)] = cv.string
+CONF_ENABLE = 'enable'
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_ENABLE): ENABLED_SCHEMA,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ecoal sensors ."""
     from ..ecoal_boiler import g_ecoal_contr
-    ## contr = ECoalControler("")
 
-    add_devices([
-            EcoalTempSensor(g_ecoal_contr,"Outside", 'outdoor_temp'),
-            EcoalTempSensor(g_ecoal_contr,"Indoor", 'indoor_temp'),
-            EcoalTempSensor(g_ecoal_contr,"Indoor 2", 'indoor2_temp'),
+    devices = []
+    config_enable = config.get(CONF_ENABLE, {})
 
-            EcoalTempSensor(g_ecoal_contr,"Domestic water", 'domestic_hot_water_temp'),
-            EcoalTempSensor(g_ecoal_contr,"Domestic water target", 'target_domestic_hot_water_temp'),
-
-            EcoalTempSensor(g_ecoal_contr,"Feedwater in", 'feedwater_in_temp'),
-            EcoalTempSensor(g_ecoal_contr,"Feedwater out", 'feedwater_out_temp'),
-            EcoalTempSensor(g_ecoal_contr,"Feedwater target", 'target_feedwater_temp'),
-
-            EcoalTempSensor(g_ecoal_contr,"Fuel feeder", 'coal_feeder_temp'),
-            EcoalTempSensor(g_ecoal_contr,"Exhaust gas", 'exhaust_temp'),
-        ])
+    for sensor_id in SENSOR_IDS:
+        name = config_enable.get(sensor_id)
+        if name:
+            devices.append( EcoalTempSensor(g_ecoal_contr, name, sensor_id) )
+    add_devices(devices)
 
 
 class EcoalTempSensor(Entity):

@@ -9,6 +9,12 @@ switch:
       central_heating_pump2: Floor radiators
       # domestic_hot_water_pump: N/A
 
+ecoal_boiler:
+  host: 192.168.1.123
+  login: admin
+  password: admin
+
+
 sets names for two pumps (central_heating_pump,central_heating_pump2).
 Missing grom config 3rd pump ( domestic_hot_water_pump ) is not used
 
@@ -19,7 +25,6 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
-
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
