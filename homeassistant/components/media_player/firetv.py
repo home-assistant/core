@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.firetv/
 """
 import functools
 import logging
-import os
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -33,15 +32,22 @@ CONF_GET_SOURCES = 'get_sources'
 
 DEFAULT_NAME = 'Amazon Fire TV'
 DEFAULT_PORT = 5555
-DEFAULT_ADBKEY = ''
 DEFAULT_GET_SOURCE = True
 DEFAULT_GET_SOURCES = True
+
+
+def has_adb_files(value):
+    """Check that ADB key files exist."""
+    priv_key = value
+    pub_key = '{}.pub'.format(value)
+    return cv.isfile(priv_key) and cv.isfile(pub_key)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_ADBKEY, default=DEFAULT_ADBKEY): cv.string,
+    vol.Optional(CONF_ADBKEY): has_adb_files,
     vol.Optional(CONF_GET_SOURCE, default=DEFAULT_GET_SOURCE): cv.boolean,
     vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean
 })
@@ -52,36 +58,27 @@ PACKAGE_SETTINGS = "com.amazon.tv.settings"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the FireTV platform."""
+    from firetv import FireTV  # pylint: disable=no-name-in-module
+
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
-    name = config[CONF_NAME]
-    adbkey = config[CONF_ADBKEY]
-    get_source = config[CONF_GET_SOURCE]
-    get_sources = config[CONF_GET_SOURCES]
 
-    device = FireTVDevice(host, name, adbkey, get_source, get_sources)
-    adb_log = " using adbkey='{0}'".format(adbkey) if adbkey else ""
-    if not device.firetv.available:
-        _LOGGER.warning("Could not connect to Fire TV at %s%s", host, adb_log)
-
-        # Configuration troubleshooting for `adbkey`
-        if adbkey:
-            # Check whether the key files exist
-            if not os.path.exists(adbkey):
-                raise FileNotFoundError(
-                    "ADB private key {} does not exist".format(adbkey))
-            if not os.path.exists(adbkey + ".pub"):
-                raise FileNotFoundError(
-                    "ADB public key {} does not exist".format(adbkey + '.pub'))
-
-            # Check whether the key files can be read
-            with open(adbkey):
-                pass
-            with open(adbkey + '.pub'):
-                pass
-
+    if CONF_ADBKEY in config:
+        ftv = FireTV(host, config[CONF_ADBKEY])
+        adb_log = " using adbkey='{0}'".format(config[CONF_ADBKEY])
     else:
-        _LOGGER.info("Setup Fire TV at %s%s", host, adb_log)
+        ftv = FireTV(host)
+        adb_log = ""
+
+    if not ftv.available:
+        _LOGGER.warning("Could not connect to Fire TV at %s%s", host, adb_log)
+    else:
+        name = config[CONF_NAME]
+        get_source = config[CONF_GET_SOURCE]
+        get_sources = config[CONF_GET_SOURCES]
+
+        device = FireTVDevice(ftv, name, get_source, get_sources)
         add_devices([device])
+        _LOGGER.info("Setup Fire TV at %s%s", host, adb_log)
 
 
 def adb_decorator(override_available=False):
@@ -121,17 +118,16 @@ def adb_decorator(override_available=False):
 class FireTVDevice(MediaPlayerDevice):
     """Representation of an Amazon Fire TV device on the network."""
 
-    def __init__(self, host, name, adbkey, get_source, get_sources):
+    def __init__(self, ftv, name, get_source, get_sources):
         """Initialize the FireTV device."""
-        from firetv import FireTV  # pylint: disable=no-name-in-module
         from adb.adb_protocol import (
             InvalidCommandError, InvalidResponseError, InvalidChecksumError)
+
+        self.firetv = ftv
 
         self._name = name
         self._get_source = get_source
         self._get_sources = get_sources
-
-        self.firetv = FireTV(host, adbkey)
 
         # whether or not the ADB connection is currently in use
         self.adb_lock = False
