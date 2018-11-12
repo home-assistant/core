@@ -40,7 +40,8 @@ def has_adb_files(value):
     """Check that ADB key files exist."""
     priv_key = value
     pub_key = '{}.pub'.format(value)
-    return cv.isfile(priv_key) and cv.isfile(pub_key)
+    cv.isfile(pub_key)
+    return cv.isfile(priv_key)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
