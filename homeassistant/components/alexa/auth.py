@@ -10,7 +10,7 @@ import async_timeout
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util import dt
-from .const import DATE_FORMAT, DEFAULT_TIMEOUT
+from .const import DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
