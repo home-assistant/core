@@ -44,7 +44,7 @@ SENSORS = [
                    "mdi:water-percent", "%"),
     WFSensorConfig("Compressor Power", "compressorpower", "mdi:flash", "W"),
     WFSensorConfig("Fan Power", "fanpower", "mdi:flash", "W"),
-    WFSensorConfig("Aux Power", "aupower", "mdi:flash", "W"),
+    WFSensorConfig("Aux Power", "auxpower", "mdi:flash", "W"),
     WFSensorConfig("Loop Pump Power", "looppumppower", "mdi:flash", "W"),
     WFSensorConfig("Compressor Speed", "actualcompressorspeed", "mdi:speedometer"),
     WFSensorConfig("Fan Speed", "airflowcurrentspeed", "mdi:fan"),
