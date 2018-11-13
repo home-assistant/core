@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE)
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
+    CONF_SHOW_ON_MAP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -21,22 +22,23 @@ REQUIREMENTS = ['enturclient==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_EXPECTED_IN = 'due_in'
 ATTR_NEXT_UP_IN = 'next_due_in'
 
-API_CLIENT_ID = 'home-assistant'
+API_CLIENT_NAME = 'homeassistant-homeassistant'
 
 CONF_ATTRIBUTION = "Data provided by entur.org under NLOD."
 CONF_STOP_IDS = 'stop_ids'
 CONF_EXPAND_PLATFORMS = 'expand_platforms'
-CONF_ADD_TO_MAP = 'add_to_map'
+
+DEFAULT_NAME = 'Entur'
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
-    vol.Optional(CONF_ADD_TO_MAP, default=False): cv.boolean,
+    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
 })
 
 
@@ -57,25 +59,34 @@ def due_in_minutes(timestamp: str) -> str:
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Entur public transport sensor."""
     from enturclient import EnturPublicTransportData
+    from enturclient.consts import CONF_NAME as API_NAME
     stop_ids = config.get(CONF_STOP_IDS)
     expand = config.get(CONF_EXPAND_PLATFORMS)
-    add_to_map = config.get(CONF_ADD_TO_MAP)
+    show_on_map = config.get(CONF_SHOW_ON_MAP)
+    name = config.get(CONF_NAME)
 
     stops = [s for s in stop_ids if "StopPlace" in s]
     quays = [s for s in stop_ids if "Quay" in s]
 
     data = EnturPublicTransportData(
-        API_CLIENT_ID,
+        API_CLIENT_NAME,
         stops,
         quays,
         expand)
+    data.update()
 
     proxy = EnturProxy(data)
 
-    data.update()
     entities = []
     for item in data.all_stop_places_quays():
-        entities.append(EnturPublicTransportSensor(proxy, item, add_to_map))
+        try:
+            given_name = "{} {}".format(
+                name, data.get_stop_info(item)[API_NAME])
+        except KeyError:
+            given_name = "{} {}".format(name, item)
+
+        entities.append(
+            EnturPublicTransportSensor(proxy, given_name, item, show_on_map))
 
     add_entities(entities, True)
 
@@ -86,34 +97,50 @@ class EnturProxy:
     Ensure throttle to not hit rate limiting on api.
     """
 
-    def __init__(self, data):
+    def __init__(self, api):
         """Initialize the proxy."""
-        self._data = data
+        self._api = api
 
     @Throttle(SCAN_INTERVAL)
     def update(self) -> None:
         """Update data in client."""
-        self._data.update()
+        self._api.update()
 
     def get_stop_info(self, stop_id: str) -> dict:
         """Get info about specific stop place."""
-        return self._data.get_stop_info(stop_id)
+        return self._api.get_stop_info(stop_id)
 
 
 class EnturPublicTransportSensor(Entity):
     """Implementation of a Entur public transport sensor."""
 
-    def __init__(self, data: EnturProxy, stop: str, add_to_map: bool):
+    ICONS = {
+        'bus': 'mdi:bus',
+        'air': 'mdi:airplane',
+        'water': 'mdi:ferry',
+        'rail': 'mdi:train'
+    }
+
+    DEFAULT_ICON_KEY = 'bus'
+
+    def __init__(self,
+                 api: EnturProxy,
+                 name: str,
+                 stop: str,
+                 show_on_map: bool):
         """Initialize the sensor."""
-        from enturclient.consts import CONF_NAME
-        self.data = data
+        from enturclient.consts import ATTR_STOP_ID
+        self.api = api
         self._stop = stop
-        self._add_to_map = add_to_map
-        self._times = data.get_stop_info(stop)
-        try:
-            self._name = "Entur " + self._times[CONF_NAME]
-        except TypeError:
-            self._name = "Entur " + stop
+        self._show_on_map = show_on_map
+        self._name = name
+        self._data = None
+        self._state = None
+        self._icon = self.ICONS[self.DEFAULT_ICON_KEY]
+        self._attributes = {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_STOP_ID: self._stop
+        }
 
     @property
     def name(self) -> str:
@@ -123,32 +150,12 @@ class EnturPublicTransportSensor(Entity):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        from enturclient.consts import ATTR, ATTR_EXPECTED_AT
-        try:
-            return due_in_minutes(
-                self._times[ATTR][ATTR_EXPECTED_AT])
-        except TypeError:
-            return None
+        return self._state
 
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
-        from enturclient.consts import (
-            CONF_LOCATION, ATTR, ATTR_NEXT_UP_AT,
-            ATTR_STOP_ID, ATTR_EXPECTED_AT,
-            CONF_LATITUDE as LAT, CONF_LONGITUDE as LONG)
-        if self._times is not None:
-            attr = self._times[ATTR]
-            attr[ATTR_NEXT_UP_IN] = due_in_minutes(attr[ATTR_NEXT_UP_AT])
-            attr[ATTR_EXPECTED_IN] = due_in_minutes(attr[ATTR_EXPECTED_AT])
-            attr[ATTR_STOP_ID] = self._times[ATTR_STOP_ID]
-            attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-            if CONF_LOCATION in self._times and self._add_to_map:
-                attr[CONF_LATITUDE] = \
-                    self._times[CONF_LOCATION][LAT]
-                attr[CONF_LONGITUDE] = \
-                    self._times[CONF_LOCATION][LONG]
-            return attr
+        return self._attributes
 
     @property
     def unit_of_measurement(self) -> str:
@@ -158,19 +165,35 @@ class EnturPublicTransportSensor(Entity):
     @property
     def icon(self) -> str:
         """Icon to use in the frontend."""
-        from enturclient.consts import CONF_TRANSPORT_MODE
-        if self._times[CONF_TRANSPORT_MODE] == 'bus':
-            return 'mdi:bus'
-        if self._times[CONF_TRANSPORT_MODE] == 'rail':
-            return 'mdi:train'
-        if self._times[CONF_TRANSPORT_MODE] == 'water':
-            return 'mdi:ferry'
-        if self._times[CONF_TRANSPORT_MODE] == 'air':
-            return 'mdi:airplane'
-
-        return 'mdi:bus'
+        return self._icon
 
     def update(self) -> None:
         """Get the latest data and update the states."""
-        self.data.update()
-        self._times = self.data.get_stop_info(self._stop)
+        from enturclient.consts import (
+            ATTR, ATTR_EXPECTED_AT, ATTR_NEXT_UP_AT, CONF_LOCATION,
+            CONF_LATITUDE as LAT, CONF_LONGITUDE as LONG, CONF_TRANSPORT_MODE)
+        self.api.update()
+
+        self._data = self.api.get_stop_info(self._stop)
+        if self._data is not None:
+            attrs = self._data[ATTR]
+            self._attributes.update(attrs)
+
+            if ATTR_NEXT_UP_AT in attrs:
+                self._attributes[ATTR_NEXT_UP_IN] = \
+                    due_in_minutes(attrs[ATTR_NEXT_UP_AT])
+
+            if CONF_LOCATION in self._data and self._show_on_map:
+                self._attributes[CONF_LATITUDE] = \
+                    self._data[CONF_LOCATION][LAT]
+                self._attributes[CONF_LONGITUDE] = \
+                    self._data[CONF_LOCATION][LONG]
+
+            if ATTR_EXPECTED_AT in attrs:
+                self._state = due_in_minutes(attrs[ATTR_EXPECTED_AT])
+            else:
+                self._state = None
+
+            self._icon = self.ICONS.get(
+                self._data[CONF_TRANSPORT_MODE],
+                self.ICONS[self.DEFAULT_ICON_KEY])
