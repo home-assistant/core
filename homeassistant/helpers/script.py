@@ -120,7 +120,8 @@ class Script():
                                   self.name, ex)
                     break
 
-                self.last_action = action.get(CONF_ALIAS, 'delay {}'.format(delay))
+                self.last_action = action.get(
+                    CONF_ALIAS, 'delay {}'.format(delay))
                 self._log("Executing step %s" % self.last_action)
 
                 unsub = async_track_point_in_utc_time(
