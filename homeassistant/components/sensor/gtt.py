@@ -10,7 +10,6 @@ from datetime import timedelta, datetime
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -30,12 +29,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BUS_NAME): cv.string,
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gtt platform."""
     stop = config.get(CONF_STOP)
     bus_name = config.get(CONF_BUS_NAME)
 
     add_entities([GttSensor(stop, bus_name)], True)
+
 
 class GttSensor(Entity):
     """Representation of a Gtt Sensor."""
@@ -50,17 +51,17 @@ class GttSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-    
+
     @property
     def icon(self):
         """Return the icon of the sensor."""
         return ICON
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
@@ -68,16 +69,16 @@ class GttSensor(Entity):
         for bus in self.data.bus_list:
             attr[bus['bus_name']] = bus['time'][0]['run']
         return attr
-    
+
     def update(self):
         """Update device state."""
         self.data.get_data()
         self._state = "{}: {}".format(self.data.state_bus['bus_name'], 
                                       self.data.state_bus['time'][0]['run'])
 
+
 class GttData:
     """Inteface to PyGTT."""
-
     def __init__(self, stop, bus_name):
         from pygtt import PyGTT
         self._pygtt = PyGTT()
@@ -85,7 +86,7 @@ class GttData:
         self._bus_name = bus_name
         self.bus_list = {}
         self.state_bus = {}
-    
+
     def get_data(self):
         """Get the data from the api."""
         self.bus_list = self._pygtt.get_by_stop(self._stop)
@@ -112,5 +113,4 @@ class GttData:
         for bus in self.bus_list:
             if bus['bus_name'] == self._bus_name:
                 self.state_bus = bus
-                return       
-
+                return
