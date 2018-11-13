@@ -178,8 +178,8 @@ def setup(hass, config):
 
     load_platform(hass, 'climate', DOMAIN, {}, config)
 
-    # Inform the Controller when HA has started so it can get it's first update
     def _first_update(event):
+        # when HA has started, the Controller can pull first update
         pkt = {'sender': 'setup()', 'signal': 'refresh', 'to': EVO_PARENT}
         async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)
 
