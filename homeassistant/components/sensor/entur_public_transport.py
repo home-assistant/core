@@ -31,6 +31,14 @@ CONF_STOP_IDS = 'stop_ids'
 CONF_EXPAND_PLATFORMS = 'expand_platforms'
 
 DEFAULT_NAME = 'Entur'
+DEFAULT_ICON_KEY = 'bus'
+
+ICONS = {
+    'bus': 'mdi:bus',
+    'air': 'mdi:airplane',
+    'water': 'mdi:ferry',
+    'rail': 'mdi:train'
+}
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -114,15 +122,6 @@ class EnturProxy:
 class EnturPublicTransportSensor(Entity):
     """Implementation of a Entur public transport sensor."""
 
-    ICONS = {
-        'bus': 'mdi:bus',
-        'air': 'mdi:airplane',
-        'water': 'mdi:ferry',
-        'rail': 'mdi:train'
-    }
-
-    DEFAULT_ICON_KEY = 'bus'
-
     def __init__(self,
                  api: EnturProxy,
                  name: str,
@@ -136,7 +135,7 @@ class EnturPublicTransportSensor(Entity):
         self._name = name
         self._data = None
         self._state = None
-        self._icon = self.ICONS[self.DEFAULT_ICON_KEY]
+        self._icon = ICONS[DEFAULT_ICON_KEY]
         self._attributes = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_STOP_ID: self._stop
@@ -194,6 +193,5 @@ class EnturPublicTransportSensor(Entity):
             else:
                 self._state = None
 
-            self._icon = self.ICONS.get(
-                self._data[CONF_TRANSPORT_MODE],
-                self.ICONS[self.DEFAULT_ICON_KEY])
+            self._icon = ICONS.get(
+                self._data[CONF_TRANSPORT_MODE], ICONS[DEFAULT_ICON_KEY])
