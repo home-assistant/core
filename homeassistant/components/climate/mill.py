@@ -182,7 +182,7 @@ class MillHeater(ClimateDevice):
     def operation_list(self):
         """List of available operation modes."""
         if self._heater.is_gen1:
-            return [STATE_HEAT]
+            return None
         return [STATE_HEAT, STATE_OFF]
 
     async def async_set_temperature(self, **kwargs):
