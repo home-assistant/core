@@ -12,7 +12,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/eliseomartelli/pygtt/archive/master.zip#pygtt==1.1.1']
+REQUIREMENTS = ['pygtt==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class GttSensor(Entity):
     def __init__(self, stop, bus_name):
         self.data = GttData(stop, bus_name)
         self._state = None
-        self._name = 'stop_{}'.format(stop)
+        self._name = 'Stop {}'.format(stop)
 
     @property
     def name(self):
@@ -51,6 +51,13 @@ class GttSensor(Entity):
     @property
     def state(self):
         return self._state
+    
+    @property
+    def device_state_attributes(self):
+        attr = {}
+        for bus in self.data.bus_list:
+            attr[bus['bus_name']] = bus['time'][0]['run']
+        return attr
     
     def update(self):
         self.data.get_data()
