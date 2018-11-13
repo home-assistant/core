@@ -72,11 +72,12 @@ class GttSensor(Entity):
     def update(self):
         """Update device state."""
         self.data.get_data()
-        self._state = "{}: {}".format(self.data.state_bus['bus_name'], self.data.state_bus['time'][0]['run'])
+        self._state = "{}: {}".format(self.data.state_bus['bus_name'], 
+                                      self.data.state_bus['time'][0]['run'])
 
 class GttData:
     """Inteface to PyGTT."""
-    
+
     def __init__(self, stop, bus_name):
         from pygtt import PyGTT
         self._pygtt = PyGTT()
