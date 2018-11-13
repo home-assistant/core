@@ -14,7 +14,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-systemair-savecair==0.0.3']
+REQUIREMENTS = ['python-systemair-savecair==0.0.4']
 
 ATTR_SUPPLY_AIR_TEMPERATURE = "supply_air_temperature"
 ATTR_SUPPLY_AIR_FAN_SPEED = "supply_air_fan_speed"
@@ -49,9 +49,7 @@ SAVECAIR_OPERATION_MODES = {
 }
 
 HA_OPERATION_MODES = {
-    STATE_AUTO: 0,
-    STATE_IDLE: 1,
-    STATE_MANUAL: 2
+    val: key for key, val in SAVECAIR_OPERATION_MODES.items()
 }
 
 
