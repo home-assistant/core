@@ -606,7 +606,7 @@ lw12==0.9.2
 lyft_rides==0.2
 
 # homeassistant.components.sensor.magicseaweed
-magicseaweed==1.0.0
+magicseaweed==1.0.3
 
 # homeassistant.components.matrix
 matrix-client==0.2.0
