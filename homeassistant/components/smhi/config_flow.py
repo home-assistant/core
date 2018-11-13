@@ -49,7 +49,7 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
                 self._errors['base'] = 'wrong_location'
 
         # If hass config has the location set and is a valid coordinate the
-        # default locationis set as default values in the form
+        # default locationis is set as default values in the form
         if not smhi_locations(self.hass):
             if await self._homeassistant_location_exists():
                 return await self._show_config_form(
