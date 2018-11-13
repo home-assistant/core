@@ -134,6 +134,7 @@ class MikrotikScanner(DeviceScanner):
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device MACs."""
+        import librouteros
         try:
             self._update_info()
         except (librouteros.exceptions.TrapError, 
