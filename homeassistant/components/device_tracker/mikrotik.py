@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_SSL)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_SSL, CONF_METHOD)
 
 REQUIREMENTS = ['librouteros==2.1.1']
 
@@ -29,6 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_METHOD): cv.string,
     vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean
 })
