@@ -145,19 +145,6 @@ def setup(hass, config):
 
         return False  # unable to continue
 
-    # Now we're ready to go, but we have no state as yet, so...
-    def _first_update(event):
-        """Let the Controller know it can obtain it's first update."""
-        pkt = {
-            'sender': 'setup()',
-            'signal': 'update',
-            'to': EVO_PARENT
-        }
-        async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)
-
-    # Create a listener for the above...
-    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
-
     if _LOGGER.isEnabledFor(logging.DEBUG):
         tmp_loc = dict(evo_data['config'])
         tmp_loc['locationInfo']['postcode'] = 'REDACTED'
