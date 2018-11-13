@@ -146,6 +146,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
 
     @property
     def device_info(self):
+        """Return device registry information for this binary sensor."""
         return {
             'identifiers': {
                 (RAINMACHINE_DOMAIN, self.rainmachine.client.mac)
