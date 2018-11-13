@@ -6,9 +6,9 @@ https://home-assistant.io/components/device_tracker.mikrotik/
 """
 import logging
 
-import voluptuous as vol
-
 import ssl
+
+import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
@@ -53,7 +53,10 @@ class MikrotikScanner(DeviceScanner):
         try:
             self.port = config[CONF_PORT]
         except KeyError:
-            self.port = MTK_DEFAULT_API_SSL_PORT if self.ssl else MTK_DEFAULT_API_PORT
+            if self.ssl:
+                self.port = MTK_DEFAULT_API_SSL_PORT
+            else:
+                self.port = MTK_DEFAULT_API_PORT
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
         self.method = config[CONF_METHOD]
@@ -75,8 +78,8 @@ class MikrotikScanner(DeviceScanner):
         import librouteros
         try:
             kwargs = {
-              'port': self.port,
-              'encoding': 'utf-8'
+                'port': self.port,
+                'encoding': 'utf-8'
             }
             if self.ssl:
                 ssl_context = ssl.create_default_context()
