@@ -284,4 +284,5 @@ class SystemAIRClimate(ClimateDevice):
 
     @property
     def is_away_mode_on(self):
+        """Flag to determine if the device is away."""
         return self.current_operation == STATE_IDLE
