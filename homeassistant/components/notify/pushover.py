@@ -7,7 +7,6 @@ https://home-assistant.io/components/notify.pushover/
 import logging
 import mimetypes
 import os
-import re
 import tempfile
 
 import requests
@@ -122,49 +121,50 @@ class PushoverNotificationService(BaseNotificationService):
     def load_file(self, url=None, local_path=None, username=None,
                   password=None, auth=None):
         """Load image/document/etc from a local path or URL."""
-            # Load the file from URL
-            if url:
-                # Check whether authentication parameters are provided
-                if username:
-                    # Use digest or basic authentication
-                    if ATTR_FILE_AUTH_DIGEST == auth:
-                        auth = HTTPDigestAuth(username, password)
-                    else:
-                        auth = HTTPBasicAuth(username, password)
+        # Load the file from URL
+        if url:
+            # Check whether authentication parameters are provided
+            if username:
+                # Use digest or basic authentication
+                if ATTR_FILE_AUTH_DIGEST == auth:
+                    auth = HTTPDigestAuth(username, password)
                 else:
-                    auth = None
-
-                # Make the request and raise an error if necessary
-                try:
-                    if auth:
-                        response = requests.get(url, auth=auth, timeout=CONF_TIMEOUT)
-                    else:
-                        response = requests.get(url, timeout=CONF_TIMEOUT)
-
-                    response.raise_for_status()
-                except requests.exceptions.RequestException as request_error:
-                    _LOGGER.error("Can't load from url: %s", request_error)
-
-                downloaded_file = (
-                    tempfile.NamedTemporaryFile(delete=False)
-                )
-
-                try:
-                    filename = downloaded_file.name
-                    downloaded_file.write(response.content)
-                except OSError as error:
-                    _LOGGER.error("Can't load from url or local path: %s", error)
-
-                return filename
-
-            # Load the file from the filesystem
-            elif local_path:
-                # Check whether path is whitelisted in configuration.yaml
-                if self._is_allowed_path(local_path):
-                    return local_path
-                _LOGGER.warning("'%s' is not secure to load data from!",
-                                local_path)
+                    auth = HTTPBasicAuth(username, password)
             else:
-                _LOGGER.warning("Neither URL nor local path found in params!")
+                auth = None
+
+            # Make the request and raise an error if necessary
+            try:
+                if auth:
+                    response = requests.get(
+                        url, auth=auth, timeout=CONF_TIMEOUT)
+                else:
+                    response = requests.get(url, timeout=CONF_TIMEOUT)
+
+                response.raise_for_status()
+            except requests.exceptions.RequestException as request_error:
+                _LOGGER.error("Can't load from url: %s", request_error)
+
+            downloaded_file = (
+                tempfile.NamedTemporaryFile(delete=False)
+            )
+
+            try:
+                filename = downloaded_file.name
+                downloaded_file.write(response.content)
+            except OSError as error:
+                _LOGGER.error("Can't load from url or local path: %s", error)
+
+            return filename
+
+        # Load the file from the filesystem
+        elif local_path:
+            # Check whether path is whitelisted in configuration.yaml
+            if self._is_allowed_path(local_path):
+                return local_path
+            _LOGGER.warning("'%s' is not secure to load data from!",
+                            local_path)
+        else:
+            _LOGGER.warning("Neither URL nor local path found in params!")
 
         return None
