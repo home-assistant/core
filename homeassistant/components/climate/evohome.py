@@ -29,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
-    dispatcher_connect
+    async_dispatcher_connect
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,7 +127,13 @@ class EvoClimateDevice(ClimateDevice):
 
         self._available = False  # should become True after first update()
 
-        dispatcher_connect(hass, DISPATCHER_EVOHOME, self._connect)
+#       dispatcher_connect(hass, DISPATCHER_EVOHOME, self._connect)
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        async_dispatcher_connect(self.hass, DISPATCHER_EVOHOME, self._connect)
+        if self._type & EVO_PARENT:
+            self.async_schedule_update_ha_state(force_refresh=True)
 
     @callback
     def _connect(self, packet):

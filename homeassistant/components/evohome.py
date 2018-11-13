@@ -56,9 +56,6 @@ CONFIG_SCHEMA = vol.Schema({
 GWS = 'gateways'
 TCS = 'temperatureControlSystems'
 
-# bit masks for dispatcher packets
-EVO_PARENT = 0x01
-
 
 def setup(hass, config):
     """Create a (EMEA/EU-based) Honeywell evohome system.
@@ -177,12 +174,5 @@ def setup(hass, config):
         zones.append(EvoZone(hass, client, zone_obj_ref))
 
     load_platform(hass, 'climate', DOMAIN, {}, config)
-
-    def _first_update(event):
-        # when HA has started, the Controller can pull first update
-        pkt = {'sender': 'setup()', 'signal': 'refresh', 'to': EVO_PARENT}
-        async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)
-
-    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
 
     return True
