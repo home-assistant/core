@@ -1,5 +1,5 @@
 """
-Allows reading temperatures from ecoal/esterownik.pl controller
+Allows reading temperatures from ecoal/esterownik.pl controller.
 
 Example configuration:
 sensor:
@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ecoal sensors ."""
+    """Set up the ecoal sensors."""
     from ..ecoal_boiler import g_ecoal_contr
 
     devices = []

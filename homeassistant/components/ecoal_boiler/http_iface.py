@@ -1,6 +1,8 @@
 """
-Implements communicaton with ecaol/esterownik.pl
-solid fuel boiler controllers over TCP/IP
+ecoal solid fuel boiler controller interface.
+
+Implements communication with ecoal/esterownik.pl
+solid fuel boiler controllers over TCP/IP.
 """
 import datetime
 import logging
@@ -14,9 +16,12 @@ _LOGGER = logging.getLogger(__name__)
 
 class ECoalControler:
     """
-    Implements communicaton with ecaol/esterownik.pl
-    solid fuel boiler controllers over TCP/IP
+    ecoal solid fuel boiler controller interface.
+
+    Implements communication with ecoal/esterownik.pl
+    solid fuel boiler controllers over TCP/IP.
     """
+
     CRCTABLE = (
         0,
         49,
@@ -278,11 +283,15 @@ class ECoalControler:
 
     class Status:
         """
-        Controller status
-        Keep convention that for Status.<attribute>
-        name of setting value method is
-        ECoalControler.set_<attribute>
+        Controller status.
+
+        Contains parsed values of status query reply.
         """
+
+        # Keep convention that for Status.<attribute>
+        # name of setting value method is
+        # ECoalControler.set_<attribute>
+
 
         mode_auto = None  # on/off
 
@@ -308,6 +317,7 @@ class ECoalControler:
         datetime = None
 
         def __str__(self):
+            """One line human readable status info."""
             if self.mode_auto is None:
                 return "N/A"
             txt = ""
@@ -359,6 +369,7 @@ class ECoalControler:
             return txt
 
     def __init__(self, host, login, password, log=_LOGGER):
+        """Init iface, perform single get_version() query."""
         self.host = host
         self.login = login
         self.password = password
@@ -403,9 +414,7 @@ class ECoalControler:
         return status_vals
 
     def get_version(self):
-        """
-        Sets .version according data from controller version.
-        """
+        """Set .version according data from controller version."""
         resp = self._get_request("0201000500020000A903")
         if resp.status_code != 200:
             return
@@ -423,7 +432,7 @@ class ECoalControler:
         return self.version
 
     def get_status(self):
-        """Gets and parses controller status"""
+        """Get and parse controller status."""
         self.status = None
         resp = self._get_request("02010006000000006103")
 
@@ -618,8 +627,11 @@ class ECoalControler:
 
     def get_cached_status(self, max_cache_period=0.2):
         """
-        Returns cached status if read less than max_cache_period.
-        Otherwise fresh value is requested
+        Return (cached) status.
+
+        If status read less than max_cache_period,
+        cached status is returned.
+        Otherwise fresh value is requested.
         """
         if (
                 not self.status
@@ -629,9 +641,7 @@ class ECoalControler:
         return self.status
 
     def set_central_heating_pump(self, state):
-        """
-        Turns on/off central heating pump
-        """
+        """Turn on/off central heating pump."""
         if state:
             resp = self._get_request("02010005000D0100018D03")
         else:
@@ -643,8 +653,10 @@ class ECoalControler:
         return resp
 
     def set_central_heating_pump2(self, state):
-        """ third pump can be configured as mixing feedwater pump,
-        domestic hot water pump or 2nd heating pump
+        """Turn on/off third pump.
+
+        Third pump can be configured as mixing feedwater pump,
+        domestic hot water pump or 2nd heating pump.
         """
         if state:
             v = 1
@@ -660,9 +672,7 @@ class ECoalControler:
         return resp
 
     def set_domestic_hot_water_pump(self, state):
-        """
-        Turns on/off domestic water pump
-        """
+        """Turn on/off domestic water pump."""
         if state:
             resp = self._get_request("02010005000E0100011103")
         else:
@@ -673,17 +683,13 @@ class ECoalControler:
         return resp
 
     def set_target_feedwater_temp(self, value):
-        """
-        Sets target feedwater tempeartur to given Celcius degrees.
-        """
+        """Set target feedwater temperature to given Celcius degrees."""
         v = int(value)
         buf = [0x01, 0x00, 0x02, 0x00, 0x28, 0x02, 0x00, v & 0xFF, 0x00]
         self._calc_crc_get_request(buf)
 
     def _calc_crc_get_request(self, buf):
-        """
-        Calculates CRC and expands buf command to be sent to controller
-        """
+        """Calculate CRC and expand buf command to be sent to controller."""
         crc = self._calc_crc(buf)
         buf.insert(0, 0x02)
         buf.append(crc)

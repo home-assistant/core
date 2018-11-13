@@ -1,5 +1,6 @@
 """
-Allows to configure ecoal (esterownik.pl)
+Allows to configuration ecoal (esterownik.pl) pumps as switches.
+
 solid fuel boiler controller as set of switches operating over pumps
 Example configuration:
 
@@ -65,7 +66,11 @@ class EcoalSwitch(ToggleEntity):
     """Representation of Ecoal switch."""
 
     def __init__(self, ecoal_contr, name, state_attr):
-        """Initialize switch"""
+        """
+        Initialize switch.
+
+        Sets HA switch to state as read from controller.
+        """
         self._ecoal_contr = ecoal_contr
         self._name = name
         self._state_attr = state_attr

@@ -1,5 +1,8 @@
 """
-Support for ecoal/esterownik.pl coal/wood boiler controller
+Support for ecoal/esterownik.pl coal/wood boiler controller.
+
+Allows read various readings available in controller
+and set very basic switches.
 """
 import logging
 
@@ -37,11 +40,8 @@ DEFAULT_PASSWORD = "admin"
 
 g_ecoal_contr = None
 
-
 async def async_setup(hass, config):
-    """
-    Setup global g_ecoal_contr same for sensors and switches
-    """
+    """Set up global g_ecoal_contr same for sensors and switches."""
     global g_ecoal_contr
     _LOGGER.debug("async_setup(): config: %r", config)
     from .http_iface import ECoalControler
