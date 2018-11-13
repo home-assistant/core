@@ -73,7 +73,7 @@ class GttSensor(Entity):
     def update(self):
         """Update device state."""
         self.data.get_data()
-        self._state = "{}: {}".format(self.data.state_bus['bus_name'], 
+        self._state = "{}: {}".format(self.data.state_bus['bus_name'],
                                       self.data.state_bus['time'][0]['run'])
 
 
