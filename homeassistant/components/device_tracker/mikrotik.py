@@ -134,7 +134,7 @@ class MikrotikScanner(DeviceScanner):
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device MACs."""
-		try:
+        try:
             self._update_info()
         except:
             self.connect_to_device()
