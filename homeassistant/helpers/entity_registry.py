@@ -95,7 +95,8 @@ class EntityRegistry:
         return None
 
     @callback
-    def async_generate_entity_id(self, domain, suggested_object_id):
+    def async_generate_entity_id(self, domain, suggested_object_id,
+                                 known_object_ids=None):
         """Generate an entity ID that does not conflict.
 
         Conflicts checked against registered and currently existing entities.
@@ -103,7 +104,8 @@ class EntityRegistry:
         return ensure_unique_string(
             '{}.{}'.format(domain, slugify(suggested_object_id)),
             chain(self.entities.keys(),
-                  self.hass.states.async_entity_ids(domain))
+                  self.hass.states.async_entity_ids(domain),
+                  known_object_ids if known_object_ids else [])
         )
 
     @callback
