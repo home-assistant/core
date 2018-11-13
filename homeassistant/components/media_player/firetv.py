@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if not ftv.available:
         _LOGGER.warning("Could not connect to Fire TV at %s%s", host, adb_log)
-        return None
+        return
 
     name = config[CONF_NAME]
     get_source = config[CONF_GET_SOURCE]
@@ -195,7 +195,7 @@ class FireTVDevice(MediaPlayerDevice):
 
         # If the ADB connection is not intact, don't update.
         if not self._available:
-            return None
+            return
 
         # Check if device is off.
         if not self.firetv.screen_on:
