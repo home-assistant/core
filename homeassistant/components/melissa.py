@@ -12,7 +12,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ["py-melissa-climate==2.1.1"]
+REQUIREMENTS = ["py-melissa-climate==2.1.2"]
 
 _LOGGER = logging.getLogger(__name__)
 
