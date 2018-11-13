@@ -60,7 +60,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = hass.data[SENSE_DATA]
 
     sense_devices = data.get_discovered_device_data()
-    devices = [SenseDevice(data, device) for device in sense_devices]
+    devices = [SenseDevice(data, device) for device in sense_devices
+               if device['tags']['DeviceListAllowed'] == 'true']
     add_entities(devices)
 
 
