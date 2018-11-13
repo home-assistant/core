@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
 
-REQUIREMENTS = ['librouteros==2.1.1']
+REQUIREMENTS = ['librouteros==2.2.0']
 
 MTK_DEFAULT_API_PORT = '8728'
 
@@ -134,7 +134,10 @@ class MikrotikScanner(DeviceScanner):
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device MACs."""
-        self._update_info()
+		try:
+            self._update_info()
+        except:
+            self.connect_to_device()
         return [device for device in self.last_results]
 
     def get_device_name(self, device):
