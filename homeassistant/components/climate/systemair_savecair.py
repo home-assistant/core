@@ -11,11 +11,10 @@ from homeassistant.components.climate import (
     SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     ClimateDevice)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-systemair-savecair==0.0.2']
+REQUIREMENTS = ['python-systemair-savecair==0.0.3']
 
 ATTR_SUPPLY_AIR_TEMPERATURE = "supply_air_temperature"
 ATTR_SUPPLY_AIR_FAN_SPEED = "supply_air_fan_speed"
@@ -33,6 +32,19 @@ SAVECAIR_FAN_MODES = {
     4: FAN_HIGH
 }
 
+SAVECAIR_OPERATION_MODES = {
+    0: STATE_AUTO,
+    1: STATE_IDLE,
+    2: STATE_MANUAL,
+}
+
+HA_OPERATION_MODES = {
+    STATE_AUTO: 0,
+    STATE_IDLE: 1,
+    STATE_MANUAL: 2
+}
+
+
 CONF_IAM_ID = "iam_id"
 DEFAULT_NAME = "SystemAIR"
 
@@ -49,6 +61,9 @@ async def async_setup_platform(hass, config, async_add_entities,
     name = config[CONF_NAME]
     iam_id = config[CONF_IAM_ID]
     password = config[CONF_PASSWORD]
+
+    import sys
+    sys.path.insert(0, "/home/per/IdeaProjects/savecair")
 
     # Create savecair client
     from systemair.savecair import SaveCairClient
@@ -198,7 +213,11 @@ class SystemAIRClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._client.get_current_operation()
+        mode = self._client.get_current_operation()
+        if mode is None:
+            return None
+
+        return SAVECAIR_OPERATION_MODES[mode]
 
     @property
     def is_on(self):
@@ -245,7 +264,9 @@ class SystemAIRClimate(ClimateDevice):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set the operation mode."""
-        await self._client.set_operation_mode(operation_mode)
+        mode = HA_OPERATION_MODES[operation_mode]
+
+        await self._client.set_operation_mode(mode)
 
     async def async_turn_on(self):
         """Turn on the climate device."""
