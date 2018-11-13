@@ -62,9 +62,6 @@ async def async_setup_platform(hass, config, async_add_entities,
     iam_id = config[CONF_IAM_ID]
     password = config[CONF_PASSWORD]
 
-    import sys
-    sys.path.insert(0, "/home/per/IdeaProjects/savecair")
-
     # Create savecair client
     from systemair.savecair import SaveCairClient
     client = SaveCairClient(iam_id, password, loop=hass.loop)
