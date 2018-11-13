@@ -132,7 +132,7 @@ class TibberSensorElPrice(Entity):
         state = None
         max_price = 0
         min_price = 10000
-        avg_price = 0
+        sum_price = 0
         num = 0
         now = dt_util.now()
         for key, price_total in self._tibber_home.price_total.items():
@@ -149,10 +149,10 @@ class TibberSensorElPrice(Entity):
                 max_price = max(max_price, price_total)
                 min_price = min(min_price, price_total)
                 num += 1
-                avg_price += price_total
+                sum_price += price_total
         self._state = state
         self._device_state_attributes['max_price'] = max_price
-        self._device_state_attributes['avg_price'] = avg_price / num
+        self._device_state_attributes['avg_price'] = sum_price / num
         self._device_state_attributes['min_price'] = min_price
         return state is not None
 
