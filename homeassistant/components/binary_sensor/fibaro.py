@@ -40,9 +40,9 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
         FibaroDevice.__init__(self, fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         stype = None
-        if fibaro_device.type in SENSOR_TYPES.keys():
+        if fibaro_device.type in SENSOR_TYPES:
             stype = fibaro_device.type
-        elif fibaro_device.baseType in SENSOR_TYPES.keys():
+        elif fibaro_device.baseType in SENSOR_TYPES:
             stype = fibaro_device.baseType
         if stype:
             self._device_class = SENSOR_TYPES[stype][2]

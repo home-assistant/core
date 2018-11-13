@@ -1,27 +1,14 @@
 """
 Support for the Fibaro devices.
 
-To enable, add the following section to configuration.yaml:
-fibaro:
-    url: "http://yourfibarohc/api/"
-    username: "your@superuseremail.com"
-    password: "YourPassword1"
-    plugins: True or False
-
-Plugins config option controls whether you want plugin devices
-(such as Netatmo, etc) imported. Usually it's best to set them up
-in HA directly.
-
-For more detailed debugging, you can enable it in the [logger] section of you
-configuration.yaml, like this:
-logger:
-    logs:
-        homeassistant.components.fibaro: debug
+For more details about this platform, please refer to the documentation.
+https://home-assistant.io/components/fibaro/
 """
 
 import logging
 from collections import defaultdict
 import voluptuous as vol
+
 from homeassistant.const import (ATTR_ARMED, ATTR_BATTERY_LEVEL,
                                  CONF_PASSWORD, CONF_URL, CONF_USERNAME,
                                  EVENT_HOMEASSISTANT_STOP)
@@ -119,29 +106,29 @@ class FibaroController():
         """Handle change report received from the HomeCenter."""
         callback_set = set()
         for change in state.get('changes', []):
-            device_id = change.pop('id')
+            dev_id = change.pop('id')
             for property_name, value in change.items():
                 if property_name == 'log':
                     if value and value != "transfer OK":
-                        _LOGGER.info("LOG %s: %s",
-                                     self._device_map[device_id].friendly_name,
-                                     value)
+                        _LOGGER.debug("LOG %s: %s",
+                                      self._device_map[dev_id].friendly_name,
+                                      value)
                     continue
                 if property_name == 'logTemp':
                     continue
-                if property_name in self._device_map[device_id].properties:
-                    self._device_map[device_id].properties[property_name] = \
+                if property_name in self._device_map[dev_id].properties:
+                    self._device_map[dev_id].properties[property_name] = \
                         value
                     _LOGGER.debug("<- %s.%s = %s",
-                                  self._device_map[device_id].ha_id,
+                                  self._device_map[dev_id].ha_id,
                                   property_name,
                                   str(value))
                 else:
                     _LOGGER.warning("Error updating %s data of %s, not found",
                                     property_name,
-                                    self._device_map[device_id].ha_id)
-                if device_id in self._callbacks:
-                    callback_set.add(device_id)
+                                    self._device_map[dev_id].ha_id)
+                if dev_id in self._callbacks:
+                    callback_set.add(dev_id)
         for item in callback_set:
             self._callbacks[item]()
 
@@ -201,7 +188,6 @@ class FibaroController():
                     _LOGGER.debug("%s (%s, %s) not mapped",
                                   device.ha_id, device.type,
                                   device.baseType)
-        return True
 
 
 def setup(hass, config):
@@ -214,7 +200,7 @@ def setup(hass, config):
 
     def stop_fibaro(event):
         """Stop Fibaro Thread."""
-        _LOGGER.info("Shutting down Fibaro connection.")
+        _LOGGER.info("Shutting down Fibaro connection")
         hass.data[FIBARO_CONTROLLER].disable_state_handler()
 
     if controller.connect():
@@ -237,12 +223,14 @@ class FibaroDevice(Entity):
         self.controller = controller
         self._name = fibaro_device.friendly_name
         self.ha_id = fibaro_device.ha_id
-        self.controller.register(fibaro_device.id, self._update_callback)
+
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        self.controller.register(self.fibaro_device.id, self._update_callback)
 
     def _update_callback(self):
         """Update the state."""
-        self.update()
-        self.schedule_update_ha_state(False)
+        self.schedule_update_ha_state(True)
 
     def get_level(self):
         """Get the level of Fibaro device."""
@@ -344,8 +332,7 @@ class FibaroDevice(Entity):
                 attr[ATTR_CURRENT_ENERGY_KWH] = convert(
                     self.fibaro_device.properties.energy, float, 0.0)
         except (ValueError, KeyError):
-            _LOGGER.error('Error while udpating attributes for %s',
-                          self.ha_id)
+            pass
 
-        attr['Id'] = self.ha_id
+        attr['id'] = self.ha_id
         return attr
