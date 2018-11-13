@@ -292,7 +292,6 @@ class ECoalControler:
         # name of setting value method is
         # ECoalControler.set_<attribute>
 
-
         mode_auto = None  # on/off
 
         indoor_temp = None
@@ -402,7 +401,7 @@ class ECoalControler:
         end_pos = buf.find(b"]")
         if start_pos < 0 or end_pos < 0 or start_pos >= end_pos:
             raise ValueError("Unable to parse as seqeuence of ints.", bytes)
-        txt = buf[start_pos+1:end_pos]
+        txt = buf[start_pos + 1: end_pos]
         status_vals = []
         for val in txt.split(b","):
             try:
@@ -537,33 +536,33 @@ class ECoalControler:
         for i, val in enumerate(status_vals):
             # Skip list of values we know about
             if i in (
-                    16,
-                    17,
-                    18,
-                    19,
-                    20,
-                    21,
-                    22,
-                    23,
-                    24,
-                    25,
-                    26,
-                    27,
-                    28,
-                    29,
-                    30,
-                    31,
-                    37,
-                    38,
-                    39,
-                    44,
-                    45,
-                    46,
-                    47,
-                    48,
-                    49,
-                    64,
-                    65,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                37,
+                38,
+                39,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                64,
+                65,
             ):
                 continue
             if val != old_status_vals[i]:
@@ -634,8 +633,8 @@ class ECoalControler:
         Otherwise fresh value is requested.
         """
         if (
-                not self.status
-                or time.time() - self.status_time > max_cache_period
+            not self.status
+            or time.time() - self.status_time > max_cache_period
         ):
             self.get_status()
         return self.status

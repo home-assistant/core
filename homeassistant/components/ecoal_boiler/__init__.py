@@ -40,6 +40,7 @@ DEFAULT_PASSWORD = "admin"
 
 g_ecoal_contr = None
 
+
 async def async_setup(hass, config):
     """Set up global g_ecoal_contr same for sensors and switches."""
     global g_ecoal_contr
