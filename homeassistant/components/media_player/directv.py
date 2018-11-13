@@ -9,10 +9,10 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MOVIE, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    MediaPlayerDevice)
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MOVIE, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
@@ -375,7 +375,10 @@ class DirecTvDevice(MediaPlayerDevice):
         _LOGGER.debug("Fast forward on %s", self._name)
         self.dtv.key_press('ffwd')
 
-    def select_source(self, source):
+    def play_media(self, media_type, media_id, **kwargs):
         """Select input source."""
-        _LOGGER.debug("Changing channel on %s to %s", self._name, source)
-        self.dtv.tune_channel(source)
+        if media_type != MEDIA_TYPE_CHANNEL:
+            raise NotImplementedError()
+
+        _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
+        self.dtv.tune_channel(media_id)
