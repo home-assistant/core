@@ -7,7 +7,7 @@ https://home-assistant.io/components/climate.velbus/
 import logging
 
 from homeassistant.components.climate import (
-    SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    STATE_HEAT, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.components.velbus import (
     DOMAIN as VELBUS_DOMAIN, VelbusEntity)
 from homeassistant.const import ATTR_TEMPERATURE
@@ -54,8 +54,8 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
 
     @property
     def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
-        return self._module.get_climate_mode()
+        """Return current operation"""
+        return STATE_HEAT
 
     @property
     def target_temperature(self):
@@ -64,6 +64,8 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._module.set_temp(kwargs.get(ATTR_TEMPERATURE))
-            self.schedule_update_ha_state()
+        temp = kwargs.get(ATTR_TEMPERATURE)
+        if temp is None:
+            return
+        self._module.set_temp(temp)
+        self.schedule_update_ha_state()
