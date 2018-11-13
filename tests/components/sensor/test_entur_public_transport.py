@@ -33,7 +33,6 @@ class TestEnturPublicTransportSensor(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -49,7 +48,7 @@ class TestEnturPublicTransportSensor(unittest.TestCase):
                       text=load_fixture(FIXTURE_FILE),
                       status_code=200)
         self.assertTrue(
-            setup_component(self.hass, 'sensor', {'sensor': self.config}))
+            setup_component(self.hass, 'sensor', {'sensor': VALID_CONFIG}))
 
         state = self.hass.states.get('sensor.entur_bergen_stasjon')
         assert state.state == '28'
