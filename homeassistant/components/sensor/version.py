@@ -16,7 +16,7 @@ from homeassistant.const import CONF_NAME, CONF_SOURCE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyhaversion==2.0.2']
+REQUIREMENTS = ['pyhaversion==2.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
