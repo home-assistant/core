@@ -29,7 +29,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 REQUIREMENTS = ['evohomeclient==0.2.7']
 # If REQUIREMENTS ever become > 0.2.7, re-check if the work-around wrapper is
@@ -161,7 +160,7 @@ def setup(hass, config):
         loc_idx
     )
 
-    evo_data['parent'] = EvoController(hass, client, tcs_obj_ref)
+    evo_data['parent'] = EvoController(evo_data, client, tcs_obj_ref)
     evo_data['children'] = zones = []
 
     for z in tcs_obj_ref.zones:                                                 # noqa E501; pylint: disable=invalid-name
@@ -171,7 +170,7 @@ def setup(hass, config):
             zone_obj_ref.zoneId + " [" + zone_obj_ref.zone_type + "]",
             zone_obj_ref.name
         )
-        zones.append(EvoZone(hass, client, zone_obj_ref))
+        zones.append(EvoZone(evo_data, client, zone_obj_ref))
 
     load_platform(hass, 'climate', DOMAIN, {}, config)
 

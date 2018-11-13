@@ -113,10 +113,8 @@ class EvoClimateDevice(ClimateDevice):
 
     # pylint: disable=no-member
 
-    def __init__(self, hass, client, obj_ref):
+    def __init__(self, evo_data, client, obj_ref):
         """Initialize the evohome entity."""
-        evo_data = hass.data[DATA_EVOHOME]
-
         self._client = client
         self._obj = obj_ref
 
@@ -235,11 +233,9 @@ class EvoClimateDevice(ClimateDevice):
 class EvoZone(EvoClimateDevice):
     """Base for a Honeywell evohome Zone device."""
 
-    def __init__(self, hass, client, obj_ref):
+    def __init__(self, evo_data, client, obj_ref):
         """Initialize the evohome Zone."""
-        super().__init__(hass, client, obj_ref)
-
-        evo_data = hass.data[DATA_EVOHOME]
+        super().__init__(evo_data, client, obj_ref)
 
         self._id = obj_ref.zoneId
         self._name = obj_ref.name
@@ -436,11 +432,10 @@ class EvoController(EvoClimateDevice):
     the child (CH/DHW) devices.  It is also a Climate device.
     """
 
-    def __init__(self, hass, client, obj_ref):
+    def __init__(self, evo_data, client, obj_ref):
         """Initialize the evohome Controller (hub)."""
-        super().__init__(hass, client, obj_ref)
+        super().__init__(evo_data, client, obj_ref)
 
-        evo_data = hass.data[DATA_EVOHOME]
         evo_data['status'] = self._status
 
         self._id = obj_ref.systemId
