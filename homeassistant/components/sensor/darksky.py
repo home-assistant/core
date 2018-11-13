@@ -43,7 +43,7 @@ DEPRECATED_SENSOR_TYPES = {
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
-    'summary': ['Summary', None, None, None, None, None, None, []],
+    'summary': ['Summary', None, None, None, None, None, None, ['daily']],
     'minutely_summary': ['Minutely Summary',
                          None, None, None, None, None, None, []],
     'hourly_summary': ['Hourly Summary', None, None, None, None, None, None,
@@ -135,16 +135,26 @@ SENSOR_TYPES = {
 }
 
 CONDITION_PICTURES = {
-    'clear-day': '/static/images/darksky/weather-sunny.svg',
-    'clear-night': '/static/images/darksky/weather-night.svg',
-    'rain': '/static/images/darksky/weather-pouring.svg',
-    'snow': '/static/images/darksky/weather-snowy.svg',
-    'sleet': '/static/images/darksky/weather-hail.svg',
-    'wind': '/static/images/darksky/weather-windy.svg',
-    'fog': '/static/images/darksky/weather-fog.svg',
-    'cloudy': '/static/images/darksky/weather-cloudy.svg',
-    'partly-cloudy-day': '/static/images/darksky/weather-partlycloudy.svg',
-    'partly-cloudy-night': '/static/images/darksky/weather-cloudy.svg',
+    'clear-day': ['/static/images/darksky/weather-sunny.svg',
+                  'mdi:weather-sunny'],
+    'clear-night': ['/static/images/darksky/weather-night.svg',
+                    'mdi:weather-sunny'],
+    'rain': ['/static/images/darksky/weather-pouring.svg',
+             'mdi:weather-pouring'],
+    'snow': ['/static/images/darksky/weather-snowy.svg',
+             'mdi:weather-snowy'],
+    'sleet': ['/static/images/darksky/weather-hail.svg',
+              'mdi:weather-snowy-rainy'],
+    'wind': ['/static/images/darksky/weather-windy.svg',
+             'mdi:weather-windy'],
+    'fog': ['/static/images/darksky/weather-fog.svg',
+            'mdi:weather-fog'],
+    'cloudy': ['/static/images/darksky/weather-cloudy.svg',
+               'mdi:weather-cloudy'],
+    'partly-cloudy-day': ['/static/images/darksky/weather-partlycloudy.svg',
+                          'mdi:weather-partlycloudy'],
+    'partly-cloudy-night': ['/static/images/darksky/weather-cloudy.svg',
+                            'mdi:weather-partlycloudy'],
 }
 
 # Language Supported Codes
@@ -259,7 +269,7 @@ class DarkSkySensor(Entity):
             return None
 
         if self._icon in CONDITION_PICTURES:
-            return CONDITION_PICTURES[self._icon]
+            return CONDITION_PICTURES[self._icon][0]
 
         return None
 
@@ -277,6 +287,9 @@ class DarkSkySensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
+        if 'summary' in self.type and self._icon in CONDITION_PICTURES:
+            return CONDITION_PICTURES[self._icon][1]
+
         return SENSOR_TYPES[self.type][6]
 
     @property
@@ -354,10 +367,12 @@ class DarkSkySensor(Entity):
         if self.type in ['precip_probability', 'cloud_cover', 'humidity']:
             return round(state * 100, 1)
         if self.type in ['dew_point', 'temperature', 'apparent_temperature',
-                         'temperature_min', 'temperature_max',
-                         'apparent_temperature_min',
-                         'apparent_temperature_max', 'precip_accumulation',
-                         'pressure', 'ozone', 'uvIndex']:
+                         'temperature_low', 'apparent_temperature_low',
+                         'temperature_min', 'apparent_temperature_min',
+                         'temperature_high', 'apparent_temperature_high',
+                         'temperature_max', 'apparent_temperature_max'
+                         'precip_accumulation', 'pressure', 'ozone',
+                         'uvIndex']:
             return round(state, 1)
         return state
 

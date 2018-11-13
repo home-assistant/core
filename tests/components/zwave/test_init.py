@@ -584,7 +584,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert args[0] == self.hass
         assert args[1] == 'mock_component'
         assert args[2] == 'zwave'
-        assert args[3] == {const.DISCOVERY_DEVICE: id(values)}
+        assert args[3] == {const.DISCOVERY_DEVICE: mock_device.unique_id}
         assert args[4] == self.zwave_config
 
         discovery.async_load_platform.reset_mock()
@@ -646,7 +646,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert args[0] == self.hass
         assert args[1] == 'mock_component'
         assert args[2] == 'zwave'
-        assert args[3] == {const.DISCOVERY_DEVICE: id(values)}
+        assert args[3] == {const.DISCOVERY_DEVICE: mock_device.unique_id}
         assert args[4] == self.zwave_config
         assert not self.primary.enable_poll.called
 

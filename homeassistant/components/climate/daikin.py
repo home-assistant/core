@@ -22,7 +22,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pydaikin==0.4']
+REQUIREMENTS = ['pydaikin==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,16 +105,10 @@ class DaikinClimate(ClimateDevice):
         daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE]
         if self._api.device.values.get(daikin_attr) is not None:
             self._supported_features |= SUPPORT_FAN_MODE
-        else:
-            # even devices without support must have a default valid value
-            self._api.device.values[daikin_attr] = 'A'
 
         daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE]
         if self._api.device.values.get(daikin_attr) is not None:
             self._supported_features |= SUPPORT_SWING_MODE
-        else:
-            # even devices without support must have a default valid value
-            self._api.device.values[daikin_attr] = '0'
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
@@ -174,8 +168,10 @@ class DaikinClimate(ClimateDevice):
 
             daikin_attr = HA_ATTR_TO_DAIKIN.get(attr)
             if daikin_attr is not None:
-                if value in self._list[attr]:
+                if attr == ATTR_OPERATION_MODE:
                     values[daikin_attr] = HA_STATE_TO_DAIKIN[value]
+                elif value in self._list[attr]:
+                    values[daikin_attr] = value.lower()
                 else:
                     _LOGGER.error("Invalid value %s for %s", attr, value)
 

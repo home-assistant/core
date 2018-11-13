@@ -154,7 +154,7 @@ class TestDarkSkySetup(unittest.TestCase):
 
         assert mock_get_forecast.called
         assert mock_get_forecast.call_count == 1
-        assert len(self.hass.states.entity_ids()) == 7
+        assert len(self.hass.states.entity_ids()) == 9
 
         state = self.hass.states.get('sensor.dark_sky_summary')
         assert state is not None

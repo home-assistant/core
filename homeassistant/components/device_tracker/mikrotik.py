@@ -23,6 +23,8 @@ MTK_DEFAULT_API_SSL_PORT = '8729'
 
 _LOGGER = logging.getLogger(__name__)
 
+MTK_DEFAULT_API_PORT = '8728'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
@@ -53,6 +55,7 @@ class MikrotikScanner(DeviceScanner):
             self.port = MTK_DEFAULT_API_SSL_PORT if self.ssl else MTK_DEFAULT_API_PORT
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.method = config[CONF_METHOD]
 
         self.connected = False
         self.success_init = False
@@ -61,16 +64,10 @@ class MikrotikScanner(DeviceScanner):
         self.success_init = self.connect_to_device()
 
         if self.success_init:
-            _LOGGER.info(
-                "Start polling Mikrotik (%s) router...",
-                self.host
-            )
+            _LOGGER.info("Start polling Mikrotik (%s) router...", self.host)
             self._update_info()
         else:
-            _LOGGER.error(
-                "Connection to Mikrotik (%s) failed",
-                self.host
-            )
+            _LOGGER.error("Connection to Mikrotik (%s) failed", self.host)
 
     def connect_to_device(self):
         """Connect to Mikrotik method."""
@@ -102,16 +99,15 @@ class MikrotikScanner(DeviceScanner):
                 raise
 
             if routerboard_info:
-                _LOGGER.info("Connected to Mikrotik %s with IP %s",
-                             routerboard_info[0].get('model', 'Router'),
-                             self.host)
+                _LOGGER.info(
+                    "Connected to Mikrotik %s with IP %s",
+                    routerboard_info[0].get('model', 'Router'), self.host)
 
                 self.connected = True
 
                 try:
                     self.capsman_exist = self.client(
-                        cmd='/caps-man/interface/getall'
-                    )
+                        cmd='/caps-man/interface/getall')
                 except (librouteros.exceptions.TrapError,
                         librouteros.exceptions.MultiTrapError,
                         librouteros.exceptions.ConnectionError):
@@ -119,27 +115,27 @@ class MikrotikScanner(DeviceScanner):
 
                 if not self.capsman_exist:
                     _LOGGER.info(
-                        'Mikrotik %s: Not a CAPSman controller. Trying '
-                        'local interfaces ',
-                        self.host
-                    )
+                        "Mikrotik %s: Not a CAPSman controller. Trying "
+                        "local interfaces", self.host)
 
                 try:
                     self.wireless_exist = self.client(
-                        cmd='/interface/wireless/getall'
-                    )
+                        cmd='/interface/wireless/getall')
                 except (librouteros.exceptions.TrapError,
                         librouteros.exceptions.MultiTrapError,
                         librouteros.exceptions.ConnectionError):
                     self.wireless_exist = False
 
-                if not self.wireless_exist:
+                if not self.wireless_exist or self.method == 'ip':
                     _LOGGER.info(
-                        'Mikrotik %s: Wireless adapters not found. Try to '
-                        'use DHCP lease table as presence tracker source. '
-                        'Please decrease lease time as much as possible.',
-                        self.host
-                    )
+                        "Mikrotik %s: Wireless adapters not found. Try to "
+                        "use DHCP lease table as presence tracker source. "
+                        "Please decrease lease time as much as possible",
+                        self.host)
+                if self.method:
+                    _LOGGER.info(
+                        "Mikrotik %s: Manually selected polling method %s",
+                        self.host, self.method)
 
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.MultiTrapError,
@@ -159,28 +155,27 @@ class MikrotikScanner(DeviceScanner):
 
     def _update_info(self):
         """Retrieve latest information from the Mikrotik box."""
-        if self.capsman_exist:
-            devices_tracker = 'capsman'
-        elif self.wireless_exist:
-            devices_tracker = 'wireless'
+        if self.method:
+            devices_tracker = self.method
         else:
-            devices_tracker = 'ip'
+            if self.capsman_exist:
+                devices_tracker = 'capsman'
+            elif self.wireless_exist:
+                devices_tracker = 'wireless'
+            else:
+                devices_tracker = 'ip'
 
         _LOGGER.info(
             "Loading %s devices from Mikrotik (%s) ...",
-            devices_tracker,
-            self.host
-        )
+            devices_tracker, self.host)
 
         device_names = self.client(cmd='/ip/dhcp-server/lease/getall')
         if devices_tracker == 'capsman':
             devices = self.client(
-                cmd='/caps-man/registration-table/getall'
-            )
+                cmd='/caps-man/registration-table/getall')
         elif devices_tracker == 'wireless':
             devices = self.client(
-                cmd='/interface/wireless/registration-table/getall'
-            )
+                cmd='/interface/wireless/registration-table/getall')
         else:
             devices = device_names
 
@@ -188,21 +183,17 @@ class MikrotikScanner(DeviceScanner):
             return False
 
         mac_names = {device.get('mac-address'): device.get('host-name')
-                     for device in device_names
-                     if device.get('mac-address')}
+                     for device in device_names if device.get('mac-address')}
 
-        if self.wireless_exist or self.capsman_exist:
+        if devices_tracker in ('wireless', 'capsman'):
             self.last_results = {
                 device.get('mac-address'):
                     mac_names.get(device.get('mac-address'))
-                for device in devices
-            }
+                for device in devices}
         else:
             self.last_results = {
                 device.get('mac-address'):
                     mac_names.get(device.get('mac-address'))
-                for device in device_names
-                if device.get('active-address')
-            }
+                for device in device_names if device.get('active-address')}
 
         return True

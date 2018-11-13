@@ -13,7 +13,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.3', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,8 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
 
         devices = []
         try:
-            station_info = await self.hass.async_add_job(self.device.status)
+            station_info = \
+                await self.hass.async_add_executor_job(self.device.status)
             _LOGGER.debug("Got new station info: %s", station_info)
 
             for device in station_info.associated_stations:
