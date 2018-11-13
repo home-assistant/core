@@ -10,7 +10,8 @@ from homeassistant.components.climate import (
     STATE_HEAT, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.components.velbus import (
     DOMAIN as VELBUS_DOMAIN, VelbusEntity)
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import (
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,10 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit this state is expressed in."""
-        return self._module.get_unit(self._channel)
+        if self._module.get_unit(self._channel) == '°C':
+            return TEMP_CELSIUS
+        else:
+            return TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
