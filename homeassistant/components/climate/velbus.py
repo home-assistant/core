@@ -54,7 +54,7 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
 
     @property
     def current_operation(self):
-        """Return current operation"""
+        """Return current operation."""
         return STATE_HEAT
 
     @property
