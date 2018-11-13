@@ -136,7 +136,9 @@ class MikrotikScanner(DeviceScanner):
         """Scan for new devices and return a list with found device MACs."""
         try:
             self._update_info()
-        except (librouteros.exceptions.TrapError, librouteros.exceptions.MultiTrapError, librouteros.exceptions.ConnectionError) as api_error:
+        except (librouteros.exceptions.TrapError, 
+                librouteros.exceptions.MultiTrapError, 
+                librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error("Connection error: %s", api_error)
             self.connect_to_device()
         return [device for device in self.last_results]
