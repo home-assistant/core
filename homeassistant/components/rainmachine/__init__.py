@@ -25,6 +25,7 @@ from .const import (
     DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
 
 REQUIREMENTS = ['regenmaschine==1.0.7']
+
 _LOGGER = logging.getLogger(__name__)
 
 DATA_LISTENER = 'listener'
@@ -96,23 +97,23 @@ SERVICE_STOP_ZONE_SCHEMA = vol.Schema({
 
 SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int})
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN:
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
         vol.Schema({
             vol.Required(CONF_IP_ADDRESS): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_BINARY_SENSORS, default={}):
-                BINARY_SENSOR_SCHEMA,
-            vol.Optional(CONF_SENSORS, default={}):
-                SENSOR_SCHEMA,
-            vol.Optional(CONF_SWITCHES, default={}):
-                SWITCH_SCHEMA,
             vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
                 cv.time_period,
+            vol.Optional(CONF_BINARY_SENSORS, default={}):
+                BINARY_SENSOR_SCHEMA,
+            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+            vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
         })
-}, extra=vol.ALLOW_EXTRA)
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
@@ -133,16 +134,7 @@ async def async_setup(hass, config):
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={'source': SOURCE_IMPORT},
-            data={
-                CONF_IP_ADDRESS: conf[CONF_IP_ADDRESS],
-                CONF_PASSWORD: conf[CONF_PASSWORD],
-                CONF_PORT: conf[CONF_PORT],
-                CONF_SSL: conf[CONF_SSL],
-                CONF_BINARY_SENSORS: conf[CONF_BINARY_SENSORS],
-                CONF_SENSORS: conf[CONF_SENSORS],
-                CONF_SWITCHES: conf[CONF_SWITCHES],
-                CONF_SCAN_INTERVAL: conf[CONF_SCAN_INTERVAL],
-            }))
+            data=conf))
 
     return True
 

@@ -49,20 +49,6 @@ class RainMachineSensor(RainMachineEntity):
         self._unit = unit
 
     @property
-    def device_info(self):
-        """Return device registry information for this binary sensor."""
-        return {
-            'identifiers': {
-                (RAINMACHINE_DOMAIN, self.rainmachine.client.mac)
-            },
-            'name': self.rainmachine.client.name,
-            'manufacturer': 'RainMachine',
-            'model': 'Hardware Version {0}'.format(
-                self.rainmachine.client.hardware_version),
-            'sw_version': self.rainmachine.client.software_version,
-        }
-
-    @property
     def icon(self) -> str:
         """Return the icon."""
         return self._icon
