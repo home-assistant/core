@@ -75,10 +75,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 class SystemAIRClimate(ClimateDevice):
     """Representation of the climate sensor."""
-
     def __init__(self, client, name):
         """Construct the SystemAIR Climate Device."""
-
         self._name = name
 
         self._support_flags = SUPPORT_TARGET_TEMPERATURE
