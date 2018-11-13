@@ -48,8 +48,7 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
         """Return the unit this state is expressed in."""
         if self._module.get_unit(self._channel) == '°C':
             return TEMP_CELSIUS
-        else:
-            return TEMP_FAHRENHEIT
+        return TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
