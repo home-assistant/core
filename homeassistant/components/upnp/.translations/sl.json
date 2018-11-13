@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "UPnP/IGD je \u017ee konfiguriran",
+            "incomplete_device": "Ignoriranje nepopolnih UPnP naprav",
             "no_devices_discovered": "Ni odkritih UPnP/IGD naprav",
             "no_sensors_or_port_mapping": "Omogo\u010dite vsaj senzorje ali preslikavo vrat (port mapping)"
         },

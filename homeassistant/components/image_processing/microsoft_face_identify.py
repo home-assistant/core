@@ -83,18 +83,16 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
 
         This method is a coroutine.
         """
-        detect = None
+        detect = []
         try:
             face_data = await self._api.call_api(
                 'post', 'detect', image, binary=True)
 
-            if not face_data:
-                return
-
-            face_ids = [data['faceId'] for data in face_data]
-            detect = await self._api.call_api(
-                'post', 'identify',
-                {'faceIds': face_ids, 'personGroupId': self._face_group})
+            if face_data:
+                face_ids = [data['faceId'] for data in face_data]
+                detect = await self._api.call_api(
+                    'post', 'identify',
+                    {'faceIds': face_ids, 'personGroupId': self._face_group})
 
         except HomeAssistantError as err:
             _LOGGER.error("Can't process image on Microsoft face: %s", err)

@@ -849,7 +849,9 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_extract_entities_none_exclude_stuff(self):
         """Test extract entities function with none or exclude stuff."""
-        assert MATCH_ALL == template.extract_entities(None)
+        assert [] == template.extract_entities(None)
+
+        assert [] == template.extract_entities("mdi:water")
 
         assert MATCH_ALL == \
             template.extract_entities(
@@ -896,7 +898,7 @@ class TestHelpersTemplate(unittest.TestCase):
 
         assert ['device_tracker.phone_2'] == \
             template.extract_entities("""
-is_state_attr('device_tracker.phone_2', 'battery', 40)
+{{ is_state_attr('device_tracker.phone_2', 'battery', 40) }}
             """)
 
         assert sorted([
@@ -960,6 +962,23 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
             template.extract_entities(
                 "{{ is_state('media_player.' ~ where , 'playing') }}",
                 {'where': 'livingroom'})
+
+    def test_jinja_namespace(self):
+        """Test Jinja's namespace command can be used."""
+        test_template = template.Template(
+            (
+                "{% set ns = namespace(a_key='') %}"
+                "{% set ns.a_key = states.sensor.dummy.state %}"
+                "{{ ns.a_key }}"
+            ),
+            self.hass
+        )
+
+        self.hass.states.set('sensor.dummy', 'a value')
+        assert 'a value' == test_template.render()
+
+        self.hass.states.set('sensor.dummy', 'another value')
+        assert 'another value' == test_template.render()
 
 
 @asyncio.coroutine

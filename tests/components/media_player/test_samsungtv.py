@@ -23,7 +23,8 @@ WORKING_CONFIG = {
     CONF_NAME: 'fake',
     CONF_PORT: 8001,
     CONF_TIMEOUT: 10,
-    CONF_MAC: 'fake'
+    CONF_MAC: 'fake',
+    'uuid': None,
 }
 
 DISCOVERY_INFO = {

@@ -137,6 +137,7 @@ HANDLERS = Registry()
 FLOWS = [
     'cast',
     'deconz',
+    'dialogflow',
     'hangouts',
     'homematicip_cloud',
     'hue',
@@ -144,6 +145,7 @@ FLOWS = [
     'ios',
     'lifx',
     'mailgun',
+    'luftdaten',
     'mqtt',
     'nest',
     'openuv',

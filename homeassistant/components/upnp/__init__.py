@@ -16,7 +16,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import dispatcher
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import get_local_ip
 
 from .const import (
     CONF_ENABLE_PORT_MAPPING, CONF_ENABLE_SENSORS,
@@ -26,11 +25,11 @@ from .const import (
 )
 from .const import DOMAIN
 from .const import LOGGER as _LOGGER
-from .config_flow import ensure_domain_data
+from .config_flow import async_ensure_domain_data
 from .device import Device
 
 
-REQUIREMENTS = ['async-upnp-client==0.12.7']
+REQUIREMENTS = ['async-upnp-client==0.13.2']
 
 NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'
@@ -87,7 +86,7 @@ def _substitute_hass_ports(ports, hass_port=None):
 # config
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Register a port mapping for Home Assistant via UPnP."""
-    ensure_domain_data(hass)
+    await async_ensure_domain_data(hass)
 
     # ensure sane config
     if DOMAIN not in config:
@@ -97,9 +96,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     # overridden local ip
     if CONF_LOCAL_IP in upnp_config:
         hass.data[DOMAIN]['local_ip'] = upnp_config[CONF_LOCAL_IP]
-    else:
-        hass.data[DOMAIN]['local_ip'] = \
-            await hass.async_add_executor_job(get_local_ip)
 
     # determine ports
     ports = {CONF_HASS: CONF_HASS}  # default, port_mapping disabled by default
@@ -121,7 +117,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistantType,
                             config_entry: ConfigEntry):
     """Set up UPnP/IGD-device from a config entry."""
-    ensure_domain_data(hass)
+    await async_ensure_domain_data(hass)
     data = config_entry.data
 
     # build UPnP/IGD device

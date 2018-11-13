@@ -21,7 +21,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt
 
-REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.3', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'philips.light.bulb',
          'philips.light.candle',
          'philips.light.candle2',
-         'philips.light.mono1']),
+         'philips.light.mono1',
+         ]),
 })
 
 # The light does not accept cct values < 1
@@ -263,7 +264,7 @@ class XiaomiPhilipsAbstractLight(Light):
         """Call a light command handling error messages."""
         from miio import DeviceException
         try:
-            result = await self.hass.async_add_job(
+            result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs))
 
             _LOGGER.debug("Response received from light: %s", result)
@@ -303,7 +304,7 @@ class XiaomiPhilipsAbstractLight(Light):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = await self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_executor_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -331,7 +332,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = await self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_executor_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -481,7 +482,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = await self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_executor_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -541,7 +542,7 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = await self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_executor_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -587,7 +588,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = await self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_executor_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -715,7 +716,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = await self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_executor_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
