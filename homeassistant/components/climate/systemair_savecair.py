@@ -25,6 +25,10 @@ FAN_LOW = "Low"
 FAN_NORMAL = "Medium"
 FAN_HIGH = "High"
 
+FAN_LIST = [FAN_OFF, FAN_LOW, FAN_NORMAL, FAN_HIGH]
+
+OPERATION_LIST = [STATE_AUTO, STATE_MANUAL]
+
 SAVECAIR_FAN_MODES = {
     1: FAN_OFF,
     2: FAN_LOW,
@@ -74,16 +78,16 @@ class SystemAIRClimate(ClimateDevice):
 
     def __init__(self, client, name):
         """Construct the SystemAIR Climate Device."""
+
         self._name = name
 
-        """Initialize the climate device."""
         self._support_flags = SUPPORT_TARGET_TEMPERATURE
         self._support_flags = self._support_flags | SUPPORT_FAN_MODE
         self._support_flags = self._support_flags | SUPPORT_OPERATION_MODE
         self._support_flags = self._support_flags | SUPPORT_AWAY_MODE
 
-        self._fan_list = [FAN_OFF, FAN_LOW, FAN_NORMAL, FAN_HIGH]
-        self._operation_list = [STATE_AUTO, STATE_MANUAL]
+        self._fan_list = FAN_LIST
+        self._operation_list = OPERATION_LIST
 
         self._client = client
         self._client.start()
