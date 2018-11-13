@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA, STATE_AUTO, STATE_IDLE, STATE_MANUAL, SUPPORT_AWAY_MODE,
-    SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    ClimateDevice)
+    SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
@@ -28,6 +28,12 @@ FAN_HIGH = "High"
 FAN_LIST = [FAN_OFF, FAN_LOW, FAN_NORMAL, FAN_HIGH]
 
 OPERATION_LIST = [STATE_AUTO, STATE_MANUAL]
+
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | \
+                SUPPORT_FAN_MODE | \
+                SUPPORT_OPERATION_MODE | \
+                SUPPORT_AWAY_MODE | \
+                SUPPORT_ON_OFF
 
 SAVECAIR_FAN_MODES = {
     1: FAN_OFF,
@@ -79,15 +85,6 @@ class SystemAIRClimate(ClimateDevice):
     def __init__(self, client, name):
         """Construct the SystemAIR Climate Device."""
         self._name = name
-
-        self._support_flags = SUPPORT_TARGET_TEMPERATURE
-        self._support_flags = self._support_flags | SUPPORT_FAN_MODE
-        self._support_flags = self._support_flags | SUPPORT_OPERATION_MODE
-        self._support_flags = self._support_flags | SUPPORT_AWAY_MODE
-
-        self._fan_list = FAN_LIST
-        self._operation_list = OPERATION_LIST
-
         self._client = client
         self._client.start()
 
@@ -115,7 +112,7 @@ class SystemAIRClimate(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return self._support_flags
+        return SUPPORT_FLAGS
 
     @property
     def name(self):
@@ -237,7 +234,7 @@ class SystemAIRClimate(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return self._operation_list
+        return OPERATION_LIST
 
     @property
     def fan_list(self):
@@ -245,7 +242,7 @@ class SystemAIRClimate(ClimateDevice):
         if self.current_operation != STATE_MANUAL:
             return None
 
-        return self._fan_list
+        return FAN_LIST
 
     @property
     def target_temperature_step(self):
