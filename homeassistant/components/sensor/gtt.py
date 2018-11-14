@@ -105,6 +105,7 @@ class GttData:
             prev_time = 0
             if prev is not None:
                 this_time = datetime.strptime(bus['time'][0]['run'], "%H:%M")
+                # pylint: disable=unsubscriptable-object
                 prev_time = datetime.strptime(prev['time'][0]['run'], "%H:%M")
             if this_time <= prev_time:
                 prev = bus
