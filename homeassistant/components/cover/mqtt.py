@@ -283,9 +283,8 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             if payload.isnumeric():
                 percentage_payload = self.find_percentage_in_range(
                     float(payload), COVER_PAYLOAD)
-                if 0 <= percentage_payload <= 100:
-                    self._position = percentage_payload
-                    self._state = int(payload) == self._position_closed
+                self._position = percentage_payload
+                self._state = percentage_payload == DEFAULT_POSITION_CLOSED
             else:
                 _LOGGER.warning(
                     "Payload is not integer within range: %s",
@@ -470,6 +469,11 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         offset_position = position - min_range
         position_percentage = round(
             float(offset_position) / current_range * 100.0)
+
+        max_percent = 100
+        min_percent = 0
+        position_percentage = min(max(position_percentage, min_percent),
+                                  max_percent)
         if range_type == TILT_PAYLOAD and self._tilt_invert:
             return 100 - position_percentage
         return position_percentage
