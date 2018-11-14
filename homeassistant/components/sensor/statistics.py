@@ -67,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     max_age = config.get(CONF_MAX_AGE, None)
     precision = config.get(CONF_PRECISION)
 
-    async_add_entities([StatisticsSensor(hass, entity_id, name, sampling_size,
+    async_add_entities([StatisticsSensor(entity_id, name, sampling_size,
                                          max_age, precision)], True)
 
     return True
@@ -76,10 +76,9 @@ async def async_setup_platform(hass, config, async_add_entities,
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 
-    def __init__(self, hass, entity_id, name, sampling_size, max_age,
+    def __init__(self, entity_id, name, sampling_size, max_age,
                  precision):
         """Initialize the Statistics sensor."""
-        self._hass = hass
         self._entity_id = entity_id
         self.is_binary = True if self._entity_id.split('.')[0] == \
             'binary_sensor' else False
@@ -110,7 +109,7 @@ class StatisticsSensor(Entity):
 
             self._add_state_to_queue(new_state)
 
-            self.hass.async_add_job(self.async_update_ha_state, True)
+            self.async_schedule_update_ha_state(True)
 
         @callback
         def async_stats_sensor_startup(event):
@@ -120,9 +119,11 @@ class StatisticsSensor(Entity):
             async_track_state_change(
                 self.hass, self._entity_id, async_stats_sensor_state_listener)
 
-            if 'recorder' in self._hass.config.components:
+            if 'recorder' in self.hass.config.components:
                 # only use the database if it's configured
-                self.hass.async_add_job(self._initialize_from_database)
+                self.hass.async_create_task(
+                    self._async_initialize_from_database()
+                )
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, async_stats_sensor_startup)
@@ -252,7 +253,7 @@ class StatisticsSensor(Entity):
                 self.change = self.average_change = STATE_UNKNOWN
                 self.change_rate = STATE_UNKNOWN
 
-    async def _initialize_from_database(self):
+    async def _async_initialize_from_database(self):
         """Initialize the list of states from the database.
 
         The query will get the list of states in DESCENDING order so that we
@@ -266,7 +267,7 @@ class StatisticsSensor(Entity):
         _LOGGER.debug("%s: initializing values from the database",
                       self.entity_id)
 
-        with session_scope(hass=self._hass) as session:
+        with session_scope(hass=self.hass) as session:
             query = session.query(States)\
                 .filter(States.entity_id == self._entity_id.lower())
 
@@ -286,7 +287,7 @@ class StatisticsSensor(Entity):
         for state in reversed(states):
             self._add_state_to_queue(state)
 
-        self.hass.async_add_job(self.async_update_ha_state, True)
+        self.async_schedule_update_ha_state(True)
 
         _LOGGER.debug("%s: initializing from database completed",
                       self.entity_id)
