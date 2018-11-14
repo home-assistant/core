@@ -153,8 +153,8 @@ def setup(hass, config):
     evo_data['parent'] = EvoController(evo_data, client, tcs_obj_ref)
     evo_data['children'] = zones = []
 
-    for z in tcs_obj_ref.zones:                                                 # noqa E501; pylint: disable=invalid-name
-        zone_obj_ref = tcs_obj_ref.zones[z]
+    for zone_idx in tcs_obj_ref.zones:
+        zone_obj_ref = tcs_obj_ref.zones[zone_idx]
         _LOGGER.debug(
             "setup(): Found Zone, id=%s, name=%s",
             zone_obj_ref.zoneId + " [" + zone_obj_ref.zone_type + "]",
