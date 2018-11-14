@@ -85,11 +85,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the USGS Earthquake Hazards Program Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    feed_type = config.get(CONF_FEED_TYPE)
+    feed_type = config[CONF_FEED_TYPE]
     coordinates = (config.get(CONF_LATITUDE, hass.config.latitude),
                    config.get(CONF_LONGITUDE, hass.config.longitude))
     radius_in_km = config[CONF_RADIUS]
-    minimum_magnitude = config.get(CONF_MINIMUM_MAGNITUDE)
+    minimum_magnitude = config[CONF_MINIMUM_MAGNITUDE]
     # Initialize the entity manager.
     feed = UsgsEarthquakeHazardsProgramFeedEntityManager(
         hass, add_entities, scan_interval, coordinates, feed_type,
