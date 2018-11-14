@@ -79,7 +79,9 @@ class GttSensor(Entity):
 
 class GttData:
     """Inteface to PyGTT."""
+
     def __init__(self, stop, bus_name):
+        """Initialization method of the GttData class."""
         from pygtt import PyGTT
         self._pygtt = PyGTT()
         self._stop = stop
