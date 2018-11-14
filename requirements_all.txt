@@ -373,6 +373,9 @@ fedexdeliverymanager==1.0.6
 # homeassistant.components.feedreader
 feedparser==5.2.1
 
+# homeassistant.components.fibaro
+fiblary3==0.1.7
+
 # homeassistant.components.sensor.fints
 fints==1.0.1
 
