@@ -7,10 +7,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SSL)
+    CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL)
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 
 @callback
