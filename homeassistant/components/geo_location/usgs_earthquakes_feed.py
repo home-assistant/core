@@ -2,8 +2,7 @@
 U.S. Geological Survey Earthquake Hazards Program Feed platform.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/geo_location/
-usgs_earthquake_hazards_program_feed/
+https://home-assistant.io/components/geo_location/usgs_earthquakes_feed/
 """
 from datetime import timedelta
 import logging
@@ -44,10 +43,10 @@ DEFAULT_UNIT_OF_MEASUREMENT = 'km'
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SIGNAL_DELETE_ENTITY = 'usgs_earthquake_hazards_program_feed_delete_{}'
-SIGNAL_UPDATE_ENTITY = 'usgs_earthquake_hazards_program_feed_update_{}'
+SIGNAL_DELETE_ENTITY = 'usgs_earthquakes_feed_delete_{}'
+SIGNAL_UPDATE_ENTITY = 'usgs_earthquakes_feed_update_{}'
 
-SOURCE = 'usgs_earthquake_hazards_program_feed'
+SOURCE = 'usgs_earthquakes_feed'
 
 VALID_FEED_TYPES = [
     'past_hour_significant_earthquakes',
@@ -91,7 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     radius_in_km = config[CONF_RADIUS]
     minimum_magnitude = config[CONF_MINIMUM_MAGNITUDE]
     # Initialize the entity manager.
-    feed = UsgsEarthquakeHazardsProgramFeedEntityManager(
+    feed = UsgsEarthquakesFeedEntityManager(
         hass, add_entities, scan_interval, coordinates, feed_type,
         radius_in_km, minimum_magnitude)
 
@@ -102,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
 
 
-class UsgsEarthquakeHazardsProgramFeedEntityManager:
+class UsgsEarthquakesFeedEntityManager:
     """Feed Entity Manager for USGS Earthquake Hazards Program feed."""
 
     def __init__(self, hass, add_entities, scan_interval, coordinates,
@@ -136,7 +135,7 @@ class UsgsEarthquakeHazardsProgramFeedEntityManager:
 
     def _generate_entity(self, external_id):
         """Generate new entity."""
-        new_entity = UsgsEarthquakeHazardsProgramEvent(self, external_id)
+        new_entity = UsgsEarthquakesEvent(self, external_id)
         # Add new entities to HA.
         self._add_entities([new_entity], True)
 
@@ -149,7 +148,7 @@ class UsgsEarthquakeHazardsProgramFeedEntityManager:
         dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
-class UsgsEarthquakeHazardsProgramEvent(GeoLocationEvent):
+class UsgsEarthquakesEvent(GeoLocationEvent):
     """This represents an external event with USGS Earthquake data."""
 
     def __init__(self, feed_manager, external_id):

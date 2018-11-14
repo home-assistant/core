@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.geo_location\
-    .usgs_earthquake_hazards_program_feed import \
+    .usgs_earthquakes_feed import \
     ATTR_ALERT, ATTR_EXTERNAL_ID, SCAN_INTERVAL, ATTR_PLACE, \
     ATTR_MAGNITUDE, ATTR_STATUS, ATTR_TYPE, \
     ATTR_TIME, ATTR_UPDATED, CONF_FEED_TYPE
@@ -22,7 +22,7 @@ import homeassistant.util.dt as dt_util
 CONFIG = {
     geo_location.DOMAIN: [
         {
-            'platform': 'usgs_earthquake_hazards_program_feed',
+            'platform': 'usgs_earthquakes_feed',
             CONF_FEED_TYPE: 'past_hour_m25_earthquakes',
             CONF_RADIUS: 200
         }
@@ -32,7 +32,7 @@ CONFIG = {
 CONFIG_WITH_CUSTOM_LOCATION = {
     geo_location.DOMAIN: [
         {
-            'platform': 'usgs_earthquake_hazards_program_feed',
+            'platform': 'usgs_earthquakes_feed',
             CONF_FEED_TYPE: 'past_hour_m25_earthquakes',
             CONF_RADIUS: 200,
             CONF_LATITUDE: 15.1,
@@ -42,7 +42,7 @@ CONFIG_WITH_CUSTOM_LOCATION = {
 }
 
 
-class TestUsgsEarthquakeHazardsProgramFeedPlatform(unittest.TestCase):
+class TestUsgsEarthquakesFeedPlatform(unittest.TestCase):
     """Test the USGS Earthquake Hazards Program Feed platform."""
 
     def setUp(self):
@@ -129,7 +129,7 @@ class TestUsgsEarthquakeHazardsProgramFeedPlatform(unittest.TestCase):
                     ATTR_STATUS: 'Status 1', ATTR_TYPE: 'Type 1',
                     ATTR_ALERT: 'Alert 1', ATTR_MAGNITUDE: 5.7,
                     ATTR_UNIT_OF_MEASUREMENT: "km",
-                    ATTR_SOURCE: 'usgs_earthquake_hazards_program_feed'}
+                    ATTR_SOURCE: 'usgs_earthquakes_feed'}
                 assert round(abs(float(state.state)-15.5), 7) == 0
 
                 state = self.hass.states.get("geo_location.title_2")
@@ -139,7 +139,7 @@ class TestUsgsEarthquakeHazardsProgramFeedPlatform(unittest.TestCase):
                     ATTR_EXTERNAL_ID: "2345", ATTR_LATITUDE: -31.1,
                     ATTR_LONGITUDE: 150.1, ATTR_FRIENDLY_NAME: "Title 2",
                     ATTR_UNIT_OF_MEASUREMENT: "km",
-                    ATTR_SOURCE: 'usgs_earthquake_hazards_program_feed'}
+                    ATTR_SOURCE: 'usgs_earthquakes_feed'}
                 assert round(abs(float(state.state)-20.5), 7) == 0
 
                 state = self.hass.states.get("geo_location.title_3")
@@ -149,7 +149,7 @@ class TestUsgsEarthquakeHazardsProgramFeedPlatform(unittest.TestCase):
                     ATTR_EXTERNAL_ID: "3456", ATTR_LATITUDE: -31.2,
                     ATTR_LONGITUDE: 150.2, ATTR_FRIENDLY_NAME: "Title 3",
                     ATTR_UNIT_OF_MEASUREMENT: "km",
-                    ATTR_SOURCE: 'usgs_earthquake_hazards_program_feed'}
+                    ATTR_SOURCE: 'usgs_earthquakes_feed'}
                 assert round(abs(float(state.state)-25.5), 7) == 0
 
                 # Simulate an update - one existing, one new entry,
