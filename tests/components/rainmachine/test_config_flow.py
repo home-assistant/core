@@ -1,5 +1,4 @@
 """Define tests for the OpenUV config flow."""
-from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
