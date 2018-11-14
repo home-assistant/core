@@ -50,39 +50,37 @@ class TestInputText(unittest.TestCase):
             }},
         ]
         for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+            assert not setup_component(self.hass, DOMAIN, {DOMAIN: cfg})
 
     def test_set_value(self):
         """Test set_value method."""
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+        assert setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_1': {
                 'initial': 'test',
                 'min': 3,
                 'max': 10,
             },
-        }}))
+        }})
         entity_id = 'input_text.test_1'
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual('test', str(state.state))
+        assert 'test' == str(state.state)
 
         set_value(self.hass, entity_id, 'testing')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual('testing', str(state.state))
+        assert 'testing' == str(state.state)
 
         set_value(self.hass, entity_id, 'testing too long')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual('testing', str(state.state))
+        assert 'testing' == str(state.state)
 
     def test_mode(self):
         """Test mode settings."""
-        self.assertTrue(
-            setup_component(self.hass, DOMAIN, {DOMAIN: {
+        assert setup_component(self.hass, DOMAIN, {DOMAIN: {
                 'test_default_text': {
                     'initial': 'test',
                     'min': 3,
@@ -100,19 +98,19 @@ class TestInputText(unittest.TestCase):
                     'max': 10,
                     'mode': 'password',
                 },
-            }}))
+            }})
 
         state = self.hass.states.get('input_text.test_default_text')
         assert state
-        self.assertEqual('text', state.attributes['mode'])
+        assert 'text' == state.attributes['mode']
 
         state = self.hass.states.get('input_text.test_explicit_text')
         assert state
-        self.assertEqual('text', state.attributes['mode'])
+        assert 'text' == state.attributes['mode']
 
         state = self.hass.states.get('input_text.test_explicit_password')
         assert state
-        self.assertEqual('password', state.attributes['mode'])
+        assert 'password' == state.attributes['mode']
 
 
 @asyncio.coroutine

@@ -9,10 +9,12 @@ from homeassistant.components.fan import (
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.loader import bind_hass
+from homeassistant.core import callback
 
 
+@callback
 @bind_hass
-def turn_on(hass, entity_id: str = None, speed: str = None) -> None:
+def async_turn_on(hass, entity_id: str = None, speed: str = None) -> None:
     """Turn all or specified fan on."""
     data = {
         key: value for key, value in [
@@ -21,20 +23,24 @@ def turn_on(hass, entity_id: str = None, speed: str = None) -> None:
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
+@callback
 @bind_hass
-def turn_off(hass, entity_id: str = None) -> None:
+def async_turn_off(hass, entity_id: str = None) -> None:
     """Turn all or specified fan off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
 
 
+@callback
 @bind_hass
-def oscillate(hass, entity_id: str = None,
-              should_oscillate: bool = True) -> None:
+def async_oscillate(hass, entity_id: str = None,
+                    should_oscillate: bool = True) -> None:
     """Set oscillation on all or specified fan."""
     data = {
         key: value for key, value in [
@@ -43,11 +49,13 @@ def oscillate(hass, entity_id: str = None,
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_OSCILLATE, data)
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_OSCILLATE, data))
 
 
+@callback
 @bind_hass
-def set_speed(hass, entity_id: str = None, speed: str = None) -> None:
+def async_set_speed(hass, entity_id: str = None, speed: str = None) -> None:
     """Set speed for all or specified fan."""
     data = {
         key: value for key, value in [
@@ -56,11 +64,14 @@ def set_speed(hass, entity_id: str = None, speed: str = None) -> None:
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_SET_SPEED, data)
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_SET_SPEED, data))
 
 
+@callback
 @bind_hass
-def set_direction(hass, entity_id: str = None, direction: str = None) -> None:
+def async_set_direction(
+        hass, entity_id: str = None, direction: str = None) -> None:
     """Set direction for all or specified fan."""
     data = {
         key: value for key, value in [
@@ -69,4 +80,5 @@ def set_direction(hass, entity_id: str = None, direction: str = None) -> None:
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, data)
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_SET_DIRECTION, data))

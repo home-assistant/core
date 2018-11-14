@@ -56,17 +56,21 @@ homeassistant/components/climate/ephember.py @ttroy50
 homeassistant/components/climate/eq3btsmart.py @rytilahti
 homeassistant/components/climate/mill.py @danielhiversen
 homeassistant/components/climate/sensibo.py @andrey-git
+homeassistant/components/cover/brunt.py @eavanvalkenburg
 homeassistant/components/cover/group.py @cdce8p
 homeassistant/components/cover/template.py @PhracturedBlue
+homeassistant/components/device_tracker/asuswrt.py @kennedyshead
 homeassistant/components/device_tracker/automatic.py @armills
 homeassistant/components/device_tracker/huawei_router.py @abmantis
 homeassistant/components/device_tracker/quantum_gateway.py @cisasteelersfan
 homeassistant/components/device_tracker/tile.py @bachya
+homeassistant/components/device_tracker/bt_smarthub.py @jxwolstenholme
 homeassistant/components/history_graph.py @andrey-git
 homeassistant/components/influx.py @fabaff
 homeassistant/components/light/lifx_legacy.py @amelchio
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
+homeassistant/components/light/yeelightsunflower.py @lindsaymarkward
 homeassistant/components/lock/nello.py @pschmitt
 homeassistant/components/lock/nuki.py @pschmitt
 homeassistant/components/media_player/emby.py @mezz64
@@ -86,6 +90,7 @@ homeassistant/components/notify/mastodon.py @fabaff
 homeassistant/components/notify/smtp.py @fabaff
 homeassistant/components/notify/syslog.py @fabaff
 homeassistant/components/notify/xmpp.py @fabaff
+homeassistant/components/notify/yessssms.py @flowolf
 homeassistant/components/plant.py @ChristianKuehnel
 homeassistant/components/scene/lifx_cloud.py @amelchio
 homeassistant/components/sensor/airvisual.py @bachya
@@ -233,6 +238,10 @@ homeassistant/components/*/upcloud.py @scop
 # V
 homeassistant/components/velux.py @Julius2342
 homeassistant/components/*/velux.py @Julius2342
+
+# W
+homeassistant/components/wemo.py @sqldiablo
+homeassistant/components/*/wemo.py @sqldiablo
 
 # X
 homeassistant/components/*/xiaomi_aqara.py @danielhiversen @syssi

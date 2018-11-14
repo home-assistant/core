@@ -30,46 +30,46 @@ class TestFritzboxClimate(unittest.TestCase):
 
     def test_init(self):
         """Test instance creation."""
-        self.assertEqual(18.0, self.thermostat._current_temperature)
-        self.assertEqual(19.5, self.thermostat._target_temperature)
-        self.assertEqual(22.0, self.thermostat._comfort_temperature)
-        self.assertEqual(16.0, self.thermostat._eco_temperature)
+        assert 18.0 == self.thermostat._current_temperature
+        assert 19.5 == self.thermostat._target_temperature
+        assert 22.0 == self.thermostat._comfort_temperature
+        assert 16.0 == self.thermostat._eco_temperature
 
     def test_supported_features(self):
         """Test supported features property."""
-        self.assertEqual(129, self.thermostat.supported_features)
+        assert 129 == self.thermostat.supported_features
 
     def test_available(self):
         """Test available property."""
-        self.assertTrue(self.thermostat.available)
+        assert self.thermostat.available
         self.thermostat._device.present = False
-        self.assertFalse(self.thermostat.available)
+        assert not self.thermostat.available
 
     def test_name(self):
         """Test name property."""
-        self.assertEqual('Test Thermostat', self.thermostat.name)
+        assert 'Test Thermostat' == self.thermostat.name
 
     def test_temperature_unit(self):
         """Test temperature_unit property."""
-        self.assertEqual('°C', self.thermostat.temperature_unit)
+        assert '°C' == self.thermostat.temperature_unit
 
     def test_precision(self):
         """Test precision property."""
-        self.assertEqual(0.5, self.thermostat.precision)
+        assert 0.5 == self.thermostat.precision
 
     def test_current_temperature(self):
         """Test current_temperature property incl. special temperatures."""
-        self.assertEqual(18, self.thermostat.current_temperature)
+        assert 18 == self.thermostat.current_temperature
 
     def test_target_temperature(self):
         """Test target_temperature property."""
-        self.assertEqual(19.5, self.thermostat.target_temperature)
+        assert 19.5 == self.thermostat.target_temperature
 
         self.thermostat._target_temperature = 126.5
-        self.assertEqual(None, self.thermostat.target_temperature)
+        assert self.thermostat.target_temperature is None
 
         self.thermostat._target_temperature = 127.0
-        self.assertEqual(None, self.thermostat.target_temperature)
+        assert self.thermostat.target_temperature is None
 
     @patch.object(FritzboxThermostat, 'set_operation_mode')
     def test_set_temperature_operation_mode(self, mock_set_op):
@@ -101,20 +101,20 @@ class TestFritzboxClimate(unittest.TestCase):
     def test_current_operation(self):
         """Test operation mode property for different temperatures."""
         self.thermostat._target_temperature = 127.0
-        self.assertEqual('on', self.thermostat.current_operation)
+        assert 'on' == self.thermostat.current_operation
         self.thermostat._target_temperature = 126.5
-        self.assertEqual('off', self.thermostat.current_operation)
+        assert 'off' == self.thermostat.current_operation
         self.thermostat._target_temperature = 22.0
-        self.assertEqual('heat', self.thermostat.current_operation)
+        assert 'heat' == self.thermostat.current_operation
         self.thermostat._target_temperature = 16.0
-        self.assertEqual('eco', self.thermostat.current_operation)
+        assert 'eco' == self.thermostat.current_operation
         self.thermostat._target_temperature = 12.5
-        self.assertEqual('manual', self.thermostat.current_operation)
+        assert 'manual' == self.thermostat.current_operation
 
     def test_operation_list(self):
         """Test operation_list property."""
-        self.assertEqual(['heat', 'eco', 'off', 'on'],
-                         self.thermostat.operation_list)
+        assert ['heat', 'eco', 'off', 'on'] == \
+            self.thermostat.operation_list
 
     @patch.object(FritzboxThermostat, 'set_temperature')
     def test_set_operation_mode(self, mock_set_temp):
@@ -137,15 +137,15 @@ class TestFritzboxClimate(unittest.TestCase):
 
     def test_min_max_temperature(self):
         """Test min_temp and max_temp properties."""
-        self.assertEqual(8.0, self.thermostat.min_temp)
-        self.assertEqual(28.0, self.thermostat.max_temp)
+        assert 8.0 == self.thermostat.min_temp
+        assert 28.0 == self.thermostat.max_temp
 
     def test_device_state_attributes(self):
         """Test device_state property."""
         attr = self.thermostat.device_state_attributes
-        self.assertEqual(attr['device_locked'], True)
-        self.assertEqual(attr['locked'], False)
-        self.assertEqual(attr['battery_low'], True)
+        assert attr['device_locked'] is True
+        assert attr['locked'] is False
+        assert attr['battery_low'] is True
 
     def test_update(self):
         """Test update function."""
@@ -160,10 +160,10 @@ class TestFritzboxClimate(unittest.TestCase):
         self.thermostat.update()
 
         device.update.assert_called_once_with()
-        self.assertEqual(10.0, self.thermostat._current_temperature)
-        self.assertEqual(11.0, self.thermostat._target_temperature)
-        self.assertEqual(12.0, self.thermostat._comfort_temperature)
-        self.assertEqual(13.0, self.thermostat._eco_temperature)
+        assert 10.0 == self.thermostat._current_temperature
+        assert 11.0 == self.thermostat._target_temperature
+        assert 12.0 == self.thermostat._comfort_temperature
+        assert 13.0 == self.thermostat._eco_temperature
 
     def test_update_http_error(self):
         """Test exception handling of update function."""

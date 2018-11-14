@@ -16,7 +16,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import dispatcher
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.components.discovery import DOMAIN as DISCOVERY_DOMAIN
 
 from .const import (
     CONF_ENABLE_PORT_MAPPING, CONF_ENABLE_SENSORS,
@@ -26,12 +25,11 @@ from .const import (
 )
 from .const import DOMAIN
 from .const import LOGGER as _LOGGER
-from .config_flow import ensure_domain_data
+from .config_flow import async_ensure_domain_data
 from .device import Device
 
 
-REQUIREMENTS = ['async-upnp-client==0.12.7']
-DEPENDENCIES = ['http']
+REQUIREMENTS = ['async-upnp-client==0.13.0']
 
 NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'
@@ -50,18 +48,37 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def _substitute_hass_ports(ports, hass_port):
-    """Substitute 'hass' for the hass_port."""
+def _substitute_hass_ports(ports, hass_port=None):
+    """
+    Substitute 'hass' for the hass_port.
+
+    This triggers a warning when hass_port is None.
+    """
     ports = ports.copy()
 
     # substitute 'hass' for hass_port, both keys and values
     if CONF_HASS in ports:
-        ports[hass_port] = ports[CONF_HASS]
+        if hass_port is None:
+            _LOGGER.warning(
+                'Could not determine Home Assistant http port, '
+                'not setting up port mapping from %s to %s. '
+                'Enable the http-component.',
+                CONF_HASS, ports[CONF_HASS])
+        else:
+            ports[hass_port] = ports[CONF_HASS]
         del ports[CONF_HASS]
 
     for port in ports:
         if ports[port] == CONF_HASS:
-            ports[port] = hass_port
+            if hass_port is None:
+                _LOGGER.warning(
+                    'Could not determine Home Assistant http port, '
+                    'not setting up port mapping from %s to %s. '
+                    'Enable the http-component.',
+                    port, ports[port])
+                del ports[port]
+            else:
+                ports[port] = hass_port
 
     return ports
 
@@ -69,18 +86,14 @@ def _substitute_hass_ports(ports, hass_port):
 # config
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Register a port mapping for Home Assistant via UPnP."""
-    ensure_domain_data(hass)
+    await async_ensure_domain_data(hass)
 
     # ensure sane config
     if DOMAIN not in config:
         return True
-
-    if DISCOVERY_DOMAIN not in config:
-        _LOGGER.warning('UPNP needs discovery, please enable it')
-        return False
+    upnp_config = config[DOMAIN]
 
     # overridden local ip
-    upnp_config = config[DOMAIN]
     if CONF_LOCAL_IP in upnp_config:
         hass.data[DOMAIN]['local_ip'] = upnp_config[CONF_LOCAL_IP]
 
@@ -104,7 +117,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistantType,
                             config_entry: ConfigEntry):
     """Set up UPnP/IGD-device from a config entry."""
-    ensure_domain_data(hass)
+    await async_ensure_domain_data(hass)
     data = config_entry.data
 
     # build UPnP/IGD device
@@ -119,13 +132,15 @@ async def async_setup_entry(hass: HomeAssistantType,
 
     # port mapping
     if data.get(CONF_ENABLE_PORT_MAPPING):
-        local_ip = hass.data[DOMAIN].get('local_ip')
+        local_ip = hass.data[DOMAIN]['local_ip']
         ports = hass.data[DOMAIN]['auto_config']['ports']
         _LOGGER.debug('Enabling port mappings: %s', ports)
 
-        hass_port = hass.http.server_port
-        ports = _substitute_hass_ports(ports, hass_port)
-        await device.async_add_port_mappings(ports, local_ip=local_ip)
+        hass_port = None
+        if hasattr(hass, 'http'):
+            hass_port = hass.http.server_port
+        ports = _substitute_hass_ports(ports, hass_port=hass_port)
+        await device.async_add_port_mappings(ports, local_ip)
 
     # sensors
     if data.get(CONF_ENABLE_SENSORS):
@@ -135,10 +150,12 @@ async def async_setup_entry(hass: HomeAssistantType,
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             config_entry, 'sensor'))
 
-    async def unload_entry(event):
-        """Unload entry on quit."""
-        await async_unload_entry(hass, config_entry)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unload_entry)
+    async def delete_port_mapping(event):
+        """Delete port mapping on quit."""
+        if data.get(CONF_ENABLE_PORT_MAPPING):
+            _LOGGER.debug('Deleting port mappings')
+            await device.async_delete_port_mappings()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, delete_port_mapping)
 
     return True
 
