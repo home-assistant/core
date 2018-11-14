@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     config_enable = config.get(CONF_ENABLE, {})
     # _LOGGER.debug("config_enable: %r", config_enable)
     switches = []
-    for pump_id in PUMP_IDNAMES:
+    for pump_id in PUMP_IDNAMES:     # pylint: disable=W0621
         name = config_enable.get(pump_id)
         if name:
             switches.append(EcoalSwitch(g_ecoal_contr, name, pump_id))
@@ -78,7 +78,9 @@ class EcoalSwitch(ToggleEntity):
         # is held inside ecoal_boiler.http_interface
         self._contr_set_fun = getattr(self._ecoal_contr, "set_" + state_attr)
         # No setting value, read instead
-        self._state = self.is_on
+        # self._state = self.is_on
+        self._state = None
+        self.reread_update()
 
     @property
     def name(self) -> Optional[str]:
@@ -87,30 +89,41 @@ class EcoalSwitch(ToggleEntity):
 
     @property
     def should_poll(self) -> bool:
-        """No polling needed."""
+        """Polling needed."""
         return True
+
+    def update(self):
+        """Fetch new state data for the sensor.
+
+        This is the only method that should fetch new data for Home Assistant.
+        """
+        # Old values read 0.5 back can still be used
+        # _LOGGER.debug("CALLED: %r.update(max_cache_period=%r)",
+        #       self, max_cache_period)
+        status = self._ecoal_contr.get_cached_status()
+        self._state = getattr(status, self._state_attr)
+
+    def reread_update(self) -> None:
+        """Fetch state of pump without using cache."""
+        # Get status without using cache
+        self._ecoal_contr.get_status()
+        self.update()
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        status = self._ecoal_contr.get_cached_status(max_cache_period=1)
-        self._state = getattr(status, self._state_attr)
         return self._state
 
     def turn_on(self, **kwargs) -> None:
         """Turn the device on."""
-        # self._ecoal_contr.set_domestic_hot_water_pump(1)
         self._contr_set_fun(1)
-        # Reread state without using cache here
-        self._ecoal_contr.get_status()
-        self.is_on
+        # Reread state without using cache.
+        self.reread_update()
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs) -> None:
         """Turn the device off."""
-        # self._ecoal_contr.set_domestic_hot_water_pump(0)
         self._contr_set_fun(0)
-        # Reread state without using cache here
-        self._ecoal_contr.get_status()
-        self.is_on
+        # Reread state without using cache.
+        self.reread_update()
         self.schedule_update_ha_state()

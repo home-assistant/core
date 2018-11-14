@@ -442,138 +442,21 @@ class ECoalControler:
         status_vals = self._parse_seq_of_ints(buf)
         self.log.debug("Receiveed status vals: %r", status_vals)
 
-        old_status_vals = [
-            2,
-            1,
-            6,
-            6,
-            0,
-            0,
-            76,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            215,
-            0,
-            214,
-            0,
-            103,
-            0,
-            165,
-            1,
-            163,
-            0,
-            155,
-            0,
-            219,
-            0,
-            165,
-            0,
-            0,
-            0,
-            0,
-            0,
-            2,
-            61,
-            48,
-            0,
-            0,
-            0,
-            2,
-            2,
-            18,
-            11,
-            11,
-            15,
-            13,
-            30,
-            1,
-            0,
-            0,
-            1,
-            0,
-            225,
-            0,
-            215,
-            0,
-            10,
-            8,
-            2,
-            0,
-            0,
-            195,
-            85,
-            0,
-            0,
-            18,
-            3,
-            17,
-            12,
-            5,
-            112,
-            81,
-            16,
-            0,
-            6,
-            225,
-            0,
-            210,
-            0,
-            0,
-            0,
-            36,
-            3,
-        ]
-        # 2018/11/11 diffs:
-        # pos: 73 diff: 112 -> 113   pos: 84 diff: 36 -> 204
+        # Vals diff for guessing
+        # old_status_vals = [2,1, .... ]
+        # for i, val in enumerate(status_vals):
+        # Skip list of values we know about
+        # if i in (
+        #    16,17,18,19,20,21,22,23,24,25,26,27,28,29,
+        #    30,31,37,38,39,44,45,46,47,48,49,64,65,
+        # ):
+        #    continue
+        # if val != old_status_vals[i]:
+        #    self.log.debug(
+        #        "Diff pos: %d diff: %r -> %r", i, old_status_vals[i], val
+        #    )
 
-        for i, val in enumerate(status_vals):
-            # Skip list of values we know about
-            if i in (
-                16,
-                17,
-                18,
-                19,
-                20,
-                21,
-                22,
-                23,
-                24,
-                25,
-                26,
-                27,
-                28,
-                29,
-                30,
-                31,
-                37,
-                38,
-                39,
-                44,
-                45,
-                46,
-                47,
-                48,
-                49,
-                64,
-                65,
-            ):
-                continue
-            if val != old_status_vals[i]:
-                self.log.debug(
-                    "Diff pos: %d diff: %r -> %r", i, old_status_vals[i], val
-                )
-
-        # self.status_vals = status_vals
         status = self.Status()
-
-        # return self.__temp(self.s_statusdata[19],self.s_statusdata[18]);
         status.indoor2_temp = self._calc_temp(
             status_vals[17], status_vals[16]
         )  # Guess
@@ -632,10 +515,8 @@ class ECoalControler:
         cached status is returned.
         Otherwise fresh value is requested.
         """
-        if (
-            not self.status
-            or time.time() - self.status_time > max_cache_period
-        ):
+        if (not self.status
+                or time.time() - self.status_time > max_cache_period):
             self.get_status()
         return self.status
 
