@@ -1,6 +1,6 @@
 """The tests for the USGS Earthquake Hazards Program Feed platform."""
 import datetime
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -80,92 +80,91 @@ async def test_setup(hass):
     mock_entry_4 = _generate_mock_feed_entry(
         '4567', 'Title 4', 12.5, (-31.3, 150.3))
 
-    with patch('geojson_client.usgs_earthquake_hazards_program_feed.'
+    # Patching 'utcnow' to gain more control over the timed update.
+    utcnow = dt_util.utcnow()
+    with patch('homeassistant.util.dt.utcnow', return_value=utcnow), \
+        patch('geojson_client.usgs_earthquake_hazards_program_feed.'
                'UsgsEarthquakeHazardsProgramFeed') as mock_feed:
         mock_feed.return_value.update.return_value = 'OK', [mock_entry_1,
                                                             mock_entry_2,
                                                             mock_entry_3]
+        with assert_setup_component(1, geo_location.DOMAIN):
+            assert await async_setup_component(
+                hass, geo_location.DOMAIN, CONFIG)
+            # Artificially trigger update.
+            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+            # Collect events.
+            await hass.async_block_till_done()
 
-        utcnow = dt_util.utcnow()
-        # Patching 'utcnow' to gain more control over the timed update.
-        with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
-            with assert_setup_component(1, geo_location.DOMAIN):
-                assert await async_setup_component(
-                    hass, geo_location.DOMAIN, CONFIG)
-                # Artificially trigger update.
-                hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-                # Collect events.
-                await hass.async_block_till_done()
+            all_states = hass.states.async_all()
+            assert len(all_states) == 3
 
-                all_states = hass.states.async_all()
-                assert len(all_states) == 3
+            state = hass.states.get("geo_location.title_1")
+            assert state is not None
+            assert state.name == "Title 1"
+            assert state.attributes == {
+                ATTR_EXTERNAL_ID: "1234", ATTR_LATITUDE: -31.0,
+                ATTR_LONGITUDE: 150.0, ATTR_FRIENDLY_NAME: "Title 1",
+                ATTR_PLACE: "Location 1",
+                ATTR_ATTRIBUTION: "Attribution 1",
+                ATTR_TIME:
+                    datetime.datetime(
+                        2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
+                ATTR_UPDATED:
+                    datetime.datetime(
+                        2018, 9, 22, 9, 0, tzinfo=datetime.timezone.utc),
+                ATTR_STATUS: 'Status 1', ATTR_TYPE: 'Type 1',
+                ATTR_ALERT: 'Alert 1', ATTR_MAGNITUDE: 5.7,
+                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_SOURCE: 'usgs_earthquakes_feed'}
+            assert round(abs(float(state.state)-15.5), 7) == 0
 
-                state = hass.states.get("geo_location.title_1")
-                assert state is not None
-                assert state.name == "Title 1"
-                assert state.attributes == {
-                    ATTR_EXTERNAL_ID: "1234", ATTR_LATITUDE: -31.0,
-                    ATTR_LONGITUDE: 150.0, ATTR_FRIENDLY_NAME: "Title 1",
-                    ATTR_PLACE: "Location 1",
-                    ATTR_ATTRIBUTION: "Attribution 1",
-                    ATTR_TIME:
-                        datetime.datetime(
-                            2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
-                    ATTR_UPDATED:
-                        datetime.datetime(
-                            2018, 9, 22, 9, 0, tzinfo=datetime.timezone.utc),
-                    ATTR_STATUS: 'Status 1', ATTR_TYPE: 'Type 1',
-                    ATTR_ALERT: 'Alert 1', ATTR_MAGNITUDE: 5.7,
-                    ATTR_UNIT_OF_MEASUREMENT: "km",
-                    ATTR_SOURCE: 'usgs_earthquakes_feed'}
-                assert round(abs(float(state.state)-15.5), 7) == 0
+            state = hass.states.get("geo_location.title_2")
+            assert state is not None
+            assert state.name == "Title 2"
+            assert state.attributes == {
+                ATTR_EXTERNAL_ID: "2345", ATTR_LATITUDE: -31.1,
+                ATTR_LONGITUDE: 150.1, ATTR_FRIENDLY_NAME: "Title 2",
+                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_SOURCE: 'usgs_earthquakes_feed'}
+            assert round(abs(float(state.state)-20.5), 7) == 0
 
-                state = hass.states.get("geo_location.title_2")
-                assert state is not None
-                assert state.name == "Title 2"
-                assert state.attributes == {
-                    ATTR_EXTERNAL_ID: "2345", ATTR_LATITUDE: -31.1,
-                    ATTR_LONGITUDE: 150.1, ATTR_FRIENDLY_NAME: "Title 2",
-                    ATTR_UNIT_OF_MEASUREMENT: "km",
-                    ATTR_SOURCE: 'usgs_earthquakes_feed'}
-                assert round(abs(float(state.state)-20.5), 7) == 0
+            state = hass.states.get("geo_location.title_3")
+            assert state is not None
+            assert state.name == "Title 3"
+            assert state.attributes == {
+                ATTR_EXTERNAL_ID: "3456", ATTR_LATITUDE: -31.2,
+                ATTR_LONGITUDE: 150.2, ATTR_FRIENDLY_NAME: "Title 3",
+                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_SOURCE: 'usgs_earthquakes_feed'}
+            assert round(abs(float(state.state)-25.5), 7) == 0
 
-                state = hass.states.get("geo_location.title_3")
-                assert state is not None
-                assert state.name == "Title 3"
-                assert state.attributes == {
-                    ATTR_EXTERNAL_ID: "3456", ATTR_LATITUDE: -31.2,
-                    ATTR_LONGITUDE: 150.2, ATTR_FRIENDLY_NAME: "Title 3",
-                    ATTR_UNIT_OF_MEASUREMENT: "km",
-                    ATTR_SOURCE: 'usgs_earthquakes_feed'}
-                assert round(abs(float(state.state)-25.5), 7) == 0
+            # Simulate an update - one existing, one new entry,
+            # one outdated entry
+            mock_feed.return_value.update.return_value = 'OK', [
+                mock_entry_1, mock_entry_4, mock_entry_3]
+            async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
+            await hass.async_block_till_done()
 
-                # Simulate an update - one existing, one new entry,
-                # one outdated entry
-                mock_feed.return_value.update.return_value = 'OK', [
-                    mock_entry_1, mock_entry_4, mock_entry_3]
-                async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
-                await hass.async_block_till_done()
+            all_states = hass.states.async_all()
+            assert len(all_states) == 3
 
-                all_states = hass.states.async_all()
-                assert len(all_states) == 3
+            # Simulate an update - empty data, but successful update,
+            # so no changes to entities.
+            mock_feed.return_value.update.return_value = 'OK_NO_DATA', None
+            async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
+            await hass.async_block_till_done()
 
-                # Simulate an update - empty data, but successful update,
-                # so no changes to entities.
-                mock_feed.return_value.update.return_value = 'OK_NO_DATA', None
-                async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
-                await hass.async_block_till_done()
+            all_states = hass.states.async_all()
+            assert len(all_states) == 3
 
-                all_states = hass.states.async_all()
-                assert len(all_states) == 3
+            # Simulate an update - empty data, removes all entities
+            mock_feed.return_value.update.return_value = 'ERROR', None
+            async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
+            await hass.async_block_till_done()
 
-                # Simulate an update - empty data, removes all entities
-                mock_feed.return_value.update.return_value = 'ERROR', None
-                async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
-                await hass.async_block_till_done()
-
-                all_states = hass.states.async_all()
-                assert len(all_states) == 0
+            all_states = hass.states.async_all()
+            assert len(all_states) == 0
 
 
 async def test_setup_with_custom_location(hass):
@@ -190,7 +189,6 @@ async def test_setup_with_custom_location(hass):
             all_states = hass.states.async_all()
             assert len(all_states) == 1
 
-            mock_feed.assert_called_with((15.1, 25.2),
-                                         'past_hour_m25_earthquakes',
-                                         filter_minimum_magnitude=0.0,
-                                         filter_radius=200.0)
+            assert mock_feed.call_args == call(
+                (15.1, 25.2), 'past_hour_m25_earthquakes',
+                filter_minimum_magnitude=0.0, filter_radius=200.0)
