@@ -71,15 +71,20 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
         return '{0}_{1}'.format(
             self.rainmachine.device_mac.replace(':', ''), self._sensor_type)
 
-    @callback
-    def _update_data(self):
-        """Update the state."""
-        self.async_schedule_update_ha_state(True)
-
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SENSOR_UPDATE_TOPIC, self._update_data)
+        @callback
+        def update(self):
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, SENSOR_UPDATE_TOPIC, update)
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
 
     async def async_update(self):
         """Update the state."""

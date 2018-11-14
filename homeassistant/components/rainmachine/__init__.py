@@ -40,6 +40,7 @@ CONF_ZONE_RUN_TIME = 'zone_run_time'
 
 DEFAULT_ATTRIBUTION = 'Data provided by Green Electronics LLC'
 DEFAULT_ICON = 'mdi:water'
+DEFAULT_SSL = True
 DEFAULT_ZONE_RUN = 60 * 10
 
 TYPE_FREEZE = 'freeze'
@@ -147,7 +148,7 @@ async def async_setup_entry(hass, config_entry):
     ip_address = config_entry.data[CONF_IP_ADDRESS]
     password = config_entry.data[CONF_PASSWORD]
     port = config_entry.data[CONF_PORT]
-    ssl = config_entry.data[CONF_SSL]
+    ssl = config_entry.data.get(CONF_SSL, DEFAULT_SSL)
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
@@ -224,6 +225,21 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
+async def async_unload_entry(hass, config_entry):
+    """Unload an OpenUV config entry."""
+    hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
+
+    remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(
+        config_entry.entry_id)
+    remove_listener()
+
+    for component in ('binary_sensor', 'sensor', 'switch'):
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, component)
+
+    return True
+
+
 class RainMachine:
     """Define a generic RainMachine object."""
 
@@ -252,6 +268,7 @@ class RainMachineEntity(Entity):
     def __init__(self, rainmachine):
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._async_unsub_dispatcher_connect = None
         self._name = None
         self.rainmachine = rainmachine
 

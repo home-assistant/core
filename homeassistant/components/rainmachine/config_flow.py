@@ -34,7 +34,6 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
         self.data_schema[vol.Required(CONF_IP_ADDRESS)] = str
         self.data_schema[vol.Required(CONF_PASSWORD)] = str
         self.data_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
-        self.data_schema[vol.Optional(CONF_SSL, default=True)] = bool
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
@@ -69,7 +68,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
                 user_input[CONF_PASSWORD],
                 websession,
                 port=user_input.get(CONF_PORT, DEFAULT_PORT),
-                ssl=user_input.get(CONF_SSL, DEFAULT_SSL))
+                ssl=True)
         except RainMachineError:
             return await self._show_form({
                 CONF_PASSWORD: 'invalid_credentials'
@@ -83,6 +82,4 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
         # access token without using the IP address and password, so we have to
         # store it:
         return self.async_create_entry(
-            title=user_input[CONF_IP_ADDRESS],
-            data=user_input
-        )
+            title=user_input[CONF_IP_ADDRESS], data=user_input)

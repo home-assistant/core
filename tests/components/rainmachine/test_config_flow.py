@@ -91,7 +91,6 @@ async def test_step_user(hass):
         CONF_PASSWORD: 'password',
         CONF_PORT: 8080,
         CONF_SSL: True,
-        CONF_SCAN_INTERVAL: timedelta(minutes=5)
     }
 
     flow = config_flow.RainMachineFlowHandler()
@@ -107,5 +106,5 @@ async def test_step_user(hass):
             CONF_PASSWORD: 'password',
             CONF_PORT: 8080,
             CONF_SSL: True,
-            CONF_SCAN_INTERVAL: 300,
+            CONF_SCAN_INTERVAL: 60,
         }

@@ -186,8 +186,13 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated)
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
