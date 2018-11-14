@@ -84,7 +84,7 @@ async def test_setup(hass):
     utcnow = dt_util.utcnow()
     with patch('homeassistant.util.dt.utcnow', return_value=utcnow), \
         patch('geojson_client.usgs_earthquake_hazards_program_feed.'
-               'UsgsEarthquakeHazardsProgramFeed') as mock_feed:
+              'UsgsEarthquakeHazardsProgramFeed') as mock_feed:
         mock_feed.return_value.update.return_value = 'OK', [mock_entry_1,
                                                             mock_entry_2,
                                                             mock_entry_3]
