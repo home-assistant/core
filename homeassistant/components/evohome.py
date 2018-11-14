@@ -108,12 +108,12 @@ def setup(hass, config):
     evo_data['client'] = client
 
     # Redact any installation data we'll never need
-    if client.installation_info[0]['locationInfo']['locationId'] != 'REDACTED':
-        for loc in client.installation_info:
-            loc['locationInfo']['streetAddress'] = 'REDACTED'
-            loc['locationInfo']['city'] = 'REDACTED'
-            loc['locationInfo']['locationOwner'] = 'REDACTED'
-            loc[GWS][0]['gatewayInfo'] = 'REDACTED'
+    for loc in client.installation_info:
+        loc['locationInfo']['locationId'] != 'REDACTED'
+        loc['locationInfo']['locationOwner'] = 'REDACTED'
+        loc['locationInfo']['streetAddress'] = 'REDACTED'
+        loc['locationInfo']['city'] = 'REDACTED'
+        loc[GWS][0]['gatewayInfo'] = 'REDACTED'
 
     # Pull down the installation configuration
     loc_idx = evo_data['params'][CONF_LOCATION_IDX]
