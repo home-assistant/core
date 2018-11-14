@@ -26,7 +26,6 @@ SENSOR_TYPES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Fibaro controller devices."""
-
     if discovery_info is None:
         return
 
