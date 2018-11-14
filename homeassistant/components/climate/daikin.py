@@ -22,7 +22,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pydaikin==0.6']
+REQUIREMENTS = ['pydaikin==0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +82,6 @@ class DaikinClimate(ClimateDevice):
         from pydaikin import appliance
 
         self._api = api
-        self._force_refresh = False
         self._list = {
             ATTR_OPERATION_MODE: list(HA_STATE_TO_DAIKIN),
             ATTR_FAN_MODE: list(
@@ -183,7 +182,6 @@ class DaikinClimate(ClimateDevice):
                     _LOGGER.error("Invalid temperature %s", value)
 
         if values:
-            self._force_refresh = True
             self._api.device.set(values)
 
     @property
@@ -264,5 +262,4 @@ class DaikinClimate(ClimateDevice):
 
     def update(self):
         """Retrieve latest state."""
-        self._api.update(no_throttle=self._force_refresh)
-        self._force_refresh = False
+        self._api.update()

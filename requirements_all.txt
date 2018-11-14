@@ -86,7 +86,7 @@ abodepy==0.14.0
 afsapi==0.0.4
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.1.6
+aioasuswrt==1.1.11
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
@@ -333,7 +333,7 @@ einder==0.3.1
 eliqonline==1.0.14
 
 # homeassistant.components.elkm1
-elkm1-lib==0.7.11
+elkm1-lib==0.7.12
 
 # homeassistant.components.enocean
 enocean==0.40
@@ -372,6 +372,9 @@ fedexdeliverymanager==1.0.6
 
 # homeassistant.components.feedreader
 feedparser==5.2.1
+
+# homeassistant.components.fibaro
+fiblary3==0.1.7
 
 # homeassistant.components.sensor.fints
 fints==1.0.1
@@ -482,7 +485,7 @@ holidays==0.9.8
 home-assistant-frontend==20181112.0
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.0
+homeassistant-pyozw==0.1.1
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -606,7 +609,7 @@ lw12==0.9.2
 lyft_rides==0.2
 
 # homeassistant.components.sensor.magicseaweed
-magicseaweed==1.0.0
+magicseaweed==1.0.3
 
 # homeassistant.components.matrix
 matrix-client==0.2.0
@@ -628,7 +631,7 @@ mficlient==0.3.0
 miflora==0.4.0
 
 # homeassistant.components.climate.mill
-millheater==0.2.3
+millheater==0.2.4
 
 # homeassistant.components.sensor.mitemp_bt
 mitemp_bt==0.0.1
@@ -880,7 +883,7 @@ pycsspeechtts==1.0.2
 
 # homeassistant.components.daikin
 # homeassistant.components.climate.daikin
-pydaikin==0.6
+pydaikin==0.7
 
 # homeassistant.components.deconz
 pydeconz==47
@@ -950,7 +953,7 @@ pygtfs-homeassistant==0.1.3.dev0
 pyharmony==1.0.20
 
 # homeassistant.components.sensor.version
-pyhaversion==2.0.2
+pyhaversion==2.0.3
 
 # homeassistant.components.binary_sensor.hikvision
 pyhik==0.1.8
@@ -1333,7 +1336,7 @@ raincloudy==0.0.5
 # raspihats==2.2.3
 
 # homeassistant.components.rainmachine
-regenmaschine==1.0.2
+regenmaschine==1.0.7
 
 # homeassistant.components.python_script
 restrictedpython==4.0b6
