@@ -628,7 +628,7 @@ mficlient==0.3.0
 miflora==0.4.0
 
 # homeassistant.components.climate.mill
-millheater==0.2.3
+millheater==0.2.4
 
 # homeassistant.components.sensor.mitemp_bt
 mitemp_bt==0.0.1
