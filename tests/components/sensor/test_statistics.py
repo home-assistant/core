@@ -49,6 +49,9 @@ class TestStatisticsSensor(unittest.TestCase):
             }
         })
 
+        self.hass.start()
+        self.hass.block_till_done()
+
         for value in values:
             self.hass.states.set('binary_sensor.test_monitored', value)
             self.hass.block_till_done()
@@ -66,6 +69,9 @@ class TestStatisticsSensor(unittest.TestCase):
                 'entity_id': 'sensor.test_monitored',
             }
         })
+
+        self.hass.start()
+        self.hass.block_till_done()
 
         for value in self.values:
             self.hass.states.set('sensor.test_monitored', value,
@@ -100,6 +106,9 @@ class TestStatisticsSensor(unittest.TestCase):
             }
         })
 
+        self.hass.start()
+        self.hass.block_till_done()
+
         for value in self.values:
             self.hass.states.set('sensor.test_monitored', value,
                                  {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
@@ -120,6 +129,9 @@ class TestStatisticsSensor(unittest.TestCase):
                 'sampling_size': 1,
             }
         })
+
+        self.hass.start()
+        self.hass.block_till_done()
 
         for value in self.values[-3:]:  # just the last 3 will do
             self.hass.states.set('sensor.test_monitored', value,
@@ -162,6 +174,9 @@ class TestStatisticsSensor(unittest.TestCase):
                 }
             })
 
+            self.hass.start()
+            self.hass.block_till_done()
+
             for value in self.values:
                 self.hass.states.set('sensor.test_monitored', value,
                                      {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
@@ -193,6 +208,9 @@ class TestStatisticsSensor(unittest.TestCase):
                     'entity_id': 'sensor.test_monitored'
                 }
             })
+
+            self.hass.start()
+            self.hass.block_till_done()
 
             for value in self.values:
                 self.hass.states.set('sensor.test_monitored', value,
@@ -231,6 +249,10 @@ class TestStatisticsSensor(unittest.TestCase):
                 'sampling_size': 100,
             }
         })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         # check if the result is as in test_sensor_source()
         state = self.hass.states.get('sensor.test_mean')
         assert str(self.mean) == state.state
@@ -283,6 +305,9 @@ class TestStatisticsSensor(unittest.TestCase):
                     'max_age': {'hours': max_age}
                 }
             })
+
+            self.hass.start()
+            self.hass.block_till_done()
 
             # check if the result is as in test_sensor_source()
             state = self.hass.states.get('sensor.test_mean')
