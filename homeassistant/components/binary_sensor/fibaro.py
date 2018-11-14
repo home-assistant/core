@@ -26,6 +26,10 @@ SENSOR_TYPES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Fibaro controller devices."""
+
+    if discovery_info is None:
+        return
+
     add_entities(
         [FibaroBinarySensor(device, hass.data[FIBARO_CONTROLLER])
          for device in hass.data[FIBARO_DEVICES]['binary_sensor']], True)
@@ -37,7 +41,7 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
     def __init__(self, fibaro_device, controller):
         """Initialize the binary_sensor."""
         self._state = None
-        FibaroDevice.__init__(self, fibaro_device, controller)
+        super().__init__(fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         stype = None
         if fibaro_device.type in SENSOR_TYPES:
