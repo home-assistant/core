@@ -251,6 +251,9 @@ omit =
     homeassistant/components/neato.py
     homeassistant/components/*/neato.py
 
+    homeassistant/components/ness_alarm.py
+    homeassistant/components/*/ness_alarm.py
+
     homeassistant/components/nest/__init__.py
     homeassistant/components/*/nest.py
 
