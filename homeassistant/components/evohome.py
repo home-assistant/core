@@ -8,12 +8,10 @@ https://home-assistant.io/components/evohome/
 """
 
 # Glossary:
-
-# TCS - temperature control system (a.k.a. Controller, Parent), which can
-# have up to 13 Children:
-#   0-12 Heating zones (a.k.a. Zone), and
-#   0-1 DHW controller, (a.k.a. Boiler)
-
+#   TCS - temperature control system (a.k.a. Controller, Parent), which can
+#   have up to 13 Children:
+#     0-12 Heating zones (a.k.a. Zone), and
+#     0-1 DHW controller, (a.k.a. Boiler)
 # The TCS & Zones are implemented as Climate devices, Boiler as a WaterHeater
 
 import logging
@@ -30,9 +28,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['evohomeclient==0.2.7']
-# If REQUIREMENTS ever become > 0.2.7, re-check if the work-around wrapper is
-# still required when instantiating the client; see setup(), below
+REQUIREMENTS = ['https://github.com/watchforstock/evohome-client/archive/master.zip#evohomeclient==0.2.8']  # noqa E501
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,17 +67,11 @@ def setup(hass, config):
 
     _LOGGER.debug("setup(): API call [4 request(s)]: client.__init__()...")
     try:
-        # There's a bug in evohomeclient2 v0.2.7: the client.__init__() sets
-        # the root loglevel when EvohomeClient(debug=?), so remember it now...
-        log_level = logging.getLogger().getEffectiveLevel()
-
         client = EvohomeClient(
             evo_data['params'][CONF_USERNAME],
             evo_data['params'][CONF_PASSWORD],
             debug=False
         )
-        # ...then restore it to what it was before instantiating the client
-        logging.getLogger().setLevel(log_level)
 
     except HTTPError as err:
         if err.response.status_code == HTTP_BAD_REQUEST:
@@ -174,4 +164,5 @@ def setup(hass, config):
 
     hass.async_create_task(
         async_load_platform(hass, 'climate', DOMAIN, {}, config))
+
     return True
