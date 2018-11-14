@@ -21,8 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
-from .const import (
-    DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
+from .const import DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 REQUIREMENTS = ['regenmaschine==1.0.7']
 
