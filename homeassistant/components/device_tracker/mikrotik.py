@@ -127,7 +127,8 @@ class MikrotikScanner(DeviceScanner):
 
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.MultiTrapError,
-                librouteros.exceptions.ConnectionError):
+                librouteros.exceptions.ConnectionError) as api_error:
+            _LOGGER.error("Connection error: %s", api_error)
         return self.connected
 
     def scan_devices(self):
