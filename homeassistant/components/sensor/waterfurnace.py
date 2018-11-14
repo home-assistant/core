@@ -46,7 +46,8 @@ SENSORS = [
     WFSensorConfig("Fan Power", "fanpower", "mdi:flash", "W"),
     WFSensorConfig("Aux Power", "auxpower", "mdi:flash", "W"),
     WFSensorConfig("Loop Pump Power", "looppumppower", "mdi:flash", "W"),
-    WFSensorConfig("Compressor Speed", "actualcompressorspeed", "mdi:speedometer"),
+    WFSensorConfig("Compressor Speed", "actualcompressorspeed",
+                   "mdi:speedometer"),
     WFSensorConfig("Fan Speed", "airflowcurrentspeed", "mdi:fan"),
 
 ]
