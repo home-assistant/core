@@ -32,8 +32,7 @@ MIN_TEMP = 5
 SERVICE_SET_ROOM_TEMP = 'mill_set_room_temperature'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
-                 SUPPORT_FAN_MODE |
-                 SUPPORT_OPERATION_MODE)
+                 SUPPORT_FAN_MODE)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -94,7 +93,7 @@ class MillHeater(ClimateDevice):
         """Return the list of supported features."""
         if self._heater.is_gen1:
             return SUPPORT_FLAGS
-        return SUPPORT_FLAGS | SUPPORT_ON_OFF
+        return SUPPORT_FLAGS | SUPPORT_ON_OFF | SUPPORT_OPERATION_MODE
 
     @property
     def available(self):
