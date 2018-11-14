@@ -171,8 +171,8 @@ async def test_setup(hass):
 async def test_setup_with_custom_location(hass):
     """Test the setup with a custom location."""
     # Set up some mock feed entries for this test.
-    mock_entry_1 = _generate_mock_feed_entry('1234', 'Title 1', 20.5,
-                                                  (-31.1, 150.1))
+    mock_entry_1 = _generate_mock_feed_entry(
+        '1234', 'Title 1', 20.5, (-31.1, 150.1))
 
     with patch('geojson_client.usgs_earthquake_hazards_program_feed.'
                'UsgsEarthquakeHazardsProgramFeed') as mock_feed:
