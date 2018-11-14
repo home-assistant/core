@@ -6,62 +6,33 @@ https://home-assistant.io/components/sensor.meteo_france/
 """
 
 import logging
-import datetime
 
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.meteo_france import (SENSOR_TYPES,
+                                                   DATA_METEO_FRANCE,
+                                                   CONF_POSTAL_CODE,
+                                                   CONF_ATTRIBUTION)
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION, TEMP_CELSIUS)
+    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['meteofrance==0.2.8']
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by Meteo-France"
-CONF_POSTAL_CODE = 'postal_code'
-
 STATE_ATTR_FORECAST = '1h rain forecast'
-
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
-
-SENSOR_TYPES = {
-    'rain_chance': ['Rain chance', '%'],
-    'freeze_chance': ['Freeze chance', '%'],
-    'thunder_chance': ['Thunder chance', '%'],
-    'snow_chance': ['Snow chance', '%'],
-    'weather': ['Weather', None],
-    'wind_speed': ['Wind Speed', 'km/h'],
-    'next_rain': ['Next rain', 'min'],
-    'temperature': ['Temperature', TEMP_CELSIUS],
-    'uv': ['UV', None],
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_POSTAL_CODE): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Meteo-France sensor."""
-    postal_code = config[CONF_POSTAL_CODE]
-
-    from meteofrance.client import meteofranceClient, meteofranceError
-
-    try:
-        meteofrance_client = meteofranceClient(postal_code)
-    except meteofranceError as exp:
-        _LOGGER.error(exp)
+    if discovery_info is None:
         return
 
-    client = MeteoFranceUpdater(meteofrance_client)
+    postal_code = discovery_info[CONF_POSTAL_CODE]
+    monitored_conditions = discovery_info[CONF_MONITORED_CONDITIONS]
+
+    client = hass.data[DATA_METEO_FRANCE][postal_code]
 
     add_entities([MeteoFranceSensor(variable, client)
-                  for variable in config[CONF_MONITORED_CONDITIONS]],
+                  for variable in monitored_conditions],
                  True)
 
 
@@ -116,24 +87,3 @@ class MeteoFranceSensor(Entity):
             _LOGGER.error("No condition `%s` for location `%s`",
                           self._condition, self._data["name"])
             self._state = None
-
-
-class MeteoFranceUpdater:
-    """Update data from Meteo-France."""
-
-    def __init__(self, client):
-        """Initialize the data object."""
-        self._client = client
-
-    def get_data(self):
-        """Get the latest data from Meteo-France."""
-        return self._client.get_data()
-
-    @Throttle(SCAN_INTERVAL)
-    def update(self):
-        """Get the latest data from Meteo-France."""
-        from meteofrance.client import meteofranceError
-        try:
-            self._client.update()
-        except meteofranceError as exp:
-            _LOGGER.error(exp)

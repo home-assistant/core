@@ -7,59 +7,26 @@ https://home-assistant.io/components/weather.meteo_france/
 import logging
 from datetime import datetime, timedelta
 
-import voluptuous as vol
-
+from homeassistant.components.meteo_france import (DATA_METEO_FRANCE,
+                                                   CONDITION_CLASSES,
+                                                   CONF_POSTAL_CODE,
+                                                   CONF_ATTRIBUTION)
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_CONDITION,
+    WeatherEntity, ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME)
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers import config_validation as cv
-# Reuse data and API logic from the sensor implementation
-from homeassistant.components.sensor.meteo_france import \
-    MeteoFranceUpdater, CONF_POSTAL_CODE, CONF_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_POSTAL_CODE): cv.string,
-})
-
-CONDITION_CLASSES = {
-    'clear-night': ['Nuit Claire'],
-    'cloudy': ['Très nuageux'],
-    'fog': ['Brume ou bancs de brouillard',
-            'Brouillard', 'Brouillard givrant'],
-    'hail': ['Risque de grêle'],
-    'lightning': ["Risque d'orages", 'Orages'],
-    'lightning-rainy': ['Pluie orageuses', 'Pluies orageuses'],
-    'partlycloudy': ['Ciel voilé', 'Ciel voilé nuit', 'Éclaircies'],
-    'pouring': ['Pluie forte'],
-    'rainy': ['Bruine / Pluie faible', 'Bruine', 'Pluie faible',
-              'Pluies éparses / Rares averses', 'Pluies éparses',
-              'Rares averses', 'Pluie / Averses', 'Averses', 'Pluie'],
-    'snowy': ['Neige / Averses de neige', 'Neige', 'Averses de neige',
-              'Neige forte', 'Quelques flocons'],
-    'snowy-rainy': ['Pluie et neige', 'Pluie verglaçante'],
-    'sunny': ['Ensoleillé'],
-    'windy': [],
-    'windy-variant': [],
-    'exceptional': [],
-}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Meteo-France weather platform."""
-    postal_code = config[CONF_POSTAL_CODE]
-
-    from meteofrance.client import meteofranceClient, meteofranceError
-
-    try:
-        meteofrance_client = meteofranceClient(postal_code)
-    except meteofranceError as exp:
-        _LOGGER.error(exp)
+    if discovery_info is None:
         return
 
-    client = MeteoFranceUpdater(meteofrance_client)
+    postal_code = discovery_info[CONF_POSTAL_CODE]
+
+    client = hass.data[DATA_METEO_FRANCE][postal_code]
 
     add_entities([MeteoFranceWeather(client)], True)
 
