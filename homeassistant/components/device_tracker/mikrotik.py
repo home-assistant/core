@@ -18,12 +18,10 @@ from homeassistant.const import (
 
 REQUIREMENTS = ['librouteros==2.1.1']
 
-MTK_DEFAULT_API_PORT = '8728'
-MTK_DEFAULT_API_SSL_PORT = '8729'
-
 _LOGGER = logging.getLogger(__name__)
 
 MTK_DEFAULT_API_PORT = '8728'
+MTK_DEFAULT_API_SSL_PORT = '8729'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
