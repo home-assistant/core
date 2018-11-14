@@ -99,7 +99,8 @@ EVO_PARENT = 0x01
 EVO_CHILD = 0x02
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Create the evohome Controller, and its Zones, if any."""
     evo_data = hass.data[DATA_EVOHOME]
 
