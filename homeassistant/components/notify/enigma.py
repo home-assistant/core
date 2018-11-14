@@ -1,18 +1,10 @@
-"""
-Support for Enigma2 notifications.
-
-For more details,
-please refer to github at https://github.com/cinzas/homeassistant-enigma-player
-
-"""
-# dependencies
-from urllib.error import URLError, HTTPError
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
-from homeassistant.components.notify import (
-    ATTR_DATA, PLATFORM_SCHEMA,
-    BaseNotificationService)
-
+#
+# Support for Enigma2 notifications.
+#
+# For more details,
+# please refer to github at https://github.com/cinzas/homeassistant-enigma-player
+#
+#
 # imports
 import logging
 import asyncio
@@ -20,6 +12,14 @@ import urllib.request
 import urllib.parse
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+
+# dependencies
+from urllib.error import URLError, HTTPError
+from homeassistant.const import (
+    CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.components.notify import (
+    ATTR_DATA, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 # Logging
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_service(hass, config, discovery_info=None):
-    """Setup the Enigma platform."""
+    #Setup the Enigma platform.#
     if config.get(CONF_HOST) is not None:
         enigma = EnigmaNotify(config.get(CONF_NAME),
                               config.get(CONF_HOST),
@@ -66,21 +66,21 @@ def async_get_service(hass, config, discovery_info=None):
 
 
 class EnigmaNotify(BaseNotificationService):
-    """Representation of a notification service for Enigma device."""
+    #Representation of a notification service for Enigma device.#
 
     def __init__(self, name, host, port, username, password):
-        """Initialize the Enigma device."""
+        #Initialize the Enigma device.#
         self._name = name
         self._host = host
         self._port = port
         self._username = username
         self._password = password
-        """ Opener for http connection """
+        # Opener for http connection #
         self._opener = False
 
-        """ With auth """
-        if self._password is not None:
-            """ Handle HTTP Auth. """
+        # With auth #
+        if self._password:
+            # Handle HTTP Auth. #
             mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             mgr.add_password(None, self._host+":"+str(self._port),
                              self._username, self._password)
@@ -93,7 +93,7 @@ class EnigmaNotify(BaseNotificationService):
             self._opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 
     def request_call(self, url):
-        """Call web API request."""
+        #Call web API request.#
         uri = 'http://' + self._host + ":" + str(self._port) + url
         _LOGGER.debug("Enigma: [request_call] - Call request %s ", uri)
         try:
@@ -105,7 +105,7 @@ class EnigmaNotify(BaseNotificationService):
 
     @asyncio.coroutine
     def async_send_message(self, message="", **kwargs):
-        """Send message."""
+        #Send message.#
         try:
             displaytime = DISPLAY_TIME
             messagetype = MESSAGE_TYPE
