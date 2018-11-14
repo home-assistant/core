@@ -32,12 +32,12 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the Twilio component."""
-    from twilio.rest import TwilioRestClient
+    from twilio.rest import Client
     if DOMAIN not in config:
         return True
 
     conf = config[DOMAIN]
-    hass.data[DATA_TWILIO] = TwilioRestClient(
+    hass.data[DATA_TWILIO] = Client(
         conf.get(CONF_ACCOUNT_SID), conf.get(CONF_AUTH_TOKEN))
     return True
 
@@ -56,7 +56,7 @@ async def handle_webhook(hass, webhook_id, request):
 async def async_setup_entry(hass, entry):
     """Configure based on config entry."""
     hass.components.webhook.async_register(
-        entry.data[CONF_WEBHOOK_ID], handle_webhook)
+        DOMAIN, 'Twilio', entry.data[CONF_WEBHOOK_ID], handle_webhook)
     return True
 
 

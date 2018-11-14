@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import SIGNAL_CALLBACK
+from .const import CHILD_CALLBACK, NODE_CALLBACK
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,6 +15,7 @@ ATTR_CHILD_ID = 'child_id'
 ATTR_DESCRIPTION = 'description'
 ATTR_DEVICE = 'device'
 ATTR_NODE_ID = 'node_id'
+ATTR_HEARTBEAT = 'heartbeat'
 MYSENSORS_PLATFORM_DEVICES = 'mysensors_devices_{}'
 
 
@@ -51,6 +52,7 @@ class MySensorsDevice:
         child = node.children[self.child_id]
         attr = {
             ATTR_BATTERY_LEVEL: node.battery_level,
+            ATTR_HEARTBEAT: node.heartbeat,
             ATTR_CHILD_ID: self.child_id,
             ATTR_DESCRIPTION: child.description,
             ATTR_DEVICE: self.gateway.device,
@@ -103,7 +105,11 @@ class MySensorsEntity(MySensorsDevice, Entity):
 
     async def async_added_to_hass(self):
         """Register update callback."""
-        dev_id = id(self.gateway), self.node_id, self.child_id, self.value_type
+        gateway_id = id(self.gateway)
+        dev_id = gateway_id, self.node_id, self.child_id, self.value_type
         async_dispatcher_connect(
-            self.hass, SIGNAL_CALLBACK.format(*dev_id),
+            self.hass, CHILD_CALLBACK.format(*dev_id),
+            self.async_update_callback)
+        async_dispatcher_connect(
+            self.hass, NODE_CALLBACK.format(gateway_id, self.node_id),
             self.async_update_callback)

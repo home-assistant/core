@@ -313,6 +313,11 @@ class HangoutsBot:
         """Handle the update_users_and_conversations service."""
         await self._async_list_conversations()
 
+    async def async_handle_reconnect(self, _=None):
+        """Handle the reconnect service."""
+        await self.async_disconnect()
+        await self.async_connect()
+
     def get_intents(self, conv_id):
         """Return the intents for a specific conversation."""
         return self._conversation_intents.get(conv_id)

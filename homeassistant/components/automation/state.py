@@ -26,7 +26,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
 }), cv.key_dependency(CONF_FOR, CONF_TO))
 
 
-async def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     from_state = config.get(CONF_FROM, MATCH_ALL)
