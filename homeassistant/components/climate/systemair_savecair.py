@@ -238,7 +238,7 @@ class SystemAIRClimate(ClimateDevice):
     def fan_list(self):
         """Return the list of available fan modes."""
         if self.current_operation != STATE_MANUAL:
-            return []
+            return None
 
         return FAN_LIST
 
