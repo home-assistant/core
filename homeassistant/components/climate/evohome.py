@@ -125,8 +125,6 @@ class EvoClimateDevice(ClimateDevice):
 
         self._available = False  # should become True after first update()
 
-#       dispatcher_connect(hass, DISPATCHER_EVOHOME, self._connect)
-
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         async_dispatcher_connect(self.hass, DISPATCHER_EVOHOME, self._connect)
