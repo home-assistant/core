@@ -20,12 +20,9 @@ REQUIREMENTS = ['hkavr==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Harman Kardon AVR Test'
+DEFAULT_NAME = 'Harman Kardon AVR'
 DEFAULT_PORT = 10025
 
-                            # coming up later..
-                            #SUPPORT_PAUSE | SUPPORT_NEXT_TRACK | \
-                            #SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY | \
 SUPPORT_HARMAN_KARDON_AVR = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
                             SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
                             SUPPORT_SELECT_SOURCE
