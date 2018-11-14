@@ -281,17 +281,11 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                     payload)
 
             if payload.isnumeric():
-                int_payload = int(payload)
-                if (self._position_open == DEFAULT_POSITION_OPEN
-                        and self._position_closed == DEFAULT_POSITION_CLOSED
-                        and 0 <= int_payload <= 100):
-                    percentage_payload = int_payload
-                else:
-                    percentage_payload = self.find_percentage_in_range(
-                        float(payload), COVER_PAYLOAD)
+                percentage_payload = self.find_percentage_in_range(
+                    float(payload), COVER_PAYLOAD)
                 if 0 <= percentage_payload <= 100:
                     self._position = percentage_payload
-                    self._state = int_payload == self._position_closed
+                    self._state = int(payload) == self._position_closed
             else:
                 _LOGGER.warning(
                     "Payload is not integer within range: %s",
@@ -379,11 +373,8 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             # Optimistically assume that cover has changed state.
             self._state = False
             if self._get_position_topic:
-                if self._position_open == DEFAULT_POSITION_OPEN:
-                    self._position = self._position_open
-                else:
-                    self._position = self.find_percentage_in_range(
-                        self._position_open, COVER_PAYLOAD)
+                self._position = self.find_percentage_in_range(
+                    self._position_open, COVER_PAYLOAD)
             self.async_schedule_update_ha_state()
 
     async def async_close_cover(self, **kwargs):
@@ -398,11 +389,8 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             # Optimistically assume that cover has changed state.
             self._state = True
             if self._get_position_topic:
-                if self._position_closed == DEFAULT_POSITION_CLOSED:
-                    self._position = self._position_closed
-                else:
-                    self._position = self.find_percentage_in_range(
-                        self._position_closed, COVER_PAYLOAD)
+                self._position = self.find_percentage_in_range(
+                    self._position_closed, COVER_PAYLOAD)
             self.async_schedule_update_ha_state()
 
     async def async_stop_cover(self, **kwargs):
