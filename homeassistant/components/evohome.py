@@ -28,7 +28,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform
 
 REQUIREMENTS = ['evohomeclient==0.2.7']
 # If REQUIREMENTS ever become > 0.2.7, re-check if the work-around wrapper is
@@ -172,6 +172,6 @@ def setup(hass, config):
         )
         zones.append(EvoZone(evo_data, client, zone_obj_ref))
 
-    load_platform(hass, 'climate', DOMAIN, {}, config)
-
+    hass.async_create_task(
+        async_load_platform(hass, 'climate', DOMAIN, {}, config))
     return True

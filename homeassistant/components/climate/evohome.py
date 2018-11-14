@@ -99,13 +99,13 @@ EVO_PARENT = 0x01
 EVO_CHILD = 0x02
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the evohome Controller, and its Zones, if any."""
     evo_data = hass.data[DATA_EVOHOME]
 
     entities = [evo_data['parent']] + evo_data['children']
 
-    add_entities(entities, update_before_add=False)
+    async_add_entities(entities, update_before_add=False)
 
 
 class EvoClimateDevice(ClimateDevice):
@@ -120,7 +120,6 @@ class EvoClimateDevice(ClimateDevice):
 
         self._params = evo_data['params']
         self._timers = evo_data['timers']
-        self._timers['statusUpdated'] = datetime.min
         self._status = {}
 
         self._available = False  # should become True after first update()
@@ -444,6 +443,7 @@ class EvoController(EvoClimateDevice):
         self._type = EVO_PARENT
 
         self._config = evo_data['config'][GWS][0][TCS][0]
+        self._timers['statusUpdated'] = datetime.min
 
         self._operation_list = TCS_OP_LIST
         self._supported_features = \
@@ -579,7 +579,6 @@ class EvoController(EvoClimateDevice):
         timeout = datetime.now() + timedelta(seconds=55)
         expired = timeout > self._timers['statusUpdated'] + \
             timedelta(seconds=self._params[CONF_SCAN_INTERVAL])
-
         return expired  # if expired then self.update()
 
     def _update_state_data(self, evo_data):
