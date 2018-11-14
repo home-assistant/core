@@ -323,6 +323,7 @@ omit =
     homeassistant/components/nest/*
     homeassistant/components/netatmo/*
     homeassistant/components/netgear_lte/*
+    homeassistant/components/meteo_france.py
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
