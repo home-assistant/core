@@ -38,6 +38,26 @@ class DeviceEntry:
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
 
 
+def format_mac(mac):
+    """Format the mac address string for entry into dev reg."""
+    to_test = mac
+
+    if len(to_test) == 17 and to_test.count(':') == 5:
+        return to_test.lower()
+
+    if len(to_test) == 17 and to_test.count('-') == 5:
+        to_test = to_test.replace('-', '')
+    elif len(to_test) == 14 and to_test.count('.') == 2:
+        to_test = to_test.replace('.', '')
+
+    if len(to_test) == 12:
+        # no : included
+        return ':'.join(to_test.lower()[i:i + 2] for i in range(0, 12, 2))
+
+    # Not sure how formatted, return original
+    return mac
+
+
 class DeviceRegistry:
     """Class to hold a registry of devices."""
 
@@ -71,6 +91,12 @@ class DeviceRegistry:
         if connections is None:
             connections = set()
 
+        connections = {
+            (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC
+            else (key, value)
+            for key, value in connections
+        }
+
         device = self.async_get_device(identifiers, connections)
 
         if device is None:
@@ -87,8 +113,8 @@ class DeviceRegistry:
             device.id,
             add_config_entry_id=config_entry_id,
             hub_device_id=hub_device_id,
-            merge_connections=connections,
-            merge_identifiers=identifiers,
+            merge_connections=connections or _UNDEF,
+            merge_identifiers=identifiers or _UNDEF,
             manufacturer=manufacturer,
             model=model,
             name=name,
@@ -128,7 +154,8 @@ class DeviceRegistry:
                 ('identifiers', merge_identifiers),
         ):
             old_value = getattr(old, attr_name)
-            if value is not _UNDEF and value != old_value:
+            # If not undefined, check if `value` contains new items.
+            if value is not _UNDEF and not value.issubset(old_value):
                 changes[attr_name] = old_value | value
 
         for attr_name, value in (

@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.const import MATCH_ALL, EVENT_TIME_CHANGED
-from homeassistant.core import callback
+from homeassistant.core import callback, DOMAIN as HASS_DOMAIN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_get_all_descriptions
 
@@ -134,7 +134,7 @@ async def handle_call_service(hass, connection, msg):
     Async friendly.
     """
     blocking = True
-    if (msg['domain'] == 'homeassistant' and
+    if (msg['domain'] == HASS_DOMAIN and
             msg['service'] in ['restart', 'stop']):
         blocking = False
     await hass.services.async_call(

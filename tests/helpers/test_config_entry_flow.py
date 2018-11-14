@@ -1,5 +1,5 @@
 """Tests for the Config Entry Flow helper."""
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import pytest
 
@@ -9,7 +9,7 @@ from tests.common import MockConfigEntry, MockModule
 
 
 @pytest.fixture
-def flow_conf(hass):
+def discovery_flow_conf(hass):
     """Register a handler."""
     handler_conf = {
         'discovered': False,
@@ -26,7 +26,18 @@ def flow_conf(hass):
         yield handler_conf
 
 
-async def test_single_entry_allowed(hass, flow_conf):
+@pytest.fixture
+def webhook_flow_conf(hass):
+    """Register a handler."""
+    with patch.dict(config_entries.HANDLERS):
+        config_entry_flow.register_webhook_flow(
+            'test_single', 'Test Single', {}, False)
+        config_entry_flow.register_webhook_flow(
+            'test_multiple', 'Test Multiple', {}, True)
+        yield {}
+
+
+async def test_single_entry_allowed(hass, discovery_flow_conf):
     """Test only a single entry is allowed."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
@@ -38,7 +49,7 @@ async def test_single_entry_allowed(hass, flow_conf):
     assert result['reason'] == 'single_instance_allowed'
 
 
-async def test_user_no_devices_found(hass, flow_conf):
+async def test_user_no_devices_found(hass, discovery_flow_conf):
     """Test if no devices found."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
@@ -51,18 +62,18 @@ async def test_user_no_devices_found(hass, flow_conf):
     assert result['reason'] == 'no_devices_found'
 
 
-async def test_user_has_confirmation(hass, flow_conf):
+async def test_user_has_confirmation(hass, discovery_flow_conf):
     """Test user requires no confirmation to setup."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
-    flow_conf['discovered'] = True
+    discovery_flow_conf['discovered'] = True
 
     result = await flow.async_step_user()
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
 
 
-async def test_discovery_single_instance(hass, flow_conf):
+async def test_discovery_single_instance(hass, discovery_flow_conf):
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
@@ -74,7 +85,7 @@ async def test_discovery_single_instance(hass, flow_conf):
     assert result['reason'] == 'single_instance_allowed'
 
 
-async def test_discovery_confirmation(hass, flow_conf):
+async def test_discovery_confirmation(hass, discovery_flow_conf):
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
@@ -88,7 +99,7 @@ async def test_discovery_confirmation(hass, flow_conf):
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
-async def test_multiple_discoveries(hass, flow_conf):
+async def test_multiple_discoveries(hass, discovery_flow_conf):
     """Test we only create one instance for multiple discoveries."""
     loader.set_component(hass, 'test', MockModule('test'))
 
@@ -102,7 +113,7 @@ async def test_multiple_discoveries(hass, flow_conf):
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-async def test_only_one_in_progress(hass, flow_conf):
+async def test_only_one_in_progress(hass, discovery_flow_conf):
     """Test a user initialized one will finish and cancel discovered one."""
     loader.set_component(hass, 'test', MockModule('test'))
 
@@ -127,22 +138,71 @@ async def test_only_one_in_progress(hass, flow_conf):
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_import_no_confirmation(hass, flow_conf):
+async def test_import_no_confirmation(hass, discovery_flow_conf):
     """Test import requires no confirmation to set up."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
-    flow_conf['discovered'] = True
+    discovery_flow_conf['discovered'] = True
 
     result = await flow.async_step_import(None)
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
-async def test_import_single_instance(hass, flow_conf):
+async def test_import_single_instance(hass, discovery_flow_conf):
     """Test import doesn't create second instance."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
-    flow_conf['discovered'] = True
+    discovery_flow_conf['discovered'] = True
     MockConfigEntry(domain='test').add_to_hass(hass)
 
     result = await flow.async_step_import(None)
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+
+
+async def test_webhook_single_entry_allowed(hass, webhook_flow_conf):
+    """Test only a single entry is allowed."""
+    flow = config_entries.HANDLERS['test_single']()
+    flow.hass = hass
+
+    MockConfigEntry(domain='test_single').add_to_hass(hass)
+    result = await flow.async_step_user()
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result['reason'] == 'one_instance_allowed'
+
+
+async def test_webhook_multiple_entries_allowed(hass, webhook_flow_conf):
+    """Test multiple entries are allowed when specified."""
+    flow = config_entries.HANDLERS['test_multiple']()
+    flow.hass = hass
+
+    MockConfigEntry(domain='test_multiple').add_to_hass(hass)
+    hass.config.api = Mock(base_url='http://example.com')
+
+    result = await flow.async_step_user()
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+
+
+async def test_webhook_config_flow_aborts_external_url(hass,
+                                                       webhook_flow_conf):
+    """Test configuring a webhook without an external url."""
+    flow = config_entries.HANDLERS['test_single']()
+    flow.hass = hass
+
+    hass.config.api = Mock(base_url='http://192.168.1.10')
+    result = await flow.async_step_user()
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result['reason'] == 'not_internet_accessible'
+
+
+async def test_webhook_config_flow_registers_webhook(hass, webhook_flow_conf):
+    """Test setting up an entry creates a webhook."""
+    flow = config_entries.HANDLERS['test_single']()
+    flow.hass = hass
+
+    hass.config.api = Mock(base_url='http://example.com')
+    result = await flow.async_step_user(user_input={})
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result['data']['webhook_id'] is not None

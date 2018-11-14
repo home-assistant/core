@@ -1,4 +1,6 @@
 """Tests for the Device Registry."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.helpers import device_registry
@@ -15,7 +17,9 @@ async def test_get_or_create_returns_same_entry(registry):
     """Make sure we do not duplicate entries."""
     entry = registry.async_get_or_create(
         config_entry_id='1234',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
         identifiers={('bridgeid', '0123')},
         sw_version='sw-version',
         name='name',
@@ -23,12 +27,16 @@ async def test_get_or_create_returns_same_entry(registry):
         model='model')
     entry2 = registry.async_get_or_create(
         config_entry_id='1234',
-        connections={('ethernet', '11:22:33:44:55:66:77:88')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '11:22:33:66:77:88')
+        },
         identifiers={('bridgeid', '0123')},
         manufacturer='manufacturer', model='model')
     entry3 = registry.async_get_or_create(
         config_entry_id='1234',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')}
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        }
     )
 
     assert len(registry.devices) == 1
@@ -46,7 +54,9 @@ async def test_requirement_for_identifier_or_connection(registry):
     """Make sure we do require some descriptor of device."""
     entry = registry.async_get_or_create(
         config_entry_id='1234',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
         identifiers=set(),
         manufacturer='manufacturer', model='model')
     entry2 = registry.async_get_or_create(
@@ -70,17 +80,23 @@ async def test_multiple_config_entries(registry):
     """Make sure we do not get duplicate entries."""
     entry = registry.async_get_or_create(
         config_entry_id='123',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
         identifiers={('bridgeid', '0123')},
         manufacturer='manufacturer', model='model')
     entry2 = registry.async_get_or_create(
         config_entry_id='456',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
         identifiers={('bridgeid', '0123')},
         manufacturer='manufacturer', model='model')
     entry3 = registry.async_get_or_create(
         config_entry_id='123',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
         identifiers={('bridgeid', '0123')},
         manufacturer='manufacturer', model='model')
 
@@ -110,7 +126,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     'identifiers': [
                         [
                             'serial',
-                            '12:34:56:78:90:AB:CD:EF'
+                            '12:34:56:AB:CD:EF'
                         ]
                     ],
                     'manufacturer': 'manufacturer',
@@ -127,7 +143,7 @@ async def test_loading_from_storage(hass, hass_storage):
     entry = registry.async_get_or_create(
         config_entry_id='1234',
         connections={('Zigbee', '01.23.45.67.89')},
-        identifiers={('serial', '12:34:56:78:90:AB:CD:EF')},
+        identifiers={('serial', '12:34:56:AB:CD:EF')},
         manufacturer='manufacturer', model='model')
     assert entry.id == 'abcdefghijklm'
     assert isinstance(entry.config_entries, set)
@@ -137,17 +153,23 @@ async def test_removing_config_entries(registry):
     """Make sure we do not get duplicate entries."""
     entry = registry.async_get_or_create(
         config_entry_id='123',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
         identifiers={('bridgeid', '0123')},
         manufacturer='manufacturer', model='model')
     entry2 = registry.async_get_or_create(
         config_entry_id='456',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
         identifiers={('bridgeid', '0123')},
         manufacturer='manufacturer', model='model')
     entry3 = registry.async_get_or_create(
         config_entry_id='123',
-        connections={('ethernet', '34:56:78:90:AB:CD:EF:12')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '34:56:78:CD:EF:12')
+        },
         identifiers={('bridgeid', '4567')},
         manufacturer='manufacturer', model='model')
 
@@ -168,7 +190,9 @@ async def test_specifying_hub_device_create(registry):
     """Test specifying a hub and updating."""
     hub = registry.async_get_or_create(
         config_entry_id='123',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
         identifiers={('hue', '0123')},
         manufacturer='manufacturer', model='hub')
 
@@ -195,7 +219,9 @@ async def test_specifying_hub_device_update(registry):
 
     hub = registry.async_get_or_create(
         config_entry_id='123',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
         identifiers={('hue', '0123')},
         manufacturer='manufacturer', model='hub')
 
@@ -213,7 +239,9 @@ async def test_loading_saving_data(hass, registry):
     """Test that we load/save data correctly."""
     orig_hub = registry.async_get_or_create(
         config_entry_id='123',
-        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
         identifiers={('hue', '0123')},
         manufacturer='manufacturer', model='hub')
 
@@ -239,3 +267,64 @@ async def test_loading_saving_data(hass, registry):
 
     assert orig_hub == new_hub
     assert orig_light == new_light
+
+
+async def test_no_unnecessary_changes(registry):
+    """Make sure we do not consider devices changes."""
+    entry = registry.async_get_or_create(
+        config_entry_id='1234',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        identifiers={('hue', '456'), ('bla', '123')},
+    )
+    with patch('homeassistant.helpers.device_registry'
+               '.DeviceRegistry.async_schedule_save') as mock_save:
+        entry2 = registry.async_get_or_create(
+            config_entry_id='1234',
+            identifiers={('hue', '456')},
+        )
+
+    assert entry.id == entry2.id
+    assert len(mock_save.mock_calls) == 0
+
+
+async def test_format_mac(registry):
+    """Make sure we normalize mac addresses."""
+    entry = registry.async_get_or_create(
+        config_entry_id='1234',
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
+    )
+    for mac in [
+        '123456ABCDEF',
+        '123456abcdef',
+        '12:34:56:ab:cd:ef',
+        '1234.56ab.cdef',
+    ]:
+        test_entry = registry.async_get_or_create(
+            config_entry_id='1234',
+            connections={
+                (device_registry.CONNECTION_NETWORK_MAC, mac)
+            },
+        )
+        assert test_entry.id == entry.id, mac
+        assert test_entry.connections == {
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:ab:cd:ef')
+        }
+
+    # This should not raise
+    for invalid in [
+        'invalid_mac',
+        '123456ABCDEFG',  # 1 extra char
+        '12:34:56:ab:cdef',  # not enough :
+        '12:34:56:ab:cd:e:f',  # too many :
+        '1234.56abcdef',  # not enough .
+        '123.456.abc.def',  # too many .
+    ]:
+        invalid_mac_entry = registry.async_get_or_create(
+            config_entry_id='1234',
+            connections={
+                (device_registry.CONNECTION_NETWORK_MAC, invalid)
+            },
+        )
+        assert list(invalid_mac_entry.connections)[0][1] == invalid

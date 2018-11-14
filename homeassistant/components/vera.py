@@ -195,3 +195,11 @@ class VeraDevice(Entity):
         attr['Vera Device Id'] = self.vera_device.vera_device_id
 
         return attr
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID.
+
+        The Vera assigns a unique and immutable ID number to each device.
+        """
+        return str(self.vera_device.vera_device_id)

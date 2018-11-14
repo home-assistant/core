@@ -9,13 +9,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
-                                             NOTIFY_SERVICE_SCHEMA,
                                              BaseNotificationService,
-                                             ATTR_MESSAGE)
+                                             ATTR_MESSAGE, ATTR_DATA)
 
 from homeassistant.components.hangouts.const \
-    import (DOMAIN, SERVICE_SEND_MESSAGE,
-            TARGETS_SCHEMA, CONF_DEFAULT_CONVERSATIONS)
+    import (DOMAIN, SERVICE_SEND_MESSAGE, TARGETS_SCHEMA,
+            CONF_DEFAULT_CONVERSATIONS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,10 +22,6 @@ DEPENDENCIES = [DOMAIN]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEFAULT_CONVERSATIONS): [TARGETS_SCHEMA]
-})
-
-NOTIFY_SERVICE_SCHEMA = NOTIFY_SERVICE_SCHEMA.extend({
-    vol.Optional(ATTR_TARGET): [TARGETS_SCHEMA]
 })
 
 
@@ -59,8 +54,10 @@ class HangoutsNotificationService(BaseNotificationService):
         messages.append({'text': message, 'parse_str': True})
         service_data = {
             ATTR_TARGET: target_conversations,
-            ATTR_MESSAGE: messages
+            ATTR_MESSAGE: messages,
         }
+        if kwargs[ATTR_DATA]:
+            service_data[ATTR_DATA] = kwargs[ATTR_DATA]
 
         return self.hass.services.call(
             DOMAIN, SERVICE_SEND_MESSAGE, service_data=service_data)

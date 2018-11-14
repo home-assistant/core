@@ -1,15 +1,14 @@
 """Tests for the Input slider component."""
 # pylint: disable=protected-access
 import asyncio
-import unittest
 import datetime
 
 from homeassistant.core import CoreState, State, Context
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.components.input_datetime import (
     DOMAIN, ATTR_ENTITY_ID, ATTR_DATE, ATTR_TIME, SERVICE_SET_DATETIME)
 
-from tests.common import get_test_home_assistant, mock_restore_cache
+from tests.common import mock_restore_cache
 
 
 async def async_set_datetime(hass, entity_id, dt_value):
@@ -21,33 +20,19 @@ async def async_set_datetime(hass, entity_id, dt_value):
     }, blocking=True)
 
 
-class TestInputDatetime(unittest.TestCase):
-    """Test the input datetime component."""
-
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_invalid_configs(self):
-        """Test config."""
-        invalid_configs = [
-            None,
-            {},
-            {'name with space': None},
-            {'test_no_value': {
-                'has_time': False,
-                'has_date': False
-            }},
-        ]
-        for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+async def test_invalid_configs(hass):
+    """Test config."""
+    invalid_configs = [
+        None,
+        {},
+        {'name with space': None},
+        {'test_no_value': {
+            'has_time': False,
+            'has_date': False
+        }},
+    ]
+    for cfg in invalid_configs:
+        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
 @asyncio.coroutine

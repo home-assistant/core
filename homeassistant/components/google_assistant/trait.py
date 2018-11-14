@@ -1,7 +1,6 @@
 """Implement the Smart Home traits."""
 import logging
 
-from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components import (
     climate,
     cover,
@@ -10,20 +9,24 @@ from homeassistant.components import (
     input_boolean,
     media_player,
     light,
+    lock,
     scene,
     script,
     switch,
+    vacuum,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_LOCKED,
     STATE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    ATTR_SUPPORTED_FEATURES,
 )
+from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
-
 from .const import ERR_VALUE_OUT_OF_RANGE
 from .helpers import SmartHomeError
 
@@ -31,14 +34,21 @@ _LOGGER = logging.getLogger(__name__)
 
 PREFIX_TRAITS = 'action.devices.traits.'
 TRAIT_ONOFF = PREFIX_TRAITS + 'OnOff'
+TRAIT_DOCK = PREFIX_TRAITS + 'Dock'
+TRAIT_STARTSTOP = PREFIX_TRAITS + 'StartStop'
 TRAIT_BRIGHTNESS = PREFIX_TRAITS + 'Brightness'
 TRAIT_COLOR_SPECTRUM = PREFIX_TRAITS + 'ColorSpectrum'
 TRAIT_COLOR_TEMP = PREFIX_TRAITS + 'ColorTemperature'
 TRAIT_SCENE = PREFIX_TRAITS + 'Scene'
 TRAIT_TEMPERATURE_SETTING = PREFIX_TRAITS + 'TemperatureSetting'
+TRAIT_LOCKUNLOCK = PREFIX_TRAITS + 'LockUnlock'
+TRAIT_FANSPEED = PREFIX_TRAITS + 'FanSpeed'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
+COMMAND_DOCK = PREFIX_COMMANDS + 'Dock'
+COMMAND_STARTSTOP = PREFIX_COMMANDS + 'StartStop'
+COMMAND_PAUSEUNPAUSE = PREFIX_COMMANDS + 'PauseUnpause'
 COMMAND_BRIGHTNESS_ABSOLUTE = PREFIX_COMMANDS + 'BrightnessAbsolute'
 COMMAND_COLOR_ABSOLUTE = PREFIX_COMMANDS + 'ColorAbsolute'
 COMMAND_ACTIVATE_SCENE = PREFIX_COMMANDS + 'ActivateScene'
@@ -47,6 +57,8 @@ COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
 COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
     PREFIX_COMMANDS + 'ThermostatTemperatureSetRange')
 COMMAND_THERMOSTAT_SET_MODE = PREFIX_COMMANDS + 'ThermostatSetMode'
+COMMAND_LOCKUNLOCK = PREFIX_COMMANDS + 'LockUnlock'
+COMMAND_FANSPEED = PREFIX_COMMANDS + 'SetFanSpeed'
 
 
 TRAITS = []
@@ -70,10 +82,11 @@ class _Trait:
 
     commands = []
 
-    def __init__(self, hass, state):
+    def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
         self.hass = hass
         self.state = state
+        self.config = config
 
     def sync_attributes(self):
         """Return attributes for a sync request."""
@@ -393,6 +406,96 @@ class SceneTrait(_Trait):
 
 
 @register_trait
+class DockTrait(_Trait):
+    """Trait to offer dock functionality.
+
+    https://developers.google.com/actions/smarthome/traits/dock
+    """
+
+    name = TRAIT_DOCK
+    commands = [
+        COMMAND_DOCK
+    ]
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        return domain == vacuum.DOMAIN
+
+    def sync_attributes(self):
+        """Return dock attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return dock query attributes."""
+        return {'isDocked': self.state.state == vacuum.STATE_DOCKED}
+
+    async def execute(self, command, params):
+        """Execute a dock command."""
+        await self.hass.services.async_call(
+            self.state.domain, vacuum.SERVICE_RETURN_TO_BASE, {
+                ATTR_ENTITY_ID: self.state.entity_id
+            }, blocking=True)
+
+
+@register_trait
+class StartStopTrait(_Trait):
+    """Trait to offer StartStop functionality.
+
+    https://developers.google.com/actions/smarthome/traits/startstop
+    """
+
+    name = TRAIT_STARTSTOP
+    commands = [
+        COMMAND_STARTSTOP,
+        COMMAND_PAUSEUNPAUSE
+    ]
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        return domain == vacuum.DOMAIN
+
+    def sync_attributes(self):
+        """Return StartStop attributes for a sync request."""
+        return {'pausable':
+                self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                & vacuum.SUPPORT_PAUSE != 0}
+
+    def query_attributes(self):
+        """Return StartStop query attributes."""
+        return {
+            'isRunning': self.state.state == vacuum.STATE_CLEANING,
+            'isPaused': self.state.state == vacuum.STATE_PAUSED,
+        }
+
+    async def execute(self, command, params):
+        """Execute a StartStop command."""
+        if command == COMMAND_STARTSTOP:
+            if params['start']:
+                await self.hass.services.async_call(
+                    self.state.domain, vacuum.SERVICE_START, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True)
+            else:
+                await self.hass.services.async_call(
+                    self.state.domain, vacuum.SERVICE_STOP, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True)
+        elif command == COMMAND_PAUSEUNPAUSE:
+            if params['pause']:
+                await self.hass.services.async_call(
+                    self.state.domain, vacuum.SERVICE_PAUSE, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True)
+            else:
+                await self.hass.services.async_call(
+                    self.state.domain, vacuum.SERVICE_START, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True)
+
+
+@register_trait
 class TemperatureSettingTrait(_Trait):
     """Trait to offer handling both temperature point and modes functionality.
 
@@ -531,3 +634,119 @@ class TemperatureSettingTrait(_Trait):
                     climate.ATTR_OPERATION_MODE:
                         self.google_to_hass[params['thermostatMode']],
                 }, blocking=True)
+
+
+@register_trait
+class LockUnlockTrait(_Trait):
+    """Trait to lock or unlock a lock.
+
+    https://developers.google.com/actions/smarthome/traits/lockunlock
+    """
+
+    name = TRAIT_LOCKUNLOCK
+    commands = [
+        COMMAND_LOCKUNLOCK
+    ]
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        return domain == lock.DOMAIN
+
+    def sync_attributes(self):
+        """Return LockUnlock attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return LockUnlock query attributes."""
+        return {'isLocked': self.state.state == STATE_LOCKED}
+
+    def can_execute(self, command, params):
+        """Test if command can be executed."""
+        allowed_unlock = not params['lock'] and self.config.allow_unlock
+        return params['lock'] or allowed_unlock
+
+    async def execute(self, command, params):
+        """Execute an LockUnlock command."""
+        if params['lock']:
+            service = lock.SERVICE_LOCK
+        else:
+            service = lock.SERVICE_UNLOCK
+
+        await self.hass.services.async_call(lock.DOMAIN, service, {
+            ATTR_ENTITY_ID: self.state.entity_id
+        }, blocking=True)
+
+
+@register_trait
+class FanSpeedTrait(_Trait):
+    """Trait to control speed of Fan.
+
+    https://developers.google.com/actions/smarthome/traits/fanspeed
+    """
+
+    name = TRAIT_FANSPEED
+    commands = [
+        COMMAND_FANSPEED
+    ]
+
+    speed_synonyms = {
+        fan.SPEED_OFF: ['stop', 'off'],
+        fan.SPEED_LOW: ['slow', 'low', 'slowest', 'lowest'],
+        fan.SPEED_MEDIUM: ['medium', 'mid', 'middle'],
+        fan.SPEED_HIGH: [
+            'high', 'max', 'fast', 'highest', 'fastest', 'maximum'
+        ]
+    }
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        if domain != fan.DOMAIN:
+            return False
+
+        return features & fan.SUPPORT_SET_SPEED
+
+    def sync_attributes(self):
+        """Return speed point and modes attributes for a sync request."""
+        modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
+        speeds = []
+        for mode in modes:
+            speed = {
+                "speed_name": mode,
+                "speed_values": [{
+                    "speed_synonym": self.speed_synonyms.get(mode),
+                    "lang": 'en'
+                }]
+            }
+            speeds.append(speed)
+
+        return {
+            'availableFanSpeeds': {
+                'speeds': speeds,
+                'ordered': True
+            },
+            "reversible": bool(self.state.attributes.get(
+                ATTR_SUPPORTED_FEATURES, 0) & fan.SUPPORT_DIRECTION)
+        }
+
+    def query_attributes(self):
+        """Return speed point and modes query attributes."""
+        attrs = self.state.attributes
+        response = {}
+
+        speed = attrs.get(fan.ATTR_SPEED)
+        if speed is not None:
+            response['on'] = speed != fan.SPEED_OFF
+            response['online'] = True
+            response['currentFanSpeedSetting'] = speed
+
+        return response
+
+    async def execute(self, command, params):
+        """Execute an SetFanSpeed command."""
+        await self.hass.services.async_call(
+            fan.DOMAIN, fan.SERVICE_SET_SPEED, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                fan.ATTR_SPEED: params['fanSpeed']
+            }, blocking=True)

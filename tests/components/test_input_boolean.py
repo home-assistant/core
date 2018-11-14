@@ -1,140 +1,98 @@
 """The tests for the input_boolean component."""
 # pylint: disable=protected-access
 import asyncio
-import unittest
 import logging
 
 from homeassistant.core import CoreState, State, Context
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.components.input_boolean import (
     is_on, CONF_INITIAL, DOMAIN)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON,
     SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON)
-from homeassistant.loader import bind_hass
 
-from tests.common import (
-    get_test_home_assistant, mock_component, mock_restore_cache)
+from tests.common import mock_component, mock_restore_cache
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@bind_hass
-def toggle(hass, entity_id):
-    """Set input_boolean to False.
+async def test_config(hass):
+    """Test config."""
+    invalid_configs = [
+        None,
+        1,
+        {},
+        {'name with space': None},
+    ]
 
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def turn_on(hass, entity_id):
-    """Set input_boolean to True.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
+    for cfg in invalid_configs:
+        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-@bind_hass
-def turn_off(hass, entity_id):
-    """Set input_boolean to False.
+async def test_methods(hass):
+    """Test is_on, turn_on, turn_off methods."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {
+        'test_1': None,
+    }})
+    entity_id = 'input_boolean.test_1'
 
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
+    assert not is_on(hass, entity_id)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
+
+    await hass.async_block_till_done()
+
+    assert is_on(hass, entity_id)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
+
+    await hass.async_block_till_done()
+
+    assert not is_on(hass, entity_id)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
+
+    await hass.async_block_till_done()
+
+    assert is_on(hass, entity_id)
 
 
-class TestInputBoolean(unittest.TestCase):
-    """Test the input boolean module."""
+async def test_config_options(hass):
+    """Test configuration options."""
+    count_start = len(hass.states.async_entity_ids())
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    _LOGGER.debug('ENTITIES @ start: %s', hass.states.async_entity_ids())
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {
+        'test_1': None,
+        'test_2': {
+            'name': 'Hello World',
+            'icon': 'mdi:work',
+            'initial': True,
+        },
+    }})
 
-    def test_config(self):
-        """Test config."""
-        invalid_configs = [
-            None,
-            1,
-            {},
-            {'name with space': None},
-        ]
+    _LOGGER.debug('ENTITIES: %s', hass.states.async_entity_ids())
 
-        for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+    assert count_start + 2 == len(hass.states.async_entity_ids())
 
-    def test_methods(self):
-        """Test is_on, turn_on, turn_off methods."""
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
-            'test_1': None,
-        }}))
-        entity_id = 'input_boolean.test_1'
+    state_1 = hass.states.get('input_boolean.test_1')
+    state_2 = hass.states.get('input_boolean.test_2')
 
-        self.assertFalse(
-            is_on(self.hass, entity_id))
+    assert state_1 is not None
+    assert state_2 is not None
 
-        turn_on(self.hass, entity_id)
+    assert STATE_OFF == state_1.state
+    assert ATTR_ICON not in state_1.attributes
+    assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-        self.hass.block_till_done()
-
-        self.assertTrue(
-            is_on(self.hass, entity_id))
-
-        turn_off(self.hass, entity_id)
-
-        self.hass.block_till_done()
-
-        self.assertFalse(
-            is_on(self.hass, entity_id))
-
-        toggle(self.hass, entity_id)
-
-        self.hass.block_till_done()
-
-        self.assertTrue(is_on(self.hass, entity_id))
-
-    def test_config_options(self):
-        """Test configuration options."""
-        count_start = len(self.hass.states.entity_ids())
-
-        _LOGGER.debug('ENTITIES @ start: %s', self.hass.states.entity_ids())
-
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
-            'test_1': None,
-            'test_2': {
-                'name': 'Hello World',
-                'icon': 'mdi:work',
-                'initial': True,
-            },
-        }}))
-
-        _LOGGER.debug('ENTITIES: %s', self.hass.states.entity_ids())
-
-        self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
-
-        state_1 = self.hass.states.get('input_boolean.test_1')
-        state_2 = self.hass.states.get('input_boolean.test_2')
-
-        self.assertIsNotNone(state_1)
-        self.assertIsNotNone(state_2)
-
-        self.assertEqual(STATE_OFF, state_1.state)
-        self.assertNotIn(ATTR_ICON, state_1.attributes)
-        self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
-
-        self.assertEqual(STATE_ON, state_2.state)
-        self.assertEqual('Hello World',
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME))
-        self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
+    assert STATE_ON == state_2.state
+    assert 'Hello World' == \
+        state_2.attributes.get(ATTR_FRIENDLY_NAME)
+    assert 'mdi:work' == state_2.attributes.get(ATTR_ICON)
 
 
 @asyncio.coroutine

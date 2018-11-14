@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "communication_error": "Unable to communicate with the Luftdaten API",
+            "invalid_sensor": "Sensor not available or invalid",
+            "sensor_exists": "Sensor already registered"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Show on map",
+                    "station_id": "Luftdaten Sensor ID"
+                },
+                "title": "Define Luftdaten"
+            }
+        },
+        "title": "Luftdaten"
+    }
+}

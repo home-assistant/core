@@ -120,7 +120,6 @@ async def async_setup(hass, config):
     }
     hass.data[DATA_ENTITY_GROUP_LOOKUP] = {
         EVENT_KEY_COMMAND: defaultdict(list),
-        EVENT_KEY_SENSOR: defaultdict(list),
     }
 
     # Allow platform to specify function to register new unknown devices
@@ -493,8 +492,7 @@ class RflinkCommand(RflinkDevice):
             # Rflink protocol/transport handles asynchronous writing of buffer
             # to serial/tcp device. Does not wait for command send
             # confirmation.
-            self.hass.async_create_task(self._protocol.send_command(
-                self._device_id, cmd))
+            self._protocol.send_command(self._device_id, cmd)
 
         if repetitions > 1:
             self._repetition_task = self.hass.async_create_task(
