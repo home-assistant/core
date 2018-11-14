@@ -7,15 +7,11 @@ https://home-assistant.io/components/binary_sensor.point/
 
 import logging
 
+from homeassistant.components.point import MinutPointEntity
+from homeassistant.components.point.const import (
+    DOMAIN as POINT_DOMAIN, NEW_DEVICE, SIGNAL_WEBHOOK)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-from homeassistant.components.point import (
-    DOMAIN as POINT_DOMAIN,
-    NEW_DEVICE,
-    SIGNAL_WEBHOOK,
-    MinutPointEntity,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,20 +51,28 @@ class MinutPointBinarySensor(MinutPointEntity):
     def __init__(self, point_client, device_id, device_class):
         """Initialize the entity."""
         super().__init__(point_client, device_id, device_class)
+
+        self._async_unsub_hook_dispatcher_connect = None
         self._events = EVENTS[device_class]
         self._is_on = None
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
-        async_dispatcher_connect(self.hass, SIGNAL_WEBHOOK,
-                                 self._webhook_event)
+        self._async_unsub_hook_dispatcher_connect = async_dispatcher_connect(
+            self.hass, SIGNAL_WEBHOOK, self._webhook_event)
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        await super().async_will_remove_from_hass()
+        if self._async_unsub_hook_dispatcher_connect:
+            self._async_unsub_hook_dispatcher_connect()
 
     @callback
     def _update_callback(self):
         """Update the value of the sensor."""
         if not self.is_updated:
-            pass
+            return
         if self._events[0] in self.device.ongoing_events:
             self._is_on = True
         else:
@@ -79,10 +83,10 @@ class MinutPointBinarySensor(MinutPointEntity):
     def _webhook_event(self, data, webhook):
         """Process new event from the webhook."""
         if self.device.webhook != webhook:
-            pass
+            return
         _type = data.get('event', {}).get('type')
         if _type not in self._events:
-            pass
+            return
         _LOGGER.debug("Recieved webhook: %s", _type)
         if _type == self._events[0]:
             self._is_on = True

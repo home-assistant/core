@@ -6,17 +6,14 @@ https://home-assistant.io/components/sensor.point/
 """
 import logging
 
+from homeassistant.components.point import MinutPointEntity
+from homeassistant.components.point.const import (
+    DOMAIN as POINT_DOMAIN, NEW_DEVICE)
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_PRESSURE, DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS)
 from homeassistant.core import callback
-from homeassistant.const import (DEVICE_CLASS_HUMIDITY,
-                                 DEVICE_CLASS_TEMPERATURE,
-                                 DEVICE_CLASS_PRESSURE, TEMP_CELSIUS)
 from homeassistant.util.dt import parse_datetime
-
-from homeassistant.components.point import (
-    DOMAIN as POINT_DOMAIN,
-    NEW_DEVICE,
-    MinutPointEntity,
-)
 
 _LOGGER = logging.getLogger(__name__)
 

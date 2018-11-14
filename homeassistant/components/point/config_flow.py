@@ -10,10 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 
-DOMAIN = 'point'
-CLIENT_ID = 'client_id'
-CLIENT_SECRET = 'client_secret'
-KEY_IMPORT_GROUPS = 'import_groups'
+from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN
 
 AUTH_CALLBACK_PATH = '/api/minut'
 AUTH_CALLBACK_NAME = 'api:minut'
@@ -36,8 +33,6 @@ def register_flow_implementation(hass, domain, name, client_id, client_secret):
         hass.data[DATA_FLOW_IMPL] = OrderedDict()
 
     hass.data[DATA_FLOW_IMPL][domain] = {
-        'domain': domain,
-        'name': name,
         CLIENT_ID: client_id,
         CLIENT_SECRET: client_secret,
     }
@@ -180,9 +175,6 @@ class MinutAuthCallbackView(HomeAssistantView):
     url = AUTH_CALLBACK_PATH
     name = AUTH_CALLBACK_NAME
 
-    def __init__(self):
-        """Initialize."""
-
     @staticmethod
     async def get(request):
         """Receive authorization code."""
@@ -194,4 +186,4 @@ class MinutAuthCallbackView(HomeAssistantView):
                     context={'source': 'code'},
                     data=request.query['code'],
                 ))
-        return u"OK!"
+        return "OK!"

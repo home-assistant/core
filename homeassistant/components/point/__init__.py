@@ -4,8 +4,6 @@ Support for Minut Point.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/point/
 """
-from datetime import timedelta
-import json
 import logging
 
 import voluptuous as vol
@@ -23,18 +21,12 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
 from . import config_flow  # noqa  pylint_disable=unused-import
+from .const import (
+    CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, NEW_DEVICE, SCAN_INTERVAL,
+    SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
 
 REQUIREMENTS = ['pypoint==1.0.5']
 DEPENDENCIES = ['webhook']
-
-EVENT_RECEIVED = 'point_webhook_received'
-CONF_WEBHOOK_URL = 'webhook_url'
-SIGNAL_UPDATE_ENTITY = 'point_update'
-SIGNAL_WEBHOOK = 'point_webhook'
-NEW_DEVICE = 'new_device'
-
-DOMAIN = 'point'
-SCAN_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +104,7 @@ async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry,
         entry.data[CONF_WEBHOOK_URL] = \
             hass.components.webhook.async_generate_url(
                 entry.data[CONF_WEBHOOK_ID])
-        _LOGGER.info('Regisering new webhook at: %s',
+        _LOGGER.info('Registering new webhook at: %s',
                      entry.data[CONF_WEBHOOK_URL])
         hass.config_entries.async_update_entry(
             entry, data={
@@ -127,19 +119,25 @@ async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry,
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
-    _LOGGER.debug("Unload")
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-    client = hass.data[DOMAIN][entry.entry_id]
+    client = hass.data[DOMAIN].pop(entry.entry_id)
     client.remove_webhook()
+
+    if not hass.data[DOMAIN]:
+        hass.data.pop(DOMAIN)
+
+    for component in ('binary_sensor', 'sensor'):
+        await hass.config_entries.async_forward_entry_unload(
+            entry, component)
+
     return True
 
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle webhook callback."""
-    body = await request.text()
-    _LOGGER.debug("Webhook %s: %s", webhook_id, body)
     try:
-        data = json.loads(body) if body else {}
+        data = await request.json()
+        _LOGGER.debug("Webhook %s: %s", webhook_id, data)
     except ValueError:
         return None
 
@@ -165,7 +163,6 @@ class MinutPointClient():
 
     async def update(self, *args):
         """Periodically poll the cloud for current state."""
-        _LOGGER.debug('Updating')
         await self._sync()
 
     async def _sync(self):
@@ -207,6 +204,7 @@ class MinutPointEntity(Entity):
 
     def __init__(self, point_client, device_id, device_class):
         """Initialize the entity."""
+        self._async_unsub_dispatcher_connect = None
         self._client = point_client
         self._id = device_id
         self._name = self.device.name
@@ -221,9 +219,14 @@ class MinutPointEntity(Entity):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         _LOGGER.debug('Created device %s', self)
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ENTITY,
-                                 self._update_callback)
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
         self._update_callback()
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
 
     @callback
     def _update_callback(self):
