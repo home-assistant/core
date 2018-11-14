@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switches based on ecoal interface."""
-    from ..ecoal_boiler import g_ecoal_contr
+    from ..ecoal_boiler import ECOAL_CONTR
 
     config_enable = config.get(CONF_ENABLE, {})
     # _LOGGER.debug("config_enable: %r", config_enable)
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for pump_id in PUMP_IDNAMES:     # pylint: disable=W0621
         name = config_enable.get(pump_id)
         if name:
-            switches.append(EcoalSwitch(g_ecoal_contr, name, pump_id))
+            switches.append(EcoalSwitch(ECOAL_CONTR, name, pump_id))
     add_entities(switches)
 
 
@@ -89,7 +89,7 @@ class EcoalSwitch(ToggleEntity):
 
     @property
     def should_poll(self) -> bool:
-        """Polling needed."""
+        """Returns if polling needed."""
         return True
 
     def update(self):

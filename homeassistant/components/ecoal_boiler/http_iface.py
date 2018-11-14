@@ -385,8 +385,8 @@ class ECoalControler:
         self.get_version()
 
     @staticmethod
-    def _calc_temp(hi, lo):
-        return ((hi << 8 | lo) - (hi >> 7 << 16)) / 10.0
+    def _calc_temp(hibyte, lobyte):
+        return ((hibyte << 8 | lobyte) - (hibyte >> 7 << 16)) / 10.0
 
     def _get_request(self, req):
         url = "http://%s/?com=%s" % (self.host, req)
@@ -539,12 +539,12 @@ class ECoalControler:
         domestic hot water pump or 2nd heating pump.
         """
         if state:
-            v = 1
+            byte_val = 1
             # 02010005000f0100018a03
         else:
-            v = 0
+            byte_val = 0
             # 02010005000f010000bb03
-        buf = [0x01, 0x00, 0x05, 0x00, 0x0F, 0x01, 0x00, v]
+        buf = [0x01, 0x00, 0x05, 0x00, 0x0F, 0x01, 0x00, byte_val]
         resp = self._calc_crc_get_request(buf)
         if resp.status_code == 200:
             return None
@@ -564,8 +564,8 @@ class ECoalControler:
 
     def set_target_feedwater_temp(self, value):
         """Set target feedwater temperature to given Celcius degrees."""
-        v = int(value)
-        buf = [0x01, 0x00, 0x02, 0x00, 0x28, 0x02, 0x00, v & 0xFF, 0x00]
+        byte = int(value)
+        buf = [0x01, 0x00, 0x02, 0x00, 0x28, 0x02, 0x00, byte & 0xFF, 0x00]
         self._calc_crc_get_request(buf)
 
     def _calc_crc_get_request(self, buf):
@@ -579,13 +579,13 @@ class ECoalControler:
 
     def _calc_crc(self, buf):
         crc = 0
-        for b in buf:
-            crc = self.CRCTABLE[crc & 0xFF ^ b & 0xFF]
+        for byte in buf:
+            crc = self.CRCTABLE[crc & 0xFF ^ byte & 0xFF]
         return crc
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)  # Basic setup.
+def test_contr():
+    """Tests connection, performs simple operations."""
     contr = ECoalControler("192.168.9.2", "admin", "admin")
     contr.get_cached_status()
     if 0:
@@ -597,3 +597,8 @@ if __name__ == "__main__":
         # contr.set_domestic_hot_water_pump(0)
         contr.set_central_heating_pump2(0)
         contr.get_status()
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)  # Basic setup.
+    test_contr()

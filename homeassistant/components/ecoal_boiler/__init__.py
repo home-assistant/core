@@ -38,12 +38,12 @@ DEFAULT_PASSWORD = "admin"
 # })
 # })
 
-g_ecoal_contr = None
+ECOAL_CONTR = None
 
 
 async def async_setup(hass, config):
-    """Set up global g_ecoal_contr same for sensors and switches."""
-    global g_ecoal_contr
+    """Set up global ECOAL_CONTR same for sensors and switches."""
+    global ECOAL_CONTR
     _LOGGER.debug("async_setup(): config: %r", config)
     from .http_iface import ECoalControler
 
@@ -59,7 +59,6 @@ async def async_setup(hass, config):
     _LOGGER.debug(
         "async_setup(): host: %r login: %r passwd: %r", host, login, passwd
     )
-    g_ecoal_contr = ECoalControler(host, login, passwd)
-    _LOGGER.debug("async_setup(): g_ecoal_contr: %r", g_ecoal_contr)
-
+    ECOAL_CONTR = ECoalControler(host, login, passwd)
+    # _LOGGER.debug("async_setup(): ECOAL_CONTR: %r", ECOAL_CONTR)
     return True
