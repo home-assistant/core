@@ -9,8 +9,7 @@
                 "data": {
                     "ip_address": "Hostname or IP Address",
                     "password": "Password",
-                    "port": "Port",
-                    "ssl": "Use SSL"
+                    "port": "Port"
                 },
                 "title": "Fill in your information"
             }
