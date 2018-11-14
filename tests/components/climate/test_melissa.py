@@ -1,6 +1,5 @@
 """Test for Melissa climate component."""
 from unittest.mock import Mock, patch
-import json
 
 from homeassistant.components.climate.melissa import MelissaClimate
 
@@ -14,43 +13,10 @@ from homeassistant.components.melissa import DATA_MELISSA
 from homeassistant.const import (
     TEMP_CELSIUS, STATE_ON, ATTR_TEMPERATURE, STATE_OFF, STATE_IDLE
 )
-from tests.common import load_fixture, mock_coro_func
+from tests.common import mock_coro_func
+from tests.components.test_melissa import melissa_mock
 
 _SERIAL = "12345678"
-
-
-def melissa_mock():
-    """Use this to mock the melissa api."""
-    api = Mock()
-    api.async_fetch_devices = mock_coro_func(
-        return_value=json.loads(load_fixture('melissa_fetch_devices.json')))
-    api.async_status = mock_coro_func(return_value=json.loads(load_fixture(
-        'melissa_status.json')))
-    api.async_cur_settings = mock_coro_func(
-        return_value=json.loads(load_fixture('melissa_cur_settings.json')))
-
-    api.async_send = mock_coro_func(return_value=True)
-
-    api.STATE_OFF = 0
-    api.STATE_ON = 1
-    api.STATE_IDLE = 2
-
-    api.MODE_AUTO = 0
-    api.MODE_FAN = 1
-    api.MODE_HEAT = 2
-    api.MODE_COOL = 3
-    api.MODE_DRY = 4
-
-    api.FAN_AUTO = 0
-    api.FAN_LOW = 1
-    api.FAN_MEDIUM = 2
-    api.FAN_HIGH = 3
-
-    api.STATE = 'state'
-    api.MODE = 'mode'
-    api.FAN = 'fan'
-    api.TEMP = 'temp'
-    return api
 
 
 async def test_setup_platform(hass):

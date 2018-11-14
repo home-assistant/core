@@ -23,5 +23,33 @@
         "href": "/v1/controllers"
       }
     }
+  },
+    "87654321": {
+    "user_id": 4989,
+    "serial_number": "87654321",
+    "mac": "87654321",
+    "firmware_version": "V1SHTHF",
+    "name": "Bobbie - 87654321",
+    "type": "bobbie",
+    "room_id": null,
+    "created": "2018-07-17 14:59:52",
+    "assigned_at": "2018-11-03 18:30:10",
+    "id": 2,
+    "online": true,
+    "controller_log": {
+      "cold": 37.695380858278,
+      "hot": 38.968910166349,
+      "home": -64.508492399299,
+      "energy": 66.01097264196,
+      "voltage": 234.63291742617,
+      "current": 0.051926230372376,
+      "relay_state": 16,
+      "load": false
+    },
+    "_links": {
+      "self": {
+        "href": "/v1/controllers"
+      }
+    }
   }
 }
