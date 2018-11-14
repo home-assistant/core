@@ -5,21 +5,21 @@
 asynctest==0.12.2
 coveralls==1.2.0
 flake8-docstrings==1.3.0
-flake8==3.5
+flake8==3.6.0
 mock-open==1.3.1
-mypy==0.630
+mypy==0.641
 pydocstyle==2.1.1
 pylint==2.1.1
 pytest-aiohttp==0.3.0
 pytest-cov==2.5.1
 pytest-sugar==0.9.1
 pytest-timeout==1.3.2
-pytest==3.9.1
+pytest==3.9.3
 requests_mock==1.5.2
 
 
 # homeassistant.components.homekit
-HAP-python==2.3.0
+HAP-python==2.2.2
 
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.1.3
@@ -79,10 +79,10 @@ gTTS-token==1.1.2
 
 # homeassistant.components.geo_location.geo_json_events
 # homeassistant.components.geo_location.nsw_rural_fire_service_feed
-geojson_client==0.1
+geojson_client==0.3
 
 # homeassistant.components.sensor.geo_rss_events
-georss_client==0.3
+georss_client==0.4
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.9
@@ -100,7 +100,7 @@ hdate==0.6.5
 holidays==0.9.8
 
 # homeassistant.components.frontend
-ais-dom-frontend==20181026.1
+ais-dom-frontend==20181103.3
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -121,14 +121,15 @@ mficlient==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.15.2
+# homeassistant.components.image_processing.tensorflow
+# homeassistant.components.sensor.pollen
+numpy==1.15.3
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
 paho-mqtt==1.4.0
 
 # homeassistant.components.device_tracker.aruba
-# homeassistant.components.device_tracker.asuswrt
 # homeassistant.components.device_tracker.cisco_ios
 # homeassistant.components.device_tracker.unifi_direct
 # homeassistant.components.media_player.pandora
@@ -210,22 +211,19 @@ pyunifi==2.13
 pywebpush==1.6.0
 
 # homeassistant.components.python_script
-restrictedpython==4.0b5
+restrictedpython==4.0b6
 
 # homeassistant.components.rflink
 rflink==0.0.37
 
 # homeassistant.components.ring
-ring_doorbell==0.2.1
-
-# homeassistant.components.lovelace
-ruamel.yaml==0.15.72
+ring_doorbell==0.2.2
 
 # homeassistant.components.media_player.yamaha
 rxv==0.5.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==3.1.12
+simplisafe-python==3.1.13
 
 # homeassistant.components.sleepiq
 sleepyq==0.6
@@ -239,7 +237,7 @@ somecomfort==0.5.2
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.11
+sqlalchemy==1.2.13
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -258,6 +256,3 @@ wakeonlan==1.1.6
 
 # homeassistant.components.cloud
 warrant==0.6.1
-
-# homeassistant.components.sensor.yahoo_finance
-yahoo-finance==1.4.0

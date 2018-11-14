@@ -140,6 +140,6 @@ def setup(hass, config):
 
         _LOGGER.debug("setup(), location = %s", tmp_loc)
 
-    load_platform(hass, 'climate', DOMAIN)
+    load_platform(hass, 'climate', DOMAIN, {}, config)
 
     return True

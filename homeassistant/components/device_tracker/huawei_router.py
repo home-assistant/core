@@ -39,7 +39,7 @@ Device = namedtuple('Device', ['name', 'ip', 'mac', 'state'])
 class HuaweiDeviceScanner(DeviceScanner):
     """This class queries a router running HUAWEI firmware."""
 
-    ARRAY_REGEX = re.compile(r'var UserDevinfo = new Array\((.*),null\);')
+    ARRAY_REGEX = re.compile(r'var UserDevinfo = new Array\((.*)null\);')
     DEVICE_REGEX = re.compile(r'new USERDevice\((.*?)\),')
     DEVICE_ATTR_REGEX = re.compile(
         '"(?P<Domain>.*?)","(?P<IpAddr>.*?)",'

@@ -51,25 +51,25 @@ class TestVacuumMQTT(unittest.TestCase):
 
     def test_default_supported_features(self):
         """Test that the correct supported features."""
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
         entity = self.hass.states.get('vacuum.mqtttest')
         entity_features = \
             entity.attributes.get(mqtt.CONF_SUPPORTED_FEATURES, 0)
-        self.assertListEqual(sorted(mqtt.services_to_strings(entity_features)),
-                             sorted(['turn_on', 'turn_off', 'stop',
-                                     'return_home', 'battery', 'status',
-                                     'clean_spot']))
+        assert sorted(mqtt.services_to_strings(entity_features)) == \
+            sorted(['turn_on', 'turn_off', 'stop',
+                    'return_home', 'battery', 'status',
+                    'clean_spot'])
 
     def test_all_commands(self):
         """Test simple commands to the vacuum."""
         self.default_config[mqtt.CONF_SUPPORTED_FEATURES] = \
             mqtt.services_to_strings(mqtt.ALL_SERVICES)
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         common.turn_on(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
@@ -129,9 +129,9 @@ class TestVacuumMQTT(unittest.TestCase):
         self.default_config[mqtt.CONF_SUPPORTED_FEATURES] = \
             mqtt.services_to_strings(mqtt.ALL_SERVICES)
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         message = """{
             "battery_level": 54,
@@ -143,13 +143,11 @@ class TestVacuumMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'vacuum/state', message)
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_ON, state.state)
-        self.assertEqual(
-            'mdi:battery-50',
+        assert STATE_ON == state.state
+        assert 'mdi:battery-50' == \
             state.attributes.get(ATTR_BATTERY_ICON)
-        )
-        self.assertEqual(54, state.attributes.get(ATTR_BATTERY_LEVEL))
-        self.assertEqual('max', state.attributes.get(ATTR_FAN_SPEED))
+        assert 54 == state.attributes.get(ATTR_BATTERY_LEVEL)
+        assert 'max' == state.attributes.get(ATTR_FAN_SPEED)
 
         message = """{
             "battery_level": 61,
@@ -162,13 +160,11 @@ class TestVacuumMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'vacuum/state', message)
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertEqual(
-            'mdi:battery-charging-60',
+        assert STATE_OFF == state.state
+        assert 'mdi:battery-charging-60' == \
             state.attributes.get(ATTR_BATTERY_ICON)
-        )
-        self.assertEqual(61, state.attributes.get(ATTR_BATTERY_LEVEL))
-        self.assertEqual('min', state.attributes.get(ATTR_FAN_SPEED))
+        assert 61 == state.attributes.get(ATTR_BATTERY_LEVEL)
+        assert 'min' == state.attributes.get(ATTR_FAN_SPEED)
 
     def test_battery_template(self):
         """Test that you can use non-default templates for battery_level."""
@@ -179,31 +175,31 @@ class TestVacuumMQTT(unittest.TestCase):
             mqtt.CONF_BATTERY_LEVEL_TEMPLATE: "{{ value }}"
         })
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         fire_mqtt_message(self.hass, 'retroroomba/battery_level', '54')
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(54, state.attributes.get(ATTR_BATTERY_LEVEL))
-        self.assertEqual(state.attributes.get(ATTR_BATTERY_ICON),
-                         'mdi:battery-50')
+        assert 54 == state.attributes.get(ATTR_BATTERY_LEVEL)
+        assert state.attributes.get(ATTR_BATTERY_ICON) == \
+            'mdi:battery-50'
 
     def test_status_invalid_json(self):
         """Test to make sure nothing breaks if the vacuum sends bad JSON."""
         self.default_config[mqtt.CONF_SUPPORTED_FEATURES] = \
             mqtt.services_to_strings(mqtt.ALL_SERVICES)
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         fire_mqtt_message(self.hass, 'vacuum/state', '{"asdfasas false}')
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_OFF, state.state)
-        self.assertEqual("Stopped", state.attributes.get(ATTR_STATUS))
+        assert STATE_OFF == state.state
+        assert "Stopped" == state.attributes.get(ATTR_STATUS)
 
     def test_default_availability_payload(self):
         """Test availability by default payload with defined topic."""
@@ -211,24 +207,24 @@ class TestVacuumMQTT(unittest.TestCase):
             'availability_topic': 'availability-topic'
         })
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'online')
         self.hass.block_till_done()
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'offline')
         self.hass.block_till_done()
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
     def test_custom_availability_payload(self):
         """Test availability by custom payload with defined topic."""
@@ -238,21 +234,21 @@ class TestVacuumMQTT(unittest.TestCase):
             'payload_not_available': 'nogood'
         })
 
-        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+        assert setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: self.default_config,
-        }))
+        })
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'good')
         self.hass.block_till_done()
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE != state.state
 
         fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
         self.hass.block_till_done()
 
         state = self.hass.states.get('vacuum.mqtttest')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)
+        assert STATE_UNAVAILABLE == state.state

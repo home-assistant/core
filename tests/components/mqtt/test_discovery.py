@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start, \
-                                                    ALREADY_DISCOVERED
+                                       ALREADY_DISCOVERED
 from homeassistant.const import STATE_ON, STATE_OFF
 
 from tests.common import async_fire_mqtt_message, mock_coro, MockConfigEntry
