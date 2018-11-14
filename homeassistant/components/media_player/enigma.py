@@ -29,7 +29,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 # Requirements
-REQUIREMENTS = ['beautifulsoup4==4.6.0']
+REQUIREMENTS = ['beautifulsoup4==4.6.3']
 
 # Logging
 _LOGGER = logging.getLogger(__name__)
