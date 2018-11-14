@@ -1,5 +1,5 @@
 """
-Sensor to get GTT's next bus at the stop.
+Sensor to get GTT's timetable for a stop.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.gtt/
