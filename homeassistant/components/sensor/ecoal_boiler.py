@@ -97,5 +97,5 @@ class EcoalTempSensor(Entity):
         This is the only method that should fetch new data for Home Assistant.
         """
         # Old values read 0.5 back can still be used
-        status = self._ecoal_contr.get_cached_status(0.5)
+        status = self._ecoal_contr.get_cached_status()
         self._state = getattr(status, self._status_attr)

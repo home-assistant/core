@@ -89,7 +89,7 @@ class EcoalSwitch(ToggleEntity):
 
     @property
     def should_poll(self) -> bool:
-        """Returns if polling needed."""
+        """Return if polling needed."""
         return True
 
     def update(self):

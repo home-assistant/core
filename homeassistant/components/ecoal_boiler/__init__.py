@@ -6,6 +6,10 @@ and set very basic switches.
 """
 import logging
 
+# import voluptuous as vol
+# import homeassistant.helpers.config_validation as cv
+
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ecoal_boiler"
@@ -18,25 +22,17 @@ DEFAULT_PASSWORD = "admin"
 
 
 # CONFIG_SCHEMA = vol.Schema({
-# DOMAIN: vol.Schema({
-# vol.Required(CONF_HOSTNAME): cv.string,
-# vol.Optional(CONF_LOGIN,
-# default=DEFAULT_LOGIN): cv.string,
-# vol.Optional(CONF_PASSWORD,
-# default=DEFAULT_PASSWORD): cv.string,
+#    DOMAIN: vol.Schema({
+#        vol.Required(CONF_HOSTNAME): cv.string,
+#        vol.Optional(CONF_LOGIN,
+#                        default=DEFAULT_LOGIN): cv.string,
+#        vol.Optional(CONF_PASSWORD,
+#                        default=DEFAULT_PASSWORD): cv.string,
+#    })
 # })
-# })
-# TODO: Fails with:
-# [homeassistant.config] Invalid config for [ecoal_boiler]:
-#       [homeassistant] is an invalid option for [ecoal_boiler].
-#       Check: ecoal_boiler->homeassistant.
-#  [homeassistant.setup] Setup failed for ecoal_boiler: Invalid config.
-
-
-# CONFIG_SCHEMA = vol.Schema({
-# DOMAIN: vol.Schema({
-# })
-# })
+# Fails with:
+# Invalid config for [ecoal_boiler]:
+#   [homeassistant] is an invalid option for [ecoal_boiler].
 
 ECOAL_CONTR = None
 
