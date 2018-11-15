@@ -30,30 +30,21 @@ IHC_DATA = 'ihc{}'
 IHC_CONTROLLER = 'controller'
 IHC_INFO = 'info'
 AUTO_SETUP_YAML = 'ihc_auto_setup.yaml'
-CONF_CONTROLLER2 = 'secondary'
-CONTROLLER_ID = [2, 1]
-PRIMARY = True
-SECONDARY = False
 
 
 IHC_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME, default=""): cv.string,
     vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
     vol.Optional(CONF_INFO, default=True): cv.boolean,
-    vol.Optional(CONF_CONTROLLER2):
-        vol.All({
-            vol.Required(CONF_URL): cv.string,
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
-            vol.Optional(CONF_INFO, default=True): cv.boolean,
-        }),
 }, extra=vol.ALLOW_EXTRA)
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: IHC_SCHEMA
+    DOMAIN: vol.Schema(vol.All(
+        cv.ensure_list,
+        [IHC_SCHEMA])),
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -114,15 +105,20 @@ IHC_PLATFORMS = ('binary_sensor', 'light', 'sensor', 'switch')
 
 
 def setup(hass, config):
-    """Set up the IHC component for primary and secondary controller."""
-    conf = config[DOMAIN]
-    ihc_status = ihc_setup(hass, config, conf, CONTROLLER_ID[PRIMARY])
-
-    # Setup optional secondary controller.
-    if ihc_status and CONF_CONTROLLER2 in conf:
-        conf2 = conf[CONF_CONTROLLER2]
-        ihc_status = ihc_setup(hass, config, conf2, CONTROLLER_ID[SECONDARY])
-    return ihc_status
+    """Set up the IHC platform."""
+    conf = config.get(DOMAIN)
+    index = 0
+    # Set up the IHC component
+    for controller_conf in conf:
+        # The controller may be named optionally. If not done an index value 
+        # is added. The name/index is required for reference when manually 
+        # configurating entities on the controller
+        name = controller_conf[CONF_NAME] or str(index)
+        if not ihc_setup(hass, config, controller_conf, name):
+            return False
+        index += 1
+    
+    return True
 
 
 def ihc_setup(hass, config, conf, controller_id):
