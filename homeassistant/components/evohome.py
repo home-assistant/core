@@ -53,6 +53,7 @@ TCS = 'temperatureControlSystems'
 
 # bit masks for dispatcher packets
 EVO_PARENT = 0x01
+EVO_CHILD = 0x02
 
 
 def setup(hass, config):
@@ -112,7 +113,7 @@ def setup(hass, config):
 
     # Redact any installation data we'll never need
     for loc in client.installation_info:
-        loc['locationInfo']['locationId'] != 'REDACTED'
+        loc['locationInfo']['locationId'] = 'REDACTED'
         loc['locationInfo']['locationOwner'] = 'REDACTED'
         loc['locationInfo']['streetAddress'] = 'REDACTED'
         loc['locationInfo']['city'] = 'REDACTED'

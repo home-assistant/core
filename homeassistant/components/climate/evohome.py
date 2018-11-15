@@ -20,6 +20,12 @@ from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE,
     ClimateDevice
 )
+from homeassistant.components.evohome import (
+    DATA_EVOHOME, DISPATCHER_EVOHOME,
+    CONF_LOCATION_IDX, SCAN_INTERVAL_DEFAULT,
+    EVO_PARENT, EVO_CHILD,
+    GWS, TCS,
+)
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     HTTP_TOO_MANY_REQUESTS,
@@ -33,13 +39,6 @@ from homeassistant.helpers.dispatcher import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'evohome'
-DATA_EVOHOME = 'data_' + DOMAIN
-DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
-
-CONF_LOCATION_IDX = 'location_idx'
-SCAN_INTERVAL_DEFAULT = 300
 
 # the Controller's opmode/state and the zone's (inherited) state
 EVO_RESET = 'AutoWithReset'
@@ -89,14 +88,6 @@ HA_STATE_TO_ZONE = {
     STATE_MANUAL: EVO_PERMOVER
 }
 ZONE_OP_LIST = list(HA_STATE_TO_ZONE)
-
-# these are used to help prevent E501 (line too long) violations
-GWS = 'gateways'
-TCS = 'temperatureControlSystems'
-
-# bit masks for dispatcher packets
-EVO_PARENT = 0x01
-EVO_CHILD = 0x02
 
 
 async def async_setup_platform(hass, config, async_add_entities,
