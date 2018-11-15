@@ -86,7 +86,7 @@ abodepy==0.14.0
 afsapi==0.0.4
 
 # homeassistant.components.device_tracker.asuswrt
-aioasuswrt==1.1.2
+aioasuswrt==1.1.6
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
@@ -479,7 +479,7 @@ holidays==0.9.8
 home-assistant-frontend==20181103.3
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.0
+homeassistant-pyozw==0.1.1
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -865,7 +865,7 @@ pycsspeechtts==1.0.2
 
 # homeassistant.components.daikin
 # homeassistant.components.climate.daikin
-pydaikin==0.4
+pydaikin==0.6
 
 # homeassistant.components.deconz
 pydeconz==47
