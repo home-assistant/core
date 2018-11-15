@@ -123,6 +123,8 @@ class ArubaDeviceScanner(DeviceScanner):
             _LOGGER.error("Connection timed out")
             return
 
+        devices = {}
+
         if self.type == 'AP':
             ssh.sendline(self.password)
             ssh.expect('>')
@@ -140,7 +142,6 @@ class ArubaDeviceScanner(DeviceScanner):
             devices_result = ssh.before.splitlines()
             ssh.sendline('exit')
             ssh.sendline('exit')
-            devices = {}
 
             for device in devices_result:
                 try:
@@ -157,9 +158,6 @@ class ArubaDeviceScanner(DeviceScanner):
                 except (IndexError, ValueError):
                     _LOGGER.debug("No IP found")
 
-            _LOGGER.debug("devices %s", devices)
-            return devices
-
         else:
             ssh.sendline(self.password)
             ssh.expect('#')
@@ -168,7 +166,6 @@ class ArubaDeviceScanner(DeviceScanner):
             devices_result = ssh.before.split(b'\r\n')
             ssh.sendline('exit')
 
-            devices = {}
             for device in devices_result:
                 match = _DEVICES_REGEX.search(device.decode('utf-8'))
                 if match:
@@ -177,4 +174,5 @@ class ArubaDeviceScanner(DeviceScanner):
                         'mac': match.group('mac').upper(),
                         'name': match.group('name')
                     }
+
         return devices
