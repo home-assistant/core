@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ihc_id = light[CONF_ID]
             controller_id = light[CONF_CONTROLLER]
             ihc_controller = hass.data[controller_id][IHC_CONTROLLER]
-            info = hass.data[ihc_key][IHC_INFO]
+            info = hass.data[controller_id][IHC_INFO]
             name = light[CONF_NAME]
             dimmable = light[CONF_DIMMABLE]
             
