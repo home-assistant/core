@@ -9,10 +9,10 @@
 import logging
 import urllib.request
 import urllib.parse
+from urllib.error import URLError, HTTPError
 import asyncio
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from urllib.error import URLError, HTTPError
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.components.notify import (

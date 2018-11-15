@@ -11,10 +11,10 @@
 import logging
 import urllib.request
 import urllib.parse
+from urllib.error import URLError, HTTPError
 from datetime import timedelta
 import asyncio
 import voluptuous as vol
-from urllib.error import URLError, HTTPError
 
 # From homeassitant
 from homeassistant.util import Throttle
@@ -191,8 +191,8 @@ class EnigmaDevice(MediaPlayerDevice):
         try:
             return self._opener.open(uri, timeout=self._timeout).read()
         except (HTTPError, URLError, ConnectionRefusedError):
-            _LOGGER.exception("Enigma: [request_call] - Error connecting to" +
-                              "remote enigma %s: %s ", self._host,
+            _LOGGER.exception("Enigma: [request_call] - Error connecting to \
+                              remote enigma %s: %s ", self._host,
                               HTTPError.code)
         return False
 
@@ -381,9 +381,8 @@ class EnigmaDevice(MediaPlayerDevice):
         self.request_call('/web/vol?set=mute')
 
 # SET - Change to channel number
-    @asyncio.coroutine
     def async_play_media(self, media_id, media_type, **kwargs):
-        """media_id should only be a channel number."""
+        """Media_id should only be a channel number."""
         try:
             cv.positive_int(media_id)
         except vol.Invalid:
