@@ -90,6 +90,9 @@ omit =
     homeassistant/components/eight_sleep.py
     homeassistant/components/*/eight_sleep.py
 
+    homeassistant/components/ecoal_boiler/*
+    homeassistant/components/*/ecoal_boiler.py
+
     homeassistant/components/ecobee.py
     homeassistant/components/*/ecobee.py
 
