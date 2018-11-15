@@ -272,6 +272,21 @@ class RainMachineEntity(Entity):
         self.rainmachine = rainmachine
 
     @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            'identifiers': {
+                (DOMAIN, self.rainmachine.client.mac)
+            },
+            'name': self.rainmachine.client.name,
+            'manufacturer': 'RainMachine',
+            'model': 'Version {0} (API: {1})'.format(
+                self.rainmachine.client.hardware_version,
+                self.rainmachine.client.api_version),
+            'sw_version': self.rainmachine.client.software_version,
+        }
+
+    @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attrs
