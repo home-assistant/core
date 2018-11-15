@@ -110,8 +110,8 @@ def setup(hass, config):
     index = 0
     # Set up the IHC component
     for index, controller_conf in enumerate(conf):
-        # The controller may be named optionally. If not done an index value 
-        # is added. The name/index is required for reference when manually 
+        # The controller may be named optionally. If not done an index value
+        # is added. The name/index is required for reference when manually
         # configurating entities on the controller
         name = controller_conf[CONF_NAME] or str(index)
         if not ihc_setup(hass, config, controller_conf, name):
