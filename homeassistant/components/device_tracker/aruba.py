@@ -99,7 +99,6 @@ class ArubaDeviceScanner(DeviceScanner):
         import pexpect
         connect = 'ssh {}@{}'
         ssh = pexpect.spawn(connect.format(self.username, self.host))
-        ssh.logfile = open("/HassDev/testlog", "wb")
         query = ssh.expect(['password:', pexpect.TIMEOUT, pexpect.EOF,
                             'continue connecting (yes/no)?',
                             'Host key verification failed.',
