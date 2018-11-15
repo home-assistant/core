@@ -28,7 +28,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['https://github.com/watchforstock/evohome-client/archive/master.zip#evohomeclient==0.2.8']  # noqa E501
+REQUIREMENTS = ['evohomeclient==0.2.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,7 +125,7 @@ def setup(hass, config):
         evo_data['config'] = client.installation_info[loc_idx]
     except IndexError:
         _LOGGER.warning(
-            "setup(): Parameter '%s'=%s , is outside its range (0-%s)",
+            "setup(): Parameter '%s'=%s, is outside its range (0-%s)",
             CONF_LOCATION_IDX,
             loc_idx,
             len(client.installation_info) - 1

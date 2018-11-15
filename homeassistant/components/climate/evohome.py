@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     HTTP_TOO_MANY_REQUESTS,
-    PRECISION_TENTHS,
+    PRECISION_HALVES,
     TEMP_CELSIUS
 )
 from homeassistant.core import callback
@@ -111,8 +111,15 @@ async def async_setup_platform(hass, config, async_add_entities,
     # (i.e. loc_idx > 0) other than using a protected member, such as below
     tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
 
-    evo_data['parent'] = EvoController(evo_data, client, tcs_obj_ref)
-    evo_data['children'] = zones = []
+    _LOGGER.debug(
+        "setup(): Found Controller, id=%s, name=%s (location_idx=%s)",
+        tcs_obj_ref.systemId + " [" + tcs_obj_ref.modelType + "]",
+        tcs_obj_ref.location.name,
+        loc_idx
+    )
+
+    controller = EvoController(evo_data, client, tcs_obj_ref)
+    zones = []
 
     for zone_idx in tcs_obj_ref.zones:
         zone_obj_ref = tcs_obj_ref.zones[zone_idx]
@@ -123,7 +130,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         )
         zones.append(EvoZone(evo_data, client, zone_obj_ref))
 
-    entities = [evo_data['parent']] + evo_data['children']
+    entities = [controller] + zones
 
     async_add_entities(entities, update_before_add=False)
 
@@ -243,7 +250,7 @@ class EvoClimateDevice(ClimateDevice):
     @property
     def precision(self):
         """Return the temperature precision to use in the frontend UI."""
-        return PRECISION_TENTHS
+        return PRECISION_HALVES
 
 
 class EvoZone(EvoClimateDevice):
