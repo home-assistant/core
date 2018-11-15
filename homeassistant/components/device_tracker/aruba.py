@@ -12,7 +12,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_TYPE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +27,8 @@ _DEVICES_REGEX = re.compile(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_TYPE): cv.string
 })
 
 
@@ -45,7 +47,7 @@ class ArubaDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-
+        self.type = config[CONF_TYPE]
         self.last_results = {}
 
         # Test the router is accessible.
@@ -81,11 +83,23 @@ class ArubaDeviceScanner(DeviceScanner):
         self.last_results = data.values()
         return True
 
+    def get_extra_attributes(self, device):
+        """Return the extra info of the given device."""
+        filter_att = next((
+            {
+                'ip': result['ip'].decode('utf-8'),
+                'location_name': result['location_name'].decode('utf-8')
+            } for result in self.last_results
+            if result['mac'] == device), None)
+        return filter_att
+
     def get_aruba_data(self):
         """Retrieve data from Aruba Access Point and return parsed result."""
+        import ipaddress
         import pexpect
         connect = 'ssh {}@{}'
         ssh = pexpect.spawn(connect.format(self.username, self.host))
+        ssh.logfile = open("/HassDev/testlog", "wb")
         query = ssh.expect(['password:', pexpect.TIMEOUT, pexpect.EOF,
                             'continue connecting (yes/no)?',
                             'Host key verification failed.',
@@ -109,20 +123,59 @@ class ArubaDeviceScanner(DeviceScanner):
         elif query == 6:
             _LOGGER.error("Connection timed out")
             return
-        ssh.sendline(self.password)
-        ssh.expect('#')
-        ssh.sendline('show clients')
-        ssh.expect('#')
-        devices_result = ssh.before.split(b'\r\n')
-        ssh.sendline('exit')
 
-        devices = {}
-        for device in devices_result:
-            match = _DEVICES_REGEX.search(device.decode('utf-8'))
-            if match:
-                devices[match.group('ip')] = {
-                    'ip': match.group('ip'),
-                    'mac': match.group('mac').upper(),
-                    'name': match.group('name')
-                }
+        if self.type == 'AP':
+            ssh.sendline(self.password)
+            ssh.expect('>')
+            ssh.sendline('enable')
+            ssh.expect('Password:')
+            ssh.sendline('enable')
+            ssh.expect('#')
+            ssh.sendline('show user')
+            ssh.sendline(' ')
+            ssh.sendline(' ')
+            ssh.sendline(' ')
+            ssh.sendline(' ')
+            ssh.sendline(' ')
+            ssh.expect('#')
+            devices_result = ssh.before.splitlines()
+            ssh.sendline('exit')
+            ssh.sendline('exit')
+            devices = {}
+
+            for device in devices_result:
+                try:
+                    device_elements = device.split()
+                    _LOGGER.debug("split %s", device_elements)
+                    ipaddress.ip_address(device_elements[0].decode('utf-8'))
+                    devices[device_elements[0]] = {
+                        'ip': device_elements[0],
+                        'mac': device_elements[1],
+                        'name': device_elements[10],
+                        'location_name': device_elements[4]
+                    }
+
+                except (IndexError, ValueError):
+                    _LOGGER.debug("No IP found")
+
+            _LOGGER.debug("devices %s", devices)
+            return devices
+
+        else:
+            ssh.sendline(self.password)
+            ssh.expect('#')
+            ssh.sendline('show clients')
+            ssh.expect('#')
+            devices_result = ssh.before.split(b'\r\n')
+            ssh.sendline('exit')
+
+            devices = {}
+            for device in devices_result:
+                match = _DEVICES_REGEX.search(device.decode('utf-8'))
+                if match:
+                    devices[match.group('ip')] = {
+                        'ip': match.group('ip'),
+                        'mac': match.group('mac').upper(),
+                        'name': match.group('name')
+                    }
         return devices
