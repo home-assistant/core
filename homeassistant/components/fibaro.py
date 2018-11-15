@@ -28,9 +28,7 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 CONF_PLUGINS = "plugins"
 
-FIBARO_COMPONENTS = [
-    'binary_sensor',
-]
+FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light', 'sensor', 'switch']
 
 FIBARO_TYPEMAP = {
     'com.fibaro.multilevelSensor': "sensor",
