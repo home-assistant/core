@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Su instancia de Home Assistant debe ser accesible desde Internet para recibir mensajes de Dialogflow.",
+            "one_instance_allowed": "Solo una instancia es necesaria."
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfEst\u00e1 seguro de que desea configurar Dialogflow?"
+            }
+        },
+        "title": "Dialogflow"
+    }
+}
