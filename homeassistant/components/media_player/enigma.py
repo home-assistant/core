@@ -381,8 +381,12 @@ class EnigmaDevice(MediaPlayerDevice):
         self.request_call('/web/vol?set=mute')
 
 # SET - Change to channel number
+    @asyncio.coroutine
     def async_play_media(self, media_id, media_type, **kwargs):
-        """Media_id should only be a channel number."""
+        """Support changing a channel."""
+        if media_type != MEDIA_TYPE_CHANNEL:
+            _LOGGER.error('Unsupported media type')
+            return
         try:
             cv.positive_int(media_id)
         except vol.Invalid:
