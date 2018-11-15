@@ -382,7 +382,7 @@ class EnigmaDevice(MediaPlayerDevice):
 
 # SET - Change to channel number
     @asyncio.coroutine
-    def async_play_media(self, media_id, media_type, **kwargs):
+    def async_play_media(self, media_type, media_id, **kwargs):
         """Support changing a channel."""
         if media_type != MEDIA_TYPE_CHANNEL:
             _LOGGER.error('Unsupported media type')
