@@ -378,7 +378,8 @@ class DirecTvDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id, **kwargs):
         """Select input source."""
         if media_type != MEDIA_TYPE_CHANNEL:
-            raise NotImplementedError()
-
-        _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
-        self.dtv.tune_channel(media_id)
+            _LOGGER.error("Invalid media type %s. Only %s is supported",
+                          media_type, MEDIA_TYPE_CHANNEL)
+        else:
+            _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
+            self.dtv.tune_channel(media_id)
