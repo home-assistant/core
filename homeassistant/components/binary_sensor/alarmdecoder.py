@@ -7,9 +7,9 @@ https://home-assistant.io/components/binary_sensor.alarmdecoder/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.alarmdecoder import (
+from ..alarmdecoder import (
     ZONE_SCHEMA, CONF_ZONES, CONF_ZONE_NAME, CONF_ZONE_TYPE,
-    CONF_ZONE_RFID, SIGNAL_ZONE_FAULT, SIGNAL_ZONE_RESTORE,
+    CONF_ZONE_RFID, CONF_ZONE_LOOP, SIGNAL_ZONE_FAULT, SIGNAL_ZONE_RESTORE,
     SIGNAL_RFX_MESSAGE, SIGNAL_REL_MESSAGE, CONF_RELAY_ADDR,
     CONF_RELAY_CHAN)
 
@@ -26,6 +26,24 @@ ATTR_RF_LOOP2 = 'rf_loop2'
 ATTR_RF_LOOP4 = 'rf_loop4'
 ATTR_RF_LOOP1 = 'rf_loop1'
 
+ATTR_BITS = {
+    ATTR_RF_BIT0: 0x01,
+    ATTR_RF_LOW_BAT: 0x02,
+    ATTR_RF_SUPERVISED: 0x04,
+    ATTR_RF_BIT3: 0x08,
+    ATTR_RF_LOOP3: 0x10,
+    ATTR_RF_LOOP2: 0x20,
+    ATTR_RF_LOOP4: 0x40,
+    ATTR_RF_LOOP1: 0X80,
+}
+
+LOOP_ATTR = {
+    1: ATTR_RF_LOOP1,
+    2: ATTR_RF_LOOP2,
+    3: ATTR_RF_LOOP3,
+    4: ATTR_RF_LOOP4,
+}
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the AlarmDecoder binary sensor devices."""
@@ -37,10 +55,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         zone_rfid = device_config_data.get(CONF_ZONE_RFID)
+        zone_loop = device_config_data.get(CONF_ZONE_LOOP)
         relay_addr = device_config_data.get(CONF_RELAY_ADDR)
         relay_chan = device_config_data.get(CONF_RELAY_CHAN)
         device = AlarmDecoderBinarySensor(
-            zone_num, zone_name, zone_type, zone_rfid, relay_addr, relay_chan)
+            zone_num, zone_name, zone_type, zone_rfid, zone_loop, relay_addr,
+            relay_chan)
         devices.append(device)
 
     add_entities(devices)
@@ -51,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AlarmDecoderBinarySensor(BinarySensorDevice):
     """Representation of an AlarmDecoder binary sensor."""
 
-    def __init__(self, zone_number, zone_name, zone_type, zone_rfid,
+    def __init__(self, zone_number, zone_name, zone_type, zone_rfid, zone_loop,
                  relay_addr, relay_chan):
         """Initialize the binary_sensor."""
         self._zone_number = zone_number
@@ -59,6 +79,7 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         self._state = None
         self._name = zone_name
         self._rfid = zone_rfid
+        self._loop = zone_loop
         self._rfstate = None
         self._relay_addr = relay_addr
         self._relay_chan = relay_chan
@@ -87,25 +108,27 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         """No polling needed."""
         return False
 
+    def get_attr(self, key):
+        """Get the value of one of the RF state attributes."""
+        if self._rfid and self._rfstate is not None:
+            return self._rfstate & ATTR_BITS[key] != 0
+
+        return None
+
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
         if self._rfid and self._rfstate is not None:
-            attr[ATTR_RF_BIT0] = True if self._rfstate & 0x01 else False
-            attr[ATTR_RF_LOW_BAT] = True if self._rfstate & 0x02 else False
-            attr[ATTR_RF_SUPERVISED] = True if self._rfstate & 0x04 else False
-            attr[ATTR_RF_BIT3] = True if self._rfstate & 0x08 else False
-            attr[ATTR_RF_LOOP3] = True if self._rfstate & 0x10 else False
-            attr[ATTR_RF_LOOP2] = True if self._rfstate & 0x20 else False
-            attr[ATTR_RF_LOOP4] = True if self._rfstate & 0x40 else False
-            attr[ATTR_RF_LOOP1] = True if self._rfstate & 0x80 else False
+            for key in ATTR_BITS.keys():  # pylint: disable=C0201
+                attr[key] = self.get_attr(key)
         return attr
 
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._state == 1
+        return self._state == 1 \
+            or (self._loop and self.get_attr(LOOP_ATTR[self._loop]))
 
     @property
     def device_class(self):
