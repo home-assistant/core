@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             info = hass.data[controller_id][IHC_INFO]
             name = sensor_cfg[CONF_NAME]
             unit = sensor_cfg[CONF_UNIT_OF_MEASUREMENT]
-            
+
             sensor = IHCSensor(ihc_controller, name, ihc_id, info, unit)
             devices.append(sensor)
 
