@@ -225,8 +225,8 @@ class EnigmaDevice(MediaPlayerDevice):
             name = soup.e2model.renderContents().decode('UTF8')
             _LOGGER.debug("Enigma: [update] - Name for host %s = %s",
                           self._host, name)
-        if name:
-            self._name = name
+            if name:
+                self._name = name
 
         # If powered on
         if self._pwstate == 'false':
