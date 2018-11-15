@@ -26,24 +26,6 @@ ATTR_RF_LOOP2 = 'rf_loop2'
 ATTR_RF_LOOP4 = 'rf_loop4'
 ATTR_RF_LOOP1 = 'rf_loop1'
 
-ATTR_BITS = {
-    ATTR_RF_BIT0: 0x01,
-    ATTR_RF_LOW_BAT: 0x02,
-    ATTR_RF_SUPERVISED: 0x04,
-    ATTR_RF_BIT3: 0x08,
-    ATTR_RF_LOOP3: 0x10,
-    ATTR_RF_LOOP2: 0x20,
-    ATTR_RF_LOOP4: 0x40,
-    ATTR_RF_LOOP1: 0X80,
-}
-
-LOOP_ATTR = {
-    1: ATTR_RF_LOOP1,
-    2: ATTR_RF_LOOP2,
-    3: ATTR_RF_LOOP3,
-    4: ATTR_RF_LOOP4,
-}
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the AlarmDecoder binary sensor devices."""
@@ -108,27 +90,25 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         """No polling needed."""
         return False
 
-    def get_attr(self, key):
-        """Get the value of one of the RF state attributes."""
-        if self._rfid and self._rfstate is not None:
-            return self._rfstate & ATTR_BITS[key] != 0
-
-        return None
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
         if self._rfid and self._rfstate is not None:
-            for key in ATTR_BITS.keys():  # pylint: disable=C0201
-                attr[key] = self.get_attr(key)
+            attr[ATTR_RF_BIT0] = True if self._rfstate & 0x01 else False
+            attr[ATTR_RF_LOW_BAT] = True if self._rfstate & 0x02 else False
+            attr[ATTR_RF_SUPERVISED] = True if self._rfstate & 0x04 else False
+            attr[ATTR_RF_BIT3] = True if self._rfstate & 0x08 else False
+            attr[ATTR_RF_LOOP3] = True if self._rfstate & 0x10 else False
+            attr[ATTR_RF_LOOP2] = True if self._rfstate & 0x20 else False
+            attr[ATTR_RF_LOOP4] = True if self._rfstate & 0x40 else False
+            attr[ATTR_RF_LOOP1] = True if self._rfstate & 0x80 else False
         return attr
 
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._state == 1 \
-            or (self._loop and self.get_attr(LOOP_ATTR[self._loop]))
+        return self._state == 1
 
     @property
     def device_class(self):
@@ -151,6 +131,8 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         """Update RF state."""
         if self._rfid and message and message.serial_number == self._rfid:
             self._rfstate = message.value
+            if self._loop:
+                self._state = 1 if message.loop[self._loop - 1] else 0
             self.schedule_update_ha_state()
 
     def _rel_message_callback(self, message):
