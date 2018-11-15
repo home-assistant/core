@@ -34,6 +34,7 @@ def populate_data():
     REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = {
         'CentraLite': ['3130'],
         'LUMI': ['lumi.sensor_switch.aq2'],
+        'OSRAM': ['LIGHTIFY Dimming Switch'],
     }
     DEVICE_CLASS[zll.PROFILE_ID] = {
         zll.DeviceType.ON_OFF_LIGHT: 'light',
