@@ -163,6 +163,7 @@ class EvoClimateDevice(ClimateDevice):
             raise err
 
     def _flatten_json(self, y):                                                 # noqa: E501; pylint: disable=no-self-use
+        """Convert a JSON tree into a (flat) dict."""
         # pylint: disable=invalid-name
         out = {}
 
