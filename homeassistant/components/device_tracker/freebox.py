@@ -65,8 +65,8 @@ class FreeboxDeviceScanner(DeviceScanner):
         hosts = await self.connection.lan.get_hosts_list()
 
         last_results = [_build_device(device)
-                            for device in hosts
-                            if device['active']]
+                        for device in hosts
+                        if device['active']]
 
         self.last_results = last_results
         return True
