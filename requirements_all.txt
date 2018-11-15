@@ -672,7 +672,7 @@ mbddns==0.1.2
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
 
-# homeassistant.components.sensor.meteo_france
+# homeassistant.components.meteo_france
 meteofrance==0.2.8
 
 # homeassistant.components.sensor.mfi
