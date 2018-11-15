@@ -67,7 +67,7 @@ class EnigmaNotify(BaseNotificationService):
     """Representation of a notification service for Enigma device."""
 
     def __init__(self, name, host, port, username, password):
-        # Initialize the Enigma device.
+        """Initialize the Enigma device."""
         self._name = name
         self._host = host
         self._port = port
