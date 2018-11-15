@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ihc_id = switch[CONF_ID]
             controller_id = switch[CONF_CONTROLLER]
             ihc_controller = hass.data[controller_id][IHC_CONTROLLER]
-            info = hass.data[controller_id][IHC_INFO]            
+            info = hass.data[controller_id][IHC_INFO]
             name = switch[CONF_NAME]
 
             sensor = IHCSwitch(ihc_controller, name, ihc_id, info)
