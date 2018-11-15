@@ -46,7 +46,7 @@ def send_request(payload, session):
     try:
         request = requests.post(
             URL, cookies={"sdi_squeezenetwork_session": session},
-            json=payload, timeout=5)
+            json=payload, timeout=30)
     except requests.exceptions.Timeout:
         _LOGGER.error("Timed out when sending request")
     except requests.exceptions.ConnectionError:
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     session_request = requests.post(
         "https://www.uesmartradio.com/user/login",
-        data={"email": email, "password": password}, timeout=5)
+        data={"email": email, "password": password}, timeout=30)
     session = session_request.cookies["sdi_squeezenetwork_session"]
 
     player_request = send_request({"params": ["", ["serverstatus"]]}, session)
