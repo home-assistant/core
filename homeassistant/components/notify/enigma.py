@@ -48,7 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
 async def async_get_service(hass, config, discovery_info=None):
     """Setup the Enigma platform."""
     if config.get(CONF_HOST) is not None:
