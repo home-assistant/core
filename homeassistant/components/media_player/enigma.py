@@ -72,7 +72,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # SETUP PLATFORM
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Enigma platform."""
     if DATA_ENIGMA not in hass.data:
         hass.data[DATA_ENIGMA] = []
 
@@ -135,6 +134,7 @@ class EnigmaDevice(MediaPlayerDevice):
 
     # Load channels from specified bouquet orfrom first available bouquet
     def load_sources(self):
+        """Initialize the Enigma device loading the sources."""
         from bs4 import BeautifulSoup
 
         if self._bouquet:
