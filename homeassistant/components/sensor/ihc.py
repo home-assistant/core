@@ -5,10 +5,10 @@ https://home-assistant.io/components/sensor.ihc/
 """
 import voluptuous as vol
 from homeassistant.components.ihc import (
-    validate_name, IHC_DATA, IHC_CONTROLLER, CONTROLLER_ID, IHC_INFO)
+    validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.ihc.const import (
-    CONF_SECONDARY)
+    CONF_CONTROLLER)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ID, CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_SENSORS,
@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [
             vol.All({
                 vol.Required(CONF_ID): cv.positive_int,
-                vol.Optional(CONF_SECONDARY, default=False): cv.boolean,
+                vol.Optional(CONF_CONTROLLER, default="0"): cv.string,
                 vol.Optional(CONF_NAME): cv.string,
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT,
                              default=TEMP_CELSIUS): cv.string
@@ -54,14 +54,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sensors = config[CONF_SENSORS]
         for sensor_cfg in sensors:
             ihc_id = sensor_cfg[CONF_ID]
-            # Get controller id
-            ihc_secondary = bool(sensor_cfg[CONF_SECONDARY])
-            ihc_key = IHC_DATA.format(CONTROLLER_ID[ihc_secondary])
-            ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
-
+            controller_id = sensor_cfg[CONF_CONTROLLER]
+            ihc_controller = hass.data[controller_id][IHC_CONTROLLER]
             info = hass.data[ihc_key][IHC_INFO]
             name = sensor_cfg[CONF_NAME]
             unit = sensor_cfg[CONF_UNIT_OF_MEASUREMENT]
+            
             sensor = IHCSensor(ihc_controller, name, ihc_id, info, unit)
             devices.append(sensor)
 
