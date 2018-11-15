@@ -560,7 +560,7 @@ class ZHAEvent(object):
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         self._hass.bus.async_fire(
-            self._cluster.server_commands.get(command_id)[0],
+            'zha_' + self._cluster.server_commands.get(command_id)[0],
             {'device': self.event_id, 'args': args},
             EventOrigin.remote
         )
@@ -573,7 +573,7 @@ class ZHAEvent(object):
     @callback
     def attribute_updated(self, attrid, value):
         self._hass.bus.async_fire(
-            self._cluster.attributes.get(attrid)[0],
+            'zha_' + self._cluster.attributes.get(attrid)[0],
             {'device': self.event_id, 'value': value},
             EventOrigin.remote
         )
