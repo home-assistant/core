@@ -116,7 +116,7 @@ def setup(hass, config):
         name = controller_conf[CONF_NAME] or str(index)
         if not ihc_setup(hass, config, controller_conf, name):
             return False
-    
+
     return True
 
 
