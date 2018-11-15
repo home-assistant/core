@@ -1,6 +1,7 @@
 """
 Support for Freebox devices (Freebox v6 and Freebox mini 4K).
- For more details about this component, please refer to the documentation at
+
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/device_tracker/freebox/
 """
 from collections import namedtuple
@@ -32,6 +33,7 @@ def _build_device(device_dict):
 
 class FreeboxDeviceScanner(DeviceScanner):
     """Queries the Freebox device."""
+
     def __init__(self, fbx):
         """Initialize the scanner."""
         self.last_results = {}

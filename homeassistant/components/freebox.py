@@ -1,6 +1,7 @@
 """
 Support for Freebox devices (Freebox v6 and Freebox mini 4K).
- For more details about this component, please refer to the documentation at
+
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/freebox/
 """
 import logging
@@ -31,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Set up the Freebox component"""
+    """Set up the Freebox component."""
     conf = config.get(DOMAIN)
 
     async def discovery_dispatch(service, discovery_info):
@@ -54,7 +55,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_freebox(hass, config, host, port):
-    """Start up the Freebox component platforms"""
+    """Start up the Freebox component platforms."""
     from aiofreepybox import Freepybox
     from aiofreepybox.exceptions import HttpRequestError
 
