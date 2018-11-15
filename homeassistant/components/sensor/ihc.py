@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ihc_id = sensor_cfg[CONF_ID]
             controller_id = sensor_cfg[CONF_CONTROLLER]
             ihc_controller = hass.data[controller_id][IHC_CONTROLLER]
-            info = hass.data[ihc_key][IHC_INFO]
+            info = hass.data[controller_id][IHC_INFO]
             name = sensor_cfg[CONF_NAME]
             unit = sensor_cfg[CONF_UNIT_OF_MEASUREMENT]
             
