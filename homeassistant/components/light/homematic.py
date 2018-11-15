@@ -8,7 +8,9 @@ import logging
 
 from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
+    ATTR_HS_COLOR, SUPPORT_COLOR,
+    ATTR_EFFECT, SUPPORT_EFFECT, Light)
 from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,15 +55,45 @@ class HMLight(HMDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_HOMEMATIC
+        if hasattr(self._hmdevice, "get_effect"):
+            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_EFFECT
+        return SUPPORT_BRIGHTNESS
+
+    @property
+    def hs_color(self):
+        """Return the hue and saturation color value [float, float]."""
+        if not self.supported_features & SUPPORT_COLOR:
+            return None
+        hue, sat = self._hmdevice.get_hs_color()
+        return hue*360.0, sat*100.0
+
+    @property
+    def effect_list(self):
+        if not self.supported_features & SUPPORT_EFFECT:
+            return None
+        return self._hmdevice.get_effect_list()
+
+    @property
+    def effect(self):
+        if not self.supported_features & SUPPORT_EFFECT:
+            return None
+        return self._hmdevice.get_effect()
 
     def turn_on(self, **kwargs):
-        """Turn the light on."""
+        """Turn the light on and/or change color or color effect settings."""
         if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)
         else:
-            self._hmdevice.on(self._channel)
+            if ATTR_HS_COLOR not in kwargs and ATTR_EFFECT not in kwargs:
+                self._hmdevice.on(self._channel)
+
+        if ATTR_HS_COLOR in kwargs:
+            self._hmdevice.set_hs_color(
+                hue=kwargs[ATTR_HS_COLOR][0]/360.0,
+                saturation=kwargs[ATTR_HS_COLOR][1]/100.0)
+        if ATTR_EFFECT in kwargs:
+            self._hmdevice.set_effect(kwargs[ATTR_EFFECT])
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
@@ -72,3 +104,7 @@ class HMLight(HMDevice, Light):
         # Use LEVEL
         self._state = "LEVEL"
         self._data.update({self._state: STATE_UNKNOWN})
+
+        if self.supported_features & SUPPORT_COLOR:
+            self._data.update(
+                {"COLOR": STATE_UNKNOWN, "PROGRAM": STATE_UNKNOWN})
