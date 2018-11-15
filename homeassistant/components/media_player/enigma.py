@@ -72,6 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # SETUP PLATFORM
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Initialize the Enigma device."""
     if DATA_ENIGMA not in hass.data:
         hass.data[DATA_ENIGMA] = []
 
