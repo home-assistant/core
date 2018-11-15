@@ -1040,6 +1040,9 @@ pymodbus==1.3.1
 # homeassistant.components.media_player.monoprice
 pymonoprice==0.3
 
+# homeassistant.components.camera.motioneye
+pymotion==0.1.6
+
 # homeassistant.components.media_player.yamaha_musiccast
 pymusiccast==0.1.6
 

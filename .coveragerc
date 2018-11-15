@@ -439,6 +439,7 @@ omit =
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
+    homeassistant/components/camera/motioneye.py
     homeassistant/components/camera/onvif.py
     homeassistant/components/camera/proxy.py
     homeassistant/components/camera/ring.py
