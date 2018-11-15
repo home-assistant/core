@@ -536,7 +536,6 @@ class ZHAEvent(object):
     def __init__(self, hass, cluster, discovery_info):
         """Register callback that will be used for signals."""
         self._hass = hass
-        self.endpoint = discovery_info['endpoint']
         self._cluster = cluster
         self._cluster.add_listener(self)
         ieee = discovery_info['endpoint'].device.ieee
@@ -551,7 +550,7 @@ class ZHAEvent(object):
                 discovery_info.get('entity_suffix', '')
             )
         else:
-            self.event_id = "{}.zha_{}{}".format(
+            self.event_id = "{}.event_{}{}".format(
                 ieeetail,
                 discovery_info['endpoint'].endpoint_id,
                 discovery_info.get('entity_suffix', '')
