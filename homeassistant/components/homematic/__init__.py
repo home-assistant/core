@@ -66,7 +66,7 @@ HM_DEVICE_TYPES = {
         'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic',
         'IPKeySwitchPowermeter', 'IPGarage'],
     DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer', 'IPDimmer',
-        'ColorEffectLight'],
+                      'ColorEffectLight'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
         'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
