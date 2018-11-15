@@ -187,7 +187,6 @@ class EnigmaDevice(MediaPlayerDevice):
         # Get first bouquet reference
         bouquets_xml = self.request_call('/web/getallservices')
         # bouquets_xml = self.request_call('/web/bouquets')
-
         soup = BeautifulSoup(bouquets_xml, 'html.parser')
         return soup.find('e2servicereference').renderContents().decode('UTF8')
 
@@ -197,8 +196,7 @@ class EnigmaDevice(MediaPlayerDevice):
         uri = 'http://' + self._host + ":" + str(self._port) + url
         _LOGGER.debug("Enigma: [request_call] - Call request %s ", uri)
         try:
-            return self._opener.open(uri, timeout=self._timeout).read().decode
-            ('UTF8')
+            return self._opener.open(uri, timeout=self._timeout).read()
         except (HTTPError, URLError, ConnectionRefusedError):
             _LOGGER.exception("Enigma: [request_call] - Error connecting to" +
                               "remote enigma %s: %s ", self._host,
