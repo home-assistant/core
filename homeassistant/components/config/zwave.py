@@ -1,5 +1,4 @@
 """Provide configuration end points for Z-Wave."""
-import asyncio
 import logging
 
 from collections import deque
@@ -16,8 +15,7 @@ CONFIG_PATH = 'zwave_device_config.yaml'
 OZW_LOG_FILENAME = 'OZW_Log.txt'
 
 
-@asyncio.coroutine
-def async_setup(hass):
+async def async_setup(hass):
     """Set up the Z-Wave config API."""
     hass.http.register_view(EditKeyBasedConfigView(
         'zwave', 'device_config', CONFIG_PATH, cv.entity_id,
@@ -41,8 +39,7 @@ class ZWaveLogView(HomeAssistantView):
     name = "api:zwave:ozwlog"
 
 # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """Retrieve the lines from ZWave log."""
         try:
             lines = int(request.query.get('lines', 0))
@@ -50,7 +47,7 @@ class ZWaveLogView(HomeAssistantView):
             return Response(text='Invalid datetime', status=400)
 
         hass = request.app['hass']
-        response = yield from hass.async_add_job(self._get_log, hass, lines)
+        response = await hass.async_add_job(self._get_log, hass, lines)
 
         return Response(text='\n'.join(response))
 
@@ -212,7 +209,7 @@ class ZWaveProtectionView(HomeAssistantView):
         network = hass.data.get(const.DATA_NETWORK)
 
         def _fetch_protection():
-            """Helper to get protection data."""
+            """Get protection data."""
             node = network.nodes.get(nodeid)
             if node is None:
                 return self.json_message('Node not found', HTTP_NOT_FOUND)
@@ -236,7 +233,7 @@ class ZWaveProtectionView(HomeAssistantView):
         protection_data = await request.json()
 
         def _set_protection():
-            """Helper to get protection data."""
+            """Set protection data."""
             node = network.nodes.get(nodeid)
             selection = protection_data["selection"]
             value_id = int(protection_data[const.ATTR_VALUE_ID])

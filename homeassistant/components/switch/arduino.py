@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arduino platform."""
     # Verify that Arduino board is present
     if arduino.BOARD is None:
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     switches = []
     for pinnum, pin in pins.items():
         switches.append(ArduinoSwitch(pinnum, pin))
-    add_devices(switches)
+    add_entities(switches)
 
 
 class ArduinoSwitch(SwitchDevice):

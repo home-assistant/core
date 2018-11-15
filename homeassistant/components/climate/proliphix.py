@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Proliphix thermostats."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     pdp = proliphix.PDP(host, username, password)
 
-    add_devices([ProliphixThermostat(pdp)])
+    add_entities([ProliphixThermostat(pdp)])
 
 
 class ProliphixThermostat(ClimateDevice):

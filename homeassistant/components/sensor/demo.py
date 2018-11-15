@@ -10,9 +10,9 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo sensors."""
-    add_devices([
+    add_entities([
         DemoSensor('Outside Temperature', 15.6, DEVICE_CLASS_TEMPERATURE,
                    TEMP_CELSIUS, 12),
         DemoSensor('Outside Humidity', 54, DEVICE_CLASS_HUMIDITY, '%', None),

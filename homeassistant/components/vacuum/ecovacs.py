@@ -2,7 +2,7 @@
 Support for Ecovacs Ecovacs Vaccums.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/vacuum.neato/
+https://home-assistant.io/components/vacuum.ecovacs/
 """
 import logging
 
@@ -27,13 +27,13 @@ ATTR_ERROR = 'error'
 ATTR_COMPONENT_PREFIX = 'component_'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecovacs vacuums."""
     vacuums = []
     for device in hass.data[ECOVACS_DEVICES]:
         vacuums.append(EcovacsVacuum(device))
     _LOGGER.debug("Adding Ecovacs Vacuums to Hass: %s", vacuums)
-    add_devices(vacuums, True)
+    add_entities(vacuums, True)
 
 
 class EcovacsVacuum(VacuumDevice):
@@ -43,9 +43,9 @@ class EcovacsVacuum(VacuumDevice):
         """Initialize the Ecovacs Vacuum."""
         self.device = device
         self.device.connect_and_wait_until_ready()
-        try:
+        if self.device.vacuum.get('nick', None) is not None:
             self._name = '{}'.format(self.device.vacuum['nick'])
-        except KeyError:
+        else:
             # In case there is no nickname defined, use the device id
             self._name = '{}'.format(self.device.vacuum['did'])
 
@@ -189,10 +189,6 @@ class EcovacsVacuum(VacuumDevice):
 
         for key, val in self.device.components.items():
             attr_name = ATTR_COMPONENT_PREFIX + key
-            data[attr_name] = int(val * 100 / 0.2777778)
-            # The above calculation includes a fix for a bug in sucks 0.9.1
-            # When sucks 0.9.2+ is released, it should be changed to the
-            # following:
-            # data[attr_name] = int(val * 100)
+            data[attr_name] = int(val * 100)
 
         return data

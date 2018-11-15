@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Aladdin Connect platform."""
     from aladdin_connect import AladdinConnectClient
 
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         if not acc.login():
             raise ValueError("Username or Password is incorrect")
-        add_devices(AladdinDevice(acc, door) for door in acc.get_doors())
+        add_entities(AladdinDevice(acc, door) for door in acc.get_doors())
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(

@@ -15,11 +15,11 @@ DEPENDENCIES = ['homekit_controller']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit switch support."""
     if discovery_info is not None:
         accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
-        add_devices([HomeKitSwitch(accessory, discovery_info)], True)
+        add_entities([HomeKitSwitch(accessory, discovery_info)], True)
 
 
 class HomeKitSwitch(HomeKitEntity, SwitchDevice):
@@ -32,8 +32,7 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
 
     def update_characteristics(self, characteristics):
         """Synchronise the switch state with Home Assistant."""
-        # pylint: disable=import-error
-        import homekit
+        import homekit  # pylint: disable=import-error
 
         for characteristic in characteristics:
             ctype = characteristic['type']

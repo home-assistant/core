@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GC100 devices."""
     switches = []
     ports = config.get(CONF_PORTS)
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for port_addr, port_name in port.items():
             switches.append(GC100Switch(
                 port_name, port_addr, hass.data[DATA_GC100]))
-    add_devices(switches, True)
+    add_entities(switches, True)
 
 
 class GC100Switch(ToggleEntity):

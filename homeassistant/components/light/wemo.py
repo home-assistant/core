@@ -4,7 +4,6 @@ Support for Belkin WeMo lights.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.wemo/
 """
-import asyncio
 import logging
 from datetime import timedelta
 import requests
@@ -27,7 +26,7 @@ SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR |
                 SUPPORT_TRANSITION)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up discovered WeMo switches."""
     from pywemo import discovery
 
@@ -43,12 +42,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             raise PlatformNotReady
 
         if device.model_name == 'Dimmer':
-            add_devices([WemoDimmer(device)])
+            add_entities([WemoDimmer(device)])
         else:
-            setup_bridge(device, add_devices)
+            setup_bridge(device, add_entities)
 
 
-def setup_bridge(bridge, add_devices):
+def setup_bridge(bridge, add_entities):
     """Set up a WeMo link."""
     lights = {}
 
@@ -65,7 +64,7 @@ def setup_bridge(bridge, add_devices):
                 new_lights.append(lights[light_id])
 
         if new_lights:
-            add_devices(new_lights)
+            add_entities(new_lights)
 
     update_lights()
 
@@ -160,13 +159,12 @@ class WemoDimmer(Light):
         self._brightness = None
         self._state = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register update callback."""
         wemo = self.hass.components.wemo
         # The register method uses a threading condition, so call via executor.
-        # and yield from to wait until the task is done.
-        yield from self.hass.async_add_job(
+        # and await to wait until the task is done.
+        await self.hass.async_add_job(
             wemo.SUBSCRIPTION_REGISTRY.register, self.wemo)
         # The on method just appends to a defaultdict list.
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)

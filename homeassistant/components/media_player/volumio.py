@@ -6,23 +6,24 @@ https://home-assistant.io/components/media_player.volumio/
 
 Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
+import asyncio
 from datetime import timedelta
 import logging
 import socket
-import asyncio
-import aiohttp
 
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
-    SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC,
-    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST)
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_PLAYING, STATE_PAUSED, STATE_IDLE, CONF_HOST, CONF_PORT, CONF_NAME)
-import homeassistant.helpers.config_validation as cv
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _CONFIGURING = {}
@@ -50,8 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Volumio platform."""
     if DATA_VOLUMIO not in hass.data:
         hass.data[DATA_VOLUMIO] = dict()
@@ -75,7 +76,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entity = Volumio(name, host, port, hass)
 
     hass.data[DATA_VOLUMIO][ip_addr] = entity
-    async_add_devices([entity])
+    async_add_entities([entity])
 
 
 class Volumio(MediaPlayerDevice):
@@ -89,13 +90,11 @@ class Volumio(MediaPlayerDevice):
         self._url = '{}:{}'.format(host, str(port))
         self._name = name
         self._state = {}
-        self.async_update()
         self._lastvol = self._state.get('volume', 0)
         self._playlists = []
         self._currentplaylist = None
 
-    @asyncio.coroutine
-    def send_volumio_msg(self, method, params=None):
+    async def send_volumio_msg(self, method, params=None):
         """Send message."""
         url = "http://{}:{}/api/v1/{}/".format(self.host, self.port, method)
 
@@ -103,9 +102,9 @@ class Volumio(MediaPlayerDevice):
 
         try:
             websession = async_get_clientsession(self.hass)
-            response = yield from websession.get(url, params=params)
+            response = await websession.get(url, params=params)
             if response.status == 200:
-                data = yield from response.json()
+                data = await response.json()
             else:
                 _LOGGER.error(
                     "Query failed, response code: %s Full message: %s",
@@ -113,7 +112,9 @@ class Volumio(MediaPlayerDevice):
                 return False
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
-            _LOGGER.error("Failed communicating with Volumio: %s", type(error))
+            _LOGGER.error(
+                "Failed communicating with Volumio '%s': %s",
+                self._name, type(error))
             return False
 
         try:
@@ -122,11 +123,10 @@ class Volumio(MediaPlayerDevice):
             _LOGGER.error("Received invalid response: %s", data)
             return False
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update state."""
-        resp = yield from self.send_volumio_msg('getState')
-        yield from self._async_update_playlists()
+        resp = await self.send_volumio_msg('getState')
+        await self._async_update_playlists()
         if resp is False:
             return
         self._state = resp.copy()

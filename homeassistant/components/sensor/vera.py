@@ -22,9 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vera controller devices."""
-    add_devices(
+    add_entities(
         [VeraSensor(device, hass.data[VERA_CONTROLLER])
          for device in hass.data[VERA_DEVICES]['sensor']], True)
 

@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['homematic']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform."""
     if discovery_info is None:
         return
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         new_device = HMCover(conf)
         devices.append(new_device)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class HMCover(HMDevice, CoverDevice):

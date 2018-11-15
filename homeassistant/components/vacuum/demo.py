@@ -43,9 +43,9 @@ DEMO_VACUUM_NONE = '4_Fourth_floor'
 DEMO_VACUUM_STATE = '5_Fifth_floor'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo vacuums."""
-    add_devices([
+    add_entities([
         DemoVacuum(DEMO_VACUUM_COMPLETE, SUPPORT_ALL_SERVICES),
         DemoVacuum(DEMO_VACUUM_MOST, SUPPORT_MOST_SERVICES),
         DemoVacuum(DEMO_VACUUM_BASIC, SUPPORT_BASIC_SERVICES),

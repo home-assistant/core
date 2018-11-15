@@ -55,14 +55,14 @@ _SENSOR_TYPES_DEPRECATED = SENSOR_TYPES_DEPRECATED + DEPRECATED_WEATHER_VARS
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nest Sensor.
 
     No longer used.
     """
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
 
@@ -119,7 +119,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
         return all_sensors
 
-    async_add_devices(await hass.async_add_job(get_sensors), True)
+    async_add_entities(await hass.async_add_job(get_sensors), True)
 
 
 class NestBasicSensor(NestSensorDevice):
@@ -140,15 +140,15 @@ class NestBasicSensor(NestSensorDevice):
         self._unit = SENSOR_UNITS.get(self.variable)
 
         if self.variable in VARIABLE_NAME_MAPPING:
-            self._state = getattr(self._device,
+            self._state = getattr(self.device,
                                   VARIABLE_NAME_MAPPING[self.variable])
         elif self.variable in PROTECT_SENSOR_TYPES \
                 and self.variable != 'color_status':
             # keep backward compatibility
-            state = getattr(self._device, self.variable)
+            state = getattr(self.device, self.variable)
             self._state = state.capitalize() if state is not None else None
         else:
-            self._state = getattr(self._device, self.variable)
+            self._state = getattr(self.device, self.variable)
 
 
 class NestTempSensor(NestSensorDevice):
@@ -166,12 +166,12 @@ class NestTempSensor(NestSensorDevice):
 
     def update(self):
         """Retrieve latest state."""
-        if self._device.temperature_scale == 'C':
+        if self.device.temperature_scale == 'C':
             self._unit = TEMP_CELSIUS
         else:
             self._unit = TEMP_FAHRENHEIT
 
-        temp = getattr(self._device, self.variable)
+        temp = getattr(self.device, self.variable)
         if temp is None:
             self._state = None
 

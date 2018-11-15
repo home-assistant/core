@@ -2,7 +2,7 @@
 
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers import aiohttp_client
@@ -23,10 +23,11 @@ def configured_hosts(hass):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class DeconzFlowHandler(data_entry_flow.FlowHandler):
+class DeconzFlowHandler(config_entries.ConfigFlow):
     """Handle a deCONZ config flow."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the deCONZ config flow."""
@@ -34,10 +35,6 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         self.deconz_config = {}
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(self, user_input=None):
         """Handle a deCONZ config flow start.
 
         Only allows one instance to be set up.
@@ -66,7 +63,7 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
             for bridge in self.bridges:
                 hosts.append(bridge[CONF_HOST])
             return self.async_show_form(
-                step_id='init',
+                step_id='user',
                 data_schema=vol.Schema({
                     vol.Required(CONF_HOST): vol.In(hosts)
                 })

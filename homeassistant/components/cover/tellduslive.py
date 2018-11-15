@@ -14,12 +14,12 @@ from homeassistant.components.tellduslive import TelldusLiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Telldus Live covers."""
     if discovery_info is None:
         return
 
-    add_devices(TelldusLiveCover(hass, cover) for cover in discovery_info)
+    add_entities(TelldusLiveCover(hass, cover) for cover in discovery_info)
 
 
 class TelldusLiveCover(TelldusLiveEntity, CoverDevice):
@@ -28,19 +28,19 @@ class TelldusLiveCover(TelldusLiveEntity, CoverDevice):
     @property
     def is_closed(self):
         """Return the current position of the cover."""
-        return self._device.is_down
+        return self.device.is_down
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self._device.down()
+        self.device.down()
         self.changed()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self._device.up()
+        self.device.up()
         self.changed()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._device.stop()
+        self.device.stop()
         self.changed()

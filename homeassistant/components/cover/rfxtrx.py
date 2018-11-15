@@ -29,12 +29,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx cover."""
     import RFXtrx as rfxtrxmod
 
     covers = rfxtrx.get_devices_from_config(config, RfxtrxCover)
-    add_devices(covers)
+    add_entities(covers)
 
     def cover_update(event):
         """Handle cover updates from the RFXtrx gateway."""
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         new_device = rfxtrx.get_new_device(event, config, RfxtrxCover)
         if new_device:
-            add_devices([new_device])
+            add_entities([new_device])
 
         rfxtrx.apply_received_command(event)
 

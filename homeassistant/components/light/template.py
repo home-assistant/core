@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.template/
 """
 import logging
-import asyncio
 
 import voluptuous as vol
 
@@ -49,8 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Template Lights."""
     lights = []
 
@@ -103,7 +102,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No lights added")
         return False
 
-    async_add_devices(lights)
+    async_add_entities(lights)
     return True
 
 
@@ -181,8 +180,7 @@ class LightTemplate(Light):
         """Return the entity picture to use in the frontend, if any."""
         return self._entity_picture
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def template_light_state_listener(entity, old_state, new_state):
@@ -202,8 +200,7 @@ class LightTemplate(Light):
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_light_startup)
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         optimistic_set = False
         # set optimistic states
@@ -218,24 +215,22 @@ class LightTemplate(Light):
             optimistic_set = True
 
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
-            self.hass.async_add_job(self._level_script.async_run(
-                {"brightness": kwargs[ATTR_BRIGHTNESS]}))
+            await self._level_script.async_run(
+                {"brightness": kwargs[ATTR_BRIGHTNESS]}, context=self._context)
         else:
-            yield from self._on_script.async_run()
+            await self._on_script.async_run()
 
         if optimistic_set:
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        yield from self._off_script.async_run()
+        await self._off_script.async_run(context=self._context)
         if self._template is None:
             self._state = False
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update the state from the template."""
         if self._template is not None:
             try:

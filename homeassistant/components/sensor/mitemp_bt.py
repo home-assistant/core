@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MiTempBt sensor."""
     from mitemp_bt import mitemp_bt_poller
     try:
@@ -90,7 +90,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devs.append(MiTempBtSensor(
             poller, parameter, name, unit, force_update, median))
 
-    add_devices(devs)
+    add_entities(devs)
 
 
 class MiTempBtSensor(Entity):

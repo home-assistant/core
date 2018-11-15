@@ -21,6 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,9 +104,9 @@ PLATFORM_SCHEMA = vol.Schema(vol.All({
 }, _state_validator))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the manual alarm platform."""
-    add_devices([ManualAlarm(
+    add_entities([ManualAlarm(
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
@@ -306,3 +307,10 @@ class ManualAlarm(alarm.AlarmControlPanel):
             state_attr[ATTR_POST_PENDING_STATE] = self._state
 
         return state_attr
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
+        state = await async_get_last_state(self.hass, self.entity_id)
+        if state:
+            self._state = state.state
+            self._state_ts = state.last_updated

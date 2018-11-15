@@ -1,17 +1,20 @@
 """Storage for auth models."""
 from collections import OrderedDict
 from datetime import timedelta
+import hmac
 from logging import getLogger
 from typing import Any, Dict, List, Optional  # noqa: F401
-import hmac
 
+from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
+from .permissions import DEFAULT_POLICY
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'
+INITIAL_GROUP_NAME = 'All Access'
 
 
 class AuthStore:
@@ -27,7 +30,17 @@ class AuthStore:
         """Initialize the auth store."""
         self.hass = hass
         self._users = None  # type: Optional[Dict[str, models.User]]
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._groups = None  # type: Optional[Dict[str, models.Group]]
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY,
+                                                 private=True)
+
+    async def async_get_groups(self) -> List[models.Group]:
+        """Retrieve all users."""
+        if self._groups is None:
+            await self._async_load()
+            assert self._groups is not None
+
+        return list(self._groups.values())
 
     async def async_get_users(self) -> List[models.User]:
         """Retrieve all users."""
@@ -49,14 +62,20 @@ class AuthStore:
             self, name: Optional[str], is_owner: Optional[bool] = None,
             is_active: Optional[bool] = None,
             system_generated: Optional[bool] = None,
-            credentials: Optional[models.Credentials] = None) -> models.User:
+            credentials: Optional[models.Credentials] = None,
+            groups: Optional[List[models.Group]] = None) -> models.User:
         """Create a new user."""
         if self._users is None:
             await self._async_load()
-            assert self._users is not None
+
+        assert self._users is not None
+        assert self._groups is not None
 
         kwargs = {
-            'name': name
+            'name': name,
+            # Until we get group management, we just put everyone in the
+            # same group.
+            'groups': groups or [],
         }  # type: Dict[str, Any]
 
         if is_owner is not None:
@@ -128,11 +147,27 @@ class AuthStore:
         self._async_schedule_save()
 
     async def async_create_refresh_token(
-            self, user: models.User, client_id: Optional[str] = None) \
+            self, user: models.User, client_id: Optional[str] = None,
+            client_name: Optional[str] = None,
+            client_icon: Optional[str] = None,
+            token_type: str = models.TOKEN_TYPE_NORMAL,
+            access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION) \
             -> models.RefreshToken:
         """Create a new token for a user."""
-        refresh_token = models.RefreshToken(user=user, client_id=client_id)
+        kwargs = {
+            'user': user,
+            'client_id': client_id,
+            'token_type': token_type,
+            'access_token_expiration': access_token_expiration
+        }  # type: Dict[str, Any]
+        if client_name:
+            kwargs['client_name'] = client_name
+        if client_icon:
+            kwargs['client_icon'] = client_icon
+
+        refresh_token = models.RefreshToken(**kwargs)
         user.refresh_tokens[refresh_token.id] = refresh_token
+
         self._async_schedule_save()
         return refresh_token
 
@@ -178,6 +213,15 @@ class AuthStore:
 
         return found
 
+    @callback
+    def async_log_refresh_token_usage(
+            self, refresh_token: models.RefreshToken,
+            remote_ip: Optional[str] = None) -> None:
+        """Update refresh token last used information."""
+        refresh_token.last_used_at = dt_util.utcnow()
+        refresh_token.last_used_ip = remote_ip
+        self._async_schedule_save()
+
     async def _async_load(self) -> None:
         """Load the users."""
         data = await self._store.async_load()
@@ -187,14 +231,45 @@ class AuthStore:
         if self._users is not None:
             return
 
-        users = OrderedDict()  # type: Dict[str, models.User]
-
         if data is None:
-            self._users = users
+            self._set_defaults()
             return
 
+        users = OrderedDict()  # type: Dict[str, models.User]
+        groups = OrderedDict()  # type: Dict[str, models.Group]
+
+        # When creating objects we mention each attribute explicetely. This
+        # prevents crashing if user rolls back HA version after a new property
+        # was added.
+
+        for group_dict in data.get('groups', []):
+            groups[group_dict['id']] = models.Group(
+                name=group_dict['name'],
+                id=group_dict['id'],
+                policy=group_dict.get('policy', DEFAULT_POLICY),
+            )
+
+        migrate_group = None
+
+        if not groups:
+            migrate_group = models.Group(
+                name=INITIAL_GROUP_NAME,
+                policy=DEFAULT_POLICY
+            )
+            groups[migrate_group.id] = migrate_group
+
         for user_dict in data['users']:
-            users[user_dict['id']] = models.User(**user_dict)
+            users[user_dict['id']] = models.User(
+                name=user_dict['name'],
+                groups=[groups[group_id] for group_id
+                        in user_dict.get('group_ids', [])],
+                id=user_dict['id'],
+                is_owner=user_dict['is_owner'],
+                is_active=user_dict['is_active'],
+                system_generated=user_dict['system_generated'],
+            )
+            if migrate_group is not None and not user_dict['system_generated']:
+                users[user_dict['id']].groups = [migrate_group]
 
         for cred_dict in data['credentials']:
             users[cred_dict['user_id']].credentials.append(models.Credentials(
@@ -216,18 +291,40 @@ class AuthStore:
                     'Ignoring refresh token %(id)s with invalid created_at '
                     '%(created_at)s for user_id %(user_id)s', rt_dict)
                 continue
+
+            token_type = rt_dict.get('token_type')
+            if token_type is None:
+                if rt_dict['client_id'] is None:
+                    token_type = models.TOKEN_TYPE_SYSTEM
+                else:
+                    token_type = models.TOKEN_TYPE_NORMAL
+
+            # old refresh_token don't have last_used_at (pre-0.78)
+            last_used_at_str = rt_dict.get('last_used_at')
+            if last_used_at_str:
+                last_used_at = dt_util.parse_datetime(last_used_at_str)
+            else:
+                last_used_at = None
+
             token = models.RefreshToken(
                 id=rt_dict['id'],
                 user=users[rt_dict['user_id']],
                 client_id=rt_dict['client_id'],
+                # use dict.get to keep backward compatibility
+                client_name=rt_dict.get('client_name'),
+                client_icon=rt_dict.get('client_icon'),
+                token_type=token_type,
                 created_at=created_at,
                 access_token_expiration=timedelta(
                     seconds=rt_dict['access_token_expiration']),
                 token=rt_dict['token'],
-                jwt_key=rt_dict['jwt_key']
+                jwt_key=rt_dict['jwt_key'],
+                last_used_at=last_used_at,
+                last_used_ip=rt_dict.get('last_used_ip'),
             )
             users[rt_dict['user_id']].refresh_tokens[token.id] = token
 
+        self._groups = groups
         self._users = users
 
     @callback
@@ -242,10 +339,12 @@ class AuthStore:
     def _data_to_save(self) -> Dict:
         """Return the data to store."""
         assert self._users is not None
+        assert self._groups is not None
 
         users = [
             {
                 'id': user.id,
+                'group_ids': [group.id for group in user.groups],
                 'is_owner': user.is_owner,
                 'is_active': user.is_active,
                 'name': user.name,
@@ -253,6 +352,18 @@ class AuthStore:
             }
             for user in self._users.values()
         ]
+
+        groups = []
+        for group in self._groups.values():
+            g_dict = {
+                'name': group.name,
+                'id': group.id,
+            }  # type: Dict[str, Any]
+
+            if group.policy is not DEFAULT_POLICY:
+                g_dict['policy'] = group.policy
+
+            groups.append(g_dict)
 
         credentials = [
             {
@@ -271,11 +382,18 @@ class AuthStore:
                 'id': refresh_token.id,
                 'user_id': user.id,
                 'client_id': refresh_token.client_id,
+                'client_name': refresh_token.client_name,
+                'client_icon': refresh_token.client_icon,
+                'token_type': refresh_token.token_type,
                 'created_at': refresh_token.created_at.isoformat(),
                 'access_token_expiration':
                     refresh_token.access_token_expiration.total_seconds(),
                 'token': refresh_token.token,
                 'jwt_key': refresh_token.jwt_key,
+                'last_used_at':
+                    refresh_token.last_used_at.isoformat()
+                    if refresh_token.last_used_at else None,
+                'last_used_ip': refresh_token.last_used_ip,
             }
             for user in self._users.values()
             for refresh_token in user.refresh_tokens.values()
@@ -283,6 +401,22 @@ class AuthStore:
 
         return {
             'users': users,
+            'groups': groups,
             'credentials': credentials,
             'refresh_tokens': refresh_tokens,
         }
+
+    def _set_defaults(self) -> None:
+        """Set default values for auth store."""
+        self._users = OrderedDict()  # type: Dict[str, models.User]
+
+        # Add default group
+        all_access_group = models.Group(
+            name=INITIAL_GROUP_NAME,
+            policy=DEFAULT_POLICY,
+        )
+
+        groups = OrderedDict()  # type: Dict[str, models.Group]
+        groups[all_access_group.id] = all_access_group
+
+        self._groups = groups

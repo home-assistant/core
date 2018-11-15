@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the WSDOT sensor."""
     sensors = []
     for travel_time in config.get(CONF_TRAVEL_TIMES):
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             WashingtonStateTravelTimeSensor(
                 name, config.get(CONF_API_KEY), travel_time.get(CONF_ID)))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class WashingtonStateTransportSensor(Entity):

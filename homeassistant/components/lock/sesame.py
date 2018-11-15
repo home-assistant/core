@@ -26,16 +26,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(
         hass, config: ConfigType,
-        add_devices: Callable[[list], None], discovery_info=None):
+        add_entities: Callable[[list], None], discovery_info=None):
     """Set up the Sesame platform."""
     import pysesame
 
     email = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
 
-    add_devices([SesameDevice(sesame) for sesame in
-                 pysesame.get_sesames(email, password)],
-                update_before_add=True)
+    add_entities([SesameDevice(sesame) for sesame in
+                  pysesame.get_sesames(email, password)],
+                 update_before_add=True)
 
 
 class SesameDevice(LockDevice):

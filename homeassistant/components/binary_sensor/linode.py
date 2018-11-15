@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Linode droplet sensor."""
     linode = hass.data.get(DATA_LINODE)
     nodes = config.get(CONF_NODES)
@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             return
         dev.append(LinodeBinarySensor(linode, node_id))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class LinodeBinarySensor(BinarySensorDevice):

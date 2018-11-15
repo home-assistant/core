@@ -1,17 +1,16 @@
 """
-Support for Wink thermostats, Air Conditioners, and Water Heaters.
+Support for Wink thermostats and Air Conditioners.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.wink/
 """
-import asyncio
 import logging
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE, STATE_AUTO, STATE_COOL, STATE_ECO, STATE_ELECTRIC,
-    STATE_FAN_ONLY, STATE_GAS, STATE_HEAT, STATE_HEAT_PUMP, STATE_HIGH_DEMAND,
-    STATE_PERFORMANCE, SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
+    ATTR_TEMPERATURE, STATE_AUTO, STATE_COOL, STATE_ECO,
+    STATE_FAN_ONLY, STATE_HEAT, SUPPORT_AUX_HEAT,
+    SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
     ClimateDevice)
@@ -25,11 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ECO_TARGET = 'eco_target'
 ATTR_EXTERNAL_TEMPERATURE = 'external_temperature'
 ATTR_OCCUPIED = 'occupied'
-ATTR_RHEEM_TYPE = 'rheem_type'
 ATTR_SCHEDULE_ENABLED = 'schedule_enabled'
 ATTR_SMART_TEMPERATURE = 'smart_temperature'
 ATTR_TOTAL_CONSUMPTION = 'total_consumption'
-ATTR_VACATION_MODE = 'vacation_mode'
 ATTR_HEAT_ON = 'heat_on'
 ATTR_COOL_ON = 'cool_on'
 
@@ -43,14 +40,9 @@ HA_STATE_TO_WINK = {
     STATE_AUTO: 'auto',
     STATE_COOL: 'cool_only',
     STATE_ECO: 'eco',
-    STATE_ELECTRIC: 'electric_only',
     STATE_FAN_ONLY: 'fan_only',
-    STATE_GAS: 'gas',
     STATE_HEAT: 'heat_only',
-    STATE_HEAT_PUMP: 'heat_pump',
-    STATE_HIGH_DEMAND: 'high_demand',
     STATE_OFF: 'off',
-    STATE_PERFORMANCE: 'performance',
 }
 
 WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
@@ -63,25 +55,18 @@ SUPPORT_FLAGS_THERMOSTAT = (
 SUPPORT_FLAGS_AC = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                     SUPPORT_FAN_MODE)
 
-SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                        SUPPORT_AWAY_MODE)
 
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink climate devices."""
     import pywink
     for climate in pywink.get_thermostats():
         _id = climate.object_id() + climate.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkThermostat(climate, hass)])
+            add_entities([WinkThermostat(climate, hass)])
     for climate in pywink.get_air_conditioners():
         _id = climate.object_id() + climate.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkAC(climate, hass)])
-    for water_heater in pywink.get_water_heaters():
-        _id = water_heater.object_id() + water_heater.name()
-        if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkWaterHeater(water_heater, hass)])
+            add_entities([WinkAC(climate, hass)])
 
 
 class WinkThermostat(WinkDevice, ClimateDevice):
@@ -92,8 +77,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS_THERMOSTAT
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['climate'].append(self)
 
@@ -118,7 +102,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
                 self.hass, self.target_temperature_low, self.temperature_unit,
                 PRECISION_TENTHS)
 
-        if self.external_temperature:
+        if self.external_temperature is not None:
             data[ATTR_EXTERNAL_TEMPERATURE] = show_temp(
                 self.hass, self.external_temperature, self.temperature_unit,
                 PRECISION_TENTHS)
@@ -126,16 +110,16 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         if self.smart_temperature:
             data[ATTR_SMART_TEMPERATURE] = self.smart_temperature
 
-        if self.occupied:
+        if self.occupied is not None:
             data[ATTR_OCCUPIED] = self.occupied
 
-        if self.eco_target:
+        if self.eco_target is not None:
             data[ATTR_ECO_TARGET] = self.eco_target
 
-        if self.heat_on:
+        if self.heat_on is not None:
             data[ATTR_HEAT_ON] = self.heat_on
 
-        if self.cool_on:
+        if self.cool_on is not None:
             data[ATTR_COOL_ON] = self.cool_on
 
         current_humidity = self.current_humidity
@@ -506,93 +490,3 @@ class WinkAC(WinkDevice, ClimateDevice):
         elif fan_mode == SPEED_HIGH:
             speed = 1.0
         self.wink.set_ac_fan_speed(speed)
-
-
-class WinkWaterHeater(WinkDevice, ClimateDevice):
-    """Representation of a Wink water heater."""
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS_HEATER
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        # The Wink API always returns temp in Celsius
-        return TEMP_CELSIUS
-
-    @property
-    def device_state_attributes(self):
-        """Return the optional device state attributes."""
-        data = {}
-        data[ATTR_VACATION_MODE] = self.wink.vacation_mode_enabled()
-        data[ATTR_RHEEM_TYPE] = self.wink.rheem_type()
-
-        return data
-
-    @property
-    def current_operation(self):
-        """
-        Return current operation one of the following.
-
-        ["eco", "performance", "heat_pump",
-        "high_demand", "electric_only", "gas]
-        """
-        if not self.wink.is_on():
-            current_op = STATE_OFF
-        else:
-            current_op = WINK_STATE_TO_HA.get(self.wink.current_mode())
-            if current_op is None:
-                current_op = STATE_UNKNOWN
-        return current_op
-
-    @property
-    def operation_list(self):
-        """List of available operation modes."""
-        op_list = ['off']
-        modes = self.wink.modes()
-        for mode in modes:
-            if mode == 'aux':
-                continue
-            ha_mode = WINK_STATE_TO_HA.get(mode)
-            if ha_mode is not None:
-                op_list.append(ha_mode)
-            else:
-                error = "Invalid operation mode mapping. " + mode + \
-                    " doesn't map. Please report this."
-                _LOGGER.error(error)
-        return op_list
-
-    def set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        self.wink.set_temperature(target_temp)
-
-    def set_operation_mode(self, operation_mode):
-        """Set operation mode."""
-        op_mode_to_set = HA_STATE_TO_WINK.get(operation_mode)
-        self.wink.set_operation_mode(op_mode_to_set)
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self.wink.current_set_point()
-
-    def turn_away_mode_on(self):
-        """Turn away on."""
-        self.wink.set_vacation_mode(True)
-
-    def turn_away_mode_off(self):
-        """Turn away off."""
-        self.wink.set_vacation_mode(False)
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return self.wink.min_set_point()
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return self.wink.max_set_point()

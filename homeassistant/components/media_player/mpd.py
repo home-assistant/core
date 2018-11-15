@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MPD platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     device = MpdDevice(host, port, password, name)
-    add_devices([device], True)
+    add_entities([device], True)
 
 
 class MpdDevice(MediaPlayerDevice):
@@ -79,7 +79,7 @@ class MpdDevice(MediaPlayerDevice):
 
         # set up MPD client
         self._client = mpd.MPDClient()
-        self._client.timeout = 5
+        self._client.timeout = 30
         self._client.idletimeout = None
 
     def _connect(self):

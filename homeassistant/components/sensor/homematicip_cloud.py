@@ -25,31 +25,33 @@ ATTR_HUMIDITY = 'humidity'
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud sensors devices."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud sensors from a config entry."""
-    from homematicip.device import (
-        HeatingThermostat, TemperatureHumiditySensorWithoutDisplay,
-        TemperatureHumiditySensorDisplay, MotionDetectorIndoor)
+    from homematicip.aio.device import (
+        AsyncHeatingThermostat, AsyncTemperatureHumiditySensorWithoutDisplay,
+        AsyncTemperatureHumiditySensorDisplay, AsyncMotionDetectorIndoor,
+        AsyncTemperatureHumiditySensorOutdoor)
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = [HomematicipAccesspointStatus(home)]
     for device in home.devices:
-        if isinstance(device, HeatingThermostat):
+        if isinstance(device, AsyncHeatingThermostat):
             devices.append(HomematicipHeatingThermostat(home, device))
-        if isinstance(device, (TemperatureHumiditySensorDisplay,
-                               TemperatureHumiditySensorWithoutDisplay)):
+        if isinstance(device, (AsyncTemperatureHumiditySensorDisplay,
+                               AsyncTemperatureHumiditySensorWithoutDisplay,
+                               AsyncTemperatureHumiditySensorOutdoor)):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
-        if isinstance(device, MotionDetectorIndoor):
+        if isinstance(device, AsyncMotionDetectorIndoor):
             devices.append(HomematicipIlluminanceSensor(home, device))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipAccesspointStatus(HomematicipGenericDevice):

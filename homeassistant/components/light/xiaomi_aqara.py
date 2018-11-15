@@ -12,7 +12,7 @@ import homeassistant.util.color as color_util
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if model in ['gateway', 'gateway.v3']:
                 devices.append(XiaomiGatewayLight(device, 'Gateway Light',
                                                   gateway))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class XiaomiGatewayLight(XiaomiDevice, Light):

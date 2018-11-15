@@ -106,7 +106,7 @@ class EntityPlatform:
         return await self._async_setup_platform(async_create_setup_task)
 
     async def _async_setup_platform(self, async_create_setup_task, tries=0):
-        """Helper to set up a platform via config file or config entry.
+        """Set up a platform via config file or config entry.
 
         async_create_setup_task creates a coroutine that sets up platform.
         """
@@ -168,7 +168,7 @@ class EntityPlatform:
             warn_task.cancel()
 
     def _schedule_add_entities(self, new_entities, update_before_add=False):
-        """Synchronously schedule adding entities for a single platform."""
+        """Schedule adding entities for a single platform, synchronously."""
         run_callback_threadsafe(
             self.hass.loop,
             self._async_schedule_add_entities, list(new_entities),
@@ -237,7 +237,7 @@ class EntityPlatform:
     async def _async_add_entity(self, entity, update_before_add,
                                 component_entities, entity_registry,
                                 device_registry):
-        """Helper method to add an entity to the platform."""
+        """Add an entity to the platform."""
         if entity is None:
             raise ValueError('Entity cannot be None')
 
@@ -272,15 +272,29 @@ class EntityPlatform:
             else:
                 config_entry_id = None
 
-            device = entity.device
-            if device is not None:
+            device_info = entity.device_info
+            device_id = None
+
+            if config_entry_id is not None and device_info is not None:
+                processed_dev_info = {
+                    'config_entry_id': config_entry_id
+                }
+                for key in (
+                        'connections',
+                        'identifiers',
+                        'manufacturer',
+                        'model',
+                        'name',
+                        'sw_version',
+                        'via_hub',
+                ):
+                    if key in device_info:
+                        processed_dev_info[key] = device_info[key]
+
                 device = device_registry.async_get_or_create(
-                    device['identifiers'], device['manufacturer'],
-                    device['model'], device['connection'],
-                    sw_version=device.get('sw_version'))
-                device_id = device.id
-            else:
-                device_id = None
+                    **processed_dev_info)
+                if device:
+                    device_id = device.id
 
             entry = entity_registry.async_get_or_create(
                 self.domain, self.platform_name, entity.unique_id,
@@ -331,8 +345,10 @@ class EntityPlatform:
             raise HomeAssistantError(
                 msg)
 
-        self.entities[entity.entity_id] = entity
-        component_entities.add(entity.entity_id)
+        entity_id = entity.entity_id
+        self.entities[entity_id] = entity
+        component_entities.add(entity_id)
+        entity.async_on_remove(lambda: self.entities.pop(entity_id))
 
         if hasattr(entity, 'async_added_to_hass'):
             await entity.async_added_to_hass()
@@ -351,7 +367,7 @@ class EntityPlatform:
         if not self.entities:
             return
 
-        tasks = [self._async_remove_entity(entity_id)
+        tasks = [self.async_remove_entity(entity_id)
                  for entity_id in self.entities]
 
         await asyncio.wait(tasks, loop=self.hass.loop)
@@ -362,7 +378,7 @@ class EntityPlatform:
 
     async def async_remove_entity(self, entity_id):
         """Remove entity id from platform."""
-        await self._async_remove_entity(entity_id)
+        await self.entities[entity_id].async_remove()
 
         # Clean up polling job if no longer needed
         if (self._async_unsub_polling is not None and
@@ -370,15 +386,6 @@ class EntityPlatform:
                         in self.entities.values())):
             self._async_unsub_polling()
             self._async_unsub_polling = None
-
-    async def _async_remove_entity(self, entity_id):
-        """Remove entity id from platform."""
-        entity = self.entities.pop(entity_id)
-
-        if hasattr(entity, 'async_will_remove_from_hass'):
-            await entity.async_will_remove_from_hass()
-
-        self.hass.states.async_remove(entity_id)
 
     async def _update_entity_states(self, now):
         """Update the states of all the polling entities.

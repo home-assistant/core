@@ -4,7 +4,6 @@ Support for manual alarms controllable via MQTT.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.manual_mqtt/
 """
-import asyncio
 import copy
 import datetime
 import logging
@@ -123,9 +122,9 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 }), _state_validator))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the manual MQTT alarm platform."""
-    add_devices([ManualMQTTAlarm(
+    add_entities([ManualMQTTAlarm(
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
@@ -363,8 +362,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         return mqtt.async_subscribe(
             self.hass, self._command_topic, message_received, self._qos)
 
-    @asyncio.coroutine
-    def _async_state_changed_listener(self, entity_id, old_state, new_state):
+    async def _async_state_changed_listener(self, entity_id, old_state,
+                                            new_state):
         """Publish state change to MQTT."""
         mqtt.async_publish(
             self.hass, self._state_topic, new_state.state, self._qos, True)

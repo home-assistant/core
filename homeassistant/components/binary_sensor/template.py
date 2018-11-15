@@ -4,7 +4,6 @@ Support for exposing a templated binary sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.template/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -16,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START)
+    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START, MATCH_ALL)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -46,8 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up template binary sensors."""
     sensors = []
 
@@ -56,21 +55,36 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
-        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
-                      value_template.extract_entities())
+        entity_ids = set()
+        manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
+
+        for template in (
+                value_template,
+                icon_template,
+                entity_picture_template,
+        ):
+            if template is None:
+                continue
+            template.hass = hass
+
+            if manual_entity_ids is not None:
+                continue
+
+            template_entity_ids = template.extract_entities()
+            if template_entity_ids == MATCH_ALL:
+                entity_ids = MATCH_ALL
+            elif entity_ids != MATCH_ALL:
+                entity_ids |= set(template_entity_ids)
+
+        if manual_entity_ids is not None:
+            entity_ids = manual_entity_ids
+        elif entity_ids != MATCH_ALL:
+            entity_ids = list(entity_ids)
+
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
         delay_on = device_config.get(CONF_DELAY_ON)
         delay_off = device_config.get(CONF_DELAY_OFF)
-
-        if value_template is not None:
-            value_template.hass = hass
-
-        if icon_template is not None:
-            icon_template.hass = hass
-
-        if entity_picture_template is not None:
-            entity_picture_template.hass = hass
 
         sensors.append(
             BinarySensorTemplate(
@@ -82,7 +96,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No sensors added")
         return False
 
-    async_add_devices(sensors)
+    async_add_entities(sensors)
     return True
 
 
@@ -108,8 +122,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._delay_on = delay_on
         self._delay_off = delay_off
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def template_bsensor_state_listener(entity, old_state, new_state):

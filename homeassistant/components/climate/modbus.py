@@ -50,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus Thermostat Platform."""
     name = config.get(CONF_NAME)
     modbus_slave = config.get(CONF_SLAVE)
@@ -60,9 +60,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     count = config.get(CONF_COUNT)
     precision = config.get(CONF_PRECISION)
 
-    add_devices([ModbusThermostat(name, modbus_slave,
-                                  target_temp_register, current_temp_register,
-                                  data_type, count, precision)], True)
+    add_entities([ModbusThermostat(name, modbus_slave,
+                                   target_temp_register, current_temp_register,
+                                   data_type, count, precision)], True)
 
 
 class ModbusThermostat(ClimateDevice):

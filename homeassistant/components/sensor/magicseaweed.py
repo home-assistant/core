@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Magicseaweed sensor."""
     name = config.get(CONF_NAME)
     spot_id = config[CONF_SPOT_ID]
@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for hour in hours:
                 sensors.append(MagicSeaweedSensor(
                     forecast_data, variable, name, units, hour))
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class MagicSeaweedSensor(Entity):

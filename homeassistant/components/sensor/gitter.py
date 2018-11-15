@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gitter sensor."""
     from gitterpy.client import GitterClient
     from gitterpy.errors import GitterTokenError
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Token is not valid")
         return
 
-    add_devices([GitterSensor(gitter, room, name, username)], True)
+    add_entities([GitterSensor(gitter, room, name, username)], True)
 
 
 class GitterSensor(Entity):

@@ -111,7 +111,7 @@ async def async_setup(hass, config):
 
     hass.data[MYSENSORS_GATEWAYS] = gateways
 
-    hass.async_add_job(finish_setup(hass, gateways))
+    hass.async_create_task(finish_setup(hass, config, gateways))
 
     return True
 
@@ -130,7 +130,7 @@ def _get_mysensors_name(gateway, node_id, child_id):
 @callback
 def setup_mysensors_platform(
         hass, domain, discovery_info, device_class, device_args=None,
-        async_add_devices=None):
+        async_add_entities=None):
     """Set up a MySensors platform."""
     # Only act if called via MySensors by discovery event.
     # Otherwise gateway is not set up.
@@ -161,6 +161,6 @@ def setup_mysensors_platform(
         new_devices.append(devices[dev_id])
     if new_devices:
         _LOGGER.info("Adding new devices: %s", new_devices)
-        if async_add_devices is not None:
-            async_add_devices(new_devices, True)
+        if async_add_entities is not None:
+            async_add_entities(new_devices, True)
     return new_devices

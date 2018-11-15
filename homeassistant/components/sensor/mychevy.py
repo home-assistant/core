@@ -4,7 +4,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mychevy/
 """
 
-import asyncio
 import logging
 
 from homeassistant.components.mychevy import (
@@ -31,7 +30,7 @@ SENSORS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MyChevy sensors."""
     if discovery_info is None:
         return
@@ -42,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for car in hub.cars:
             sensors.append(EVSensor(hub, sconfig, car.vid))
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class MyChevyStatus(Entity):
@@ -55,8 +54,7 @@ class MyChevyStatus(Entity):
         """Initialize sensor with car connection."""
         self._state = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             UPDATE_TOPIC, self.success)
@@ -129,8 +127,7 @@ class EVSensor(Entity):
                               slugify(self._car.name),
                               slugify(self._name)))
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             UPDATE_TOPIC, self.async_update_callback)

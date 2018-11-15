@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Pi-hole sensor."""
     from hole import Hole
 
@@ -81,10 +81,9 @@ async def async_setup_platform(
     location = config.get(CONF_LOCATION)
     verify_tls = config.get(CONF_VERIFY_SSL)
 
-    session = async_get_clientsession(hass)
+    session = async_get_clientsession(hass, verify_tls)
     pi_hole = PiHoleData(Hole(
-        host, hass.loop, session, location=location, tls=use_tls,
-        verify_tls=verify_tls))
+        host, hass.loop, session, location=location, tls=use_tls))
 
     await pi_hole.async_update()
 
@@ -94,7 +93,7 @@ async def async_setup_platform(
     sensors = [PiHoleSensor(pi_hole, name, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class PiHoleSensor(Entity):

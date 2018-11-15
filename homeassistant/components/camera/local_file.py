@@ -31,7 +31,7 @@ CAMERA_SERVICE_UPDATE_FILE_PATH = CAMERA_SERVICE_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Camera that works with local files."""
     file_path = config[CONF_FILE_PATH]
     camera = LocalFile(config[CONF_NAME], file_path)
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         update_file_path_service,
         schema=CAMERA_SERVICE_UPDATE_FILE_PATH)
 
-    add_devices([camera])
+    add_entities([camera])
 
 
 class LocalFile(Camera):

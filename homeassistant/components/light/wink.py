@@ -4,7 +4,6 @@ Support for Wink lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.wink/
 """
-import asyncio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
@@ -17,25 +16,24 @@ from homeassistant.util.color import \
 DEPENDENCIES = ['wink']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink lights."""
     import pywink
 
     for light in pywink.get_light_bulbs():
         _id = light.object_id() + light.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkLight(light, hass)])
+            add_entities([WinkLight(light, hass)])
     for light in pywink.get_light_groups():
         _id = light.object_id() + light.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkLight(light, hass)])
+            add_entities([WinkLight(light, hass)])
 
 
 class WinkLight(WinkDevice, Light):
     """Representation of a Wink light."""
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['light'].append(self)
 

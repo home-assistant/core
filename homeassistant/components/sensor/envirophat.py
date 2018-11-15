@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense HAT sensor platform."""
     try:
         import envirophat
@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_DISPLAY_OPTIONS]:
         dev.append(EnvirophatSensor(data, variable))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class EnvirophatSensor(Entity):

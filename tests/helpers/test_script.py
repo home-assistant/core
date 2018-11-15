@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest import mock
 import unittest
 
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 # Otherwise can't test just this file (import order issue)
 import homeassistant.components  # noqa
 import homeassistant.util.dt as dt_util
@@ -32,6 +32,7 @@ class TestScriptHelper(unittest.TestCase):
     def test_firing_event(self):
         """Test the firing of events."""
         event = 'test_event'
+        context = Context()
         calls = []
 
         @callback
@@ -48,17 +49,19 @@ class TestScriptHelper(unittest.TestCase):
             }
         }))
 
-        script_obj.run()
+        script_obj.run(context=context)
 
         self.hass.block_till_done()
 
         assert len(calls) == 1
+        assert calls[0].context is context
         assert calls[0].data.get('hello') == 'world'
         assert not script_obj.can_cancel
 
     def test_firing_event_template(self):
         """Test the firing of events."""
         event = 'test_event'
+        context = Context()
         calls = []
 
         @callback
@@ -82,11 +85,12 @@ class TestScriptHelper(unittest.TestCase):
             }
         }))
 
-        script_obj.run({'is_world': 'yes'})
+        script_obj.run({'is_world': 'yes'}, context=context)
 
         self.hass.block_till_done()
 
         assert len(calls) == 1
+        assert calls[0].context is context
         assert calls[0].data == {
             'dict': {
                 1: 'yes',
@@ -100,6 +104,7 @@ class TestScriptHelper(unittest.TestCase):
     def test_calling_service(self):
         """Test the calling of a service."""
         calls = []
+        context = Context()
 
         @callback
         def record_call(service):
@@ -113,16 +118,18 @@ class TestScriptHelper(unittest.TestCase):
             'data': {
                 'hello': 'world'
             }
-        })
+        }, context=context)
 
         self.hass.block_till_done()
 
         assert len(calls) == 1
+        assert calls[0].context is context
         assert calls[0].data.get('hello') == 'world'
 
     def test_calling_service_template(self):
         """Test the calling of a service."""
         calls = []
+        context = Context()
 
         @callback
         def record_call(service):
@@ -147,17 +154,19 @@ class TestScriptHelper(unittest.TestCase):
                     {% endif %}
                 """
             }
-        }, {'is_world': 'yes'})
+        }, {'is_world': 'yes'}, context=context)
 
         self.hass.block_till_done()
 
         assert len(calls) == 1
+        assert calls[0].context is context
         assert calls[0].data.get('hello') == 'world'
 
     def test_delay(self):
         """Test the delay."""
         event = 'test_event'
         events = []
+        context = Context()
 
         @callback
         def record_event(event):
@@ -171,7 +180,7 @@ class TestScriptHelper(unittest.TestCase):
             {'delay': {'seconds': 5}},
             {'event': event}]))
 
-        script_obj.run()
+        script_obj.run(context=context)
         self.hass.block_till_done()
 
         assert script_obj.is_running
@@ -185,6 +194,8 @@ class TestScriptHelper(unittest.TestCase):
 
         assert not script_obj.is_running
         assert len(events) == 2
+        assert events[0].context is context
+        assert events[1].context is context
 
     def test_delay_template(self):
         """Test the delay as a template."""
@@ -244,6 +255,70 @@ class TestScriptHelper(unittest.TestCase):
         assert not script_obj.is_running
         assert len(events) == 1
 
+    def test_delay_complex_template(self):
+        """Test the delay with a working complex template."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'delay': {
+                'seconds': '{{ 5 }}'
+            }},
+            {'event': event}]))
+
+        script_obj.run()
+        self.hass.block_till_done()
+
+        assert script_obj.is_running
+        assert script_obj.can_cancel
+        assert script_obj.last_action == event
+        assert len(events) == 1
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 2
+
+    def test_delay_complex_invalid_template(self):
+        """Test the delay with a complex template that fails."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'delay': {
+                 'seconds': '{{ invalid_delay }}'
+            }},
+            {'delay': {
+                'seconds': '{{ 5 }}'
+            }},
+            {'event': event}]))
+
+        with mock.patch.object(script, '_LOGGER') as mock_logger:
+            script_obj.run()
+            self.hass.block_till_done()
+            assert mock_logger.error.called
+
+        assert not script_obj.is_running
+        assert len(events) == 1
+
     def test_cancel_while_delay(self):
         """Test the cancelling while the delay is present."""
         event = 'test_event'
@@ -282,6 +357,7 @@ class TestScriptHelper(unittest.TestCase):
         """Test the wait template."""
         event = 'test_event'
         events = []
+        context = Context()
 
         @callback
         def record_event(event):
@@ -297,7 +373,7 @@ class TestScriptHelper(unittest.TestCase):
             {'wait_template': "{{states.switch.test.state == 'off'}}"},
             {'event': event}]))
 
-        script_obj.run()
+        script_obj.run(context=context)
         self.hass.block_till_done()
 
         assert script_obj.is_running
@@ -310,6 +386,8 @@ class TestScriptHelper(unittest.TestCase):
 
         assert not script_obj.is_running
         assert len(events) == 2
+        assert events[0].context is context
+        assert events[1].context is context
 
     def test_wait_template_cancel(self):
         """Test the wait template cancel action."""

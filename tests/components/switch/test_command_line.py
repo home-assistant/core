@@ -10,6 +10,7 @@ import homeassistant.components.switch as switch
 import homeassistant.components.switch.command_line as command_line
 
 from tests.common import get_test_home_assistant
+from tests.components.switch import common
 
 
 # pylint: disable=invalid-name
@@ -32,29 +33,29 @@ class TestCommandSwitch(unittest.TestCase):
                 'command_on': 'echo 1 > {}'.format(path),
                 'command_off': 'echo 0 > {}'.format(path),
             }
-            self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
+            assert setup_component(self.hass, switch.DOMAIN, {
                 'switch': {
                     'platform': 'command_line',
                     'switches': {
                         'test': test_switch
                     }
                 }
-            }))
+            })
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_OFF, state.state)
+            assert STATE_OFF == state.state
 
-            switch.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_ON, state.state)
+            assert STATE_ON == state.state
 
-            switch.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_OFF, state.state)
+            assert STATE_OFF == state.state
 
     def test_state_value(self):
         """Test with state value."""
@@ -66,29 +67,29 @@ class TestCommandSwitch(unittest.TestCase):
                 'command_off': 'echo 0 > {}'.format(path),
                 'value_template': '{{ value=="1" }}'
             }
-            self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
+            assert setup_component(self.hass, switch.DOMAIN, {
                 'switch': {
                     'platform': 'command_line',
                     'switches': {
                         'test': test_switch
                     }
                 }
-            }))
+            })
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_OFF, state.state)
+            assert STATE_OFF == state.state
 
-            switch.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_ON, state.state)
+            assert STATE_ON == state.state
 
-            switch.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_OFF, state.state)
+            assert STATE_OFF == state.state
 
     def test_state_json_value(self):
         """Test with state JSON value."""
@@ -102,29 +103,29 @@ class TestCommandSwitch(unittest.TestCase):
                 'command_off': 'echo \'{}\' > {}'.format(offcmd, path),
                 'value_template': '{{ value_json.status=="ok" }}'
             }
-            self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
+            assert setup_component(self.hass, switch.DOMAIN, {
                 'switch': {
                     'platform': 'command_line',
                     'switches': {
                         'test': test_switch
                     }
                 }
-            }))
+            })
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_OFF, state.state)
+            assert STATE_OFF == state.state
 
-            switch.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_ON, state.state)
+            assert STATE_ON == state.state
 
-            switch.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_OFF, state.state)
+            assert STATE_OFF == state.state
 
     def test_state_code(self):
         """Test with state code."""
@@ -135,29 +136,29 @@ class TestCommandSwitch(unittest.TestCase):
                 'command_on': 'echo 1 > {}'.format(path),
                 'command_off': 'echo 0 > {}'.format(path),
             }
-            self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
+            assert setup_component(self.hass, switch.DOMAIN, {
                 'switch': {
                     'platform': 'command_line',
                     'switches': {
                         'test': test_switch
                     }
                 }
-            }))
+            })
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_OFF, state.state)
+            assert STATE_OFF == state.state
 
-            switch.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_ON, state.state)
+            assert STATE_ON == state.state
 
-            switch.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, 'switch.test')
             self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
-            self.assertEqual(STATE_ON, state.state)
+            assert STATE_ON == state.state
 
     def test_assumed_state_should_be_true_if_command_state_is_none(self):
         """Test with state value."""
@@ -174,13 +175,13 @@ class TestCommandSwitch(unittest.TestCase):
         ]
 
         no_state_device = command_line.CommandSwitch(*init_args)
-        self.assertTrue(no_state_device.assumed_state)
+        assert no_state_device.assumed_state
 
         # Set state command
         init_args[-2] = 'cat {}'
 
         state_device = command_line.CommandSwitch(*init_args)
-        self.assertFalse(state_device.assumed_state)
+        assert not state_device.assumed_state
 
     def test_entity_id_set_correctly(self):
         """Test that entity_id is set correctly from object_id."""
@@ -195,5 +196,5 @@ class TestCommandSwitch(unittest.TestCase):
         ]
 
         test_switch = command_line.CommandSwitch(*init_args)
-        self.assertEqual(test_switch.entity_id, 'switch.test_device_name')
-        self.assertEqual(test_switch.name, 'Test friendly name!')
+        assert test_switch.entity_id == 'switch.test_device_name'
+        assert test_switch.name == 'Test friendly name!'

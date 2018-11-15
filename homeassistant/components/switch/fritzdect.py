@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add all switches connected to Fritz Box."""
     from fritzhome.fritz import FritzBox
 
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if actor.has_switch:
             data = FritzDectSwitchData(fritz, actor.actor_id)
             data.is_online = True
-            add_devices([FritzDectSwitch(hass, data, actor.name)], True)
+            add_entities([FritzDectSwitch(hass, data, actor.name)], True)
 
 
 class FritzDectSwitch(SwitchDevice):

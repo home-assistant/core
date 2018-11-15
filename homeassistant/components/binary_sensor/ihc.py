@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC binary sensor platform."""
     ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
     info = hass.data[IHC_DATA][IHC_INFO]
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                      sensor_type, inverting)
             devices.append(sensor)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class IHCBinarySensor(IHCDevice, BinarySensorDevice):

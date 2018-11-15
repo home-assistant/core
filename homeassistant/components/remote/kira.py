@@ -18,14 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 CONF_REMOTE = "remote"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Kira platform."""
     if discovery_info:
         name = discovery_info.get(CONF_NAME)
         device = discovery_info.get(CONF_DEVICE)
 
         kira = hass.data[DOMAIN][CONF_REMOTE][name]
-        add_devices([KiraRemote(device, kira)])
+        add_entities([KiraRemote(device, kira)])
     return True
 
 

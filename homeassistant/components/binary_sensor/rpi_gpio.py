@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
     pull_mode = config.get(CONF_PULL_MODE)
     bouncetime = config.get(CONF_BOUNCETIME)
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for port_num, port_name in ports.items():
         binary_sensors.append(RPiGPIOBinarySensor(
             port_name, port_num, pull_mode, bouncetime, invert_logic))
-    add_devices(binary_sensors, True)
+    add_entities(binary_sensors, True)
 
 
 class RPiGPIOBinarySensor(BinarySensorDevice):

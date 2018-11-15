@@ -11,11 +11,11 @@ from homeassistant.components.calendar import CalendarEventDevice, get_date
 from homeassistant.components.google import CONF_DEVICE_ID, CONF_NAME
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo Calendar platform."""
     calendar_data_future = DemoGoogleCalendarDataFuture()
     calendar_data_current = DemoGoogleCalendarDataCurrent()
-    add_devices([
+    add_entities([
         DemoGoogleCalendar(hass, calendar_data_future, {
             CONF_NAME: 'Calendar 1',
             CONF_DEVICE_ID: 'calendar_1',

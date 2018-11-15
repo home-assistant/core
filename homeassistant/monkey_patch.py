@@ -25,7 +25,7 @@ from typing import Any
 
 def patch_weakref_tasks() -> None:
     """Replace weakref.WeakSet to address Python 3 bug."""
-    # pylint: disable=no-self-use, protected-access, bare-except
+    # pylint: disable=no-self-use, protected-access
     import asyncio.tasks
 
     class IgnoreCalls:
@@ -38,7 +38,7 @@ def patch_weakref_tasks() -> None:
     asyncio.tasks.Task._all_tasks = IgnoreCalls()  # type: ignore
     try:
         del asyncio.tasks.Task.__del__
-    except:  # noqa: E722
+    except:  # noqa: E722 pylint: disable=bare-except
         pass
 
 

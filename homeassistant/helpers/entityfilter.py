@@ -10,6 +10,18 @@ CONF_INCLUDE_ENTITIES = 'include_entities'
 CONF_EXCLUDE_DOMAINS = 'exclude_domains'
 CONF_EXCLUDE_ENTITIES = 'exclude_entities'
 
+
+def _convert_filter(config):
+    filt = generate_filter(
+        config[CONF_INCLUDE_DOMAINS],
+        config[CONF_INCLUDE_ENTITIES],
+        config[CONF_EXCLUDE_DOMAINS],
+        config[CONF_EXCLUDE_ENTITIES],
+    )
+    filt.config = config
+    return filt
+
+
 FILTER_SCHEMA = vol.All(
     vol.Schema({
         vol.Optional(CONF_EXCLUDE_DOMAINS, default=[]):
@@ -18,13 +30,7 @@ FILTER_SCHEMA = vol.All(
         vol.Optional(CONF_INCLUDE_DOMAINS, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
-    }),
-    lambda config: generate_filter(
-        config[CONF_INCLUDE_DOMAINS],
-        config[CONF_INCLUDE_ENTITIES],
-        config[CONF_EXCLUDE_DOMAINS],
-        config[CONF_EXCLUDE_ENTITIES],
-    ))
+    }), _convert_filter)
 
 
 def generate_filter(include_domains, include_entities,
@@ -64,8 +70,8 @@ def generate_filter(include_domains, include_entities,
 
     # Case 4 - both includes and excludes specified
     # Case 4a - include domain specified
-    #  - if domain is included, and entity not excluded, pass
-    #  - if domain is not included, and entity not included, fail
+    #  - if domain is included, pass if entity not excluded
+    #  - if domain is not included, pass if entity is included
     # note: if both include and exclude domains specified,
     #   the exclude domains are ignored
     if include_d:
@@ -79,8 +85,8 @@ def generate_filter(include_domains, include_entities,
         return entity_filter_4a
 
     # Case 4b - exclude domain specified
-    #  - if domain is excluded, and entity not included, fail
-    #  - if domain is not excluded, and entity not excluded, pass
+    #  - if domain is excluded, pass if entity is included
+    #  - if domain is not excluded, pass if entity not excluded
     if exclude_d:
         def entity_filter_4b(entity_id):
             """Return filter function for case 4b."""

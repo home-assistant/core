@@ -6,9 +6,8 @@ import logging
 import os
 import re
 import shutil
-# pylint: disable=unused-import
-from typing import (  # noqa: F401
-    Any, Tuple, Optional, Dict, List, Union, Callable)
+from typing import (  # noqa: F401 pylint: disable=unused-import
+    Any, Tuple, Optional, Dict, List, Union, Callable, Sequence, Set)
 from types import ModuleType
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -23,7 +22,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
     CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS, CONF_AUTH_MFA_MODULES,
-    CONF_TYPE)
+    CONF_TYPE, CONF_ID)
 from homeassistant.core import callback, DOMAIN as CONF_CORE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
@@ -106,8 +105,9 @@ map:
 # Track the sun
 sun:
 
-# Weather prediction
+# Sensors
 sensor:
+  # Weather prediction
   - platform: yr
 
 # Text to speech
@@ -128,9 +128,51 @@ some_password: welcome
 """
 
 
+def _no_duplicate_auth_provider(configs: Sequence[Dict[str, Any]]) \
+        -> Sequence[Dict[str, Any]]:
+    """No duplicate auth provider config allowed in a list.
+
+    Each type of auth provider can only have one config without optional id.
+    Unique id is required if same type of auth provider used multiple times.
+    """
+    config_keys = set()  # type: Set[Tuple[str, Optional[str]]]
+    for config in configs:
+        key = (config[CONF_TYPE], config.get(CONF_ID))
+        if key in config_keys:
+            raise vol.Invalid(
+                'Duplicate auth provider {} found. Please add unique IDs if '
+                'you want to have the same auth provider twice'.format(
+                    config[CONF_TYPE]
+                ))
+        config_keys.add(key)
+    return configs
+
+
+def _no_duplicate_auth_mfa_module(configs: Sequence[Dict[str, Any]]) \
+        -> Sequence[Dict[str, Any]]:
+    """No duplicate auth mfa module item allowed in a list.
+
+    Each type of mfa module can only have one config without optional id.
+    A global unique id is required if same type of mfa module used multiple
+    times.
+    Note: this is different than auth provider
+    """
+    config_keys = set()  # type: Set[str]
+    for config in configs:
+        key = config.get(CONF_ID, config[CONF_TYPE])
+        if key in config_keys:
+            raise vol.Invalid(
+                'Duplicate mfa module {} found. Please add unique IDs if '
+                'you want to have the same mfa module twice'.format(
+                    config[CONF_TYPE]
+                ))
+        config_keys.add(key)
+    return configs
+
+
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
     cv.slug: vol.Schema(  # Package names are slugs
-        {cv.slug: vol.Any(dict, list, None)})  # Only slugs for component names
+        {cv.string: vol.Any(dict, list, None)})  # Component configuration
 })
 
 CUSTOMIZE_DICT_SCHEMA = vol.Schema({
@@ -166,10 +208,16 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
                     CONF_TYPE: vol.NotIn(['insecure_example'],
                                          'The insecure_example auth provider'
                                          ' is for testing only.')
-                })]),
+                })],
+                _no_duplicate_auth_provider),
     vol.Optional(CONF_AUTH_MFA_MODULES):
         vol.All(cv.ensure_list,
-                [auth_mfa_modules.MULTI_FACTOR_AUTH_MODULE_SCHEMA]),
+                [auth_mfa_modules.MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({
+                    CONF_TYPE: vol.NotIn(['insecure_example'],
+                                         'The insecure_example mfa module'
+                                         ' is for testing only.')
+                })],
+                _no_duplicate_auth_mfa_module),
 })
 
 
@@ -397,7 +445,7 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
 
-    if domain != 'homeassistant':
+    if domain != CONF_CORE:
         message += ('Please check the docs at '
                     'https://home-assistant.io/components/{}/'.format(domain))
 
@@ -406,7 +454,8 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
 
 async def async_process_ha_core_config(
         hass: HomeAssistant, config: Dict,
-        has_api_password: bool = False) -> None:
+        has_api_password: bool = False,
+        has_trusted_networks: bool = False) -> None:
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -423,11 +472,17 @@ async def async_process_ha_core_config(
             ]
             if has_api_password:
                 auth_conf.append({'type': 'legacy_api_password'})
+            if has_trusted_networks:
+                auth_conf.append({'type': 'trusted_networks'})
+
+        mfa_conf = config.get(CONF_AUTH_MFA_MODULES, [
+            {'type': 'totp', 'id': 'totp', 'name': 'Authenticator app'},
+        ])
 
         setattr(hass, 'auth', await auth.auth_manager_from_config(
             hass,
             auth_conf,
-            config.get(CONF_AUTH_MFA_MODULES, [])))
+            mfa_conf))
 
     hac = hass.config
 
@@ -608,7 +663,10 @@ def merge_packages_config(hass: HomeAssistant, config: Dict, packages: Dict,
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
                 continue
-            component = get_component(hass, comp_name)
+            # If component name is given with a trailing description, remove it
+            # when looking for component
+            domain = comp_name.split(' ')[0]
+            component = get_component(hass, domain)
 
             if component is None:
                 _log_pkg_error(pack_name, comp_name, config, "does not exist")

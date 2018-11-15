@@ -14,7 +14,7 @@ from homeassistant.util import color as colorutil
 DEPENDENCIES = ['tuya']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tuya light platform."""
     if discovery_info is None:
         return
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if device is None:
             continue
         devices.append(TuyaLight(device))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class TuyaLight(TuyaDevice, Light):
@@ -40,17 +40,17 @@ class TuyaLight(TuyaDevice, Light):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return self.tuya.brightness()
+        return int(self.tuya.brightness())
 
     @property
     def hs_color(self):
         """Return the hs_color of the light."""
-        return self.tuya.hs_color()
+        return tuple(map(int, self.tuya.hs_color()))
 
     @property
     def color_temp(self):
         """Return the color_temp of the light."""
-        color_temp = self.tuya.color_temp()
+        color_temp = int(self.tuya.color_temp())
         if color_temp is None:
             return None
         return colorutil.color_temperature_kelvin_to_mired(color_temp)

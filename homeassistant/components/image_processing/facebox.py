@@ -152,7 +152,7 @@ def valid_file_path(file_path):
         return False
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the classifier."""
     if DATA_FACEBOX not in hass.data:
         hass.data[DATA_FACEBOX] = []
@@ -173,7 +173,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             camera[CONF_ENTITY_ID], camera.get(CONF_NAME))
         entities.append(facebox)
         hass.data[DATA_FACEBOX].append(facebox)
-    add_devices(entities)
+    add_entities(entities)
 
     def service_handle(service):
         """Handle for services."""

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u0151 adatok"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Email c\u00edm"
+                },
+                "title": "T\u00f6ltsd ki az adataid"
+            }
+        }
+    }
+}

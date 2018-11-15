@@ -24,6 +24,7 @@ WEMO_MODEL_DISPATCH = {
     'Bridge':  'light',
     'CoffeeMaker': 'switch',
     'Dimmer': 'light',
+    'Humidifier': 'fan',
     'Insight': 'switch',
     'LightSwitch': 'switch',
     'Maker':   'switch',
@@ -57,12 +58,17 @@ def coerce_host_port(value):
 
 
 CONF_STATIC = 'static'
+CONF_DISCOVERY = 'discovery'
+
+DEFAULT_DISCOVERY = True
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_STATIC, default=[]): vol.Schema([
             vol.All(cv.string, coerce_host_port)
-        ])
+        ]),
+        vol.Optional(CONF_DISCOVERY,
+                     default=DEFAULT_DISCOVERY): cv.boolean
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -77,7 +83,7 @@ def setup(hass, config):
 
     def stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
-        _LOGGER.info("Shutting down subscriptions.")
+        _LOGGER.debug("Shutting down subscriptions.")
         SUBSCRIPTION_REGISTRY.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
@@ -124,24 +130,25 @@ def setup(hass, config):
             _LOGGER.error(
                 'Unable to get description url for %s',
                 '{}:{}'.format(host, port) if port else host)
-            return False
+            continue
 
         try:
             device = pywemo.discovery.device_from_description(url, None)
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as err:
             _LOGGER.error('Unable to access %s (%s)', url, err)
-            return False
+            continue
 
         devices.append((url, device))
 
-    _LOGGER.info("Scanning for WeMo devices.")
-    devices.extend(
-        (setup_url_for_device(device), device)
-        for device in pywemo.discover_devices())
+    if config.get(DOMAIN, {}).get(CONF_DISCOVERY):
+        _LOGGER.debug("Scanning for WeMo devices.")
+        devices.extend(
+            (setup_url_for_device(device), device)
+            for device in pywemo.discover_devices())
 
     for url, device in devices:
-        _LOGGER.info('Adding wemo at %s:%i', device.host, device.port)
+        _LOGGER.debug('Adding wemo at %s:%i', device.host, device.port)
 
         discovery_info = {
             'model_name': device.model_name,

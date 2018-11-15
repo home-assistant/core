@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PiFace Digital Output devices."""
     switches = []
     ports = config.get(CONF_PORTS)
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         invert_logic = port_entity[ATTR_INVERT_LOGIC]
 
         switches.append(RPiPFIOSwitch(port, name, invert_logic))
-    add_devices(switches)
+    add_entities(switches)
 
 
 class RPiPFIOSwitch(ToggleEntity):

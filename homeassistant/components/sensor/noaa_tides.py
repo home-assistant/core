@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NOAA Tides and Currents sensor."""
     station_id = config[CONF_STATION_ID]
     name = config.get(CONF_NAME)
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if noaa_sensor.data is None:
         _LOGGER.error("Unable to setup NOAA Tides Sensor")
         return
-    add_devices([noaa_sensor], True)
+    add_entities([noaa_sensor], True)
 
 
 class NOAATidesAndCurrentsSensor(Entity):

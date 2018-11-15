@@ -21,7 +21,7 @@ DEPENDENCIES = ['tesla']
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla sensor platform."""
     controller = hass.data[TESLA_DOMAIN]['devices']['controller']
     devices = []
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devices.append(TeslaSensor(device, controller, 'outside'))
         else:
             devices.append(TeslaSensor(device, controller))
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class TeslaSensor(TeslaDevice, Entity):
