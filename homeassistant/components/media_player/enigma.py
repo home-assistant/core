@@ -132,7 +132,7 @@ class EnigmaDevice(MediaPlayerDevice):
             self._opener = urllib.request.build_opener(handler)
             self._opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 
-    self.load_sources()
+        self.load_sources()
 
     # Load channels from specified bouquet or load sources from first
     # available bouquet
