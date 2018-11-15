@@ -27,6 +27,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 REQUIREMENTS = ['https://github.com/watchforstock/evohome-client/archive/master.zip#evohomeclient==0.2.8']  # noqa E501
 
@@ -50,6 +51,9 @@ CONFIG_SCHEMA = vol.Schema({
 # These are used to help prevent E501 (line too long) violations.
 GWS = 'gateways'
 TCS = 'temperatureControlSystems'
+
+# bit masks for dispatcher packets
+EVO_PARENT = 0x01
 
 
 def setup(hass, config):
@@ -164,5 +168,12 @@ def setup(hass, config):
 
     hass.async_create_task(
         async_load_platform(hass, 'climate', DOMAIN, {}, config))
+
+    # Inform the Controller when HA has started so it can get it's first update
+    def _first_update(event):
+        pkt = {'sender': 'setup()', 'signal': 'refresh', 'to': EVO_PARENT}
+        async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)
+
+    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
 
     return True

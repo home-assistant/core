@@ -128,8 +128,6 @@ class EvoClimateDevice(ClimateDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         async_dispatcher_connect(self.hass, DISPATCHER_EVOHOME, self._connect)
-        if self._type & EVO_PARENT:
-            self.async_schedule_update_ha_state(force_refresh=True)
 
     @callback
     def _connect(self, packet):
