@@ -52,6 +52,7 @@ class FbxSensor(Entity):
 
 class FbxRXSensor(FbxSensor):
     """Update the Freebox RxSensor."""
+
     _name = 'Freebox download speed'
     _unit = 'KB/s'
 
@@ -69,6 +70,7 @@ class FbxRXSensor(FbxSensor):
 
 class FbxTXSensor(FbxSensor):
     """Update the Freebox TxSensor."""
+
     _name = 'Freebox upload speed'
     _unit = 'KB/s'
 
