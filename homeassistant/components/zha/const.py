@@ -19,21 +19,22 @@ def populate_data():
     from homeassistant.components.sensor import zha as sensor_zha
 
     DEVICE_CLASS[zha.PROFILE_ID] = {
-        zha.DeviceType.ON_OFF_OUTPUT: 'binary_sensor',
+        zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
+        zha.DeviceType.LEVEL_CONTROL_SWITCH: 'binary_sensor',
+        zha.DeviceType.REMOTE_CONTROL: 'binary_sensor',
         zha.DeviceType.SMART_PLUG: 'switch',
         zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: 'light',
         zha.DeviceType.ON_OFF_LIGHT: 'light',
         zha.DeviceType.DIMMABLE_LIGHT: 'light',
         zha.DeviceType.COLOR_DIMMABLE_LIGHT: 'light',
+        zha.DeviceType.ON_OFF_LIGHT_SWITCH: 'binary_sensor',
+        zha.DeviceType.DIMMER_SWITCH: 'binary_sensor',
+        zha.DeviceType.COLOR_DIMMER_SWITCH: 'binary_sensor',
     }
-    REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = [
-        zha.DeviceType.ON_OFF_SWITCH,
-        zha.DeviceType.LEVEL_CONTROL_SWITCH,
-        zha.DeviceType.REMOTE_CONTROL,
-        zha.DeviceType.ON_OFF_LIGHT_SWITCH,
-        zha.DeviceType.DIMMER_SWITCH,
-        zha.DeviceType.COLOR_DIMMER_SWITCH,
-    ]
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = {
+        'CentraLite': ['3130'],
+        'LUMI': ['lumi.sensor_switch.aq2'],
+    }
     DEVICE_CLASS[zll.PROFILE_ID] = {
         zll.DeviceType.ON_OFF_LIGHT: 'light',
         zll.DeviceType.ON_OFF_PLUGIN_UNIT: 'switch',
@@ -71,6 +72,9 @@ def populate_data():
         (quirks.smartthings.SmartthingsTemperatureHumiditySensor, 64581):
             ('sensor', sensor_zha.RelativeHumiditySensor)
     })
+
+    PROFILES[zha.PROFILE_ID].CLUSTERS[0x5F01] = ([0x0000, 0x0006, 0xFFFF],
+                                                 [0x0000, 0x0004, 0xFFFF])
 
     # A map of hass components to all Zigbee clusters it could use
     for profile_id, classes in DEVICE_CLASS.items():

@@ -25,14 +25,7 @@ REQUIREMENTS = [
 ]
 
 DOMAIN = 'zha'
-SWITCH = 'switch'
-DEVICE = 'device'
-LEVEL = 'level'
 DATA_ZHA_EVENT = 'zha_events'
-OFF_EVENT_KEY = 'zha.off'
-ON_EVENT_KEY = 'zha.on'
-TOGGLE_EVENT_KEY = 'zha.toggle'
-LEVEL_CHANGE_EVENT_KEY = 'zha.level_change'
 
 
 class RadioType(enum.Enum):
@@ -208,8 +201,40 @@ class ApplicationListener:
             node_config = self._config[DOMAIN][CONF_DEVICE_CONFIG].get(
                 device_key, {})
 
+            profile = zigpy.profiles.PROFILES[endpoint.profile_id]
+            _LOGGER.debug(
+                "Manufacturer: %s model: %s",
+                endpoint.manufacturer,
+                endpoint.model
+            )
+            supported_remote_models = zha_const.REMOTE_DEVICE_TYPES.get(
+                    endpoint.profile_id, {}).get(endpoint.manufacturer, [])
+            _LOGGER.debug(
+                "Supported remote models: %s",
+                supported_remote_models
+            )
+            if endpoint.model in supported_remote_models:
+                profile_clusters = profile.CLUSTERS[endpoint.device_type]
+                in_clusters = [endpoint.in_clusters[c]
+                               for c in profile_clusters[0]
+                               if c in endpoint.in_clusters]
+                out_clusters = [endpoint.out_clusters[c]
+                                for c in profile_clusters[1]
+                                if c in endpoint.out_clusters]
+                discovery_info = {
+                    'application_listener': self,
+                    'endpoint': endpoint,
+                    'in_clusters': in_clusters,
+                    'out_clusters': out_clusters,
+                    'manufacturer': endpoint.manufacturer,
+                    'model': endpoint.model,
+                    'new_join': join,
+                    'unique_id': device_key,
+                }
+                self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
+                await self._async_setup_event(discovery_info)
+
             if endpoint.profile_id in zigpy.profiles.PROFILES:
-                profile = zigpy.profiles.PROFILES[endpoint.profile_id]
                 if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
                                               {}).get(endpoint.device_type,
                                                       None):
@@ -247,29 +272,6 @@ class ApplicationListener:
                     {'discovery_key': device_key},
                     self._config,
                 )
-            else:
-                if endpoint.device_type in zha_const.REMOTE_DEVICE_TYPES.get(
-                        endpoint.profile_id, {}):
-                    profile_clusters = profile.CLUSTERS[endpoint.device_type]
-                    in_clusters = [endpoint.in_clusters[c]
-                                   for c in profile_clusters[0]
-                                   if c in endpoint.in_clusters]
-                    out_clusters = [endpoint.out_clusters[c]
-                                    for c in profile_clusters[1]
-                                    if c in endpoint.out_clusters]
-                    discovery_info = {
-                        'application_listener': self,
-                        'endpoint': endpoint,
-                        'in_clusters': {c.cluster_id: c for c in in_clusters},
-                        'out_clusters': {c.cluster_id: c for c in
-                                         out_clusters},
-                        'manufacturer': endpoint.manufacturer,
-                        'model': endpoint.model,
-                        'new_join': join,
-                        'unique_id': device_key,
-                    }
-                    self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
-                    await self._async_setup_remote(discovery_info)
 
             for cluster in endpoint.in_clusters.values():
                 await self._attempt_single_cluster_device(
@@ -355,24 +357,22 @@ class ApplicationListener:
             self._config,
         )
 
-    async def _async_setup_remote(self, discovery_info):
-        from zigpy.zcl.clusters.general import OnOff, LevelControl
+    async def _async_setup_event(self, discovery_info):
         out_clusters = discovery_info['out_clusters']
-        if OnOff.cluster_id in out_clusters:
-            cluster = out_clusters[OnOff.cluster_id]
-            event = ZHASwitchEvent(self._hass, cluster, discovery_info)
+        in_clusters = discovery_info['in_clusters']
+        for in_cluster in in_clusters:
+            event = ZHAEvent(self._hass, in_cluster, discovery_info)
             if discovery_info['new_join']:
-                await configure_reporting(event.event_id, cluster, 0, False, 0,
-                                          600, 1)
+                await configure_reporting(event.event_id, in_cluster, 0,
+                                          False, 0, 600, 1)
             self._hass.data[DATA_ZHA_EVENT].append(
                 event
             )
-        if LevelControl.cluster_id in out_clusters:
-            cluster = out_clusters[LevelControl.cluster_id]
-            event = ZHALevelEvent(self._hass, cluster, discovery_info)
+        for out_cluster in out_clusters:
+            event = ZHAEvent(self._hass, out_cluster, discovery_info)
             if discovery_info['new_join']:
-                await configure_reporting(event.event_id, cluster, 1, False, 0,
-                                          600, 1)
+                await configure_reporting(event.event_id, out_cluster, 0,
+                                          False, 0, 600, 1)
             self._hass.data[DATA_ZHA_EVENT].append(
                 event
             )
@@ -533,17 +533,17 @@ class ZHAEvent(object):
     instead of a sensor entity in hass.
     """
 
-    def __init__(self, hass, cluster, domain, discovery_info):
+    def __init__(self, hass, cluster, discovery_info):
         """Register callback that will be used for signals."""
         self._hass = hass
+        self.endpoint = discovery_info['endpoint']
         self._cluster = cluster
         self._cluster.add_listener(self)
         ieee = discovery_info['endpoint'].device.ieee
         ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
         if discovery_info['manufacturer'] and discovery_info['model'] is not \
                 None:
-            self.event_id = "{}.{}_{}_{}_{}{}".format(
-                domain,
+            self.event_id = "{}.{}_{}_{}{}".format(
                 slugify(discovery_info['manufacturer']),
                 slugify(discovery_info['model']),
                 ieeetail,
@@ -551,115 +551,46 @@ class ZHAEvent(object):
                 discovery_info.get('entity_suffix', '')
             )
         else:
-            self.event_id = "{}.zha_{}_{}{}".format(
-                domain,
+            self.event_id = "{}.zha_{}{}".format(
                 ieeetail,
                 discovery_info['endpoint'].endpoint_id,
                 discovery_info.get('entity_suffix', '')
             )
 
-
-class ZHASwitchEvent(ZHAEvent):
-    """Switch / remote event for zha"""
-
-    def __init__(self, hass, cluster, discovery_info):
-        """Initialize Switch."""
-        super().__init__(hass, cluster, SWITCH, discovery_info)
-
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
-        if command_id in (0x0000, 0x0040):
-            self._hass.bus.fire(
-                OFF_EVENT_KEY,
-                {DEVICE: self.event_id},
-                EventOrigin.remote
-            )
-            _LOGGER.debug(
-                "%s: fired off event", self.event_id
-            )
-        elif command_id in (0x0001, 0x0041, 0x0042):
-            self._hass.bus.fire(
-                ON_EVENT_KEY,
-                {DEVICE: self.event_id},
-                EventOrigin.remote
-            )
-            _LOGGER.debug(
-                "%s: fired on event", self.event_id
-            )
-        elif command_id == 0x0002:
-            self._hass.bus.fire(
-                TOGGLE_EVENT_KEY,
-                {DEVICE: self.event_id},
-                EventOrigin.remote
-            )
-            _LOGGER.debug(
-                "%s: fired toggle event", self.event_id
-            )
-
-
-class ZHALevelEvent(ZHAEvent):
-    """Switch / remote event for zha"""
-
-    def __init__(self, hass, cluster, discovery_info):
-        """Initialize Switch."""
-        super().__init__(hass, cluster, SWITCH, discovery_info)
-        self._level = 0
+        self._hass.bus.async_fire(
+            self._cluster.server_commands.get(command_id)[0],
+            {'device': self.event_id, 'args': args},
+            EventOrigin.remote
+        )
+        _LOGGER.debug(
+            "%s: fired %s event with arguments: %s", self.event_id,
+            self._cluster.server_commands.get(command_id)[0],
+            args
+        )
 
     @callback
-    def cluster_command(self, tsn, command_id, args):
-        """Handle commands received to this cluster."""
-        if command_id in (0x0000, 0x0004):  # move_to_level, -with_on_off
-            self.set_level(args[0])
-        elif command_id in (0x0001, 0x0005):  # move, -with_on_off
-            # We should dim slowly -- for now, just step once
-            rate = args[1]
-            if args[0] == 0xff:
-                rate = 10  # Should read default move rate
-            self.move_level(-rate if args[0] else rate)
-        elif command_id == 0x0002:  # step
-            # Step (technically shouldn't change on/off)
-            self.move_level(-args[1] if args[0] else args[1])
+    def attribute_updated(self, attrid, value):
+        self._hass.bus.async_fire(
+            self._cluster.attributes.get(attrid)[0],
+            {'device': self.event_id, 'value': value},
+            EventOrigin.remote
+        )
+        _LOGGER.debug(
+            "%s: updated attribute %s with value: %s", self.event_id,
+            self._cluster.attributes.get(attrid)[0],
+            value
+        )
 
-    def attribute_update(self, attrid, value):
-        """Handle attribute updates on this cluster."""
-        if attrid == 0:
-            self._level = value
-
-    def move_level(self, change):
-        """Increment the level."""
-        self.set_level(min(255, max(0, self._level + change)))
-
-    def set_level(self, level):
-        """Set the level."""
-        if level == 0 and self._level > 0:
-            self._hass.bus.fire(
-                OFF_EVENT_KEY,
-                {DEVICE: self.event_id},
-                EventOrigin.remote
-            )
-            _LOGGER.debug(
-                "%s: fired off event", self.event_id
-            )
-        elif level > 0 and self._level == 0:
-            self._hass.bus.fire(
-                ON_EVENT_KEY,
-                {DEVICE: self.event_id},
-                EventOrigin.remote
-            )
-            _LOGGER.debug(
-                "%s: fired on event", self.event_id
-            )
-        else:
-            self._hass.bus.fire(
-                LEVEL_CHANGE_EVENT_KEY,
-                {DEVICE: self.event_id, LEVEL: self._level},
-                EventOrigin.remote
-            )
-            _LOGGER.debug(
-                "%s: fired level change event", self.event_id
-            )
-        self._level = level
+    @callback
+    def zdo_command(self, *args, **kwargs):
+        _LOGGER.debug(
+            "%s: issued zdo command %s with args: %s", self.event_id,
+            args,
+            kwargs
+        )
 
 
 def get_discovery_info(hass, discovery_info):
