@@ -62,19 +62,19 @@ async def async_setup_freebox(hass, config, host, port):
     from aiofreepybox.exceptions import HttpRequestError
 
     app_desc = {
-            'app_id': 'hass',
-            'app_name': 'Home Assistant',
-            'app_version': '0.65',
-            'device_name': socket.gethostname()
+        'app_id': 'hass',
+        'app_name': 'Home Assistant',
+        'app_version': '0.65',
+        'device_name': socket.gethostname()
         }
 
     token_file = hass.config.path(FREEBOX_CONFIG_FILE)
     api_version = 'v1'
 
     fbx = Freepybox(
-            app_desc=app_desc,
-            token_file=token_file,
-            api_version=api_version)
+        app_desc=app_desc,
+        token_file=token_file,
+        api_version=api_version)
 
     try:
         await fbx.open(host, port)
