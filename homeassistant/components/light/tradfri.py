@@ -14,7 +14,7 @@ from homeassistant.components.light import (
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import (
-    KEY_GATEWAY, KEY_API, DOMAIN as TRADFRI_DOMAIN)
+    KEY_GATEWAY, KEY_API, DEFAULT_OBSERVE_TIMEOUT, DOMAIN as TRADFRI_DOMAIN)
 from homeassistant.components.tradfri.const import (
     CONF_IMPORT_GROUPS, CONF_GATEWAY_ID)
 import homeassistant.util.color as color_util
@@ -126,7 +126,7 @@ class TradfriGroup(Light):
         try:
             cmd = self._group.observe(callback=self._observe_update,
                                       err_callback=self._async_start_observe,
-                                      duration=0)
+                                      duration=DEFAULT_OBSERVE_TIMEOUT)
             self.hass.async_create_task(self._api(cmd))
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
@@ -345,7 +345,7 @@ class TradfriLight(Light):
         try:
             cmd = self._light.observe(callback=self._observe_update,
                                       err_callback=self._async_start_observe,
-                                      duration=0)
+                                      duration=DEFAULT_OBSERVE_TIMEOUT)
             self.hass.async_create_task(self._api(cmd))
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)

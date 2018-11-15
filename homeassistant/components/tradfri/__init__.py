@@ -26,6 +26,7 @@ KEY_GATEWAY = 'tradfri_gateway'
 KEY_API = 'tradfri_api'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = False
+DEFAULT_OBSERVE_TIMEOUT = 3600  # Set default timeout to 1 hour in seconds
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

@@ -9,7 +9,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.tradfri import (
-    KEY_GATEWAY, KEY_API, DOMAIN as TRADFRI_DOMAIN)
+    KEY_GATEWAY, KEY_API, DEFAULT_OBSERVE_TIMEOUT, DOMAIN as TRADFRI_DOMAIN)
 from homeassistant.components.tradfri.const import (
     CONF_GATEWAY_ID)
 
@@ -114,7 +114,7 @@ class TradfriSwitch(SwitchDevice):
         try:
             cmd = self._switch.observe(callback=self._observe_update,
                                        err_callback=self._async_start_observe,
-                                       duration=0)
+                                       duration=DEFAULT_OBSERVE_TIMEOUT)
             self.hass.async_create_task(self._api(cmd))
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
