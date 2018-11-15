@@ -34,6 +34,7 @@ DEFAULT_PASSWORD = "admin"
 # Invalid config for [ecoal_boiler]:
 #   [homeassistant] is an invalid option for [ecoal_boiler].
 
+# In fact it is variable, set during setup
 ECOAL_CONTR = None
 
 

@@ -324,21 +324,21 @@ class ECoalControler:
                 txt += " auto"
             else:
                 txt += " manual"
-            txt += " outdoor: %.1f°C" % (self.outdoor_temp,)
-            txt += " indoor: %.1f°C %.1f°C" % (
+            txt += " outdoor: %.1f\xb0C" % (self.outdoor_temp,)
+            txt += " indoor: %.1f\xb0C %.1f\xb0C" % (
                 self.indoor_temp,
                 self.indoor2_temp,
             )
-            txt += " DHW: %.1f°C (target: %.1f°C)" % (
+            txt += " DHW: %.1f\xb0C (target: %.1f\xb0C)" % (
                 self.domestic_hot_water_temp,
                 self.target_domestic_hot_water_temp,
             )
-            txt += " feedwater: %.1f°C -> %.1f°C (target: %.1f°C)" % (
+            txt += " feedwater: %.1f\xb0C -> %.1f\xb0C (target: %.1f\xb0C)" % (
                 self.feedwater_in_temp,
                 self.feedwater_out_temp,
                 self.target_feedwater_temp,
             )
-            txt += " exhaust: %.1f°C" % (self.exhaust_temp,)
+            txt += " exhaust: %.1f\xb0C" % (self.exhaust_temp,)
             if self.central_heating_pump:
                 txt += " CH:On"
             else:
@@ -355,7 +355,7 @@ class ECoalControler:
                 txt += " Feeder:On"
             else:
                 txt += " Feeder:Off"
-            txt += " Feeder work time: %ds temp: %.1f°C" % (
+            txt += " Feeder work time: %ds temp: %.1f\xb0C" % (
                 self.feeder_work_time,
                 self.coal_feeder_temp,
             )
@@ -588,15 +588,13 @@ def test_contr():
     """Tests connection, performs simple operations."""
     contr = ECoalControler("192.168.9.2", "admin", "admin")
     contr.get_cached_status()
-    if 0:
-        contr.get_cached_status()
-        time.sleep(0.2)
-        contr.get_cached_status()
-    if 1:
-        # contr.set_central_heating_pump(0)
-        # contr.set_domestic_hot_water_pump(0)
-        contr.set_central_heating_pump2(0)
-        contr.get_status()
+    # contr.get_cached_status()
+    # time.sleep(0.2)
+    # contr.get_cached_status()
+    # contr.set_central_heating_pump(0)
+    # contr.set_domestic_hot_water_pump(0)
+    contr.set_central_heating_pump2(0)
+    contr.get_status()
 
 
 if __name__ == "__main__":
