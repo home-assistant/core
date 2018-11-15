@@ -47,9 +47,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
-
 async def async_get_service(hass, config, discovery_info=None):
-    """Setup the Enigma platform."""
+    """Return the notify service."""
     if config.get(CONF_HOST) is not None:
         enigma = EnigmaNotify(config.get(CONF_NAME),
                               config.get(CONF_HOST),

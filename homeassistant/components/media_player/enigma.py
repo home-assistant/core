@@ -135,7 +135,6 @@ class EnigmaDevice(MediaPlayerDevice):
 
     # Load channels from specified bouquet orfrom first available bouquet
     def load_sources(self):
-        """import BeautifulSoup."""
         from bs4 import BeautifulSoup
 
         if self._bouquet:
