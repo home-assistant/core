@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             info = hass.data[controller_id][IHC_INFO]
             name = light[CONF_NAME]
             dimmable = light[CONF_DIMMABLE]
-            
+
             device = IhcLight(ihc_controller, name, ihc_id, info, dimmable)
             devices.append(device)
 
