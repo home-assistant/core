@@ -104,6 +104,25 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Create the evohome Controller, and its Zones, if any."""
     evo_data = hass.data[DATA_EVOHOME]
 
+    client = evo_data['client']
+    loc_idx = evo_data['params'][CONF_LOCATION_IDX]
+
+    # evohomeclient has exposed no means of accessing non-default location
+    # (i.e. loc_idx > 0) other than using a protected member, such as below
+    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
+
+    evo_data['parent'] = EvoController(evo_data, client, tcs_obj_ref)
+    evo_data['children'] = zones = []
+
+    for zone_idx in tcs_obj_ref.zones:
+        zone_obj_ref = tcs_obj_ref.zones[zone_idx]
+        _LOGGER.debug(
+            "setup(): Found Zone, id=%s, name=%s",
+            zone_obj_ref.zoneId + " [" + zone_obj_ref.zone_type + "]",
+            zone_obj_ref.name
+        )
+        zones.append(EvoZone(evo_data, client, zone_obj_ref))
+
     entities = [evo_data['parent']] + evo_data['children']
 
     async_add_entities(entities, update_before_add=False)

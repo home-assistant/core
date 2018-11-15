@@ -19,7 +19,6 @@ import logging
 from requests.exceptions import HTTPError
 import voluptuous as vol
 
-from homeassistant.components.climate.evohome import EvoController, EvoZone
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
@@ -124,7 +123,6 @@ def setup(hass, config):
 
     try:
         evo_data['config'] = client.installation_info[loc_idx]
-
     except IndexError:
         _LOGGER.warning(
             "setup(): Parameter '%s'=%s , is outside its range (0-%s)",
@@ -132,7 +130,6 @@ def setup(hass, config):
             loc_idx,
             len(client.installation_info) - 1
         )
-
         return False  # unable to continue
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -142,29 +139,6 @@ def setup(hass, config):
             tmp_loc[GWS][0][TCS][0]['dhw'] = '...'
 
         _LOGGER.debug("setup(): evo_data['config']=%s", tmp_loc)
-
-    # evohomeclient has exposed no means of accessing non-default location
-    # (i.e. loc_idx > 0) other than using a protected member, such as below
-    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
-
-    _LOGGER.debug(
-        "setup(): Found Controller, id=%s, name=%s (location_idx=%s)",
-        tcs_obj_ref.systemId + " [" + tcs_obj_ref.modelType + "]",
-        tcs_obj_ref.location.name,
-        loc_idx
-    )
-
-    evo_data['parent'] = EvoController(evo_data, client, tcs_obj_ref)
-    evo_data['children'] = zones = []
-
-    for zone_idx in tcs_obj_ref.zones:
-        zone_obj_ref = tcs_obj_ref.zones[zone_idx]
-        _LOGGER.debug(
-            "setup(): Found Zone, id=%s, name=%s",
-            zone_obj_ref.zoneId + " [" + zone_obj_ref.zone_type + "]",
-            zone_obj_ref.name
-        )
-        zones.append(EvoZone(evo_data, client, zone_obj_ref))
 
     hass.async_create_task(
         async_load_platform(hass, 'climate', DOMAIN, {}, config))
