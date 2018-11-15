@@ -135,24 +135,24 @@ class EnigmaDevice(MediaPlayerDevice):
         self.load_sources()
 
     # Load channels from specified bouquet or load sources from first
-    # available bouquet
+    # Available bouquet
     def load_sources(self):
         """import BeautifulSoup."""
         from bs4 import BeautifulSoup
 
         if self._bouquet:
-         # Load user set bouquet.
+        # Load user set bouquet.
             _LOGGER.debug("Enigma: [load_sources] - Request user bouquet %s ",
                           self._bouquet)
             epgbouquet_xml = self.request_call('/web/epgnow?bRef=' +
                                                urllib.parse.quote_plus
                                                (self._bouquet))
 
-         # Channels name
+        # Channels name
             soup = BeautifulSoup(epgbouquet_xml, 'html.parser')
             src_names = soup.find_all('e2eventservicename')
             self._source_names = [src_name.string for src_name in src_names]
-          # Channels reference
+         # Channels reference
             src_references = soup.find_all('e2eventservicereference')
             sources = [src_reference.string for src_reference in
                        src_references]
@@ -225,7 +225,7 @@ class EnigmaDevice(MediaPlayerDevice):
             about_xml = self.request_call('/web/about')
             soup = BeautifulSoup(about_xml, 'html.parser')
             name = soup.e2model.renderContents().decode('UTF8')
-            LOGGER.debug("Enigma: [update] - Name for host %s = %s",
+            _LOGGER.debug("Enigma: [update] - Name for host %s = %s",
                          self._host, name)
         if name:
             self._name = name
@@ -256,7 +256,7 @@ class EnigmaDevice(MediaPlayerDevice):
                     self._picon_url = 'http://' + self._host + ":" + \
                                       str(self._port) + '/picon/' + \
                                       reference.replace(":", "_")[:-1]+'.png'
-            LOGGER.debug("Enigma: [update] - Eventtitle for host %s = %s",
+            _LOGGER.debug("Enigma: [update] - Eventtitle for host %s = %s",
                          self._host, eventtitle)
 
             # Check volume and if is muted and update self variables
@@ -280,7 +280,7 @@ class EnigmaDevice(MediaPlayerDevice):
 # GET - Name
     @property
     def name(self):
-        """ Return the name of the device."""
+        """Return the name of the device."""
         return self._name
 
 # GET - State
