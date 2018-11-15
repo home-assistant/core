@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = sensor_cfg[CONF_NAME]
             sensor_type = sensor_cfg.get(CONF_TYPE)
             inverting = sensor_cfg[CONF_INVERTING]
-            
+
             sensor = IHCBinarySensor(ihc_controller, name, ihc_id, info,
                                      sensor_type, inverting)
             devices.append(sensor)
