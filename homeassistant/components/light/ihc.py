@@ -7,9 +7,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.ihc import (
-    validate_name, IHC_DATA, IHC_CONTROLLER, CONTROLLER_ID, IHC_INFO)
+    validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.const import (
-    CONF_DIMMABLE, CONF_SECONDARY)
+    CONF_CONTROLLER, CONF_DIMMABLE)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA, Light)
@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [
             vol.All({
                 vol.Required(CONF_ID): cv.positive_int,
-                vol.Optional(CONF_SECONDARY, default=False): cv.boolean,
+                vol.Optional(CONF_CONTROLLER, default="0"): cv.string,
                 vol.Optional(CONF_NAME): cv.string,
                 vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
             }, validate_name)
@@ -56,14 +56,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         lights = config[CONF_LIGHTS]
         for light in lights:
             ihc_id = light[CONF_ID]
-            # Get controller id
-            ihc_secondary = bool(light[CONF_SECONDARY])
-            ihc_key = IHC_DATA.format(CONTROLLER_ID[ihc_secondary])
-            ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
-
+            controller_id = light[CONF_CONTROLLER]
+            ihc_controller = hass.data[controller_id][IHC_CONTROLLER]
             info = hass.data[ihc_key][IHC_INFO]
             name = light[CONF_NAME]
             dimmable = light[CONF_DIMMABLE]
+            
             device = IhcLight(ihc_controller, name, ihc_id, info, dimmable)
             devices.append(device)
 
