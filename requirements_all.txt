@@ -358,7 +358,7 @@ eternalegypt==0.0.5
 
 # homeassistant.components.evohome
 # homeassistant.components.climate.honeywell
-evohomeclient==0.2.7
+evohomeclient==0.2.8
 
 # homeassistant.components.image_processing.dlib_face_detect
 # homeassistant.components.image_processing.dlib_face_identify
