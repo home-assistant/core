@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.ihc import (
     validate_name, IHC_DATA, IHC_CONTROLLER, CONTROLLER_ID, IHC_INFO)
 from homeassistant.components.ihc.const import (
-    CONF_INVERTING, CONF_SECONDARY)
+    CONF_CONTROLLER, CONF_INVERTING)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.const import (
     CONF_NAME, CONF_TYPE, CONF_ID, CONF_BINARY_SENSORS)
@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [
             vol.All({
                 vol.Required(CONF_ID): cv.positive_int,
-                vol.Optional(CONF_SECONDARY, default=False): cv.boolean,
+                vol.Optional(CONF_CONTROLLER, default="0"): cv.string,
                 vol.Optional(CONF_NAME): cv.string,
                 vol.Optional(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_INVERTING, default=False): cv.boolean,
@@ -55,15 +55,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         binary_sensors = config[CONF_BINARY_SENSORS]
         for sensor_cfg in binary_sensors:
             ihc_id = sensor_cfg[CONF_ID]
-            # Get controller id
-            ihc_secondary = bool(sensor_cfg[CONF_SECONDARY])
-            ihc_key = IHC_DATA.format(CONTROLLER_ID[ihc_secondary])
-            ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
-
+            controller_id = sensor_cfg[CONF_CONTROLLER]
+            ihc_controller = hass.data[controller_id][IHC_CONTROLLER]
             info = hass.data[ihc_key][IHC_INFO]
             name = sensor_cfg[CONF_NAME]
             sensor_type = sensor_cfg.get(CONF_TYPE)
             inverting = sensor_cfg[CONF_INVERTING]
+            
             sensor = IHCBinarySensor(ihc_controller, name, ihc_id, info,
                                      sensor_type, inverting)
             devices.append(sensor)
