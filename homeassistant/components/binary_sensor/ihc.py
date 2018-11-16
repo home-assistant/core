@@ -3,18 +3,15 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.ihc/
 """
-import voluptuous as vol
-
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
+    BinarySensorDevice)
 from homeassistant.components.ihc import (
     IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.const import (
     CONF_INVERTING)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.const import (
-    CONF_NAME, CONF_TYPE, CONF_ID, CONF_BINARY_SENSORS)
-import homeassistant.helpers.config_validation as cv
+    CONF_TYPE)
 
 DEPENDENCIES = ['ihc']
 
@@ -22,7 +19,7 @@ DEPENDENCIES = ['ihc']
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC binary sensor platform."""
     devices = []
-    if discovery_info:
+    if discovery_info:  
         for name, device in discovery_info.items():
             ihc_id = device['ihc_id']
             product_cfg = device['product_cfg']
