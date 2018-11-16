@@ -5,8 +5,8 @@ https://home-assistant.io/components/switch.ihc/
 """
 import voluptuous as vol
 
-from homeassistant.components.ihc import (    
-    validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
+from homeassistant.components.ihc import (
+    IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_SWITCHES
