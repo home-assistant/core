@@ -85,25 +85,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def adb_decorator(override_available=False):
-    """Send an ADB command if the device is available."""
+    """Send an ADB command if the device is available and not locked."""
     def adb_wrapper(func):
-        """Wait until previous ADB commands have finished."""
+        """Wait if previous ADB commands haven't finished."""
         @functools.wraps(func)
         def _adb_wrapper(self, *args, **kwargs):
             # If the device is unavailable, don't do anything
             if not self.available and not override_available:
                 return None
 
-            # Acquire the lock, try to run the command, then release the lock
-            with self.adb_lock:
-                try:
-                    return func(self, *args, **kwargs)
-                except self.exceptions:
-                    _LOGGER.error('Failed to execute an ADB command; will '
-                                  'attempt to re-establish the ADB connection '
-                                  'in the next update')
-                    self._available = False  # pylint: disable=protected-access
-                    return None
+            # If an ADB command is already running, skip this command
+            if not self.adb_lock.acquire(blocking=False):
+                _LOGGER.info('Skipping an ADB command because a previous '
+                             'command is still running')
+                return None
+
+            # Additional ADB commands will be prevented while trying this one
+            try:
+                returns = func(self, *args, **kwargs)
+            except self.exceptions:
+                _LOGGER.error('Failed to execute an ADB command; will attempt '
+                              'to re-establish the ADB connection in the next '
+                              'update')
+                returns = None
+                self._available = False  # pylint: disable=protected-access
+            finally:
+                self.adb_lock.release()
+
+            return returns
 
         return _adb_wrapper
 
