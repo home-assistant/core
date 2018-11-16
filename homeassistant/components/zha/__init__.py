@@ -144,7 +144,6 @@ class ApplicationListener:
         self._config = config
         self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._device_registry = collections.defaultdict(list)
-        import homeassistant.components.zha.const as zha_const
         self._events = []
         hass.data[DISCOVERY_KEY] = hass.data.get(DISCOVERY_KEY, {})
 
