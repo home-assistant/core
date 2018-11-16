@@ -33,6 +33,7 @@ IHC_CONTROLLER = 'controller'
 IHC_INFO = 'info'
 AUTO_SETUP_YAML = 'ihc_auto_setup.yaml'
 
+
 def validate_name(config):
     """Validate device name."""
     if CONF_NAME in config:
@@ -41,6 +42,7 @@ def validate_name(config):
     name = 'ihc_{}'.format(ihcid)
     config[CONF_NAME] = name
     return config
+
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_ID): cv.positive_int,
@@ -83,7 +85,7 @@ SENSOR_SCHEMA = vol.Schema({
         [DEVICE_SCHEMA],
         vol.All({
             vol.Optional(CONF_UNIT_OF_MEASUREMENT,
-                            default=TEMP_CELSIUS): cv.string,
+                         default=TEMP_CELSIUS): cv.string,
         }, validate_name)
     ])
 })
@@ -191,7 +193,8 @@ def ihc_setup(hass, config, conf, controller_id):
                                        controller_id)):
         return False
     # Manual configuration
-    get_manual_configuration(hass, config, conf, ihc_controller, controller_id)
+    get_manual_configuration(hass, config, conf, ihc_controller, 
+                             controller_id)
     # Store controler configuration
     ihc_key = IHC_DATA.format(controller_id)
     hass.data[ihc_key] = {
@@ -215,14 +218,15 @@ def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
                         'note': sensor_cfg.get(CONF_NOTE) or '',
                         'position': sensor_cfg.get(CONF_POSITION) or ''},
                     'product_cfg': {
-                        'type' : sensor_cfg.get(CONF_TYPE),
-                        'inverting' : sensor_cfg.get(CONF_INVERTING),
-                        'dimmable' : sensor_cfg.get(CONF_DIMMABLE),
-                        'unit' : sensor_cfg.get(CONF_UNIT_OF_MEASUREMENT)
+                        'type': sensor_cfg.get(CONF_TYPE),
+                        'inverting': sensor_cfg.get(CONF_INVERTING),
+                        'dimmable': sensor_cfg.get(CONF_DIMMABLE),
+                        'unit': sensor_cfg.get(CONF_UNIT_OF_MEASUREMENT)
                     }
                 }
-                discovery_info = { sensor_cfg[CONF_NAME]: device }
-                discovery.load_platform(hass, 'binary_sensor', DOMAIN, discovery_info, config)
+                discovery_info = {sensor_cfg[CONF_NAME]: device}
+                discovery.load_platform(hass, 'binary_sensor', DOMAIN, 
+                                        discovery_info, config)
 
 
 def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller,
