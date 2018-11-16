@@ -41,14 +41,16 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
 
 # DEFAULTS
 DATA_ENIGMA = 'enigma'
-
 DEFAULT_NAME = 'Enigma2 Satelite'
 DEFAULT_PORT = 80
 DEFAULT_TIMEOUT = 30
 DEFAULT_USERNAME = 'root'
 DEFAULT_PASSWORD = None
+DEFAULT_BOUQUET = 'bouquet'
 
+# Extend bouquet conf variable
 CONF_BOUQUET = 'bouquet'
+CONF_PICON = 'picon'
 
 SUPPORT_ENIGMA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
@@ -67,11 +69,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
     vol.Optional(CONF_BOUQUET): cv.string,
+    vol.Optional(CONF_PICON): cv.string,
 })
 
 
 # SETUP PLATFORM
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Initialize the Enigma device."""
     if DATA_ENIGMA not in hass.data:
         hass.data[DATA_ENIGMA] = []
@@ -85,9 +89,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                               config.get(CONF_USERNAME),
                               config.get(CONF_PASSWORD),
                               config.get(CONF_TIMEOUT),
-                              config.get(CONF_BOUQUET))
+                              config.get(CONF_BOUQUET),
+                              config.get(CONF_PICON))
 
-        _LOGGER.info("Enigma receiver at host %s initialized.", CONF_HOST)
+        _LOGGER.info("Enigma receiver at host %s initialized.",
+                     config.get(CONF_HOST))
         hass.data[DATA_ENIGMA].append(enigma)
         enigmas.append(enigma)
 
@@ -98,7 +104,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class EnigmaDevice(MediaPlayerDevice):
     """Representation of a Enigma device."""
 
-    def __init__(self, name, host, port, username, password, timeout, bouquet):
+    def __init__(self, name, host, port, username, password, timeout,
+                 bouquet, picon):
         """Initialize the Enigma device."""
         self._name = name
         self._host = host
@@ -107,6 +114,7 @@ class EnigmaDevice(MediaPlayerDevice):
         self._password = password
         self._timeout = timeout
         self._bouquet = bouquet
+        self._picon = picon
         self._pwstate = True
         self._volume = 0
         self._muted = False
@@ -244,16 +252,41 @@ class EnigmaDevice(MediaPlayerDevice):
                 soup = BeautifulSoup(xml, 'html.parser')
                 eventtitle = soup.e2eventtitle.renderContents().decode('UTF8')
                 if self._password != DEFAULT_PASSWORD:
-                    self._picon_url = 'http://' + \
-                                      self._username + ':' + \
-                                      self._password + \
-                                      '@' + self._host + ":" + \
-                                      str(self._port) + '/picon/' + \
-                                      reference.replace(":", "_")[:-1]+'.png'
+                    # if icon = screenhost then get screenshot
+                    if self._picon == 'screenshot':
+                        self._picon_url = 'http://' + \
+                                           self._username + ':' + \
+                                           self._password + \
+                                           '@' + self._host + ':' + \
+                                           str(self._port) + '/grab?format=png\
+                                           &r=720&mode=all&reference=' + \
+                                           reference.replace(":", "_")[:-1]
+                    # otherwise try to get picon
+                    else:
+                        self._picon_url = 'http://' + \
+                                           self._username + ':' + \
+                                           self._password + \
+                                           '@' + self._host + ':' + \
+                                           str(self._port) + '/picon/' + \
+                                           reference.replace(":", "_")[:-1] \
+                                           + '.png'
                 else:
-                    self._picon_url = 'http://' + self._host + ":" + \
-                                      str(self._port) + '/picon/' + \
-                                      reference.replace(":", "_")[:-1]+'.png'
+                    # if icon = screenhost then get screenshot
+                    if self._icon == 'screenshot':
+                        self._picon_url = 'http://' + \
+                                           self._username + ':' + \
+                                           self._password + \
+                                           '@' + self._host + ':' + \
+                                           str(self._port) + '/grab?format=png\
+                                           &r=720&mode=all&reference=' + \
+                                           reference.replace(":", "_")[:-1]
+                    # otherwise try to get picon
+                    else:
+                        self._picon_url = 'http://' + self._host + ':' + \
+                                           str(self._port) + '/picon/' + \
+                                           str(self._port) + '/picon/' + \
+                                           reference.replace(":", "_")[:-1] \
+                                           + '.png'
             _LOGGER.debug("Enigma: [update] - Eventtitle for host %s = %s",
                           self._host, eventtitle)
 
