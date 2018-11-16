@@ -25,6 +25,8 @@ REQUIREMENTS = ['websocket-client==0.37.0']
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
+CONF_HOST_ENTITY_ID = 'host_entity_id'
+
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'GPM Desktop Player'
 DEFAULT_PORT = 5672
@@ -42,6 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_HOST_ENTITY_ID): cv.string,
 })
 
 
@@ -109,6 +112,7 @@ def setup_gpmdp(hass, config, code, add_entities):
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    host_entity_id = config.get(CONF_HOST_ENTITY_ID)
     url = 'ws://{}:{}'.format(host, port)
 
     if not code:
@@ -119,7 +123,7 @@ def setup_gpmdp(hass, config, code, add_entities):
         configurator = hass.components.configurator
         configurator.request_done(_CONFIGURING.pop('gpmdp'))
 
-    add_entities([GPMDP(name, url, code)], True)
+    add_entities([GPMDP(name, url, host_entity_id, code)], True)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -139,13 +143,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class GPMDP(MediaPlayerDevice):
     """Representation of a GPMDP."""
 
-    def __init__(self, name, url, code):
+    def __init__(self, name, url, host_entity_id, code):
         """Initialize the media player."""
         from websocket import create_connection
         self._connection = create_connection
         self._url = url
         self._authorization_code = code
         self._name = name
+        self._host_entity_id = host_entity_id
         self._status = STATE_OFF
         self._ws = None
         self._title = None
@@ -200,6 +205,13 @@ class GPMDP(MediaPlayerDevice):
     def update(self):
         """Get the latest details from the player."""
         time.sleep(1)
+		
+        if (self._host_entity_id is not None):
+            state_obj = self.hass.states.get(self._host_entity_id)
+            if (state_obj is None) or (state_obj.state == 'off'):
+                self._status = 'off'
+                return
+		
         playstate = self.send_gpmdp_msg('playback', 'getPlaybackState')
         if playstate is None:
             return
