@@ -49,11 +49,11 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_POSITION): cv.string,
     vol.Optional(CONF_NOTE): cv.string,
-})
+}, extra=vol.ALLOW_EXTRA)
 
-SWITCH_SCHEMA = vol.Schema({
+
+SWITCH_SCHEMA = DEVICE_SCHEMA.extend({
     vol.All(cv.ensure_list, [
-        [DEVICE_SCHEMA],
         vol.All({
             vol.Required(CONF_ID): cv.positive_int,
             vol.Optional(CONF_NAME): cv.string,
@@ -61,9 +61,8 @@ SWITCH_SCHEMA = vol.Schema({
     ])
 })
 
-BINARY_SENSOR_SCHEMA = vol.Schema({
+BINARY_SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
     vol.All(cv.ensure_list, [
-        [DEVICE_SCHEMA],
         vol.All({
             vol.Optional(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_INVERTING, default=False): cv.boolean,
@@ -71,9 +70,8 @@ BINARY_SENSOR_SCHEMA = vol.Schema({
     ])
 })
 
-LIGHT_SCHEMA = vol.Schema({
+LIGHT_SCHEMA  = DEVICE_SCHEMA.extend({
     vol.All(cv.ensure_list, [
-        [DEVICE_SCHEMA],
         vol.All({
             vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
         }, validate_name)
@@ -82,7 +80,6 @@ LIGHT_SCHEMA = vol.Schema({
 
 SENSOR_SCHEMA = vol.Schema({
     vol.All(cv.ensure_list, [
-        [DEVICE_SCHEMA],
         vol.All({
             vol.Optional(CONF_UNIT_OF_MEASUREMENT,
                          default=TEMP_CELSIUS): cv.string,
