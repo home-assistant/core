@@ -18,7 +18,7 @@ DEPENDENCIES = ['ihc']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC binary sensor platform."""
-    if discover_info is None:
+    if discovery_info is None:
         return
     devices = []
     for name, device in discovery_info.items():
