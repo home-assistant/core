@@ -1,3 +1,9 @@
+"""
+Support for Zigbee Home Automation devices that should fire events.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/zha/
+"""
 import logging
 from homeassistant.util import slugify
 from homeassistant.core import EventOrigin, callback
@@ -6,30 +12,32 @@ from homeassistant.core import EventOrigin, callback
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_setup_event(hass, discovery_info):
+async def async_setup_event(hass, discovery_info):
+    """Set up events for devices that have been registered in const.py.
+
+    Will create events for devices registered in REMOTE_DEVICE_TYPES.
+    """
     from homeassistant.components.zha import const as zha_const
     from homeassistant.components.zha import configure_reporting
     out_clusters = discovery_info['out_clusters']
     in_clusters = discovery_info['in_clusters']
+    events = []
     for in_cluster in in_clusters:
         event = ZHAEvent(hass, in_cluster, discovery_info)
         if discovery_info['new_join']:
             await configure_reporting(event.event_id, in_cluster, 0,
                                       False, 0, 600, 1)
-        hass.data[zha_const.DATA_ZHA_EVENT].append(
-            event
-        )
+        events.append(event)
     for out_cluster in out_clusters:
         event = ZHAEvent(hass, out_cluster, discovery_info)
         if discovery_info['new_join']:
             await configure_reporting(event.event_id, out_cluster, 0,
                                       False, 0, 600, 1)
-        hass.data[zha_const.DATA_ZHA_EVENT].append(
-            event
-        )
+            events.append(event)
+    return events
 
 
-class ZHAEvent(object):
+class ZHAEvent():
     """When you want signals instead of entities.
     Stateless sensors such as remotes are expected to generate an event
     instead of a sensor entity in hass.
@@ -74,6 +82,7 @@ class ZHAEvent(object):
 
     @callback
     def attribute_updated(self, attrid, value):
+        """Handle attribute updates."""
         self._hass.bus.async_fire(
             'zha_attribute_updated',
             {'device': self.event_id,
@@ -92,6 +101,7 @@ class ZHAEvent(object):
 
     @callback
     def zdo_command(self, *args, **kwargs):
+        """log zdo commands for debugging."""
         _LOGGER.debug(
             "%s: issued zdo command %s with args: %s", self.event_id,
             args,

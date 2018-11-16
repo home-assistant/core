@@ -1,7 +1,5 @@
 """All constants related to the ZHA component."""
 
-DATA_ZHA_EVENT = 'zha_events'
-
 DEVICE_CLASS = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
@@ -76,6 +74,11 @@ def populate_data():
             ('sensor', sensor_zha.RelativeHumiditySensor)
     })
 
+    # This registers a device that Xiaomi didn't follow the spec on.
+    # Translated: For device type: 0x5F01 in the ZHA zigbee profile
+    # the input clusters are: [0x0000, 0x0006, 0xFFFF] and the output
+    # clusters are: [0x0000, 0x0004, 0xFFFF]. The goal is to read this
+    # from a configuration file in the future
     PROFILES[zha.PROFILE_ID].CLUSTERS[0x5F01] = ([0x0000, 0x0006, 0xFFFF],
                                                  [0x0000, 0x0004, 0xFFFF])
 
