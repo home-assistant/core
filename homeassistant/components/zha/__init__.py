@@ -146,6 +146,8 @@ class ApplicationListener:
         self._device_registry = collections.defaultdict(list)
         self._events = []
         hass.data[DISCOVERY_KEY] = hass.data.get(DISCOVERY_KEY, {})
+        import homeassistant.components.zha.const as zha_const
+        zha_const.populate_data(self._hass)
 
     def device_joined(self, device):
         """Handle device joined.
@@ -180,7 +182,6 @@ class ApplicationListener:
         import zigpy.profiles
         import homeassistant.components.zha.event as zha_event
         import homeassistant.components.zha.const as zha_const
-        zha_const.populate_data()
 
         device_manufacturer = device_model = None
 
@@ -205,39 +206,39 @@ class ApplicationListener:
                 endpoint.model
             )
 
-            supported_remote_models = zha_const.REMOTE_DEVICE_TYPES.get(
+            if endpoint.profile_id in zigpy.profiles.PROFILES:
+                supported_remote_models = zha_const.REMOTE_DEVICE_TYPES.get(
                     endpoint.profile_id, {}).get(endpoint.manufacturer, [])
 
-            _LOGGER.debug(
-                "Supported remote models: %s",
-                supported_remote_models
-            )
+                _LOGGER.debug(
+                    "Supported remote models: %s",
+                    supported_remote_models
+                )
 
-            if endpoint.profile_id in zigpy.profiles.PROFILES and \
-                    endpoint.model in supported_remote_models:
-                profile = zigpy.profiles.PROFILES[endpoint.profile_id]
-                profile_clusters = profile.CLUSTERS[endpoint.device_type]
-                in_clusters = [endpoint.in_clusters[c]
-                               for c in profile_clusters[0]
-                               if c in endpoint.in_clusters]
-                out_clusters = [endpoint.out_clusters[c]
-                                for c in profile_clusters[1]
-                                if c in endpoint.out_clusters]
-                discovery_info = {
-                    'application_listener': self,
-                    'endpoint': endpoint,
-                    'in_clusters': in_clusters,
-                    'out_clusters': out_clusters,
-                    'manufacturer': endpoint.manufacturer,
-                    'model': endpoint.model,
-                    'new_join': join,
-                    'unique_id': device_key,
-                }
-                created_events = await zha_event.async_setup_event(
-                    self._hass,
-                    discovery_info
-                    )
-                self._events.extend(created_events)
+                if endpoint.model in supported_remote_models:
+                    profile = zigpy.profiles.PROFILES[endpoint.profile_id]
+                    profile_clusters = profile.CLUSTERS[endpoint.device_type]
+                    in_clusters = [endpoint.in_clusters[c]
+                                   for c in profile_clusters[0]
+                                   if c in endpoint.in_clusters]
+                    out_clusters = [endpoint.out_clusters[c]
+                                    for c in profile_clusters[1]
+                                    if c in endpoint.out_clusters]
+                    discovery_info = {
+                        'application_listener': self,
+                        'endpoint': endpoint,
+                        'in_clusters': in_clusters,
+                        'out_clusters': out_clusters,
+                        'manufacturer': endpoint.manufacturer,
+                        'model': endpoint.model,
+                        'new_join': join,
+                        'unique_id': device_key,
+                    }
+                    created_events = await zha_event.async_setup_event(
+                        self._hass,
+                        discovery_info
+                        )
+                    self._events.extend(created_events)
 
             if endpoint.profile_id in zigpy.profiles.PROFILES:
                 profile = zigpy.profiles.PROFILES[endpoint.profile_id]

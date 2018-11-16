@@ -1,5 +1,9 @@
 """All constants related to the ZHA component."""
 
+import os
+import logging
+
+REMOTES_CONFIG_FILE = 'zha-remotes.json'
 DEVICE_CLASS = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
@@ -7,8 +11,10 @@ CUSTOM_CLUSTER_MAPPINGS = {}
 COMPONENT_CLUSTERS = {}
 REMOTE_DEVICE_TYPES = {}
 
+_LOGGER = logging.getLogger(__name__)
 
-def populate_data():
+
+def populate_data(hass):
     """Populate data using constants from bellows.
 
     These cannot be module level, as importing bellows must be done in a
@@ -17,6 +23,32 @@ def populate_data():
     from zigpy import zcl, quirks
     from zigpy.profiles import PROFILES, zha, zll
     from homeassistant.components.sensor import zha as sensor_zha
+    from homeassistant.util.json import load_json, save_json
+
+    remotes_config_path = hass.config.path(REMOTES_CONFIG_FILE)
+
+    _LOGGER.debug(
+        "remotes config path: %s Is path: %s",
+        remotes_config_path,
+        os.path.isfile(remotes_config_path)
+    )
+
+    if not os.path.isfile(remotes_config_path):
+        save_json(remotes_config_path,
+                  {str(zha.PROFILE_ID): {}, str(zll.PROFILE_ID): {}}
+                  )
+
+    remote_devices = load_json(remotes_config_path)
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = remote_devices.get(
+        str(zha.PROFILE_ID)
+        )
+    REMOTE_DEVICE_TYPES[zll.PROFILE_ID] = remote_devices.get(
+        str(zll.PROFILE_ID)
+        )
+
+    _LOGGER.debug(
+        "loaded from remotes config: %s", REMOTE_DEVICE_TYPES
+    )
 
     DEVICE_CLASS[zha.PROFILE_ID] = {
         zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
@@ -30,11 +62,6 @@ def populate_data():
         zha.DeviceType.ON_OFF_LIGHT_SWITCH: 'binary_sensor',
         zha.DeviceType.DIMMER_SWITCH: 'binary_sensor',
         zha.DeviceType.COLOR_DIMMER_SWITCH: 'binary_sensor',
-    }
-    REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = {
-        'CentraLite': ['3130'],
-        'LUMI': ['lumi.sensor_switch.aq2'],
-        'OSRAM': ['LIGHTIFY Dimming Switch'],
     }
     DEVICE_CLASS[zll.PROFILE_ID] = {
         zll.DeviceType.ON_OFF_LIGHT: 'light',
@@ -50,8 +77,6 @@ def populate_data():
         zll.DeviceType.SCENE_CONTROLLER: 'binary_sensor',
         zll.DeviceType.ON_OFF_SENSOR: 'binary_sensor',
     }
-    REMOTE_DEVICE_TYPES[zll.PROFILE_ID] = [
-    ]
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
         zcl.clusters.general.LevelControl: 'light',
