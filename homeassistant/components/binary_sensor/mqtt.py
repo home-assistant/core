@@ -145,7 +145,7 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
         self._payload_on = config.get(CONF_PAYLOAD_ON)
         self._payload_off = config.get(CONF_PAYLOAD_OFF)
         value_template = config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
+        if value_template is not None and value_template.hass is None:
             value_template.hass = self.hass
         self._template = value_template
 
