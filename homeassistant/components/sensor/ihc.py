@@ -3,14 +3,11 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ihc/
 """
-import voluptuous as vol
 from homeassistant.components.ihc import (
-    validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
+    IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.const import (
-    CONF_ID, CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_SENSORS,
-    TEMP_CELSIUS)
-import homeassistant.helpers.config_validation as cv
+    CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ihc']
