@@ -18,24 +18,25 @@ DEPENDENCIES = ['ihc']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC binary sensor platform."""
+    if discover_info is None:
+        return
     devices = []
-    if discovery_info:  
-        for name, device in discovery_info.items():
-            ihc_id = device['ihc_id']
-            product_cfg = device['product_cfg']
-            product = device['product']
-            # Find controller that corresponds with device id
-            ctrl_id = device['ctrl_id']
-            ihc_key = IHC_DATA.format(ctrl_id)
-            info = hass.data[ihc_key][IHC_INFO]
-            ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
+    for name, device in discovery_info.items():
+        ihc_id = device['ihc_id']
+        product_cfg = device['product_cfg']
+        product = device['product']
+        # Find controller that corresponds with device id
+        ctrl_id = device['ctrl_id']
+        ihc_key = IHC_DATA.format(ctrl_id)
+        info = hass.data[ihc_key][IHC_INFO]
+        ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
 
-            sensor = IHCBinarySensor(ihc_controller, name, ihc_id, info,
-                                     product_cfg.get(CONF_TYPE),
-                                     product_cfg[CONF_INVERTING],
-                                     product)
-            devices.append(sensor)
-        add_entities(devices)
+        sensor = IHCBinarySensor(ihc_controller, name, ihc_id, info,
+                                 product_cfg.get(CONF_TYPE),
+                                 product_cfg[CONF_INVERTING],
+                                 product)
+        devices.append(sensor)
+    add_entities(devices)
 
 
 class IHCBinarySensor(IHCDevice, BinarySensorDevice):
