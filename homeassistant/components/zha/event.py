@@ -92,7 +92,7 @@ class ZHAEvent():
             EventOrigin.remote
         )
         _LOGGER.debug(
-            "%s: fired [zha_attribute_updated] for attribute [%s]" + \
+            "%s: fired [zha_attribute_updated] for attribute [%s]" +
             " with value: [%s] and id: [%s]",
             self.event_id,
             self._cluster.attributes.get(attrid, ['Unknown'])[0],
