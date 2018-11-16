@@ -31,7 +31,7 @@ class FibaroCover(FibaroDevice, CoverDevice):
 
     def __init__(self, fibaro_device, controller):
         """Initialize the Vera device."""
-        FibaroDevice.__init__(self, fibaro_device, controller)
+        super().__init__(fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @staticmethod
@@ -62,7 +62,7 @@ class FibaroCover(FibaroDevice, CoverDevice):
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.action("setValue2", kwargs.get(ATTR_TILT_POSITION))
+        self.set_level2(kwargs.get(ATTR_TILT_POSITION))
 
     @property
     def is_closed(self):
@@ -80,11 +80,11 @@ class FibaroCover(FibaroDevice, CoverDevice):
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        self.action("setValue2", 100)
+        self.set_level2(100)
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover."""
-        self.action("setValue2", 0)
+        self.set_level2(0)
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""

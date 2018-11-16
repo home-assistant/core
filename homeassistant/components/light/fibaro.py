@@ -114,7 +114,7 @@ class FibaroLight(FibaroDevice, Light):
                 # so instead, we switch it off
                 elif target_brightness < 4:
                     self._brightness = 0
-                    self.action("turnOff")
+                    self.call_turn_off()
                     return
                 else:
                     # We set it to the target brightness and turn it on
@@ -125,11 +125,12 @@ class FibaroLight(FibaroDevice, Light):
                 self._white = kwargs.get(ATTR_WHITE_VALUE, self._white)
                 self._color = kwargs.get(ATTR_HS_COLOR, self._color)
                 rgb = color_util.color_hs_to_RGB(*self._color)
-                self.set_color(int(rgb[0] * self._brightness / 255.0 + 0.5),
-                               int(rgb[1] * self._brightness / 255.0 + 0.5),
-                               int(rgb[2] * self._brightness / 255.0 + 0.5),
-                               int(self._white * self._brightness / 255.0 +
-                                   0.5))
+                self.call_set_color(
+                    int(rgb[0] * self._brightness / 255.0 + 0.5),
+                    int(rgb[1] * self._brightness / 255.0 + 0.5),
+                    int(rgb[2] * self._brightness / 255.0 + 0.5),
+                    int(self._white * self._brightness / 255.0 +
+                        0.5))
                 if self.state == 'off':
                     self.set_level(int(scaleto100(self._brightness)))
                 return
@@ -139,7 +140,7 @@ class FibaroLight(FibaroDevice, Light):
                 return
 
             # The simplest case is left for last. No dimming, just switch on
-            self.action("turnOn")
+            self.call_turn_on()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
@@ -149,7 +150,7 @@ class FibaroLight(FibaroDevice, Light):
                     self._brightness and self._brightness >= 4:
                 self._last_brightness = self._brightness
             self._brightness = 0
-            self.action("turnOff")
+            self.call_turn_off()
 
     @property
     def is_on(self):

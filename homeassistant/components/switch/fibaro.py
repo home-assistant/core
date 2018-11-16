@@ -31,17 +31,17 @@ class FibaroSwitch(FibaroDevice, SwitchDevice):
     def __init__(self, fibaro_device, controller):
         """Initialize the Fibaro device."""
         self._state = False
-        FibaroDevice.__init__(self, fibaro_device, controller)
+        super().__init__(fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     def turn_on(self, **kwargs):
         """Turn device on."""
-        self.action("turnOn")
+        self.call_turn_on()
         self._state = True
 
     def turn_off(self, **kwargs):
         """Turn device off."""
-        self.action("turnOff")
+        self.call_turn_off()
         self._state = False
 
     @property

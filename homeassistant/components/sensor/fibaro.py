@@ -48,9 +48,9 @@ class FibaroSensor(FibaroDevice, Entity):
         """Initialize the sensor."""
         self.current_value = None
         self.last_changed_time = None
-        FibaroDevice.__init__(self, fibaro_device, controller)
+        super().__init__(fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
-        if fibaro_device.type in SENSOR_TYPES.keys():
+        if fibaro_device.type in SENSOR_TYPES:
             self._device_class = SENSOR_TYPES[fibaro_device.type][3]
             self._icon = SENSOR_TYPES[fibaro_device.type][2]
             self._unit_of_measurement = SENSOR_TYPES[fibaro_device.type][1]
@@ -79,7 +79,7 @@ class FibaroSensor(FibaroDevice, Entity):
             return self.fibaro_device.properties.unit
         except (KeyError, ValueError):
             pass
-        return ''
+        return None
 
     @property
     def icon(self):
