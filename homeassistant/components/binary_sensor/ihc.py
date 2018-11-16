@@ -6,30 +6,17 @@ https://home-assistant.io/components/binary_sensor.ihc/
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
-from homeassistant.components.ihc import (
-    validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
+    BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
+from homeassistant.components.ihc import (    
+    DOMAIN, validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.const import (
-    CONF_CONTROLLER, CONF_INVERTING)
+    CONF_INVERTING)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.const import (
     CONF_NAME, CONF_TYPE, CONF_ID, CONF_BINARY_SENSORS)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['ihc']
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_BINARY_SENSORS, default=[]):
-        vol.All(cv.ensure_list, [
-            vol.All({
-                vol.Required(CONF_ID): cv.positive_int,
-                vol.Optional(CONF_CONTROLLER, default="0"): cv.string,
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
-                vol.Optional(CONF_INVERTING, default=False): cv.boolean,
-            }, validate_name)
-        ])
-})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -51,22 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                      product_cfg[CONF_INVERTING],
                                      product)
             devices.append(sensor)
-    else:
-        binary_sensors = config[CONF_BINARY_SENSORS]
-        for sensor_cfg in binary_sensors:
-            ihc_id = sensor_cfg[CONF_ID]
-            controller_id = sensor_cfg[CONF_CONTROLLER]
-            ihc_controller = hass.data[controller_id][IHC_CONTROLLER]
-            info = hass.data[controller_id][IHC_INFO]
-            name = sensor_cfg[CONF_NAME]
-            sensor_type = sensor_cfg.get(CONF_TYPE)
-            inverting = sensor_cfg[CONF_INVERTING]
-
-            sensor = IHCBinarySensor(ihc_controller, name, ihc_id, info,
-                                     sensor_type, inverting)
-            devices.append(sensor)
-
-    add_entities(devices)
+        add_entities(devices)            
 
 
 class IHCBinarySensor(IHCDevice, BinarySensorDevice):
