@@ -4,6 +4,8 @@ import os
 import logging
 
 REMOTES_CONFIG_FILE = 'zha-remotes.json'
+ZHA = 'Zigbee_home_automation'
+ZLL = 'Zigbee_light_link'
 DEVICE_CLASS = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
@@ -35,16 +37,12 @@ def populate_data(hass):
 
     if not os.path.isfile(remotes_config_path):
         save_json(remotes_config_path,
-                  {str(zha.PROFILE_ID): {}, str(zll.PROFILE_ID): {}}
+                  {ZHA: {}, ZLL: {}}
                   )
 
     remote_devices = load_json(remotes_config_path)
-    REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = remote_devices.get(
-        str(zha.PROFILE_ID)
-        )
-    REMOTE_DEVICE_TYPES[zll.PROFILE_ID] = remote_devices.get(
-        str(zll.PROFILE_ID)
-        )
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = remote_devices.get(ZHA)
+    REMOTE_DEVICE_TYPES[zll.PROFILE_ID] = remote_devices.get(ZLL)
 
     _LOGGER.debug(
         "loaded from remotes config: %s", REMOTE_DEVICE_TYPES
