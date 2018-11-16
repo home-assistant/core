@@ -103,7 +103,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
 
     _LOGGER.debug(
-        "setup(): Found Controller, id=%s, name=%s (location_idx=%s)",
+        "setup_platform(): Found Controller, id=%s, name=%s (location_idx=%s)",
         tcs_obj_ref.systemId + " [" + tcs_obj_ref.modelType + "]",
         tcs_obj_ref.location.name,
         loc_idx
@@ -115,7 +115,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     for zone_idx in tcs_obj_ref.zones:
         zone_obj_ref = tcs_obj_ref.zones[zone_idx]
         _LOGGER.debug(
-            "setup(): Found Zone, id=%s, name=%s",
+            "setup_platform(): Found Zone, id=%s, name=%s",
             zone_obj_ref.zoneId + " [" + zone_obj_ref.zone_type + "]",
             zone_obj_ref.name
         )
@@ -335,13 +335,6 @@ class EvoZone(EvoClimateDevice):
           - strftime('%Y-%m-%dT%H:%M:%SZ') for TemporaryOverride, or
           - None for PermanentOverride (i.e. indefinitely)
         """
-        _LOGGER.debug(
-            "_set_temperature(): API call [1 request(s)]: "
-            "zone(%s).set_temperature(temp=%s, until=%s)...",
-            self._id,
-            temperature,
-            until
-        )
         try:
             self._obj.set_temperature(temperature, until)
         except HTTPError as err:
@@ -393,11 +386,6 @@ class EvoZone(EvoClimateDevice):
 
     def _set_operation_mode(self, operation_mode):
         if operation_mode == EVO_FOLLOW:
-            _LOGGER.debug(
-                "_set_operation_mode(): API call [1 request(s)]: "
-                "zone(%s).cancel_temp_override()...",
-                self._id
-            )
             try:
                 self._obj.cancel_temp_override(self._obj)
             except HTTPError as err:
@@ -565,12 +553,6 @@ class EvoController(EvoClimateDevice):
         self._set_operation_mode(EVO_AUTO)
 
     def _set_operation_mode(self, operation_mode):
-        _LOGGER.debug(
-            "_set_operation_mode(): API call [1 request(s)]: "
-            "tcs(%s)._set_status(op_mode=%s)...",
-            self._id,
-            operation_mode
-        )
         try:
             self._obj._set_status(operation_mode)                               # noqa: E501; pylint: disable=protected-access
         except HTTPError as err:
@@ -599,11 +581,6 @@ class EvoController(EvoClimateDevice):
     def _update_state_data(self, evo_data):
         loc_idx = evo_data['params'][CONF_LOCATION_IDX]
 
-        _LOGGER.debug(
-            "_update_state_data(): API call [1 request(s)]: "
-            "client.locations[%s].status()...",
-            loc_idx
-        )
         try:
             evo_data['status'].update(
                 self._client.locations[loc_idx].status()[GWS][0][TCS][0])

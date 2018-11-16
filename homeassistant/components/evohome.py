@@ -69,7 +69,6 @@ def setup(hass, config):
 
     from evohomeclient2 import EvohomeClient
 
-    _LOGGER.debug("setup(): API call [4 request(s)]: client.__init__()...")
     try:
         client = EvohomeClient(
             evo_data['params'][CONF_USERNAME],
