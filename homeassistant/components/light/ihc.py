@@ -20,21 +20,22 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC lights platform."""
+    if discover_info is None:
+        return
     devices = []
-    if discovery_info:
-        for name, device in discovery_info.items():
-            ihc_id = device['ihc_id']
-            product_cfg = device['product_cfg']
-            product = device['product']
-            # Find controller that corresponds with device id
-            ctrl_id = device['ctrl_id']
-            ihc_key = IHC_DATA.format(ctrl_id)
-            info = hass.data[ihc_key][IHC_INFO]
-            ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
-            dimmable = product_cfg[CONF_DIMMABLE]
-            light = IhcLight(ihc_controller, name, ihc_id, info,
-                             dimmable, product)
-            devices.append(light)
+    for name, device in discovery_info.items():
+        ihc_id = device['ihc_id']
+        product_cfg = device['product_cfg']
+        product = device['product']
+        # Find controller that corresponds with device id
+        ctrl_id = device['ctrl_id']
+        ihc_key = IHC_DATA.format(ctrl_id)
+        info = hass.data[ihc_key][IHC_INFO]
+        ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
+        dimmable = product_cfg[CONF_DIMMABLE]
+        light = IhcLight(ihc_controller, name, ihc_id, info,
+                         dimmable, product)
+        devices.append(light)
     add_entities(devices)
 
 
