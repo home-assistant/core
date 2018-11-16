@@ -272,7 +272,7 @@ class EnigmaDevice(MediaPlayerDevice):
                                            + '.png'
                 else:
                     # if icon = screenhost then get screenshot
-                    if self._icon == 'screenshot':
+                    if self._picon == 'screenshot':
                         self._picon_url = 'http://' + \
                                            self._username + ':' + \
                                            self._password + \
