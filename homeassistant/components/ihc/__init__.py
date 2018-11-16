@@ -9,16 +9,18 @@ import os.path
 import xml.etree.ElementTree
 
 import voluptuous as vol
-
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA)
 from homeassistant.components.ihc.const import (
     ATTR_IHC_ID, ATTR_VALUE, CONF_AUTOSETUP, CONF_BINARY_SENSOR, CONF_DIMMABLE,
-    CONF_INFO, CONF_INVERTING, CONF_LIGHT, CONF_NODE, CONF_SENSOR, CONF_SWITCH,
-    CONF_XPATH, SERVICE_SET_RUNTIME_VALUE_BOOL,
+    CONF_INFO, CONF_INVERTING, CONF_LIGHT, CONF_NODE, CONF_NOTE, CONF_POSITION, 
+    CONF_SENSOR, CONF_SWITCH, CONF_XPATH, SERVICE_SET_RUNTIME_VALUE_BOOL,
     SERVICE_SET_RUNTIME_VALUE_FLOAT, SERVICE_SET_RUNTIME_VALUE_INT)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT,
-    CONF_URL, CONF_USERNAME, TEMP_CELSIUS)
+    CONF_BINARY_SENSORS, CONF_ID, CONF_LIGHTS, CONF_NAME, CONF_PASSWORD,
+    CONF_SENSORS, CONF_SWITCHES, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, CONF_URL,
+    CONF_USERNAME, TEMP_CELSIUS)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -31,14 +33,71 @@ IHC_CONTROLLER = 'controller'
 IHC_INFO = 'info'
 AUTO_SETUP_YAML = 'ihc_auto_setup.yaml'
 
+def validate_name(config):
+    """Validate device name."""
+    if CONF_NAME in config:
+        return config
+    ihcid = config[CONF_ID]
+    name = 'ihc_{}'.format(ihcid)
+    config[CONF_NAME] = name
+    return config
+
+DEVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_ID): cv.positive_int,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_POSITION): cv.string,
+    vol.Optional(CONF_NOTE): cv.string,
+})
+
+SWITCH_SCHEMA = vol.Schema({
+    vol.All(cv.ensure_list, [
+        [DEVICE_SCHEMA],
+        vol.All({
+            vol.Required(CONF_ID): cv.positive_int,
+            vol.Optional(CONF_NAME): cv.string,
+        }, validate_name)
+    ])
+})
+
+BINARY_SENSOR_SCHEMA = vol.Schema({
+    vol.All(cv.ensure_list, [
+        [DEVICE_SCHEMA],
+        vol.All({
+            vol.Optional(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_INVERTING, default=False): cv.boolean,
+        }, validate_name)
+    ])
+})
+
+LIGHT_SCHEMA = vol.Schema({
+    vol.All(cv.ensure_list, [
+        [DEVICE_SCHEMA],
+        vol.All({
+            vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
+        }, validate_name)
+    ])
+})
+
+SENSOR_SCHEMA = vol.Schema({
+    vol.All(cv.ensure_list, [
+        [DEVICE_SCHEMA],
+        vol.All({
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT,
+                            default=TEMP_CELSIUS): cv.string,
+        }, validate_name)
+    ])
+})
 
 IHC_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=""): cv.string,
     vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
     vol.Optional(CONF_INFO, default=True): cv.boolean,
+    vol.Optional(CONF_BINARY_SENSORS): BINARY_SENSOR_SCHEMA,
+    vol.Optional(CONF_LIGHTS): LIGHT_SCHEMA,
+    vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+    vol.Optional(CONF_SWITCH): SWITCH_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
 
 CONFIG_SCHEMA = vol.Schema({
@@ -107,14 +166,8 @@ IHC_PLATFORMS = ('binary_sensor', 'light', 'sensor', 'switch')
 def setup(hass, config):
     """Set up the IHC platform."""
     conf = config.get(DOMAIN)
-    index = 0
-    # Set up the IHC component
     for index, controller_conf in enumerate(conf):
-        # The controller may be named optionally. If not done an index value
-        # is added. The name/index is required for reference when manually
-        # configurating entities on the controller
-        name = controller_conf[CONF_NAME] or str(index)
-        if not ihc_setup(hass, config, controller_conf, name):
+        if not ihc_setup(hass, config, controller_conf, index):
             return False
 
     return True
@@ -137,14 +190,39 @@ def ihc_setup(hass, config, conf, controller_id):
             not autosetup_ihc_products(hass, config, ihc_controller,
                                        controller_id)):
         return False
-
+    # Manual configuration
+    get_manual_configuration(hass, config, conf, ihc_controller, controller_id)
+    # Store controler configuration
     ihc_key = IHC_DATA.format(controller_id)
     hass.data[ihc_key] = {
         IHC_CONTROLLER: ihc_controller,
         IHC_INFO: conf[CONF_INFO]}
     setup_service_functions(hass, ihc_controller)
-
     return True
+
+
+def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
+    """Get manual configuration IHC devices."""
+    for component in IHC_PLATFORMS:
+        if component in conf:
+            component_setup = conf.get(component)
+            for sensor_id, sensor_cfg in component_setup.items():
+                device = {
+                    'ihc_id': sensor_id,
+                    'ctrl_id': controller_id,
+                    'product': {
+                        'name': sensor_cfg[CONF_NAME],
+                        'note': sensor_cfg.get(CONF_NOTE) or '',
+                        'position': sensor_cfg.get(CONF_POSITION) or ''},
+                    'product_cfg': {
+                        'type' : sensor_cfg.get(CONF_TYPE),
+                        'inverting' : sensor_cfg.get(CONF_INVERTING),
+                        'dimmable' : sensor_cfg.get(CONF_DIMMABLE),
+                        'unit' : sensor_cfg.get(CONF_UNIT_OF_MEASUREMENT)
+                    }
+                }
+                discovery_info = { sensor_cfg[CONF_NAME]: device }
+                discovery.load_platform(hass, 'binary_sensor', DOMAIN, discovery_info, config)
 
 
 def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller,
@@ -152,7 +230,7 @@ def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller,
     """Auto setup of IHC products from the IHC project file."""
     project_xml = ihc_controller.get_project()
     if not project_xml:
-        _LOGGER.error("Unable to read project from ICH controller")
+        _LOGGER.error("Unable to read project from IHC controller")
         return False
     project = xml.etree.ElementTree.fromstring(project_xml)
 
@@ -235,11 +313,3 @@ def setup_service_functions(hass: HomeAssistantType, ihc_controller):
                            schema=SET_RUNTIME_VALUE_FLOAT_SCHEMA)
 
 
-def validate_name(config):
-    """Validate device name."""
-    if CONF_NAME in config:
-        return config
-    ihcid = config[CONF_ID]
-    name = 'ihc_{}'.format(ihcid)
-    config[CONF_NAME] = name
-    return config
