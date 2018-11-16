@@ -205,13 +205,13 @@ class GPMDP(MediaPlayerDevice):
     def update(self):
         """Get the latest details from the player."""
         time.sleep(1)
-		
+
         if self._host_entity_id is not None:
             state_obj = self.hass.states.get(self._host_entity_id)
             if (state_obj is None) or (state_obj.state == 'off'):
                 self._status = 'off'
                 return
-		
+
         playstate = self.send_gpmdp_msg('playback', 'getPlaybackState')
         if playstate is None:
             return
