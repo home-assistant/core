@@ -69,12 +69,14 @@ class HMLight(HMDevice, Light):
 
     @property
     def effect_list(self):
+        """Return the list of supported effects."""
         if not self.supported_features & SUPPORT_EFFECT:
             return None
         return self._hmdevice.get_effect_list()
 
     @property
     def effect(self):
+        """Return the current color change program of the light."""
         if not self.supported_features & SUPPORT_EFFECT:
             return None
         return self._hmdevice.get_effect()
