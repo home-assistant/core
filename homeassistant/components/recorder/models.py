@@ -71,7 +71,7 @@ class States(Base):   # type: ignore
     __tablename__ = 'states'
     state_id = Column(Integer, primary_key=True)
     domain = Column(String(64))
-    entity_id = Column(String(255))
+    entity_id = Column(String(255), index=True)
     state = Column(String(255))
     attributes = Column(Text)
     event_id = Column(Integer, ForeignKey('events.event_id'), index=True)
@@ -87,10 +87,6 @@ class States(Base):   # type: ignore
         # (get_states in history.py)
         Index(
             'ix_states_entity_id_last_updated', 'entity_id', 'last_updated'),
-        # Used for filtering logbook entries
-        # (_get_related_entity_ids in logbook.py)
-        Index(
-            'ix_states_domain_entity_id', 'domain', 'entity_id'),
     )
 
     @staticmethod
