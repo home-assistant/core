@@ -25,7 +25,6 @@ REQUIREMENTS = [
 ]
 
 DOMAIN = 'zha'
-DATA_ZHA_EVENT = 'zha_events'
 
 
 class RadioType(enum.Enum):
@@ -134,7 +133,8 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
                                  schema=SERVICE_SCHEMAS[SERVICE_REMOVE])
 
-    hass.data[DATA_ZHA_EVENT] = []
+    import homeassistant.components.zha.const as zha_const
+    hass.data[zha_const.DATA_ZHA_EVENT] = []
 
     return True
 
@@ -181,6 +181,7 @@ class ApplicationListener:
     async def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""
         import zigpy.profiles
+        import homeassistant.components.zha.event as event
         import homeassistant.components.zha.const as zha_const
         zha_const.populate_data()
 
@@ -201,7 +202,6 @@ class ApplicationListener:
             node_config = self._config[DOMAIN][CONF_DEVICE_CONFIG].get(
                 device_key, {})
 
-            profile = zigpy.profiles.PROFILES[endpoint.profile_id]
             _LOGGER.debug(
                 "Manufacturer: %s model: %s",
                 endpoint.manufacturer,
@@ -213,28 +213,31 @@ class ApplicationListener:
                 "Supported remote models: %s",
                 supported_remote_models
             )
-            if endpoint.model in supported_remote_models:
-                profile_clusters = profile.CLUSTERS[endpoint.device_type]
-                in_clusters = [endpoint.in_clusters[c]
-                               for c in profile_clusters[0]
-                               if c in endpoint.in_clusters]
-                out_clusters = [endpoint.out_clusters[c]
-                                for c in profile_clusters[1]
-                                if c in endpoint.out_clusters]
-                discovery_info = {
-                    'application_listener': self,
-                    'endpoint': endpoint,
-                    'in_clusters': in_clusters,
-                    'out_clusters': out_clusters,
-                    'manufacturer': endpoint.manufacturer,
-                    'model': endpoint.model,
-                    'new_join': join,
-                    'unique_id': device_key,
-                }
-                self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
-                await self._async_setup_event(discovery_info)
+            if endpoint.profile_id in zigpy.profiles.PROFILES and \
+               endpoint.model in supported_remote_models:
+                    profile = zigpy.profiles.PROFILES[endpoint.profile_id]
+                    profile_clusters = profile.CLUSTERS[endpoint.device_type]
+                    in_clusters = [endpoint.in_clusters[c]
+                                   for c in profile_clusters[0]
+                                   if c in endpoint.in_clusters]
+                    out_clusters = [endpoint.out_clusters[c]
+                                    for c in profile_clusters[1]
+                                    if c in endpoint.out_clusters]
+                    discovery_info = {
+                        'application_listener': self,
+                        'endpoint': endpoint,
+                        'in_clusters': in_clusters,
+                        'out_clusters': out_clusters,
+                        'manufacturer': endpoint.manufacturer,
+                        'model': endpoint.model,
+                        'new_join': join,
+                        'unique_id': device_key,
+                    }
+                    self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
+                    await event._async_setup_event(self._hass, discovery_info)
 
             if endpoint.profile_id in zigpy.profiles.PROFILES:
+                profile = zigpy.profiles.PROFILES[endpoint.profile_id]
                 if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
                                               {}).get(endpoint.device_type,
                                                       None):
@@ -356,26 +359,6 @@ class ApplicationListener:
             {'discovery_key': cluster_key},
             self._config,
         )
-
-    async def _async_setup_event(self, discovery_info):
-        out_clusters = discovery_info['out_clusters']
-        in_clusters = discovery_info['in_clusters']
-        for in_cluster in in_clusters:
-            event = ZHAEvent(self._hass, in_cluster, discovery_info)
-            if discovery_info['new_join']:
-                await configure_reporting(event.event_id, in_cluster, 0,
-                                          False, 0, 600, 1)
-            self._hass.data[DATA_ZHA_EVENT].append(
-                event
-            )
-        for out_cluster in out_clusters:
-            event = ZHAEvent(self._hass, out_cluster, discovery_info)
-            if discovery_info['new_join']:
-                await configure_reporting(event.event_id, out_cluster, 0,
-                                          False, 0, 600, 1)
-            self._hass.data[DATA_ZHA_EVENT].append(
-                event
-            )
 
 
 class Entity(entity.Entity):
@@ -525,71 +508,6 @@ class ZhaDeviceEntity(entity.Entity):
                 self._state = 'offline'
             else:
                 self._state = 'online'
-
-
-class ZHAEvent(object):
-    """When you want signals instead of entities.
-    Stateless sensors such as remotes are expected to generate an event
-    instead of a sensor entity in hass.
-    """
-
-    def __init__(self, hass, cluster, discovery_info):
-        """Register callback that will be used for signals."""
-        self._hass = hass
-        self._cluster = cluster
-        self._cluster.add_listener(self)
-        ieee = discovery_info['endpoint'].device.ieee
-        ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
-        if discovery_info['manufacturer'] and discovery_info['model'] is not \
-                None:
-            self.event_id = "{}.{}_{}_{}{}".format(
-                slugify(discovery_info['manufacturer']),
-                slugify(discovery_info['model']),
-                ieeetail,
-                discovery_info['endpoint'].endpoint_id,
-                discovery_info.get('entity_suffix', '')
-            )
-        else:
-            self.event_id = "{}.event_{}{}".format(
-                ieeetail,
-                discovery_info['endpoint'].endpoint_id,
-                discovery_info.get('entity_suffix', '')
-            )
-
-    @callback
-    def cluster_command(self, tsn, command_id, args):
-        """Handle commands received to this cluster."""
-        self._hass.bus.async_fire(
-            'zha_' + self._cluster.server_commands.get(command_id)[0],
-            {'device': self.event_id, 'args': args},
-            EventOrigin.remote
-        )
-        _LOGGER.debug(
-            "%s: fired %s event with arguments: %s", self.event_id,
-            self._cluster.server_commands.get(command_id)[0],
-            args
-        )
-
-    @callback
-    def attribute_updated(self, attrid, value):
-        self._hass.bus.async_fire(
-            'zha_' + self._cluster.attributes.get(attrid)[0],
-            {'device': self.event_id, 'value': value},
-            EventOrigin.remote
-        )
-        _LOGGER.debug(
-            "%s: updated attribute %s with value: %s", self.event_id,
-            self._cluster.attributes.get(attrid)[0],
-            value
-        )
-
-    @callback
-    def zdo_command(self, *args, **kwargs):
-        _LOGGER.debug(
-            "%s: issued zdo command %s with args: %s", self.event_id,
-            args,
-            kwargs
-        )
 
 
 def get_discovery_info(hass, discovery_info):

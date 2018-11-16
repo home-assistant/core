@@ -1,5 +1,7 @@
 """All constants related to the ZHA component."""
 
+DATA_ZHA_EVENT = 'zha_events'
+
 DEVICE_CLASS = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
