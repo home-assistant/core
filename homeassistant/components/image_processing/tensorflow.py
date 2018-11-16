@@ -246,7 +246,8 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         for category, values in matches.items():
             # Draw custom category regions/areas
-            if self._category_areas[category] != [0, 0, 1, 1]:
+            if (category in self._category_areas
+                    and self._category_areas[category] != [0, 0, 1, 1]):
                 label = "{} Detection Area".format(category.capitalize())
                 draw_box(draw, self._category_areas[category], img_width,
                          img_height, label, (0, 255, 0))
