@@ -3,30 +3,30 @@
     "title": "Minut Point",
     "step": {
       "user": {
-        "title": "Authentication Provider",
-        "description": "Pick via which authentication provider you want to authenticate with Point.",
+        "title": "Autentiseringsleverant\u00f6r",
+        "description": "V\u00e4lj den autentiseringsleverant\u00f6r som du vill autentisera med mot Point.",
         "data": {
-          "flow_impl": "Provider"
+          "flow_impl": "Leverant\u00f6r"
         }
       },
       "auth": {
-        "title": "Authenticate Point",
-        "description": "Please follow the link below and <b>Accept</b> access to your Minut account, then come back and press <b>Submit</b> below.\n\n[Link]({authorization_url})"
+        "title": "Autentisera Point",
+        "description": "F\u00f6lj l\u00e4nken nedan och klicka p\u00e5 <b>Accept</b> f\u00f6r att tilll\u00e5ta tillg\u00e5ng till ditt Minut konto, kom d\u00f6refter tillbaka hit och kicka p\u00e5 <b>Submit</b> nedan.\n\n[L\u00e4nk]({authorization_url})"
       }
     },
     "create_entry": {
-      "default": "Successfully authenticated with Minut for your Point device(s)"
+      "default": "Autentiserad med Minut f\u00f6r era Point enheter."
     },
     "error": {
-      "no_token": "Not authenticated with Minut",
-      "follow_link": "Please follow the link and authenticate before pressing Submit"
+      "no_token": "Inte autentiserad hos Minut",
+      "follow_link": "F\u00f6lj l\u00e4nken och autentisera innan du kickar på Submit"
     },
     "abort": {
-      "already_setup": "You can only configure a Point account.",
-      "external_setup": "Point successfully configured from another flow.",
-      "no_flows": "You need to configure Point before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/point/).",
-      "authorize_url_timeout": "Timeout generating authorize url.",
-      "authorize_url_fail": "Unknown error generating an authorize url."
+      "already_setup": "Du kan endast konfigurera ett Point-konto.",
+      "external_setup": "Point har lyckats konfigureras fr\u00e5n ett annat fl\u00f6de.",
+      "no_flows": "Du m\u00e5ste konfigurera Nest innan du kan autentisera med det. [V\u00e4nligen l\u00e4s instruktionerna] (https://www.home-assistant.io/components/point/).",
+      "authorize_url_timeout": "Timeout vid generering av en autentisieringsadress.",
+      "authorize_url_fail": "Ok\u00e4nt fel vid generering av autentisieringsadress."
     }
   }
 } 
