@@ -1,21 +1,18 @@
 """Tests for the Point config flow."""
 import asyncio
-from sys import modules
 from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.point import config_flow, DOMAIN
+from homeassistant.components.point import DOMAIN, config_flow
 
-from tests.common import mock_coro
+from tests.common import MockDependency, mock_coro
 
 
-@pytest.fixture
 def init_config_flow(hass, side_effect=None):
     """Init a configuration flow."""
-    config_flow.register_flow_implementation(hass, DOMAIN, 'Test', 'id',
-                                             'secret')
+    config_flow.register_flow_implementation(hass, DOMAIN, 'id', 'secret')
     flow = config_flow.PointFlowHandler()
     flow._get_authorization_url = Mock(  # pylint: disable=W0212
         return_value=mock_coro('https://example.com'),
@@ -25,15 +22,23 @@ def init_config_flow(hass, side_effect=None):
 
 
 @pytest.fixture
-def mock_pypoint(is_authorized=True):
-    """Mock a PointSession include."""
-    point = Mock()
-    point.PointSession().get_access_token.return_value = {
-        'access_token': 'boo'
-    }
-    point.PointSession().is_authorized = is_authorized
-    point.PointSession().user.return_value = {'email': 'john.doe@example.com'}
-    modules['pypoint'] = point
+def is_authorized():
+    """Set PointSession authorized."""
+    return True
+
+
+@pytest.fixture
+def mock_pypoint(is_authorized):  # pylint: disable=W0621
+    """Mock pypoint."""
+    with MockDependency('pypoint') as mock_pypoint_:
+        mock_pypoint_.PointSession().get_access_token.return_value = {
+            'access_token': 'boo'
+        }
+        mock_pypoint_.PointSession().is_authorized = is_authorized
+        mock_pypoint_.PointSession().user.return_value = {
+            'email': 'john.doe@example.com'
+        }
+        yield mock_pypoint_
 
 
 async def test_abort_if_no_implementation_registered(hass):
@@ -61,11 +66,9 @@ async def test_abort_if_already_setup(hass):
     assert result['reason'] == 'already_setup'
 
 
-async def test_full_flow_implementation(hass):
+async def test_full_flow_implementation(hass, mock_pypoint):  # noqa pylint: disable=W0621
     """Test registering an implementation and finishing flow works."""
-    config_flow.register_flow_implementation(hass, 'test-other', 'Test Other',
-                                             None, None)
-    mock_pypoint()
+    config_flow.register_flow_implementation(hass, 'test-other', None, None)
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
@@ -89,9 +92,8 @@ async def test_full_flow_implementation(hass):
     assert result['data']['token'] == {'access_token': 'boo'}
 
 
-async def test_step_import(hass):
+async def test_step_import(hass, mock_pypoint):  # pylint: disable=W0621
     """Test that we trigger import when configuring with client."""
-    mock_pypoint()
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import()
@@ -99,9 +101,9 @@ async def test_step_import(hass):
     assert result['step_id'] == 'auth'
 
 
-async def test_wrong_code_flow_implementation(hass):
+@pytest.mark.parametrize('is_authorized', [False])
+async def test_wrong_code_flow_implementation(hass, mock_pypoint):  # noqa pylint: disable=W0621
     """Test wrong code."""
-    mock_pypoint(is_authorized=False)
     flow = init_config_flow(hass)
 
     result = await flow.async_step_code('123ABC')
@@ -110,7 +112,7 @@ async def test_wrong_code_flow_implementation(hass):
 
 
 async def test_not_pick_implementation_if_only_one(hass):
-    """Test we allow picking implementation if we have two."""
+    """Test we allow picking implementation if we have one flow_imp."""
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
@@ -134,16 +136,6 @@ async def test_abort_if_exception_generating_auth_url(hass):
     result = await flow.async_step_user()
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'authorize_url_fail'
-
-
-async def test_abort_configuration_exist(hass):
-    """Test we abort if config entry alreay exists from step_auth."""
-    flow = init_config_flow(hass)
-
-    with patch.object(hass.config_entries, 'async_entries', return_value=[{}]):
-        result = await flow.async_step_user()
-    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result['reason'] == 'already_setup'
 
 
 async def test_abort_no_code(hass):

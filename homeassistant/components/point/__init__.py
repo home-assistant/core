@@ -53,7 +53,7 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
 
     config_flow.register_flow_implementation(
-        hass, DOMAIN, 'configuration.yaml', conf[CONF_CLIENT_ID],
+        hass, DOMAIN, conf[CONF_CLIENT_ID],
         conf[CONF_CLIENT_SECRET])
 
     hass.async_create_task(

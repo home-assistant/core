@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def register_flow_implementation(hass, domain, name, client_id, client_secret):
+def register_flow_implementation(hass, domain, client_id, client_secret):
     """Register a flow implementation.
 
     domain: Domain of the component responsible for the implementation.
