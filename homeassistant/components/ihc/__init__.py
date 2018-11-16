@@ -193,7 +193,7 @@ def ihc_setup(hass, config, conf, controller_id):
                                        controller_id)):
         return False
     # Manual configuration
-    get_manual_configuration(hass, config, conf, ihc_controller, 
+    get_manual_configuration(hass, config, conf, ihc_controller,
                              controller_id)
     # Store controler configuration
     ihc_key = IHC_DATA.format(controller_id)
@@ -225,7 +225,7 @@ def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
                     }
                 }
                 discovery_info = {sensor_cfg[CONF_NAME]: device}
-                discovery.load_platform(hass, 'binary_sensor', DOMAIN, 
+                discovery.load_platform(hass, 'binary_sensor', DOMAIN,
                                         discovery_info, config)
 
 
