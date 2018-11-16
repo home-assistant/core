@@ -3,16 +3,13 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.ihc/
 """
-import voluptuous as vol
-
 from homeassistant.components.ihc import (
     IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_SWITCHES
-import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['ihc']
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC switch platform."""
