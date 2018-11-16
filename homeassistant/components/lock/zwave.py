@@ -172,6 +172,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def get_usercode(service):
         """Get a usercode at index X on the lock."""
+        _LOGGER.debug('running get_usercode')
         node_id = service.data.get(zwave.const.ATTR_NODE_ID)
         lock_node = network.nodes[node_id]
         code_slot = service.data.get(ATTR_CODE_SLOT)
