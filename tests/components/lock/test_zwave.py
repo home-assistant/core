@@ -7,7 +7,6 @@ from homeassistant import config_entries
 from homeassistant.components.lock import zwave
 from homeassistant.components.zwave import const
 
-from tests.common import MockConfigEntry
 from tests.mock.zwave import (
     MockNode, MockValue, MockEntityValues, value_changed)
 
