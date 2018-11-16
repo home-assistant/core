@@ -226,7 +226,7 @@ def get_manual_configuration(hass, config, conf, ihc_controller,
                     }
                 }
                 discovery_info = {sensor_cfg[CONF_NAME]: device}
-                discovery.load_platform(hass, 'binary_sensor', DOMAIN,
+                discovery.load_platform(hass, component, DOMAIN,
                                         discovery_info, config)
 
 
