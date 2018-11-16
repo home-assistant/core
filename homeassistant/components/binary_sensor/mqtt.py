@@ -149,7 +149,7 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
             elif (payload == self._payload_off and
                   (self._state is True or self._state is None)):
                 self._state = False
-            else:  # Payload is not for this entity
+            elif (payload != self._payload_on and payload != self._payload_off):  # Payload is not for this entity
                 _LOGGER.warning('No matching payload found'
                                 ' for entity: %s with state_topic: %s',
                                 self._name, self._state_topic)
