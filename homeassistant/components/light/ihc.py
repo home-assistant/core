@@ -7,14 +7,12 @@ import voluptuous as vol
 import logging
 
 from homeassistant.components.ihc import (    
-    validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
+    IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.const import (
     CONF_DIMMABLE)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.const import (
-    CONF_ID, CONF_NAME, CONF_LIGHTS)
 
 import homeassistant.helpers.config_validation as cv
 
@@ -36,8 +34,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             info = hass.data[ihc_key][IHC_INFO]
             ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
             dimmable = product_cfg[CONF_DIMMABLE]
-            light = IhcLight(ihc_controller, name, ihc_id, info, 
-                dimmable, product)
+            light = IhcLight(ihc_controller, name, ihc_id, info,
+                             dimmable, product)
             devices.append(light)
     add_entities(devices)
 
