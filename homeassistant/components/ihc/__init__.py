@@ -99,7 +99,7 @@ IHC_SCHEMA = vol.Schema({
     vol.Optional(CONF_BINARY_SENSORS): BINARY_SENSOR_SCHEMA,
     vol.Optional(CONF_LIGHTS): LIGHT_SCHEMA,
     vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-    vol.Optional(CONF_SWITCH): SWITCH_SCHEMA,
+    vol.Optional(CONF_SWITCHES): SWITCH_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
 
 CONFIG_SCHEMA = vol.Schema({
@@ -204,7 +204,8 @@ def ihc_setup(hass, config, conf, controller_id):
     return True
 
 
-def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
+def get_manual_configuration(hass, config, conf, ihc_controller,
+                             controller_id):
     """Get manual configuration IHC devices."""
     for component in IHC_PLATFORMS:
         if component in conf:
@@ -315,5 +316,3 @@ def setup_service_functions(hass: HomeAssistantType, ihc_controller):
     hass.services.register(DOMAIN, SERVICE_SET_RUNTIME_VALUE_FLOAT,
                            set_runtime_value_float,
                            schema=SET_RUNTIME_VALUE_FLOAT_SCHEMA)
-
-
