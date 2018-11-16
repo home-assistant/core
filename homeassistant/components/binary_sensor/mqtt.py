@@ -143,9 +143,11 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)
-            if payload == self._payload_on and (self._state == False or self._state == None):
+            if (payload == self._payload_on and 
+                    (self._state is False or self._state == None)):
                 self._state = True
-            elif payload == self._payload_off and (self._state == True or self._state == None):
+            elif (payload == self._payload_off and 
+                    (self._state is True or self._state == None)):
                 self._state = False
             else:  # Payload is not for this entity
                 _LOGGER.warning('No matching payload found'
