@@ -3,16 +3,16 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.ihc/
 """
-import logging
 import voluptuous as vol
+import logging
 
-from homeassistant.components.ihc import (
+from homeassistant.components.ihc import (    
     validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.const import (
-    CONF_CONTROLLER, CONF_DIMMABLE)
+    CONF_DIMMABLE)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA, Light)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import (
     CONF_ID, CONF_NAME, CONF_LIGHTS)
 
@@ -21,19 +21,6 @@ import homeassistant.helpers.config_validation as cv
 DEPENDENCIES = ['ihc']
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LIGHTS, default=[]):
-        vol.All(cv.ensure_list, [
-            vol.All({
-                vol.Required(CONF_ID): cv.positive_int,
-                vol.Optional(CONF_CONTROLLER, default="0"): cv.string,
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
-            }, validate_name)
-        ])
-})
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC lights platform."""
@@ -48,23 +35,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ihc_key = IHC_DATA.format(ctrl_id)
             info = hass.data[ihc_key][IHC_INFO]
             ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
-
-            light = IhcLight(ihc_controller, name, ihc_id, info,
-                             product_cfg[CONF_DIMMABLE], product)
+            dimmable = product_cfg[CONF_DIMMABLE]
+            light = IhcLight(ihc_controller, name, ihc_id, info, 
+                dimmable, product)
             devices.append(light)
-    else:
-        lights = config[CONF_LIGHTS]
-        for light in lights:
-            ihc_id = light[CONF_ID]
-            controller_id = light[CONF_CONTROLLER]
-            ihc_controller = hass.data[controller_id][IHC_CONTROLLER]
-            info = hass.data[controller_id][IHC_INFO]
-            name = light[CONF_NAME]
-            dimmable = light[CONF_DIMMABLE]
-
-            device = IhcLight(ihc_controller, name, ihc_id, info, dimmable)
-            devices.append(device)
-
     add_entities(devices)
 
 
