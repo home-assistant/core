@@ -111,8 +111,8 @@ def setup_gpmdp(hass, config, code, add_entities):
     """Set up gpmdp."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
     host_entity_id = config.get(CONF_HOST_ENTITY_ID)
+    port = config.get(CONF_PORT)
     url = 'ws://{}:{}'.format(host, port)
 
     if not code:
@@ -206,7 +206,7 @@ class GPMDP(MediaPlayerDevice):
         """Get the latest details from the player."""
         time.sleep(1)
 		
-        if (self._host_entity_id is not None):
+        if self._host_entity_id is not None:
             state_obj = self.hass.states.get(self._host_entity_id)
             if (state_obj is None) or (state_obj.state == 'off'):
                 self._status = 'off'
