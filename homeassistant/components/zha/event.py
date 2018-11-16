@@ -17,7 +17,6 @@ async def async_setup_event(hass, discovery_info):
 
     Will create events for devices registered in REMOTE_DEVICE_TYPES.
     """
-    from homeassistant.components.zha import const as zha_const
     from homeassistant.components.zha import configure_reporting
     out_clusters = discovery_info['out_clusters']
     in_clusters = discovery_info['in_clusters']

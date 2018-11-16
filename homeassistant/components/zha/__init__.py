@@ -179,7 +179,7 @@ class ApplicationListener:
     async def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""
         import zigpy.profiles
-        import homeassistant.components.zha.event
+        import homeassistant.components.zha.event as zha_event
         import homeassistant.components.zha.const as zha_const
         zha_const.populate_data()
 
@@ -234,7 +234,7 @@ class ApplicationListener:
                     'new_join': join,
                     'unique_id': device_key,
                 }
-                created_events = await event.async_setup_event(
+                created_events = await zha_event.async_setup_event(
                     self._hass,
                     discovery_info
                     )
