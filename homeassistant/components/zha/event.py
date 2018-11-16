@@ -5,6 +5,7 @@ from homeassistant.core import EventOrigin, callback
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def _async_setup_event(hass, discovery_info):
     from homeassistant.components.zha import const as zha_const
     from homeassistant.components.zha import configure_reporting

@@ -13,7 +13,6 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import const as ha_const
-from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 from homeassistant.helpers.entity_component import EntityComponent
