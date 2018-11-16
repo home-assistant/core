@@ -7,8 +7,8 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
-from homeassistant.components.ihc import (    
-    DOMAIN, validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
+from homeassistant.components.ihc import (
+    IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.const import (
     CONF_INVERTING)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                      product_cfg[CONF_INVERTING],
                                      product)
             devices.append(sensor)
-        add_entities(devices)            
+        add_entities(devices)
 
 
 class IHCBinarySensor(IHCDevice, BinarySensorDevice):
