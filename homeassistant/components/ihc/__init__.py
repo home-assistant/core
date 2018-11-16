@@ -70,7 +70,7 @@ BINARY_SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
     ])
 })
 
-LIGHT_SCHEMA  = DEVICE_SCHEMA.extend({
+LIGHT_SCHEMA = DEVICE_SCHEMA.extend({
     vol.All(cv.ensure_list, [
         vol.All({
             vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
