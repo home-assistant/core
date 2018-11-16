@@ -3,10 +3,9 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.ihc/
 """
-import voluptuous as vol
 import logging
 
-from homeassistant.components.ihc import (    
+from homeassistant.components.ihc import (
     IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.const import (
     CONF_DIMMABLE)
@@ -14,11 +13,10 @@ from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 
-import homeassistant.helpers.config_validation as cv
-
 DEPENDENCIES = ['ihc']
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC lights platform."""
