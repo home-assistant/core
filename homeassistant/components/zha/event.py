@@ -38,6 +38,7 @@ async def async_setup_event(hass, discovery_info):
 
 class ZHAEvent():
     """When you want signals instead of entities.
+
     Stateless sensors such as remotes are expected to generate an event
     instead of a sensor entity in hass.
     """
@@ -100,7 +101,7 @@ class ZHAEvent():
 
     @callback
     def zdo_command(self, *args, **kwargs):
-        """log zdo commands for debugging."""
+        """Log zdo commands for debugging."""
         _LOGGER.debug(
             "%s: issued zdo command %s with args: %s", self.event_id,
             args,
