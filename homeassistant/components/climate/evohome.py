@@ -421,13 +421,16 @@ class EvoZone(EvoClimateDevice):
     def update(self):
         """Process the evohome Zone's state data."""
         evo_data = self.hass.data[DATA_EVOHOME]
-
+        tmp = self._status  # DELETEME
+        
         for _zone in evo_data['status']['zones']:
             if _zone['zoneId'] == self._id:
                 self._status = _zone
                 break
 
         self._available = True
+
+        _LOGGER.warn("self._status(%s): old = %s, new = %s", self._id, tmp, self._status)
 
 
 class EvoController(EvoClimateDevice):
