@@ -117,7 +117,7 @@ class MillHeater(ClimateDevice):
             "open_window": self._heater.open_window,
             "heating": self._heater.is_heating,
             "controlled_by_tibber": self._heater.tibber_control,
-            "gen_1_heater": self._heater.is_gen1,
+            "heater_generation": 1 if self._heater.is_gen1 else 2,
         }
         if self._heater.room:
             res['room'] = self._heater.room.name
