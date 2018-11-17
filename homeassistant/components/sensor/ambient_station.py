@@ -1,15 +1,14 @@
 """
-Support for Ambient Weather Station Sensor Platform.
+Support for Ambient Weather Station Service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ambstation/
 """
+
 import logging
 import time
 from datetime import timedelta
-
 import voluptuous as vol
-
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_API_KEY, CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
@@ -133,7 +132,7 @@ class AmbientWeatherSensor(Entity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        _LOGGER.info("Getting data for sensor: {}".format(self._name))
+        _LOGGER.info("Getting data for sensor: %s", self._name)
         data = self.station_data.get_data()
         if data is None:
             self._state = None
@@ -141,11 +140,11 @@ class AmbientWeatherSensor(Entity):
             if self._condition in data:
                 self._state = data[self._condition]
             else:
-                _LOGGER.warning("{} sensor data not available from the "
-                                "station".format(self._condition))
+                _LOGGER.warning("%s sensor data not available from the "
+                                "station", self._condition)
                 self._state = None
 
-        _LOGGER.debug("Sensor: {} | Data: {}".format(self._name, self._state))
+        _LOGGER.debug("Sensor: %s | Data: %s", self._name, self._state)
 
 
 class AmbientStationData:
@@ -177,12 +176,15 @@ class AmbientStationData:
     def update(self):
         """Get new data or return cached data."""
         data = self._update()
+        new_data = None
         if data is None:
             _LOGGER.debug("Throttling update - using cached data")
-            return self._last_data
+            new_data = self._last_data
         else:
-            self._last_data = data
-            return self._last_data
+            self._last_data = data      # cache latest data
+            new_data = self._last_data
+
+        return new_data
 
     def _connect_api(self):
         """Connect to the API and capture new data."""
@@ -191,7 +193,7 @@ class AmbientStationData:
         self._api = AmbientAPI(**self._api_keys)
         self._devices = self._api.get_devices()
 
-        if len(self._devices) > 0:
+        if self._devices:
             self._station = self._devices[0]
         else:
             _LOGGER.warning("No station devices available")
@@ -199,19 +201,19 @@ class AmbientStationData:
     def _update(self):
         """Get new data."""
         # refresh API connection since servers turn over nightly
+        new_data = None
         self._connect_api()
         time.sleep(2)   # need minimum 2 seconds between API calls
         if self._station is not None:
             data = self._station.get_data()
             if data is not None:
-                if len(data) > 0:
-                    return data[0]
+                if data:
+                    new_data = data[0]
                 else:
                     _LOGGER.debug("Data is not list type")
-                    return None
             else:
                 _LOGGER.debug("data is None type")
-                return None
         else:
             _LOGGER.debug("Station is None type")
-            return None
+
+        return new_data
