@@ -888,6 +888,8 @@ omit =
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py
+    homeassistant/components/notify/enigma.py
+    homeassistant/components/media_player/enigma.py
 
 [report]
 # Regexes for lines to exclude from consideration
