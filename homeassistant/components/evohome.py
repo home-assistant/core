@@ -20,7 +20,7 @@ from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
+    CONF_USERNAME, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
     HTTP_BAD_REQUEST, HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS
 )
@@ -37,7 +37,6 @@ DATA_EVOHOME = 'data_' + DOMAIN
 DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
 
 CONF_LOCATION_IDX = 'location_idx'
-SCAN_INTERVAL_DEFAULT = 300
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -62,10 +61,8 @@ def setup(hass, config):
     Currently, only the Controller and the Zones are implemented here.
     """
     evo_data = hass.data[DATA_EVOHOME] = {}
+    evo_data['params'] = dict(config[DOMAIN])  # we require a copy
     evo_data['timers'] = {}
-
-    evo_data['params'] = dict(config[DOMAIN])
-    evo_data['params'][CONF_SCAN_INTERVAL] = SCAN_INTERVAL_DEFAULT
 
     from evohomeclient2 import EvohomeClient
 

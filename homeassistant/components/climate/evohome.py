@@ -22,7 +22,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.evohome import (
     DATA_EVOHOME, DISPATCHER_EVOHOME,
-    CONF_LOCATION_IDX, SCAN_INTERVAL_DEFAULT,
+    CONF_LOCATION_IDX,
     EVO_PARENT, EVO_CHILD,
     GWS, TCS,
 )
@@ -37,8 +37,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     async_dispatcher_connect
 )
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=95)
 
 # the Controller's opmode/state and the zone's (inherited) state
 EVO_RESET = 'AutoWithReset'
@@ -179,7 +182,7 @@ class EvoClimateDevice(ClimateDevice):
         else:
             raise err
 
-    def _flatten_json(self, y):                                                 # noqa: E501; pylint: disable=no-self-use
+    def _flatten_json(self, json):                                              # noqa: E501; pylint: disable=no-self-use
         """Convert a JSON tree into a (flat) dict."""
         # pylint: disable=invalid-name
         out = {}
@@ -196,7 +199,7 @@ class EvoClimateDevice(ClimateDevice):
             else:
                 out[name[:-1]] = x
 
-        _flatten(y)
+        _flatten(json)
         return out
 
     @property
@@ -411,12 +414,12 @@ class EvoZone(EvoClimateDevice):
     def should_poll(self) -> bool:
         """Return False as evohome child devices should never be polled.
 
-        The evohome Controller will retreive state on behalf of its children.
+        The evohome Controller will inform its children when to update().
         """
         return False
 
     def update(self):
-        """Get the latest state data of the evohome Zone."""
+        """Process the evohome Zone's state data."""
         evo_data = self.hass.data[DATA_EVOHOME]
 
         for _zone in evo_data['status']['zones']:
@@ -568,15 +571,9 @@ class EvoController(EvoClimateDevice):
 
     @property
     def should_poll(self) -> bool:
-        """Return True when the evohome Controller should be polled.
-
-        The evohome Controller will be polled once every 300 seconds by
-        default.
-        """
-        timeout = datetime.now() + timedelta(seconds=55)
-        expired = timeout > self._timers['statusUpdated'] + \
-            timedelta(seconds=self._params[CONF_SCAN_INTERVAL])
-        return expired  # if expired then self.update()
+        """Return True as the evohome Controller should be polled."""
+        _LOGGER.warn("should_poll(%s)=%s", self._id, True)  # DELETEME
+        return True
 
     def _update_state_data(self, evo_data):
         loc_idx = evo_data['params'][CONF_LOCATION_IDX]
@@ -595,6 +592,7 @@ class EvoController(EvoClimateDevice):
                 evo_data['status']
             )
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest state data of the entire evohome Location.
 
@@ -602,6 +600,7 @@ class EvoController(EvoClimateDevice):
         such as the operating mode of the Controller and the current temp of
         its children (e.g. Zones, DHW controller).
         """
+        _LOGGER.warn("update(%s)", self._id)  # DELETEME
         evo_data = self.hass.data[DATA_EVOHOME]
         self._update_state_data(evo_data)
 
