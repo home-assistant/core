@@ -171,6 +171,7 @@ class MiroboVacuum(StateVacuumDevice):
         self.consumable_state = None
         self.clean_history = None
         self.dnd_state = None
+        self.last_clean = None
 
     @property
     def name(self):
