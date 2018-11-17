@@ -283,6 +283,5 @@ class RainMachineEntity(Entity):
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
-        if self._dispatcher_handlers:
-            for handler in self._dispatcher_handlers:
-                handler()
+        for handler in self._dispatcher_handlers:
+            handler()
