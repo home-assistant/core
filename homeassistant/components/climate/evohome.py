@@ -430,8 +430,6 @@ class EvoZone(EvoClimateDevice):
 
         self._available = True
 
-        _LOGGER.warn("self._status(%s): old = %s, new = %s", self._id, tmp, self._status)
-
 
 class EvoController(EvoClimateDevice):
     """Base for a Honeywell evohome hub/Controller device.
