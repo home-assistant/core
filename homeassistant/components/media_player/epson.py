@@ -75,7 +75,7 @@ async def async_setup_platform(
             if service.service == SERVICE_SELECT_CMODE:
                 cmode = service.data.get(ATTR_CMODE)
                 await device.select_cmode(cmode)
-            await device.update()
+            device.async_update_ha_state(force_refresh=True)
 
     epson_schema = MEDIA_PLAYER_SCHEMA.extend({
         vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))
@@ -102,7 +102,7 @@ class EpsonProjector(MediaPlayerDevice):
         self._volume = None
         self._state = None
 
-    async def update(self):
+    async def async_update(self):
         """Update state of device."""
         from epson_projector.const import (
             EPSON_CODES, POWER, CMODE, CMODE_LIST, SOURCE, VOLUME, BUSY,
@@ -142,11 +142,13 @@ class EpsonProjector(MediaPlayerDevice):
         """Turn on epson."""
         from epson_projector.const import TURN_ON
         await self._projector.send_command(TURN_ON)
+        self.async_update_ha_state(force_refresh=True)
 
     async def async_turn_off(self):
         """Turn off epson."""
         from epson_projector.const import TURN_OFF
         await self._projector.send_command(TURN_OFF)
+        self.async_update_ha_state(force_refresh=True)
 
     @property
     def source_list(self):
@@ -167,12 +169,14 @@ class EpsonProjector(MediaPlayerDevice):
         """Set color mode in Epson."""
         from epson_projector.const import (CMODE_LIST_SET)
         await self._projector.send_command(CMODE_LIST_SET[cmode])
+        self.async_update_ha_state(force_refresh=True)
 
     async def async_select_source(self, source):
         """Select input source."""
         from epson_projector.const import INV_SOURCES
         selected_source = INV_SOURCES[source]
         await self._projector.send_command(selected_source)
+        self.async_update_ha_state(force_refresh=True)
 
     async def async_mute_volume(self, mute):
         """Mute (true) or unmute (false) sound."""
