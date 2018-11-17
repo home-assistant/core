@@ -128,6 +128,8 @@ class TradfriGroup(Light):
                                       err_callback=self._async_start_observe,
                                       duration=DEFAULT_OBSERVE_TIMEOUT)
             self.hass.async_create_task(self._api(cmd))
+            self.hass.loop.call_later(DEFAULT_OBSERVE_TIMEOUT - 1, 
+                                      self._async_start_observe)
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
@@ -347,6 +349,8 @@ class TradfriLight(Light):
                                       err_callback=self._async_start_observe,
                                       duration=DEFAULT_OBSERVE_TIMEOUT)
             self.hass.async_create_task(self._api(cmd))
+            self.hass.loop.call_later(DEFAULT_OBSERVE_TIMEOUT - 1, 
+                                      self._async_start_observe)
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
