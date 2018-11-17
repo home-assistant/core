@@ -242,6 +242,9 @@ caldav==0.5.0
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
 
+# homeassistant.components.image_processing.clarifai_general
+clarifai==2.4.1
+
 # homeassistant.components.coinbase
 coinbase==2.1.0
 

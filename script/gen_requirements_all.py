@@ -43,6 +43,7 @@ TEST_REQUIREMENTS = (
     'aiounifi',
     'apns2',
     'caldav',
+    'clarifai',
     'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
