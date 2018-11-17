@@ -176,6 +176,7 @@ batinfo==0.4.2
 
 # homeassistant.components.enigma
 # homeassistant.components.device_tracker.linksys_ap
+# homeassistant.components.media_player.enigma
 # homeassistant.components.sensor.scrape
 # homeassistant.components.sensor.sytadin
 beautifulsoup4==4.6.3

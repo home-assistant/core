@@ -261,7 +261,9 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
 
             # Concatenate Channel and Title name to display
             self._selected_source = (servicename + ' - ' + eventtitle)
+
         return True
+
 
 # GET - Name
     @property
