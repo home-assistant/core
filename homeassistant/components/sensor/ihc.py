@@ -7,7 +7,7 @@ from homeassistant.components.ihc import (
     IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.const import (
-    CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
+    CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ihc']
