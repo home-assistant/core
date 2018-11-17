@@ -1,17 +1,17 @@
-import random
+"""
+Support for Ambient Weather Station Sensor Platform.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.ambstation/
+"""
 import logging
 import time
 from datetime import timedelta
-from homeassistant.const import TEMP_FAHRENHEIT
-from homeassistant.helpers.entity import Entity
-from requests.exceptions import (
-    ConnectionError as ConnectError, HTTPError, Timeout)
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX)
+from homeassistant.const import (CONF_API_KEY, CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -20,6 +20,7 @@ from homeassistant.util import Throttle
 REQUIREMENTS = ['ambient_api==1.5.2']
 
 CONF_APP_KEY = 'app_key'
+CONF_UPDATE_INTERVAL = 'update_interval'
 
 SENSOR_NAME = 0
 SENSOR_UNITS = 1
@@ -66,16 +67,18 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_APP_KEY): cv.string,
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
+        vol.All(cv.time_period, cv.positive_timedelta)),
 })
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Initialze each sensor platform for each monitored condition."""
     api_key = config.get(CONF_API_KEY)
     app_key = config.get(CONF_APP_KEY)
-    station_data = AmbientStationData(api_key, app_key)
+    interval = config.get(CONF_UPDATE_INTERVAL)
+    station_data = AmbientStationData(api_key, app_key, interval)
     sensor_list = list()
 
     if CONF_UNITS in config:
@@ -131,7 +134,7 @@ class AmbientWeatherSensor(Entity):
         This is the only method that should fetch new data for Home Assistant.
         """
         _LOGGER.info("Getting data for sensor: {}".format(self._name))
-        data = self.station_data.update()
+        data = self.station_data.get_data()
         if data is None:
             self._state = None
         else:
@@ -146,17 +149,14 @@ class AmbientWeatherSensor(Entity):
 
 
 class AmbientStationData:
-    """
-    Class to interface with ambient-api library and get latest station data
-    """
+    """Class to interface with ambient-api library."""
 
-    def __init__(self, api_key, app_key):
-        """
-        Initialize station data object.  Each sensor will have a handle to this
-        object
-        """
+    def __init__(self, api_key, app_key, interval):
+        """Initialize station data object."""
         self._api_key = api_key
         self._app_key = app_key
+
+        self._interval = interval
 
         self._api_keys = {
             'AMBIENT_ENDPOINT':
@@ -171,9 +171,11 @@ class AmbientStationData:
         self._api = None
         self._devices = None
         self._last_data = None
-        self._throttle_time = timedelta(seconds=10)
+
+        self.get_data = Throttle(self._interval)(self.update)
 
     def update(self):
+        """Get new data or return cached data."""
         data = self._update()
         if data is None:
             _LOGGER.debug("Throttling update - using cached data")
@@ -183,10 +185,7 @@ class AmbientStationData:
             return self._last_data
 
     def _connect_api(self):
-        """
-        The servers turn over once a day and we don't know when, so evertime
-        we go to fetch new data we'll refresh the API connection
-        """
+        """Connect to the API and capture new data."""
         from ambient_api.ambientapi import AmbientAPI
 
         self._api = AmbientAPI(**self._api_keys)
@@ -197,11 +196,8 @@ class AmbientStationData:
         else:
             _LOGGER.warning("No station devices available")
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update(self):
-        """
-        Get new data
-        """
+        """Get new data."""
         # refresh API connection since servers turn over nightly
         self._connect_api()
         time.sleep(2)   # need minimum 2 seconds between API calls
