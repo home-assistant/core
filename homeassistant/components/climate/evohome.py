@@ -37,7 +37,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     async_dispatcher_connect
 )
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -574,14 +573,6 @@ class EvoController(EvoClimateDevice):
         """Return True as the evohome Controller should always be polled."""
         return True
 
-    @property
-    def _should_update_state_data(self) -> bool:
-        # Return True when the latest evohome state data should be retreived
-        timeout = datetime.now() + timedelta(seconds=55)
-        expired = timeout > self._timers['statusUpdated'] + \
-            timedelta(seconds=self._params[CONF_SCAN_INTERVAL])
-        return expired
-
     def _update_state_data(self, evo_data):
         # Retreive the latest state data via the client api
         loc_idx = evo_data['params'][CONF_LOCATION_IDX]
@@ -606,7 +597,12 @@ class EvoController(EvoClimateDevice):
         such as the operating mode of the Controller and the current temp of
         its children (e.g. Zones, DHW controller).
         """
-        if not self._should_update_state_data:
+        # should the latest evohome state data be retreived
+        timeout = datetime.now() + timedelta(seconds=55)
+        expired = timeout > self._timers['statusUpdated'] + \
+            timedelta(seconds=self._params[CONF_SCAN_INTERVAL])
+
+        if not expired:
             return
 
         self._update_state_data(self.hass.data[DATA_EVOHOME])
@@ -614,5 +610,5 @@ class EvoController(EvoClimateDevice):
         self._available = True
 
         # inform the children that state data has been updated
-        pkt = {'sender': 'controller', 'signal': 'refresh','to': EVO_CHILD}
+        pkt = {'sender': 'controller', 'signal': 'refresh', 'to': EVO_CHILD}
         async_dispatcher_send(self.hass, DISPATCHER_EVOHOME, pkt)
