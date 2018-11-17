@@ -267,7 +267,7 @@ class RainMachineEntity(Entity):
     def __init__(self, rainmachine):
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._async_unsub_dispatcher_connect = None
+        self._dispatcher_handlers = []
         self._name = None
         self.rainmachine = rainmachine
 
@@ -295,3 +295,8 @@ class RainMachineEntity(Entity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        for handler in self._dispatcher_handlers:
+            handler()
