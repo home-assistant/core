@@ -20,7 +20,7 @@ from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD,
+    CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
     HTTP_BAD_REQUEST, HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS
 )
@@ -37,12 +37,17 @@ DATA_EVOHOME = 'data_' + DOMAIN
 DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
 
 CONF_LOCATION_IDX = 'location_idx'
+SCAN_INTERVAL_DEFAULT = 300
+SCAN_INTERVAL_MINIMUM = 180
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
+        vol.Optional(CONF_LOCATION_IDX, default=0):
+            cv.positive_int,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT):
+            vol.All(vol.Coerce(int), vol.Range(min=SCAN_INTERVAL_MINIMUM)),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -61,8 +66,12 @@ def setup(hass, config):
     Currently, only the Controller and the Zones are implemented here.
     """
     evo_data = hass.data[DATA_EVOHOME] = {}
-    evo_data['params'] = dict(config[DOMAIN])  # we require a copy
     evo_data['timers'] = {}
+
+    # use a copy of config since scan_interval is rounded up to nearest 60s
+    evo_data['params'] = dict(config[DOMAIN])
+    evo_data['params'][CONF_SCAN_INTERVAL] = \
+        (config[DOMAIN][CONF_SCAN_INTERVAL] + 59) // 60 * 60
 
     from evohomeclient2 import EvohomeClient
 
@@ -140,7 +149,7 @@ def setup(hass, config):
     hass.async_create_task(
         async_load_platform(hass, 'climate', DOMAIN, {}, config))
 
-    # Inform the Controller when HA has started so it can get it's first update
+    # Inform the Controller when HA has started so it gets it's first update
     def _first_update(event):
         pkt = {'sender': 'setup()', 'signal': 'refresh', 'to': EVO_PARENT}
         async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)

@@ -41,7 +41,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=95)
+SCAN_INTERVAL_DEFAULT = 300
 
 # the Controller's opmode/state and the zone's (inherited) state
 EVO_RESET = 'AutoWithReset'
@@ -571,11 +571,19 @@ class EvoController(EvoClimateDevice):
 
     @property
     def should_poll(self) -> bool:
-        """Return True as the evohome Controller should be polled."""
-        _LOGGER.warn("should_poll(%s)=%s", self._id, True)  # DELETEME
+        """Return True as the evohome Controller should always be polled."""
         return True
 
+    @property
+    def _should_update_state_data(self) -> bool:
+        # Return True when the latest evohome state data should be retreived
+        timeout = datetime.now() + timedelta(seconds=55)
+        expired = timeout > self._timers['statusUpdated'] + \
+            timedelta(seconds=self._params[CONF_SCAN_INTERVAL])
+        return expired
+
     def _update_state_data(self, evo_data):
+        # Retreive the latest state data via the client api
         loc_idx = evo_data['params'][CONF_LOCATION_IDX]
 
         try:
@@ -586,13 +594,11 @@ class EvoController(EvoClimateDevice):
         else:
             evo_data['timers']['statusUpdated'] = datetime.now()
 
-        if _LOGGER.isEnabledFor(5):  # lower than DEBUG=10
-            _LOGGER.debug(
-                "_update_state_data(): evo_data['status'] = %s",
-                evo_data['status']
-            )
+        _LOGGER.debug(
+            "_update_state_data(): evo_data['status'] = %s",
+            evo_data['status']
+        )
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest state data of the entire evohome Location.
 
@@ -600,17 +606,13 @@ class EvoController(EvoClimateDevice):
         such as the operating mode of the Controller and the current temp of
         its children (e.g. Zones, DHW controller).
         """
-        _LOGGER.warn("update(%s)", self._id)  # DELETEME
-        evo_data = self.hass.data[DATA_EVOHOME]
-        self._update_state_data(evo_data)
+        if not self._should_update_state_data:
+            return
 
-        self._status = evo_data['status']
+        self._update_state_data(self.hass.data[DATA_EVOHOME])
 
         self._available = True
 
-        pkt = {
-            'sender': 'controller',
-            'signal': 'refresh',
-            'to': EVO_CHILD
-        }
+        # inform the children that state data has been updated
+        pkt = {'sender': 'controller', 'signal': 'refresh','to': EVO_CHILD}
         async_dispatcher_send(self.hass, DISPATCHER_EVOHOME, pkt)
