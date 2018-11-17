@@ -37,38 +37,36 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation binary sensor from config entry."""
-    async def async_discover(discovery_info):
-        await _async_setup_entity(hass, config_entry, async_add_entities,
-                                  discovery_info)
+    async def async_discover(discovery_key):
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    [discovery_key])
 
     unsub = async_dispatcher_connect(
         hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
     discovery_info = hass.data.get(DATA_ZHA, {})
-    binary_sensors = discovery_info.get('binary_sensor', None)
-    if binary_sensors is None:
-        return
-    for discovery_key in binary_sensors.keys():
-        await _async_setup_entity(hass, config_entry, async_add_entities,
-                                  discovery_key)
+    binary_sensors = discovery_info.get('binary_sensor')
+    if binary_sensors is not None:
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    binary_sensors)
 
 
-async def _async_setup_entity(hass, config_entry, async_add_entities,
-                              discovery_info=None):
-    """Set up the ZHA binary sensor."""
-    discovery_info = helpers.get_discovery_info(hass, 'binary_sensor',
-                                                discovery_info)
-    if discovery_info is None:
-        return
-
-    from zigpy.zcl.clusters.general import OnOff
-    from zigpy.zcl.clusters.security import IasZone
+async def _async_setup_entities(hass, config_entry, async_add_entities,
+                                discovery_keys):
+    """Set up the ZHA binary sensors."""
     entities = []
-    if IasZone.cluster_id in discovery_info['in_clusters']:
-        entities.append(await _async_setup_iaszone(discovery_info))
-    elif OnOff.cluster_id in discovery_info['out_clusters']:
-        entities.append(await _async_setup_remote(discovery_info))
+    for discovery_key in discovery_keys:
+        discovery_info = helpers.get_discovery_info(hass, 'binary_sensor',
+                                                    discovery_key)
+        if discovery_info is not None:
+            from zigpy.zcl.clusters.general import OnOff
+            from zigpy.zcl.clusters.security import IasZone
+            if IasZone.cluster_id in discovery_info['in_clusters']:
+                entities.append(await _async_setup_iaszone(discovery_info))
+            elif OnOff.cluster_id in discovery_info['out_clusters']:
+                entities.append(await _async_setup_remote(discovery_info))
+
     async_add_entities(entities, update_before_add=True)
 
 

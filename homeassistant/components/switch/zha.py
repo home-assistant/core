@@ -27,42 +27,41 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation switch from config entry."""
-    async def async_discover(discovery_info):
-        await _async_setup_entity(hass, config_entry, async_add_entities,
-                                  discovery_info)
+    async def async_discover(discovery_key):
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    [discovery_key])
 
     unsub = async_dispatcher_connect(
         hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
     discovery_info = hass.data.get(DATA_ZHA, {})
-    switches = discovery_info.get('switch', None)
-    if switches is None:
-        return
-    for discovery_key in switches.keys():
-        await _async_setup_entity(hass, config_entry, async_add_entities,
-                                  discovery_key)
+    switches = discovery_info.get('switch')
+    if switches is not None:
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    switches)
 
 
-async def _async_setup_entity(hass, config_entry, async_add_entities,
-                              discovery_info=None):
-    """Set up the ZHA switch."""
+async def _async_setup_entities(hass, config_entry, async_add_entities,
+                                discovery_keys):
+    """Set up the ZHA switches."""
     from zigpy.zcl.clusters.general import OnOff
+    entities = []
+    for discovery_key in discovery_keys:
+        discovery_info = helpers.get_discovery_info(hass, 'switch',
+                                                    discovery_key)
+        if discovery_info is not None:
+            switch = Switch(**discovery_info)
+            if discovery_info['new_join']:
+                in_clusters = discovery_info['in_clusters']
+                cluster = in_clusters[OnOff.cluster_id]
+                await helpers.configure_reporting(
+                    switch.entity_id, cluster, switch.value_attribute,
+                    min_report=0, max_report=600, reportable_change=1
+                )
+            entities.append(switch)
 
-    discovery_info = helpers.get_discovery_info(hass, 'switch', discovery_info)
-    if discovery_info is None:
-        return
-
-    switch = Switch(**discovery_info)
-    if discovery_info['new_join']:
-        in_clusters = discovery_info['in_clusters']
-        cluster = in_clusters[OnOff.cluster_id]
-        await helpers.configure_reporting(
-            switch.entity_id, cluster, switch.value_attribute,
-            min_report=0, max_report=600, reportable_change=1
-        )
-
-    async_add_entities([switch], update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class Switch(ZhaEntity, SwitchDevice):

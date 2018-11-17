@@ -12,8 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.components.zha.entities import ZhaDeviceEntity
-from homeassistant import config_entries
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant import config_entries, const as ha_const
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import const as zha_const
 
@@ -74,7 +73,7 @@ async def async_setup(hass, config):
     """Set up ZHA from config."""
     if DOMAIN in config:
         if not hass.config_entries.async_entries(DOMAIN):
-            hass.async_add_job(hass.config_entries.flow.async_init(
+            hass.async_create_task(hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={'source': config_entries.SOURCE_IMPORT},
                 data=config[DOMAIN]
@@ -99,12 +98,10 @@ async def async_setup_entry(hass, config_entry):
         import bellows.ezsp
         from bellows.zigbee.application import ControllerApplication
         radio = bellows.ezsp.EZSP()
-        radio_description = "EZSP"
     elif radio_type == RadioType.xbee.name:
         import zigpy_xbee.api
         from zigpy_xbee.zigbee.application import ControllerApplication
         radio = zigpy_xbee.api.XBee()
-        radio_description = "XBee"
 
     await radio.connect(usb_path, baudrate)
     hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
@@ -119,16 +116,6 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(
             listener.async_device_initialized(device, False))
 
-    device_registry = await \
-        hass.helpers.device_registry.async_get_registry()
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_ZIGBEE, str(APPLICATION_CONTROLLER.ieee))},
-        identifiers={(DOMAIN, str(APPLICATION_CONTROLLER.ieee))},
-        name="Zigbee Coordinator",
-        manufacturer="ZHA",
-        model=radio_description,
-    )
     hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(APPLICATION_CONTROLLER.ieee)
 
     for component in COMPONENTS:
@@ -136,18 +123,6 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(
                 config_entry, component)
         )
-
-    device_registry = await \
-        hass.helpers.device_registry.async_get_registry()
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_ZIGBEE, str(APPLICATION_CONTROLLER.ieee))},
-        identifiers={(DOMAIN, str(APPLICATION_CONTROLLER.ieee))},
-        name="Zigbee Coordinator",
-        manufacturer="ZHA",
-        model=radio_description,
-    )
-    hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(APPLICATION_CONTROLLER.ieee)
 
     async def permit(service):
         """Allow devices to join this network."""
@@ -182,13 +157,13 @@ async def async_unload_entry(hass, config_entry):
     hass.services.async_remove(DOMAIN, SERVICE_PERMIT)
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
 
-    for component in COMPONENTS:
-        await hass.config_entries.async_forward_entry_unload(
-            config_entry, component)
-
     dispatchers = hass.data[DATA_ZHA].get(DATA_ZHA_DISPATCHERS, [])
     for unsub_dispatcher in dispatchers:
         unsub_dispatcher()
+
+    for component in COMPONENTS:
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, component)
 
     _LOGGER.debug("Closing zha radio")
     hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()

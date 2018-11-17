@@ -8,11 +8,8 @@ async def test_flow_works(hass):
     """Test that config flow works."""
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
-    result = await flow.async_step_user()
 
-    assert result['type'] == 'form'
-
-    result = await flow.async_step_init(
+    result = await flow.async_step_user(
         user_input={'database_path': 'zigbee.db', 'usb_path': '/dev/ttyUSB1'})
 
     assert result['type'] == 'create_entry'
@@ -63,6 +60,6 @@ async def test_flow_existing_config_entry(hass):
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
 
     assert result['type'] == 'abort'

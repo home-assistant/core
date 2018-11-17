@@ -38,7 +38,7 @@ class RadioType(enum.Enum):
     @classmethod
     def list(cls):
         """Return list of enum's values."""
-        return list(map(lambda r: r.value, cls))
+        return [e.value for e in RadioType]
 
 
 DISCOVERY_KEY = 'zha_discovery_info'

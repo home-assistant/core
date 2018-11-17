@@ -19,13 +19,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason='single_instance_allowed')
-
-        return await self.async_step_init()
-
-    async def async_step_init(self, user_input=None):
         """Handle a zha config flow start."""
         if self._async_current_entries():
             return self.async_abort(reason='single_instance_allowed')
