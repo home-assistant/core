@@ -78,13 +78,8 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, SENSOR_UPDATE_TOPIC, update)
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
+        self._dispatcher_handlers.append(async_dispatcher_connect(
+            self.hass, SENSOR_UPDATE_TOPIC, update))
 
     async def async_update(self):
         """Update the state."""
