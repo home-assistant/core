@@ -464,7 +464,6 @@ class EvoController(EvoClimateDevice):
         """
         status = dict(self._status)
 
-        # remove Zone/DHW state data
         if 'zones' in status:
             del status['zones']
         if 'dhw' in status:
@@ -573,8 +572,23 @@ class EvoController(EvoClimateDevice):
         """Return True as the evohome Controller should always be polled."""
         return True
 
-    def _update_state_data(self, evo_data):
+    def update(self):
+        """Get the latest state data of the entire evohome Location.
+
+        This includes state data for the Controller and all its child devices,
+        such as the operating mode of the Controller and the current temp of
+        its children (e.g. Zones, DHW controller).
+        """
+        # should the latest evohome state data be retreived this cycle?
+        timeout = datetime.now() + timedelta(seconds=55)
+        expired = timeout > self._timers['statusUpdated'] + \
+            timedelta(seconds=self._params[CONF_SCAN_INTERVAL])
+
+        if not expired:
+            return
+
         # Retreive the latest state data via the client api
+        evo_data = self.hass.data[DATA_EVOHOME]
         loc_idx = evo_data['params'][CONF_LOCATION_IDX]
 
         try:
@@ -584,31 +598,13 @@ class EvoController(EvoClimateDevice):
             self._handle_requests_exceptions(err)
         else:
             evo_data['timers']['statusUpdated'] = datetime.now()
+            self._available = True
 
         _LOGGER.debug(
             "_update_state_data(): evo_data['status'] = %s",
             evo_data['status']
         )
 
-    def update(self):
-        """Get the latest state data of the entire evohome Location.
-
-        This includes state data for the Controller and all its child devices,
-        such as the operating mode of the Controller and the current temp of
-        its children (e.g. Zones, DHW controller).
-        """
-        # should the latest evohome state data be retreived
-        timeout = datetime.now() + timedelta(seconds=55)
-        expired = timeout > self._timers['statusUpdated'] + \
-            timedelta(seconds=self._params[CONF_SCAN_INTERVAL])
-
-        if not expired:
-            return
-
-        self._update_state_data(self.hass.data[DATA_EVOHOME])
-
-        self._available = True
-
-        # inform the children that state data has been updated
+        # inform the child devices that state data has been updated
         pkt = {'sender': 'controller', 'signal': 'refresh', 'to': EVO_CHILD}
         async_dispatcher_send(self.hass, DISPATCHER_EVOHOME, pkt)
