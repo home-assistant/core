@@ -262,6 +262,7 @@ class EvoZone(EvoClimateDevice):
             if _zone['zoneId'] == self._id:
                 self._config = _zone
                 break
+        self._status = {}
 
         self._operation_list = ZONE_OP_LIST
         self._supported_features = \
@@ -440,14 +441,13 @@ class EvoController(EvoClimateDevice):
         """Initialize the evohome Controller (hub)."""
         super().__init__(evo_data, client, obj_ref)
 
-        evo_data['status'] = self._status
-
         self._id = obj_ref.systemId
         self._name = "_" + obj_ref.location.name
         self._icon = "mdi:thermostat"
         self._type = EVO_PARENT
 
         self._config = evo_data['config'][GWS][0][TCS][0]
+        self._status = evo_data['status']
         self._timers['statusUpdated'] = datetime.min
 
         self._operation_list = TCS_OP_LIST
@@ -501,9 +501,8 @@ class EvoController(EvoClimateDevice):
         Although evohome Controllers do not have a target temp, one is
         expected by the HA schema.
         """
-        evo_data = self.hass.data[DATA_EVOHOME]
         temps = [zone['setpointStatus']['targetHeatTemperature']
-                 for zone in evo_data['status']['zones']]
+                 for zone in self._status['zones']]
 
         avg_temp = round(sum(temps) / len(temps), 1) if temps else None
         return avg_temp
@@ -515,8 +514,7 @@ class EvoController(EvoClimateDevice):
         Although evohome Controllers do not have a target temp, one is
         expected by the HA schema.
         """
-        evo_data = self.hass.data[DATA_EVOHOME]
-        tmp_list = [x for x in evo_data['status']['zones']
+        tmp_list = [x for x in self._status['zones']
                     if x['temperatureStatus']['isAvailable'] is True]
         temps = [zone['temperatureStatus']['temperature'] for zone in tmp_list]
 
@@ -588,21 +586,20 @@ class EvoController(EvoClimateDevice):
             return
 
         # Retreive the latest state data via the client api
-        evo_data = self.hass.data[DATA_EVOHOME]
-        loc_idx = evo_data['params'][CONF_LOCATION_IDX]
+        loc_idx = self._params[CONF_LOCATION_IDX]
 
         try:
-            evo_data['status'].update(
+            self._status.update(
                 self._client.locations[loc_idx].status()[GWS][0][TCS][0])
         except HTTPError as err:  # check if we've exceeded the api rate limit
             self._handle_requests_exceptions(err)
         else:
-            evo_data['timers']['statusUpdated'] = datetime.now()
+            self._timers['statusUpdated'] = datetime.now()
             self._available = True
 
         _LOGGER.debug(
-            "_update_state_data(): evo_data['status'] = %s",
-            evo_data['status']
+            "_update_state_data(): self._status = %s",
+            self._status
         )
 
         # inform the child devices that state data has been updated

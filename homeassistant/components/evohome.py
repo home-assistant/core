@@ -115,6 +115,7 @@ def setup(hass, config):
         evo_data['params'][CONF_PASSWORD] = 'REDACTED'
 
     evo_data['client'] = client
+    evo_data['status'] = {}
 
     # Redact any installation data we'll never need
     for loc in client.installation_info:
