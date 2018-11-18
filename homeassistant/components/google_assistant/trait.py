@@ -197,15 +197,18 @@ class OnOffTrait(_Trait):
     @staticmethod
     def supported(domain, features):
         """Test if state is supported."""
-        return domain in (
-            group.DOMAIN,
-            input_boolean.DOMAIN,
-            switch.DOMAIN,
-            fan.DOMAIN,
-            light.DOMAIN,
-            cover.DOMAIN,
-            media_player.DOMAIN,
-        )
+        if domain == climate.DOMAIN:
+            return features & climate.SUPPORT_ON_OFF != 0
+        else:
+            return domain in (
+                group.DOMAIN,
+                input_boolean.DOMAIN,
+                switch.DOMAIN,
+                fan.DOMAIN,
+                light.DOMAIN,
+                cover.DOMAIN,
+                media_player.DOMAIN,
+            )
 
     def sync_attributes(self):
         """Return OnOff attributes for a sync request."""
