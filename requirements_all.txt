@@ -883,7 +883,7 @@ pycsspeechtts==1.0.2
 
 # homeassistant.components.daikin
 # homeassistant.components.climate.daikin
-pydaikin==0.7
+pydaikin==0.8
 
 # homeassistant.components.deconz
 pydeconz==47
