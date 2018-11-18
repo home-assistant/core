@@ -29,30 +29,26 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation sensor from config entry."""
-    async def async_discover(discovery_key):
+    async def async_discover(discovery_info):
         await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    [discovery_key])
+                                    [discovery_info])
 
     unsub = async_dispatcher_connect(
         hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
-    discovery_info = hass.data.get(DATA_ZHA, {})
-    sensors = discovery_info.get('sensor')
+    sensors = hass.data.get(DATA_ZHA, {}).get('sensor')
     if sensors is not None:
         await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    sensors)
+                                    sensors.values())
 
 
 async def _async_setup_entities(hass, config_entry, async_add_entities,
-                                discovery_keys):
+                                discovery_infos):
     """Set up the ZHA sensors."""
     entities = []
-    for discovery_key in discovery_keys:
-        discovery_info = helpers.get_discovery_info(hass, 'sensor',
-                                                    discovery_key)
-        if discovery_info is not None:
-            entities.append(await make_sensor(discovery_info))
+    for discovery_info in discovery_infos:
+        entities.append(await make_sensor(discovery_info))
 
     async_add_entities(entities, update_before_add=True)
 

@@ -34,49 +34,45 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation light from config entry."""
-    async def async_discover(discovery_key):
+    async def async_discover(discovery_info):
         await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    [discovery_key])
+                                    [discovery_info])
 
     unsub = async_dispatcher_connect(
         hass, ZHA_DISCOVERY_NEW.format(light.DOMAIN), async_discover)
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
-    discovery_info = hass.data.get(DATA_ZHA, {})
-    lights = discovery_info.get('light')
+    lights = hass.data.get(DATA_ZHA, {}).get('light')
     if lights is not None:
         await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    lights)
+                                    lights.values())
 
 
 async def _async_setup_entities(hass, config_entry, async_add_entities,
-                                discovery_keys):
+                                discovery_infos):
     """Set up the ZHA lights."""
     entities = []
-    for discovery_key in discovery_keys:
-        discovery_info = helpers.get_discovery_info(hass, 'light',
-                                                    discovery_key)
-        if discovery_info is not None:
-            endpoint = discovery_info['endpoint']
-            if hasattr(endpoint, 'light_color'):
-                caps = await helpers.safe_read(
-                    endpoint.light_color, ['color_capabilities'])
-                discovery_info['color_capabilities'] = caps.get(
-                    'color_capabilities')
-                if discovery_info['color_capabilities'] is None:
-                    # ZCL Version 4 devices don't support the
-                    # color_capabilities attribute. In this version XY support
-                    # is mandatory, but we need to probe to determine if the
-                    # device supports color temperature.
-                    discovery_info['color_capabilities'] = \
-                        CAPABILITIES_COLOR_XY
-                    result = await helpers.safe_read(
-                        endpoint.light_color, ['color_temperature'])
-                    if (result.get('color_temperature') is not
-                            UNSUPPORTED_ATTRIBUTE):
-                        discovery_info['color_capabilities'] |= \
-                            CAPABILITIES_COLOR_TEMP
-            entities.append(Light(**discovery_info))
+    for discovery_info in discovery_infos:
+        endpoint = discovery_info['endpoint']
+        if hasattr(endpoint, 'light_color'):
+            caps = await helpers.safe_read(
+                endpoint.light_color, ['color_capabilities'])
+            discovery_info['color_capabilities'] = caps.get(
+                'color_capabilities')
+            if discovery_info['color_capabilities'] is None:
+                # ZCL Version 4 devices don't support the color_capabilities
+                # attribute. In this version XY support is mandatory, but we
+                # need to probe to determine if the device supports color
+                # temperature.
+                discovery_info['color_capabilities'] = \
+                    CAPABILITIES_COLOR_XY
+                result = await helpers.safe_read(
+                    endpoint.light_color, ['color_temperature'])
+                if (result.get('color_temperature') is not
+                        UNSUPPORTED_ATTRIBUTE):
+                    discovery_info['color_capabilities'] |= \
+                        CAPABILITIES_COLOR_TEMP
+        entities.append(Light(**discovery_info))
 
     async_add_entities(entities, update_before_add=True)
 

@@ -50,29 +50,26 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation fan from config entry."""
-    async def async_discover(discovery_key):
+    async def async_discover(discovery_info):
         await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    [discovery_key])
+                                    [discovery_info])
 
     unsub = async_dispatcher_connect(
         hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
-    discovery_info = hass.data.get(DATA_ZHA, {})
-    fans = discovery_info.get('fan')
+    fans = hass.data.get(DATA_ZHA, {}).get('fan')
     if fans is not None:
         await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    fans)
+                                    fans.values())
 
 
 async def _async_setup_entities(hass, config_entry, async_add_entities,
-                                discovery_keys):
+                                discovery_infos):
     """Set up the ZHA fans."""
     entities = []
-    for discovery_key in discovery_keys:
-        discovery_info = helpers.get_discovery_info(hass, 'fan', discovery_key)
-        if discovery_info is not None:
-            entities.append(ZhaFan(**discovery_info))
+    for discovery_info in discovery_infos:
+        entities.append(ZhaFan(**discovery_info))
 
     async_add_entities(entities, update_before_add=True)
 

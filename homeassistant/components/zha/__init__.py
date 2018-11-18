@@ -275,7 +275,9 @@ class ApplicationListener:
                 )
 
                 async_dispatcher_send(
-                    self._hass, ZHA_DISCOVERY_NEW.format(component), device_key
+                    self._hass,
+                    ZHA_DISCOVERY_NEW.format(component),
+                    discovery_info
                 )
 
             for cluster in endpoint.in_clusters.values():
@@ -354,5 +356,5 @@ class ApplicationListener:
         self._hass.data[DATA_ZHA][component][cluster_key] = discovery_info
 
         async_dispatcher_send(
-            self._hass, ZHA_DISCOVERY_NEW.format(component), cluster_key
+            self._hass, ZHA_DISCOVERY_NEW.format(component), discovery_info
         )
