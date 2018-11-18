@@ -199,16 +199,15 @@ class OnOffTrait(_Trait):
         """Test if state is supported."""
         if domain == climate.DOMAIN:
             return features & climate.SUPPORT_ON_OFF != 0
-        else:
-            return domain in (
-                group.DOMAIN,
-                input_boolean.DOMAIN,
-                switch.DOMAIN,
-                fan.DOMAIN,
-                light.DOMAIN,
-                cover.DOMAIN,
-                media_player.DOMAIN,
-            )
+        return domain in (
+            group.DOMAIN,
+            input_boolean.DOMAIN,
+            switch.DOMAIN,
+            fan.DOMAIN,
+            light.DOMAIN,
+            cover.DOMAIN,
+            media_player.DOMAIN,
+        )
 
     def sync_attributes(self):
         """Return OnOff attributes for a sync request."""
