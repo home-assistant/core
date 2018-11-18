@@ -24,6 +24,7 @@ async def test_default_state(hass):
     assert state.attributes.get('effect_list') is None
     assert state.attributes.get('effect') is None
 
+
 async def test_light_service_calls(hass):
     """Test service calls to light."""
 
@@ -54,6 +55,7 @@ async def test_light_service_calls(hass):
 
     assert hass.states.get('switch.decorative_lights').state == 'off'
     assert hass.states.get('light.light_switch').state == 'off'
+
 
 async def test_switch_service_calls(hass):
     """Test service calls to switch."""

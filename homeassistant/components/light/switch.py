@@ -40,15 +40,16 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     async_add_entities([LightSwitch(config.get(CONF_NAME),
                                     config[CONF_ENTITY_ID])])
 
+
 class LightSwitch(Light):
     """Represents a Switch as a Light."""
 
     def __init__(self, name: str, switch_entity_id: str) -> None:
         """Initialize Light Switch."""
-        self._name = name # type: str
-        self._switch_entity_id = switch_entity_id # type: str
-        self._is_on = False # type: bool
-        self._available = False # type: bool
+        self._name = name  # type: str
+        self._switch_entity_id = switch_entity_id  # type: str
+        self._is_on = False  # type: bool
+        self._available = False  # type: bool
         self._async_unsub_state_changed = None
 
     @property
