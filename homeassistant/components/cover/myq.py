@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN)
+    PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN, CoverDevice)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_CLOSING,
     STATE_OPEN, STATE_OPENING)
@@ -27,7 +27,7 @@ MYQ_TO_HASS = {
     'opening': STATE_OPENING
 }
 
-COVER_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TYPE): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string
@@ -58,8 +58,6 @@ async def async_setup_platform(
     devices = await myq.get_devices()
     async_add_entities([MyQDevice(device) for device in devices], True)
 
-    return True
-
 
 class MyQDevice(CoverDevice):
     """Representation of a MyQ cover."""
@@ -67,7 +65,6 @@ class MyQDevice(CoverDevice):
     def __init__(self, device):
         """Initialize with API object, device id."""
         self._device = device
-        self._state = None
 
     @property
     def device_class(self):
@@ -120,5 +117,3 @@ class MyQDevice(CoverDevice):
     async def async_update(self):
         """Update status of cover."""
         await self._device.update()
-
-        self._state = self._device.state
