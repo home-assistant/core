@@ -4,6 +4,7 @@ import requests_mock
 
 import homeassistant.components.notify.notifyme as notifyme
 
+
 class TestNotifyMe(unittest.TestCase):
     """Tests for NotifyMe notification service."""
 

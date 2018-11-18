@@ -27,23 +27,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 NOTIFYME_API_ENDPOINT = "https://api.notifymyecho.com/v1/NotifyMe"
 
+
 def get_service(hass, config, discovery_info=None):
     """Get the NotifyMe notification service."""
-    accessToken = config[CONF_ACCESS_TOKEN]
-    return NotifymeNotificationService(accessToken)
+    access_token = config[CONF_ACCESS_TOKEN]
+    return NotifymeNotificationService(access_token)
+
 
 class NotifymeNotificationService(BaseNotificationService):
     """Implementation of a notification service for the NotifyMe service."""
 
-    def __init__(self, accessToken):
+    def __init__(self, access_token):
         """Initialize the service."""
-        self.accessToken = accessToken
+        self.access_token = access_token
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message via NotifyMe."""
         data = {
             "notification": message,
-            "accessCode": self.accessToken
+            "accessCode": self.access_token
         }
 
         async with aiohttp.ClientSession() as session:
