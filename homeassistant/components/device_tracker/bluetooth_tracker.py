@@ -50,7 +50,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         see(mac="{}{}".format(BT_PREFIX, mac), host_name=name,
             attributes=attributes, source_type=SOURCE_TYPE_BLUETOOTH)
 
-    device_id = config.get(CONF_DEVICE_ID, DEFAULT_DEVICE_ID)
+    device_id = config.get(CONF_DEVICE_ID)
 
     def discover_devices():
         """Discover Bluetooth devices."""
