@@ -584,3 +584,74 @@ def test_is_regex():
 
     valid_re = ".*"
     schema(valid_re)
+
+
+def test_is_mac_address():
+    """Test the mac_address validator."""
+    with pytest.raises(vol.Invalid):
+        schema = vol.Schema(cv.is_mac_address(separators=True))
+
+    with pytest.raises(vol.Invalid):
+        schema = vol.Schema(cv.is_mac_address(chunk=11))
+
+    with pytest.raises(vol.Invalid):
+        schema = vol.Schema(cv.is_mac_address(allow_lowercase=False,
+                                              allow_uppercase=False))
+
+    with pytest.raises(vol.Invalid):
+        schema = vol.Schema(cv.is_mac_address(allow_uppercase=False))
+        schema('0123456789AB')
+
+    with pytest.raises(vol.Invalid):
+        schema = vol.Schema(cv.is_mac_address(allow_lowercase=False))
+        schema('0123456789ab')
+
+    with pytest.raises(vol.Invalid):
+        schema = vol.Schema(cv.is_mac_address(separators=[':']))
+        schema('01-23-45-67-89-ab')
+
+    with pytest.raises(vol.Invalid):
+        schema = vol.Schema(cv.is_mac_address(separators=[':']))
+        schema('not a mac!')
+
+    test_2_chunk = [
+        '01:23:45:67:89:AB',
+        '01:23:45:67:89:ab',
+        '01.23.45.67.89.AB',
+        '01.23.45.67.89.ab',
+        '01-23-45-67-89-AB',
+        '01-23-45-67-89-ab',
+        '0123456789AB',
+        '0123456789ab',
+    ]
+    schema = vol.Schema(cv.is_mac_address)
+    for mac in test_2_chunk:
+        schema(mac)
+
+    test_4_chunk = [
+        '0123:4567:89AB',
+        '0123:4567:89ab',
+        '0123.4567.89AB',
+        '0123.4567.89ab',
+        '0123-4567-89AB',
+        '0123-4567-89ab',
+        '0123456789AB',
+        '0123456789ab',
+    ]
+    schema = vol.Schema(cv.is_mac_address(chunk=4))
+    for mac in test_4_chunk:
+        schema(mac)
+
+    test_6_chunk = [
+        '012345:6789AB',
+        '012345:6789ab',
+        '012345.6789AB',
+        '012345.6789ab',
+        '012345-6789AB',
+        '012345-6789ab',
+        '0123456789AB',
+        '0123456789ab',
+    ]
+    schema = vol.Schema(cv.is_mac_address(chunk=6))
+    for mac in test_6_chunk:
+        schema(mac)

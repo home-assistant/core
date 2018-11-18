@@ -474,6 +474,62 @@ def deprecated(key):
     return validator
 
 
+def is_mac_address(value=None, separators=None, allow_lowercase=True,
+                   allow_uppercase=True, chunk=2):
+    """Validate that a value is a MAC address."""
+
+    if not allow_lowercase and not allow_uppercase:
+        raise vol.Invalid("Must not disallow upper and lowercase")
+
+    if separators is None:
+        separators = ['', '.', ':', '-']
+    elif not isinstance(separators, list):
+        raise vol.Invalid('separators must be a list')
+
+    if 12 % chunk != 0:
+        raise vol.Invalid("Invalid chunk size for MAC address")
+
+    characters = ["0-9"]
+    if allow_lowercase:
+        characters.append("a-z")
+    if allow_uppercase:
+        characters.append("A-Z")
+
+    repeat = int(12 / chunk)
+    character_class = "[%s]{%s}" % ("".join(characters), chunk)
+    format_list = []
+
+    for s in separators:
+        if s == '':
+            format_list.append(s.join([character_class] * repeat))
+        else:
+            sep = "[%s]{1}" % re.escape(s)
+            format_list.append(sep.join([character_class] * repeat))
+
+    regex_list = []
+    for f in format_list:
+        regex_list.append(re.compile("^%s$" % f))
+
+    def validator(value: Any) -> str:
+        """Validate that the value is a MAC address."""
+
+        if not isinstance(value, str):
+            raise vol.Invalid('not a string value: {}'.format(value))
+
+        matches = False
+        for r in regex_list:
+            if r.match(value):
+                matches = True
+                break
+
+        if not matches:
+            err = "value {} is not a permitted MAC address".format(value)
+            raise vol.Invalid(err)
+
+        return value
+    return validator
+
+
 # Validator helpers
 
 def key_dependency(key, dependency):
