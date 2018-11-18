@@ -60,11 +60,8 @@ class GoogleHomeAlarmSensor(Entity):
     def state(self):
         return self._state
 
-    async def update(self):
+    async def async_update(self):
         await self._alarmsapi.get_alarms()
-        self._alarms = self._alarmsapi.alarms
-        self._state = "Ok"
-
-        
-
-    
+        self._alarms = self._alarmsapi.alarms['alarm']
+        for alarm in self._alarms:
+            self._state = alarm['fire_time']
