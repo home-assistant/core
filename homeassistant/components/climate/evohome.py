@@ -421,8 +421,7 @@ class EvoZone(EvoClimateDevice):
     def update(self):
         """Process the evohome Zone's state data."""
         evo_data = self.hass.data[DATA_EVOHOME]
-        tmp = self._status  # DELETEME
-        
+
         for _zone in evo_data['status']['zones']:
             if _zone['zoneId'] == self._id:
                 self._status = _zone
