@@ -527,7 +527,6 @@ omit =
     homeassistant/components/foursquare.py
     homeassistant/components/goalfeed.py
     homeassistant/components/ifttt.py
-    homeassistant/components/image_processing/clarifai_general.py
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
     homeassistant/components/image_processing/seven_segments.py

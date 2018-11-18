@@ -1,6 +1,6 @@
-"""The tests for the clarifai_general component."""
+"""The tests for the clarifai_general platform."""
 import json
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from clarifai.rest import ApiError
 from clarifai.rest.client import Model
@@ -38,7 +38,7 @@ VALID_CONFIG = {
 
 
 class MockErrorResponse:
-    """Mock Clarifai response to bad API key."""
+    """Mock Clarifai RESPONSE to bad API key."""
 
     status_code = 404
     reason = 'Failure'
@@ -50,11 +50,11 @@ class MockErrorResponse:
         return {}
 
 
-resource = 'https://www.mock.com/url'
-params = {}
-method = 'GET'
-response = MockErrorResponse()
-error = ApiError(resource, params, method, response)
+RESOURCE = 'https://www.mock.com/url'
+PARAMS = {}
+METHOD = 'GET'
+RESPONSE = MockErrorResponse()
+ERROR = ApiError(RESOURCE, PARAMS, METHOD, RESPONSE)
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ def mock_app():
 def mock_app_with_error():
     """Throw an ApiError."""
     with patch('clarifai.rest.ClarifaiApp',
-               side_effect=error) as _mock_mock_app_with_error:
+               side_effect=ERROR) as _mock_mock_app_with_error:
         yield _mock_mock_app_with_error
 
 
@@ -94,7 +94,8 @@ def test_parse_data():
 def test_valid_api_key(mock_app):
     """Test that the api key is validated."""
     cg.validate_api_key(MOCK_API_KEY)
-    mock_app.assert_called_with(api_key=MOCK_API_KEY)
+    assert mock_app.call_count == 1
+    assert mock_app.call_args == call(api_key=MOCK_API_KEY)
 
 
 def test_invalid_api_key(mock_app_with_error, caplog):
@@ -126,7 +127,7 @@ async def test_process_image(hass, mock_app, mock_image):
     assert state.attributes.get('dog') == PARSED_CONCEPTS['dog']
 
 
-@patch.object(Model, 'predict_by_base64', side_effect=error)
+@patch.object(Model, 'predict_by_base64', side_effect=ERROR)
 async def test_process_with_error(hass, mock_app, mock_image,
                                   caplog):
     """Test processing with error from predict_by_base64."""

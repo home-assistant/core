@@ -1,5 +1,5 @@
 """
-Component that will perform image classification via Clarifai general model.
+Platform that will perform image classification via Clarifai general model.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing/clarifai_general
@@ -15,7 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingEntity, CONF_SOURCE, CONF_ENTITY_ID,
     CONF_NAME)
-from homeassistant.const import STATE_UNKNOWN
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,10 +48,15 @@ def validate_api_key(api_key):
         app = ClarifaiApp(api_key=api_key)
         return app
     except ApiError as exc:
-        error = json.loads(exc.response.content)
-        _LOGGER.error(
+        if exc.response is None:
+            _LOGGER.error("%s error: setup requires an internet connection", 
+            CLASSIFIER)
+            return None
+        else:
+            error = json.loads(exc.response.content)
+            _LOGGER.error(
             "%s error: %s", CLASSIFIER, error['status']['description'])
-        return None
+            return None
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -77,8 +81,7 @@ class ClarifaiClassifier(ImageProcessingEntity):
 
     def __init__(self, app, camera_entity, name=None):
         """Init with the API key."""
-        model = 'general-v1.3'
-        self.model = app.models.get(model)
+        self.model = app.public_models.general_model
         if name:  # Since name is optional.
             self._name = name
         else:
@@ -86,7 +89,7 @@ class ClarifaiClassifier(ImageProcessingEntity):
             self._name = "{} {}".format(CLASSIFIER, entity_name)
         self._camera_entity = camera_entity
         self._classifications = {}  # The dict of classifications.
-        self._state = STATE_UNKNOWN  # The most likely classification.
+        self._state = None  # The most likely classification.
 
     def model_prediction(self, image):
         """Make a prediction based on an image."""
@@ -95,10 +98,16 @@ class ClarifaiClassifier(ImageProcessingEntity):
             response = self.model.predict_by_base64(encode_image(image))
             if response['status']['description'] == 'Ok':
                 return response
-        except ApiError:
-            _LOGGER.error("%s error: check your internet connection",
-                          CLASSIFIER)
-            return None
+        except ApiError as exc:
+            if exc.response is None:
+                _LOGGER.error("%s error: check your internet connection",
+                CLASSIFIER)
+                return None
+            else:
+                error = json.loads(exc.response.content)
+                _LOGGER.error(
+                    "%s error: %s", CLASSIFIER, error['status']['description'])
+                return None
 
     def process_image(self, image):
         """Process an image."""
@@ -112,12 +121,7 @@ class ClarifaiClassifier(ImageProcessingEntity):
 
         else:
             self._classifications = {}
-            self._state = STATE_UNKNOWN
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'class'
+            self._state = None
 
     @property
     def camera_entity(self):
@@ -130,7 +134,7 @@ class ClarifaiClassifier(ImageProcessingEntity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return device specific state attributes."""
         attr = self._classifications
         return attr
