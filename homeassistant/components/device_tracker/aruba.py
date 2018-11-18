@@ -6,9 +6,7 @@ https://home-assistant.io/components/device_tracker.aruba/
 """
 import logging
 import re
-
 import voluptuous as vol
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
