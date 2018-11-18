@@ -18,8 +18,6 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 REQUIREMENTS = ['pymyq==1.0.0']
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'myq'
-
 MYQ_TO_HASS = {
     'closed': STATE_CLOSED,
     'closing': STATE_CLOSING,
@@ -70,11 +68,6 @@ class MyQDevice(CoverDevice):
     def device_class(self):
         """Define this cover as a garage door."""
         return 'garage'
-
-    @property
-    def should_poll(self):
-        """Poll for state."""
-        return True
 
     @property
     def name(self):
