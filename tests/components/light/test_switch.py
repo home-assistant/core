@@ -27,7 +27,6 @@ async def test_default_state(hass):
 
 async def test_light_service_calls(hass):
     """Test service calls to light."""
-
     await async_setup_component(hass, 'switch', {'switch': [
         {'platform': 'demo'}
     ]})
@@ -59,7 +58,6 @@ async def test_light_service_calls(hass):
 
 async def test_switch_service_calls(hass):
     """Test service calls to switch."""
-
     await async_setup_component(hass, 'switch', {'switch': [
         {'platform': 'demo'}
     ]})

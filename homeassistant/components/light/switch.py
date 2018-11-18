@@ -36,7 +36,6 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities,
                                discovery_info=None) -> None:
     """Initialize Light Switch platform."""
-
     async_add_entities([LightSwitch(config.get(CONF_NAME),
                                     config[CONF_ENTITY_ID])])
 
@@ -73,19 +72,19 @@ class LightSwitch(Light):
         return False
 
     async def async_turn_on(self, **kwargs):
-        """Forward the turn_on command to the switch in this light switch"""
+        """Forward the turn_on command to the switch in this light switch."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
             switch.DOMAIN, switch.SERVICE_TURN_ON, data, blocking=True)
 
     async def async_turn_off(self, **kwargs):
-        """Forward the turn_off command to the switch in this light switch"""
+        """Forward the turn_off command to the switch in this light switch."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
             switch.DOMAIN, switch.SERVICE_TURN_OFF, data, blocking=True)
 
     async def async_update(self):
-        """Query the switch in this light switch and determine the state"""
+        """Query the switch in this light switch and determine the state."""
         switch_state = self.hass.states.get(self._switch_entity_id)
 
         if switch_state is None:
