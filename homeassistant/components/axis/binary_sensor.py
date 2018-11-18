@@ -5,6 +5,7 @@ from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN, LOGGER
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_MAC, CONF_TRIGGER_TIME
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
@@ -103,5 +104,5 @@ class AxisBinarySensor(BinarySensorDevice):
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            'identifiers': {(AXIS_DOMAIN, self.device.serial)}
+            'connections': {(CONNECTION_NETWORK_MAC, self.device.serial)}
         }

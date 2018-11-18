@@ -6,13 +6,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    ATTR_LOCATION, CONF_HOST, CONF_INCLUDE, CONF_MAC, CONF_NAME,
+    ATTR_LOCATION, CONF_DEVICE, CONF_HOST, CONF_INCLUDE, CONF_MAC, CONF_NAME,
     CONF_PASSWORD, CONF_PORT, CONF_TRIGGER_TIME, CONF_USERNAME)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json
 
-from .const import CONF_CAMERA, CONF_DEVICE, CONF_EVENTS, CONF_MODEL_ID, DOMAIN
+from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL_ID, DOMAIN
 from .device import get_device
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 

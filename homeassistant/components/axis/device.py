@@ -10,7 +10,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_CAMERA, CONF_DEVICE, CONF_EVENTS, CONF_MODEL_ID, LOGGER
+from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL_ID, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 
 

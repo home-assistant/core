@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util.json import load_json, save_json
 
 from .config_flow import configured_devices, DEVICE_SCHEMA
-from .const import LOGGER, DOMAIN
+from .const import DOMAIN
 from .device import AxisNetworkDevice
 
 REQUIREMENTS = ['axis==16']
@@ -73,7 +73,6 @@ async def async_setup_entry(hass, config_entry):
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, device.serial)},
-        identifiers={(DOMAIN, device.serial)},
         manufacturer="Axis Communications AB",
         model="{} {}".format(device.model_id, device.product_type),
         name=device.name,

@@ -6,6 +6,7 @@ from homeassistant.components.mjpeg.camera import (
 from homeassistant.const import (
     CONF_AUTHENTICATION, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD,
     CONF_PORT, CONF_USERNAME, HTTP_DIGEST_AUTHENTICATION)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = [AXIS_DOMAIN]
@@ -76,5 +77,5 @@ class AxisCamera(MjpegCamera):
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            'identifiers': {(AXIS_DOMAIN, self.device.serial)}
+            'connections': {(CONNECTION_NETWORK_MAC, self.device.serial)}
         }
