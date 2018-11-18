@@ -132,17 +132,18 @@ class AmbientWeatherSensor(Entity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        _LOGGER.info("Getting data for sensor: %s", self._name)
+        _LOGGER.debug("Getting data for sensor: %s", self._name)
         data = self.station_data.get_data()
         if data is None:
-            self._state = None
+            # update likely got throttled and returned None, so use the cached
+            # data from the station_data object
+            self._state = self.station_data.data[self._condition]
         else:
             if self._condition in data:
                 self._state = data[self._condition]
             else:
                 _LOGGER.warning("%s sensor data not available from the "
                                 "station", self._condition)
-                self._state = None
 
         _LOGGER.debug("Sensor: %s | Data: %s", self._name, self._state)
 
@@ -165,24 +166,29 @@ class AmbientStationData:
             'log_level': 'DEBUG'
         }
 
-        self._data = None
+        self.data = None
         self._station = None
         self._api = None
         self._devices = None
-        self._last_data = None
 
         self.get_data = Throttle(self._interval)(self.update)
 
     def update(self):
-        """Get new data or return cached data."""
-        data = self._update()
+        """Get new data."""
+        # refresh API connection since servers turn over nightly
+        _LOGGER.debug("Getting new data from server")
         new_data = None
-        if data is None:
-            _LOGGER.debug("Throttling update - using cached data")
-            new_data = self._last_data
+        self._connect_api()
+        time.sleep(2)   # need minimum 2 seconds between API calls
+        if self._station is not None:
+            data = self._station.get_data()
+            if data is not None:
+                new_data = data[0]
+                self.data = new_data
+            else:
+                _LOGGER.debug("data is None type")
         else:
-            self._last_data = data      # cache latest data
-            new_data = self._last_data
+            _LOGGER.debug("Station is None type")
 
         return new_data
 
@@ -197,23 +203,3 @@ class AmbientStationData:
             self._station = self._devices[0]
         else:
             _LOGGER.warning("No station devices available")
-
-    def _update(self):
-        """Get new data."""
-        # refresh API connection since servers turn over nightly
-        new_data = None
-        self._connect_api()
-        time.sleep(2)   # need minimum 2 seconds between API calls
-        if self._station is not None:
-            data = self._station.get_data()
-            if data is not None:
-                if data:
-                    new_data = data[0]
-                else:
-                    _LOGGER.debug("Data is not list type")
-            else:
-                _LOGGER.debug("data is None type")
-        else:
-            _LOGGER.debug("Station is None type")
-
-        return new_data
