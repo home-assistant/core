@@ -49,8 +49,9 @@ def validate_api_key(api_key):
         return app
     except ApiError as exc:
         if exc.response is None:
-            _LOGGER.error("%s error: setup requires an internet connection",
-                CLASSIFIER)
+            _LOGGER.error(
+                "%s error: setup requires an internet connection", CLASSIFIER
+                )
             return None
         else:
             error = json.loads(exc.response.content)
@@ -100,8 +101,9 @@ class ClarifaiClassifier(ImageProcessingEntity):
                 return response
         except ApiError as exc:
             if exc.response is None:
-                _LOGGER.error("%s error: check your internet connection",
-                    CLASSIFIER)
+                _LOGGER.error(
+                    "%s error: check your internet connection", CLASSIFIER
+                    )
                 return None
             else:
                 error = json.loads(exc.response.content)
