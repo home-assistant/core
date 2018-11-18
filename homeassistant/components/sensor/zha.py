@@ -37,10 +37,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
-    sensors = hass.data.get(DATA_ZHA, {}).get('sensor')
+    sensors = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
     if sensors is not None:
         await _async_setup_entities(hass, config_entry, async_add_entities,
                                     sensors.values())
+        del hass.data[DATA_ZHA][DOMAIN]
 
 
 async def _async_setup_entities(hass, config_entry, async_add_entities,

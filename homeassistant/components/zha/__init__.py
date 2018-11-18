@@ -270,15 +270,17 @@ class ApplicationListener:
                     'new_join': join,
                     'unique_id': device_key,
                 }
-                self._hass.data[DATA_ZHA][component][device_key] = (
-                    discovery_info
-                )
 
-                async_dispatcher_send(
-                    self._hass,
-                    ZHA_DISCOVERY_NEW.format(component),
-                    discovery_info
-                )
+                if join:
+                    async_dispatcher_send(
+                        self._hass,
+                        ZHA_DISCOVERY_NEW.format(component),
+                        discovery_info
+                    )
+                else:
+                    self._hass.data[DATA_ZHA][component][device_key] = (
+                        discovery_info
+                    )
 
             for cluster in endpoint.in_clusters.values():
                 await self._attempt_single_cluster_device(
@@ -353,8 +355,12 @@ class ApplicationListener:
         discovery_info[discovery_attr] = {cluster.cluster_id: cluster}
         if sub_component:
             discovery_info.update({'sub_component': sub_component})
-        self._hass.data[DATA_ZHA][component][cluster_key] = discovery_info
 
-        async_dispatcher_send(
-            self._hass, ZHA_DISCOVERY_NEW.format(component), discovery_info
-        )
+        if is_new_join:
+            async_dispatcher_send(
+                self._hass,
+                ZHA_DISCOVERY_NEW.format(component),
+                discovery_info
+            )
+        else:
+            self._hass.data[DATA_ZHA][component][cluster_key] = discovery_info
