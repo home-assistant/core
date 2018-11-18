@@ -48,7 +48,7 @@ TAHOMA_TYPES = {
     'io:VerticalExteriorAwningIOComponent': 'cover',
     'io:WindowOpenerVeluxIOComponent': 'cover',
     'rtds:RTDSContactSensor': 'sensor',
-    'rtds:RTDSMotionSensor': 'sensor'
+    'rtds:RTDSMotionSensor': 'sensor',
     'rtds:RTDSSmokeSensor': 'smoke',
     'rts:BlindRTSComponent': 'cover',
     'rts:CurtainRTSComponent': 'cover',
@@ -56,7 +56,7 @@ TAHOMA_TYPES = {
     'rts:ExteriorVenetianBlindRTSComponent': 'cover',
     'rts:GarageDoor4TRTSComponent': 'switch',
     'rts:RollerShutterRTSComponent': 'cover',
-    'rts:VenetianBlindRTSComponent': 'cover',
+    'rts:VenetianBlindRTSComponent': 'cover'
 }
 
 
