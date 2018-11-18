@@ -37,7 +37,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                discovery_info=None) -> None:
     """Initialize Light Switch platform."""
     async_add_entities([LightSwitch(config.get(CONF_NAME),
-                                    config[CONF_ENTITY_ID])])
+                                    config[CONF_ENTITY_ID])], True)
 
 
 class LightSwitch(Light):
@@ -104,7 +104,6 @@ class LightSwitch(Light):
 
         self._async_unsub_state_changed = async_track_state_change(
             self.hass, self._switch_entity_id, async_state_changed_listener)
-        await self.async_update()
 
     async def async_will_remove_from_hass(self):
         """Handle removal from Home Assistant."""
