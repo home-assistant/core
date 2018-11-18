@@ -53,11 +53,10 @@ def validate_api_key(api_key):
                 "%s error: setup requires an internet connection", CLASSIFIER
                 )
             return None
-        else:
-            error = json.loads(exc.response.content)
-            _LOGGER.error(
-                "%s error: %s", CLASSIFIER, error['status']['description'])
-            return None
+        error = json.loads(exc.response.content)
+        _LOGGER.error(
+            "%s error: %s", CLASSIFIER, error['status']['description'])
+        return None
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -105,11 +104,10 @@ class ClarifaiClassifier(ImageProcessingEntity):
                     "%s error: check your internet connection", CLASSIFIER
                     )
                 return None
-            else:
-                error = json.loads(exc.response.content)
-                _LOGGER.error(
-                    "%s error: %s", CLASSIFIER, error['status']['description'])
-                return None
+            error = json.loads(exc.response.content)
+            _LOGGER.error(
+                "%s error: %s", CLASSIFIER, error['status']['description'])
+            return None
 
     def process_image(self, image):
         """Process an image."""
