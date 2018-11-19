@@ -50,6 +50,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NOTE): cv.string
 }, extra=vol.ALLOW_EXTRA)
 
+
 SWITCH_SCHEMA = DEVICE_SCHEMA.extend({
     vol.Required(CONF_ID): cv.positive_int,
     vol.Optional(CONF_NAME): cv.string,
