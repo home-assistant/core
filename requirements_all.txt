@@ -456,6 +456,9 @@ geojson_client==0.3
 # homeassistant.components.sensor.geo_rss_events
 georss_client==0.5
 
+# homeassistant.components.sensor.google_home_alarm
+ghlocalapi==0.1.0
+
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.7
 
