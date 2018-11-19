@@ -526,7 +526,7 @@ lakeside==0.10
 libnacl==1.6.1
 
 # homeassistant.components.dyson
-libpurecoollink==0.4.2
+libpurecool==0.5.0
 
 # homeassistant.components.camera.foscam
 libpyfoscam==1.0

@@ -8,9 +8,9 @@ from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import (dyson, ATTR_SPEED, ATTR_SPEED_LIST,
                                           ATTR_OSCILLATING)
 from tests.common import get_test_home_assistant
-from libpurecoollink.const import FanSpeed, FanMode, NightMode, Oscillation
-from libpurecoollink.dyson_pure_state import DysonPureCoolState
-from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+from libpurecool.const import FanSpeed, FanMode, NightMode, Oscillation
+from libpurecool.dyson_pure_state import DysonPureCoolState
+from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
 
 class MockDysonState(DysonPureCoolState):
@@ -94,9 +94,9 @@ class DysonTest(unittest.TestCase):
         self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
         dyson.setup_platform(self.hass, None, _add_device)
 
-    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+    @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_device_on()])
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
     def test_get_state_attributes(self, mocked_login, mocked_devices):
         """Test async added to hass."""
         setup_component(self.hass, dyson_parent.DOMAIN, {
@@ -117,9 +117,9 @@ class DysonTest(unittest.TestCase):
         assert ATTR_SPEED_LIST in state.attributes
         assert ATTR_OSCILLATING in state.attributes
 
-    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+    @mock.patch('libpurecool.dyson.DysonAccount.devices',
                 return_value=[_get_device_on()])
-    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
     def test_async_added_to_hass(self, mocked_login, mocked_devices):
         """Test async added to hass."""
         setup_component(self.hass, dyson_parent.DOMAIN, {

@@ -61,7 +61,7 @@ TEST_REQUIREMENTS = (
     'home-assistant-frontend',
     'homematicip',
     'influxdb',
-    'libpurecoollink',
+    'libpurecool',
     'libsoundtouch',
     'mficlient',
     'numpy',
