@@ -379,6 +379,9 @@ fiblary3==0.1.7
 # homeassistant.components.sensor.fints
 fints==1.0.1
 
+# homeassistant.components.media_player.firetv
+firetv==1.0.7
+
 # homeassistant.components.sensor.fitbit
 fitbit==0.3.0
 
