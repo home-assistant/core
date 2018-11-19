@@ -11,7 +11,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
     ATTR_HS_COLOR, SUPPORT_COLOR,
     ATTR_EFFECT, SUPPORT_EFFECT, Light)
-from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class HMLight(HMDevice, Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         # Is dimmer?
-        if self._state == "LEVEL":
+        if self._state == 'LEVEL':
             return int(self._hm_get_state() * 255)
         return None
 
@@ -55,7 +54,7 @@ class HMLight(HMDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if hasattr(self._hmdevice, "get_effect"):
+        if 'COLOR' in self._hmdevice.WRITENODE:
             return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_EFFECT
         return SUPPORT_BRIGHTNESS
 
@@ -86,9 +85,8 @@ class HMLight(HMDevice, Light):
         if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)
-        else:
-            if ATTR_HS_COLOR not in kwargs and ATTR_EFFECT not in kwargs:
-                self._hmdevice.on(self._channel)
+        elif ATTR_HS_COLOR not in kwargs and ATTR_EFFECT not in kwargs:
+            self._hmdevice.on(self._channel)
 
         if ATTR_HS_COLOR in kwargs:
             self._hmdevice.set_hs_color(
@@ -105,8 +103,7 @@ class HMLight(HMDevice, Light):
         """Generate a data dict (self._data) from the Homematic metadata."""
         # Use LEVEL
         self._state = "LEVEL"
-        self._data.update({self._state: STATE_UNKNOWN})
+        self._data[self._state] = None
 
         if self.supported_features & SUPPORT_COLOR:
-            self._data.update(
-                {"COLOR": STATE_UNKNOWN, "PROGRAM": STATE_UNKNOWN})
+            self._data.update({"COLOR": None, "PROGRAM": None})
