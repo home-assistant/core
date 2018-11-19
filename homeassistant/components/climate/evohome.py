@@ -90,7 +90,7 @@ HA_STATE_TO_ZONE = {
 ZONE_OP_LIST = list(HA_STATE_TO_ZONE)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
+async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Create the evohome Controller, and its Zones, if any."""
     evo_data = hass.data[DATA_EVOHOME]
@@ -165,7 +165,7 @@ class EvoClimateDevice(ClimateDevice):
             self._params[CONF_SCAN_INTERVAL] = new_interval
 
             _LOGGER.warning(
-                "API rate limit has been exceeded: suspending polling for %s "
+                "API rate limit has been exceeded. Suspending polling for %s "
                 "seconds, and increasing '%s' from %s to %s seconds.",
                 new_interval * 3,
                 CONF_SCAN_INTERVAL,

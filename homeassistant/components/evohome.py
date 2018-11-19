@@ -60,7 +60,7 @@ EVO_PARENT = 0x01
 EVO_CHILD = 0x02
 
 
-def setup(hass, config):
+def setup(hass, hass_config):
     """Create a (EMEA/EU-based) Honeywell evohome system.
 
     Currently, only the Controller and the Zones are implemented here.
@@ -69,9 +69,9 @@ def setup(hass, config):
     evo_data['timers'] = {}
 
     # use a copy of config since scan_interval is rounded up to nearest 60s
-    evo_data['params'] = dict(config[DOMAIN])
+    evo_data['params'] = dict(hass_config[DOMAIN])
     evo_data['params'][CONF_SCAN_INTERVAL] = \
-        (config[DOMAIN][CONF_SCAN_INTERVAL] + 59) // 60 * 60
+        (hass_config[DOMAIN][CONF_SCAN_INTERVAL] + 59) // 60 * 60
 
     from evohomeclient2 import EvohomeClient
 
@@ -148,7 +148,7 @@ def setup(hass, config):
         _LOGGER.debug("setup(): evo_data['config']=%s", tmp_loc)
 
     hass.async_create_task(
-        async_load_platform(hass, 'climate', DOMAIN, {}, config))
+        async_load_platform(hass, 'climate', DOMAIN, {}, hass_config))
 
     # Inform the Controller when HA has started so it gets it's first update
     def _first_update(event):
