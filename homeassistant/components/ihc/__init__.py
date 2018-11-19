@@ -43,48 +43,30 @@ def validate_name(config):
     config[CONF_NAME] = name
     return config
 
-
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_ID): cv.positive_int,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_POSITION): cv.string,
-    vol.Optional(CONF_NOTE): cv.string,
+    vol.Optional(CONF_NOTE): cv.string
 }, extra=vol.ALLOW_EXTRA)
 
-
 SWITCH_SCHEMA = DEVICE_SCHEMA.extend({
-    vol.All(cv.ensure_list, [
-        vol.All({
-            vol.Required(CONF_ID): cv.positive_int,
-            vol.Optional(CONF_NAME): cv.string,
-        }, validate_name)
-    ])
+    vol.Required(CONF_ID): cv.positive_int,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 BINARY_SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
-    vol.All(cv.ensure_list, [
-        vol.All({
-            vol.Optional(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_INVERTING, default=False): cv.boolean,
-        }, validate_name)
-    ])
+    vol.Optional(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_INVERTING, default=False): cv.boolean,
 })
 
 LIGHT_SCHEMA = DEVICE_SCHEMA.extend({
-    vol.All(cv.ensure_list, [
-        vol.All({
-            vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
-        }, validate_name)
-    ])
+    vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
 })
-
-SENSOR_SCHEMA = vol.Schema({
-    vol.All(cv.ensure_list, [
-        vol.All({
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT,
-                         default=TEMP_CELSIUS): cv.string,
-        }, validate_name)
-    ])
+          
+SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT,
+                default=TEMP_CELSIUS): cv.string,
 })
 
 IHC_SCHEMA = vol.Schema({
@@ -93,16 +75,37 @@ IHC_SCHEMA = vol.Schema({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
     vol.Optional(CONF_INFO, default=True): cv.boolean,
-    vol.Optional(CONF_BINARY_SENSORS): BINARY_SENSOR_SCHEMA,
-    vol.Optional(CONF_LIGHTS): LIGHT_SCHEMA,
-    vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-    vol.Optional(CONF_SWITCHES): SWITCH_SCHEMA,
+    vol.Optional(CONF_BINARY_SENSORS, default=[]):
+        vol.All(cv.ensure_list, [
+            vol.All(
+                BINARY_SENSOR_SCHEMA,
+                validate_name)
+        ]),
+    vol.Optional(CONF_LIGHTS, default=[]):
+        vol.All(cv.ensure_list, [
+            vol.All(
+                LIGHT_SCHEMA,
+                validate_name)
+        ]),
+    vol.Optional(CONF_SENSORS, default=[]):
+        vol.All(cv.ensure_list, [
+            vol.All(
+                SENSOR_SCHEMA,
+                validate_name)
+        ]),
+    vol.Optional(CONF_SWITCHES, default=[]):
+        vol.All(cv.ensure_list, [
+            vol.All(
+                SWITCH_SCHEMA,
+                validate_name)
+        ]),
 }, extra=vol.ALLOW_EXTRA)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema(vol.All(
         cv.ensure_list,
-        [IHC_SCHEMA])),
+        [IHC_SCHEMA]
+    )),
 }, extra=vol.ALLOW_EXTRA)
 
 
