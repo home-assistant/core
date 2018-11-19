@@ -75,7 +75,7 @@ async def async_setup_platform(
             if service.service == SERVICE_SELECT_CMODE:
                 cmode = service.data.get(ATTR_CMODE)
                 await device.select_cmode(cmode)
-            await device.async_update()
+            device.async_schedule_update_ha_state(True)
 
     epson_schema = MEDIA_PLAYER_SCHEMA.extend({
         vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))
