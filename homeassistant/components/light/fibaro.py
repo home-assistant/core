@@ -22,19 +22,18 @@ DEPENDENCIES = ['fibaro']
 
 def scaleto255(value):
     """Scale the input value from 0-100 to 0-255."""
-    if value < 3:
-        value = 0
-    if value > 97:
+    # Fibaro has a funny way of storing brightness either 0-100 or 0-99
+    # depending on device type (e.g. dimmer vs led)
+    if value > 98:
         value = 100
     return max(0, min(255, ((value * 256.0) / 100.0)))
 
 
 def scaleto100(value):
     """Scale the input value from 0-255 to 0-100."""
-    if value < 2:
-        value = 0
-    if value > 253:
-        value = 255
+    # Make sure a low but non-zero value is not rounded down to zero
+    if 0 < value < 3:
+        return 1
     return max(0, min(100, ((value * 100.4) / 255.0)))
 
 
@@ -98,17 +97,11 @@ class FibaroLight(FibaroDevice, Light):
                 # No brightness specified, so we either restore it to
                 # last brightness or switch it on at maximum level
                 if target_brightness is None:
-                    if self._brightness < 4:
+                    if self._brightness == 0:
                         if self._last_brightness:
                             self._brightness = self._last_brightness
                         else:
                             self._brightness = 255
-                # We're supposed to turn it on to a very very low level,
-                # so instead, we switch it off
-                elif target_brightness < 4:
-                    self._brightness = 0
-                    self.call_turn_off()
-                    return
                 else:
                     # We set it to the target brightness and turn it on
                     self._brightness = target_brightness
