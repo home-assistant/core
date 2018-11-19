@@ -237,7 +237,7 @@ class ProxyCamera(Camera):
             job = _resize_image
         else:
             job = _crop_image
-        image = await self.hass.async_add_job(
+        image = await self.hass.async_add_executor_job(
             job, image.content, self._image_opts)
 
         if self._cache_images:
@@ -273,5 +273,5 @@ class ProxyCamera(Camera):
             job = _resize_image
         else:
             job = _crop_image
-        return await self.hass.async_add_job(
+        return await self.hass.async_add_executor_job(
             job, image.content, self._stream_opts)
