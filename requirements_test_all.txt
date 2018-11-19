@@ -162,7 +162,7 @@ pydeconz==47
 pydispatcher==2.0.5
 
 # homeassistant.components.homematic
-pyhomematic==0.1.51
+pyhomematic==0.1.52
 
 # homeassistant.components.litejet
 pylitejet==0.1
