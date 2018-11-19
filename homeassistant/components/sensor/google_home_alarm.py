@@ -13,8 +13,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS,
-                                CONF_DISPLAY_OPTIONS
+from homeassistant.const import (CONF_HOST, CONF_MONITORED_CONDITIONS,
+                                CONF_DISPLAY_OPTIONS)
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['ghlocalapi==0.1.0']
@@ -29,8 +29,8 @@ SENSOR_TYPE_TIMER = 'timer'
 SENSOR_TYPE_ALARM = 'alarm'
 
 SENSOR_TYPES = {
-    SENSOR_TYPE_TIMER : "Timer",
-    SENSOR_TYPE_ALARM : "Alarm",
+    SENSOR_TYPE_TIMER: "Timer",
+    SENSOR_TYPE_ALARM: "Alarm",
 }
 
 DISPLAY_TYPES = {
@@ -45,17 +45,18 @@ DISPLAY_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_SHOW_TIMERS, default=True): cv.boolean,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['alarm', 'timer']): 
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=['alarm', 'timer']):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_DISPLAY_OPTIONS, default='time'): vol.In(DISPLAY_TYPES)
 })
+
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Google Home Alarm platform."""
     from ghlocalapi.device_info import DeviceInfo
 
-    host = config.get(CONF_HOST)    
+    host = config.get(CONF_HOST)
 
     devinfo = DeviceInfo(hass.loop, async_get_clientsession(hass), host)
     await devinfo.get_device_info()
@@ -84,8 +85,8 @@ class GoogleHomeAlarmSensor(Entity):
         self._name = "{} {}".format(name, SENSOR_TYPES[condition])
         self._state = None
         self.type = type
-        self._alarmsapi = Alarms(hass.loop, 
-                                 async_get_clientsession(hass), 
+        self._alarmsapi = Alarms(hass.loop,
+                                 async_get_clientsession(hass),
                                  host)
         self._condition = condition
         self._available = True
@@ -104,7 +105,7 @@ class GoogleHomeAlarmSensor(Entity):
     def available(self):
         """Return the availability state."""
         return self._available
-    
+
     @property
     def state(self):
         """Return the state."""
