@@ -22,7 +22,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.evohome import (
     DATA_EVOHOME, DISPATCHER_EVOHOME,
-    CONF_LOCATION_IDX,
+    CONF_LOCATION_IDX, SCAN_INTERVAL_DEFAULT,
     EVO_PARENT, EVO_CHILD,
     GWS, TCS,
 )
@@ -39,8 +39,6 @@ from homeassistant.helpers.dispatcher import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL_DEFAULT = 300
 
 # the Controller's opmode/state and the zone's (inherited) state
 EVO_RESET = 'AutoWithReset'
