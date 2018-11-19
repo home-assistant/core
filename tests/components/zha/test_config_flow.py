@@ -4,7 +4,7 @@ from homeassistant.components.zha.const import DOMAIN, RadioType
 from tests.common import MockConfigEntry
 
 
-async def test_flow_works(hass):
+async def test_user_flow(hass):
     """Test that config flow works."""
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
@@ -20,7 +20,20 @@ async def test_flow_works(hass):
     }
 
 
-async def test_import(hass):
+async def test_user_flow_existing_config_entry(hass):
+    """Test if config entry already exists."""
+    MockConfigEntry(domain=DOMAIN, data={
+        'usb_path': '/dev/ttyUSB1'
+    }).add_to_hass(hass)
+    flow = config_flow.ZhaFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_user()
+
+    assert result['type'] == 'abort'
+
+
+async def test_import_flow(hass):
     """Test import from configuration.yaml ."""
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
@@ -52,14 +65,19 @@ async def test_import(hass):
     }
 
 
-async def test_flow_existing_config_entry(hass):
-    """Test if config entry already exists."""
+async def test_import_flow_existing_config_entry(hass):
+    """Test import from configuration.yaml ."""
     MockConfigEntry(domain=DOMAIN, data={
         'usb_path': '/dev/ttyUSB1'
     }).add_to_hass(hass)
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_import({
+        'usb_path': '/dev/ttyUSB1',
+        'database_path': 'zigbee.db',
+        'baudrate': 28800,
+        'radio_type': RadioType.xbee,
+    })
 
     assert result['type'] == 'abort'
