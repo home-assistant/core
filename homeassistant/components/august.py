@@ -141,16 +141,11 @@ def setup(hass, config):
     from requests import Session
 
     conf = config[DOMAIN]
+    api_http_session = None
     try:
         api_http_session = Session()
-        API_SESSIONS.append(api_http_session)
     except RequestException as ex:
         _LOGGER.warning("Creating HTTP session failed with: %s", str(ex))
-        api_http_session = None
-
-    hass.bus.listen_once(
-        EVENT_HOMEASSISTANT_STOP, dispose)
-    _LOGGER.debug("Registered for HASS stop event")
 
     api = Api(timeout=conf.get(CONF_TIMEOUT), http_session=api_http_session)
 
@@ -162,18 +157,21 @@ def setup(hass, config):
         install_id=conf.get(CONF_INSTALL_ID),
         access_token_cache_file=hass.config.path(AUGUST_CONFIG_FILE))
 
+    def close_http_session(event):
+        """Close API sessions used to connect to August."""
+        _LOGGER.debug("Closing August HTTP sessions")
+        if api_http_session:
+            try:
+                api_http_session.close()
+            except RequestException:
+                pass
+
+        _LOGGER.debug("August HTTP session closed.")
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_http_session)
+    _LOGGER.debug("Registered for HASS stop event")
+
     return setup_august(hass, config, api, authenticator)
-
-
-def dispose(event):
-    """Close API sessions used to connect to August."""
-    _LOGGER.debug("Closing August HTTP sessions")
-    for api in API_SESSIONS:
-        try:
-            api.close()
-        except RequestException:
-            pass
-    _LOGGER.debug("August HTTP session closed.")
 
 
 class AugustData:
