@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.google_home_alarm/
 """
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
@@ -14,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (CONF_HOST, CONF_MONITORED_CONDITIONS,
-                                CONF_DISPLAY_OPTIONS)
+                                 CONF_DISPLAY_OPTIONS)
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['ghlocalapi==0.1.0']
