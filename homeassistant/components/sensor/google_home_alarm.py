@@ -86,6 +86,10 @@ class GoogleHomeAlarmSensor(Entity):
         return self._name
 
     @property
+    def icon(self):
+        return 'mdi:alarm'
+
+    @property
     def available(self):
         return self._available
     
