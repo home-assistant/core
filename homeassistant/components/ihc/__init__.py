@@ -43,6 +43,7 @@ def validate_name(config):
     config[CONF_NAME] = name
     return config
 
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_ID): cv.positive_int,
     vol.Optional(CONF_NAME): cv.string,
