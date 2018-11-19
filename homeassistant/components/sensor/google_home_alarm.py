@@ -100,7 +100,7 @@ class GoogleHomeAlarmSensor(Entity):
             self._available = False
         else:
             self._available = True
-            time_date = dt_util.utc_from_timestamp(data[0]['fire_time'] / 1000)
+            time_date = dt_util.utc_from_timestamp(min(element['fire_time'] for element in data) / 1000)
 
             time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
             time_utc = time_date.strftime(TIME_STR_FORMAT)
