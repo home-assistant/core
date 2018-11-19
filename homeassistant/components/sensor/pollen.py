@@ -245,6 +245,7 @@ class ForecastSensor(BaseSensor):
         if self._kind == TYPE_ALLERGY_FORECAST:
             outlook = self.pollen.data[TYPE_ALLERGY_OUTLOOK]
             self._attrs[ATTR_OUTLOOK] = outlook['Outlook']
+            self._attrs[ATTR_SEASON] = outlook['Season']
 
         self._state = average
 

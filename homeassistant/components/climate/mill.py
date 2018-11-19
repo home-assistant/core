@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['millheater==0.2.4']
+REQUIREMENTS = ['millheater==0.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,6 +117,7 @@ class MillHeater(ClimateDevice):
             "open_window": self._heater.open_window,
             "heating": self._heater.is_heating,
             "controlled_by_tibber": self._heater.tibber_control,
+            "heater_generation": 1 if self._heater.is_gen1 else 2,
         }
         if self._heater.room:
             res['room'] = self._heater.room.name
