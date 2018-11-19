@@ -51,35 +51,35 @@ class FibaroSensor(FibaroDevice, Entity):
         super().__init__(fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         if fibaro_device.type in SENSOR_TYPES:
-            self._device_class = SENSOR_TYPES[fibaro_device.type][3]
+            self._unit = SENSOR_TYPES[fibaro_device.type][1]
             self._icon = SENSOR_TYPES[fibaro_device.type][2]
-            self._unit_of_measurement = SENSOR_TYPES[fibaro_device.type][1]
+            self._device_class = SENSOR_TYPES[fibaro_device.type][3]
         else:
+            self._unit = None
             self._icon = None
             self._device_class = None
-            self._unit_of_measurement = None
+        try:
+            if not self._unit:
+                if self.fibaro_device.properties.unit == 'lux':
+                    self._unit = 'lx'
+                elif self.fibaro_device.properties.unit == 'C':
+                    self._unit = TEMP_CELSIUS
+                elif self.fibaro_device.properties.unit == 'F':
+                    self._unit = TEMP_FAHRENHEIT
+                else:
+                    self._unit = self.fibaro_device.properties.unit
+        except (KeyError, ValueError):
+            pass
 
     @property
     def state(self):
-        """Return the name of the sensor."""
+        """Return the state of the sensor."""
         return self.current_value
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        try:
-            if self._unit_of_measurement:
-                return self._unit_of_measurement
-            if self.fibaro_device.properties.unit == 'lux':
-                return 'lx'
-            if self.fibaro_device.properties.unit == 'C':
-                return TEMP_CELSIUS
-            if self.fibaro_device.properties.unit == 'F':
-                return TEMP_FAHRENHEIT
-            return self.fibaro_device.properties.unit
-        except (KeyError, ValueError):
-            pass
-        return None
+        return self._unit
 
     @property
     def icon(self):

@@ -5,15 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.fibaro/
 """
 
-# pylint: disable=R1715
-
 import logging
 import threading
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_HS_COLOR, ATTR_WHITE_VALUE,
-    ENTITY_ID_FORMAT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_WHITE_VALUE,
-    Light)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, ENTITY_ID_FORMAT,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
 import homeassistant.util.color as color_util
 from homeassistant.components.fibaro import (
     FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
@@ -96,11 +93,7 @@ class FibaroLight(FibaroDevice, Light):
         """Turn the light on."""
         with self._update_lock:
             if self._supported_flags & SUPPORT_BRIGHTNESS:
-                target_brightness = None
-                if ATTR_BRIGHTNESS_PCT in kwargs:
-                    target_brightness = scaleto255(kwargs[ATTR_BRIGHTNESS_PCT])
-                elif ATTR_BRIGHTNESS in kwargs:
-                    target_brightness = kwargs[ATTR_BRIGHTNESS]
+                target_brightness = kwargs.get(ATTR_BRIGHTNESS)
 
                 # No brightness specified, so we either restore it to
                 # last brightness or switch it on at maximum level

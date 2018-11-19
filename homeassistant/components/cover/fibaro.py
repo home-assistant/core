@@ -6,8 +6,8 @@ https://home-assistant.io/components/cover.fibaro/
 """
 import logging
 
-from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT, \
-    ATTR_POSITION, ATTR_TILT_POSITION
+from homeassistant.components.cover import (
+    CoverDevice, ENTITY_ID_FORMAT, ATTR_POSITION, ATTR_TILT_POSITION)
 from homeassistant.components.fibaro import (
     FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
 
@@ -49,12 +49,12 @@ class FibaroCover(FibaroDevice, CoverDevice):
     @property
     def current_cover_position(self):
         """Return current position of cover. 0 is closed, 100 is open."""
-        return self.bound(self.get_level())
+        return self.bound(self.level)
 
     @property
     def current_cover_tilt_position(self):
         """Return the current tilt position for venetian blinds."""
-        return self.bound(self.get_level2())
+        return self.bound(self.level2)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -67,8 +67,9 @@ class FibaroCover(FibaroDevice, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        if self.current_cover_position is not None:
-            return self.current_cover_position == 0
+        if self.current_cover_position is None:
+            return None
+        return self.current_cover_position == 0
 
     def open_cover(self, **kwargs):
         """Open the cover."""

@@ -229,13 +229,15 @@ class FibaroDevice(Entity):
         """Update the state."""
         self.schedule_update_ha_state(True)
 
-    def get_level(self):
+    @property
+    def level(self):
         """Get the level of Fibaro device."""
         if 'value' in self.fibaro_device.properties:
             return self.fibaro_device.properties.value
         return None
 
-    def get_level2(self):
+    @property
+    def level2(self):
         """Get the tilt level of Fibaro device."""
         if 'value2' in self.fibaro_device.properties:
             return self.fibaro_device.properties.value2
