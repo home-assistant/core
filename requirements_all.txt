@@ -424,6 +424,9 @@ georss_client==0.4
 # homeassistant.components.device_tracker.googlehome
 ghlocalapi==0.1.0
 
+# homeassistant.components.sensor.google_home_alarm
+ghlocalapi==0.1.0
+
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.7
 
