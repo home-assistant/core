@@ -208,15 +208,32 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                     if value[-1] == TOPIC_BASE and key.endswith('_topic'):
                         payload[key] = "{}{}".format(value[:-1], base)
 
-        # If present, the node_id will be included in the discovered object id
-        discovery_id = '_'.join((node_id, object_id)) if node_id else object_id
+        # If present, unique_id is used as the discovered object id. Otherwise,
+        # if present, the node_id will be included in the discovered object id
+        discovery_id = payload.get(
+            'unique_id', ' '.join(
+                (node_id, object_id)) if node_id else object_id)
+        discovery_hash = (component, discovery_id)
+
+        if payload:
+            platform = payload.get(CONF_PLATFORM, 'mqtt')
+            if platform not in ALLOWED_PLATFORMS.get(component, []):
+                _LOGGER.warning("Platform %s (component %s) is not allowed",
+                                platform, component)
+                return
+            payload[CONF_PLATFORM] = platform
+
+            if CONF_STATE_TOPIC not in payload:
+                payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
+                    discovery_topic, component,
+                    '%s/' % node_id if node_id else '', object_id)
+
+            payload[ATTR_DISCOVERY_HASH] = discovery_hash
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = {}
-
-        discovery_hash = (component, discovery_id)
-
         if discovery_hash in hass.data[ALREADY_DISCOVERED]:
+            # Dispatch update
             _LOGGER.info(
                 "Component has already been discovered: %s %s, sending update",
                 component, discovery_id)
@@ -224,22 +241,8 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                 hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload)
         elif payload:
             # Add component
-            platform = payload.get(CONF_PLATFORM, 'mqtt')
-            if platform not in ALLOWED_PLATFORMS.get(component, []):
-                _LOGGER.warning("Platform %s (component %s) is not allowed",
-                                platform, component)
-                return
-
-            payload[CONF_PLATFORM] = platform
-            if CONF_STATE_TOPIC not in payload:
-                payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
-                    discovery_topic, component,
-                    '%s/' % node_id if node_id else '', object_id)
-
-            hass.data[ALREADY_DISCOVERED][discovery_hash] = None
-            payload[ATTR_DISCOVERY_HASH] = discovery_hash
-
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
+            hass.data[ALREADY_DISCOVERED][discovery_hash] = None
 
             if platform not in CONFIG_ENTRY_PLATFORMS.get(component, []):
                 await async_load_platform(
