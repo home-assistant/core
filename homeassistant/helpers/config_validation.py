@@ -477,7 +477,6 @@ def deprecated(key):
 def is_mac_address(value=None, separators=None, allow_lowercase=True,
                    allow_uppercase=True, chunk=2):
     """Validate that a value is a MAC address."""
-
     if not allow_lowercase and not allow_uppercase:
         raise vol.Invalid("Must not disallow upper and lowercase")
 
@@ -512,7 +511,6 @@ def is_mac_address(value=None, separators=None, allow_lowercase=True,
 
     def validator(value: Any) -> str:
         """Validate that the value is a MAC address."""
-
         if not isinstance(value, str):
             raise vol.Invalid('not a string value: {}'.format(value))
 
