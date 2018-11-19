@@ -74,11 +74,6 @@ class ZHAEvent():
             {'device': self.event_id, 'args': args},
             EventOrigin.remote
         )
-        _LOGGER.debug(
-            "%s: fired [zha_%s] event with arguments: %s", self.event_id,
-            self._cluster.server_commands.get(command_id)[0],
-            args
-        )
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -90,14 +85,6 @@ class ZHAEvent():
              'attribute_id': attrid,
              'value': value},
             EventOrigin.remote
-        )
-        _LOGGER.debug(
-            "%s: fired [zha_attribute_updated] for attribute [%s] \
-             with value: [%s] and id: [%s]",
-            self.event_id,
-            self._cluster.attributes.get(attrid, ['Unknown'])[0],
-            value,
-            attrid
         )
 
     @callback
