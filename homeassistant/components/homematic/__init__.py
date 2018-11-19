@@ -18,7 +18,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyhomematic==0.1.51']
+REQUIREMENTS = ['pyhomematic==0.1.52']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,8 +64,9 @@ HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch', 'RFSiren',
         'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic',
-        'IPKeySwitchPowermeter'],
-    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer'],
+        'IPKeySwitchPowermeter', 'IPGarage'],
+    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer', 'IPDimmer',
+                      'ColorEffectLight'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
         'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
@@ -76,7 +77,7 @@ HM_DEVICE_TYPES = {
         'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
         'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
-        'IPWeatherSensorBasic', 'IPBrightnessSensor'],
+        'IPWeatherSensorBasic', 'IPBrightnessSensor', 'IPGarage'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
