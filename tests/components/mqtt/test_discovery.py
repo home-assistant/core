@@ -185,7 +185,7 @@ def test_discovery_incl_nodeid(hass, mqtt_mock, caplog):
 
     assert state is not None
     assert state.name == 'Beer'
-    assert ('binary_sensor', 'my_node_id_bla') in hass.data[ALREADY_DISCOVERED]
+    assert ('binary_sensor', 'my_node_id bla') in hass.data[ALREADY_DISCOVERED]
 
 
 @asyncio.coroutine
