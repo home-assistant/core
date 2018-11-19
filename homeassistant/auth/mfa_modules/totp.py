@@ -67,7 +67,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         super().__init__(hass, config)
         self._users = None  # type: Optional[Dict[str, str]]
         self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY)
+            STORAGE_VERSION, STORAGE_KEY, private=True)
 
     @property
     def input_schema(self) -> vol.Schema:
@@ -176,7 +176,7 @@ class TotpSetupFlow(SetupFlow):
             -> Dict[str, Any]:
         """Handle the first step of setup flow.
 
-        Return self.async_show_form(step_id='init') if user_input == None.
+        Return self.async_show_form(step_id='init') if user_input is None.
         Return self.async_create_entry(data={'result': result}) if finish.
         """
         import pyotp

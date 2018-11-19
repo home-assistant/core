@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.deconz/
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.deconz.const import (
     ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN)
+    DECONZ_DOMAIN)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -36,10 +36,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities.append(DeconzBinarySensor(sensor))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ_UNSUB].append(
+    hass.data[DATA_DECONZ].listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
-    async_add_sensor(hass.data[DATA_DECONZ].sensors.values())
+    async_add_sensor(hass.data[DATA_DECONZ].api.sensors.values())
 
 
 class DeconzBinarySensor(BinarySensorDevice):
@@ -52,7 +52,8 @@ class DeconzBinarySensor(BinarySensorDevice):
     async def async_added_to_hass(self):
         """Subscribe sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
+        self.hass.data[DATA_DECONZ].deconz_ids[self.entity_id] = \
+            self._sensor.deconz_id
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect sensor object when removed."""
@@ -127,7 +128,7 @@ class DeconzBinarySensor(BinarySensorDevice):
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
-        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
+        bridgeid = self.hass.data[DATA_DECONZ].api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},

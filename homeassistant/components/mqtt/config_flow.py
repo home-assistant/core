@@ -5,7 +5,8 @@ import queue
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_PROTOCOL, CONF_HOST)
 
 from .const import CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY
 
@@ -16,6 +17,8 @@ class FlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+
+    _hassio_discovery = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -60,11 +63,65 @@ class FlowHandler(config_entries.ConfigFlow):
 
         return self.async_create_entry(title='configuration.yaml', data={})
 
+    async def async_step_hassio(self, user_input=None):
+        """Receive a Hass.io discovery."""
+        if self._async_current_entries():
+            return self.async_abort(reason='single_instance_allowed')
 
-def try_connection(broker, port, username, password):
+        self._hassio_discovery = user_input
+
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(self, user_input=None):
+        """Confirm a Hass.io discovery."""
+        errors = {}
+
+        if user_input is not None:
+            data = self._hassio_discovery
+            can_connect = await self.hass.async_add_executor_job(
+                try_connection,
+                data[CONF_HOST],
+                data[CONF_PORT],
+                data.get(CONF_USERNAME),
+                data.get(CONF_PASSWORD),
+                data.get(CONF_PROTOCOL)
+            )
+
+            if can_connect:
+                return self.async_create_entry(
+                    title=data['addon'], data={
+                        CONF_BROKER: data[CONF_HOST],
+                        CONF_PORT: data[CONF_PORT],
+                        CONF_USERNAME: data.get(CONF_USERNAME),
+                        CONF_PASSWORD: data.get(CONF_PASSWORD),
+                        CONF_PROTOCOL: data.get(CONF_PROTOCOL),
+                        CONF_DISCOVERY: user_input[CONF_DISCOVERY],
+                    })
+
+            errors['base'] = 'cannot_connect'
+
+        return self.async_show_form(
+            step_id='hassio_confirm',
+            description_placeholders={
+                'addon': self._hassio_discovery['addon']
+            },
+            data_schema=vol.Schema({
+                vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): bool
+            }),
+            errors=errors,
+        )
+
+
+def try_connection(broker, port, username, password, protocol='3.1'):
     """Test if we can connect to an MQTT broker."""
     import paho.mqtt.client as mqtt
-    client = mqtt.Client()
+
+    if protocol == '3.1':
+        proto = mqtt.MQTTv31
+    else:
+        proto = mqtt.MQTTv311
+
+    client = mqtt.Client(protocol=proto)
     if username and password:
         client.username_pw_set(username, password)
 

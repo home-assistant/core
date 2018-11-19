@@ -15,17 +15,19 @@ DEPENDENCIES = ['melissa']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the melissa sensor platform."""
     sensors = []
     api = hass.data[DATA_MELISSA]
-    devices = api.fetch_devices().values()
+
+    devices = (await api.async_fetch_devices()).values()
 
     for device in devices:
         if device['type'] == 'melissa':
             sensors.append(MelissaTemperatureSensor(device, api))
             sensors.append(MelissaHumiditySensor(device, api))
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class MelissaSensor(Entity):
@@ -54,9 +56,9 @@ class MelissaSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    def update(self):
+    async def async_update(self):
         """Fetch status from melissa."""
-        self._data = self._api.status(cached=True)
+        self._data = await self._api.async_status(cached=True)
 
 
 class MelissaTemperatureSensor(MelissaSensor):
@@ -70,9 +72,9 @@ class MelissaTemperatureSensor(MelissaSensor):
         """Return the unit of measurement."""
         return self._unit
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for the sensor."""
-        super().update()
+        await super().async_update()
         try:
             self._state = self._data[self._serial]['temp']
         except KeyError:
@@ -90,9 +92,9 @@ class MelissaHumiditySensor(MelissaSensor):
         """Return the unit of measurement."""
         return self._unit
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for the sensor."""
-        super().update()
+        await super().async_update()
         try:
             self._state = self._data[self._serial]['humidity']
         except KeyError:

@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.teksavvy/
 """
 from datetime import timedelta
 import logging
-import asyncio
 import async_timeout
 
 import voluptuous as vol
@@ -58,16 +57,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the sensor platform."""
     websession = async_get_clientsession(hass)
     apikey = config.get(CONF_API_KEY)
     bandwidthcap = config.get(CONF_TOTAL_BANDWIDTH)
 
     ts_data = TekSavvyData(hass.loop, websession, apikey, bandwidthcap)
-    ret = yield from ts_data.async_update()
+    ret = await ts_data.async_update()
     if ret is False:
         _LOGGER.error("Invalid Teksavvy API key: %s", apikey)
         return
@@ -112,10 +110,9 @@ class TekSavvySensor(Entity):
         """Icon to use in the frontend, if any."""
         return self._icon
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from TekSavvy and update the state."""
-        yield from self.teksavvydata.async_update()
+        await self.teksavvydata.async_update()
         if self.type in self.teksavvydata.data:
             self._state = round(self.teksavvydata.data[self.type], 2)
 

@@ -3,9 +3,10 @@ from unittest.mock import MagicMock
 
 import asynctest
 
-from homeassistant.components import light
 from homeassistant.components.light import group
 from homeassistant.setup import async_setup_component
+
+from tests.components.light import common
 
 
 async def test_default_state(hass):
@@ -300,29 +301,29 @@ async def test_service_calls(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get('light.light_group').state == 'on'
-    light.async_toggle(hass, 'light.light_group')
+    common.async_toggle(hass, 'light.light_group')
     await hass.async_block_till_done()
 
     assert hass.states.get('light.bed_light').state == 'off'
     assert hass.states.get('light.ceiling_lights').state == 'off'
     assert hass.states.get('light.kitchen_lights').state == 'off'
 
-    light.async_turn_on(hass, 'light.light_group')
+    common.async_turn_on(hass, 'light.light_group')
     await hass.async_block_till_done()
 
     assert hass.states.get('light.bed_light').state == 'on'
     assert hass.states.get('light.ceiling_lights').state == 'on'
     assert hass.states.get('light.kitchen_lights').state == 'on'
 
-    light.async_turn_off(hass, 'light.light_group')
+    common.async_turn_off(hass, 'light.light_group')
     await hass.async_block_till_done()
 
     assert hass.states.get('light.bed_light').state == 'off'
     assert hass.states.get('light.ceiling_lights').state == 'off'
     assert hass.states.get('light.kitchen_lights').state == 'off'
 
-    light.async_turn_on(hass, 'light.light_group', brightness=128,
-                        effect='Random', rgb_color=(42, 255, 255))
+    common.async_turn_on(hass, 'light.light_group', brightness=128,
+                         effect='Random', rgb_color=(42, 255, 255))
     await hass.async_block_till_done()
 
     state = hass.states.get('light.bed_light')

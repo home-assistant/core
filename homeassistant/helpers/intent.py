@@ -1,17 +1,20 @@
 """Module to coordinate user intentions."""
 import logging
 import re
+from typing import Any, Callable, Dict, Iterable, Optional
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
-from homeassistant.core import callback
+from homeassistant.core import callback, State, T
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.const import ATTR_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
+_SlotsType = Dict[str, Any]
 
 INTENT_TURN_OFF = 'HassTurnOff'
 INTENT_TURN_ON = 'HassTurnOn'
@@ -28,7 +31,7 @@ SPEECH_TYPE_SSML = 'ssml'
 
 @callback
 @bind_hass
-def async_register(hass, handler):
+def async_register(hass: HomeAssistantType, handler: 'IntentHandler') -> None:
     """Register an intent with Home Assistant."""
     intents = hass.data.get(DATA_KEY)
     if intents is None:
@@ -44,10 +47,12 @@ def async_register(hass, handler):
 
 
 @bind_hass
-async def async_handle(hass, platform, intent_type, slots=None,
-                       text_input=None):
+async def async_handle(hass: HomeAssistantType, platform: str,
+                       intent_type: str, slots: Optional[_SlotsType] = None,
+                       text_input: Optional[str] = None) -> 'IntentResponse':
     """Handle an intent."""
-    handler = hass.data.get(DATA_KEY, {}).get(intent_type)
+    handler = \
+        hass.data.get(DATA_KEY, {}).get(intent_type)  # type: IntentHandler
 
     if handler is None:
         raise UnknownIntent('Unknown intent {}'.format(intent_type))
@@ -93,7 +98,8 @@ class IntentUnexpectedError(IntentError):
 
 @callback
 @bind_hass
-def async_match_state(hass, name, states=None):
+def async_match_state(hass: HomeAssistantType, name: str,
+                      states: Optional[Iterable[State]] = None) -> State:
     """Find a state that matches the name."""
     if states is None:
         states = hass.states.async_all()
@@ -108,7 +114,7 @@ def async_match_state(hass, name, states=None):
 
 
 @callback
-def async_test_feature(state, feature, feature_name):
+def async_test_feature(state: State, feature: int, feature_name: str) -> None:
     """Test is state supports a feature."""
     if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & feature == 0:
         raise IntentHandleError(
@@ -119,18 +125,18 @@ def async_test_feature(state, feature, feature_name):
 class IntentHandler:
     """Intent handler registration."""
 
-    intent_type = None
-    slot_schema = None
+    intent_type = None  # type: Optional[str]
+    slot_schema = None  # type: Optional[vol.Schema]
     _slot_schema = None
-    platforms = []
+    platforms = []  # type: Optional[Iterable[str]]
 
     @callback
-    def async_can_handle(self, intent_obj):
+    def async_can_handle(self, intent_obj: 'Intent') -> bool:
         """Test if an intent can be handled."""
         return self.platforms is None or intent_obj.platform in self.platforms
 
     @callback
-    def async_validate_slots(self, slots):
+    def async_validate_slots(self, slots: _SlotsType) -> _SlotsType:
         """Validate slot information."""
         if self.slot_schema is None:
             return slots
@@ -141,18 +147,19 @@ class IntentHandler:
                 for key, validator in self.slot_schema.items()},
                                            extra=vol.ALLOW_EXTRA)
 
-        return self._slot_schema(slots)
+        return self._slot_schema(slots)  # type: ignore
 
-    async def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj: 'Intent') -> 'IntentResponse':
         """Handle the intent."""
         raise NotImplementedError()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent a string of an intent handler."""
         return '<{} - {}>'.format(self.__class__.__name__, self.intent_type)
 
 
-def _fuzzymatch(name, items, key):
+def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) \
+        -> Optional[T]:
     """Fuzzy matching function."""
     matches = []
     pattern = '.*?'.join(name)
@@ -176,14 +183,15 @@ class ServiceIntentHandler(IntentHandler):
         vol.Required('name'): cv.string,
     }
 
-    def __init__(self, intent_type, domain, service, speech):
+    def __init__(self, intent_type: str, domain: str, service: str,
+                 speech: str) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
         self.domain = domain
         self.service = service
         self.speech = speech
 
-    async def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj: 'Intent') -> 'IntentResponse':
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -203,7 +211,9 @@ class Intent:
 
     __slots__ = ['hass', 'platform', 'intent_type', 'slots', 'text_input']
 
-    def __init__(self, hass, platform, intent_type, slots, text_input):
+    def __init__(self, hass: HomeAssistantType, platform: str,
+                 intent_type: str, slots: _SlotsType,
+                 text_input: Optional[str]) -> None:
         """Initialize an intent."""
         self.hass = hass
         self.platform = platform
@@ -212,7 +222,7 @@ class Intent:
         self.text_input = text_input
 
     @callback
-    def create_response(self):
+    def create_response(self) -> 'IntentResponse':
         """Create a response."""
         return IntentResponse(self)
 
@@ -220,14 +230,15 @@ class Intent:
 class IntentResponse:
     """Response to an intent."""
 
-    def __init__(self, intent=None):
+    def __init__(self, intent: Optional[Intent] = None) -> None:
         """Initialize an IntentResponse."""
         self.intent = intent
-        self.speech = {}
-        self.card = {}
+        self.speech = {}  # type: Dict[str, Dict[str, Any]]
+        self.card = {}  # type: Dict[str, Dict[str, str]]
 
     @callback
-    def async_set_speech(self, speech, speech_type='plain', extra_data=None):
+    def async_set_speech(self, speech: str, speech_type: str = 'plain',
+                         extra_data: Optional[Any] = None) -> None:
         """Set speech response."""
         self.speech[speech_type] = {
             'speech': speech,
@@ -235,7 +246,8 @@ class IntentResponse:
         }
 
     @callback
-    def async_set_card(self, title, content, card_type='simple'):
+    def async_set_card(self, title: str, content: str,
+                       card_type: str = 'simple') -> None:
         """Set speech response."""
         self.card[card_type] = {
             'title': title,
@@ -243,7 +255,7 @@ class IntentResponse:
         }
 
     @callback
-    def as_dict(self):
+    def as_dict(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
         """Return a dictionary representation of an intent response."""
         return {
             'speech': self.speech,

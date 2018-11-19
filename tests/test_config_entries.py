@@ -6,11 +6,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries, loader, data_entry_flow
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.common import (
-    MockModule, mock_coro, MockConfigEntry, async_fire_time_changed)
+    MockModule, mock_coro, MockConfigEntry, async_fire_time_changed,
+    MockPlatform, MockEntity)
 
 
 @pytest.fixture
@@ -39,8 +41,123 @@ def test_call_setup_entry(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_remove_entry(hass, manager):
+    """Test that we can remove an entry."""
+    async def mock_setup_entry(hass, entry):
+        """Mock setting up entry."""
+        hass.loop.create_task(hass.config_entries.async_forward_entry_setup(
+            entry, 'light'))
+        return True
+
+    async def mock_unload_entry(hass, entry):
+        """Mock unloading an entry."""
+        result = await hass.config_entries.async_forward_entry_unload(
+            entry, 'light')
+        assert result
+        return result
+
+    entity = MockEntity(
+        unique_id='1234',
+        name='Test Entity',
+    )
+
+    async def mock_setup_entry_platform(hass, entry, async_add_entities):
+        """Mock setting up platform."""
+        async_add_entities([entity])
+
+    loader.set_component(hass, 'test', MockModule(
+        'test',
+        async_setup_entry=mock_setup_entry,
+        async_unload_entry=mock_unload_entry
+    ))
+    loader.set_component(
+        hass, 'light.test',
+        MockPlatform(async_setup_entry=mock_setup_entry_platform))
+
+    MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
+    entry = MockConfigEntry(
+        domain='test',
+        entry_id='test2',
+    )
+    entry.add_to_manager(manager)
+    MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
+
+    # Check all config entries exist
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1', 'test2', 'test3']
+
+    # Setup entry
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    # Check entity state got added
+    assert hass.states.get('light.test_entity') is not None
+    # Group all_lights, light.test_entity
+    assert len(hass.states.async_all()) == 2
+
+    # Check entity got added to entity registry
+    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    assert len(ent_reg.entities) == 1
+    entity_entry = list(ent_reg.entities.values())[0]
+    assert entity_entry.config_entry_id == entry.entry_id
+
+    # Remove entry
+    result = await manager.async_remove('test2')
+    await hass.async_block_till_done()
+
+    # Check that unload went well and so no need to restart
+    assert result == {
+        'require_restart': False
+    }
+
+    # Check that config entry was removed.
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1', 'test3']
+
+    # Check that entity state has been removed
+    assert hass.states.get('light.test_entity') is None
+    # Just Group all_lights
+    assert len(hass.states.async_all()) == 1
+
+    # Check that entity registry entry no longer references config_entry_id
+    entity_entry = list(ent_reg.entities.values())[0]
+    assert entity_entry.config_entry_id is None
+
+
 @asyncio.coroutine
-def test_remove_entry(hass, manager):
+def test_remove_entry_raises(hass, manager):
+    """Test if a component raises while removing entry."""
+    @asyncio.coroutine
+    def mock_unload_entry(hass, entry):
+        """Mock unload entry function."""
+        raise Exception("BROKEN")
+
+    loader.set_component(
+        hass, 'test',
+        MockModule('comp', async_unload_entry=mock_unload_entry))
+
+    MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
+    MockConfigEntry(
+        domain='test',
+        entry_id='test2',
+        state=config_entries.ENTRY_STATE_LOADED
+    ).add_to_manager(manager)
+    MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
+
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1', 'test2', 'test3']
+
+    result = yield from manager.async_remove('test2')
+
+    assert result == {
+        'require_restart': True
+    }
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1', 'test3']
+
+
+@asyncio.coroutine
+def test_remove_entry_if_not_loaded(hass, manager):
     """Test that we can remove an entry."""
     mock_unload_entry = MagicMock(return_value=mock_coro(True))
 
@@ -64,34 +181,6 @@ def test_remove_entry(hass, manager):
         ['test1', 'test3']
 
     assert len(mock_unload_entry.mock_calls) == 1
-
-
-@asyncio.coroutine
-def test_remove_entry_raises(hass, manager):
-    """Test if a component raises while removing entry."""
-    @asyncio.coroutine
-    def mock_unload_entry(hass, entry):
-        """Mock unload entry function."""
-        raise Exception("BROKEN")
-
-    loader.set_component(
-        hass, 'test',
-        MockModule('comp', async_unload_entry=mock_unload_entry))
-
-    MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
-    MockConfigEntry(domain='test', entry_id='test2').add_to_manager(manager)
-    MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
-
-    assert [item.entry_id for item in manager.async_entries()] == \
-        ['test1', 'test2', 'test3']
-
-    result = yield from manager.async_remove('test2')
-
-    assert result == {
-        'require_restart': True
-    }
-    assert [item.entry_id for item in manager.async_entries()] == \
-        ['test1', 'test3']
 
 
 @asyncio.coroutine
@@ -315,3 +404,66 @@ async def test_loading_default_config(hass):
         await manager.async_load()
 
     assert len(manager.async_entries()) == 0
+
+
+async def test_updating_entry_data(manager):
+    """Test that we can update an entry data."""
+    entry = MockConfigEntry(
+        domain='test',
+        data={'first': True},
+    )
+    entry.add_to_manager(manager)
+
+    manager.async_update_entry(entry, data={
+        'second': True
+    })
+
+    assert entry.data == {
+        'second': True
+    }
+
+
+async def test_setup_raise_not_ready(hass, caplog):
+    """Test a setup raising not ready."""
+    entry = MockConfigEntry(domain='test')
+
+    mock_setup_entry = MagicMock(side_effect=ConfigEntryNotReady)
+    loader.set_component(
+        hass, 'test', MockModule('test', async_setup_entry=mock_setup_entry))
+
+    with patch('homeassistant.helpers.event.async_call_later') as mock_call:
+        await entry.async_setup(hass)
+
+    assert len(mock_call.mock_calls) == 1
+    assert 'Config entry for test not ready yet' in caplog.text
+    p_hass, p_wait_time, p_setup = mock_call.mock_calls[0][1]
+
+    assert p_hass is hass
+    assert p_wait_time == 5
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+
+    mock_setup_entry.side_effect = None
+    mock_setup_entry.return_value = mock_coro(True)
+
+    await p_setup(None)
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_setup_retrying_during_unload(hass):
+    """Test if we unload an entry that is in retry mode."""
+    entry = MockConfigEntry(domain='test')
+
+    mock_setup_entry = MagicMock(side_effect=ConfigEntryNotReady)
+    loader.set_component(
+        hass, 'test', MockModule('test', async_setup_entry=mock_setup_entry))
+
+    with patch('homeassistant.helpers.event.async_call_later') as mock_call:
+        await entry.async_setup(hass)
+
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+    assert len(mock_call.return_value.mock_calls) == 0
+
+    await entry.async_unload(hass)
+
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert len(mock_call.return_value.mock_calls) == 1

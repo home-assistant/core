@@ -46,24 +46,6 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@bind_hass
-def turn_on(hass, entity_id):
-    """Set input_boolean to True."""
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def turn_off(hass, entity_id):
-    """Set input_boolean to False."""
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def toggle(hass, entity_id):
-    """Set input_boolean to False."""
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
-
-
 async def async_setup(hass, config):
     """Set up an input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)

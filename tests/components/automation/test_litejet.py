@@ -7,8 +7,9 @@ from datetime import timedelta
 from homeassistant import setup
 import homeassistant.util.dt as dt_util
 from homeassistant.components import litejet
-from tests.common import (fire_time_changed, get_test_home_assistant)
 import homeassistant.components.automation as automation
+
+from tests.common import (fire_time_changed, get_test_home_assistant)
 
 _LOGGER = logging.getLogger(__name__)
 

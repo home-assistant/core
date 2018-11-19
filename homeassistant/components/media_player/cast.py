@@ -343,7 +343,7 @@ class CastDevice(MediaPlayerDevice):
                 # Discovered is not our device.
                 return
             _LOGGER.debug("Discovered chromecast with same UUID: %s", discover)
-            self.hass.async_add_job(self.async_set_cast_info(discover))
+            self.hass.async_create_task(self.async_set_cast_info(discover))
 
         async def async_stop(event):
             """Disconnect socket on Home Assistant stop."""
@@ -352,7 +352,7 @@ class CastDevice(MediaPlayerDevice):
         async_dispatcher_connect(self.hass, SIGNAL_CAST_DISCOVERED,
                                  async_cast_discovered)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
-        self.hass.async_add_job(self.async_set_cast_info(self._cast_info))
+        self.hass.async_create_task(self.async_set_cast_info(self._cast_info))
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""

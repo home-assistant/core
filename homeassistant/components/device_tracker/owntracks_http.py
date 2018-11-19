@@ -4,7 +4,6 @@ Device tracker platform that adds support for OwnTracks over HTTP.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.owntracks_http/
 """
-import asyncio
 import re
 
 from aiohttp.web_exceptions import HTTPInternalServerError
@@ -19,8 +18,7 @@ from .owntracks import (  # NOQA
 DEPENDENCIES = ['http']
 
 
-@asyncio.coroutine
-def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up an OwnTracks tracker."""
     context = context_from_config(async_see, config)
 
@@ -39,19 +37,18 @@ class OwnTracksView(HomeAssistantView):
         """Initialize OwnTracks URL endpoints."""
         self.context = context
 
-    @asyncio.coroutine
-    def post(self, request, user, device):
+    async def post(self, request, user, device):
         """Handle an OwnTracks message."""
         hass = request.app['hass']
 
         subscription = self.context.mqtt_topic
         topic = re.sub('/#$', '', subscription)
 
-        message = yield from request.json()
+        message = await request.json()
         message['topic'] = '{}/{}/{}'.format(topic, user, device)
 
         try:
-            yield from async_handle_message(hass, self.context, message)
+            await async_handle_message(hass, self.context, message)
             return self.json([])
 
         except ValueError:

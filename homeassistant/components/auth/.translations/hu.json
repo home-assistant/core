@@ -1,5 +1,21 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Nincs el\u00e9rhet\u0151 \u00e9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1s."
+            },
+            "error": {
+                "invalid_code": "\u00c9rv\u00e9nytelen k\u00f3d, pr\u00f3b\u00e1ld \u00fajra."
+            },
+            "step": {
+                "init": {
+                    "description": "V\u00e1lassz \u00e9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1st:"
+                },
+                "setup": {
+                    "title": "Be\u00e1ll\u00edt\u00e1s ellen\u0151rz\u00e9se"
+                }
+            }
+        },
         "totp": {
             "error": {
                 "invalid_code": "\u00c9rv\u00e9nytelen k\u00f3d, pr\u00f3b\u00e1ld \u00fajra. Ha ez a hiba folyamatosan el\u0151fordul, akkor gy\u0151z\u0151dj meg r\u00f3la, hogy a Home Assistant rendszered \u00f3r\u00e1ja pontosan j\u00e1r."

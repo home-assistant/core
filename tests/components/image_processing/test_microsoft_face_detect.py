@@ -9,6 +9,7 @@ import homeassistant.components.microsoft_face as mf
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture, mock_coro)
+from tests.components.image_processing import common
 
 
 class TestMicrosoftFaceDetectSetup:
@@ -146,7 +147,7 @@ class TestMicrosoftFaceDetect:
             params={'returnFaceAttributes': "age,gender"}
         )
 
-        ip.scan(self.hass, entity_id='image_processing.test_local')
+        common.scan(self.hass, entity_id='image_processing.test_local')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.test_local')
@@ -159,3 +160,23 @@ class TestMicrosoftFaceDetect:
         assert face_events[0].data['gender'] == 'male'
         assert face_events[0].data['entity_id'] == \
             'image_processing.test_local'
+
+        # Test that later, if a request is made that results in no face
+        # being detected, that this is reflected in the state object
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(
+            self.endpoint_url.format("detect"),
+            text="[]",
+            params={'returnFaceAttributes': "age,gender"}
+        )
+
+        common.scan(self.hass, entity_id='image_processing.test_local')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('image_processing.test_local')
+
+        # No more face events were fired
+        assert len(face_events) == 1
+        # Total faces and actual qualified number of faces reset to zero
+        assert state.attributes.get('total_faces') == 0
+        assert state.state == '0'

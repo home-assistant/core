@@ -43,8 +43,7 @@ class TestTimer(unittest.TestCase):
         ]
 
         for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+            assert not setup_component(self.hass, DOMAIN, {DOMAIN: cfg})
 
     def test_config_options(self):
         """Test configuration options."""
@@ -66,24 +65,24 @@ class TestTimer(unittest.TestCase):
         assert setup_component(self.hass, 'timer', config)
         self.hass.block_till_done()
 
-        self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
+        assert count_start + 2 == len(self.hass.states.entity_ids())
         self.hass.block_till_done()
 
         state_1 = self.hass.states.get('timer.test_1')
         state_2 = self.hass.states.get('timer.test_2')
 
-        self.assertIsNotNone(state_1)
-        self.assertIsNotNone(state_2)
+        assert state_1 is not None
+        assert state_2 is not None
 
-        self.assertEqual(STATUS_IDLE, state_1.state)
-        self.assertNotIn(ATTR_ICON, state_1.attributes)
-        self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
+        assert STATUS_IDLE == state_1.state
+        assert ATTR_ICON not in state_1.attributes
+        assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-        self.assertEqual(STATUS_IDLE, state_2.state)
-        self.assertEqual('Hello World',
-                         state_2.attributes.get(ATTR_FRIENDLY_NAME))
-        self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
-        self.assertEqual('0:00:10', state_2.attributes.get(ATTR_DURATION))
+        assert STATUS_IDLE == state_2.state
+        assert 'Hello World' == \
+            state_2.attributes.get(ATTR_FRIENDLY_NAME)
+        assert 'mdi:work' == state_2.attributes.get(ATTR_ICON)
+        assert '0:00:10' == state_2.attributes.get(ATTR_DURATION)
 
 
 @asyncio.coroutine

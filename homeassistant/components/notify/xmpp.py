@@ -12,12 +12,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM)
+    CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT, CONF_ROOM, CONF_RESOURCE)
 
-REQUIREMENTS = ['sleekxmpp==1.3.2',
-                'dnspython3==1.15.0',
-                'pyasn1==0.3.7',
-                'pyasn1-modules==0.1.5']
+REQUIREMENTS = ['slixmpp==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,84 +28,94 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TLS, default=True): cv.boolean,
     vol.Optional(CONF_VERIFY, default=True): cv.boolean,
     vol.Optional(CONF_ROOM, default=''): cv.string,
+    vol.Optional(CONF_RESOURCE, default="home-assistant"): cv.string,
 })
 
 
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the Jabber (XMPP) notification service."""
     return XmppNotificationService(
-        config.get(CONF_SENDER), config.get(CONF_PASSWORD),
-        config.get(CONF_RECIPIENT), config.get(CONF_TLS),
-        config.get(CONF_VERIFY), config.get(CONF_ROOM))
+        config.get(CONF_SENDER), config.get(CONF_RESOURCE),
+        config.get(CONF_PASSWORD), config.get(CONF_RECIPIENT),
+        config.get(CONF_TLS), config.get(CONF_VERIFY),
+        config.get(CONF_ROOM), hass.loop)
 
 
 class XmppNotificationService(BaseNotificationService):
     """Implement the notification service for Jabber (XMPP)."""
 
-    def __init__(self, sender, password, recipient, tls, verify, room):
+    def __init__(self, sender, resource, password,
+                 recipient, tls, verify, room, loop):
         """Initialize the service."""
+        self._loop = loop
         self._sender = sender
+        self._resource = resource
         self._password = password
         self._recipient = recipient
         self._tls = tls
         self._verify = verify
         self._room = room
 
-    def send_message(self, message="", **kwargs):
+    async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = '{}: {}'.format(title, message) if title else message
 
-        send_message('{}/home-assistant'.format(self._sender),
-                     self._password, self._recipient, self._tls,
-                     self._verify, self._room, data)
+        await async_send_message(
+            '{}/{}'.format(self._sender, self._resource),
+            self._password, self._recipient, self._tls,
+            self._verify, self._room, self._loop, data)
 
 
-def send_message(sender, password, recipient, use_tls,
-                 verify_certificate, room, message):
+async def async_send_message(sender, password, recipient, use_tls,
+                             verify_certificate, room, loop, message):
     """Send a message over XMPP."""
-    import sleekxmpp
+    import slixmpp
 
-    class SendNotificationBot(sleekxmpp.ClientXMPP):
+    class SendNotificationBot(slixmpp.ClientXMPP):
         """Service for sending Jabber (XMPP) messages."""
 
         def __init__(self):
             """Initialize the Jabber Bot."""
-            super(SendNotificationBot, self).__init__(sender, password)
+            super().__init__(sender, password)
 
-            self.use_tls = use_tls
+            # need hass.loop!!
+            self.loop = loop
+
+            self.force_starttls = use_tls
             self.use_ipv6 = False
-            self.add_event_handler('failed_auth', self.check_credentials)
+            self.add_event_handler(
+                'failed_auth', self.disconnect_on_login_fail)
             self.add_event_handler('session_start', self.start)
+
             if room:
                 self.register_plugin('xep_0045')  # MUC
             if not verify_certificate:
                 self.add_event_handler('ssl_invalid_cert',
                                        self.discard_ssl_invalid_cert)
 
-            self.connect(use_tls=self.use_tls, use_ssl=False)
-            self.process()
+            self.connect(force_starttls=self.force_starttls, use_ssl=False)
 
         def start(self, event):
             """Start the communication and sends the message."""
-            self.send_presence()
             self.get_roster()
-
+            self.send_presence()
             if room:
-                _LOGGER.debug("Joining room %s.", room)
-                self.plugin['xep_0045'].joinMUC(room, sender, wait=True)
+                _LOGGER.debug("Joining room %s", room)
+                self.plugin['xep_0045'].join_muc(room, sender, wait=True)
                 self.send_message(mto=room, mbody=message, mtype='groupchat')
             else:
                 self.send_message(mto=recipient, mbody=message, mtype='chat')
             self.disconnect(wait=True)
 
-        def check_credentials(self, event):
+        def disconnect_on_login_fail(self, event):
             """Disconnect from the server if credentials are invalid."""
+            _LOGGER.warning('Login failed')
             self.disconnect()
 
         @staticmethod
         def discard_ssl_invalid_cert(event):
             """Do nothing if ssl certificate is invalid."""
-            _LOGGER.info('Ignoring invalid ssl certificate as requested.')
+            _LOGGER.info('Ignoring invalid ssl certificate as requested')
 
     SendNotificationBot()

@@ -102,7 +102,7 @@ class TestConfig(unittest.TestCase):
         """Test if it finds a YAML config file."""
         create_file(YAML_PATH)
 
-        self.assertEqual(YAML_PATH, config_util.find_config_file(CONFIG_DIR))
+        assert YAML_PATH == config_util.find_config_file(CONFIG_DIR)
 
     @mock.patch('builtins.print')
     def test_ensure_config_exists_creates_config(self, mock_print):
@@ -112,8 +112,8 @@ class TestConfig(unittest.TestCase):
         """
         config_util.ensure_config_exists(CONFIG_DIR, False)
 
-        self.assertTrue(os.path.isfile(YAML_PATH))
-        self.assertTrue(mock_print.called)
+        assert os.path.isfile(YAML_PATH)
+        assert mock_print.called
 
     def test_ensure_config_exists_uses_existing_config(self):
         """Test that calling ensure_config_exists uses existing config."""
@@ -124,21 +124,20 @@ class TestConfig(unittest.TestCase):
             content = f.read()
 
         # File created with create_file are empty
-        self.assertEqual('', content)
+        assert '' == content
 
     def test_load_yaml_config_converts_empty_files_to_dict(self):
         """Test that loading an empty file returns an empty dict."""
         create_file(YAML_PATH)
 
-        self.assertIsInstance(
-            config_util.load_yaml_config_file(YAML_PATH), dict)
+        assert isinstance(config_util.load_yaml_config_file(YAML_PATH), dict)
 
     def test_load_yaml_config_raises_error_if_not_dict(self):
         """Test error raised when YAML file is not a dict."""
         with open(YAML_PATH, 'w') as f:
             f.write('5')
 
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             config_util.load_yaml_config_file(YAML_PATH)
 
     def test_load_yaml_config_raises_error_if_malformed_yaml(self):
@@ -146,7 +145,7 @@ class TestConfig(unittest.TestCase):
         with open(YAML_PATH, 'w') as f:
             f.write(':')
 
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             config_util.load_yaml_config_file(YAML_PATH)
 
     def test_load_yaml_config_raises_error_if_unsafe_yaml(self):
@@ -154,7 +153,7 @@ class TestConfig(unittest.TestCase):
         with open(YAML_PATH, 'w') as f:
             f.write('hello: !!python/object/apply:os.system')
 
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             config_util.load_yaml_config_file(YAML_PATH)
 
     def test_load_yaml_config_preserves_key_order(self):
@@ -163,9 +162,8 @@ class TestConfig(unittest.TestCase):
             f.write('hello: 2\n')
             f.write('world: 1\n')
 
-        self.assertEqual(
-            [('hello', 2), ('world', 1)],
-            list(config_util.load_yaml_config_file(YAML_PATH).items()))
+        assert [('hello', 2), ('world', 1)] == \
+            list(config_util.load_yaml_config_file(YAML_PATH).items())
 
     @mock.patch('homeassistant.util.location.detect_location_info',
                 return_value=location_util.LocationInfo(
@@ -181,7 +179,7 @@ class TestConfig(unittest.TestCase):
 
         config = config_util.load_yaml_config_file(YAML_PATH)
 
-        self.assertIn(DOMAIN, config)
+        assert DOMAIN in config
 
         ha_conf = config[DOMAIN]
 
@@ -205,10 +203,9 @@ class TestConfig(unittest.TestCase):
 
         Non existing folder returns None.
         """
-        self.assertIsNone(
-            config_util.create_default_config(
-                os.path.join(CONFIG_DIR, 'non_existing_dir/'), False))
-        self.assertTrue(mock_print.called)
+        assert config_util.create_default_config(
+                os.path.join(CONFIG_DIR, 'non_existing_dir/'), False) is None
+        assert mock_print.called
 
     # pylint: disable=no-self-use
     def test_core_config_schema(self):
@@ -264,7 +261,7 @@ class TestConfig(unittest.TestCase):
         """Test that customize_glob preserves order."""
         conf = config_util.CORE_CONFIG_SCHEMA(
             {'customize_glob': OrderedDict()})
-        self.assertIsInstance(conf['customize_glob'], OrderedDict)
+        assert isinstance(conf['customize_glob'], OrderedDict)
 
     def _compute_state(self, config):
         run_coroutine_threadsafe(
@@ -306,14 +303,10 @@ class TestConfig(unittest.TestCase):
             config_util.process_ha_config_upgrade(self.hass)
             hass_path = self.hass.config.path.return_value
 
-            self.assertEqual(mock_os.path.isdir.call_count, 1)
-            self.assertEqual(
-                mock_os.path.isdir.call_args, mock.call(hass_path)
-            )
-            self.assertEqual(mock_shutil.rmtree.call_count, 1)
-            self.assertEqual(
-                mock_shutil.rmtree.call_args, mock.call(hass_path)
-            )
+            assert mock_os.path.isdir.call_count == 1
+            assert mock_os.path.isdir.call_args == mock.call(hass_path)
+            assert mock_shutil.rmtree.call_count == 1
+            assert mock_shutil.rmtree.call_args == mock.call(hass_path)
 
     def test_process_config_upgrade(self):
         """Test update of version on upgrade."""
@@ -327,10 +320,8 @@ class TestConfig(unittest.TestCase):
 
             config_util.process_ha_config_upgrade(self.hass)
 
-            self.assertEqual(opened_file.write.call_count, 1)
-            self.assertEqual(
-                opened_file.write.call_args, mock.call(__version__)
-            )
+            assert opened_file.write.call_count == 1
+            assert opened_file.write.call_args == mock.call(__version__)
 
     def test_config_upgrade_same_version(self):
         """Test no update of version on no upgrade."""
@@ -354,9 +345,8 @@ class TestConfig(unittest.TestCase):
             opened_file = mock_open.return_value
             # pylint: disable=no-member
             config_util.process_ha_config_upgrade(self.hass)
-            self.assertEqual(opened_file.write.call_count, 1)
-            self.assertEqual(
-                opened_file.write.call_args, mock.call(__version__))
+            assert opened_file.write.call_count == 1
+            assert opened_file.write.call_args == mock.call(__version__)
 
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')

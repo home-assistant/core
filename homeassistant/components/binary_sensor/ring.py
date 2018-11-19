@@ -73,6 +73,7 @@ class RingBinarySensor(BinarySensorDevice):
                                       SENSOR_TYPES.get(self._sensor_type)[0])
         self._device_class = SENSOR_TYPES.get(self._sensor_type)[2]
         self._state = None
+        self._unique_id = '{}-{}'.format(self._data.id, self._sensor_type)
 
     @property
     def name(self):
@@ -88,6 +89,11 @@ class RingBinarySensor(BinarySensorDevice):
     def device_class(self):
         """Return the class of the binary sensor."""
         return self._device_class
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def device_state_attributes(self):

@@ -101,120 +101,99 @@ class TestBanSensor(unittest.TestCase):
         """Test that log is parsed correctly for single ban."""
         log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
-        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('single_ban'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.update()
 
-        self.assertEqual(sensor.state, '111.111.111.111')
-        self.assertEqual(
-            sensor.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
-        )
-        self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS], ['111.111.111.111']
-        )
+        assert sensor.state == '111.111.111.111'
+        assert \
+            sensor.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
+        assert \
+            sensor.state_attributes[STATE_ALL_BANS] == ['111.111.111.111']
 
     def test_multiple_ban(self):
         """Test that log is parsed correctly for multiple ban."""
         log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
-        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('multi_ban'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.update()
 
-        self.assertEqual(sensor.state, '222.222.222.222')
-        self.assertEqual(
-            sensor.state_attributes[STATE_CURRENT_BANS],
+        assert sensor.state == '222.222.222.222'
+        assert sensor.state_attributes[STATE_CURRENT_BANS] == \
             ['111.111.111.111', '222.222.222.222']
-        )
-        self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS],
+        assert sensor.state_attributes[STATE_ALL_BANS] == \
             ['111.111.111.111', '222.222.222.222']
-        )
 
     def test_unban_all(self):
         """Test that log is parsed correctly when unbanning."""
         log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
-        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('unban_all'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.update()
 
-        self.assertEqual(sensor.state, 'None')
-        self.assertEqual(sensor.state_attributes[STATE_CURRENT_BANS], [])
-        self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS],
+        assert sensor.state == 'None'
+        assert sensor.state_attributes[STATE_CURRENT_BANS] == []
+        assert sensor.state_attributes[STATE_ALL_BANS] == \
             ['111.111.111.111', '222.222.222.222']
-        )
 
     def test_unban_one(self):
         """Test that log is parsed correctly when unbanning one ip."""
         log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
-        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('unban_one'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.update()
 
-        self.assertEqual(sensor.state, '222.222.222.222')
-        self.assertEqual(
-            sensor.state_attributes[STATE_CURRENT_BANS],
+        assert sensor.state == '222.222.222.222'
+        assert sensor.state_attributes[STATE_CURRENT_BANS] == \
             ['222.222.222.222']
-        )
-        self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS],
+        assert sensor.state_attributes[STATE_ALL_BANS] == \
             ['111.111.111.111', '222.222.222.222']
-        )
 
     def test_multi_jail(self):
         """Test that log is parsed correctly when using multiple jails."""
         log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
         sensor1 = BanSensor('fail2ban', 'jail_one', log_parser)
         sensor2 = BanSensor('fail2ban', 'jail_two', log_parser)
-        self.assertEqual(sensor1.name, 'fail2ban jail_one')
-        self.assertEqual(sensor2.name, 'fail2ban jail_two')
+        assert sensor1.name == 'fail2ban jail_one'
+        assert sensor2.name == 'fail2ban jail_two'
         mock_fh = MockOpen(read_data=fake_log('multi_jail'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor1.update()
             sensor2.update()
 
-        self.assertEqual(sensor1.state, '111.111.111.111')
-        self.assertEqual(
-            sensor1.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
-        )
-        self.assertEqual(
-            sensor1.state_attributes[STATE_ALL_BANS], ['111.111.111.111']
-        )
-        self.assertEqual(sensor2.state, '222.222.222.222')
-        self.assertEqual(
-            sensor2.state_attributes[STATE_CURRENT_BANS], ['222.222.222.222']
-        )
-        self.assertEqual(
-            sensor2.state_attributes[STATE_ALL_BANS], ['222.222.222.222']
-        )
+        assert sensor1.state == '111.111.111.111'
+        assert \
+            sensor1.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
+        assert sensor1.state_attributes[STATE_ALL_BANS] == ['111.111.111.111']
+        assert sensor2.state == '222.222.222.222'
+        assert \
+            sensor2.state_attributes[STATE_CURRENT_BANS] == ['222.222.222.222']
+        assert sensor2.state_attributes[STATE_ALL_BANS] == ['222.222.222.222']
 
     def test_ban_active_after_update(self):
         """Test that ban persists after subsequent update."""
         log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
-        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('single_ban'))
         with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
                    create=True):
             sensor.update()
-            self.assertEqual(sensor.state, '111.111.111.111')
+            assert sensor.state == '111.111.111.111'
             sensor.update()
-            self.assertEqual(sensor.state, '111.111.111.111')
-        self.assertEqual(
-            sensor.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
-        )
-        self.assertEqual(
-            sensor.state_attributes[STATE_ALL_BANS], ['111.111.111.111']
-        )
+            assert sensor.state == '111.111.111.111'
+        assert \
+            sensor.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
+        assert sensor.state_attributes[STATE_ALL_BANS] == ['111.111.111.111']

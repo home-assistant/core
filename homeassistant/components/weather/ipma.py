@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyipma==1.1.3']
+REQUIREMENTS = ['pyipma==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,8 +71,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         station = await Station.get(websession, float(latitude),
                                     float(longitude))
 
-    _LOGGER.debug("Initializing ipma weather: coordinates %s, %s",
-                  latitude, longitude)
+    _LOGGER.debug("Initializing for coordinates %s, %s -> station %s",
+                  latitude, longitude, station.local)
 
     async_add_entities([IPMAWeather(station, config)], True)
 
@@ -93,6 +93,8 @@ class IPMAWeather(WeatherEntity):
         """Update Condition and Forecast."""
         with async_timeout.timeout(10, loop=self.hass.loop):
             self._condition = await self._station.observation()
+            _LOGGER.debug("Updating station %s, condition %s",
+                          self._station.local, self._condition)
             self._forecast = await self._station.forecast()
             self._description = self._forecast[0].description
 

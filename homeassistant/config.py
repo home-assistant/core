@@ -105,8 +105,9 @@ map:
 # Track the sun
 sun:
 
-# Weather prediction
+# Sensors
 sensor:
+  # Weather prediction
   - platform: yr
 
 # Text to speech
@@ -444,7 +445,7 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
 
-    if domain != 'homeassistant':
+    if domain != CONF_CORE:
         message += ('Please check the docs at '
                     'https://home-assistant.io/components/{}/'.format(domain))
 

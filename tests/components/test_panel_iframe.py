@@ -62,7 +62,7 @@ class TestPanelIframe(unittest.TestCase):
 
         panels = self.hass.data[frontend.DATA_PANELS]
 
-        assert panels.get('router').to_response(self.hass, None) == {
+        assert panels.get('router').to_response() == {
             'component_name': 'iframe',
             'config': {'url': 'http://192.168.1.1'},
             'icon': 'mdi:network-wireless',
@@ -70,7 +70,7 @@ class TestPanelIframe(unittest.TestCase):
             'url_path': 'router'
         }
 
-        assert panels.get('weather').to_response(self.hass, None) == {
+        assert panels.get('weather').to_response() == {
             'component_name': 'iframe',
             'config': {'url': 'https://www.wunderground.com/us/ca/san-diego'},
             'icon': 'mdi:weather',
@@ -78,7 +78,7 @@ class TestPanelIframe(unittest.TestCase):
             'url_path': 'weather',
         }
 
-        assert panels.get('api').to_response(self.hass, None) == {
+        assert panels.get('api').to_response() == {
             'component_name': 'iframe',
             'config': {'url': '/api'},
             'icon': 'mdi:weather',
@@ -86,7 +86,7 @@ class TestPanelIframe(unittest.TestCase):
             'url_path': 'api',
         }
 
-        assert panels.get('ftp').to_response(self.hass, None) == {
+        assert panels.get('ftp').to_response() == {
             'component_name': 'iframe',
             'config': {'url': 'ftp://some/ftp'},
             'icon': 'mdi:weather',

@@ -19,11 +19,13 @@ from homeassistant.components import (
     scene,
     script,
     switch,
+    vacuum,
 )
 
 from . import trait
 from .const import (
-    TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_THERMOSTAT,
+    TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_VACUUM,
+    TYPE_THERMOSTAT, TYPE_FAN,
     CONF_ALIASES, CONF_ROOM_HINT,
     ERR_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
     ERR_UNKNOWN_ERROR
@@ -36,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN_TO_GOOGLE_TYPES = {
     climate.DOMAIN: TYPE_THERMOSTAT,
     cover.DOMAIN: TYPE_SWITCH,
-    fan.DOMAIN: TYPE_SWITCH,
+    fan.DOMAIN: TYPE_FAN,
     group.DOMAIN: TYPE_SWITCH,
     input_boolean.DOMAIN: TYPE_SWITCH,
     light.DOMAIN: TYPE_LIGHT,
@@ -44,6 +46,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
+    vacuum.DOMAIN: TYPE_VACUUM,
 }
 
 
@@ -213,7 +216,7 @@ async def _process(hass, config, message):
             'requestId': request_id,
             'payload': {'errorCode': err.code}
         }
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.exception('Unexpected error')
         return {
             'requestId': request_id,

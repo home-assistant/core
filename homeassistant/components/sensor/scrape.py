@@ -13,7 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
     CONF_NAME, CONF_RESOURCE, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
-    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL, CONF_USERNAME,
+    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL, CONF_USERNAME, CONF_HEADERS,
     CONF_PASSWORD, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.helpers.entity import Entity
@@ -35,6 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ATTR): cv.string,
     vol.Optional(CONF_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
+    vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -49,7 +50,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
     method = 'GET'
-    payload = headers = None
+    payload = None
+    headers = config.get(CONF_HEADERS)
     verify_ssl = config.get(CONF_VERIFY_SSL)
     select = config.get(CONF_SELECT)
     attr = config.get(CONF_ATTR)

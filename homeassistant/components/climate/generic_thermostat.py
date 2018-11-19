@@ -67,9 +67,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the generic thermostat platform."""
     name = config.get(CONF_NAME)
     heater_entity_id = config.get(CONF_HEATER)
@@ -147,12 +146,10 @@ class GenericThermostat(ClimateDevice):
         if sensor_state and sensor_state.state != STATE_UNKNOWN:
             self._async_update_temp(sensor_state)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Run when entity about to be added."""
         # Check If we have an old state
-        old_state = yield from async_get_last_state(self.hass,
-                                                    self.entity_id)
+        old_state = await async_get_last_state(self.hass, self.entity_id)
         if old_state is not None:
             # If we have no initial temperature, restore
             if self._target_temp is None:
@@ -235,11 +232,11 @@ class GenericThermostat(ClimateDevice):
         if operation_mode == STATE_HEAT:
             self._current_operation = STATE_HEAT
             self._enabled = True
-            await self._async_control_heating()
+            await self._async_control_heating(force=True)
         elif operation_mode == STATE_COOL:
             self._current_operation = STATE_COOL
             self._enabled = True
-            await self._async_control_heating()
+            await self._async_control_heating(force=True)
         elif operation_mode == STATE_OFF:
             self._current_operation = STATE_OFF
             self._enabled = False
@@ -265,7 +262,7 @@ class GenericThermostat(ClimateDevice):
         if temperature is None:
             return
         self._target_temp = temperature
-        await self._async_control_heating()
+        await self._async_control_heating(force=True)
         await self.async_update_ha_state()
 
     @property
@@ -310,7 +307,7 @@ class GenericThermostat(ClimateDevice):
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
 
-    async def _async_control_heating(self, time=None):
+    async def _async_control_heating(self, time=None, force=False):
         """Check if we need to turn heating on or off."""
         async with self._temp_lock:
             if not self._active and None not in (self._cur_temp,
@@ -323,16 +320,21 @@ class GenericThermostat(ClimateDevice):
             if not self._active or not self._enabled:
                 return
 
-            if self.min_cycle_duration:
-                if self._is_device_active:
-                    current_state = STATE_ON
-                else:
-                    current_state = STATE_OFF
-                long_enough = condition.state(
-                    self.hass, self.heater_entity_id, current_state,
-                    self.min_cycle_duration)
-                if not long_enough:
-                    return
+            if not force and time is None:
+                # If the `force` argument is True, we
+                # ignore `min_cycle_duration`.
+                # If the `time` argument is not none, we were invoked for
+                # keep-alive purposes, and `min_cycle_duration` is irrelevant.
+                if self.min_cycle_duration:
+                    if self._is_device_active:
+                        current_state = STATE_ON
+                    else:
+                        current_state = STATE_OFF
+                    long_enough = condition.state(
+                        self.hass, self.heater_entity_id, current_state,
+                        self.min_cycle_duration)
+                    if not long_enough:
+                        return
 
             too_cold = \
                 self._target_temp - self._cur_temp >= self._cold_tolerance
@@ -383,15 +385,19 @@ class GenericThermostat(ClimateDevice):
 
     async def async_turn_away_mode_on(self):
         """Turn away mode on by setting it on away hold indefinitely."""
+        if self._is_away:
+            return
         self._is_away = True
         self._saved_target_temp = self._target_temp
         self._target_temp = self._away_temp
-        await self._async_control_heating()
+        await self._async_control_heating(force=True)
         await self.async_update_ha_state()
 
     async def async_turn_away_mode_off(self):
         """Turn away off."""
+        if not self._is_away:
+            return
         self._is_away = False
         self._target_temp = self._saved_target_temp
-        await self._async_control_heating()
+        await self._async_control_heating(force=True)
         await self.async_update_ha_state()

@@ -356,8 +356,14 @@ def test_string():
     """Test string validation."""
     schema = vol.Schema(cv.string)
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(vol.Invalid):
         schema(None)
+
+    with pytest.raises(vol.Invalid):
+        schema([])
+
+    with pytest.raises(vol.Invalid):
+        schema({})
 
     for value in (True, 1, 'hello'):
         schema(value)

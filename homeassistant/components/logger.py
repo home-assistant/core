@@ -47,11 +47,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def set_level(hass, logs):
-    """Set log level for components."""
-    hass.services.call(DOMAIN, SERVICE_SET_LEVEL, logs)
-
-
 class HomeAssistantLogFilter(logging.Filter):
     """A log filter."""
 

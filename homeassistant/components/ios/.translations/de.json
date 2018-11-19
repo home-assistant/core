@@ -5,8 +5,10 @@
         },
         "step": {
             "confirm": {
-                "description": "M\u00f6chtest du die Home Assistant iOS-Komponente einrichten?"
+                "description": "M\u00f6chtest du die Home Assistant iOS-Komponente einrichten?",
+                "title": "Home Assistant iOS"
             }
-        }
+        },
+        "title": "Home Assistant iOS"
     }
 }

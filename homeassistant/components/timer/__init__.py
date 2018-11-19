@@ -12,12 +12,10 @@ import voluptuous as vol
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME)
-from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 
-from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,64 +59,6 @@ CONFIG_SCHEMA = vol.Schema({
         }, None)
     })
 }, extra=vol.ALLOW_EXTRA)
-
-
-@bind_hass
-def start(hass, entity_id, duration):
-    """Start a timer."""
-    hass.add_job(async_start, hass, entity_id, {ATTR_ENTITY_ID: entity_id,
-                                                ATTR_DURATION: duration})
-
-
-@callback
-@bind_hass
-def async_start(hass, entity_id, duration):
-    """Start a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_START, {ATTR_ENTITY_ID: entity_id,
-                                ATTR_DURATION: duration}))
-
-
-@bind_hass
-def pause(hass, entity_id):
-    """Pause a timer."""
-    hass.add_job(async_pause, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_pause(hass, entity_id):
-    """Pause a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_PAUSE, {ATTR_ENTITY_ID: entity_id}))
-
-
-@bind_hass
-def cancel(hass, entity_id):
-    """Cancel a timer."""
-    hass.add_job(async_cancel, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_cancel(hass, entity_id):
-    """Cancel a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_CANCEL, {ATTR_ENTITY_ID: entity_id}))
-
-
-@bind_hass
-def finish(hass, entity_id):
-    """Finish a timer."""
-    hass.add_job(async_cancel, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_finish(hass, entity_id):
-    """Finish a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_FINISH, {ATTR_ENTITY_ID: entity_id}))
 
 
 async def async_setup(hass, config):

@@ -4,7 +4,6 @@ A component which is collecting configuration errors.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/persistent_notification/
 """
-import asyncio
 import logging
 from collections import OrderedDict
 from typing import Awaitable
@@ -18,7 +17,9 @@ from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
+import homeassistant.util.dt as dt_util
 
+ATTR_CREATED_AT = 'created_at'
 ATTR_MESSAGE = 'message'
 ATTR_NOTIFICATION_ID = 'notification_id'
 ATTR_TITLE = 'title'
@@ -96,11 +97,11 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     """Remove a notification."""
     data = {ATTR_NOTIFICATION_ID: notification_id}
 
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
 
 
-@asyncio.coroutine
-def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
+async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
     """Set up the persistent notification component."""
     persistent_notifications = OrderedDict()
     hass.data[DOMAIN] = {'notifications': persistent_notifications}
@@ -148,6 +149,7 @@ def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
             ATTR_NOTIFICATION_ID: notification_id,
             ATTR_STATUS: STATUS_UNREAD,
             ATTR_TITLE: title,
+            ATTR_CREATED_AT: dt_util.utcnow(),
         }
 
         hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
@@ -201,11 +203,12 @@ def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
 def websocket_get_notifications(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return a list of persistent_notifications."""
-    connection.to_write.put_nowait(
+    connection.send_message(
         websocket_api.result_message(msg['id'], [
             {
-                key: data[key] for key in (ATTR_NOTIFICATION_ID, ATTR_MESSAGE,
-                                           ATTR_STATUS, ATTR_TITLE)
+                key: data[key] for key in (ATTR_NOTIFICATION_ID,
+                                           ATTR_MESSAGE, ATTR_STATUS,
+                                           ATTR_TITLE, ATTR_CREATED_AT)
             }
             for data in hass.data[DOMAIN]['notifications'].values()
         ])

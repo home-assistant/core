@@ -43,8 +43,7 @@ class FritzBoxScanner(DeviceScanner):
         self.password = config[CONF_PASSWORD]
         self.success_init = True
 
-        # pylint: disable=import-error
-        import fritzconnection as fc
+        import fritzconnection as fc  # pylint: disable=import-error
 
         # Establish a connection to the FRITZ!Box.
         try:

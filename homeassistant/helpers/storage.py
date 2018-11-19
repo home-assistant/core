@@ -2,7 +2,7 @@
 import asyncio
 import logging
 import os
-from typing import Dict, Optional, Callable
+from typing import Dict, Optional, Callable, Any
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -46,11 +46,12 @@ async def async_migrator(hass, old_path, store, *,
 class Store:
     """Class to help storing data."""
 
-    def __init__(self, hass, version: int, key: str):
+    def __init__(self, hass, version: int, key: str, private: bool = False):
         """Initialize storage class."""
         self.version = version
         self.key = key
         self.hass = hass
+        self._private = private
         self._data = None
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
@@ -62,7 +63,7 @@ class Store:
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
 
-    async def async_load(self):
+    async def async_load(self) -> Optional[Dict[str, Any]]:
         """Load data.
 
         If the expected version does not match the given version, the migrate
@@ -186,7 +187,7 @@ class Store:
             os.makedirs(os.path.dirname(path))
 
         _LOGGER.debug('Writing data for %s', self.key)
-        json.save_json(path, data)
+        json.save_json(path, data, self._private)
 
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""

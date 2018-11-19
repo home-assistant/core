@@ -10,12 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     STATE_ON, STATE_OFF, STATE_AUTO, PLATFORM_SCHEMA, ClimateDevice,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE)
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE,
+    SUPPORT_ON_OFF)
 from homeassistant.const import (
     CONF_MAC, CONF_DEVICES, TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-eq3bt==0.1.9', 'construct==2.9.41']
+REQUIREMENTS = ['python-eq3bt==0.1.9', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                 SUPPORT_AWAY_MODE)
+                 SUPPORT_AWAY_MODE | SUPPORT_ON_OFF)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -53,14 +54,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-# pylint: disable=import-error
 class EQ3BTSmartThermostat(ClimateDevice):
     """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
     def __init__(self, _mac, _name):
         """Initialize the thermostat."""
         # We want to avoid name clash with this module.
-        import eq3bt as eq3
+        import eq3bt as eq3  # pylint: disable=import-error
 
         self.modes = {
             eq3.Mode.Open: STATE_ON,
@@ -151,6 +151,14 @@ class EQ3BTSmartThermostat(ClimateDevice):
         """Return if we are away."""
         return self.current_operation == STATE_AWAY
 
+    def turn_on(self):
+        """Turn device on."""
+        self.set_operation_mode(STATE_AUTO)
+
+    def turn_off(self):
+        """Turn device off."""
+        self.set_operation_mode(STATE_OFF)
+
     @property
     def min_temp(self):
         """Return the minimum temperature."""
@@ -176,7 +184,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
-        from bluepy.btle import BTLEException
+        from bluepy.btle import BTLEException  # pylint: disable=import-error
         try:
             self._thermostat.update()
         except BTLEException as ex:

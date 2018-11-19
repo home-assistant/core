@@ -10,13 +10,15 @@ import requests
 
 from homeassistant.components.fritzbox import DOMAIN as FRITZBOX_DOMAIN
 from homeassistant.components.fritzbox import (
-    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_BATTERY_LOW, ATTR_STATE_LOCKED)
+    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_BATTERY_LOW, ATTR_STATE_HOLIDAY_MODE,
+    ATTR_STATE_LOCKED, ATTR_STATE_SUMMER_MODE,
+    ATTR_STATE_WINDOW_OPEN)
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO, STATE_HEAT, STATE_MANUAL,
     STATE_OFF, STATE_ON, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS)
+    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS)
 DEPENDENCIES = ['fritzbox']
 
 _LOGGER = logging.getLogger(__name__)
@@ -151,10 +153,21 @@ class FritzboxThermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
+            ATTR_STATE_BATTERY_LOW: self._device.battery_low,
             ATTR_STATE_DEVICE_LOCKED: self._device.device_lock,
             ATTR_STATE_LOCKED: self._device.lock,
-            ATTR_STATE_BATTERY_LOW: self._device.battery_low,
         }
+
+        # the following attributes are available since fritzos 7
+        if self._device.battery_level is not None:
+            attrs[ATTR_BATTERY_LEVEL] = self._device.battery_level
+        if self._device.holiday_active is not None:
+            attrs[ATTR_STATE_HOLIDAY_MODE] = self._device.holiday_active
+        if self._device.summer_active is not None:
+            attrs[ATTR_STATE_SUMMER_MODE] = self._device.summer_active
+        if ATTR_STATE_WINDOW_OPEN is not None:
+            attrs[ATTR_STATE_WINDOW_OPEN] = self._device.window_open
+
         return attrs
 
     def update(self):

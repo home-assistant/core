@@ -52,7 +52,8 @@ class Data:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the user data store."""
         self.hass = hass
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY,
+                                                 private=True)
         self._data = None  # type: Optional[Dict[str, Any]]
 
     async def async_load(self) -> None:

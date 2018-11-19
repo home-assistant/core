@@ -63,3 +63,8 @@ class NeatoCleaningMap(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._robot_name
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._robot_serial

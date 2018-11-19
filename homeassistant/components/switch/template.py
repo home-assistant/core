@@ -4,7 +4,6 @@ Support for switches which integrates with other components.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.template/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -43,9 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Template switch."""
     switches = []
 
@@ -103,8 +101,7 @@ class SwitchTemplate(SwitchDevice):
         self._entity_picture = None
         self._entities = entity_ids
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def template_switch_state_listener(entity, old_state, new_state):
@@ -152,18 +149,15 @@ class SwitchTemplate(SwitchDevice):
         """Return the entity_picture to use in the frontend, if any."""
         return self._entity_picture
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Fire the on action."""
-        yield from self._on_script.async_run()
+        await self._on_script.async_run(context=self._context)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Fire the off action."""
-        yield from self._off_script.async_run()
+        await self._off_script.async_run(context=self._context)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update the state from the template."""
         try:
             state = self._template.async_render().lower()

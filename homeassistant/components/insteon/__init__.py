@@ -4,7 +4,6 @@ Support for INSTEON Modems (PLM and Hub).
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon/
 """
-import asyncio
 import collections
 import logging
 from typing import Dict
@@ -20,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.14.2']
+REQUIREMENTS = ['insteonplm==0.15.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,8 +148,7 @@ X10_HOUSECODE_SCHEMA = vol.Schema({
     })
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the connection to the modem."""
     import insteonplm
 
@@ -292,7 +290,7 @@ def async_setup(hass, config):
 
     if host:
         _LOGGER.info('Connecting to Insteon Hub on %s', host)
-        conn = yield from insteonplm.Connection.create(
+        conn = await insteonplm.Connection.create(
             host=host,
             port=ip_port,
             username=username,
@@ -302,7 +300,7 @@ def async_setup(hass, config):
             workdir=hass.config.config_dir)
     else:
         _LOGGER.info("Looking for Insteon PLM on %s", port)
-        conn = yield from insteonplm.Connection.create(
+        conn = await insteonplm.Connection.create(
             device=port,
             loop=hass.loop,
             workdir=hass.config.config_dir)
@@ -468,6 +466,16 @@ class InsteonEntity(Entity):
         return self._insteon_device_state.group
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self._insteon_device_state.group == 0x01:
+            uid = self._insteon_device.id
+        else:
+            uid = '{:s}_{:d}'.format(self._insteon_device.id,
+                                     self._insteon_device_state.group)
+        return uid
+
+    @property
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
         name = ''
@@ -494,8 +502,7 @@ class InsteonEntity(Entity):
                       deviceid.human, group, val)
         self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register INSTEON update events."""
         _LOGGER.debug('Tracking updates for device %s group %d statename %s',
                       self.address, self.group,

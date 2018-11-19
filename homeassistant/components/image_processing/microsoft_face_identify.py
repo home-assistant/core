@@ -4,7 +4,6 @@ Component that will help set the Microsoft face for verify processing.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/image_processing.microsoft_face_identify/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -29,9 +28,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Microsoft Face identify platform."""
     api = hass.data[DATA_MICROSOFT_FACE]
     face_group = config[CONF_GROUP]
@@ -80,24 +78,21 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
         """Return the name of the entity."""
         return self._name
 
-    @asyncio.coroutine
-    def async_process_image(self, image):
+    async def async_process_image(self, image):
         """Process image.
 
         This method is a coroutine.
         """
-        detect = None
+        detect = []
         try:
-            face_data = yield from self._api.call_api(
+            face_data = await self._api.call_api(
                 'post', 'detect', image, binary=True)
 
-            if not face_data:
-                return
-
-            face_ids = [data['faceId'] for data in face_data]
-            detect = yield from self._api.call_api(
-                'post', 'identify',
-                {'faceIds': face_ids, 'personGroupId': self._face_group})
+            if face_data:
+                face_ids = [data['faceId'] for data in face_data]
+                detect = await self._api.call_api(
+                    'post', 'identify',
+                    {'faceIds': face_ids, 'personGroupId': self._face_group})
 
         except HomeAssistantError as err:
             _LOGGER.error("Can't process image on Microsoft face: %s", err)

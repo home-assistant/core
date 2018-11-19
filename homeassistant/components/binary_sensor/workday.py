@@ -4,7 +4,6 @@ Sensor to indicate whether the current day is a workday.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.workday/
 """
-import asyncio
 import logging
 from datetime import datetime, timedelta
 
@@ -15,15 +14,16 @@ from homeassistant.const import CONF_NAME, WEEKDAYS
 from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['holidays==0.9.7']
+REQUIREMENTS = ['holidays==0.9.8']
 
 _LOGGER = logging.getLogger(__name__)
 
 # List of all countries currently supported by holidays
 # There seems to be no way to get the list out at runtime
 ALL_COUNTRIES = [
-    'Argentina', 'AR', 'Australia', 'AU', 'Austria', 'AT', 'Belarus', 'BY'
-    'Belgium', 'BE', 'Canada', 'CA', 'Colombia', 'CO', 'Czech', 'CZ',
+    'Argentina', 'AR', 'Australia', 'AU', 'Austria', 'AT',
+    'Brazil', 'BR', 'Belarus', 'BY', 'Belgium', 'BE',
+    'Canada', 'CA', 'Colombia', 'CO', 'Croatia', 'HR', 'Czech', 'CZ',
     'Denmark', 'DK', 'England', 'EuropeanCentralBank', 'ECB', 'TAR',
     'Finland', 'FI', 'France', 'FRA', 'Germany', 'DE', 'Hungary', 'HU',
     'India', 'IND', 'Ireland', 'Isle of Man', 'Italy', 'IT', 'Japan', 'JP',
@@ -31,7 +31,7 @@ ALL_COUNTRIES = [
     'Northern Ireland', 'Norway', 'NO', 'Polish', 'PL', 'Portugal', 'PT',
     'PortugalExt', 'PTE', 'Scotland', 'Slovenia', 'SI', 'Slovakia', 'SK',
     'South Africa', 'ZA', 'Spain', 'ES', 'Sweden', 'SE', 'Switzerland', 'CH',
-    'UnitedKingdom', 'UK', 'UnitedStates', 'US', 'Wales',
+    'Ukraine', 'UA', 'UnitedKingdom', 'UK', 'UnitedStates', 'US', 'Wales',
 ]
 
 ALLOWED_DAYS = WEEKDAYS + ['holiday']
@@ -162,8 +162,7 @@ class IsWorkdaySensor(BinarySensorDevice):
             CONF_OFFSET: self._days_offset
         }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get date and look whether it is a holiday."""
         # Default is no workday
         self._state = False

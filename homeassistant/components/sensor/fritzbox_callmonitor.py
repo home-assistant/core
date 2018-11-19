@@ -239,8 +239,7 @@ class FritzBoxPhonebook:
         self.number_dict = None
         self.prefixes = prefixes or []
 
-        # pylint: disable=import-error
-        import fritzconnection as fc
+        import fritzconnection as fc  # pylint: disable=import-error
         # Establish a connection to the FRITZ!Box.
         self.fph = fc.FritzPhonebook(
             address=self.host, user=self.username, password=self.password)

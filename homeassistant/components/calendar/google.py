@@ -68,6 +68,7 @@ class GoogleCalendarData:
         self.event = None
 
     def _prepare_query(self):
+        # pylint: disable=import-error
         from httplib2 import ServerNotFoundError
 
         try:

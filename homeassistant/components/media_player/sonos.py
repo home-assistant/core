@@ -4,7 +4,6 @@ Support to interface with Sonos players.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.sonos/
 """
-import asyncio
 import datetime
 import functools as ft
 import logging
@@ -33,9 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Quiet down pysonos logging to just actual problems.
 logging.getLogger('pysonos').setLevel(logging.WARNING)
-logging.getLogger('pysonos.events').setLevel(logging.ERROR)
 logging.getLogger('pysonos.data_structures_entry').setLevel(logging.ERROR)
-_SOCO_SERVICES_LOGGER = logging.getLogger('pysonos.services')
 
 SUPPORT_SONOS = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE |\
@@ -72,7 +69,7 @@ ATTR_SPEECH_ENHANCE = 'speech_enhance'
 
 ATTR_SONOS_GROUP = 'sonos_group'
 
-UPNP_ERRORS_TO_IGNORE = ['701', '711']
+UPNP_ERRORS_TO_IGNORE = ['701', '711', '712']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
@@ -136,9 +133,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Sync version of async add devices."""
         hass.add_job(async_add_entities, devices, update_before_add)
 
-    hass.add_job(_setup_platform, hass,
-                 hass.data[SONOS_DOMAIN].get('media_player', {}),
-                 add_entities, None)
+    hass.async_add_executor_job(
+        _setup_platform, hass, hass.data[SONOS_DOMAIN].get('media_player', {}),
+        add_entities, None)
 
 
 def _setup_platform(hass, config, add_entities, discovery_info):
@@ -289,10 +286,6 @@ def soco_error(errorcodes=None):
             """Wrap for all soco UPnP exception."""
             from pysonos.exceptions import SoCoUPnPException, SoCoException
 
-            # Temporarily disable SoCo logging because it will log the
-            # UPnP exception otherwise
-            _SOCO_SERVICES_LOGGER.disabled = True
-
             try:
                 return funct(*args, **kwargs)
             except SoCoUPnPException as err:
@@ -302,8 +295,6 @@ def soco_error(errorcodes=None):
                     _LOGGER.error("Error on %s with %s", funct.__name__, err)
             except SoCoException as err:
                 _LOGGER.error("Error on %s with %s", funct.__name__, err)
-            finally:
-                _SOCO_SERVICES_LOGGER.disabled = False
 
         return wrapper
     return decorator
@@ -344,13 +335,13 @@ class SonosDevice(MediaPlayerDevice):
     def __init__(self, player):
         """Initialize the Sonos device."""
         self._receives_events = False
-        self._volume_increment = 5
+        self._volume_increment = 2
         self._unique_id = player.uid
         self._player = player
         self._model = None
         self._player_volume = None
         self._player_muted = None
-        self._play_mode = None
+        self._shuffle = None
         self._name = None
         self._coordinator = None
         self._sonos_group = None
@@ -372,11 +363,10 @@ class SonosDevice(MediaPlayerDevice):
 
         self._set_basic_information()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe sonos events."""
         self.hass.data[DATA_SONOS].devices.append(self)
-        self.hass.async_add_job(self._subscribe_to_player_events)
+        self.hass.async_add_executor_job(self._subscribe_to_player_events)
 
     @property
     def unique_id(self):
@@ -447,7 +437,7 @@ class SonosDevice(MediaPlayerDevice):
         speaker_info = self.soco.get_speaker_info(True)
         self._name = speaker_info['zone_name']
         self._model = speaker_info['model_name']
-        self._play_mode = self.soco.play_mode
+        self._shuffle = self.soco.shuffle
 
         self.update_volume()
 
@@ -457,16 +447,15 @@ class SonosDevice(MediaPlayerDevice):
         """Set available favorites."""
         # SoCo 0.16 raises a generic Exception on invalid xml in favorites.
         # Filter those out now so our list is safe to use.
-        # pylint: disable=broad-except
         try:
             self._favorites = []
             for fav in self.soco.music_library.get_sonos_favorites():
                 try:
                     if fav.reference.get_uri():
                         self._favorites.append(fav)
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     _LOGGER.debug("Ignoring invalid favorite '%s'", fav.title)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.debug("Ignoring invalid favorite list")
 
     def _radio_artwork(self, url):
@@ -540,7 +529,7 @@ class SonosDevice(MediaPlayerDevice):
         if new_status == 'TRANSITIONING':
             return
 
-        self._play_mode = self.soco.play_mode
+        self._shuffle = self.soco.shuffle
 
         if self.soco.is_playing_tv:
             self.update_media_linein(SOURCE_TV)
@@ -765,7 +754,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_coordinator
     def shuffle(self):
         """Shuffling state."""
-        return 'SHUFFLE' in self._play_mode
+        return self._shuffle
 
     @property
     def media_content_type(self):
@@ -841,11 +830,11 @@ class SonosDevice(MediaPlayerDevice):
         """Set volume level, range 0..1."""
         self.soco.volume = str(int(volume * 100))
 
-    @soco_error()
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
-        self.soco.play_mode = 'SHUFFLE_NOREPEAT' if shuffle else 'NORMAL'
+        self.soco.shuffle = shuffle
 
     @soco_error()
     def mute_volume(self, mute):

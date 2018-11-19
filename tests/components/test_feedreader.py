@@ -59,8 +59,8 @@ class TestFeedreaderComponent(unittest.TestCase):
         """Test the general setup of this component."""
         with patch("homeassistant.components.feedreader."
                    "track_time_interval") as track_method:
-            self.assertTrue(setup_component(self.hass, feedreader.DOMAIN,
-                                            VALID_CONFIG_1))
+            assert setup_component(
+                self.hass, feedreader.DOMAIN, VALID_CONFIG_1)
             track_method.assert_called_once_with(self.hass, mock.ANY,
                                                  DEFAULT_SCAN_INTERVAL)
 
@@ -68,15 +68,14 @@ class TestFeedreaderComponent(unittest.TestCase):
         """Test the setup of this component with scan interval."""
         with patch("homeassistant.components.feedreader."
                    "track_time_interval") as track_method:
-            self.assertTrue(setup_component(self.hass, feedreader.DOMAIN,
-                                            VALID_CONFIG_2))
+            assert setup_component(
+                self.hass, feedreader.DOMAIN, VALID_CONFIG_2)
             track_method.assert_called_once_with(self.hass, mock.ANY,
                                                  timedelta(seconds=60))
 
     def test_setup_max_entries(self):
         """Test the setup of this component with max entries."""
-        self.assertTrue(setup_component(self.hass, feedreader.DOMAIN,
-                                        VALID_CONFIG_3))
+        assert setup_component(self.hass, feedreader.DOMAIN, VALID_CONFIG_3)
 
     def setup_manager(self, feed_data, max_entries=DEFAULT_MAX_ENTRIES):
         """Set up feed manager."""

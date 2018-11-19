@@ -55,9 +55,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the OpenALPR local platform."""
     command = [config[CONF_ALPR_BIN], '-c', config[CONF_REGION], '-']
     confidence = config[CONF_CONFIDENCE]
@@ -173,8 +172,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
         """Return the name of the entity."""
         return self._name
 
-    @asyncio.coroutine
-    def async_process_image(self, image):
+    async def async_process_image(self, image):
         """Process image.
 
         This method is a coroutine.
@@ -182,7 +180,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
         result = {}
         vehicles = 0
 
-        alpr = yield from asyncio.create_subprocess_exec(
+        alpr = await asyncio.create_subprocess_exec(
             *self._cmd,
             loop=self.hass.loop,
             stdin=asyncio.subprocess.PIPE,
@@ -191,7 +189,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
         )
 
         # Send image
-        stdout, _ = yield from alpr.communicate(input=image)
+        stdout, _ = await alpr.communicate(input=image)
         stdout = io.StringIO(str(stdout, 'utf-8'))
 
         while True:

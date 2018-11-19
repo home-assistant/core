@@ -31,9 +31,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up Hook by getting the access token and list of actions."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -43,14 +42,14 @@ def async_setup_platform(hass, config, async_add_entities,
     if username is not None and password is not None:
         try:
             with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-                response = yield from websession.post(
+                response = await websession.post(
                     '{}{}'.format(HOOK_ENDPOINT, 'user/login'),
                     data={
                         'username': username,
                         'password': password})
             # The Hook API returns JSON but calls it 'text/html'.  Setting
             # content_type=None disables aiohttp's content-type validation.
-            data = yield from response.json(content_type=None)
+            data = await response.json(content_type=None)
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed authentication API call: %s", error)
             return False
@@ -63,10 +62,10 @@ def async_setup_platform(hass, config, async_add_entities,
 
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            response = yield from websession.get(
+            response = await websession.get(
                 '{}{}'.format(HOOK_ENDPOINT, 'device'),
                 params={"token": token})
-        data = yield from response.json(content_type=None)
+        data = await response.json(content_type=None)
     except (asyncio.TimeoutError, aiohttp.ClientError) as error:
         _LOGGER.error("Failed getting devices: %s", error)
         return False
@@ -104,16 +103,15 @@ class HookSmartHome(SwitchDevice):
         """Return true if device is on."""
         return self._state
 
-    @asyncio.coroutine
-    def _send(self, url):
+    async def _send(self, url):
         """Send the url to the Hook API."""
         try:
             _LOGGER.debug("Sending: %s", url)
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
-                response = yield from websession.get(
+                response = await websession.get(
                     url, params={"token": self._token})
-            data = yield from response.json(content_type=None)
+            data = await response.json(content_type=None)
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed setting state: %s", error)
@@ -122,21 +120,19 @@ class HookSmartHome(SwitchDevice):
         _LOGGER.debug("Got: %s", data)
         return data['return_value'] == '1'
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on asynchronously."""
         _LOGGER.debug("Turning on: %s", self._name)
         url = '{}{}{}{}'.format(
             HOOK_ENDPOINT, 'device/trigger/', self._id, '/On')
-        success = yield from self._send(url)
+        success = await self._send(url)
         self._state = success
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off asynchronously."""
         _LOGGER.debug("Turning off: %s", self._name)
         url = '{}{}{}{}'.format(
             HOOK_ENDPOINT, 'device/trigger/', self._id, '/Off')
-        success = yield from self._send(url)
+        success = await self._send(url)
         # If it wasn't successful, keep state as true
         self._state = not success

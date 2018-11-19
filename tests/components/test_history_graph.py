@@ -30,15 +30,15 @@ class TestGraph(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, 'history_graph', config))
-        self.assertEqual(
-            dict(self.hass.states.get('history_graph.name_1').attributes),
-            {
-                'entity_id': ['test.test'],
-                'friendly_name': 'name_1',
-                'hours_to_show': 24,
-                'refresh': 0
-            })
+        assert setup_component(self.hass, 'history_graph', config)
+        assert dict(
+            self.hass.states.get('history_graph.name_1').attributes
+        ) == {
+            'entity_id': ['test.test'],
+            'friendly_name': 'name_1',
+            'hours_to_show': 24,
+            'refresh': 0
+        }
 
     def init_recorder(self):
         """Initialize the recorder."""

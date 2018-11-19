@@ -21,16 +21,14 @@ from homeassistant.components import websocket_api
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
-from homeassistant.util.yaml import load_yaml
 
-REQUIREMENTS = ['home-assistant-frontend==20180927.0']
+REQUIREMENTS = ['home-assistant-frontend==20181103.3']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
-                'auth', 'onboarding']
+                'auth', 'onboarding', 'lovelace']
 
 CONF_THEMES = 'themes'
 CONF_EXTRA_HTML_URL = 'extra_html_url'
@@ -108,10 +106,6 @@ SCHEMA_GET_TRANSLATIONS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_GET_TRANSLATIONS,
     vol.Required('language'): str,
 })
-WS_TYPE_GET_LOVELACE_UI = 'frontend/lovelace_config'
-SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): WS_TYPE_GET_LOVELACE_UI,
-})
 
 
 class Panel:
@@ -151,7 +145,7 @@ class Panel:
             index_view.get)
 
     @callback
-    def to_response(self, hass, request):
+    def to_response(self):
         """Panel as dictionary."""
         return {
             'component_name': self.component_name,
@@ -208,9 +202,6 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_TRANSLATIONS, websocket_get_translations,
         SCHEMA_GET_TRANSLATIONS)
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
-        SCHEMA_GET_LOVELACE_UI)
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
@@ -353,11 +344,12 @@ class AuthorizeView(HomeAssistantView):
             _is_latest(self.js_option, request)
 
         if latest:
-            location = '/frontend_latest/authorize.html'
+            base = 'frontend_latest'
         else:
-            location = '/frontend_es5/authorize.html'
+            base = 'frontend_es5'
 
-        location += '?{}'.format(request.query_string)
+        location = "/{}/authorize.html{}".format(
+            base, str(request.url.relative())[15:])
 
         return web.Response(status=302, headers={
             'location': location
@@ -493,12 +485,10 @@ def websocket_get_panels(hass, connection, msg):
     Async friendly.
     """
     panels = {
-        panel:
-        connection.hass.data[DATA_PANELS][panel].to_response(
-            connection.hass, connection.request)
+        panel: connection.hass.data[DATA_PANELS][panel].to_response()
         for panel in connection.hass.data[DATA_PANELS]}
 
-    connection.to_write.put_nowait(websocket_api.result_message(
+    connection.send_message(websocket_api.result_message(
         msg['id'], panels))
 
 
@@ -508,50 +498,21 @@ def websocket_get_themes(hass, connection, msg):
 
     Async friendly.
     """
-    connection.to_write.put_nowait(websocket_api.result_message(msg['id'], {
+    connection.send_message(websocket_api.result_message(msg['id'], {
         'themes': hass.data[DATA_THEMES],
         'default_theme': hass.data[DATA_DEFAULT_THEME],
     }))
 
 
-@callback
-def websocket_get_translations(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_get_translations(hass, connection, msg):
     """Handle get translations command.
 
     Async friendly.
     """
-    async def send_translations():
-        """Send a translation."""
-        resources = await async_get_translations(hass, msg['language'])
-        connection.send_message_outside(websocket_api.result_message(
-            msg['id'], {
-                'resources': resources,
-            }
-        ))
-
-    hass.async_add_job(send_translations())
-
-
-def websocket_lovelace_config(hass, connection, msg):
-    """Send lovelace UI config over websocket config."""
-    async def send_exp_config():
-        """Send lovelace frontend config."""
-        error = None
-        try:
-            config = await hass.async_add_job(
-                load_yaml, hass.config.path('ui-lovelace.yaml'))
-            message = websocket_api.result_message(
-                msg['id'], config
-            )
-        except FileNotFoundError:
-            error = ('file_not_found',
-                     'Could not find ui-lovelace.yaml in your config dir.')
-        except HomeAssistantError as err:
-            error = 'load_error', str(err)
-
-        if error is not None:
-            message = websocket_api.error_message(msg['id'], *error)
-
-        connection.send_message_outside(message)
-
-    hass.async_add_job(send_exp_config())
+    resources = await async_get_translations(hass, msg['language'])
+    connection.send_message(websocket_api.result_message(
+        msg['id'], {
+            'resources': resources,
+        }
+    ))
