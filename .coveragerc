@@ -262,6 +262,10 @@ omit =
     homeassistant/components/pilight.py
     homeassistant/components/*/pilight.py
 
+    homeassistant/components/point/__init__.py
+    homeassistant/components/point/const.py
+    homeassistant/components/*/point.py
+
     homeassistant/components/switch/qwikswitch.py
     homeassistant/components/light/qwikswitch.py
 
