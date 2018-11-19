@@ -29,10 +29,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LutronSwitch(LutronDevice, SwitchDevice):
     """Representation of a Lutron Switch."""
 
-    def __init__(self, area_name, lutron_device, controller):
-        """Initialize the switch."""
-        LutronDevice.__init__(self, area_name, lutron_device, controller)
-
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._lutron_device.level = 100
