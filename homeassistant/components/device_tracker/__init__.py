@@ -533,6 +533,7 @@ class Device(Entity):
             (now or dt_util.utcnow()) - self.last_seen > self.consider_home
             
     def mark_stale(self):
+        """Mark the device state as stale."""
         self._state = STATE_NOT_HOME
         self.gps = None
         self.last_update_home = False
