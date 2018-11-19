@@ -241,3 +241,5 @@ async def test_precision_parsing(hass):
     assert sensor1.get_precision(-5.1) == 1
     assert sensor1.get_precision(23) == 0
     assert sensor1.get_precision(0.123) == 3
+    assert sensor1.get_precision(1.444555, 3) == 3
+    assert sensor1.get_precision(1.1234567890123) == 10

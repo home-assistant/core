@@ -304,7 +304,7 @@ class HistoryValuesSensor(Entity):
         """Return the precision of @float up to @max."""
         count = 0
         orig_num = float_num
-        while int(float_num) != float_num and count <= max_prec:
+        while int(float_num) != float_num and count < max_prec:
             count += 1
             float_num = orig_num * 10**count
         return count
