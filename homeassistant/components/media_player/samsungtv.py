@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF,
-    STATE_ON, STATE_UNKNOWN)
+    STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
