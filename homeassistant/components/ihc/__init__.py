@@ -63,10 +63,10 @@ BINARY_SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
 LIGHT_SCHEMA = DEVICE_SCHEMA.extend({
     vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
 })
-          
+
 SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
     vol.Optional(CONF_UNIT_OF_MEASUREMENT,
-                default=TEMP_CELSIUS): cv.string,
+                 default=TEMP_CELSIUS): cv.string,
 })
 
 IHC_SCHEMA = vol.Schema({
