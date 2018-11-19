@@ -8,8 +8,7 @@ import logging
 
 from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
-    ATTR_HS_COLOR, SUPPORT_COLOR,
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_COLOR,
     ATTR_EFFECT, SUPPORT_EFFECT, Light)
 
 _LOGGER = logging.getLogger(__name__)
