@@ -531,7 +531,7 @@ class Device(Entity):
         """
         return self.last_seen is None or \
             (now or dt_util.utcnow()) - self.last_seen > self.consider_home
-            
+
     def mark_stale(self):
         """Mark the device state as stale."""
         self._state = STATE_NOT_HOME
@@ -568,7 +568,6 @@ class Device(Entity):
         if not state:
             return
         self._state = state.state
-        
         self.last_update_home = (state.state == STATE_HOME)
 
         for attr, var in (
