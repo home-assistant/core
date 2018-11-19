@@ -336,10 +336,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         return state_attr
 
     async def async_added_to_hass(self):
-        """Subscribe to MQTT events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Subscribe to MQTT events."""
         async_track_state_change(
             self.hass, self.entity_id, self._async_state_changed_listener
         )
