@@ -107,7 +107,7 @@ homematicip==0.9.8
 influxdb==5.0.0
 
 # homeassistant.components.dyson
-libpurecoollink==0.4.2
+libpurecool==0.5.0
 
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.7.2

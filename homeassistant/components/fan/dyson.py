@@ -20,16 +20,20 @@ ATTR_NIGHT_MODE = 'night_mode'
 ATTR_AUTO_MODE = 'auto_mode'
 ATTR_ANGLE_LOW = 'angle_low'
 ATTR_ANGLE_HIGH = 'angle_high'
+ATTR_FLOW_DIRECTION_FRONT = 'flow_direction_front'
+ATTR_TIMER = 'timer'
 
 DEPENDENCIES = ['dyson']
 DYSON_FAN_DEVICES = 'dyson_fan_devices'
 
 SERVICE_SET_NIGHT_MODE = 'dyson_set_night_mode'
 SERVICE_SET_ANGLE = 'dyson_set_angle'
+SERVICE_SET_FLOW_DIRECTION_FRONT = 'dyson_flow_direction_front'
+SERVICE_SET_TIMER = 'dyson_set_timer'
 
 DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(ATTR_NIGHT_MODE): cv .boolean,
+    vol.Required(ATTR_NIGHT_MODE): cv.boolean,
 })
 
 DYSON_SET_ANGLE_SCHEMA = vol.Schema({
@@ -38,11 +42,21 @@ DYSON_SET_ANGLE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ANGLE_HIGH): cv.positive_int
 })
 
+DYSON_SET_FLOW_DIRECTION_FRONT_SCHEMA = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Optional(ATTR_FLOW_DIRECTION_FRONT): cv.boolean
+})
+
+DYSON_SET_TIMER_SCHEMA = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Optional(ATTR_TIMER): cv.positive_int
+})
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
-    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
-    from libpurecoollink.dyson_pure_cool import DysonPureCool
+    from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+    from libpurecool.dyson_pure_cool import DysonPureCool
 
     _LOGGER.debug("Creating new Dyson fans")
     if DYSON_FAN_DEVICES not in hass.data:
@@ -65,6 +79,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         night_mode = service.data.get(ATTR_NIGHT_MODE)
         angle_low = service.data.get(ATTR_ANGLE_LOW)
         angle_high = service.data.get(ATTR_ANGLE_HIGH)
+        flow_direction_front = service.data.get(ATTR_FLOW_DIRECTION_FRONT)
+        timer = service.data.get(ATTR_TIMER)
         fan_device = next([fan for fan in hass.data[DYSON_FAN_DEVICES] if
                            fan.entity_id == entity_id].__iter__(), None)
         if fan_device is None:
@@ -75,8 +91,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if service.service == SERVICE_SET_NIGHT_MODE:
             fan_device.set_night_mode(night_mode)
 
-        if service.service == SERVICE_SET_NIGHT_MODE:
+        if service.service == SERVICE_SET_ANGLE:
             fan_device.set_angle(angle_low, angle_high)
+
+        if service.service == SERVICE_SET_FLOW_DIRECTION_FRONT:
+            fan_device.set_flow_direction_front(flow_direction_front)
+
+        if service.service == SERVICE_SET_TIMER:
+            fan_device.set_timer(timer)
 
     # Register dyson service(s)
     hass.services.register(
@@ -86,6 +108,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.services.register(
         DOMAIN, SERVICE_SET_ANGLE, service_handle,
         schema=DYSON_SET_ANGLE_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_FLOW_DIRECTION_FRONT, service_handle,
+        schema=DYSON_SET_FLOW_DIRECTION_FRONT_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_TIMER, service_handle,
+        schema=DYSON_SET_TIMER_SCHEMA)
 
 
 class DysonPureCoolLinkDevice(FanEntity):
@@ -105,7 +135,7 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def on_message(self, message):
         """Call when new messages received from the fan."""
-        from libpurecoollink.dyson_pure_state import DysonPureCoolState
+        from libpurecool.dyson_pure_state import DysonPureCoolState
 
         if isinstance(message, DysonPureCoolState):
             _LOGGER.debug("Message received for fan device %s: %s", self.name,
@@ -124,7 +154,7 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan. Never called ??."""
-        from libpurecoollink.const import FanSpeed, FanMode
+        from libpurecool.const import FanSpeed, FanMode
 
         _LOGGER.debug("Set fan speed to: %s", speed)
 
@@ -137,7 +167,7 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
-        from libpurecoollink.const import FanSpeed, FanMode
+        from libpurecool.const import FanSpeed, FanMode
 
         _LOGGER.debug("Turn on fan %s with speed %s", self.name, speed)
         if speed:
@@ -153,14 +183,14 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
-        from libpurecoollink.const import FanMode
+        from libpurecool.const import FanMode
 
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.set_configuration(fan_mode=FanMode.OFF)
 
     def oscillate(self, oscillating: bool) -> None:
         """Turn on/off oscillating."""
-        from libpurecoollink.const import Oscillation
+        from libpurecool.const import Oscillation
 
         _LOGGER.debug("Turn oscillation %s for device %s", oscillating,
                       self.name)
@@ -187,7 +217,7 @@ class DysonPureCoolLinkDevice(FanEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        from libpurecoollink.const import FanSpeed
+        from libpurecool.const import FanSpeed
 
         if self._device.state:
             if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
@@ -207,7 +237,7 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def set_night_mode(self, night_mode: bool) -> None:
         """Turn fan in night mode."""
-        from libpurecoollink.const import NightMode
+        from libpurecool.const import NightMode
 
         _LOGGER.debug("Set %s night mode %s", self.name, night_mode)
         if night_mode:
@@ -222,7 +252,7 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def set_auto_mode(self, auto_mode: bool) -> None:
         """Turn fan in auto mode."""
-        from libpurecoollink.const import FanMode
+        from libpurecool.const import FanMode
 
         _LOGGER.debug("Set %s auto mode %s", self.name, auto_mode)
         if auto_mode:
@@ -233,7 +263,7 @@ class DysonPureCoolLinkDevice(FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        from libpurecoollink.const import FanSpeed
+        from libpurecool.const import FanSpeed
 
         supported_speeds = [
             FanSpeed.FAN_SPEED_AUTO.value,
@@ -282,7 +312,7 @@ class DysonPureCoolDevice(FanEntity):
 
     def on_message(self, message):
         """Call when new messages received from the fan."""
-        from libpurecoollink.dyson_pure_state_v2 import DysonPureCoolV2State
+        from libpurecool.dyson_pure_state_v2 import DysonPureCoolV2State
 
         if isinstance(message, DysonPureCoolV2State):
             _LOGGER.debug("Message received for fan device %s: %s", self.name,
@@ -301,7 +331,7 @@ class DysonPureCoolDevice(FanEntity):
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
-        from libpurecoollink.const import FanSpeed
+        from libpurecool.const import FanSpeed
 
         _LOGGER.debug("Turn on fan %s", self.name)
 
@@ -358,8 +388,30 @@ class DysonPureCoolDevice(FanEntity):
 
         _LOGGER.debug("set low %s and high angle %s for device %s", angle_low, angle_high,
                       self.name)
-
         self._device.enable_oscillation(angle_low, angle_high)
+
+    def set_flow_direction_front(self, flow_direction_front: bool) -> None:
+        """Turn on/off oscillating."""
+
+        _LOGGER.debug("Set frontal flow direction to %s for device %s",
+                      flow_direction_front,
+                      self.name)
+
+        if flow_direction_front:
+            self.enable_frontal_direction()
+        else:
+            self._device.disable_frontal_direction()
+
+    def set_timer(self, timer) -> None:
+        """Set timer."""
+
+        _LOGGER.debug("Set timer to %s for device %s", timer,
+                      self.name)
+
+        if timer == 0:
+            self._device.disable_sleep_timer()
+        else:
+            self._device.enable_sleep_timer(timer)
 
     @property
     def oscillating(self):
@@ -376,7 +428,7 @@ class DysonPureCoolDevice(FanEntity):
     @property
     def speed(self):
         """Return the current speed."""
-        from libpurecoollink.const import FanSpeed
+        from libpurecool.const import FanSpeed
 
         if self._device.state:
             if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
@@ -396,18 +448,28 @@ class DysonPureCoolDevice(FanEntity):
 
     @property
     def angle_low(self):
-        """Return Night mode."""
+        """Return angle high."""
         return self._device.state.oscillation_angle_low
 
     @property
     def angle_high(self):
-        """Return Night mode."""
+        """Return angle low."""
         return self._device.state.oscillation_angle_high
+
+    @property
+    def flow_direction_front(self):
+        """Return frontal flow direction."""
+        return self._device.state.front_direction == 'ON'
+
+    @property
+    def timer(self):
+        """Return timer."""
+        return self._device.state.sleep_timer
 
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        from libpurecoollink.const import FanSpeed
+        from libpurecool.const import FanSpeed
 
         supported_speeds = [
             FanSpeed.FAN_SPEED_AUTO.value,
@@ -438,5 +500,6 @@ class DysonPureCoolDevice(FanEntity):
             ATTR_NIGHT_MODE: self.night_mode,
             ATTR_ANGLE_LOW: self.angle_low,
             ATTR_ANGLE_HIGH: self.angle_high,
-
+            ATTR_FLOW_DIRECTION_FRONT: self.flow_direction_front,
+            ATTR_TIMER: self.timer,
         }
