@@ -98,7 +98,7 @@ class MillHeater(ClimateDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._heater.avaiable
+        return self._heater.available
 
     @property
     def unique_id(self):
