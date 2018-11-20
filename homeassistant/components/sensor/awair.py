@@ -110,7 +110,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
         async_add_entities(all_devices, True)
 
-    except Exception as error: # pylint: disable=broad-except
+    except Exception as error:  # pylint: disable=broad-except
         _LOGGER.error("Couldn't set up Awair platform: %s", error)
 
 
