@@ -18,6 +18,7 @@ from homeassistant.auth.permissions import PolicyPermissions
 
 from tests.common import get_test_home_assistant, mock_service, mock_coro
 
+
 @pytest.fixture
 def mock_service_platform_call():
     """Mock service platform call."""
