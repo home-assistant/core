@@ -334,7 +334,6 @@ class XiaomiPhilipsAbstractLight(Light):
         self._brightness = ceil((255 / 100.0) * state.brightness)
 
 
-
 class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
     """Representation of a Generic Xiaomi Philips Light."""
 
