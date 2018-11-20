@@ -15,13 +15,12 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['panacotta==0.1']
 
 DEFAULT_NAME = "Panasonic Blu-Ray"
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,15 +36,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Panasonic Blu-Ray platform."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
+    conf = discovery_info if discovery_info else config:
 
     # Register configured device with Home Assistant.
-    if host is not None:
-        add_entities([PanasonicBluRay(host, name)])
-    elif discovery_info is not None:
-        add_entities(PanasonicBluRay(discovery_info.get('host'),
-                                     discovery_info.get('name')))
+    add_entities([PanasonicBluRay(conf[CONF_HOST], conf[CONF_NAME])])
 
 
 class PanasonicBluRay(MediaPlayerDevice):
@@ -101,7 +95,6 @@ class PanasonicBluRay(MediaPlayerDevice):
         """When was the position of the current playing media valid."""
         return self._position_valid
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the internal state by querying the device."""
         # This can take 5+ seconds to complete
