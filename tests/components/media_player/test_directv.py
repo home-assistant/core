@@ -7,8 +7,8 @@ import pytest
 
 import homeassistant.components.media_player as mp
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE, DOMAIN, SERVICE_PLAY_MEDIA)
+    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_ENQUEUE, DOMAIN,
+    SERVICE_PLAY_MEDIA)
 
 from homeassistant.components.media_player.directv import (
     ATTR_MEDIA_CURRENTLY_RECORDING, ATTR_MEDIA_RATING, ATTR_MEDIA_RECORDED,
@@ -345,7 +345,7 @@ async def test_supported_features(hass, platforms):
 
     # Features supported for main DVR
     assert mp.SUPPORT_PAUSE | mp.SUPPORT_TURN_ON | mp.SUPPORT_TURN_OFF |\
-        mp.SUPPORT_PLAY_MEDIA  | mp.SUPPORT_STOP | mp.SUPPORT_NEXT_TRACK |\
+        mp.SUPPORT_PLAY_MEDIA | mp.SUPPORT_STOP | mp.SUPPORT_NEXT_TRACK |\
         mp.SUPPORT_PREVIOUS_TRACK | mp.SUPPORT_PLAY ==\
         main_media_entity.supported_features
 
