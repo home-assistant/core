@@ -33,7 +33,6 @@ DEFAULT_NAME = 'Azure Maps Travel Time'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-
 AVOID = ['tollRoads', 'motorways', 'ferries', 'unpavedRoads']
 TRAVEL_MODE = ['car', 'pedestrian', 'bicycle']
 ROUTE_TYPE = ['eco', 'fastest', 'shortest', 'thrilling']
