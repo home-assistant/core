@@ -58,7 +58,7 @@ DATA_KEY = 'azure_maps_travel_time'
 
 
 def convert_time_to_utc(timestr):
-    """Take a string like 08:00:00 and convert it to a unix timestamp."""
+    """Take a string like 08:00:00 and convert it to a datetime."""
     combined = datetime.combine(
         dt_util.start_of_local_day(), dt_util.parse_time(timestr))
     if combined < datetime.now():
@@ -151,7 +151,7 @@ class AzureMapsTravelTimeSensor(Entity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from Azure."""
+        """Get the latest data from Azure Maps."""
         options_copy = dict(self._options.copy())
         dtime = options_copy.get('departAt')
         atime = options_copy.get('arriveAt')
@@ -199,8 +199,7 @@ class AzureMapsTravelTimeSensor(Entity):
                 self._state = round(summary['travelTimeInSeconds']/60)
             else:
                 _LOGGER.error(resp)
-                self._state = None
-                self._attributes = None
+                self.valid_api_connection = False
                 raise HomeAssistantError
 
     def _get_location_from_entity(self, entity_id):
