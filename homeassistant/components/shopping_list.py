@@ -13,6 +13,7 @@ from homeassistant.components.http.data_validator import (
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
+from homeassistant.components import websocket_api
 
 ATTR_NAME = 'name'
 
@@ -35,6 +36,13 @@ SERVICE_COMPLETE_ITEM = 'complete_item'
 SERVICE_ITEM_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): vol.Any(None, cv.string)
 })
+
+WS_TYPE_SHOPPING_LIST_ITEMS = 'shopping_list/items'
+
+SCHEMA_WEBSOCKET_ITEMS = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_SHOPPING_LIST_ITEMS
+    })
 
 
 @asyncio.coroutine
@@ -90,6 +98,11 @@ def async_setup(hass, config):
 
     yield from hass.components.frontend.async_register_built_in_panel(
         'shopping-list', 'shopping_list', 'mdi:cart')
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_SHOPPING_LIST_ITEMS,
+        websocket_handle_items,
+        SCHEMA_WEBSOCKET_ITEMS)
 
     return True
 
@@ -256,3 +269,10 @@ class ClearCompletedItemsView(http.HomeAssistantView):
         hass.data[DOMAIN].async_clear_completed()
         hass.bus.async_fire(EVENT)
         return self.json_message('Cleared completed items.')
+
+
+@callback
+def websocket_handle_items(hass, connection, msg):
+    """Handle get shopping_list items."""
+    connection.send_message(websocket_api.result_message(
+        msg['id'], hass.data[DOMAIN].items))
