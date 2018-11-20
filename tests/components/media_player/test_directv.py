@@ -167,8 +167,12 @@ class TestSetupDirectvMediaPlayer(unittest.TestCase):
         self.hass = get_test_home_assistant()
 
         # Mocking DIRECTV class in DirectPy with our own.
-        self.current_directpy = sys.modules.get('DirectPy')
-        sys.modules['DirectPy'] = MagicMock()
+        self.directpy_mock = MagicMock()
+        modules = {
+            'DirectPy': self.directpy_mock
+        }
+        self.module_patcher = patch.dict('sys.modules', modules)
+        self.module_patcher.start()
         import DirectPy
         DirectPy.DIRECTV = mockDIRECTVClass
 
@@ -176,12 +180,11 @@ class TestSetupDirectvMediaPlayer(unittest.TestCase):
 
     def tearDown(self):
         """Stop everything that was started."""
-        sys.modules['DirectPy'] = self.current_directpy
         self.hass.stop()
+        self.module_patcher.stop()
 
     def test_setup_platform_config(self):
         """Test setting up the platform from configuration."""
-
         add_entities = Mock()
         setup_platform(
             self.hass, WORKING_CONFIG, add_entities)
@@ -294,7 +297,6 @@ class TestDirectvMediaPlayer(unittest.TestCase):
 
     def test_supported_features(self):
         """Test supported features."""
-
         # Features supported for main DVR
         assert mp.SUPPORT_PAUSE | mp.SUPPORT_TURN_ON | mp.SUPPORT_TURN_OFF |\
             mp.SUPPORT_PLAY_MEDIA | mp.SUPPORT_SELECT_SOURCE |\
@@ -310,8 +312,7 @@ class TestDirectvMediaPlayer(unittest.TestCase):
             self.client_media_entity.supported_features
 
     def test_check_attributes(self):
-        """Test attributes"""
-
+        """Test attributes."""
         # Start playing TV
         with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=self.now):
@@ -360,51 +361,73 @@ class TestDirectvMediaPlayer(unittest.TestCase):
 
     def test_main_services(self):
         """Test the different services."""
+        dtv_inst = self.main_media_entity.dtv
 
         # DVR starts in turned off state.
         state = self.hass.states.get(self.main_entity_id)
         assert state.state == STATE_OFF
 
-        # Turn main DVR on. When turning on DVR is playing.
-        common.turn_on(self.hass, self.main_entity_id)
-        self.hass.block_till_done()
-        state = self.hass.states.get(self.main_entity_id)
-        assert state.state == STATE_PLAYING
+        # All these should call key_press in our class.
+        with patch.object(dtv_inst, 'key_press',
+                          wraps=dtv_inst.key_press) as mock_key_press, \
+            patch.object(dtv_inst, 'tune_channel',
+                         wraps=dtv_inst.tune_channel) as mock_tune_channel, \
+            patch.object(dtv_inst, 'get_tuned',
+                         wraps=dtv_inst.get_tuned) as mock_get_tuned, \
+            patch.object(dtv_inst, 'get_standby',
+                         wraps=dtv_inst.get_standby) as mock_get_standby:
 
-        # Pause live TV.
-        common.media_pause(self.hass, self.main_entity_id)
-        self.hass.block_till_done()
-        state = self.hass.states.get(self.main_entity_id)
-        assert state.state == STATE_PAUSED
+            # Turn main DVR on. When turning on DVR is playing.
+            common.turn_on(self.hass, self.main_entity_id)
+            self.hass.block_till_done()
+            mock_key_press.assert_called_with('poweron')
+            state = self.hass.states.get(self.main_entity_id)
+            assert state.state == STATE_PLAYING
 
-        # Start play again for live TV.
-        common.media_play(self.hass, self.main_entity_id)
-        self.hass.block_till_done()
-        state = self.hass.states.get(self.main_entity_id)
-        assert state.state == STATE_PLAYING
+            # Pause live TV.
+            common.media_pause(self.hass, self.main_entity_id)
+            self.hass.block_till_done()
+            mock_key_press.assert_called_with('pause')
+            state = self.hass.states.get(self.main_entity_id)
+            assert state.state == STATE_PAUSED
 
-        # Change channel, currently it should be 202
-        assert state.attributes.get('source') == 202
-        common.select_source(self.hass, 7, self.main_entity_id)
-        self.hass.block_till_done()
-        state = self.hass.states.get(self.main_entity_id)
-        assert state.attributes.get('source') == 7
+            # Start play again for live TV.
+            common.media_play(self.hass, self.main_entity_id)
+            self.hass.block_till_done()
+            mock_key_press.assert_called_with('play')
+            state = self.hass.states.get(self.main_entity_id)
+            assert state.state == STATE_PLAYING
 
-        # Stop live TV.
-        common.media_stop(self.hass, self.main_entity_id)
-        self.hass.block_till_done()
-        state = self.hass.states.get(self.main_entity_id)
-        assert state.state == STATE_PAUSED
+            # Change channel, currently it should be 202
+            assert state.attributes.get('source') == 202
+            common.select_source(self.hass, 7, self.main_entity_id)
+            self.hass.block_till_done()
+            mock_tune_channel.assert_called_with('7')
+            state = self.hass.states.get(self.main_entity_id)
+            assert state.attributes.get('source') == 7
 
-        # Turn main DVR off.
-        common.turn_off(self.hass, self.main_entity_id)
-        self.hass.block_till_done()
-        state = self.hass.states.get(self.main_entity_id)
-        assert state.state == STATE_OFF
+            # Stop live TV.
+            common.media_stop(self.hass, self.main_entity_id)
+            self.hass.block_till_done()
+            mock_key_press.assert_called_with('stop')
+            state = self.hass.states.get(self.main_entity_id)
+            assert state.state == STATE_PAUSED
+
+            # Turn main DVR off.
+            common.turn_off(self.hass, self.main_entity_id)
+            self.hass.block_till_done()
+            mock_key_press.assert_called_with('poweroff')
+            state = self.hass.states.get(self.main_entity_id)
+            assert state.state == STATE_OFF
+
+            # There should have been 6 calls to check if DVR is in standby
+            assert 6 == mock_get_standby.call_count
+            # There should be 5 calls to get current info (only 1 time it will
+            # not be called as DVR is in standby.)
+            assert 5 == mock_get_tuned.call_count
 
     def test_available(self):
         """Test available status."""
-
         # Confirm service is currently set to available.
         assert self.main_media_entity.available
 

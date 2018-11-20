@@ -94,6 +94,7 @@ def media_pause(hass, entity_id=None):
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
 
+
 @bind_hass
 def media_stop(hass, entity_id=None):
     """Send the media player the command for stop."""
