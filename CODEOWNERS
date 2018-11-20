@@ -95,6 +95,7 @@ homeassistant/components/plant.py @ChristianKuehnel
 homeassistant/components/scene/lifx_cloud.py @amelchio
 homeassistant/components/sensor/airvisual.py @bachya
 homeassistant/components/sensor/alpha_vantage.py @fabaff
+homeassistant/components/sensor/azure_maps_travel_time @eavanvalkenburg
 homeassistant/components/sensor/bitcoin.py @fabaff
 homeassistant/components/sensor/cpuspeed.py @fabaff
 homeassistant/components/sensor/cups.py @fabaff
