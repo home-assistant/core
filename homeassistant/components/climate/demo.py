@@ -17,9 +17,9 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 SUPPORT_FLAGS = SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
-    add_devices([
+    add_entities([
         DemoClimate('HeatPump', 68, TEMP_FAHRENHEIT, None, None, 77,
                     None, None, None, None, 'heat', None, None,
                     None, True),

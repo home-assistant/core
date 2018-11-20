@@ -130,7 +130,7 @@ class CalendarEventDevice(Entity):
 
         now = dt.now()
 
-        if start <= now and end > now:
+        if start <= now < end:
             return STATE_ON
 
         if now >= end:

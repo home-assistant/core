@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the WHOIS sensor."""
     from pythonwhois import get_whois
     from pythonwhois.shared import WhoisException
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         if 'expiration_date' in get_whois(domain, normalized=True):
-            add_devices([WhoisSensor(name, domain)], True)
+            add_entities([WhoisSensor(name, domain)], True)
         else:
             _LOGGER.error(
                 "WHOIS lookup for %s didn't contain expiration_date",

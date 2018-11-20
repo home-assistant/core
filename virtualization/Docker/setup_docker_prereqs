@@ -7,8 +7,8 @@ set -e
 INSTALL_TELLSTICK="${INSTALL_TELLSTICK:-yes}"
 INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
-INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
+INSTALL_DLIB="${INSTALL_DLIB:-yes}"
 
 # Required debian packages for running hass or components
 PACKAGES=(
@@ -59,12 +59,12 @@ if [ "$INSTALL_LIBCEC" == "yes" ]; then
   virtualization/Docker/scripts/libcec
 fi
 
-if [ "$INSTALL_PHANTOMJS" == "yes" ]; then
-  virtualization/Docker/scripts/phantomjs
-fi
-
 if [ "$INSTALL_SSOCR" == "yes" ]; then
   virtualization/Docker/scripts/ssocr
+fi
+
+if [ "$INSTALL_DLIB" == "yes" ]; then
+  pip3 install --no-cache-dir "dlib>=19.5"
 fi
 
 # Remove packages

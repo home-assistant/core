@@ -12,7 +12,7 @@
             "init": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port (standardverdi: '80')"
+                    "port": "Port"
                 },
                 "title": "Definer deCONZ-gatewayen"
             },
@@ -28,6 +28,6 @@
                 "title": "Ekstra konfigurasjonsalternativer for deCONZ"
             }
         },
-        "title": "deCONZ"
+        "title": "deCONZ Zigbee gateway"
     }
 }

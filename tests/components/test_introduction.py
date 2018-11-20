@@ -11,7 +11,7 @@ class TestIntroduction(unittest.TestCase):
     """Test Introduction."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -20,4 +20,4 @@ class TestIntroduction(unittest.TestCase):
 
     def test_setup(self):
         """Test introduction setup."""
-        self.assertTrue(setup_component(self.hass, introduction.DOMAIN, {}))
+        assert setup_component(self.hass, introduction.DOMAIN, {})

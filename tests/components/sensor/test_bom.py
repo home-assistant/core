@@ -71,8 +71,8 @@ class TestBOMWeatherSensor(unittest.TestCase):
     def test_setup(self, mock_get):
         """Test the setup with custom settings."""
         with assert_setup_component(1, sensor.DOMAIN):
-            self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
-                'sensor': VALID_CONFIG}))
+            assert setup_component(self.hass, sensor.DOMAIN, {
+                'sensor': VALID_CONFIG})
 
         fake_entities = [
             'bom_fake_feels_like_c',
@@ -81,19 +81,19 @@ class TestBOMWeatherSensor(unittest.TestCase):
 
         for entity_id in fake_entities:
             state = self.hass.states.get('sensor.{}'.format(entity_id))
-            self.assertIsNotNone(state)
+            assert state is not None
 
     @patch('requests.get', side_effect=mocked_requests)
     def test_sensor_values(self, mock_get):
         """Test retrieval of sensor values."""
-        self.assertTrue(setup_component(
-            self.hass, sensor.DOMAIN, {'sensor': VALID_CONFIG}))
+        assert setup_component(
+            self.hass, sensor.DOMAIN, {'sensor': VALID_CONFIG})
 
         weather = self.hass.states.get('sensor.bom_fake_weather').state
-        self.assertEqual('Fine', weather)
+        assert 'Fine' == weather
 
         pressure = self.hass.states.get('sensor.bom_fake_pressure_mb').state
-        self.assertEqual('1021.7', pressure)
+        assert '1021.7' == pressure
 
         feels_like = self.hass.states.get('sensor.bom_fake_feels_like_c').state
-        self.assertEqual('25.0', feels_like)
+        assert '25.0' == feels_like

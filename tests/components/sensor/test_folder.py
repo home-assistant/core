@@ -44,8 +44,7 @@ class TestFolderSensor(unittest.TestCase):
                 'platform': 'folder',
                 CONF_FOLDER_PATHS: 'invalid_path'}
         }
-        self.assertTrue(
-            setup_component(self.hass, 'sensor', config))
+        assert setup_component(self.hass, 'sensor', config)
         assert len(self.hass.states.entity_ids()) == 0
 
     def test_valid_path(self):
@@ -56,8 +55,7 @@ class TestFolderSensor(unittest.TestCase):
                 'platform': 'folder',
                 CONF_FOLDER_PATHS: TEST_DIR}
         }
-        self.assertTrue(
-            setup_component(self.hass, 'sensor', config))
+        assert setup_component(self.hass, 'sensor', config)
         assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get('sensor.test_folder')
         assert state.state == '0.0'

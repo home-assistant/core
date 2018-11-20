@@ -5,25 +5,24 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.ecobee/
 """
 from datetime import datetime
+
 from homeassistant.components import ecobee
 from homeassistant.components.weather import (
-    WeatherEntity, ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME)
-from homeassistant.const import (TEMP_FAHRENHEIT)
-
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TIME, ATTR_FORECAST_WIND_SPEED, WeatherEntity)
+from homeassistant.const import TEMP_FAHRENHEIT
 
 DEPENDENCIES = ['ecobee']
 
 ATTR_FORECAST_TEMP_HIGH = 'temphigh'
 ATTR_FORECAST_PRESSURE = 'pressure'
 ATTR_FORECAST_VISIBILITY = 'visibility'
-ATTR_FORECAST_WIND_SPEED = 'windspeed'
 ATTR_FORECAST_HUMIDITY = 'humidity'
 
 MISSING_DATA = -5002
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecobee weather component."""
     if discovery_info is None:
         return
@@ -34,14 +33,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if 'weather' in thermostat:
             dev.append(EcobeeWeather(thermostat['name'], index))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class EcobeeWeather(WeatherEntity):
     """Representation of Ecobee weather data."""
 
     def __init__(self, name, index):
-        """Initialize the sensor."""
+        """Initialize the Ecobee weather platform."""
         self._name = name
         self._index = index
         self.weather = None

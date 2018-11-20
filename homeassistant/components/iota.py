@@ -57,7 +57,7 @@ class IotaDevice(Entity):
     """Representation of a IOTA device."""
 
     def __init__(self, name, seed, iri, is_testnet=False):
-        """Initialisation of the IOTA device."""
+        """Initialise the IOTA device."""
         self._name = name
         self._seed = seed
         self.iri = iri

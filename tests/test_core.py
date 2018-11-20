@@ -4,7 +4,7 @@ import asyncio
 import logging
 import os
 import unittest
-from unittest.mock import patch, MagicMock, sentinel
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 from tempfile import TemporaryDirectory
 
@@ -19,10 +19,11 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
-    ATTR_NOW, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED)
+    ATTR_NOW, EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, ATTR_SECONDS,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED, EVENT_SERVICE_EXECUTED)
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, async_mock_service
 
 PST = pytz.timezone('America/Los_Angeles')
 
@@ -130,7 +131,7 @@ class TestHomeAssistant(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -246,24 +247,23 @@ class TestEvent(unittest.TestCase):
         """Test events."""
         now = dt_util.utcnow()
         data = {'some': 'attr'}
+        context = ha.Context()
         event1, event2 = [
-            ha.Event('some_type', data, time_fired=now)
+            ha.Event('some_type', data, time_fired=now, context=context)
             for _ in range(2)
         ]
 
-        self.assertEqual(event1, event2)
+        assert event1 == event2
 
     def test_repr(self):
         """Test that repr method works."""
-        self.assertEqual(
-            "<Event TestEvent[L]>",
-            str(ha.Event("TestEvent")))
+        assert "<Event TestEvent[L]>" == \
+            str(ha.Event("TestEvent"))
 
-        self.assertEqual(
-            "<Event TestEvent[R]: beer=nice>",
+        assert "<Event TestEvent[R]: beer=nice>" == \
             str(ha.Event("TestEvent",
                          {"beer": "nice"},
-                         ha.EventOrigin.remote)))
+                         ha.EventOrigin.remote))
 
     def test_as_dict(self):
         """Test as dictionary."""
@@ -277,8 +277,12 @@ class TestEvent(unittest.TestCase):
             'data': data,
             'origin': 'LOCAL',
             'time_fired': now,
+            'context': {
+                'id': event.context.id,
+                'user_id': event.context.user_id,
+            },
         }
-        self.assertEqual(expected, event.as_dict())
+        assert expected == event.as_dict()
 
 
 class TestEventBus(unittest.TestCase):
@@ -286,7 +290,7 @@ class TestEventBus(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
 
@@ -304,11 +308,11 @@ class TestEventBus(unittest.TestCase):
 
         unsub = self.bus.listen('test', listener)
 
-        self.assertEqual(old_count + 1, len(self.bus.listeners))
+        assert old_count + 1 == len(self.bus.listeners)
 
         # Remove listener
         unsub()
-        self.assertEqual(old_count, len(self.bus.listeners))
+        assert old_count == len(self.bus.listeners)
 
         # Should do nothing now
         unsub()
@@ -351,7 +355,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire('test_event')
 
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
+        assert 1 == len(runs)
 
     def test_listen_once_event_with_coroutine(self):
         """Test listen_once_event method."""
@@ -368,7 +372,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire('test_event')
 
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
+        assert 1 == len(runs)
 
     def test_listen_once_event_with_thread(self):
         """Test listen_once_event method."""
@@ -384,7 +388,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire('test_event')
 
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
+        assert 1 == len(runs)
 
     def test_thread_event_listener(self):
         """Test thread event listener."""
@@ -430,59 +434,56 @@ class TestState(unittest.TestCase):
 
     def test_init(self):
         """Test state.init."""
-        self.assertRaises(
-            InvalidEntityFormatError, ha.State,
-            'invalid_entity_format', 'test_state')
+        with pytest.raises(InvalidEntityFormatError):
+            ha.State('invalid_entity_format', 'test_state')
 
-        self.assertRaises(
-            InvalidStateError, ha.State,
-            'domain.long_state', 't' * 256)
+        with pytest.raises(InvalidStateError):
+            ha.State('domain.long_state', 't' * 256)
 
     def test_domain(self):
         """Test domain."""
         state = ha.State('some_domain.hello', 'world')
-        self.assertEqual('some_domain', state.domain)
+        assert 'some_domain' == state.domain
 
     def test_object_id(self):
         """Test object ID."""
         state = ha.State('domain.hello', 'world')
-        self.assertEqual('hello', state.object_id)
+        assert 'hello' == state.object_id
 
     def test_name_if_no_friendly_name_attr(self):
         """Test if there is no friendly name."""
         state = ha.State('domain.hello_world', 'world')
-        self.assertEqual('hello world', state.name)
+        assert 'hello world' == state.name
 
     def test_name_if_friendly_name_attr(self):
         """Test if there is a friendly name."""
         name = 'Some Unique Name'
         state = ha.State('domain.hello_world', 'world',
                          {ATTR_FRIENDLY_NAME: name})
-        self.assertEqual(name, state.name)
+        assert name == state.name
 
     def test_dict_conversion(self):
         """Test conversion of dict."""
         state = ha.State('domain.hello', 'world', {'some': 'attr'})
-        self.assertEqual(state, ha.State.from_dict(state.as_dict()))
+        assert state == ha.State.from_dict(state.as_dict())
 
     def test_dict_conversion_with_wrong_data(self):
         """Test conversion with wrong data."""
-        self.assertIsNone(ha.State.from_dict(None))
-        self.assertIsNone(ha.State.from_dict({'state': 'yes'}))
-        self.assertIsNone(ha.State.from_dict({'entity_id': 'yes'}))
+        assert ha.State.from_dict(None) is None
+        assert ha.State.from_dict({'state': 'yes'}) is None
+        assert ha.State.from_dict({'entity_id': 'yes'}) is None
 
     def test_repr(self):
         """Test state.repr."""
-        self.assertEqual("<state happy.happy=on @ 1984-12-08T12:00:00+00:00>",
-                         str(ha.State(
-                             "happy.happy", "on",
-                             last_changed=datetime(1984, 12, 8, 12, 0, 0))))
+        assert "<state happy.happy=on @ 1984-12-08T12:00:00+00:00>" == \
+            str(ha.State(
+                "happy.happy", "on",
+                last_changed=datetime(1984, 12, 8, 12, 0, 0)))
 
-        self.assertEqual(
-            "<state happy.happy=on; brightness=144 @ "
-            "1984-12-08T12:00:00+00:00>",
+        assert "<state happy.happy=on; brightness=144 @ " \
+            "1984-12-08T12:00:00+00:00>" == \
             str(ha.State("happy.happy", "on", {"brightness": 144},
-                         datetime(1984, 12, 8, 12, 0, 0))))
+                         datetime(1984, 12, 8, 12, 0, 0)))
 
 
 class TestStateMachine(unittest.TestCase):
@@ -490,7 +491,7 @@ class TestStateMachine(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
@@ -503,25 +504,25 @@ class TestStateMachine(unittest.TestCase):
 
     def test_is_state(self):
         """Test is_state method."""
-        self.assertTrue(self.states.is_state('light.Bowl', 'on'))
-        self.assertFalse(self.states.is_state('light.Bowl', 'off'))
-        self.assertFalse(self.states.is_state('light.Non_existing', 'on'))
+        assert self.states.is_state('light.Bowl', 'on')
+        assert not self.states.is_state('light.Bowl', 'off')
+        assert not self.states.is_state('light.Non_existing', 'on')
 
     def test_entity_ids(self):
         """Test get_entity_ids method."""
         ent_ids = self.states.entity_ids()
-        self.assertEqual(2, len(ent_ids))
-        self.assertTrue('light.bowl' in ent_ids)
-        self.assertTrue('switch.ac' in ent_ids)
+        assert 2 == len(ent_ids)
+        assert 'light.bowl' in ent_ids
+        assert 'switch.ac' in ent_ids
 
         ent_ids = self.states.entity_ids('light')
-        self.assertEqual(1, len(ent_ids))
-        self.assertTrue('light.bowl' in ent_ids)
+        assert 1 == len(ent_ids)
+        assert 'light.bowl' in ent_ids
 
     def test_all(self):
         """Test everything."""
         states = sorted(state.entity_id for state in self.states.all())
-        self.assertEqual(['light.bowl', 'switch.ac'], states)
+        assert ['light.bowl', 'switch.ac'] == states
 
     def test_remove(self):
         """Test remove method."""
@@ -533,21 +534,21 @@ class TestStateMachine(unittest.TestCase):
 
         self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
-        self.assertIn('light.bowl', self.states.entity_ids())
-        self.assertTrue(self.states.remove('light.bowl'))
+        assert 'light.bowl' in self.states.entity_ids()
+        assert self.states.remove('light.bowl')
         self.hass.block_till_done()
 
-        self.assertNotIn('light.bowl', self.states.entity_ids())
-        self.assertEqual(1, len(events))
-        self.assertEqual('light.bowl', events[0].data.get('entity_id'))
-        self.assertIsNotNone(events[0].data.get('old_state'))
-        self.assertEqual('light.bowl', events[0].data['old_state'].entity_id)
-        self.assertIsNone(events[0].data.get('new_state'))
+        assert 'light.bowl' not in self.states.entity_ids()
+        assert 1 == len(events)
+        assert 'light.bowl' == events[0].data.get('entity_id')
+        assert events[0].data.get('old_state') is not None
+        assert 'light.bowl' == events[0].data['old_state'].entity_id
+        assert events[0].data.get('new_state') is None
 
         # If it does not exist, we should get False
-        self.assertFalse(self.states.remove('light.Bowl'))
+        assert not self.states.remove('light.Bowl')
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
     def test_case_insensitivty(self):
         """Test insensitivty."""
@@ -562,8 +563,8 @@ class TestStateMachine(unittest.TestCase):
         self.states.set('light.BOWL', 'off')
         self.hass.block_till_done()
 
-        self.assertTrue(self.states.is_state('light.bowl', 'off'))
-        self.assertEqual(1, len(runs))
+        assert self.states.is_state('light.bowl', 'off')
+        assert 1 == len(runs)
 
     def test_last_changed_not_updated_on_same_state(self):
         """Test to not update the existing, same state."""
@@ -591,25 +592,23 @@ class TestStateMachine(unittest.TestCase):
 
         self.states.set('light.bowl', 'on')
         self.hass.block_till_done()
-        self.assertEqual(0, len(events))
+        assert 0 == len(events)
 
         self.states.set('light.bowl', 'on', None, True)
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        assert 1 == len(events)
 
 
-class TestServiceCall(unittest.TestCase):
-    """Test ServiceCall class."""
+def test_service_call_repr():
+    """Test ServiceCall repr."""
+    call = ha.ServiceCall('homeassistant', 'start')
+    assert str(call) == \
+        "<ServiceCall homeassistant.start (c:{})>".format(call.context.id)
 
-    def test_repr(self):
-        """Test repr method."""
-        self.assertEqual(
-            "<ServiceCall homeassistant.start>",
-            str(ha.ServiceCall('homeassistant', 'start')))
-
-        self.assertEqual(
-            "<ServiceCall homeassistant.start: fast=yes>",
-            str(ha.ServiceCall('homeassistant', 'start', {"fast": "yes"})))
+    call2 = ha.ServiceCall('homeassistant', 'start', {'fast': 'yes'})
+    assert str(call2) == \
+        "<ServiceCall homeassistant.start (c:{}): fast=yes>".format(
+            call2.context.id)
 
 
 class TestServiceRegistry(unittest.TestCase):
@@ -617,7 +616,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
 
@@ -643,12 +642,9 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_has_service(self):
         """Test has_service method."""
-        self.assertTrue(
-            self.services.has_service("tesT_domaiN", "tesT_servicE"))
-        self.assertFalse(
-            self.services.has_service("test_domain", "non_existing"))
-        self.assertFalse(
-            self.services.has_service("non_existing", "test_service"))
+        assert self.services.has_service("tesT_domaiN", "tesT_servicE")
+        assert not self.services.has_service("test_domain", "non_existing")
+        assert not self.services.has_service("non_existing", "test_service")
 
     def test_services(self):
         """Test services."""
@@ -671,9 +667,9 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data['domain'] == 'test_domain'
         assert self.calls_register[-1].data['service'] == 'register_calls'
 
-        self.assertTrue(
-            self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
-        self.assertEqual(1, len(calls))
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
+        assert 1 == len(calls)
 
     def test_call_non_existing_with_blocking(self):
         """Test non-existing with blocking."""
@@ -702,10 +698,10 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data['domain'] == 'test_domain'
         assert self.calls_register[-1].data['service'] == 'register_calls'
 
-        self.assertTrue(
-            self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
         self.hass.block_till_done()
-        self.assertEqual(1, len(calls))
+        assert 1 == len(calls)
 
     def test_callback_service(self):
         """Test registering and calling an async service."""
@@ -724,10 +720,10 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data['domain'] == 'test_domain'
         assert self.calls_register[-1].data['service'] == 'register_calls'
 
-        self.assertTrue(
-            self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
         self.hass.block_till_done()
-        self.assertEqual(1, len(calls))
+        assert 1 == len(calls)
 
     def test_remove_service(self):
         """Test remove service."""
@@ -772,21 +768,21 @@ class TestConfig(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.config = ha.Config()
-        self.assertIsNone(self.config.config_dir)
+        assert self.config.config_dir is None
 
     def test_path_with_file(self):
         """Test get_config_path method."""
         self.config.config_dir = '/tmp/ha-config'
-        self.assertEqual("/tmp/ha-config/test.conf",
-                         self.config.path("test.conf"))
+        assert "/tmp/ha-config/test.conf" == \
+            self.config.path("test.conf")
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
         self.config.config_dir = '/tmp/ha-config'
-        self.assertEqual("/tmp/ha-config/dir/test.conf",
-                         self.config.path("dir", "test.conf"))
+        assert "/tmp/ha-config/dir/test.conf" == \
+            self.config.path("dir", "test.conf")
 
     def test_as_dict(self):
         """Test as dict."""
@@ -804,7 +800,7 @@ class TestConfig(unittest.TestCase):
             'version': __version__,
         }
 
-        self.assertEqual(expected, self.config.as_dict())
+        assert expected == self.config.as_dict()
 
     def test_is_allowed_path(self):
         """Test is_allowed_path method."""
@@ -839,7 +835,7 @@ class TestConfig(unittest.TestCase):
             for path in unvalid:
                 assert not self.config.is_allowed_path(path)
 
-            with self.assertRaises(AssertionError):
+            with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
 
 
@@ -854,32 +850,42 @@ def test_create_timer(mock_monotonic, loop):
         funcs.append(func)
         return orig_callback(func)
 
-    mock_monotonic.side_effect = 10.2, 10.3
+    mock_monotonic.side_effect = 10.2, 10.8, 11.3
 
     with patch.object(ha, 'callback', mock_callback), \
             patch('homeassistant.core.dt_util.utcnow',
-                  return_value=sentinel.mock_date):
+                  return_value=datetime(2018, 12, 31, 3, 4, 5, 333333)):
         ha._async_create_timer(hass)
 
-        assert len(funcs) == 2
-        fire_time_event, stop_timer = funcs
+    assert len(funcs) == 2
+    fire_time_event, stop_timer = funcs
+
+    assert len(hass.loop.call_later.mock_calls) == 1
+    delay, callback, target = hass.loop.call_later.mock_calls[0][1]
+    assert abs(delay - 0.666667) < 0.001
+    assert callback is fire_time_event
+    assert abs(target - 10.866667) < 0.001
+
+    with patch('homeassistant.core.dt_util.utcnow',
+               return_value=datetime(2018, 12, 31, 3, 4, 6, 100000)):
+        callback(target)
 
     assert len(hass.bus.async_listen_once.mock_calls) == 1
     assert len(hass.bus.async_fire.mock_calls) == 1
-    assert len(hass.loop.call_later.mock_calls) == 1
+    assert len(hass.loop.call_later.mock_calls) == 2
 
     event_type, callback = hass.bus.async_listen_once.mock_calls[0][1]
     assert event_type == EVENT_HOMEASSISTANT_STOP
     assert callback is stop_timer
 
-    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[0][1]
-    assert abs(slp_seconds - 0.9) < 0.001
+    delay, callback, target = hass.loop.call_later.mock_calls[1][1]
+    assert abs(delay - 0.9) < 0.001
     assert callback is fire_time_event
-    assert abs(nxt - 11.2) < 0.001
+    assert abs(target - 12.2) < 0.001
 
     event_type, event_data = hass.bus.async_fire.mock_calls[0][1]
     assert event_type == EVENT_TIME_CHANGED
-    assert event_data[ATTR_NOW] is sentinel.mock_date
+    assert event_data[ATTR_NOW] == datetime(2018, 12, 31, 3, 4, 6, 100000)
 
 
 @patch('homeassistant.core.monotonic')
@@ -893,22 +899,32 @@ def test_timer_out_of_sync(mock_monotonic, loop):
         funcs.append(func)
         return orig_callback(func)
 
-    mock_monotonic.side_effect = 10.2, 11.3, 11.3
+    mock_monotonic.side_effect = 10.2, 13.3, 13.4
 
     with patch.object(ha, 'callback', mock_callback), \
             patch('homeassistant.core.dt_util.utcnow',
-                  return_value=sentinel.mock_date):
+                  return_value=datetime(2018, 12, 31, 3, 4, 5, 333333)):
         ha._async_create_timer(hass)
+
+    delay, callback, target = hass.loop.call_later.mock_calls[0][1]
+
+    with patch('homeassistant.core.dt_util.utcnow',
+               return_value=datetime(2018, 12, 31, 3, 4, 8, 200000)):
+        callback(target)
+
+        event_type, event_data = hass.bus.async_fire.mock_calls[1][1]
+        assert event_type == EVENT_TIMER_OUT_OF_SYNC
+        assert abs(event_data[ATTR_SECONDS] - 2.433333) < 0.001
 
         assert len(funcs) == 2
         fire_time_event, stop_timer = funcs
 
-    assert len(hass.loop.call_later.mock_calls) == 1
+    assert len(hass.loop.call_later.mock_calls) == 2
 
-    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[0][1]
-    assert slp_seconds == 1
+    delay, callback, target = hass.loop.call_later.mock_calls[1][1]
+    assert abs(delay - 0.8) < 0.001
     assert callback is fire_time_event
-    assert abs(nxt - 12.3) < 0.001
+    assert abs(target - 14.2) < 0.001
 
 
 @asyncio.coroutine
@@ -966,3 +982,27 @@ def test_track_task_functions(loop):
         assert hass._track_task
     finally:
         yield from hass.async_stop()
+
+
+async def test_service_executed_with_subservices(hass):
+    """Test we block correctly till all services done."""
+    calls = async_mock_service(hass, 'test', 'inner')
+
+    async def handle_outer(call):
+        """Handle outer service call."""
+        calls.append(call)
+        call1 = hass.services.async_call('test', 'inner', blocking=True,
+                                         context=call.context)
+        call2 = hass.services.async_call('test', 'inner', blocking=True,
+                                         context=call.context)
+        await asyncio.wait([call1, call2])
+        calls.append(call)
+
+    hass.services.async_register('test', 'outer', handle_outer)
+
+    await hass.services.async_call('test', 'outer', blocking=True)
+
+    assert len(calls) == 4
+    assert [call.service for call in calls] == [
+        'outer', 'inner', 'inner', 'outer']
+    assert len(hass.bus.async_listeners().get(EVENT_SERVICE_EXECUTED, [])) == 0

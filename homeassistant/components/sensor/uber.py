@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Uber sensor."""
     from uber_rides.session import Session
 
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             dev.append(UberSensor(
                 'price', timeandpriceest, product_id, product))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class UberSensor(Entity):
@@ -175,7 +175,7 @@ class UberSensor(Entity):
                 self._state = 0
 
 
-class UberEstimate(object):
+class UberEstimate:
     """The class for handling the time and price estimate."""
 
     def __init__(self, session, start_latitude, start_longitude,

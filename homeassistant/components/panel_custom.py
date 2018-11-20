@@ -22,8 +22,13 @@ CONF_URL_PATH = 'url_path'
 CONF_CONFIG = 'config'
 CONF_WEBCOMPONENT_PATH = 'webcomponent_path'
 CONF_JS_URL = 'js_url'
+CONF_MODULE_URL = 'module_url'
 CONF_EMBED_IFRAME = 'embed_iframe'
 CONF_TRUST_EXTERNAL_SCRIPT = 'trust_external_script'
+CONF_URL_EXCLUSIVE_GROUP = 'url_exclusive_group'
+
+MSG_URL_CONFLICT = \
+                'Pass in only one of webcomponent_path, module_url or js_url'
 
 DEFAULT_EMBED_IFRAME = False
 DEFAULT_TRUST_EXTERNAL = False
@@ -40,8 +45,12 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SIDEBAR_ICON, default=DEFAULT_ICON): cv.icon,
         vol.Optional(CONF_URL_PATH): cv.string,
         vol.Optional(CONF_CONFIG): dict,
-        vol.Optional(CONF_WEBCOMPONENT_PATH): cv.isfile,
-        vol.Optional(CONF_JS_URL): cv.string,
+        vol.Exclusive(CONF_WEBCOMPONENT_PATH, CONF_URL_EXCLUSIVE_GROUP,
+                      msg=MSG_URL_CONFLICT): cv.string,
+        vol.Exclusive(CONF_JS_URL, CONF_URL_EXCLUSIVE_GROUP,
+                      msg=MSG_URL_CONFLICT): cv.string,
+        vol.Exclusive(CONF_MODULE_URL, CONF_URL_EXCLUSIVE_GROUP,
+                      msg=MSG_URL_CONFLICT): cv.string,
         vol.Optional(CONF_EMBED_IFRAME,
                      default=DEFAULT_EMBED_IFRAME): cv.boolean,
         vol.Optional(CONF_TRUST_EXTERNAL_SCRIPT,
@@ -66,6 +75,8 @@ async def async_register_panel(
         html_url=None,
         # JS source of your panel
         js_url=None,
+        # JS module of your panel
+        module_url=None,
         # If your panel should be run inside an iframe
         embed_iframe=DEFAULT_EMBED_IFRAME,
         # Should user be asked for confirmation when loading external source
@@ -73,10 +84,10 @@ async def async_register_panel(
         # Configuration to be passed to the panel
         config=None):
     """Register a new custom panel."""
-    if js_url is None and html_url is None:
-        raise ValueError('Either js_url or html_url is required.')
-    elif js_url and html_url:
-        raise ValueError('Pass in either JS url or HTML url, not both.')
+    if js_url is None and html_url is None and module_url is None:
+        raise ValueError('Either js_url, module_url or html_url is required.')
+    elif (js_url and html_url) or (module_url and html_url):
+        raise ValueError('Pass in only one of JS url, Module url or HTML url.')
 
     if config is not None and not isinstance(config, dict):
         raise ValueError('Config needs to be a dictionary.')
@@ -89,6 +100,9 @@ async def async_register_panel(
 
     if js_url is not None:
         custom_panel_config['js_url'] = js_url
+
+    if module_url is not None:
+        custom_panel_config['module_url'] = module_url
 
     if html_url is not None:
         custom_panel_config['html_url'] = html_url
@@ -135,6 +149,9 @@ async def async_setup(hass, config):
 
         if CONF_JS_URL in panel:
             kwargs['js_url'] = panel[CONF_JS_URL]
+
+        elif CONF_MODULE_URL in panel:
+            kwargs['module_url'] = panel[CONF_MODULE_URL]
 
         elif not await hass.async_add_job(os.path.isfile, panel_path):
             _LOGGER.error('Unable to find webcomponent for %s: %s',

@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.helpers import intent, config_validation as cv
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 
 DOMAIN = 'snips'
 DEPENDENCIES = ['mqtt']
@@ -131,7 +131,10 @@ async def async_setup(hass, config):
         slots = {}
         for slot in request.get('slots', []):
             slots[slot['slotName']] = {'value': resolve_slot_values(slot)}
+            slots['{}_raw'.format(slot['slotName'])] = {
+                'value': slot['rawValue']}
         slots['site_id'] = {'value': request.get('siteId')}
+        slots['session_id'] = {'value': request.get('sessionId')}
         slots['probability'] = {'value': request['intent']['probability']}
 
         try:
@@ -139,7 +142,7 @@ async def async_setup(hass, config):
                 hass, DOMAIN, intent_type, slots, request['input'])
             if 'plain' in intent_response.speech:
                 snips_response = intent_response.speech['plain']['speech']
-        except intent.UnknownIntent as err:
+        except intent.UnknownIntent:
             _LOGGER.warning("Received unknown intent %s",
                             request['intent']['intentName'])
         except intent.IntentError:

@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Garadget covers."""
     covers = []
     devices = config.get(CONF_COVERS)
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         covers.append(GaradgetCover(hass, args))
 
-    add_devices(covers)
+    add_entities(covers)
 
 
 class GaradgetCover(CoverDevice):
@@ -106,7 +106,7 @@ class GaradgetCover(CoverDevice):
             self._state = STATE_OFFLINE
             self._available = False
             self._name = DEFAULT_NAME
-        except KeyError as ex:
+        except KeyError:
             _LOGGER.warning("Garadget device %(device)s seems to be offline",
                             dict(device=self.device_id))
             self._name = DEFAULT_NAME
@@ -235,7 +235,7 @@ class GaradgetCover(CoverDevice):
             _LOGGER.error(
                 "Unable to connect to server: %(reason)s", dict(reason=ex))
             self._state = STATE_OFFLINE
-        except KeyError as ex:
+        except KeyError:
             _LOGGER.warning("Garadget device %(device)s seems to be offline",
                             dict(device=self.device_id))
             self._state = STATE_OFFLINE

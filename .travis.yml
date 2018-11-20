@@ -13,7 +13,8 @@ matrix:
     - python: "3.5.3"
       env: TOXENV=typing
     - python: "3.5.3"
-      env: TOXENV=py35
+      env: TOXENV=cov
+      after_success: coveralls
     - python: "3.6"
       env: TOXENV=py36
     - python: "3.7"
@@ -45,4 +46,3 @@ deploy:
   on:
     branch: dev
     condition: $TOXENV = lint
-after_success: coveralls

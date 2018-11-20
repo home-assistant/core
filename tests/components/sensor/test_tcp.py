@@ -39,7 +39,7 @@ class TestTCPSensor(unittest.TestCase):
     """Test the TCP Sensor."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
@@ -48,14 +48,14 @@ class TestTCPSensor(unittest.TestCase):
 
     @patch('homeassistant.components.sensor.tcp.TcpSensor.update')
     def test_setup_platform_valid_config(self, mock_update):
-        """Check a valid configuration and call add_devices with sensor."""
+        """Check a valid configuration and call add_entities with sensor."""
         with assert_setup_component(0, 'sensor'):
             assert setup_component(self.hass, 'sensor', TEST_CONFIG)
 
-        add_devices = Mock()
-        tcp.setup_platform(None, TEST_CONFIG['sensor'], add_devices)
-        assert add_devices.called
-        assert isinstance(add_devices.call_args[0][0][0], tcp.TcpSensor)
+        add_entities = Mock()
+        tcp.setup_platform(None, TEST_CONFIG['sensor'], add_entities)
+        assert add_entities.called
+        assert isinstance(add_entities.call_args[0][0][0], tcp.TcpSensor)
 
     def test_setup_platform_invalid_config(self):
         """Check an invalid configuration."""

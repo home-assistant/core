@@ -53,7 +53,7 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
                  SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_FAN_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecobee Thermostat Platform."""
     if discovery_info is None:
         return
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hold_temp)
     devices = [Thermostat(data, index, hold_temp)
                for index in range(len(data.ecobee.thermostats))]
-    add_devices(devices)
+    add_entities(devices)
 
     def fan_min_on_time_set_service(service):
         """Set the minimum fan on time on the target thermostats."""
@@ -177,7 +177,7 @@ class Thermostat(ClimateDevice):
             return None
         if self.current_operation == STATE_HEAT:
             return self.thermostat['runtime']['desiredHeat'] / 10.0
-        elif self.current_operation == STATE_COOL:
+        if self.current_operation == STATE_COOL:
             return self.thermostat['runtime']['desiredCool'] / 10.0
         return None
 
@@ -217,15 +217,15 @@ class Thermostat(ClimateDevice):
                             return 'away'
                         # A permanent hold from away climate
                         return AWAY_MODE
-                    elif event['holdClimateRef'] != "":
+                    if event['holdClimateRef'] != "":
                         # Any other hold based on climate
                         return event['holdClimateRef']
                     # Any hold not based on a climate is a temp hold
                     return TEMPERATURE_HOLD
-                elif event['type'].startswith('auto'):
+                if event['type'].startswith('auto'):
                     # All auto modes are treated as holds
                     return event['type'][4:].lower()
-                elif event['type'] == 'vacation':
+                if event['type'] == 'vacation':
                     self.vacation = event['name']
                     return VACATION_HOLD
         return None
@@ -317,7 +317,7 @@ class Thermostat(ClimateDevice):
         if hold == hold_mode:
             # no change, so no action required
             return
-        elif hold_mode == 'None' or hold_mode is None:
+        if hold_mode == 'None' or hold_mode is None:
             if hold == VACATION_HOLD:
                 self.data.ecobee.delete_vacation(
                     self.thermostat_index, self.vacation)

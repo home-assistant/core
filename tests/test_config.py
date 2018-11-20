@@ -7,7 +7,7 @@ import unittest.mock as mock
 from collections import OrderedDict
 
 import pytest
-from voluptuous import MultipleInvalid
+from voluptuous import MultipleInvalid, Invalid
 
 from homeassistant.core import DOMAIN, HomeAssistantError, Config
 import homeassistant.config as config_util
@@ -15,7 +15,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIT_SYSTEM, CONF_NAME,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
-    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
+    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT,
+    CONF_AUTH_PROVIDERS, CONF_AUTH_MFA_MODULES)
 from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.util.async_ import run_coroutine_threadsafe
@@ -101,7 +102,7 @@ class TestConfig(unittest.TestCase):
         """Test if it finds a YAML config file."""
         create_file(YAML_PATH)
 
-        self.assertEqual(YAML_PATH, config_util.find_config_file(CONFIG_DIR))
+        assert YAML_PATH == config_util.find_config_file(CONFIG_DIR)
 
     @mock.patch('builtins.print')
     def test_ensure_config_exists_creates_config(self, mock_print):
@@ -111,8 +112,8 @@ class TestConfig(unittest.TestCase):
         """
         config_util.ensure_config_exists(CONFIG_DIR, False)
 
-        self.assertTrue(os.path.isfile(YAML_PATH))
-        self.assertTrue(mock_print.called)
+        assert os.path.isfile(YAML_PATH)
+        assert mock_print.called
 
     def test_ensure_config_exists_uses_existing_config(self):
         """Test that calling ensure_config_exists uses existing config."""
@@ -123,21 +124,20 @@ class TestConfig(unittest.TestCase):
             content = f.read()
 
         # File created with create_file are empty
-        self.assertEqual('', content)
+        assert '' == content
 
     def test_load_yaml_config_converts_empty_files_to_dict(self):
         """Test that loading an empty file returns an empty dict."""
         create_file(YAML_PATH)
 
-        self.assertIsInstance(
-            config_util.load_yaml_config_file(YAML_PATH), dict)
+        assert isinstance(config_util.load_yaml_config_file(YAML_PATH), dict)
 
     def test_load_yaml_config_raises_error_if_not_dict(self):
         """Test error raised when YAML file is not a dict."""
         with open(YAML_PATH, 'w') as f:
             f.write('5')
 
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             config_util.load_yaml_config_file(YAML_PATH)
 
     def test_load_yaml_config_raises_error_if_malformed_yaml(self):
@@ -145,7 +145,7 @@ class TestConfig(unittest.TestCase):
         with open(YAML_PATH, 'w') as f:
             f.write(':')
 
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             config_util.load_yaml_config_file(YAML_PATH)
 
     def test_load_yaml_config_raises_error_if_unsafe_yaml(self):
@@ -153,7 +153,7 @@ class TestConfig(unittest.TestCase):
         with open(YAML_PATH, 'w') as f:
             f.write('hello: !!python/object/apply:os.system')
 
-        with self.assertRaises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             config_util.load_yaml_config_file(YAML_PATH)
 
     def test_load_yaml_config_preserves_key_order(self):
@@ -162,9 +162,8 @@ class TestConfig(unittest.TestCase):
             f.write('hello: 2\n')
             f.write('world: 1\n')
 
-        self.assertEqual(
-            [('hello', 2), ('world', 1)],
-            list(config_util.load_yaml_config_file(YAML_PATH).items()))
+        assert [('hello', 2), ('world', 1)] == \
+            list(config_util.load_yaml_config_file(YAML_PATH).items())
 
     @mock.patch('homeassistant.util.location.detect_location_info',
                 return_value=location_util.LocationInfo(
@@ -180,7 +179,7 @@ class TestConfig(unittest.TestCase):
 
         config = config_util.load_yaml_config_file(YAML_PATH)
 
-        self.assertIn(DOMAIN, config)
+        assert DOMAIN in config
 
         ha_conf = config[DOMAIN]
 
@@ -204,10 +203,9 @@ class TestConfig(unittest.TestCase):
 
         Non existing folder returns None.
         """
-        self.assertIsNone(
-            config_util.create_default_config(
-                os.path.join(CONFIG_DIR, 'non_existing_dir/'), False))
-        self.assertTrue(mock_print.called)
+        assert config_util.create_default_config(
+                os.path.join(CONFIG_DIR, 'non_existing_dir/'), False) is None
+        assert mock_print.called
 
     # pylint: disable=no-self-use
     def test_core_config_schema(self):
@@ -263,7 +261,7 @@ class TestConfig(unittest.TestCase):
         """Test that customize_glob preserves order."""
         conf = config_util.CORE_CONFIG_SCHEMA(
             {'customize_glob': OrderedDict()})
-        self.assertIsInstance(conf['customize_glob'], OrderedDict)
+        assert isinstance(conf['customize_glob'], OrderedDict)
 
     def _compute_state(self, config):
         run_coroutine_threadsafe(
@@ -305,14 +303,10 @@ class TestConfig(unittest.TestCase):
             config_util.process_ha_config_upgrade(self.hass)
             hass_path = self.hass.config.path.return_value
 
-            self.assertEqual(mock_os.path.isdir.call_count, 1)
-            self.assertEqual(
-                mock_os.path.isdir.call_args, mock.call(hass_path)
-            )
-            self.assertEqual(mock_shutil.rmtree.call_count, 1)
-            self.assertEqual(
-                mock_shutil.rmtree.call_args, mock.call(hass_path)
-            )
+            assert mock_os.path.isdir.call_count == 1
+            assert mock_os.path.isdir.call_args == mock.call(hass_path)
+            assert mock_shutil.rmtree.call_count == 1
+            assert mock_shutil.rmtree.call_args == mock.call(hass_path)
 
     def test_process_config_upgrade(self):
         """Test update of version on upgrade."""
@@ -326,10 +320,8 @@ class TestConfig(unittest.TestCase):
 
             config_util.process_ha_config_upgrade(self.hass)
 
-            self.assertEqual(opened_file.write.call_count, 1)
-            self.assertEqual(
-                opened_file.write.call_args, mock.call(__version__)
-            )
+            assert opened_file.write.call_count == 1
+            assert opened_file.write.call_args == mock.call(__version__)
 
     def test_config_upgrade_same_version(self):
         """Test no update of version on no upgrade."""
@@ -353,9 +345,8 @@ class TestConfig(unittest.TestCase):
             opened_file = mock_open.return_value
             # pylint: disable=no-member
             config_util.process_ha_config_upgrade(self.hass)
-            self.assertEqual(opened_file.write.call_count, 1)
-            self.assertEqual(
-                opened_file.write.call_args, mock.call(__version__))
+            assert opened_file.write.call_count == 1
+            assert opened_file.write.call_args == mock.call(__version__)
 
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
@@ -790,3 +781,195 @@ def test_merge_customize(hass):
 
     assert hass.data[config_util.DATA_CUSTOMIZE].get('b.b') == \
         {'friendly_name': 'BB'}
+
+
+async def test_auth_provider_config(hass):
+    """Test loading auth provider config onto hass object."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_PROVIDERS: [
+            {'type': 'homeassistant'},
+            {'type': 'legacy_api_password'},
+        ],
+        CONF_AUTH_MFA_MODULES: [
+            {'type': 'totp'},
+            {'type': 'totp', 'id': 'second'},
+        ]
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config)
+
+    assert len(hass.auth.auth_providers) == 2
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.auth_providers[1].type == 'legacy_api_password'
+    assert hass.auth.active is True
+    assert len(hass.auth.auth_mfa_modules) == 2
+    assert hass.auth.auth_mfa_modules[0].id == 'totp'
+    assert hass.auth.auth_mfa_modules[1].id == 'second'
+
+
+async def test_auth_provider_config_default(hass):
+    """Test loading default auth provider config."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config)
+
+    assert len(hass.auth.auth_providers) == 1
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.active is True
+    assert len(hass.auth.auth_mfa_modules) == 1
+    assert hass.auth.auth_mfa_modules[0].id == 'totp'
+
+
+async def test_auth_provider_config_default_api_password(hass):
+    """Test loading default auth provider config with api password."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config, True)
+
+    assert len(hass.auth.auth_providers) == 2
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.auth_providers[1].type == 'legacy_api_password'
+    assert hass.auth.active is True
+
+
+async def test_auth_provider_config_default_trusted_networks(hass):
+    """Test loading default auth provider config with trusted networks."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config,
+                                                   has_trusted_networks=True)
+
+    assert len(hass.auth.auth_providers) == 2
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.auth_providers[1].type == 'trusted_networks'
+    assert hass.auth.active is True
+
+
+async def test_disallowed_auth_provider_config(hass):
+    """Test loading insecure example auth provider is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_PROVIDERS: [{
+            'type': 'insecure_example',
+            'users': [{
+                'username': 'test-user',
+                'password': 'test-pass',
+                'name': 'Test Name'
+            }],
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
+
+
+async def test_disallowed_duplicated_auth_provider_config(hass):
+    """Test loading insecure example auth provider is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_PROVIDERS: [{
+            'type': 'homeassistant',
+        }, {
+            'type': 'homeassistant',
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
+
+
+async def test_disallowed_auth_mfa_module_config(hass):
+    """Test loading insecure example auth mfa module is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_MFA_MODULES: [{
+            'type': 'insecure_example',
+            'data': [{
+                'user_id': 'mock-user',
+                'pin': 'test-pin'
+            }]
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
+
+
+async def test_disallowed_duplicated_auth_mfa_module_config(hass):
+    """Test loading insecure example auth mfa module is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_MFA_MODULES: [{
+            'type': 'totp',
+        }, {
+            'type': 'totp',
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
+
+
+def test_merge_split_component_definition(hass):
+    """Test components with trailing description in packages are merged."""
+    packages = {
+        'pack_1': {'light one': {'l1': None}},
+        'pack_2': {'light two': {'l2': None},
+                   'light three': {'l3': None}},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+    }
+    config_util.merge_packages_config(hass, config, packages)
+
+    assert len(config) == 4
+    assert len(config['light one']) == 1
+    assert len(config['light two']) == 1
+    assert len(config['light three']) == 1

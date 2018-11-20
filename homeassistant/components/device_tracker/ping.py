@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-class Host(object):
+class Host:
     """Host object with ping detection."""
 
     def __init__(self, ip_address, dev_id, hass, config):
@@ -38,7 +38,7 @@ class Host(object):
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
         if sys.platform == 'win32':
-            self._ping_cmd = ['ping', '-n 1', '-w', '1000', self.ip_address]
+            self._ping_cmd = ['ping', '-n', '1', '-w', '1000', self.ip_address]
         else:
             self._ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
                               self.ip_address]

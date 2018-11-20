@@ -9,7 +9,7 @@ from zlib import adler32
 
 import voluptuous as vol
 
-import homeassistant.components.cover as cover
+from homeassistant.components import cover
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
@@ -21,16 +21,21 @@ from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
-    CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST, CONF_FILTER,
-    DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25,
-    DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START, TYPE_OUTLET, TYPE_SWITCH)
+    BRIDGE_NAME, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST,
+    CONF_FILTER, CONF_SAFE_MODE, DEFAULT_AUTO_START, DEFAULT_PORT,
+    DEFAULT_SAFE_MODE, DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2, DEVICE_CLASS_PM25, DOMAIN, HOMEKIT_FILE,
+    SERVICE_HOMEKIT_START, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER,
+    TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
-TYPES = Registry()
+REQUIREMENTS = ['HAP-python==2.4.1']
+
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==2.2.2']
+MAX_DEVICES = 100
+TYPES = Registry()
 
 # #### Driver Status ####
 STATUS_READY = 0
@@ -38,15 +43,23 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
-SWITCH_TYPES = {TYPE_OUTLET: 'Outlet',
-                TYPE_SWITCH: 'Switch'}
+SWITCH_TYPES = {
+    TYPE_FAUCET: 'Valve',
+    TYPE_OUTLET: 'Outlet',
+    TYPE_SHOWER: 'Valve',
+    TYPE_SPRINKLER: 'Valve',
+    TYPE_SWITCH: 'Switch',
+    TYPE_VALVE: 'Valve'}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
+        vol.Optional(CONF_NAME, default=BRIDGE_NAME):
+            vol.All(cv.string, vol.Length(min=3, max=25)),
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_IP_ADDRESS):
             vol.All(ipaddress.ip_address, cv.string),
         vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
+        vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
         vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
     })
@@ -54,18 +67,21 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Setup the HomeKit component."""
+    """Set up the HomeKit component."""
     _LOGGER.debug('Begin setup HomeKit')
 
     conf = config[DOMAIN]
+    name = conf[CONF_NAME]
     port = conf[CONF_PORT]
     ip_address = conf.get(CONF_IP_ADDRESS)
     auto_start = conf[CONF_AUTO_START]
+    safe_mode = conf[CONF_SAFE_MODE]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
 
-    homekit = HomeKit(hass, port, ip_address, entity_filter, entity_config)
-    await hass.async_add_job(homekit.setup)
+    homekit = HomeKit(hass, name, port, ip_address, entity_filter,
+                      entity_config, safe_mode)
+    await hass.async_add_executor_job(homekit.setup)
 
     if auto_start:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
@@ -145,6 +161,8 @@ def get_accessory(hass, driver, state, aid, config):
         elif device_class == DEVICE_CLASS_PM25 \
                 or DEVICE_CLASS_PM25 in state.entity_id:
             a_type = 'AirQualitySensor'
+        elif device_class == DEVICE_CLASS_CO:
+            a_type = 'CarbonMonoxideSensor'
         elif device_class == DEVICE_CLASS_CO2 \
                 or DEVICE_CLASS_CO2 in state.entity_id:
             a_type = 'CarbonDioxideSensor'
@@ -155,8 +173,12 @@ def get_accessory(hass, driver, state, aid, config):
         switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
         a_type = SWITCH_TYPES[switch_type]
 
-    elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
+    elif state.domain in ('automation', 'input_boolean', 'remote', 'scene',
+                          'script'):
         a_type = 'Switch'
+
+    elif state.domain == 'water_heater':
+        a_type = 'WaterHeater'
 
     if a_type is None:
         return None
@@ -168,7 +190,7 @@ def get_accessory(hass, driver, state, aid, config):
 def generate_aid(entity_id):
     """Generate accessory aid with zlib adler32."""
     aid = adler32(entity_id.encode('utf-8'))
-    if aid == 0 or aid == 1:
+    if aid in (0, 1):
         return None
     return aid
 
@@ -176,20 +198,23 @@ def generate_aid(entity_id):
 class HomeKit():
     """Class to handle all actions between HomeKit and Home Assistant."""
 
-    def __init__(self, hass, port, ip_address, entity_filter, entity_config):
+    def __init__(self, hass, name, port, ip_address, entity_filter,
+                 entity_config, safe_mode):
         """Initialize a HomeKit object."""
         self.hass = hass
+        self._name = name
         self._port = port
         self._ip_address = ip_address
         self._filter = entity_filter
         self._config = entity_config
+        self._safe_mode = safe_mode
         self.status = STATUS_READY
 
         self.bridge = None
         self.driver = None
 
     def setup(self):
-        """Setup bridge and accessory driver."""
+        """Set up bridge and accessory driver."""
         from .accessories import HomeBridge, HomeDriver
 
         self.hass.bus.async_listen_once(
@@ -199,7 +224,10 @@ class HomeKit():
         path = self.hass.config.path(HOMEKIT_FILE)
         self.driver = HomeDriver(self.hass, address=ip_addr,
                                  port=self._port, persist_file=path)
-        self.bridge = HomeBridge(self.hass, self.driver)
+        self.bridge = HomeBridge(self.hass, self.driver, self._name)
+        if self._safe_mode:
+            _LOGGER.debug('Safe_mode selected')
+            self.driver.safe_mode = True
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
@@ -229,6 +257,10 @@ class HomeKit():
 
         if not self.driver.state.paired:
             show_setup_message(self.hass, self.driver.state.pincode)
+
+        if len(self.bridge.accessories) > MAX_DEVICES:
+            _LOGGER.warning('You have exceeded the device limit, which might '
+                            'cause issues. Consider using the filter option.')
 
         _LOGGER.debug('Driver start')
         self.hass.add_job(self.driver.start)

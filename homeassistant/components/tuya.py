@@ -10,14 +10,14 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import (
     dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['tuyapy==0.1.2']
+REQUIREMENTS = ['tuyapy==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,11 @@ SERVICE_FORCE_UPDATE = 'force_update'
 SERVICE_PULL_DEVICES = 'pull_devices'
 
 TUYA_TYPE_TO_HA = {
+    'climate': 'climate',
+    'cover': 'cover',
+    'fan': 'fan',
     'light': 'light',
+    'scene': 'scene',
     'switch': 'switch',
 }
 
@@ -41,7 +45,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_COUNTRYCODE): cv.string
+        vol.Required(CONF_COUNTRYCODE): cv.string,
+        vol.Optional(CONF_PLATFORM, default='tuya'): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -54,9 +59,10 @@ def setup(hass, config):
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
     country_code = config[DOMAIN][CONF_COUNTRYCODE]
+    platform = config[DOMAIN][CONF_PLATFORM]
 
     hass.data[DATA_TUYA] = tuya
-    tuya.init(username, password, country_code)
+    tuya.init(username, password, country_code, platform)
     hass.data[DOMAIN] = {
         'entities': {}
     }
@@ -141,11 +147,6 @@ class TuyaDevice(Entity):
         return self.tuya.name()
 
     @property
-    def entity_picture(self):
-        """Return the entity picture to use in the frontend, if any."""
-        return self.tuya.iconurl()
-
-    @property
     def available(self):
         """Return if the device is available."""
         return self.tuya.available()
@@ -158,7 +159,7 @@ class TuyaDevice(Entity):
     def _delete_callback(self, dev_id):
         """Remove this entity."""
         if dev_id == self.object_id:
-            self.hass.async_add_job(self.async_remove())
+            self.hass.async_create_task(self.async_remove())
 
     @callback
     def _update_callback(self):

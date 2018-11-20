@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:power-plug'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Smappee Comfort Plugs."""
     smappee = hass.data[DATA_SMAPPEE]
 
@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                      items.get('value'),
                                      None,
                                      items.get('key')))
-    add_devices(dev)
+    add_entities(dev)
 
 
 class SmappeeSwitch(SwitchDevice):

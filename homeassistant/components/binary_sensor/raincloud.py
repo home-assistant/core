@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a raincloud device."""
     raincloud = hass.data[DATA_RAINCLOUD].data
 
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for zone in raincloud.controller.faucet.zones:
                 sensors.append(RainCloudBinarySensor(zone, sensor_type))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
     return True
 
 
@@ -67,6 +67,6 @@ class RainCloudBinarySensor(RainCloudEntity, BinarySensorDevice):
         """Return the icon of this device."""
         if self._sensor_type == 'is_watering':
             return 'mdi:water' if self.is_on else 'mdi:water-off'
-        elif self._sensor_type == 'status':
+        if self._sensor_type == 'status':
             return 'mdi:pipe' if self.is_on else 'mdi:pipe-disconnected'
         return ICON_MAP.get(self._sensor_type)

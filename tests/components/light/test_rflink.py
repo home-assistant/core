@@ -356,11 +356,10 @@ def test_signal_repetitions_cancelling(hass, monkeypatch):
 
     yield from hass.async_block_till_done()
 
-    print(protocol.send_command_ack.call_args_list)
-    assert protocol.send_command_ack.call_args_list[0][0][1] == 'off'
-    assert protocol.send_command_ack.call_args_list[1][0][1] == 'on'
-    assert protocol.send_command_ack.call_args_list[2][0][1] == 'on'
-    assert protocol.send_command_ack.call_args_list[3][0][1] == 'on'
+    assert protocol.send_command_ack.call_args_list[0][0][1] == 'on'
+    assert protocol.send_command_ack.call_args_list[1][0][1] == 'off'
+    assert protocol.send_command_ack.call_args_list[2][0][1] == 'off'
+    assert protocol.send_command_ack.call_args_list[3][0][1] == 'off'
 
 
 @asyncio.coroutine

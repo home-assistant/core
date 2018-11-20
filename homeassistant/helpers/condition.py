@@ -243,29 +243,27 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-    sunrise = get_astral_event_date(hass, 'sunrise', today)
-    sunset = get_astral_event_date(hass, 'sunset', today)
+    sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
+    sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
 
-    if sunrise is None and (before == SUN_EVENT_SUNRISE or
-                            after == SUN_EVENT_SUNRISE):
+    if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
         # There is no sunrise today
         return False
 
-    if sunset is None and (before == SUN_EVENT_SUNSET or
-                           after == SUN_EVENT_SUNSET):
+    if sunset is None and SUN_EVENT_SUNSET in (before, after):
         # There is no sunset today
         return False
 
     if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
         return False
 
-    elif before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
+    if before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
         return False
 
     if after == SUN_EVENT_SUNRISE and utcnow < sunrise + after_offset:
         return False
 
-    elif after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
+    if after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
         return False
 
     return True

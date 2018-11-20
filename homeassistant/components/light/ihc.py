@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.ihc/
 """
-from xml.etree.ElementTree import Element
-
 import voluptuous as vol
 
 from homeassistant.components.ihc import (
@@ -30,8 +28,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ihc lights platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the IHC lights platform."""
     ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
     info = hass.data[IHC_DATA][IHC_INFO]
     devices = []
@@ -52,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = IhcLight(ihc_controller, name, ihc_id, info, dimmable)
             devices.append(device)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class IhcLight(IHCDevice, Light):
@@ -64,7 +62,7 @@ class IhcLight(IHCDevice, Light):
     """
 
     def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
-                 dimmable=False, product: Element = None) -> None:
+                 dimmable=False, product=None) -> None:
         """Initialize the light."""
         super().__init__(ihc_controller, name, ihc_id, info, product)
         self._brightness = 0
@@ -111,7 +109,7 @@ class IhcLight(IHCDevice, Light):
             self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
-        """Callback from Ihc notifications."""
+        """Handle IHC notifications."""
         if isinstance(value, bool):
             self._dimmable = False
             self._state = value != 0

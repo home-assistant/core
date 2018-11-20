@@ -24,9 +24,9 @@ SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
                 SUPPORT_COLOR | SUPPORT_WHITE_VALUE)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the demo light platform."""
-    add_devices_callback([
+    add_entities_callback([
         DemoLight(1, "Bed Light", False, True, effect_list=LIGHT_EFFECT_LIST,
                   effect=LIGHT_EFFECT_LIST[0]),
         DemoLight(2, "Ceiling Lights", True, True,

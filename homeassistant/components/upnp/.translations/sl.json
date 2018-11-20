@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD je \u017ee konfiguriran",
+            "incomplete_device": "Ignoriranje nepopolnih UPnP naprav",
+            "no_devices_discovered": "Ni odkritih UPnP/IGD naprav",
+            "no_sensors_or_port_mapping": "Omogo\u010dite vsaj senzorje ali preslikavo vrat (port mapping)"
+        },
+        "error": {
+            "few": "nekaj",
+            "one": "ena",
+            "other": "ve\u010d",
+            "two": "dve"
+        },
+        "step": {
+            "init": {
+                "title": "UPnP/IGD"
+            },
+            "user": {
+                "data": {
+                    "enable_port_mapping": "Omogo\u010dajo preslikavo vrat (port mapping) za Home Assistent-a",
+                    "enable_sensors": "Dodaj prometne senzorje",
+                    "igd": "UPnP/IGD"
+                },
+                "title": "Mo\u017enosti konfiguracije za UPnP/IGD"
+            }
+        },
+        "title": "UPnP/IGD"
+    }
+}

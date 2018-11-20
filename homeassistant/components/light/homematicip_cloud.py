@@ -1,37 +1,35 @@
 """
-Support for HomematicIP light.
+Support for HomematicIP Cloud lights.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.homematicip_cloud/
 """
-
 import logging
 
-from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS)
 from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN,
-    HMIPC_HAPID)
+    HMIPC_HAPID, HomematicipGenericDevice)
+from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 
 DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_ENERGY_COUNTER = 'energy_counter_kwh'
 ATTR_POWER_CONSUMPTION = 'power_consumption'
-ATTR_ENERGIE_COUNTER = 'energie_counter_kwh'
 ATTR_PROFILE_MODE = 'profile_mode'
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
-    """Old way of setting up HomematicIP lights."""
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Old way of setting up HomematicIP Cloud lights."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Set up the HomematicIP lights from a config entry."""
-    from homematicip.aio.device import (
-        AsyncBrandSwitchMeasuring, AsyncDimmer)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the HomematicIP Cloud lights from a config entry."""
+    from homematicip.aio.device import AsyncBrandSwitchMeasuring, AsyncDimmer
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
@@ -42,11 +40,11 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             devices.append(HomematicipDimmer(home, device))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipLight(HomematicipGenericDevice, Light):
-    """MomematicIP light device."""
+    """Representation of a HomematicIP Cloud light device."""
 
     def __init__(self, home, device):
         """Initialize the light device."""
@@ -67,7 +65,7 @@ class HomematicipLight(HomematicipGenericDevice, Light):
 
 
 class HomematicipLightMeasuring(HomematicipLight):
-    """MomematicIP measuring light device."""
+    """Representation of a HomematicIP Cloud measuring light device."""
 
     @property
     def device_state_attributes(self):
@@ -79,13 +77,13 @@ class HomematicipLightMeasuring(HomematicipLight):
                     round(self._device.currentPowerConsumption, 2)
             })
         attr.update({
-            ATTR_ENERGIE_COUNTER: round(self._device.energyCounter, 2)
+            ATTR_ENERGY_COUNTER: round(self._device.energyCounter, 2)
         })
         return attr
 
 
 class HomematicipDimmer(HomematicipGenericDevice, Light):
-    """MomematicIP dimmer light device."""
+    """Representation of HomematicIP Cloud dimmer light device."""
 
     def __init__(self, home, device):
         """Initialize the dimmer light device."""
@@ -109,8 +107,7 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
-            await self._device.set_dim_level(
-                kwargs[ATTR_BRIGHTNESS]/255.0)
+            await self._device.set_dim_level(kwargs[ATTR_BRIGHTNESS]/255.0)
         else:
             await self._device.set_dim_level(1)
 

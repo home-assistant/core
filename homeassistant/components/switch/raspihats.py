@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the raspihats switch devices."""
     I2CHatSwitch.I2C_HATS_MANAGER = hass.data[I2C_HATS_MANAGER]
     switches = []
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(
                 "Failed to register %s I2CHat@%s %s", board, hex(address),
                 str(ex))
-    add_devices(switches)
+    add_entities(switches)
 
 
 class I2CHatSwitch(ToggleEntity):

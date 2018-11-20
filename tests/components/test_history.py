@@ -17,7 +17,7 @@ class TestComponentHistory(unittest.TestCase):
     """Test History component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -47,7 +47,7 @@ class TestComponentHistory(unittest.TestCase):
                     history.CONF_DOMAINS: ['thermostat'],
                     history.CONF_ENTITIES: ['media_player.test']}}})
         self.init_recorder()
-        self.assertTrue(setup_component(self.hass, history.DOMAIN, config))
+        assert setup_component(self.hass, history.DOMAIN, config)
 
     def test_get_states(self):
         """Test getting states at a specific point in time."""
@@ -83,14 +83,14 @@ class TestComponentHistory(unittest.TestCase):
             self.wait_recording_done()
 
         # Get states returns everything before POINT
-        self.assertEqual(states,
-                         sorted(history.get_states(self.hass, future),
-                                key=lambda state: state.entity_id))
+        for state1, state2 in zip(
+                states, sorted(history.get_states(self.hass, future),
+                               key=lambda state: state.entity_id)):
+            assert state1 == state2
 
         # Test get_state here because we have a DB setup
-        self.assertEqual(
-            states[0], history.get_state(self.hass, future,
-                                         states[0].entity_id))
+        assert states[0] == \
+            history.get_state(self.hass, future, states[0].entity_id)
 
     def test_state_changes_during_period(self):
         """Test state change during period."""
@@ -129,7 +129,7 @@ class TestComponentHistory(unittest.TestCase):
         hist = history.state_changes_during_period(
             self.hass, start, end, entity_id)
 
-        self.assertEqual(states, hist[entity_id])
+        assert states == hist[entity_id]
 
     def test_get_last_state_changes(self):
         """Test number of state changes."""
@@ -162,7 +162,7 @@ class TestComponentHistory(unittest.TestCase):
         hist = history.get_last_state_changes(
             self.hass, 2, entity_id)
 
-        self.assertEqual(states, hist[entity_id])
+        assert states == hist[entity_id]
 
     def test_get_significant_states(self):
         """Test that only significant states are returned.

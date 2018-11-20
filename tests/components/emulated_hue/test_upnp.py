@@ -50,7 +50,7 @@ class TestEmulatedHue(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Setup the class."""
+        """Set up the class."""
         cls.hass = hass = get_test_home_assistant()
 
         # We need to do this to get access to homeassistant/turn_(on,off)
@@ -83,13 +83,13 @@ class TestEmulatedHue(unittest.TestCase):
         result = requests.get(
             BRIDGE_URL_BASE.format('/description.xml'), timeout=5)
 
-        self.assertEqual(result.status_code, 200)
-        self.assertTrue('text/xml' in result.headers['content-type'])
+        assert result.status_code == 200
+        assert 'text/xml' in result.headers['content-type']
 
         # Make sure the XML is parsable
         try:
             ET.fromstring(result.text)
-        except:  # noqa: E722  # pylint: disable=bare-except
+        except:  # noqa: E722 pylint: disable=bare-except
             self.fail('description.xml is not valid XML!')
 
     def test_create_username(self):
@@ -100,14 +100,14 @@ class TestEmulatedHue(unittest.TestCase):
             BRIDGE_URL_BASE.format('/api'), data=json.dumps(request_json),
             timeout=5)
 
-        self.assertEqual(result.status_code, 200)
-        self.assertTrue('application/json' in result.headers['content-type'])
+        assert result.status_code == 200
+        assert 'application/json' in result.headers['content-type']
 
         resp_json = result.json()
         success_json = resp_json[0]
 
-        self.assertTrue('success' in success_json)
-        self.assertTrue('username' in success_json['success'])
+        assert 'success' in success_json
+        assert 'username' in success_json['success']
 
     def test_valid_username_request(self):
         """Test request with a valid username."""
@@ -117,4 +117,4 @@ class TestEmulatedHue(unittest.TestCase):
             BRIDGE_URL_BASE.format('/api'), data=json.dumps(request_json),
             timeout=5)
 
-        self.assertEqual(result.status_code, 400)
+        assert result.status_code == 400

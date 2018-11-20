@@ -13,7 +13,7 @@ from homeassistant.const import STATE_UNKNOWN
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Iterate through all MAX! Devices and add window shutters."""
     devices = []
     for handler in hass.data[DATA_KEY].values():
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     MaxCubeShutter(handler, name, device.rf_address))
 
     if devices:
-        add_devices(devices)
+        add_entities(devices)
 
 
 class MaxCubeShutter(BinarySensorDevice):

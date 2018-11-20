@@ -12,13 +12,13 @@ from homeassistant.components.velux import _LOGGER, DATA_VELUX
 DEPENDENCIES = ['velux']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the scenes for velux platform."""
     entities = []
     for scene in hass.data[DATA_VELUX].pyvlx.scenes:
         entities.append(VeluxScene(scene))
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 class VeluxScene(Scene):

@@ -37,7 +37,7 @@ SERIAL_SCHEMA = {
 
 ETHERNET_SCHEMA = {
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.positive_int,
+    vol.Required(CONF_PORT): cv.port,
     vol.Required(CONF_TYPE): vol.Any('tcp', 'udp', 'rtuovertcp'),
     vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
 }
@@ -157,7 +157,7 @@ def setup(hass, config):
     return True
 
 
-class ModbusHub(object):
+class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
     def __init__(self, modbus_client):

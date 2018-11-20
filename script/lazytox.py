@@ -153,7 +153,7 @@ async def lint(files):
 
 
 async def main():
-    """The main loop."""
+    """Run the main loop."""
     # Ensure we are in the homeassistant root
     os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 

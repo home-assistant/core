@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gearbest sensor."""
     from gearbest_parser import CurrencyConverter
     currency = config.get(CONF_CURRENCY)
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         currency_update,
                         MIN_TIME_BETWEEN_CURRENCY_UPDATES)
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class GearbestSensor(Entity):

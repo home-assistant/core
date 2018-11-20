@@ -13,7 +13,7 @@ from homeassistant.components.verisure import HUB as hub
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Verisure binary sensors."""
     sensors = []
     hub.update_overview()
@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             VerisureDoorWindowSensor(device_label)
             for device_label in hub.get(
                 "$.doorWindow.doorWindowDevice[*].deviceLabel")])
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class VerisureDoorWindowSensor(BinarySensorDevice):

@@ -29,12 +29,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the World clock sensor."""
     name = config.get(CONF_NAME)
     time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
 
-    async_add_devices([WorldClockSensor(time_zone, name)], True)
+    async_add_entities([WorldClockSensor(time_zone, name)], True)
 
 
 class WorldClockSensor(Entity):

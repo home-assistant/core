@@ -56,7 +56,7 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
                  SUPPORT_OPERATION_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NuHeat thermostat(s)."""
     if discovery_info is None:
         return
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         NuHeatThermostat(api, serial_number, temperature_unit)
         for serial_number in serial_numbers
     ]
-    add_devices(thermostats, True)
+    add_entities(thermostats, True)
 
     def resume_program_set_service(service):
         """Resume the program on the target thermostats."""

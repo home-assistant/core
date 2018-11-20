@@ -28,12 +28,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ripple.com sensors."""
     address = config.get(CONF_ADDRESS)
     name = config.get(CONF_NAME)
 
-    add_devices([RippleSensor(name, address)], True)
+    add_entities([RippleSensor(name, address)], True)
 
 
 class RippleSensor(Entity):

@@ -15,7 +15,7 @@ DEPENDENCIES = [QWIKSWITCH]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, _, add_devices, discovery_info=None):
+async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     """Add binary sensor from the main Qwikswitch component."""
     if discovery_info is None:
         return
@@ -24,7 +24,7 @@ async def async_setup_platform(hass, _, add_devices, discovery_info=None):
     _LOGGER.debug("Setup qwikswitch.binary_sensor %s, %s",
                   qsusb, discovery_info)
     devs = [QSBinarySensor(sensor) for sensor in discovery_info[QWIKSWITCH]]
-    add_devices(devs)
+    add_entities(devs)
 
 
 class QSBinarySensor(QSEntity, BinarySensorDevice):

@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.ihc/
 """
-from xml.etree.ElementTree import Element
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -32,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC binary sensor platform."""
     ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
     info = hass.data[IHC_DATA][IHC_INFO]
@@ -58,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                      sensor_type, inverting)
             devices.append(sensor)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class IHCBinarySensor(IHCDevice, BinarySensorDevice):
@@ -70,7 +68,7 @@ class IHCBinarySensor(IHCDevice, BinarySensorDevice):
 
     def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
                  sensor_type: str, inverting: bool,
-                 product: Element = None) -> None:
+                 product=None) -> None:
         """Initialize the IHC binary sensor."""
         super().__init__(ihc_controller, name, ihc_id, info, product)
         self._state = None

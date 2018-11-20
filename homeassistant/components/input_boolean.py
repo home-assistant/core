@@ -4,7 +4,6 @@ Component to keep track of user controlled booleans for within automation.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_boolean/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -47,24 +46,6 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@bind_hass
-def turn_on(hass, entity_id):
-    """Set input_boolean to True."""
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def turn_off(hass, entity_id):
-    """Set input_boolean to False."""
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
-
-
-@bind_hass
-def toggle(hass, entity_id):
-    """Set input_boolean to False."""
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
-
-
 async def async_setup(hass, config):
     """Set up an input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -84,30 +65,20 @@ async def async_setup(hass, config):
     if not entities:
         return False
 
-    async def async_handler_service(service):
-        """Handle a calls to the input boolean services."""
-        target_inputs = component.async_extract_from_service(service)
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, SERVICE_SCHEMA,
+        'async_turn_on'
+    )
 
-        if service.service == SERVICE_TURN_ON:
-            attr = 'async_turn_on'
-        elif service.service == SERVICE_TURN_OFF:
-            attr = 'async_turn_off'
-        else:
-            attr = 'async_toggle'
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, SERVICE_SCHEMA,
+        'async_turn_off'
+    )
 
-        tasks = [getattr(input_b, attr)() for input_b in target_inputs]
-        if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handler_service,
-        schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handler_service,
-        schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handler_service,
-        schema=SERVICE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, SERVICE_SCHEMA,
+        'async_toggle'
+    )
 
     await component.async_add_entities(entities)
     return True

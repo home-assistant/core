@@ -4,7 +4,6 @@ Component to interface with various locks that can be controlled remotely.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/lock/
 """
-import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
@@ -57,84 +56,32 @@ def is_locked(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
-@bind_hass
-def lock(hass, entity_id=None, code=None):
-    """Lock all or specified locks."""
-    data = {}
-    if code:
-        data[ATTR_CODE] = code
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_LOCK, data)
-
-
-@bind_hass
-def unlock(hass, entity_id=None, code=None):
-    """Unlock all or specified locks."""
-    data = {}
-    if code:
-        data[ATTR_CODE] = code
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_UNLOCK, data)
-
-
-@bind_hass
-def open_lock(hass, entity_id=None, code=None):
-    """Open all or specified locks."""
-    data = {}
-    if code:
-        data[ATTR_CODE] = code
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_OPEN, data)
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Track states and offer events for locks."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LOCKS)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_lock_service(service):
-        """Handle calls to the lock services."""
-        target_locks = component.async_extract_from_service(service)
-
-        code = service.data.get(ATTR_CODE)
-
-        update_tasks = []
-        for entity in target_locks:
-            if service.service == SERVICE_LOCK:
-                yield from entity.async_lock(code=code)
-            elif service.service == SERVICE_OPEN:
-                yield from entity.async_open(code=code)
-            else:
-                yield from entity.async_unlock(code=code)
-
-            if not entity.should_poll:
-                continue
-            update_tasks.append(entity.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_UNLOCK, async_handle_lock_service,
-        schema=LOCK_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_LOCK, async_handle_lock_service,
-        schema=LOCK_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_OPEN, async_handle_lock_service,
-        schema=LOCK_SERVICE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_UNLOCK, LOCK_SERVICE_SCHEMA,
+        'async_unlock'
+    )
+    component.async_register_entity_service(
+        SERVICE_LOCK, LOCK_SERVICE_SCHEMA,
+        'async_lock'
+    )
+    component.async_register_entity_service(
+        SERVICE_OPEN, LOCK_SERVICE_SCHEMA,
+        'async_open'
+    )
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
 class LockDevice(Entity):

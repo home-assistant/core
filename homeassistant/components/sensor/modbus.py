@@ -9,7 +9,7 @@ import struct
 
 import voluptuous as vol
 
-import homeassistant.components.modbus as modbus
+from homeassistant.components import modbus
 from homeassistant.const import (
     CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT, CONF_SLAVE,
     CONF_STRUCTURE)
@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
     data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'}}
@@ -108,7 +108,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if not sensors:
         return False
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class ModbusRegisterSensor(Entity):

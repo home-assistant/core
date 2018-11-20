@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontroller Site ass scho konfigur\u00e9iert",
+            "user_privilege": "Benotzer muss een Administrator sinn"
+        },
+        "error": {
+            "faulty_credentials": "Ong\u00eblteg Login Informatioune",
+            "service_unavailable": "Keen Service disponibel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "site": "Site ID",
+                    "username": "Benotzer",
+                    "verify_ssl": "Kontroller benotzt g\u00ebltegen Zertifikat"
+                },
+                "title": "Unifi Kontroller ariichten"
+            }
+        },
+        "title": "Unifi Kontroller"
+    }
+}

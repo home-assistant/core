@@ -6,7 +6,7 @@ from homeassistant.setup import setup_component
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State, callback
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -18,11 +18,11 @@ from tests.common import (
 )
 
 
-class TestMqttEventStream(object):
+class TestMqttEventStream:
     """Test the MQTT eventstream module."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_mqtt = mock_mqtt_component(self.hass)
 
@@ -104,12 +104,14 @@ class TestMqttEventStream(object):
             "state": "on",
             "entity_id": e_id,
             "attributes": {},
-            "last_changed": now.isoformat()
+            "last_changed": now.isoformat(),
         }
         event['event_data'] = {"new_state": new_state, "entity_id": e_id}
 
         # Verify that the message received was that expected
-        assert json.loads(msg) == event
+        result = json.loads(msg)
+        result['event_data']['new_state'].pop('context')
+        assert result == event
 
     @patch('homeassistant.components.mqtt.async_publish')
     def test_time_event_does_not_send_message(self, mock_pub):

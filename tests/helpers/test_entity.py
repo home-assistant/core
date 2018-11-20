@@ -1,11 +1,13 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
-from unittest.mock import MagicMock, patch
+from datetime import timedelta
+from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
 
 import homeassistant.helpers.entity as entity
+from homeassistant.core import Context
 from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.helpers.entity_values import EntityValues
@@ -71,11 +73,11 @@ def test_async_update_support(hass):
     assert len(async_update) == 1
 
 
-class TestHelpersEntity(object):
+class TestHelpersEntity:
     """Test homeassistant.helpers.entity module."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.entity = entity.Entity()
         self.entity.entity_id = 'test.overwrite_hidden_true'
         self.hass = self.entity.hass = get_test_home_assistant()
@@ -400,3 +402,44 @@ def test_async_remove_no_platform(hass):
     assert len(hass.states.async_entity_ids()) == 1
     yield from ent.async_remove()
     assert len(hass.states.async_entity_ids()) == 0
+
+
+async def test_async_remove_runs_callbacks(hass):
+    """Test async_remove method when no platform set."""
+    result = []
+
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = 'test.test'
+    ent.async_on_remove(lambda: result.append(1))
+    await ent.async_remove()
+    assert len(result) == 1
+
+
+async def test_set_context(hass):
+    """Test setting context."""
+    context = Context()
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = 'hello.world'
+    ent.async_set_context(context)
+    await ent.async_update_ha_state()
+    assert hass.states.get('hello.world').context == context
+
+
+async def test_set_context_expired(hass):
+    """Test setting context."""
+    context = Context()
+
+    with patch.object(entity.Entity, 'context_recent_time',
+                      new_callable=PropertyMock) as recent:
+        recent.return_value = timedelta(seconds=-5)
+        ent = entity.Entity()
+        ent.hass = hass
+        ent.entity_id = 'hello.world'
+        ent.async_set_context(context)
+        await ent.async_update_ha_state()
+
+    assert hass.states.get('hello.world').context != context
+    assert ent._context is None
+    assert ent._context_set is None

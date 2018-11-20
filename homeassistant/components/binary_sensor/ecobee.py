@@ -12,7 +12,7 @@ DEPENDENCIES = ['ecobee']
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecobee sensors."""
     if discovery_info is None:
         return
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
                 dev.append(EcobeeBinarySensor(sensor['name'], index))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class EcobeeBinarySensor(BinarySensorDevice):

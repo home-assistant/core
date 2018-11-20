@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Kun en enkelt konfigurasjon av Home Assistant iOS er n\u00f8dvendig."
+        },
+        "step": {
+            "confirm": {
+                "description": "\u00d8nsker du \u00e5 konfigurere Home Assistant iOS-komponenten?",
+                "title": "Home Assistant iOS"
+            }
+        },
+        "title": "Home Assistant iOS"
+    }
+}

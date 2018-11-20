@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import util
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 
-REQUIREMENTS = ['zeroconf==0.20.0']
+REQUIREMENTS = ['zeroconf==0.21.3']
 
 _LOGGER = logging.getLogger(__name__)
 

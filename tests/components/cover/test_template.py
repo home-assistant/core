@@ -1,16 +1,23 @@
 """The tests the cover command line platform."""
-
 import logging
 import unittest
 
-from homeassistant.core import callback
 from homeassistant import setup
-import homeassistant.components.cover as cover
-from homeassistant.const import STATE_OPEN, STATE_CLOSED
+from homeassistant.core import callback
+from homeassistant.components.cover import (
+    ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT,
+    SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION, SERVICE_STOP_COVER,
+    STATE_CLOSED, STATE_OPEN)
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component)
+
 _LOGGER = logging.getLogger(__name__)
+
+ENTITY_COVER = 'cover.test_template_cover'
 
 
 class TestTemplateCover(unittest.TestCase):
@@ -362,7 +369,9 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_CLOSED
 
-        cover.open_cover(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -398,10 +407,14 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_OPEN
 
-        cover.close_cover(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
 
-        cover.stop_cover(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_STOP_COVER,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
 
         assert len(self.calls) == 2
@@ -445,18 +458,23 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_OPEN
 
-        cover.open_cover(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_position') == 100.0
 
-        cover.close_cover(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_position') == 0.0
 
-        cover.set_cover_position(self.hass, 25,
-                                 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 25}, blocking=True)
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_position') == 25.0
@@ -490,8 +508,10 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.set_cover_tilt_position(self.hass, 42,
-                                      'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_SET_COVER_TILT_POSITION,
+            {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_TILT_POSITION: 42},
+            blocking=True)
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -525,7 +545,9 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.open_cover_tilt(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -559,7 +581,9 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.close_cover_tilt(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -585,18 +609,23 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_position') is None
 
-        cover.set_cover_position(self.hass, 42,
-                                 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 42}, blocking=True)
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_position') == 42.0
 
-        cover.close_cover(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_CLOSED
 
-        cover.open_cover(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_OPEN
@@ -627,18 +656,24 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_tilt_position') is None
 
-        cover.set_cover_tilt_position(self.hass, 42,
-                                      'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_SET_COVER_TILT_POSITION,
+            {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_TILT_POSITION: 42},
+            blocking=True)
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_tilt_position') == 42.0
 
-        cover.close_cover_tilt(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_tilt_position') == 0.0
 
-        cover.open_cover_tilt(self.hass, 'cover.test_template_cover')
+        self.hass.services.call(
+            DOMAIN, SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_tilt_position') == 100.0

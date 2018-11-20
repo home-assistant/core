@@ -14,7 +14,7 @@ def hass_recorder():
     hass = get_test_home_assistant()
 
     def setup_recorder(config=None):
-        """Setup with params."""
+        """Set up with params."""
         init_recorder_component(hass, config)
         hass.start()
         hass.block_till_done()

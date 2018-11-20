@@ -32,7 +32,7 @@ COVER_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gogogate2 component."""
     from pygogogate2 import Gogogate2API as pygogogate2
 
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             raise ValueError(
                 "Username or Password is incorrect or no devices found")
 
-        add_devices(MyGogogate2Device(
+        add_entities(MyGogogate2Device(
             mygogogate2, door, name) for door in devices)
 
     except (TypeError, KeyError, NameError, ValueError) as ex:

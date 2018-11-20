@@ -49,27 +49,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up cover(s) for KNX platform."""
     if discovery_info is not None:
-        async_add_devices_discovery(hass, discovery_info, async_add_devices)
+        async_add_entities_discovery(hass, discovery_info, async_add_entities)
     else:
-        async_add_devices_config(hass, config, async_add_devices)
+        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
-def async_add_devices_discovery(hass, discovery_info, async_add_devices):
+def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     """Set up covers for KNX platform configured via xknx.yaml."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXCover(hass, device))
-    async_add_devices(entities)
+        entities.append(KNXCover(device))
+    async_add_entities(entities)
 
 
 @callback
-def async_add_devices_config(hass, config, async_add_devices):
+def async_add_entities_config(hass, config, async_add_entities):
     """Set up cover for KNX platform configured within platform."""
     import xknx
     cover = xknx.devices.Cover(
@@ -88,18 +88,15 @@ def async_add_devices_config(hass, config, async_add_devices):
         invert_angle=config.get(CONF_INVERT_ANGLE))
 
     hass.data[DATA_KNX].xknx.devices.add(cover)
-    async_add_devices([KNXCover(hass, cover)])
+    async_add_entities([KNXCover(cover)])
 
 
 class KNXCover(CoverDevice):
     """Representation of a KNX cover."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize the cover."""
         self.device = device
-        self.hass = hass
-        self.async_register_callbacks()
-
         self._unsubscribe_auto_updater = None
 
     @callback
@@ -109,6 +106,10 @@ class KNXCover(CoverDevice):
             """Call after device was updated."""
             await self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
+
+    async def async_added_to_hass(self):
+        """Store register state change callback."""
+        self.async_register_callbacks()
 
     @property
     def name(self):

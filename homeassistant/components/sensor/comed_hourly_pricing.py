@@ -49,8 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the ComEd Hourly Pricing sensor."""
     websession = async_get_clientsession(hass)
     dev = []
@@ -60,7 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             hass.loop, websession, variable[CONF_SENSOR_TYPE],
             variable[CONF_OFFSET], variable.get(CONF_NAME)))
 
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class ComedHourlyPricingSensor(Entity):
@@ -100,8 +100,7 @@ class ComedHourlyPricingSensor(Entity):
         attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
         return attrs
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the ComEd Hourly Pricing data from the web service."""
         try:
             if self.type == CONF_FIVE_MINUTE or \
@@ -113,9 +112,9 @@ class ComedHourlyPricingSensor(Entity):
                     url_string += '?type=currenthouraverage'
 
                 with async_timeout.timeout(60, loop=self.loop):
-                    response = yield from self.websession.get(url_string)
+                    response = await self.websession.get(url_string)
                     # The API responds with MIME type 'text/html'
-                    text = yield from response.text()
+                    text = await response.text()
                     data = json.loads(text)
                     self._state = round(
                         float(data[0]['price']) + self.offset, 2)

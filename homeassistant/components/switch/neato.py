@@ -24,14 +24,14 @@ SWITCH_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato switches."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
             dev.append(NeatoConnectedSwitch(hass, robot, type_name))
     _LOGGER.debug("Adding switches %s", dev)
-    add_devices(dev)
+    add_entities(dev)
 
 
 class NeatoConnectedSwitch(ToggleEntity):
@@ -52,6 +52,7 @@ class NeatoConnectedSwitch(ToggleEntity):
             self._state = None
         self._schedule_state = None
         self._clean_state = None
+        self._robot_serial = self.robot.serial
 
     def update(self):
         """Update the states of Neato switches."""
@@ -82,6 +83,11 @@ class NeatoConnectedSwitch(ToggleEntity):
     def available(self):
         """Return True if entity is available."""
         return self._state
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._robot_serial
 
     @property
     def is_on(self):

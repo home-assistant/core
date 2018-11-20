@@ -27,8 +27,8 @@ LAST_BILL_AVERAGE_USAGE = "last_bills_average_usage"
 LAST_BILL_DAYS_BILLED = "last_bills_days_billed"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup all Duke Energy meters."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up all Duke Energy meters."""
     from pydukeenergy.api import DukeEnergy, DukeEnergyException
 
     try:
@@ -36,10 +36,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                           config[CONF_PASSWORD],
                           update_interval=120)
     except DukeEnergyException:
-        _LOGGER.error("Failed to setup Duke Energy")
+        _LOGGER.error("Failed to set up Duke Energy")
         return
 
-    add_devices([DukeEnergyMeter(meter) for meter in duke.get_meters()])
+    add_entities([DukeEnergyMeter(meter) for meter in duke.get_meters()])
 
 
 class DukeEnergyMeter(Entity):

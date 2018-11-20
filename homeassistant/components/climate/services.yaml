@@ -116,32 +116,28 @@ ecobee_resume_program:
       description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
       example: true
 
+mill_set_room_temperature:
+  description: Set Mill room temperatures.
+  fields:
+    room_name:
+      description: Name of room to change.
+      example: 'kitchen'
+    away_temp:
+      description: Away temp.
+      example: 12
+    comfort_temp:
+      description: Comfort temp.
+      example: 22
+    sleep_temp:
+      description: Sleep temp.
+      example: 17
+
 nuheat_resume_program:
   description: Resume the programmed schedule.
   fields:
     entity_id:
       description: Name(s) of entities to change.
       example: 'climate.kitchen'
-
-econet_add_vacation:
-  description: Add a vacation to your water heater.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.water_heater'
-    start_date:
-      description: The timestamp of when the vacation should start. (Optional, defaults to now)
-      example: 1513186320
-    end_date:
-      description: The timestamp of when the vacation should end.
-      example: 1513445520
-
-econet_delete_vacation:
-  description: Delete your existing vacation from your water heater.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.water_heater'
 
 sensibo_assume_state:
   description: Set Sensibo device to external state.

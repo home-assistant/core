@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Osram Lightify lights."""
     import lightify
 
@@ -65,10 +65,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception(msg)
         return
 
-    setup_bridge(bridge, add_devices, add_nodes, add_groups)
+    setup_bridge(bridge, add_entities, add_nodes, add_groups)
 
 
-def setup_bridge(bridge, add_devices, add_nodes, add_groups):
+def setup_bridge(bridge, add_entities, add_nodes, add_groups):
     """Set up the Lightify bridge."""
     lights = {}
 
@@ -106,7 +106,7 @@ def setup_bridge(bridge, add_devices, add_nodes, add_groups):
                     lights[group_name].group = group
 
         if new_lights:
-            add_devices(new_lights)
+            add_entities(new_lights)
 
     update_lights()
 
@@ -231,6 +231,11 @@ class OsramLightifyLight(Luminary):
                 self._luminary.temp())
         self._brightness = int(self._luminary.lum() * 2.55)
 
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._light_id
+
 
 class OsramLightifyGroup(Luminary):
     """Representation of an Osram Lightify Group."""
@@ -240,6 +245,7 @@ class OsramLightifyGroup(Luminary):
         self._bridge = bridge
         self._light_ids = []
         super().__init__(group, update_lights)
+        self._unique_id = '{}'.format(self._light_ids)
 
     def _get_state(self):
         """Get state of group."""
@@ -260,3 +266,8 @@ class OsramLightifyGroup(Luminary):
         else:
             self._temperature = color_temperature_kelvin_to_mired(o_temp)
         self._state = light.on()
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id

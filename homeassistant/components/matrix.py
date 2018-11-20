@@ -96,7 +96,7 @@ def setup(hass, config):
     return True
 
 
-class MatrixBot(object):
+class MatrixBot:
     """The Matrix Bot."""
 
     def __init__(self, hass, config_file, homeserver, verify_ssl,

@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-from homeassistant.const import CONF_VERIFY_SSL
+from homeassistant.const import CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pyunifi==2.13']
@@ -31,6 +31,18 @@ DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
 
+AVAILABLE_ATTRS = [
+    '_id', '_is_guest_by_uap', '_last_seen_by_uap', '_uptime_by_uap',
+    'ap_mac', 'assoc_time', 'authorized', 'bssid', 'bytes-r', 'ccq',
+    'channel', 'essid', 'first_seen', 'hostname', 'idletime', 'ip',
+    'is_11r', 'is_guest', 'is_wired', 'last_seen', 'latest_assoc_time',
+    'mac', 'name', 'noise', 'noted', 'oui', 'powersave_enabled',
+    'qos_policy_applied', 'radio', 'radio_proto', 'rssi', 'rx_bytes',
+    'rx_bytes-r', 'rx_packets', 'rx_rate', 'signal', 'site_id',
+    'tx_bytes', 'tx_bytes-r', 'tx_packets', 'tx_power', 'tx_rate',
+    'uptime', 'user_id', 'usergroup_id', 'vlan'
+]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_SITE_ID, default='default'): cv.string,
@@ -41,6 +53,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean, cv.isfile),
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
         cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(AVAILABLE_ATTRS)]),
     vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
 })
 
@@ -56,6 +70,7 @@ def get_scanner(hass, config):
     port = config[DOMAIN].get(CONF_PORT)
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
     detection_time = config[DOMAIN].get(CONF_DETECTION_TIME)
+    monitored_conditions = config[DOMAIN].get(CONF_MONITORED_CONDITIONS)
     ssid_filter = config[DOMAIN].get(CONF_SSID_FILTER)
 
     try:
@@ -72,18 +87,20 @@ def get_scanner(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    return UnifiScanner(ctrl, detection_time, ssid_filter)
+    return UnifiScanner(ctrl, detection_time, ssid_filter,
+                        monitored_conditions)
 
 
 class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
     def __init__(self, controller, detection_time: timedelta,
-                 ssid_filter) -> None:
+                 ssid_filter, monitored_conditions) -> None:
         """Initialize the scanner."""
         self._detection_time = detection_time
         self._controller = controller
         self._ssid_filter = ssid_filter
+        self._monitored_conditions = monitored_conditions
         self._update()
 
     def _update(self):
@@ -125,6 +142,14 @@ class UnifiScanner(DeviceScanner):
 
     def get_extra_attributes(self, device):
         """Return the extra attributes of the device."""
+        if not self._monitored_conditions:
+            return {}
+
         client = self._clients.get(device, {})
-        _LOGGER.debug("Device mac %s attributes %s", device, client)
-        return client
+        attributes = {}
+        for variable in self._monitored_conditions:
+            if variable in client:
+                attributes[variable] = client[variable]
+
+        _LOGGER.debug("Device mac %s attributes %s", device, attributes)
+        return attributes

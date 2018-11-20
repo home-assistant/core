@@ -23,11 +23,11 @@ OPERATION_LIST = [STATE_ON, STATE_OFF]
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla climate platform."""
     devices = [TeslaThermostat(device, hass.data[TESLA_DOMAIN]['controller'])
                for device in hass.data[TESLA_DOMAIN]['devices']['climate']]
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class TeslaThermostat(TeslaDevice, ClimateDevice):

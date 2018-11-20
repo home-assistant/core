@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Irish Rail transport sensor."""
     from pyirishrail.pyirishrail import IrishRailRTPI
     station = config.get(CONF_STATION)
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     irish_rail = IrishRailRTPI()
     data = IrishRailTransportData(
         irish_rail, station, direction, destination, stops_at)
-    add_devices([IrishRailTransportSensor(
+    add_entities([IrishRailTransportSensor(
         data, station, direction, destination, stops_at, name)], True)
 
 
@@ -132,7 +132,7 @@ class IrishRailTransportSensor(Entity):
             self._state = None
 
 
-class IrishRailTransportData(object):
+class IrishRailTransportData:
     """The Class for handling the data retrieval."""
 
     def __init__(self, irish_rail, station, direction, destination, stops_at):
@@ -164,7 +164,7 @@ class IrishRailTransportData(object):
                           ATTR_TRAIN_TYPE: train.get('type')}
             self.info.append(train_data)
 
-        if not self.info or not self.info:
+        if not self.info:
             self.info = self._empty_train_data()
 
     def _empty_train_data(self):

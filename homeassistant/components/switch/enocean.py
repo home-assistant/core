@@ -27,13 +27,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the EnOcean switch platform."""
     dev_id = config.get(CONF_ID)
     devname = config.get(CONF_NAME)
     channel = config.get(CONF_CHANNEL)
 
-    add_devices([EnOceanSwitch(dev_id, devname, channel)])
+    add_entities([EnOceanSwitch(dev_id, devname, channel)])
 
 
 class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):

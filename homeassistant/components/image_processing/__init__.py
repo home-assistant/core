@@ -17,7 +17,6 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,20 +64,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 SERVICE_SCAN_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
-
-
-@bind_hass
-def scan(hass, entity_id=None):
-    """Force process of all cameras or given entity."""
-    hass.add_job(async_scan, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_scan(hass, entity_id=None):
-    """Force process of all cameras or given entity."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SCAN, data))
 
 
 async def async_setup(hass, config):

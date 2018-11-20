@@ -4,11 +4,11 @@ Reads vehicle status from BMW connected drive portal.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.bmw_connected_drive/
 """
-import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
+from homeassistant.const import LENGTH_KILOMETERS
 
 DEPENDENCIES = ['bmw_connected_drive']
 
@@ -31,7 +31,7 @@ SENSOR_TYPES_ELEC = {
 SENSOR_TYPES_ELEC.update(SENSOR_TYPES)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BMW sensors."""
     accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     device = BMWConnectedDriveSensor(account, vehicle, key,
                                                      value[0], value[1])
                     devices.append(device)
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class BMWConnectedDriveSensor(BinarySensorDevice):
@@ -71,7 +71,10 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
 
     @property
     def should_poll(self) -> bool:
-        """Data update is triggered from BMWConnectedDriveEntity."""
+        """Return False.
+
+        Data update is triggered from BMWConnectedDriveEntity.
+        """
         return False
 
     @property
@@ -115,13 +118,17 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['lights_parking'] = vehicle_state.parking_lights.value
         elif self._attribute == 'condition_based_services':
             for report in vehicle_state.condition_based_services:
-                result.update(self._format_cbs_report(report))
+                result.update(
+                    self._format_cbs_report(report))
         elif self._attribute == 'check_control_messages':
             check_control_messages = vehicle_state.check_control_messages
             if not check_control_messages:
                 result['check_control_messages'] = 'OK'
             else:
-                result['check_control_messages'] = check_control_messages
+                cbs_list = []
+                for message in check_control_messages:
+                    cbs_list.append(message['ccmDescriptionShort'])
+                result['check_control_messages'] = cbs_list
         elif self._attribute == 'charging_status':
             result['charging_status'] = vehicle_state.charging_status.value
             # pylint: disable=protected-access
@@ -170,8 +177,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             self._state = (vehicle_state._attributes['connectionStatus'] ==
                            'CONNECTED')
 
-    @staticmethod
-    def _format_cbs_report(report):
+    def _format_cbs_report(self, report):
         result = {}
         service_type = report.service_type.lower().replace('_', ' ')
         result['{} status'.format(service_type)] = report.state.value
@@ -179,16 +185,17 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['{} date'.format(service_type)] = \
                 report.due_date.strftime('%Y-%m-%d')
         if report.due_distance is not None:
-            result['{} distance'.format(service_type)] = \
-                '{} km'.format(report.due_distance)
+            distance = round(self.hass.config.units.length(
+                report.due_distance, LENGTH_KILOMETERS))
+            result['{} distance'.format(service_type)] = '{} {}'.format(
+                distance, self.hass.config.units.length_unit)
         return result
 
     def update_callback(self):
         """Schedule a state update."""
         self.schedule_update_ha_state(True)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Add callback after being added to hass.
 
         Show latest data after startup.

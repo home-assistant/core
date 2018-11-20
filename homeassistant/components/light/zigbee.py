@@ -22,9 +22,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create and add an entity based on the configuration."""
-    add_devices([ZigBeeLight(hass, ZigBeeDigitalOutConfig(config))])
+    add_entities([ZigBeeLight(hass, ZigBeeDigitalOutConfig(config))])
 
 
 class ZigBeeLight(ZigBeeDigitalOut, Light):

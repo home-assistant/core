@@ -4,7 +4,6 @@ Component to offer a way to set a numeric value from a slider or text box.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_number/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -15,7 +14,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
-from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +28,7 @@ CONF_STEP = 'step'
 MODE_SLIDER = 'slider'
 MODE_BOX = 'box'
 
+ATTR_INITIAL = 'initial'
 ATTR_VALUE = 'value'
 ATTR_MIN = 'min'
 ATTR_MAX = 'max'
@@ -82,46 +81,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
-SERVICE_TO_METHOD = {
-    SERVICE_SET_VALUE: {
-        'method': 'async_set_value',
-        'schema': SERVICE_SET_VALUE_SCHEMA},
-    SERVICE_INCREMENT: {
-        'method': 'async_increment',
-        'schema': SERVICE_DEFAULT_SCHEMA},
-    SERVICE_DECREMENT: {
-        'method': 'async_decrement',
-        'schema': SERVICE_DEFAULT_SCHEMA},
-}
-
-
-@bind_hass
-def set_value(hass, entity_id, value):
-    """Set input_number to value."""
-    hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_VALUE: value,
-    })
-
-
-@bind_hass
-def increment(hass, entity_id):
-    """Increment value of entity."""
-    hass.services.call(DOMAIN, SERVICE_INCREMENT, {
-        ATTR_ENTITY_ID: entity_id
-    })
-
-
-@bind_hass
-def decrement(hass, entity_id):
-    """Decrement value of entity."""
-    hass.services.call(DOMAIN, SERVICE_DECREMENT, {
-        ATTR_ENTITY_ID: entity_id
-    })
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up an input slider."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -144,30 +104,22 @@ def async_setup(hass, config):
     if not entities:
         return False
 
-    @asyncio.coroutine
-    def async_handle_service(service):
-        """Handle calls to input_number services."""
-        target_inputs = component.async_extract_from_service(service)
-        method = SERVICE_TO_METHOD.get(service.service)
-        params = service.data.copy()
-        params.pop(ATTR_ENTITY_ID, None)
+    component.async_register_entity_service(
+        SERVICE_SET_VALUE, SERVICE_SET_VALUE_SCHEMA,
+        'async_set_value'
+    )
 
-        # call method
-        update_tasks = []
-        for target_input in target_inputs:
-            yield from getattr(target_input, method['method'])(**params)
-            if not target_input.should_poll:
-                continue
-            update_tasks.append(target_input.async_update_ha_state(True))
+    component.async_register_entity_service(
+        SERVICE_INCREMENT, SERVICE_DEFAULT_SCHEMA,
+        'async_increment'
+    )
 
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+    component.async_register_entity_service(
+        SERVICE_DECREMENT, SERVICE_DEFAULT_SCHEMA,
+        'async_decrement'
+    )
 
-    for service, data in SERVICE_TO_METHOD.items():
-        hass.services.async_register(
-            DOMAIN, service, async_handle_service, schema=data['schema'])
-
-    yield from component.async_add_entities(entities)
+    await component.async_add_entities(entities)
     return True
 
 
@@ -180,6 +132,7 @@ class InputNumber(Entity):
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._current_value = initial
+        self._initial = initial
         self._minimum = minimum
         self._maximum = maximum
         self._step = step
@@ -216,19 +169,19 @@ class InputNumber(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         return {
+            ATTR_INITIAL: self._initial,
             ATTR_MIN: self._minimum,
             ATTR_MAX: self._maximum,
             ATTR_STEP: self._step,
             ATTR_MODE: self._mode,
         }
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         if self._current_value is not None:
             return
 
-        state = yield from async_get_last_state(self.hass, self.entity_id)
+        state = await async_get_last_state(self.hass, self.entity_id)
         value = state and float(state.state)
 
         # Check against None because value can be 0
@@ -237,8 +190,7 @@ class InputNumber(Entity):
         else:
             self._current_value = self._minimum
 
-    @asyncio.coroutine
-    def async_set_value(self, value):
+    async def async_set_value(self, value):
         """Set new value."""
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
@@ -246,10 +198,9 @@ class InputNumber(Entity):
                             num_value, self._minimum, self._maximum)
             return
         self._current_value = num_value
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_increment(self):
+    async def async_increment(self):
         """Increment value."""
         new_value = self._current_value + self._step
         if new_value > self._maximum:
@@ -257,10 +208,9 @@ class InputNumber(Entity):
                             new_value, self._minimum, self._maximum)
             return
         self._current_value = new_value
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_decrement(self):
+    async def async_decrement(self):
         """Decrement value."""
         new_value = self._current_value - self._step
         if new_value < self._minimum:
@@ -268,4 +218,4 @@ class InputNumber(Entity):
                             new_value, self._minimum, self._maximum)
             return
         self._current_value = new_value
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()

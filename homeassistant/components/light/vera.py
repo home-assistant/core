@@ -18,9 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['vera']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vera lights."""
-    add_devices(
+    add_entities(
         [VeraLight(device, hass.data[VERA_CONTROLLER]) for
          device in hass.data[VERA_DEVICES]['light']], True)
 

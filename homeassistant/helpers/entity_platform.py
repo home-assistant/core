@@ -8,14 +8,13 @@ from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
 from .event import async_track_time_interval, async_call_later
-from .entity_registry import async_get_registry
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
 PLATFORM_NOT_READY_RETRIES = 10
 
 
-class EntityPlatform(object):
+class EntityPlatform:
     """Manage the entities for a single platform."""
 
     def __init__(self, *, hass, logger, domain, platform_name, platform,
@@ -71,13 +70,13 @@ class EntityPlatform(object):
             self.parallel_updates = None
 
     async def async_setup(self, platform_config, discovery_info=None):
-        """Setup the platform from a config file."""
+        """Set up the platform from a config file."""
         platform = self.platform
         hass = self.hass
 
         @callback
         def async_create_setup_task():
-            """Get task to setup platform."""
+            """Get task to set up platform."""
             if getattr(platform, 'async_setup_platform', None):
                 return platform.async_setup_platform(
                     hass, platform_config,
@@ -93,21 +92,21 @@ class EntityPlatform(object):
         await self._async_setup_platform(async_create_setup_task)
 
     async def async_setup_entry(self, config_entry):
-        """Setup the platform from a config entry."""
+        """Set up the platform from a config entry."""
         # Store it so that we can save config entry ID in entity registry
         self.config_entry = config_entry
         platform = self.platform
 
         @callback
         def async_create_setup_task():
-            """Get task to setup platform."""
+            """Get task to set up platform."""
             return platform.async_setup_entry(
                 self.hass, config_entry, self._async_schedule_add_entities)
 
         return await self._async_setup_platform(async_create_setup_task)
 
     async def _async_setup_platform(self, async_create_setup_task, tries=0):
-        """Helper to setup a platform via config file or config entry.
+        """Set up a platform via config file or config entry.
 
         async_create_setup_task creates a coroutine that sets up platform.
         """
@@ -169,7 +168,7 @@ class EntityPlatform(object):
             warn_task.cancel()
 
     def _schedule_add_entities(self, new_entities, update_before_add=False):
-        """Synchronously schedule adding entities for a single platform."""
+        """Schedule adding entities for a single platform, synchronously."""
         run_callback_threadsafe(
             self.hass.loop,
             self._async_schedule_add_entities, list(new_entities),
@@ -207,13 +206,14 @@ class EntityPlatform(object):
             return
 
         hass = self.hass
-        component_entities = set(hass.states.async_entity_ids(self.domain))
 
-        registry = await async_get_registry(hass)
-
+        device_registry = await \
+            hass.helpers.device_registry.async_get_registry()
+        entity_registry = await \
+            hass.helpers.entity_registry.async_get_registry()
         tasks = [
             self._async_add_entity(entity, update_before_add,
-                                   component_entities, registry)
+                                   entity_registry, device_registry)
             for entity in new_entities]
 
         # No entities for processing
@@ -233,8 +233,8 @@ class EntityPlatform(object):
         )
 
     async def _async_add_entity(self, entity, update_before_add,
-                                component_entities, registry):
-        """Helper method to add an entity to the platform."""
+                                entity_registry, device_registry):
+        """Add an entity to the platform."""
         if entity is None:
             raise ValueError('Entity cannot be None')
 
@@ -269,10 +269,35 @@ class EntityPlatform(object):
             else:
                 config_entry_id = None
 
-            entry = registry.async_get_or_create(
+            device_info = entity.device_info
+            device_id = None
+
+            if config_entry_id is not None and device_info is not None:
+                processed_dev_info = {
+                    'config_entry_id': config_entry_id
+                }
+                for key in (
+                        'connections',
+                        'identifiers',
+                        'manufacturer',
+                        'model',
+                        'name',
+                        'sw_version',
+                        'via_hub',
+                ):
+                    if key in device_info:
+                        processed_dev_info[key] = device_info[key]
+
+                device = device_registry.async_get_or_create(
+                    **processed_dev_info)
+                if device:
+                    device_id = device.id
+
+            entry = entity_registry.async_get_or_create(
                 self.domain, self.platform_name, entity.unique_id,
                 suggested_object_id=suggested_object_id,
-                config_entry_id=config_entry_id)
+                config_entry_id=config_entry_id,
+                device_id=device_id)
 
             if entry.disabled:
                 self.logger.info(
@@ -283,12 +308,12 @@ class EntityPlatform(object):
 
             entity.entity_id = entry.entity_id
             entity.registry_name = entry.name
-            entry.add_update_listener(entity)
+            entity.async_on_remove(entry.add_update_listener(entity))
 
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID
         elif (entity.entity_id is not None and
-              registry.async_is_registered(entity.entity_id)):
+              entity_registry.async_is_registered(entity.entity_id)):
             # If entity already registered, convert entity id to suggestion
             suggested_object_id = split_entity_id(entity.entity_id)[1]
             entity.entity_id = None
@@ -301,24 +326,25 @@ class EntityPlatform(object):
             if self.entity_namespace is not None:
                 suggested_object_id = '{} {}'.format(self.entity_namespace,
                                                      suggested_object_id)
-
-            entity.entity_id = registry.async_generate_entity_id(
-                self.domain, suggested_object_id)
+            entity.entity_id = entity_registry.async_generate_entity_id(
+                self.domain, suggested_object_id, self.entities.keys())
 
         # Make sure it is valid in case an entity set the value themselves
         if not valid_entity_id(entity.entity_id):
             raise HomeAssistantError(
                 'Invalid entity id: {}'.format(entity.entity_id))
-        elif entity.entity_id in component_entities:
+        elif (entity.entity_id in self.entities or
+              entity.entity_id in self.hass.states.async_entity_ids(
+                  self.domain)):
             msg = 'Entity id already exists: {}'.format(entity.entity_id)
             if entity.unique_id is not None:
                 msg += '. Platform {} does not generate unique IDs'.format(
                     self.platform_name)
-            raise HomeAssistantError(
-                msg)
+            raise HomeAssistantError(msg)
 
-        self.entities[entity.entity_id] = entity
-        component_entities.add(entity.entity_id)
+        entity_id = entity.entity_id
+        self.entities[entity_id] = entity
+        entity.async_on_remove(lambda: self.entities.pop(entity_id))
 
         if hasattr(entity, 'async_added_to_hass'):
             await entity.async_added_to_hass()
@@ -337,7 +363,7 @@ class EntityPlatform(object):
         if not self.entities:
             return
 
-        tasks = [self._async_remove_entity(entity_id)
+        tasks = [self.async_remove_entity(entity_id)
                  for entity_id in self.entities]
 
         await asyncio.wait(tasks, loop=self.hass.loop)
@@ -348,7 +374,7 @@ class EntityPlatform(object):
 
     async def async_remove_entity(self, entity_id):
         """Remove entity id from platform."""
-        await self._async_remove_entity(entity_id)
+        await self.entities[entity_id].async_remove()
 
         # Clean up polling job if no longer needed
         if (self._async_unsub_polling is not None and
@@ -356,15 +382,6 @@ class EntityPlatform(object):
                         in self.entities.values())):
             self._async_unsub_polling()
             self._async_unsub_polling = None
-
-    async def _async_remove_entity(self, entity_id):
-        """Remove entity id from platform."""
-        entity = self.entities.pop(entity_id)
-
-        if hasattr(entity, 'async_will_remove_from_hass'):
-            await entity.async_will_remove_from_hass()
-
-        self.hass.states.async_remove(entity_id)
 
     async def _update_entity_states(self, now):
         """Update the states of all the polling entities.

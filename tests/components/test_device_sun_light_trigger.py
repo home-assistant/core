@@ -12,13 +12,14 @@ from homeassistant.components import (
 from homeassistant.util import dt as dt_util
 
 from tests.common import get_test_home_assistant, fire_time_changed
+from tests.components.light import common as common_light
 
 
 class TestDeviceSunLightTrigger(unittest.TestCase):
     """Test the device sun light trigger module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.scanner = loader.get_component(
@@ -48,13 +49,13 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
                     'track': True,
                     'vendor': None}
                 }):
-            self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}
-            }))
+            })
 
-        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
+        assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {CONF_PLATFORM: 'test'}
-        }))
+        })
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -64,11 +65,11 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         """Test lights go on when there is someone home and the sun sets."""
         test_time = datetime(2017, 4, 5, 1, 2, 3, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.utcnow', return_value=test_time):
-            self.assertTrue(setup_component(
+            assert setup_component(
                 self.hass, device_sun_light_trigger.DOMAIN, {
-                    device_sun_light_trigger.DOMAIN: {}}))
+                    device_sun_light_trigger.DOMAIN: {}})
 
-        light.turn_off(self.hass)
+        common_light.turn_off(self.hass)
 
         self.hass.block_till_done()
 
@@ -77,38 +78,38 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
             fire_time_changed(self.hass, test_time)
             self.hass.block_till_done()
 
-        self.assertTrue(light.is_on(self.hass))
+        assert light.is_on(self.hass)
 
     def test_lights_turn_off_when_everyone_leaves(self):
         """Test lights turn off when everyone leaves the house."""
-        light.turn_on(self.hass)
+        common_light.turn_on(self.hass)
 
         self.hass.block_till_done()
 
-        self.assertTrue(setup_component(
+        assert setup_component(
             self.hass, device_sun_light_trigger.DOMAIN, {
-                device_sun_light_trigger.DOMAIN: {}}))
+                device_sun_light_trigger.DOMAIN: {}})
 
         self.hass.states.set(device_tracker.ENTITY_ID_ALL_DEVICES,
                              STATE_NOT_HOME)
 
         self.hass.block_till_done()
 
-        self.assertFalse(light.is_on(self.hass))
+        assert not light.is_on(self.hass)
 
     def test_lights_turn_on_when_coming_home_after_sun_set(self):
         """Test lights turn on when coming home after sun set."""
         test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.utcnow', return_value=test_time):
-            light.turn_off(self.hass)
+            common_light.turn_off(self.hass)
             self.hass.block_till_done()
 
-            self.assertTrue(setup_component(
+            assert setup_component(
                 self.hass, device_sun_light_trigger.DOMAIN, {
-                    device_sun_light_trigger.DOMAIN: {}}))
+                    device_sun_light_trigger.DOMAIN: {}})
 
             self.hass.states.set(
                 device_tracker.ENTITY_ID_FORMAT.format('device_2'), STATE_HOME)
 
             self.hass.block_till_done()
-        self.assertTrue(light.is_on(self.hass))
+        assert light.is_on(self.hass)

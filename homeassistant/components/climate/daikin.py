@@ -22,7 +22,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pydaikin==0.4']
+REQUIREMENTS = ['pydaikin==0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +40,15 @@ HA_STATE_TO_DAIKIN = {
     STATE_OFF: 'off',
 }
 
+DAIKIN_TO_HA_STATE = {
+    'fan': STATE_FAN_ONLY,
+    'dry': STATE_DRY,
+    'cool': STATE_COOL,
+    'hot': STATE_HEAT,
+    'auto': STATE_AUTO,
+    'off': STATE_OFF,
+}
+
 HA_ATTR_TO_DAIKIN = {
     ATTR_OPERATION_MODE: 'mode',
     ATTR_FAN_MODE: 'f_rate',
@@ -50,7 +59,7 @@ HA_ATTR_TO_DAIKIN = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Daikin HVAC platform."""
     if discovery_info is not None:
         host = discovery_info.get('ip')
@@ -62,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("Added Daikin AC on %s", host)
 
     api = daikin_api_setup(hass, host, name)
-    add_devices([DaikinClimate(api)], True)
+    add_entities([DaikinClimate(api)], True)
 
 
 class DaikinClimate(ClimateDevice):
@@ -73,11 +82,8 @@ class DaikinClimate(ClimateDevice):
         from pydaikin import appliance
 
         self._api = api
-        self._force_refresh = False
         self._list = {
-            ATTR_OPERATION_MODE: list(
-                map(str.title, set(HA_STATE_TO_DAIKIN.values()))
-            ),
+            ATTR_OPERATION_MODE: list(HA_STATE_TO_DAIKIN),
             ATTR_FAN_MODE: list(
                 map(
                     str.title,
@@ -98,16 +104,10 @@ class DaikinClimate(ClimateDevice):
         daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE]
         if self._api.device.values.get(daikin_attr) is not None:
             self._supported_features |= SUPPORT_FAN_MODE
-        else:
-            # even devices without support must have a default valid value
-            self._api.device.values[daikin_attr] = 'A'
 
         daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE]
         if self._api.device.values.get(daikin_attr) is not None:
             self._supported_features |= SUPPORT_SWING_MODE
-        else:
-            # even devices without support must have a default valid value
-            self._api.device.values[daikin_attr] = '0'
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
@@ -136,16 +136,16 @@ class DaikinClimate(ClimateDevice):
         elif key == ATTR_OPERATION_MODE:
             # Daikin can return also internal states auto-1 or auto-7
             # and we need to translate them as AUTO
-            value = re.sub(
-                '[^a-z]',
-                '',
-                self._api.device.represent(daikin_attr)[1]
-            ).title()
+            daikin_mode = re.sub(
+                '[^a-z]', '',
+                self._api.device.represent(daikin_attr)[1])
+            ha_mode = DAIKIN_TO_HA_STATE.get(daikin_mode)
+            value = ha_mode
 
         if value is None:
             _LOGGER.error("Invalid value requested for key %s", key)
         else:
-            if value == "-" or value == "--":
+            if value in ("-", "--"):
                 value = None
             elif cast_to_float:
                 try:
@@ -167,7 +167,9 @@ class DaikinClimate(ClimateDevice):
 
             daikin_attr = HA_ATTR_TO_DAIKIN.get(attr)
             if daikin_attr is not None:
-                if value.title() in self._list[attr]:
+                if attr == ATTR_OPERATION_MODE:
+                    values[daikin_attr] = HA_STATE_TO_DAIKIN[value]
+                elif value in self._list[attr]:
                     values[daikin_attr] = value.lower()
                 else:
                     _LOGGER.error("Invalid value %s for %s", attr, value)
@@ -180,7 +182,6 @@ class DaikinClimate(ClimateDevice):
                     _LOGGER.error("Invalid temperature %s", value)
 
         if values:
-            self._force_refresh = True
             self._api.device.set(values)
 
     @property
@@ -261,5 +262,4 @@ class DaikinClimate(ClimateDevice):
 
     def update(self):
         """Retrieve latest state."""
-        self._api.update(no_throttle=self._force_refresh)
-        self._force_refresh = False
+        self._api.update()

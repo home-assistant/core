@@ -19,7 +19,7 @@ from homeassistant.util.color import \
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
 
-REQUIREMENTS = ['pyHS100==0.3.2']
+REQUIREMENTS = ['pyHS100==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +35,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Initialise pyLB100 SmartBulb."""
     from pyHS100 import SmartBulb
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
-    add_devices([TPLinkSmartBulb(SmartBulb(host), name)], True)
+    add_entities([TPLinkSmartBulb(SmartBulb(host), name)], True)
 
 
 def brightness_to_percentage(byt):
@@ -56,7 +56,8 @@ def brightness_from_percentage(percent):
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb: 'SmartBulb', name) -> None:
+    # F821: https://github.com/PyCQA/pyflakes/issues/373
+    def __init__(self, smartbulb: 'SmartBulb', name) -> None:  # noqa: F821
         """Initialize the bulb."""
         self.smartbulb = smartbulb
         self._name = name
@@ -66,6 +67,8 @@ class TPLinkSmartBulb(Light):
         self._brightness = None
         self._hs = None
         self._supported_features = 0
+        self._min_mireds = None
+        self._max_mireds = None
         self._emeter_params = {}
 
     @property
@@ -107,12 +110,12 @@ class TPLinkSmartBulb(Light):
     @property
     def min_mireds(self):
         """Return minimum supported color temperature."""
-        return kelvin_to_mired(self.smartbulb.valid_temperature_range[1])
+        return self._min_mireds
 
     @property
     def max_mireds(self):
         """Return maximum supported color temperature."""
-        return kelvin_to_mired(self.smartbulb.valid_temperature_range[0])
+        return self._max_mireds
 
     @property
     def color_temp(self):
@@ -138,8 +141,6 @@ class TPLinkSmartBulb(Light):
         """Update the TP-Link Bulb's state."""
         from pyHS100 import SmartDeviceException
         try:
-            self._available = True
-
             if self._supported_features == 0:
                 self.get_features()
 
@@ -180,9 +181,13 @@ class TPLinkSmartBulb(Light):
                     # device returned no daily/monthly history
                     pass
 
+            self._available = True
+
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning("Could not read state for %s: %s", self._name, ex)
-            self._available = False
+            if self._available:
+                _LOGGER.warning(
+                    "Could not read state for %s: %s", self._name, ex)
+                self._available = False
 
     @property
     def supported_features(self):
@@ -195,5 +200,9 @@ class TPLinkSmartBulb(Light):
             self._supported_features += SUPPORT_BRIGHTNESS
         if self.smartbulb.is_variable_color_temp:
             self._supported_features += SUPPORT_COLOR_TEMP
+            self._min_mireds = kelvin_to_mired(
+                self.smartbulb.valid_temperature_range[1])
+            self._max_mireds = kelvin_to_mired(
+                self.smartbulb.valid_temperature_range[0])
         if self.smartbulb.is_color:
             self._supported_features += SUPPORT_COLOR

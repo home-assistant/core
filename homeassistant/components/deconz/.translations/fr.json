@@ -22,7 +22,8 @@
             },
             "options": {
                 "data": {
-                    "allow_clip_sensor": "Autoriser l'importation de capteurs virtuels"
+                    "allow_clip_sensor": "Autoriser l'importation de capteurs virtuels",
+                    "allow_deconz_groups": "Autoriser l'importation des groupes deCONZ"
                 },
                 "title": "Options de configuration suppl\u00e9mentaires pour deCONZ"
             }

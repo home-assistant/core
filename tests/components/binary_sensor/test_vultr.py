@@ -26,7 +26,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices, action):
+    def add_entities(self, devices, action):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -71,56 +71,56 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
         for config in self.configs:
             vultr.setup_platform(self.hass,
                                  config,
-                                 self.add_devices,
+                                 self.add_entities,
                                  None)
 
-        self.assertEqual(len(self.DEVICES), 3)
+        assert len(self.DEVICES) == 3
 
         for device in self.DEVICES:
 
             # Test pre data retrieval
             if device.subscription == '555555':
-                self.assertEqual('Vultr {}', device.name)
+                assert 'Vultr {}' == device.name
 
             device.update()
             device_attrs = device.device_state_attributes
 
             if device.subscription == '555555':
-                self.assertEqual('Vultr Another Server', device.name)
+                assert 'Vultr Another Server' == device.name
 
             if device.name == 'A Server':
-                self.assertEqual(True, device.is_on)
-                self.assertEqual('power', device.device_class)
-                self.assertEqual('on', device.state)
-                self.assertEqual('mdi:server', device.icon)
-                self.assertEqual('1000',
-                                 device_attrs[ATTR_ALLOWED_BANDWIDTH])
-                self.assertEqual('yes',
-                                 device_attrs[ATTR_AUTO_BACKUPS])
-                self.assertEqual('123.123.123.123',
-                                 device_attrs[ATTR_IPV4_ADDRESS])
-                self.assertEqual('10.05',
-                                 device_attrs[ATTR_COST_PER_MONTH])
-                self.assertEqual('2013-12-19 14:45:41',
-                                 device_attrs[ATTR_CREATED_AT])
-                self.assertEqual('576965',
-                                 device_attrs[ATTR_SUBSCRIPTION_ID])
+                assert device.is_on is True
+                assert 'power' == device.device_class
+                assert 'on' == device.state
+                assert 'mdi:server' == device.icon
+                assert '1000' == \
+                    device_attrs[ATTR_ALLOWED_BANDWIDTH]
+                assert 'yes' == \
+                    device_attrs[ATTR_AUTO_BACKUPS]
+                assert '123.123.123.123' == \
+                    device_attrs[ATTR_IPV4_ADDRESS]
+                assert '10.05' == \
+                    device_attrs[ATTR_COST_PER_MONTH]
+                assert '2013-12-19 14:45:41' == \
+                    device_attrs[ATTR_CREATED_AT]
+                assert '576965' == \
+                    device_attrs[ATTR_SUBSCRIPTION_ID]
             elif device.name == 'Failed Server':
-                self.assertEqual(False, device.is_on)
-                self.assertEqual('off', device.state)
-                self.assertEqual('mdi:server-off', device.icon)
-                self.assertEqual('1000',
-                                 device_attrs[ATTR_ALLOWED_BANDWIDTH])
-                self.assertEqual('no',
-                                 device_attrs[ATTR_AUTO_BACKUPS])
-                self.assertEqual('192.168.100.50',
-                                 device_attrs[ATTR_IPV4_ADDRESS])
-                self.assertEqual('73.25',
-                                 device_attrs[ATTR_COST_PER_MONTH])
-                self.assertEqual('2014-10-13 14:45:41',
-                                 device_attrs[ATTR_CREATED_AT])
-                self.assertEqual('123456',
-                                 device_attrs[ATTR_SUBSCRIPTION_ID])
+                assert device.is_on is False
+                assert 'off' == device.state
+                assert 'mdi:server-off' == device.icon
+                assert '1000' == \
+                    device_attrs[ATTR_ALLOWED_BANDWIDTH]
+                assert 'no' == \
+                    device_attrs[ATTR_AUTO_BACKUPS]
+                assert '192.168.100.50' == \
+                    device_attrs[ATTR_IPV4_ADDRESS]
+                assert '73.25' == \
+                    device_attrs[ATTR_COST_PER_MONTH]
+                assert '2014-10-13 14:45:41' == \
+                    device_attrs[ATTR_CREATED_AT]
+                assert '123456' == \
+                    device_attrs[ATTR_SUBSCRIPTION_ID]
 
     def test_invalid_sensor_config(self):
         """Test config type failures."""
@@ -147,10 +147,10 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
 
         no_subs_setup = vultr.setup_platform(self.hass,
                                              bad_conf,
-                                             self.add_devices,
+                                             self.add_entities,
                                              None)
 
-        self.assertFalse(no_subs_setup)
+        assert not no_subs_setup
 
         bad_conf = {
             CONF_NAME: "Missing Server",
@@ -159,7 +159,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
 
         wrong_subs_setup = vultr.setup_platform(self.hass,
                                                 bad_conf,
-                                                self.add_devices,
+                                                self.add_entities,
                                                 None)
 
-        self.assertFalse(wrong_subs_setup)
+        assert not wrong_subs_setup

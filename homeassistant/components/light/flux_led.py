@@ -18,7 +18,7 @@ from homeassistant.components.light import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['flux_led==0.21']
+REQUIREMENTS = ['flux_led==0.22']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flux lights."""
     import flux_led
     lights = []
@@ -116,7 +116,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         light_ips.append(ipaddr)
 
     if not config.get(CONF_AUTOMATIC_ADD, False):
-        add_devices(lights, True)
+        add_entities(lights, True)
         return
 
     # Find the bulbs on the LAN
@@ -132,7 +132,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         light = FluxLight(device)
         lights.append(light)
 
-    add_devices(lights, True)
+    add_entities(lights, True)
 
 
 class FluxLight(Light):
@@ -218,6 +218,9 @@ class FluxLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
+        if not self.is_on:
+            self._bulb.turnOn()
+
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color:
@@ -242,7 +245,7 @@ class FluxLight(Light):
             return
 
         # Effect selection
-        elif effect in EFFECT_MAP:
+        if effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
             return
 
@@ -268,9 +271,6 @@ class FluxLight(Light):
         # handle RGB mode
         else:
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
-
-        if not self.is_on:
-            self._bulb.turnOn()
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""

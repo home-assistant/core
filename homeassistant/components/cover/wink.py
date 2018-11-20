@@ -11,22 +11,22 @@ from homeassistant.components.wink import WinkDevice, DOMAIN
 DEPENDENCIES = ['wink']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink cover platform."""
     import pywink
 
     for shade in pywink.get_shades():
         _id = shade.object_id() + shade.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkCoverDevice(shade, hass)])
+            add_entities([WinkCoverDevice(shade, hass)])
     for shade in pywink.get_shade_groups():
         _id = shade.object_id() + shade.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkCoverDevice(shade, hass)])
+            add_entities([WinkCoverDevice(shade, hass)])
     for door in pywink.get_garage_doors():
         _id = door.object_id() + door.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkCoverDevice(door, hass)])
+            add_entities([WinkCoverDevice(door, hass)])
 
 
 class WinkCoverDevice(WinkDevice, CoverDevice):

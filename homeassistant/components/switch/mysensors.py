@@ -21,7 +21,7 @@ SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the mysensors platform for switches."""
     device_class_map = {
         'S_DOOR': MySensorsSwitch,
@@ -40,7 +40,7 @@ async def async_setup_platform(
     }
     mysensors.setup_mysensors_platform(
         hass, DOMAIN, discovery_info, device_class_map,
-        async_add_devices=async_add_devices)
+        async_add_entities=async_add_entities)
 
     async def async_send_ir_code_service(service):
         """Set IR code as device state attribute."""

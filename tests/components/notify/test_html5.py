@@ -65,7 +65,7 @@ async def mock_client(hass, aiohttp_client, registrations=None):
     return await aiohttp_client(hass.http.app)
 
 
-class TestHtml5Notify(object):
+class TestHtml5Notify:
     """Tests for HTML5 notify platform."""
 
     def test_get_service_with_no_json(self):

@@ -1,37 +1,35 @@
 """
-Support for HomematicIP alarm control panel.
+Support for HomematicIP Cloud alarm control panel.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.homematicip_cloud/
 """
 
 import logging
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.homematicip_cloud import (
+    HMIPC_HAPID, HomematicipGenericDevice)
+from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED)
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN,
-    HMIPC_HAPID)
-
-
-DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
 
-HMIP_OPEN = 'OPEN'
+DEPENDENCIES = ['homematicip_cloud']
+
 HMIP_ZONE_AWAY = 'EXTERNAL'
 HMIP_ZONE_HOME = 'INTERNAL'
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
-    """Set up the HomematicIP alarm control devices."""
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the HomematicIP Cloud alarm control devices."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP alarm control panel from a config entry."""
     from homematicip.aio.group import AsyncSecurityZoneGroup
 
@@ -42,11 +40,11 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             devices.append(HomematicipSecurityZone(home, group))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
-    """Representation of an HomematicIP security zone group."""
+    """Representation of an HomematicIP Cloud security zone group."""
 
     def __init__(self, home, device):
         """Initialize the security zone group."""
@@ -57,14 +55,18 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
+        from homematicip.base.enums import WindowState
+
         if self._device.active:
             if (self._device.sabotage or self._device.motionDetected or
-                    self._device.windowState == HMIP_OPEN):
+                    self._device.windowState == WindowState.OPEN):
                 return STATE_ALARM_TRIGGERED
 
-            if self._device.label == HMIP_ZONE_HOME:
+            active = self._home.get_security_zones_activation()
+            if active == (True, True):
+                return STATE_ALARM_ARMED_AWAY
+            if active == (False, True):
                 return STATE_ALARM_ARMED_HOME
-            return STATE_ALARM_ARMED_AWAY
 
         return STATE_ALARM_DISARMED
 
@@ -79,10 +81,3 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         await self._home.set_security_zones_activation(True, True)
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the alarm control device."""
-        # The base class is loading the battery property, but device doesn't
-        # have this property - base class needs clean-up.
-        return None

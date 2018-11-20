@@ -1,5 +1,4 @@
 """Ban logic for HTTP component."""
-
 from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
@@ -11,7 +10,6 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components import persistent_notification
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -71,16 +69,32 @@ async def ban_middleware(request, handler):
         raise
 
 
+def log_invalid_auth(func):
+    """Decorate function to handle invalid auth or failed login attempts."""
+    async def handle_req(view, request, *args, **kwargs):
+        """Try to log failed login attempts if response status >= 400."""
+        resp = await func(view, request, *args, **kwargs)
+        if resp.status >= 400:
+            await process_wrong_login(request)
+        return resp
+    return handle_req
+
+
 async def process_wrong_login(request):
-    """Process a wrong login attempt."""
+    """Process a wrong login attempt.
+
+    Increase failed login attempts counter for remote IP address.
+    Add ip ban entry if failed login attempts exceeds threshold.
+    """
     remote_addr = request[KEY_REAL_IP]
 
     msg = ('Login attempt or request with invalid authentication '
            'from {}'.format(remote_addr))
     _LOGGER.warning(msg)
-    persistent_notification.async_create(
-        request.app['hass'], msg, 'Login attempt failed',
-        NOTIFICATION_ID_LOGIN)
+
+    hass = request.app['hass']
+    hass.components.persistent_notification.async_create(
+        msg, 'Login attempt failed', NOTIFICATION_ID_LOGIN)
 
     # Check if ban middleware is loaded
     if (KEY_BANNED_IPS not in request.app or
@@ -94,20 +108,39 @@ async def process_wrong_login(request):
         new_ban = IpBan(remote_addr)
         request.app[KEY_BANNED_IPS].append(new_ban)
 
-        hass = request.app['hass']
         await hass.async_add_job(
             update_ip_bans_config, hass.config.path(IP_BANS_FILE), new_ban)
 
         _LOGGER.warning(
             "Banned IP %s for too many login attempts", remote_addr)
 
-        persistent_notification.async_create(
-            hass,
+        hass.components.persistent_notification.async_create(
             'Too many login attempts from {}'.format(remote_addr),
             'Banning IP address', NOTIFICATION_ID_BAN)
 
 
-class IpBan(object):
+async def process_success_login(request):
+    """Process a success login attempt.
+
+    Reset failed login attempts counter for remote IP address.
+    No release IP address from banned list function, it can only be done by
+    manual modify ip bans config file.
+    """
+    remote_addr = request[KEY_REAL_IP]
+
+    # Check if ban middleware is loaded
+    if (KEY_BANNED_IPS not in request.app or
+            request.app[KEY_LOGIN_THRESHOLD] < 1):
+        return
+
+    if remote_addr in request.app[KEY_FAILED_LOGIN_ATTEMPTS] and \
+            request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] > 0:
+        _LOGGER.debug('Login success, reset failed login attempts counter'
+                      ' from %s', remote_addr)
+        request.app[KEY_FAILED_LOGIN_ATTEMPTS].pop(remote_addr)
+
+
+class IpBan:
     """Represents banned IP address."""
 
     def __init__(self, ip_ban: str, banned_at: datetime = None) -> None:

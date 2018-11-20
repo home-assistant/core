@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Bridge \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "no_bridges": "\u672a\u641c\u5c0b\u5230 deCONZ Bridfe",
-            "one_instance_only": "\u7d44\u4ef6\u50c5\u652f\u63f4\u4e00\u7d44 deCONZ \u5be6\u4f8b"
+            "one_instance_only": "\u7d44\u4ef6\u50c5\u652f\u63f4\u4e00\u7d44 deCONZ \u7269\u4ef6"
         },
         "error": {
             "no_key": "\u7121\u6cd5\u53d6\u5f97 API key"

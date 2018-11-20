@@ -16,9 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['vera']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return Vera locks."""
-    add_devices(
+    add_entities(
         [VeraLock(device, hass.data[VERA_CONTROLLER]) for
          device in hass.data[VERA_DEVICES]['lock']], True)
 

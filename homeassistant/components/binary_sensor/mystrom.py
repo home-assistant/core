@@ -4,7 +4,6 @@ Support for the myStrom buttons.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mystrom/
 """
-import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
@@ -16,10 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['http']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up myStrom Binary Sensor."""
-    hass.http.register_view(MyStromView(async_add_devices))
+    hass.http.register_view(MyStromView(async_add_entities))
 
     return True
 
@@ -31,19 +30,17 @@ class MyStromView(HomeAssistantView):
     name = 'api:mystrom'
     supported_actions = ['single', 'double', 'long', 'touch']
 
-    def __init__(self, add_devices):
+    def __init__(self, add_entities):
         """Initialize the myStrom URL endpoint."""
         self.buttons = {}
-        self.add_devices = add_devices
+        self.add_entities = add_entities
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """Handle the GET request received from a myStrom button."""
-        res = yield from self._handle(request.app['hass'], request.query)
+        res = await self._handle(request.app['hass'], request.query)
         return res
 
-    @asyncio.coroutine
-    def _handle(self, hass, data):
+    async def _handle(self, hass, data):
         """Handle requests to the myStrom endpoint."""
         button_action = next((
             parameter for parameter in data
@@ -62,7 +59,7 @@ class MyStromView(HomeAssistantView):
                          button_id, button_action)
             self.buttons[entity_id] = MyStromBinarySensor(
                 '{}_{}'.format(button_id, button_action))
-            hass.async_add_job(self.add_devices, [self.buttons[entity_id]])
+            self.add_entities([self.buttons[entity_id]])
         else:
             new_state = True if self.buttons[entity_id].state == 'off' \
                 else False

@@ -48,7 +48,7 @@ OPERATION_LIST = {
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tado climate platform."""
     tado = hass.data[DATA_TADO]
 
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         climate_devices.append(device)
 
     if climate_devices:
-        add_devices(climate_devices, True)
+        add_entities(climate_devices, True)
 
 
 def create_climate_device(tado, hass, zone, name, zone_id):

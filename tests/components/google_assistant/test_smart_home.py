@@ -74,8 +74,8 @@ async def test_sync_message(hass):
                 'willReportState': False,
                 'attributes': {
                     'colorModel': 'rgb',
-                    'temperatureMinK': 6535,
-                    'temperatureMaxK': 2000,
+                    'temperatureMinK': 2000,
+                    'temperatureMaxK': 6535,
                 },
                 'roomHint': 'Living Room'
             }]

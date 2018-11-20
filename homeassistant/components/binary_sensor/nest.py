@@ -54,14 +54,14 @@ _VALID_BINARY_SENSOR_TYPES = {**BINARY_TYPES, **CLIMATE_BINARY_TYPES,
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nest binary sensors.
 
     No longer used.
     """
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest binary sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
 
@@ -112,7 +112,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
         return sensors
 
-    async_add_devices(await hass.async_add_job(get_binary_sensors), True)
+    async_add_entities(await hass.async_add_job(get_binary_sensors), True)
 
 
 class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
@@ -146,6 +146,11 @@ class NestActivityZoneSensor(NestBinarySensor):
         super(NestActivityZoneSensor, self).__init__(structure, device, "")
         self.zone = zone
         self._name = "{} {} activity".format(self._name, self.zone.name)
+
+    @property
+    def unique_id(self):
+        """Return unique id based on camera serial and zone id."""
+        return "{}-{}".format(self.device.serial, self.zone.zone_id)
 
     @property
     def device_class(self):

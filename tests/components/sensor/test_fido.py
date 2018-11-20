@@ -59,8 +59,8 @@ class PyFidoFakeModule():
     FidoClient = FidoClientMockError
 
 
-def fake_async_add_devices(component, update_before_add=False):
-    """Fake async_add_devices function."""
+def fake_async_add_entities(component, update_before_add=False):
+    """Fake async_add_entities function."""
     pass
 
 
@@ -103,7 +103,7 @@ def test_error(hass, caplog):
     sys.modules['pyfido.client'] = PyFidoClientFakeModule()
 
     config = {}
-    fake_async_add_devices = MagicMock()
+    fake_async_add_entities = MagicMock()
     yield from fido.async_setup_platform(hass, config,
-                                         fake_async_add_devices)
-    assert fake_async_add_devices.called is False
+                                         fake_async_add_entities)
+    assert fake_async_add_entities.called is False

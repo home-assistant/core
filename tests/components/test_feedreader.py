@@ -59,8 +59,8 @@ class TestFeedreaderComponent(unittest.TestCase):
         """Test the general setup of this component."""
         with patch("homeassistant.components.feedreader."
                    "track_time_interval") as track_method:
-            self.assertTrue(setup_component(self.hass, feedreader.DOMAIN,
-                                            VALID_CONFIG_1))
+            assert setup_component(
+                self.hass, feedreader.DOMAIN, VALID_CONFIG_1)
             track_method.assert_called_once_with(self.hass, mock.ANY,
                                                  DEFAULT_SCAN_INTERVAL)
 
@@ -68,18 +68,17 @@ class TestFeedreaderComponent(unittest.TestCase):
         """Test the setup of this component with scan interval."""
         with patch("homeassistant.components.feedreader."
                    "track_time_interval") as track_method:
-            self.assertTrue(setup_component(self.hass, feedreader.DOMAIN,
-                                            VALID_CONFIG_2))
+            assert setup_component(
+                self.hass, feedreader.DOMAIN, VALID_CONFIG_2)
             track_method.assert_called_once_with(self.hass, mock.ANY,
                                                  timedelta(seconds=60))
 
     def test_setup_max_entries(self):
         """Test the setup of this component with max entries."""
-        self.assertTrue(setup_component(self.hass, feedreader.DOMAIN,
-                                        VALID_CONFIG_3))
+        assert setup_component(self.hass, feedreader.DOMAIN, VALID_CONFIG_3)
 
     def setup_manager(self, feed_data, max_entries=DEFAULT_MAX_ENTRIES):
-        """Generic test setup method."""
+        """Set up feed manager."""
         events = []
 
         @callback
@@ -160,11 +159,11 @@ class TestFeedreaderComponent(unittest.TestCase):
         manager, events = self.setup_manager(feed_data, max_entries=5)
         assert len(events) == 5
 
-    def test_feed_without_publication_date(self):
-        """Test simple feed with entry without publication date."""
+    def test_feed_without_publication_date_and_title(self):
+        """Test simple feed with entry without publication date and title."""
         feed_data = load_fixture('feedreader3.xml')
         manager, events = self.setup_manager(feed_data)
-        assert len(events) == 2
+        assert len(events) == 3
 
     def test_feed_invalid_data(self):
         """Test feed with invalid data."""

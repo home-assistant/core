@@ -23,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
-import homeassistant.components.history as history
+from homeassistant.components import history
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +63,6 @@ FILTER_SCHEMA = vol.Schema({
                  default=DEFAULT_PRECISION): vol.Coerce(int),
 })
 
-# pylint: disable=redefined-builtin
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_OUTLIER,
     vol.Optional(CONF_FILTER_WINDOW_SIZE,
@@ -114,7 +113,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the template sensors."""
     name = config.get(CONF_NAME)
@@ -124,7 +123,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         entity=entity_id, **_filter)
                for _filter in config[CONF_FILTERS]]
 
-    async_add_devices([SensorFilter(name, entity_id, filters)])
+    async_add_entities([SensorFilter(name, entity_id, filters)])
 
 
 class SensorFilter(Entity):
@@ -258,7 +257,7 @@ class SensorFilter(Entity):
         return state_attr
 
 
-class FilterState(object):
+class FilterState:
     """State abstraction for filter usage."""
 
     def __init__(self, state):
@@ -283,7 +282,7 @@ class FilterState(object):
         return "{} : {}".format(self.timestamp, self.state)
 
 
-class Filter(object):
+class Filter:
     """Filter skeleton.
 
     Args:
@@ -348,7 +347,7 @@ class RangeFilter(Filter):
     """
 
     def __init__(self, entity,
-                 lower_bound, upper_bound):
+                 lower_bound=None, upper_bound=None):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_RANGE, entity=entity)
         self._lower_bound = lower_bound
@@ -357,7 +356,8 @@ class RangeFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
-        if self._upper_bound and new_state.state > self._upper_bound:
+        if (self._upper_bound is not None
+                and new_state.state > self._upper_bound):
 
             self._stats_internal['erasures_up'] += 1
 
@@ -366,7 +366,8 @@ class RangeFilter(Filter):
                           self._entity, new_state)
             new_state.state = self._upper_bound
 
-        elif self._lower_bound and new_state.state < self._lower_bound:
+        elif (self._lower_bound is not None
+              and new_state.state < self._lower_bound):
 
             self._stats_internal['erasures_low'] += 1
 
@@ -446,7 +447,8 @@ class TimeSMAFilter(Filter):
         variant (enum): type of argorithm used to connect discrete values
     """
 
-    def __init__(self, window_size, precision, entity, type):
+    def __init__(self, window_size, precision, entity,
+                 type):  # pylint: disable=redefined-builtin
         """Initialize Filter."""
         super().__init__(FILTER_NAME_TIME_SMA, window_size, precision, entity)
         self._time_window = window_size

@@ -4,20 +4,18 @@ Support for Russound multizone controllers using RIO Protocol.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.russound_rio/
 """
-
-import asyncio
 import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA,
-    MEDIA_TYPE_MUSIC)
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON,
-    CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_OFF,
+    STATE_ON)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['russound_rio==0.1.4']
@@ -31,30 +29,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_PORT, default=9621): cv.port,
-    })
+})
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Russound RIO platform."""
+    from russound_rio import Russound
+
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    from russound_rio import Russound
-
     russ = Russound(hass.loop, host, port)
 
-    yield from russ.connect()
+    await russ.connect()
 
-    # Discover sources
-    sources = yield from russ.enumerate_sources()
-
-    # Discover zones
-    valid_zones = yield from russ.enumerate_zones()
+    # Discover sources and zones
+    sources = await russ.enumerate_sources()
+    valid_zones = await russ.enumerate_zones()
 
     devices = []
     for zone_id, name in valid_zones:
-        yield from russ.watch_zone(zone_id)
+        await russ.watch_zone(zone_id)
         dev = RussoundZoneDevice(russ, zone_id, name, sources)
         devices.append(dev)
 
@@ -65,7 +61,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
 
 class RussoundZoneDevice(MediaPlayerDevice):
@@ -80,9 +76,8 @@ class RussoundZoneDevice(MediaPlayerDevice):
         self._sources = sources
 
     def _zone_var(self, name, default=None):
-        return self._russ.get_cached_zone_variable(self._zone_id,
-                                                   name,
-                                                   default)
+        return self._russ.get_cached_zone_variable(
+            self._zone_id, name, default)
 
     def _source_var(self, name, default=None):
         current = int(self._zone_var('currentsource', 0))
@@ -100,8 +95,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
             if value in (None, "", "------"):
                 return None
             return value
-        else:
-            return None
+        return None
 
     def _zone_callback_handler(self, zone_id, *args):
         if zone_id == self._zone_id:
@@ -112,8 +106,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
         if source_id == current:
             self.schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callback handlers."""
         self._russ.add_zone_callback(self._zone_callback_handler)
         self._russ.add_source_callback(self._source_callback_handler)
@@ -134,7 +127,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
         status = self._zone_var('status', "OFF")
         if status == 'ON':
             return STATE_ON
-        elif status == 'OFF':
+        if status == 'OFF':
             return STATE_OFF
 
     @property
@@ -188,21 +181,17 @@ class RussoundZoneDevice(MediaPlayerDevice):
 
     def async_turn_off(self):
         """Turn off the zone."""
-        return self._russ.send_zone_event(self._zone_id,
-                                          "ZoneOff")
+        return self._russ.send_zone_event(self._zone_id, 'ZoneOff')
 
     def async_turn_on(self):
         """Turn on the zone."""
-        return self._russ.send_zone_event(self._zone_id,
-                                          "ZoneOn")
+        return self._russ.send_zone_event(self._zone_id, 'ZoneOn')
 
     def async_set_volume_level(self, volume):
         """Set the volume level."""
         rvol = int(volume * 50.0)
-        return self._russ.send_zone_event(self._zone_id,
-                                          "KeyPress",
-                                          "Volume",
-                                          rvol)
+        return self._russ.send_zone_event(
+            self._zone_id, 'KeyPress', 'Volume', rvol)
 
     def async_select_source(self, source):
         """Select the source input for this zone."""
@@ -210,4 +199,4 @@ class RussoundZoneDevice(MediaPlayerDevice):
             if name.lower() != source.lower():
                 continue
             return self._russ.send_zone_event(
-                self._zone_id, "SelectSource", source_id)
+                self._zone_id, 'SelectSource', source_id)

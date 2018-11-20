@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u00c8 consentita solo una singola configurazione di MQTT."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi al broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Attiva l'individuazione"
+                }
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Attiva l'individuazione"
+                }
+            }
+        },
+        "title": "MQTT"
+    }
+}

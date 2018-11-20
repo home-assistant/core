@@ -6,10 +6,10 @@ import os
 from collections import OrderedDict, namedtuple
 from glob import glob
 from platform import system
+from typing import Dict, List, Sequence
 from unittest.mock import patch
 
 import attr
-from typing import Dict, List, Sequence
 import voluptuous as vol
 
 from homeassistant import bootstrap, core, loader
@@ -18,7 +18,7 @@ from homeassistant.config import (
     CONF_PACKAGES, merge_packages_config, _format_config_error,
     find_config_file, load_yaml_config_file,
     extract_domain_configs, config_per_platform)
-import homeassistant.util.yaml as yaml
+from homeassistant.util import yaml
 from homeassistant.exceptions import HomeAssistantError
 
 REQUIREMENTS = ('colorlog==3.1.4',)
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 MOCKS = {
     'load': ("homeassistant.util.yaml.load_yaml", yaml.load_yaml),
     'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
-    'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
+    'secrets': ("homeassistant.util.yaml.secret_yaml", yaml.secret_yaml),
 }
 SILENCE = (
     'homeassistant.scripts.check_config.yaml.clear_secret_cache',
@@ -163,13 +163,13 @@ def check(config_dir, secrets=False):
         'secret_cache': None,
     }
 
-    # pylint: disable=unused-variable
+    # pylint: disable=possibly-unused-variable
     def mock_load(filename):
         """Mock hass.util.load_yaml to save config file names."""
         res['yaml_files'][filename] = True
         return MOCKS['load'][1](filename)
 
-    # pylint: disable=unused-variable
+    # pylint: disable=possibly-unused-variable
     def mock_secrets(ldr, node):
         """Mock _get_secrets."""
         try:
@@ -198,7 +198,7 @@ def check(config_dir, secrets=False):
 
     if secrets:
         # Ensure !secrets point to the patched function
-        yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+        yaml.yaml.SafeLoader.add_constructor('!secret', yaml.secret_yaml)
 
     try:
         hass = core.HomeAssistant()
@@ -223,7 +223,7 @@ def check(config_dir, secrets=False):
             pat.stop()
         if secrets:
             # Ensure !secrets point to the original function
-            yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+            yaml.yaml.SafeLoader.add_constructor('!secret', yaml.secret_yaml)
         bootstrap.clear_secret_cache()
 
     return res
@@ -325,7 +325,7 @@ def check_ha_config_file(hass):
     # Merge packages
     merge_packages_config(
         hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
-    del core_config[CONF_PACKAGES]
+    core_config.pop(CONF_PACKAGES, None)
 
     # Ensure we have no None values after merge
     for key, value in config.items():

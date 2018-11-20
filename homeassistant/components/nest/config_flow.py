@@ -7,7 +7,7 @@ import os
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import load_json
@@ -49,14 +49,19 @@ class CodeInvalid(NestAuthError):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class NestFlowHandler(data_entry_flow.FlowHandler):
+class NestFlowHandler(config_entries.ConfigFlow):
     """Handle a Nest config flow."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize the Nest config flow."""
         self.flow_impl = None
+
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
+        return await self.async_step_init(user_input)
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
@@ -65,14 +70,14 @@ class NestFlowHandler(data_entry_flow.FlowHandler):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
-        elif not flows:
+        if not flows:
             return self.async_abort(reason='no_flows')
 
-        elif len(flows) == 1:
+        if len(flows) == 1:
             self.flow_impl = list(flows)[0]
             return await self.async_step_link()
 
-        elif user_input is not None:
+        if user_input is not None:
             self.flow_impl = user_input['flow_impl']
             return await self.async_step_link()
 

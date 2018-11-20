@@ -60,7 +60,7 @@ class TestStates(unittest.TestCase):
             'entity_id': 'sensor.temperature',
             'old_state': None,
             'new_state': state,
-        })
+        }, context=state.context)
         assert state == States.from_event(event).to_native()
 
     def test_from_event_to_delete_state(self):

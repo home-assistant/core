@@ -17,7 +17,7 @@ class TestDarkSky(unittest.TestCase):
     """Test the Dark Sky weather component."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
         self.lat = self.hass.config.latitude = 37.8267
@@ -36,16 +36,16 @@ class TestDarkSky(unittest.TestCase):
         mock_req.get(re.compile(uri),
                      text=load_fixture('darksky.json'))
 
-        self.assertTrue(setup_component(self.hass, weather.DOMAIN, {
+        assert setup_component(self.hass, weather.DOMAIN, {
             'weather': {
                 'name': 'test',
                 'platform': 'darksky',
                 'api_key': 'foo',
             }
-        }))
+        })
 
-        self.assertTrue(mock_get_forecast.called)
-        self.assertEqual(mock_get_forecast.call_count, 1)
+        assert mock_get_forecast.called
+        assert mock_get_forecast.call_count == 1
 
         state = self.hass.states.get('weather.test')
-        self.assertEqual(state.state, 'sunny')
+        assert state.state == 'sunny'

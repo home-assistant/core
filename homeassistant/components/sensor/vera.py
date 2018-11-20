@@ -22,9 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vera controller devices."""
-    add_devices(
+    add_entities(
         [VeraSensor(device, hass.data[VERA_CONTROLLER])
          for device in hass.data[VERA_DEVICES]['sensor']], True)
 
@@ -51,13 +51,13 @@ class VeraSensor(VeraDevice, Entity):
         import pyvera as veraApi
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             return self._temperature_units
-        elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
+        if self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
             return 'lx'
-        elif self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
+        if self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
             return 'level'
-        elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
+        if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             return '%'
-        elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
+        if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             return 'watts'
 
     def update(self):

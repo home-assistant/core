@@ -136,9 +136,9 @@ class SlackNotificationService(BaseNotificationService):
                   password=None, auth=None):
         """Load image/document/etc from a local path or URL."""
         try:
-            if url is not None:
+            if url:
                 # Check whether authentication parameters are provided
-                if username is not None and password is not None:
+                if username:
                     # Use digest or basic authentication
                     if ATTR_FILE_AUTH_DIGEST == auth:
                         auth_ = HTTPDigestAuth(username, password)
@@ -151,7 +151,7 @@ class SlackNotificationService(BaseNotificationService):
                     req = requests.get(url, timeout=CONF_TIMEOUT)
                 return req.content
 
-            elif local_path is not None:
+            elif local_path:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
                     return open(local_path, "rb")
