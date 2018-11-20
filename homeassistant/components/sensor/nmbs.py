@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     station_live = config.get(CONF_STATION_LIVE)
 
     add_entities([
-        NMBSLiveBoard(station_live, api_client),
+        NMBSLiveBoard(station_live, api_client) if station_live is not None else None,
         NMBSSensor(name, station_from, station_to, api_client),
     ], True)
 
