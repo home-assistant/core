@@ -259,6 +259,7 @@ group.ais_rss_help:
 group.all_switches:
   order: 1
   hidden: false
+  control: hidden
   context_key_words: przełaczniki,wszystkie przełączniki
   context_answer: OK, wybrano wszystkie przełączniki. Możesz powiedzieć co włączyć
     lub nawigować pilotem by sprawdzać status oraz przełączać.
@@ -267,6 +268,7 @@ group.all_switches:
 group.all_lights:
   order: 2
   hidden: false
+  control: hidden
   context_key_words: światła,wszystkie światła
   context_answer: OK, wybrano wszystkie światła. Możesz powiedzieć co włączyć lub
     nawigować pilotem by sprawdzać status oraz przełączać.

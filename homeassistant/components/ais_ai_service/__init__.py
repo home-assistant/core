@@ -1194,7 +1194,8 @@ def _publish_command_to_frame(hass, key, val, ip):
         wifi_type = val.split(';')[-1]
         requests.post(
             url + '/command',
-            json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type})
+            json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type},
+            timeout=2)
     elif key == "WifiConnectTheDevice":
         iot = val.split(';')[0]
         if iot == ais_global.G_EMPTY_OPTION:
@@ -1218,14 +1219,18 @@ def _publish_command_to_frame(hass, key, val, ip):
 
         requests.post(
             url + '/command',
-            json={key: iot, "ip": ip, "WifiNetworkPass": password, "WifiNetworkSsid": wifi, "IotName": name})
+            json={key: iot, "ip": ip, "WifiNetworkPass": password, "WifiNetworkSsid": wifi, "IotName": name},
+            timeout=2)
     else:
         try:
             requests.post(
                 url + '/command',
-                json={key: val, "ip": ip})
+                json={key: val, "ip": ip},
+                timeout=2)
         except Exception as e:
-            _LOGGER.info("requests.post problem")
+            _LOGGER.info(
+                "_publish_command_to_frame requests.post problem key: "
+                + str(key) + " val: " + str(val) + " ip " + str(ip))
 
 
 def _wifi_rssi_to_info(rssi):
@@ -1272,6 +1277,7 @@ def _publish_wifi_status(hass, service):
 
 def _process_command_from_frame(hass, service):
     # process from frame
+    _LOGGER.info('_process_command_from_frame: ' + str(service.data))
     callback = None
     if "callback" in service.data:
         callback = service.data["callback"]
@@ -1439,23 +1445,25 @@ def _process_command_from_frame(hass, service):
     return
 
 
-def _post_message(message, host):
+def _post_message(message, hosts):
     """Post the message to TTS service."""
-    try:
-        message = message.replace("°C", "stopni Celsjusza")
-        url = G_HTTP_REST_SERVICE_BASE_URL.format(host)
-        requests.post(
-            url + '/text_to_speech',
-            json={
-                "text": message,
-                "pitch": ais_global.GLOBAL_TTS_PITCH,
-                "rate": ais_global.GLOBAL_TTS_RATE,
-                "voice": ais_global.GLOBAL_TTS_VOICE
-                })
-    except Exception as e:
-        if host != 'localhost':
-            _LOGGER.error(
-                "problem to send the text to speech via http: " + str(e))
+    message = message.replace("°C", "stopni Celsjusza")
+    j_data = {
+            "text": message,
+            "pitch": ais_global.GLOBAL_TTS_PITCH,
+            "rate": ais_global.GLOBAL_TTS_RATE,
+            "voice": ais_global.GLOBAL_TTS_VOICE
+            }
+    for h in hosts:
+        _LOGGER.info("sending text_to_speech to: " + str(h))
+        try:
+            requests.post(
+                G_HTTP_REST_SERVICE_BASE_URL.format(h) + '/text_to_speech',
+                json=j_data,
+                timeout=1
+            )
+        except Exception as e:
+            _LOGGER.info("problem to send the text to speech via http: " + str(e))
 
 
 def _beep_it(hass, tone):
@@ -1472,7 +1480,7 @@ def _beep_it(hass, tone):
 def _say_it(hass, message, caller_ip=None):
     # sent the tts message to the panel via http api
     global GLOBAL_TTS_TEXT
-    _post_message(message, 'localhost')
+    l_hosts = ['localhost']
 
     # check if we should inform other speaker
     player_name = hass.states.get('input_select.tts_player').state
@@ -1482,7 +1490,7 @@ def _say_it(hass, message, caller_ip=None):
         if device is not None:
             device_ip = device["device_ip"]
             if device_ip not in ['localhost', '127.0.0.1']:
-                _post_message(message, device_ip)
+                l_hosts.append(device_ip)
 
     # check if we should inform back the caller speaker
     # the local caller has ip like 192.168.1.45
@@ -1491,7 +1499,9 @@ def _say_it(hass, message, caller_ip=None):
         ais_global.set_global_my_ip()
     if caller_ip is not None:
         if caller_ip not in ['localhost', '127.0.0.1', device_ip, ais_global.GLOBAL_MY_IP]:
-            _post_message(message, caller_ip)
+            l_hosts.append(caller_ip)
+
+    _post_message(message, l_hosts)
 
     if len(message) > 199:
         GLOBAL_TTS_TEXT = message[0: 199] + '...'
