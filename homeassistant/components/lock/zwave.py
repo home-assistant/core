@@ -8,8 +8,10 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,9 +135,18 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the Z-Wave Lock platform."""
-    await zwave.async_setup_platform(
-        hass, config, async_add_entities, discovery_info)
+    """Old method of setting up Z-Wave locks."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave Lock from Config Entry."""
+    @callback
+    def async_add_lock(lock):
+        """Add Z-Wave Lock."""
+        async_add_entities([lock])
+
+    async_dispatcher_connect(hass, 'zwave_new_lock', async_add_lock)
 
     network = hass.data[zwave.const.DATA_NETWORK]
 
