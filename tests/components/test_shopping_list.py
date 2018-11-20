@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.helpers import intent
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +55,7 @@ def test_recent_items_intent(hass):
 
 
 @asyncio.coroutine
-def test_api_get_all(hass, aiohttp_client):
+def test_deprecated_api_get_all(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -70,6 +71,37 @@ def test_api_get_all(hass, aiohttp_client):
 
     assert resp.status == 200
     data = yield from resp.json()
+    assert len(data) == 2
+    assert data[0]['name'] == 'beer'
+    assert not data[0]['complete']
+    assert data[1]['name'] == 'wine'
+    assert not data[1]['complete']
+
+
+async def test_ws_get_items(hass, hass_ws_client):
+    """Test get shopping_list items websocket command."""
+    await async_setup_component(hass, 'shopping_list', {})
+
+    await intent.async_handle(
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'beer'}}
+    )
+    await intent.async_handle(
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'wine'}}
+    )
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        'id': 5,
+        'type': 'shopping_list/items',
+    })
+    msg = await client.receive_json()
+    assert msg['success'] is True
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+    data = msg['result']
     assert len(data) == 2
     assert data[0]['name'] == 'beer'
     assert not data[0]['complete']
