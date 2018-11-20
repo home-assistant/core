@@ -323,15 +323,16 @@ class XiaomiPhilipsAbstractLight(Light):
         from miio import DeviceException
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.is_on
-            self._brightness = ceil((255 / 100.0) * state.brightness)
-
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+            return
+
+        _LOGGER.debug("Got new state: %s", state)
+        self._available = True
+        self._state = state.is_on
+        self._brightness = ceil((255 / 100.0) * state.brightness)
+
 
 
 class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
@@ -351,25 +352,25 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         from miio import DeviceException
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.is_on
-            self._brightness = ceil((255 / 100.0) * state.brightness)
-
-            delayed_turn_off = self.delayed_turn_off_timestamp(
-                state.delay_off_countdown,
-                dt.utcnow(),
-                self._state_attrs[ATTR_DELAYED_TURN_OFF])
-
-            self._state_attrs.update({
-                ATTR_SCENE: state.scene,
-                ATTR_DELAYED_TURN_OFF: delayed_turn_off,
-            })
-
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+            return
+
+        _LOGGER.debug("Got new state: %s", state)
+        self._available = True
+        self._state = state.is_on
+        self._brightness = ceil((255 / 100.0) * state.brightness)
+
+        delayed_turn_off = self.delayed_turn_off_timestamp(
+            state.delay_off_countdown,
+            dt.utcnow(),
+            self._state_attrs[ATTR_DELAYED_TURN_OFF])
+
+        self._state_attrs.update({
+            ATTR_SCENE: state.scene,
+            ATTR_DELAYED_TURN_OFF: delayed_turn_off,
+        })
 
     async def async_set_scene(self, scene: int = 1):
         """Set the fixed scene."""
@@ -501,29 +502,29 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         from miio import DeviceException
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.is_on
-            self._brightness = ceil((255 / 100.0) * state.brightness)
-            self._color_temp = self.translate(
-                state.color_temperature,
-                CCT_MIN, CCT_MAX,
-                self.max_mireds, self.min_mireds)
-
-            delayed_turn_off = self.delayed_turn_off_timestamp(
-                state.delay_off_countdown,
-                dt.utcnow(),
-                self._state_attrs[ATTR_DELAYED_TURN_OFF])
-
-            self._state_attrs.update({
-                ATTR_SCENE: state.scene,
-                ATTR_DELAYED_TURN_OFF: delayed_turn_off,
-            })
-
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+            return
+
+        _LOGGER.debug("Got new state: %s", state)
+        self._available = True
+        self._state = state.is_on
+        self._brightness = ceil((255 / 100.0) * state.brightness)
+        self._color_temp = self.translate(
+            state.color_temperature,
+            CCT_MIN, CCT_MAX,
+            self.max_mireds, self.min_mireds)
+
+        delayed_turn_off = self.delayed_turn_off_timestamp(
+            state.delay_off_countdown,
+            dt.utcnow(),
+            self._state_attrs[ATTR_DELAYED_TURN_OFF])
+
+        self._state_attrs.update({
+            ATTR_SCENE: state.scene,
+            ATTR_DELAYED_TURN_OFF: delayed_turn_off,
+        })
 
     @staticmethod
     def translate(value, left_min, left_max, right_min, right_max):
@@ -561,32 +562,32 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         from miio import DeviceException
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.is_on
-            self._brightness = ceil((255 / 100.0) * state.brightness)
-            self._color_temp = self.translate(
-                state.color_temperature,
-                CCT_MIN, CCT_MAX,
-                self.max_mireds, self.min_mireds)
-
-            delayed_turn_off = self.delayed_turn_off_timestamp(
-                state.delay_off_countdown,
-                dt.utcnow(),
-                self._state_attrs[ATTR_DELAYED_TURN_OFF])
-
-            self._state_attrs.update({
-                ATTR_SCENE: state.scene,
-                ATTR_DELAYED_TURN_OFF: delayed_turn_off,
-                ATTR_NIGHT_LIGHT_MODE: state.smart_night_light,
-                ATTR_AUTOMATIC_COLOR_TEMPERATURE:
-                    state.automatic_color_temperature,
-            })
-
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+            return
+
+        _LOGGER.debug("Got new state: %s", state)
+        self._available = True
+        self._state = state.is_on
+        self._brightness = ceil((255 / 100.0) * state.brightness)
+        self._color_temp = self.translate(
+            state.color_temperature,
+            CCT_MIN, CCT_MAX,
+            self.max_mireds, self.min_mireds)
+
+        delayed_turn_off = self.delayed_turn_off_timestamp(
+            state.delay_off_countdown,
+            dt.utcnow(),
+            self._state_attrs[ATTR_DELAYED_TURN_OFF])
+
+        self._state_attrs.update({
+            ATTR_SCENE: state.scene,
+            ATTR_DELAYED_TURN_OFF: delayed_turn_off,
+            ATTR_NIGHT_LIGHT_MODE: state.smart_night_light,
+            ATTR_AUTOMATIC_COLOR_TEMPERATURE:
+                state.automatic_color_temperature,
+        })
 
 
 class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
@@ -607,28 +608,28 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         from miio import DeviceException
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.is_on
-            self._brightness = ceil((255 / 100.0) * state.brightness)
-
-            delayed_turn_off = self.delayed_turn_off_timestamp(
-                state.delay_off_countdown,
-                dt.utcnow(),
-                self._state_attrs[ATTR_DELAYED_TURN_OFF])
-
-            self._state_attrs.update({
-                ATTR_SCENE: state.scene,
-                ATTR_DELAYED_TURN_OFF: delayed_turn_off,
-                ATTR_REMINDER: state.reminder,
-                ATTR_NIGHT_LIGHT_MODE: state.smart_night_light,
-                ATTR_EYECARE_MODE: state.eyecare,
-            })
-
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+            return
+
+        _LOGGER.debug("Got new state: %s", state)
+        self._available = True
+        self._state = state.is_on
+        self._brightness = ceil((255 / 100.0) * state.brightness)
+
+        delayed_turn_off = self.delayed_turn_off_timestamp(
+            state.delay_off_countdown,
+            dt.utcnow(),
+            self._state_attrs[ATTR_DELAYED_TURN_OFF])
+
+        self._state_attrs.update({
+            ATTR_SCENE: state.scene,
+            ATTR_DELAYED_TURN_OFF: delayed_turn_off,
+            ATTR_REMINDER: state.reminder,
+            ATTR_NIGHT_LIGHT_MODE: state.smart_night_light,
+            ATTR_EYECARE_MODE: state.eyecare,
+        })
 
     async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off."""
@@ -735,15 +736,15 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         from miio import DeviceException
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.ambient
-            self._brightness = ceil((255 / 100.0) * state.ambient_brightness)
-
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+            return
+
+        _LOGGER.debug("Got new state: %s", state)
+        self._available = True
+        self._state = state.ambient
+        self._brightness = ceil((255 / 100.0) * state.ambient_brightness)
 
 
 class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
@@ -788,30 +789,30 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         from miio import DeviceException
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.is_on
-            self._brightness = ceil((255 / 100.0) * state.brightness)
-            self._color_temp = self.translate(
-                state.color_temperature,
-                CCT_MIN, CCT_MAX,
-                self.max_mireds, self.min_mireds)
-            self._hs_color = self._get_hs(state.rgb)
-
-            self._state_attrs.update({
-                ATTR_SCENE: state.scene,
-                ATTR_SLEEP_ASSISTANT: state.sleep_assistant,
-                ATTR_SLEEP_OFF_TIME: state.sleep_off_time,
-                ATTR_TOTAL_ASSISTANT_SLEEP_TIME:
-                    state.total_assistant_sleep_time,
-                ATTR_BRAND_SLEEP: state.brand_sleep,
-                ATTR_BRAND: state.brand,
-            })
-
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+            return
+
+        _LOGGER.debug("Got new state: %s", state)
+        self._available = True
+        self._state = state.is_on
+        self._brightness = ceil((255 / 100.0) * state.brightness)
+        self._color_temp = self.translate(
+            state.color_temperature,
+            CCT_MIN, CCT_MAX,
+            self.max_mireds, self.min_mireds)
+        self._hs_color = self._get_hs(state.rgb)
+
+        self._state_attrs.update({
+            ATTR_SCENE: state.scene,
+            ATTR_SLEEP_ASSISTANT: state.sleep_assistant,
+            ATTR_SLEEP_OFF_TIME: state.sleep_off_time,
+            ATTR_TOTAL_ASSISTANT_SLEEP_TIME:
+                state.total_assistant_sleep_time,
+            ATTR_BRAND_SLEEP: state.brand_sleep,
+            ATTR_BRAND: state.brand,
+        })
 
     async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off. Unsupported."""
