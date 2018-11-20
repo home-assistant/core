@@ -6,6 +6,7 @@ https://home-assistant.io/components/mqtt/
 """
 import asyncio
 from itertools import groupby
+import json
 import logging
 from operator import attrgetter
 import os
@@ -70,6 +71,7 @@ CONF_COMMAND_TOPIC = 'command_topic'
 CONF_AVAILABILITY_TOPIC = 'availability_topic'
 CONF_PAYLOAD_AVAILABLE = 'payload_available'
 CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
+CONF_JSON_ATTRS = 'json_attributes'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
 
@@ -818,6 +820,78 @@ def _match_topic(subscription: str, topic: str) -> bool:
         return True
     except StopIteration:
         return False
+
+
+class MqttAttributes(Entity):
+    """Mixin used for platforms that support JSON attributes."""
+
+    def __init__(self, attributes_topic: Optional[str], qos: Optional[int],
+                 json_attributes: Optional[str]) -> None:
+        """Initialize the JSON attributes mixin."""
+        self._attributes = None
+        self._attributes_sub_state = None
+
+        self._attributes_topic = attributes_topic
+        self._attributes_qos = qos
+        self._attributes_json = json_attributes
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe MQTT events.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        await self._attributes_subscribe_topics()
+
+    async def attributes_discovery_update(self, config: dict):
+        """Handle updated discovery message."""
+        self._attributes_setup_from_config(config)
+        await self._attributes_subscribe_topics()
+
+    def _attributes_setup_from_config(self, config):
+        """(Re)Setup."""
+        self._attributes_topic = config.get(CONF_AVAILABILITY_TOPIC)
+        self._attributes_qos = config.get(CONF_QOS)
+        self._attributes_json = config.get(CONF_JSON_ATTRS)
+
+    async def _attributes_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        from .subscription import async_subscribe_topics
+
+        @callback
+        def attributes_message_received(topic: str,
+                                        payload: SubscribePayloadType,
+                                        qos: int) -> None:
+            if self._attributes_json:
+                self._attributes = {}
+                try:
+                    json_dict = json.loads(payload)
+                    if isinstance(json_dict, dict):
+                        attrs = {k: json_dict[k] for k in
+                                 self._attributes_json & json_dict.keys()}
+                        self._attributes = attrs
+                        self.async_schedule_update_ha_state()
+                    else:
+                        _LOGGER.warning("JSON result was not a dictionary")
+                except ValueError:
+                    _LOGGER.warning("MQTT payload could not be parsed as JSON")
+                    _LOGGER.debug("Erroneous JSON: %s", payload)
+
+        self._attributes_sub_state = await async_subscribe_topics(
+            self.hass, self._attributes_sub_state,
+            {'attributes_topic': {
+                'topic': self._attributes_topic,
+                'msg_callback': attributes_message_received,
+                'qos': self._attributes_qos}})
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        from .subscription import async_unsubscribe_topics
+        await async_unsubscribe_topics(self.hass, self._attributes_sub_state)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
 
 
 class MqttAvailability(Entity):
