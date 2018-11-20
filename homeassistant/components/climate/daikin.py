@@ -22,7 +22,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pydaikin==0.7']
+REQUIREMENTS = ['pydaikin==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,12 +101,10 @@ class DaikinClimate(ClimateDevice):
         self._supported_features = SUPPORT_TARGET_TEMPERATURE \
             | SUPPORT_OPERATION_MODE
 
-        daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE]
-        if self._api.device.values.get(daikin_attr) is not None:
+        if self._api.device.support_fan_mode:
             self._supported_features |= SUPPORT_FAN_MODE
 
-        daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE]
-        if self._api.device.values.get(daikin_attr) is not None:
+        if self._api.device.support_swing_mode:
             self._supported_features |= SUPPORT_SWING_MODE
 
     def get(self, key):
