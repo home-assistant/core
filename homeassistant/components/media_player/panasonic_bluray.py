@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Panasonic Blu-Ray platform."""
-    conf = discovery_info if discovery_info else config:
+    conf = discovery_info if discovery_info else config
 
     # Register configured device with Home Assistant.
     add_entities([PanasonicBluRay(conf[CONF_HOST], conf[CONF_NAME])])
