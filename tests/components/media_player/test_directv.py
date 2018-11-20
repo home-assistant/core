@@ -8,7 +8,7 @@ import pytest
 import homeassistant.components.media_player as mp
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE, DOMAIN, SERVICE_PLAY_MEDIA, SERVICE_SELECT_SOURCE)
+    ATTR_MEDIA_ENQUEUE, DOMAIN, SERVICE_PLAY_MEDIA)
 
 from homeassistant.components.media_player.directv import (
     ATTR_MEDIA_CURRENTLY_RECORDING, ATTR_MEDIA_RATING, ATTR_MEDIA_RECORDED,
@@ -195,16 +195,6 @@ async def async_play_media(hass, media_type, media_id, entity_id=None,
     await hass.services.async_call(DOMAIN, SERVICE_PLAY_MEDIA, data)
 
 
-async def async_select_source(hass, source, entity_id=None):
-    """Send the media player the command to select input source."""
-    data = {ATTR_INPUT_SOURCE: source}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SOURCE, data)
-
-
 class mockDIRECTVClass:
     """A fake DirecTV DVR device."""
 
@@ -355,15 +345,13 @@ async def test_supported_features(hass, platforms):
 
     # Features supported for main DVR
     assert mp.SUPPORT_PAUSE | mp.SUPPORT_TURN_ON | mp.SUPPORT_TURN_OFF |\
-        mp.SUPPORT_PLAY_MEDIA | mp.SUPPORT_SELECT_SOURCE |\
-        mp.SUPPORT_STOP | mp.SUPPORT_NEXT_TRACK |\
+        mp.SUPPORT_PLAY_MEDIA  | mp.SUPPORT_STOP | mp.SUPPORT_NEXT_TRACK |\
         mp.SUPPORT_PREVIOUS_TRACK | mp.SUPPORT_PLAY ==\
         main_media_entity.supported_features
 
     # Feature supported for clients.
     assert mp.SUPPORT_PAUSE |\
-        mp.SUPPORT_PLAY_MEDIA | mp.SUPPORT_SELECT_SOURCE |\
-        mp.SUPPORT_STOP | mp.SUPPORT_NEXT_TRACK |\
+        mp.SUPPORT_PLAY_MEDIA | mp.SUPPORT_STOP | mp.SUPPORT_NEXT_TRACK |\
         mp.SUPPORT_PREVIOUS_TRACK | mp.SUPPORT_PLAY ==\
         client_media_entity.supported_features
 
@@ -458,7 +446,7 @@ async def test_main_services(hass, platforms):
 
         # Change channel, currently it should be 202
         assert state.attributes.get('source') == 202
-        await async_select_source(hass, 7, MAIN_ENTITY_ID)
+        await async_play_media(hass, 'channel', 7, MAIN_ENTITY_ID)
         await hass.async_block_till_done()
         mock_tune_channel.assert_called_with('7')
         state = hass.states.get(MAIN_ENTITY_ID)
