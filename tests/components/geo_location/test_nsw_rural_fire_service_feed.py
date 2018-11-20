@@ -8,9 +8,9 @@ from homeassistant.components.geo_location.nsw_rural_fire_service_feed import \
     ATTR_EXTERNAL_ID, SCAN_INTERVAL, ATTR_CATEGORY, ATTR_FIRE, ATTR_LOCATION, \
     ATTR_COUNCIL_AREA, ATTR_STATUS, ATTR_TYPE, ATTR_SIZE, \
     ATTR_RESPONSIBLE_AGENCY, ATTR_PUBLICATION_DATE
-from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_START, \
-    CONF_RADIUS, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME, \
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME, \
+    ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, CONF_LATITUDE, \
+    CONF_LONGITUDE, CONF_RADIUS, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 from tests.common import assert_setup_component, async_fire_time_changed
 import homeassistant.util.dt as dt_util
@@ -82,8 +82,8 @@ async def test_setup(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch('homeassistant.util.dt.utcnow', return_value=utcnow), \
-        patch('geojson_client.nsw_rural_fire_service_feed.'
-               'NswRuralFireServiceFeed') as mock_feed:
+            patch('geojson_client.nsw_rural_fire_service_feed.'
+                  'NswRuralFireServiceFeed') as mock_feed:
         mock_feed.return_value.update.return_value = 'OK', [mock_entry_1,
                                                             mock_entry_2,
                                                             mock_entry_3]

@@ -51,19 +51,19 @@ def _generate_mock_feed_entry(external_id, title, distance_to_home,
 async def test_setup(hass):
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
-    mock_entry_1 = _generate_mock_feed_entry('1234', 'Title 1', 15.5,
-                                                  (-31.0, 150.0))
-    mock_entry_2 = _generate_mock_feed_entry('2345', 'Title 2', 20.5,
-                                                  (-31.1, 150.1))
-    mock_entry_3 = _generate_mock_feed_entry('3456', 'Title 3', 25.5,
-                                                  (-31.2, 150.2))
-    mock_entry_4 = _generate_mock_feed_entry('4567', 'Title 4', 12.5,
-                                                  (-31.3, 150.3))
+    mock_entry_1 = _generate_mock_feed_entry(
+        '1234', 'Title 1', 15.5, (-31.0, 150.0))
+    mock_entry_2 = _generate_mock_feed_entry(
+        '2345', 'Title 2', 20.5, (-31.1, 150.1))
+    mock_entry_3 = _generate_mock_feed_entry(
+        '3456', 'Title 3', 25.5, (-31.2, 150.2))
+    mock_entry_4 = _generate_mock_feed_entry(
+        '4567', 'Title 4', 12.5, (-31.3, 150.3))
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch('homeassistant.util.dt.utcnow', return_value=utcnow), \
-         patch('geojson_client.generic_feed.GenericFeed') as mock_feed:
+            patch('geojson_client.generic_feed.GenericFeed') as mock_feed:
         mock_feed.return_value.update.return_value = 'OK', [mock_entry_1,
                                                             mock_entry_2,
                                                             mock_entry_3]
@@ -180,7 +180,7 @@ async def test_setup_race_condition(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch('homeassistant.util.dt.utcnow', return_value=utcnow), \
-        patch('geojson_client.generic_feed.GenericFeed') as mock_feed:
+            patch('geojson_client.generic_feed.GenericFeed') as mock_feed:
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(
                 hass, geo_location.DOMAIN, CONFIG)
