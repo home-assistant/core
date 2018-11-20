@@ -19,7 +19,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pydaikin==0.7']
+REQUIREMENTS = ['pydaikin==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
