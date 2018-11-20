@@ -37,33 +37,11 @@ SERVICE_ITEM_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): vol.Any(None, cv.string)
 })
 
-WS_TYPE_SHOPPING_LIST_GET_ITEMS = 'shopping_list/items/get'
-WS_TYPE_SHOPPING_LIST_ADD_ITEM = 'shopping_list/items/add'
-WS_TYPE_SHOPPING_LIST_UPDATE_ITEM = 'shopping_list/items/update'
-WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS = 'shopping_list/items/clear'
+WS_TYPE_SHOPPING_LIST_ITEMS = 'shopping_list/items'
 
-SCHEMA_WEBSOCKET_GET_ITEMS = \
+SCHEMA_WEBSOCKET_ITEMS = \
     websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-        vol.Required('type'): WS_TYPE_SHOPPING_LIST_GET_ITEMS
-    })
-
-SCHEMA_WEBSOCKET_ADD_ITEM = \
-    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-        vol.Required('type'): WS_TYPE_SHOPPING_LIST_ADD_ITEM,
-        vol.Required('name'): str
-    })
-
-SCHEMA_WEBSOCKET_UPDATE_ITEM = \
-    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-        vol.Required('type'): WS_TYPE_SHOPPING_LIST_UPDATE_ITEM,
-        vol.Required('item_id'): str,
-        vol.Optional('name'): str,
-        vol.Optional('complete'): bool
-    })
-
-SCHEMA_WEBSOCKET_CLEAR_ITEMS = \
-    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-        vol.Required('type'): WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS
+        vol.Required('type'): WS_TYPE_SHOPPING_LIST_ITEMS
     })
 
 
@@ -122,21 +100,9 @@ def async_setup(hass, config):
         'shopping-list', 'shopping_list', 'mdi:cart')
 
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_GET_ITEMS,
+        WS_TYPE_SHOPPING_LIST_ITEMS,
         websocket_handle_items,
-        SCHEMA_WEBSOCKET_GET_ITEMS)
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_ADD_ITEM,
-        websocket_handle_add,
-        SCHEMA_WEBSOCKET_ADD_ITEM)
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_UPDATE_ITEM,
-        websocket_handle_update,
-        SCHEMA_WEBSOCKET_UPDATE_ITEM)
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS,
-        websocket_handle_clear,
-        SCHEMA_WEBSOCKET_CLEAR_ITEMS)
+        SCHEMA_WEBSOCKET_ITEMS)
 
     return True
 
@@ -305,44 +271,8 @@ class ClearCompletedItemsView(http.HomeAssistantView):
         return self.json_message('Cleared completed items.')
 
 
-@websocket_api.async_response
-async def websocket_handle_items(hass, connection, msg):
+@callback
+def websocket_handle_items(hass, connection, msg):
     """Handle get shopping_list items."""
     connection.send_message(websocket_api.result_message(
         msg['id'], hass.data[DOMAIN].items))
-
-
-@websocket_api.async_response
-async def websocket_handle_add(hass, connection, msg):
-    """Handle add item to shopping_list."""
-    item = hass.data[DOMAIN].async_add(msg['name'])
-    hass.bus.async_fire(EVENT)
-    connection.send_message(websocket_api.result_message(
-        msg['id'], item))
-
-
-@websocket_api.async_response
-async def websocket_handle_update(hass, connection, msg):
-    """Handle update shopping_list item."""
-    try:
-        data = {}
-        if 'name' in msg:
-            data = {'name': msg['name']}
-        else:
-            data = {'complete': msg['complete']}
-        item = hass.data[DOMAIN].async_update(msg['item_id'], data)
-        hass.bus.async_fire(EVENT)
-        connection.send_message(websocket_api.result_message(
-            msg['id'], item))
-    except KeyError:
-        connection.send_message(websocket_api.error_message(
-            msg['id'], 'shopping_list_update_failed', 'Item not found'))
-
-
-@websocket_api.async_response
-async def websocket_handle_clear(hass, connection, msg):
-    """Handle clearing shopping_list items."""
-    hass.data[DOMAIN].async_clear_completed()
-    hass.bus.async_fire(EVENT)
-    connection.send_message(websocket_api.result_message(
-        msg['id'], 'Cleared completed items.'))
