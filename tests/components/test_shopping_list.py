@@ -228,7 +228,7 @@ def test_api_clear_completed(hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_deprecated_api_create(hass, aiohttp_client):
+def test_api_create(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
