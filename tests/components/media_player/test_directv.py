@@ -1,15 +1,13 @@
 """The tests for the DirecTV Media player platform."""
-from unittest.mock import patch, Mock
+from unittest.mock import call, Mock, patch
 
 from datetime import datetime, timedelta
-import logging
 import pytest
 
 import homeassistant.components.media_player as mp
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_ENQUEUE, DOMAIN,
     SERVICE_PLAY_MEDIA)
-
 from homeassistant.components.media_player.directv import (
     ATTR_MEDIA_CURRENTLY_RECORDING, ATTR_MEDIA_RATING, ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME, DATA_DIRECTV, DEFAULT_DEVICE, DEFAULT_PORT,
@@ -18,7 +16,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP, SERVICE_TURN_OFF,
-    SERVICE_TURN_ON, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    SERVICE_TURN_ON, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE)
+import homeassistant.core as ha
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -34,7 +34,7 @@ DISCOVERY_INFO = {
 }
 
 LIVE = {
-    "callsign": "CNNHD",
+    "callsign": "HASSTV",
     "date": "20181110",
     "duration": 3600,
     "isOffAir": False,
@@ -49,7 +49,7 @@ LIVE = {
     "rating": "No Rating",
     "startTime": 1541876400,
     "stationId": 3900947,
-    "title": "CNN Newsroom With Fredricka Whitfield"
+    "title": "Using Home Assistant to automate your home"
 }
 
 LOCATIONS = [
@@ -60,7 +60,7 @@ LOCATIONS = [
 ]
 
 RECORDING = {
-    "callsign": "CNNHD",
+    "callsign": "HASSTV",
     "date": "20181110",
     "duration": 3600,
     "isOffAir": False,
@@ -75,9 +75,9 @@ RECORDING = {
     "rating": "No Rating",
     "startTime": 1541876400,
     "stationId": 3900947,
-    "title": "CNN Newsroom With Fredricka Whitfield",
+    "title": "Using Home Assistant to automate your home",
     'uniqueId': '12345',
-    'episodeTitle': 'CNN Recorded'
+    'episodeTitle': 'Configure DirecTV platform.'
 }
 
 WORKING_CONFIG = {
@@ -90,11 +90,9 @@ WORKING_CONFIG = {
     }
 }
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @pytest.fixture
-def platforms():
+async def platforms(hass):
     """Fixture for setting up test platforms."""
     config = {
         'media_player': [{
@@ -112,30 +110,25 @@ def platforms():
         }]
     }
 
-    async def setup_test_platforms(hass):
-        with MockDependency('DirectPy'), \
-             patch('DirectPy.DIRECTV', new=mockDIRECTVClass):
-            await async_setup_component(hass, mp.DOMAIN, config)
-            await hass.async_block_till_done()
-
-        main_media_entity = hass.data['media_player'].get_entity(
-            MAIN_ENTITY_ID)
-
-        client_media_entity = hass.data['media_player'].get_entity(
-            CLIENT_ENTITY_ID)
-
-        # Set the client so it seems a recording is being watched.
-        client_media_entity.dtv.attributes = RECORDING
-        # Clients do not support turning on, setting it as client is on here.
-        client_media_entity.dtv._standby = False
-
-        main_media_entity.schedule_update_ha_state(True)
-        client_media_entity.schedule_update_ha_state(True)
+    with MockDependency('DirectPy'), \
+         patch('DirectPy.DIRECTV', new=MockDirectvClass):
+        await async_setup_component(hass, mp.DOMAIN, config)
         await hass.async_block_till_done()
 
-        return (main_media_entity, client_media_entity)
+    main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
+    client_media_entity = hass.data['media_player'].get_entity(
+        CLIENT_ENTITY_ID)
 
-    return setup_test_platforms
+    # Set the client so it seems a recording is being watched.
+    client_media_entity.dtv.attributes = RECORDING
+    # Clients do not support turning on, setting it as client is on here.
+    client_media_entity.dtv._standby = False
+
+    main_media_entity.schedule_update_ha_state(True)
+    client_media_entity.schedule_update_ha_state(True)
+    await hass.async_block_till_done()
+
+    return platforms
 
 
 async def async_turn_on(hass, entity_id=None):
@@ -195,7 +188,7 @@ async def async_play_media(hass, media_type, media_id, entity_id=None,
     await hass.services.async_call(DOMAIN, SERVICE_PLAY_MEDIA, data)
 
 
-class mockDIRECTVClass:
+class MockDirectvClass:
     """A fake DirecTV DVR device."""
 
     def __init__(self, ip, port=8080, clientAddr='0'):
@@ -206,16 +199,12 @@ class mockDIRECTVClass:
         self._standby = True
         self._play = False
 
-        _LOGGER.debug("INIT with host: %s, port: %s, device: %s",
-                      self._host, self._port, self._device)
-
         self._locations = LOCATIONS
 
         self.attributes = LIVE
 
     def get_locations(self):
         """Mock for get_locations method."""
-        _LOGGER.debug("get_locations called")
         test_locations = {
             'locations': self._locations,
             'status': {
@@ -230,12 +219,10 @@ class mockDIRECTVClass:
 
     def get_standby(self):
         """Mock for get_standby method."""
-        _LOGGER.debug("STANDBY is: %s", self._standby)
         return self._standby
 
     def get_tuned(self):
         """Mock for get_tuned method."""
-        _LOGGER.debug("get_tuned called")
         if self._play:
             self.attributes['offset'] = self.attributes['offset']+1
 
@@ -250,7 +237,6 @@ class mockDIRECTVClass:
 
     def key_press(self, keypress):
         """Mock for key_press method."""
-        _LOGGER.debug("Key Press: %s", keypress)
         if keypress == 'poweron':
             self._standby = False
             self._play = True
@@ -264,14 +250,13 @@ class mockDIRECTVClass:
 
     def tune_channel(self, source):
         """Mock for tune_channel method."""
-        _LOGGER.debug("Change channel %s", source)
         self.attributes['major'] = int(source)
 
 
 async def test_setup_platform_config(hass):
     """Test setting up the platform from configuration."""
     with MockDependency('DirectPy'), \
-            patch('DirectPy.DIRECTV', new=mockDIRECTVClass):
+            patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
         await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
@@ -284,10 +269,15 @@ async def test_setup_platform_discover(hass):
     """Test setting up the platform from discovery."""
     add_entities = Mock()
     with MockDependency('DirectPy'), \
-            patch('DirectPy.DIRECTV', new=mockDIRECTVClass):
+            patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
-        setup_platform(hass, {}, add_entities,
-                       discovery_info=DISCOVERY_INFO)
+        hass.async_create_task(
+            async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
+                                ha.Config())
+        )
+        await hass.async_block_till_done()
+#        setup_platform(hass, {}, add_entities,
+#                       discovery_info=DISCOVERY_INFO)
 
     assert len(hass.data[DATA_DIRECTV]) == 1
     assert add_entities.call_count == 1
@@ -298,7 +288,7 @@ async def test_setup_platform_discover_duplicate(hass):
     add_entities = Mock()
 
     with MockDependency('DirectPy'), \
-            patch('DirectPy.DIRECTV', new=mockDIRECTVClass):
+            patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
         await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
@@ -324,7 +314,7 @@ async def test_setup_platform_discover_client(hass):
     })
 
     with MockDependency('DirectPy'), \
-            patch('DirectPy.DIRECTV', new=mockDIRECTVClass):
+            patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
         await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
@@ -341,24 +331,26 @@ async def test_setup_platform_discover_client(hass):
 
 async def test_supported_features(hass, platforms):
     """Test supported features."""
-    main_media_entity, client_media_entity = await platforms(hass)
+    await platforms(hass)
 
     # Features supported for main DVR
+    state = hass.states.get(MAIN_ENTITY_ID)
     assert mp.SUPPORT_PAUSE | mp.SUPPORT_TURN_ON | mp.SUPPORT_TURN_OFF |\
         mp.SUPPORT_PLAY_MEDIA | mp.SUPPORT_STOP | mp.SUPPORT_NEXT_TRACK |\
         mp.SUPPORT_PREVIOUS_TRACK | mp.SUPPORT_PLAY ==\
-        main_media_entity.supported_features
+        state.attributes.get('supported_features')
 
     # Feature supported for clients.
+    state = hass.states.get(CLIENT_ENTITY_ID)
     assert mp.SUPPORT_PAUSE |\
         mp.SUPPORT_PLAY_MEDIA | mp.SUPPORT_STOP | mp.SUPPORT_NEXT_TRACK |\
         mp.SUPPORT_PREVIOUS_TRACK | mp.SUPPORT_PLAY ==\
-        client_media_entity.supported_features
+        state.attributes.get('supported_features')
 
 
 async def test_check_attributes(hass, platforms):
     """Test attributes."""
-    main_media_entity, client_media_entity = await platforms(hass)
+    await platforms(hass)
     now = datetime(2018, 11, 19, 20, 0, 0, tzinfo=dt_util.UTC)
 
     # Start playing TV
@@ -405,8 +397,9 @@ async def test_check_attributes(hass, platforms):
 
 async def test_main_services(hass, platforms):
     """Test the different services."""
-    main_media_entity, client_media_entity = await platforms(hass)
+    await platforms(hass)
 
+    main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
     dtv_inst = main_media_entity.dtv
 
     # DVR starts in turned off state.
@@ -426,21 +419,24 @@ async def test_main_services(hass, platforms):
         # Turn main DVR on. When turning on DVR is playing.
         await async_turn_on(hass, MAIN_ENTITY_ID)
         await hass.async_block_till_done()
-        mock_key_press.assert_called_with('poweron')
+        assert mock_key_press.called
+        assert mock_key_press.call_args == call('poweron')
         state = hass.states.get(MAIN_ENTITY_ID)
         assert state.state == STATE_PLAYING
 
         # Pause live TV.
         await async_media_pause(hass, MAIN_ENTITY_ID)
         await hass.async_block_till_done()
-        mock_key_press.assert_called_with('pause')
+        assert mock_key_press.called
+        assert mock_key_press.call_args == call('pause')
         state = hass.states.get(MAIN_ENTITY_ID)
         assert state.state == STATE_PAUSED
 
         # Start play again for live TV.
         await async_media_play(hass, MAIN_ENTITY_ID)
         await hass.async_block_till_done()
-        mock_key_press.assert_called_with('play')
+        assert mock_key_press.called
+        assert mock_key_press.call_args == call('play')
         state = hass.states.get(MAIN_ENTITY_ID)
         assert state.state == STATE_PLAYING
 
@@ -448,21 +444,24 @@ async def test_main_services(hass, platforms):
         assert state.attributes.get('source') == 202
         await async_play_media(hass, 'channel', 7, MAIN_ENTITY_ID)
         await hass.async_block_till_done()
-        mock_tune_channel.assert_called_with('7')
+        assert mock_tune_channel.called
+        assert mock_tune_channel.call_args == call('7')
         state = hass.states.get(MAIN_ENTITY_ID)
         assert state.attributes.get('source') == 7
 
         # Stop live TV.
         await async_media_stop(hass, MAIN_ENTITY_ID)
         await hass.async_block_till_done()
-        mock_key_press.assert_called_with('stop')
+        assert mock_key_press.called
+        assert mock_key_press.call_args == call('stop')
         state = hass.states.get(MAIN_ENTITY_ID)
         assert state.state == STATE_PAUSED
 
         # Turn main DVR off.
         await async_turn_off(hass, MAIN_ENTITY_ID)
         await hass.async_block_till_done()
-        mock_key_press.assert_called_with('poweroff')
+        assert mock_key_press.called
+        assert mock_key_press.call_args == call('poweroff')
         state = hass.states.get(MAIN_ENTITY_ID)
         assert state.state == STATE_OFF
 
@@ -475,20 +474,25 @@ async def test_main_services(hass, platforms):
 
 async def test_available(hass, platforms):
     """Test available status."""
-    main_media_entity, client_media_entity = await platforms(hass)
+    await platforms(hass)
 
     # Confirm service is currently set to available.
-    assert main_media_entity.available
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state is not STATE_UNAVAILABLE
 
+    main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
     # Make update fail (i.e. DVR offline)
-    dtv = main_media_entity.dtv
-    main_media_entity.dtv = None
-    main_media_entity.schedule_update_ha_state(True)
-    await hass.async_block_till_done()
-    assert not main_media_entity.available
+    with patch.object(main_media_entity, 'dtv', None):
+        main_media_entity.schedule_update_ha_state(True)
+        await hass.async_block_till_done()
+        main_media_entity.schedule_update_ha_state(False)
+        await hass.async_block_till_done()
 
-    # Make update work again (i.e. DVR back online)
-    main_media_entity.dtv = dtv
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state is STATE_UNAVAILABLE
+
+    # Recheck state, update should work again.
     main_media_entity.schedule_update_ha_state(True)
     await hass.async_block_till_done()
-    assert main_media_entity.available
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state is not STATE_UNAVAILABLE
