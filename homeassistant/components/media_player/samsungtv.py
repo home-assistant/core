@@ -17,7 +17,8 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF)
+    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF,
+    STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
@@ -153,11 +154,11 @@ class SamsungTVDevice(MediaPlayerDevice):
                         BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
                     self._remote = None
-            self._state = None
+            self._state = STATE_ON
         except (self._exceptions_class.UnhandledResponse,
                 self._exceptions_class.AccessDenied):
             # We got a response so it's on.
-            self._state = None
+            self._state = STATE_ON
             self._remote = None
             _LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
