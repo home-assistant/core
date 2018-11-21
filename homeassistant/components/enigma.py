@@ -154,7 +154,6 @@ class EnigmaDevice(Entity):
             self._opener = urllib.request.build_opener(handler)
             self._opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 
-
     @property
     def get_host(self):
         """Return the host of the device."""
@@ -199,18 +198,3 @@ class EnigmaDevice(Entity):
     def get_opener(self):
         """Return the host of the device."""
         return self._opener
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
