@@ -14,12 +14,13 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_DEVICES, DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python_awair==0.0.1']
+REQUIREMENTS = ['python_awair==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ DEVICE_CLASS_PM2_5 = 'PM2.5'
 DEVICE_CLASS_PM10 = 'PM10'
 DEVICE_CLASS_CARBON_DIOXIDE = 'CO2'
 DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = 'VOC'
+DEVICE_CLASS_SCORE = 'score'
 
 SENSOR_TYPES = {
     'TEMP': {'device_class': DEVICE_CLASS_TEMPERATURE,
@@ -60,11 +62,17 @@ SENSOR_TYPES = {
     'PM10': {'device_class': DEVICE_CLASS_PM10,
              'unit_of_measurement': 'µg/m3',
              'icon': 'mdi:cloud'},
+    'score': {'device_class': DEVICE_CLASS_SCORE,
+              'unit_of_measurement': '%',
+              'icon': 'mdi:percent'},
 }
 
 TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 AWAIR_QUOTA = 300
-THROTTLE = timedelta(minutes=10)
+
+# This is the minimum time between throttled update calls.
+# Don't bother asking us for state more often than that.
+SCAN_INTERVAL = timedelta(minutes=5)
 
 AWAIR_DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_UUID): cv.string,
@@ -87,7 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Connect to the Awair API and find devices."""
     from python_awair import AwairClient
 
-    token = config.get(CONF_ACCESS_TOKEN)
+    token = config[CONF_ACCESS_TOKEN]
     client = AwairClient(token, session=async_get_clientsession(hass))
 
     try:
@@ -95,13 +103,12 @@ async def async_setup_platform(hass, config, async_add_entities,
         devices = config.get(CONF_DEVICES, await client.devices())
 
         # Try to throttle dynamically based on quota and number of devices.
-        global THROTTLE
         throttle_minutes = math.ceil(60 / ((AWAIR_QUOTA / len(devices)) / 24))
-        THROTTLE = timedelta(minutes=throttle_minutes)
+        throttle = timedelta(minutes=throttle_minutes)
 
         for device in devices:
             _LOGGER.debug("Found awair device: %s", device)
-            awair_data = AwairData(client, device[CONF_UUID])
+            awair_data = AwairData(client, device[CONF_UUID], throttle)
             await awair_data.async_update()
             for sensor in SENSOR_TYPES:
                 if sensor in awair_data.data:
@@ -109,9 +116,16 @@ async def async_setup_platform(hass, config, async_add_entities,
                     all_devices.append(awair_sensor)
 
         async_add_entities(all_devices, True)
+        return
+    except AwairClient.AuthError:
+        _LOGGER.error("Awair API access_token invalid")
+    except AwairClient.RatelimitError:
+        _LOGGER.error("Awair API ratelimit exceeded.")
+    except (AwairClient.QueryError, AwairClient.NotFoundError,
+            AwairClient.GenericError) as error:
+        _LOGGER.error("Unexpected Awair API error: %s", error)
 
-    except Exception as error:  # pylint: disable=broad-except
-        _LOGGER.error("Couldn't set up Awair platform: %s", error)
+    raise PlatformNotReady
 
 
 class AwairSensor(Entity):
@@ -148,14 +162,9 @@ class AwairSensor(Entity):
         return self._data.data[self._type]
 
     @property
-    def score(self):
-        """Return the aggregate Awair score."""
-        return self._data.data[ATTR_SCORE]
-
-    @property
-    def timestamp(self):
-        """Return the timestamp of the last sensor reading."""
-        return self._data.data[ATTR_TIMESTAMP]
+    def device_state_attributes(self):
+        """Return additional attributes."""
+        return self._data.attrs
 
     @property
     def unique_id(self):
@@ -163,37 +172,39 @@ class AwairSensor(Entity):
         return "{}_{}".format(self._uuid, self._type)
 
     @property
-    def uuid(self):
-        """Return the API UUID of this entity."""
-        return self._uuid
-
-    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return self._unit_of_measurement
+
+    @property
+    def should_poll(self):
+        """HA should poll us for state."""
+        return True
 
     async def async_update(self):
         """Get the latest data."""
         await self._data.async_update()
 
 
-class AwairData(Entity):
+class AwairData:
     """Get data from Awair API."""
 
-    def __init__(self, client, uuid):
+    def __init__(self, client, uuid, throttle):
         """Initialize the data object."""
         self._client = client
         self._uuid = uuid
         self.data = {}
+        self.attrs = {}
+        self.async_update = Throttle(throttle)(self._async_update)
 
-    @Throttle(THROTTLE)
-    async def async_update(self):
+    async def _async_update(self):
         """Get the data from Awair API."""
         resp = await self._client.air_data_latest(self._uuid)
-        timestamp = datetime.strptime(resp[0][ATTR_TIMESTAMP], TIME_FORMAT)
 
-        self.data = {ATTR_TIMESTAMP: timestamp,
-                     ATTR_SCORE: resp[0][ATTR_SCORE]}
+        timestamp = datetime.strptime(resp[0][ATTR_TIMESTAMP], TIME_FORMAT)
+        self.attrs[ATTR_TIMESTAMP] = timestamp
+
+        self.data[ATTR_SCORE] = resp[0][ATTR_SCORE]
 
         # The air_data_latest call only returns one item, so this should
         # be safe to only process one entry.
@@ -201,4 +212,3 @@ class AwairData(Entity):
             self.data[sensor[ATTR_COMPONENT]] = sensor[ATTR_VALUE]
 
         _LOGGER.debug("Got Awair Data for %s: %s", self._uuid, self.data)
-        return True
