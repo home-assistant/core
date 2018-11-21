@@ -92,5 +92,5 @@ def hass_admin_user(hass):
 def hass_read_only_user(hass):
     """Return a Home Assistant read only user."""
     read_only_group = hass.loop.run_until_complete(hass.auth.async_get_group(
-        GROUP_ID_ADMIN))
+        GROUP_ID_READ_ONLY))
     return MockUser(groups=[read_only_group]).add_to_hass(hass)
