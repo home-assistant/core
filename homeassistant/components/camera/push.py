@@ -4,14 +4,14 @@ Camera platform that receives images through HTTP POST.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/camera.push/
 """
-import aiohttp
-import asyncio
-import async_timeout
 import logging
+import asyncio
 
 from collections import deque
 from datetime import timedelta
 import voluptuous as vol
+import aiohttp
+import async_timeout
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
     STATE_IDLE, STATE_RECORDING, DOMAIN
@@ -78,8 +78,8 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         with async_timeout.timeout(5, loop=hass.loop):
             data = dict(await request.post())
-    except (asyncio.TimeoutError, aiohttp.web.HTTPException) as e:
-        _LOGGER.error("Could not get information from POST <%s>", e)
+    except (asyncio.TimeoutError, aiohttp.web.HTTPException) as error:
+        _LOGGER.error("Could not get information from POST <%s>", error)
         return
 
     camera = hass.data[PUSH_CAMERA_DATA][webhook_id]
