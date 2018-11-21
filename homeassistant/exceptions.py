@@ -1,5 +1,10 @@
 """The exceptions used by Home Assistant."""
+from typing import Optional, Tuple, TYPE_CHECKING
 import jinja2
+
+# pylint: disable=using-constant-test
+if TYPE_CHECKING:
+    from .core import Context  # noqa
 
 
 class HomeAssistantError(Exception):
@@ -38,8 +43,10 @@ class InvalidStateError(HomeAssistantError):
 class Unauthorized(HomeAssistantError):
     """When an action is unauthorized."""
 
-    def __init__(self, context=None, user_id=None, entity_id=None,
-                 permission=None) -> None:
+    def __init__(self, context: Optional['Context'] = None,
+                 user_id: Optional[str] = None,
+                 entity_id: Optional[str] = None,
+                 permission: Optional[Tuple[str]] = None) -> None:
         """Unauthorized error."""
         super().__init__(self.__class__.__name__)
         self.context = context
