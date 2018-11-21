@@ -45,6 +45,14 @@ class AuthStore:
 
         return list(self._groups.values())
 
+    async def async_get_group(self, group_id: str) -> Optional[models.Group]:
+        """Retrieve all users."""
+        if self._groups is None:
+            await self._async_load()
+            assert self._groups is not None
+
+        return self._groups.get(group_id)
+
     async def async_get_users(self) -> List[models.User]:
         """Retrieve all users."""
         if self._users is None:
