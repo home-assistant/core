@@ -74,7 +74,7 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 
 # Enigma Media Player Device
-class EnigmaMediaPlayer(EnigmaMediaPlayerDevice):
+class EnigmaMediaPlayer(MediaPlayerDevice):
     """Representation of a Enigma Media Player device."""
 
     def __init__(self, EnigmaMediaPlayerDevice):
