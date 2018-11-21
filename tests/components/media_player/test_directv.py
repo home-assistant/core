@@ -263,7 +263,7 @@ async def test_setup_platform_config(hass):
         await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
 
-    assert sum(1 for item in hass.data['media_player'].entities) == 1
+    assert len(hass.states.async_entity_ids('media_player')) == 1
     assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
     assert len(hass.data[DATA_DIRECTV]) == 1
     assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
@@ -280,7 +280,7 @@ async def test_setup_platform_discover(hass):
         )
         await hass.async_block_till_done()
 
-    assert sum(1 for item in hass.data['media_player'].entities) == 1
+    assert len(hass.states.async_entity_ids('media_player')) == 1
     assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
     assert len(hass.data[DATA_DIRECTV]) == 1
     assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
@@ -299,7 +299,7 @@ async def test_setup_platform_discover_duplicate(hass):
         )
         await hass.async_block_till_done()
 
-    assert sum(1 for item in hass.data['media_player'].entities) == 1
+    assert len(hass.states.async_entity_ids('media_player')) == 1
     assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
     assert len(hass.data[DATA_DIRECTV]) == 1
     assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
@@ -330,7 +330,7 @@ async def test_setup_platform_discover_client(hass):
 
     del LOCATIONS[-1]
     del LOCATIONS[-1]
-    assert sum(1 for item in hass.data['media_player'].entities) == 3
+    assert len(hass.states.async_entity_ids('media_player')) == 3
     assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
     assert hass.data['media_player'].get_entity('media_player.client_1') \
         is not None
