@@ -59,7 +59,7 @@ def extract_image_from_mjpeg(stream):
         end_idx = chunk.find(data_end)
         if end_idx != -1:
             return data[data.find(data_start):] + chunk[:end_idx + 2]
-        
+
         data += chunk
 
 
