@@ -58,7 +58,7 @@ MAX_VOLUME = 100
 
 
 async def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+                               discovery_info=None):
     """Initialize the Enigma device."""
     devices = []
     enigma_list = hass.data[ENIGMA_DOMAIN]

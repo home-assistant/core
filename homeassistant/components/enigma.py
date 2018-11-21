@@ -5,10 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/enigma/
 """
 
-import asyncio
-from datetime import timedelta
 import logging
-from urllib.error import HTTPError, URLError
 import urllib.parse
 import urllib.request
 
@@ -16,9 +13,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT,
-    CONF_USERNAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 
 # REQUIREMENTS
@@ -32,9 +28,6 @@ DOMAIN = 'enigma'
 
 # Supported domains
 SUPPORTED_DOMAINS = ['media_player']
-
-# Local confs
-CONF_HOST = 'host'
 
 # DEFAULTS
 DEFAULT_PORT = 80
@@ -69,15 +62,15 @@ CONFIG_SCHEMA = vol.Schema({
                     vol.Required(CONF_HOST): cv.string,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME):\
+                    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME):
                                  cv.string,
-                    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):\
+                    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
                                  cv.string,
-                    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):\
+                    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
                                  cv.socket_timeout,
-                    vol.Optional(CONF_BOUQUET, default=DEFAULT_BOUQUET):\
+                    vol.Optional(CONF_BOUQUET, default=DEFAULT_BOUQUET):
                                  cv.string,
-                    vol.Optional(CONF_PICON, default=DEFAULT_PICON):\
+                    vol.Optional(CONF_PICON, default=DEFAULT_PICON):
                                  cv.string,
                 }),
             ]),
