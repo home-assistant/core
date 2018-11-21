@@ -109,13 +109,11 @@ def platforms(hass):
         }]
     }
 
-    hass_loop = asyncio.get_event_loop()
-
     with MockDependency('DirectPy'), \
             patch('DirectPy.DIRECTV', new=MockDirectvClass):
-        hass_loop.run_until_complete(async_setup_component(
+        hass.loop.run_until_complete(async_setup_component(
             hass, mp.DOMAIN, config))
-        hass_loop.run_until_complete(hass.async_block_till_done())
+        hass.loop.run_until_complete(hass.async_block_till_done())
 
     main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
     client_media_entity = hass.data['media_player'].get_entity(
@@ -128,7 +126,7 @@ def platforms(hass):
 
     main_media_entity.schedule_update_ha_state(True)
     client_media_entity.schedule_update_ha_state(True)
-    hass_loop.run_until_complete(hass.async_block_till_done())
+    hass.loop.run_until_complete(hass.async_block_till_done())
 
     return
 
