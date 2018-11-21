@@ -40,7 +40,6 @@ DEFAULT_ENTITY_NAMESPACE = 'august'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
 LOGIN_METHODS = ['phone', 'email']
-API_SESSIONS = []
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
