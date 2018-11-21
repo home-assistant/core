@@ -121,7 +121,13 @@ def dtv_side_effect(client_dtv, main_dtv):
 
 
 @pytest.fixture
-def platforms(hass, dtv_side_effect):
+def mock_now():
+    """Fixture for dtutil.now."""
+    return dt_util.utcnow()
+
+
+@pytest.fixture
+def platforms(hass, dtv_side_effect, mock_now):
     """Fixture for setting up test platforms."""
     config = {
         'media_player': [{
@@ -140,7 +146,8 @@ def platforms(hass, dtv_side_effect):
     }
 
     with MockDependency('DirectPy'), \
-            patch('DirectPy.DIRECTV', side_effect=dtv_side_effect):
+            patch('DirectPy.DIRECTV', side_effect=dtv_side_effect), \
+            patch('homeassistant.util.dt.utcnow', return_value=mock_now):
         hass.loop.run_until_complete(async_setup_component(
             hass, mp.DOMAIN, config))
         hass.loop.run_until_complete(hass.async_block_till_done())
@@ -368,8 +375,12 @@ async def test_supported_features(hass, platforms):
         state.attributes.get('supported_features')
 
 
-async def test_check_attributes(hass, platforms):
+async def test_check_attributes(hass, platforms, mock_now):
     """Test attributes."""
+    next_update = mock_now + timedelta(minutes=5)
+    with patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
     now = datetime(2018, 11, 19, 20, 0, 0, tzinfo=dt_util.UTC)
 
     # Start playing TV
@@ -414,9 +425,13 @@ async def test_check_attributes(hass, platforms):
     assert state.attributes.get(mp.ATTR_MEDIA_POSITION_UPDATED_AT) == now
 
 
-async def test_main_services(hass, platforms, main_dtv):
+async def test_main_services(hass, platforms, main_dtv, mock_now):
     """Test the different services."""
-    # DVR starts in turned off state.
+    next_update = mock_now + timedelta(minutes=5)
+    with patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+    # DVR starts in off state.
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state.state == STATE_OFF
 
@@ -488,14 +503,11 @@ async def test_main_services(hass, platforms, main_dtv):
         assert mock_get_tuned.call_count == 5
 
 
-async def test_available(hass, main_dtv):
+async def test_available(hass, platforms, main_dtv, mock_now):
     """Test available status."""
-    now = dt_util.utcnow()
-
-    with MockDependency('DirectPy'), \
-            patch('DirectPy.DIRECTV', return_value=main_dtv), \
-            patch('homeassistant.util.dt.utcnow', return_value=now):
-        await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
+    next_update = mock_now + timedelta(minutes=5)
+    with patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
     # Confirm service is currently set to available.
@@ -503,7 +515,7 @@ async def test_available(hass, main_dtv):
     assert state.state != STATE_UNAVAILABLE
 
     # Make update fail (i.e. DVR offline)
-    next_update = now + timedelta(minutes=5)
+    next_update = next_update + timedelta(minutes=5)
     with patch.object(
             main_dtv, 'get_standby', side_effect=requests.RequestException), \
             patch('homeassistant.util.dt.utcnow', return_value=next_update):
