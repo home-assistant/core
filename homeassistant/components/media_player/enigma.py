@@ -71,20 +71,20 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 
 # Enigma Media Player Device
-class EnigmaMediaPlayer(MediaPlayerDevice):
+class EnigmaMediaPlayer(EnigmaMediaPlayerDevice):
     """Representation of a Enigma Media Player device."""
 
-    def __init__(self, MediaPlayerDevice):
+    def __init__(self, EnigmaMediaPlayerDevice):
         """Initialize the Enigma device."""
-        self._host = MediaPlayerDevice._host
-        self._port = MediaPlayerDevice._port
-        self._name = MediaPlayerDevice._name
-        self._username = MediaPlayerDevice._username
-        self._password = MediaPlayerDevice._password
-        self._timeout = MediaPlayerDevice._timeout
-        self._bouquet = MediaPlayerDevice._bouquet
-        self._picon = MediaPlayerDevice._picon
-        self._opener = MediaPlayerDevice._opener
+        self._host = EnigmaMediaPlayerDevice._host
+        self._port = EnigmaMediaPlayerDevice._port
+        self._name = EnigmaMediaPlayerDevice._name
+        self._username = EnigmaMediaPlayerDevice._username
+        self._password = EnigmaMediaPlayerDevice._password
+        self._timeout = EnigmaMediaPlayerDevice._timeout
+        self._bouquet = EnigmaMediaPlayerDevice._bouquet
+        self._picon = EnigmaMediaPlayerDevice._picon
+        self._opener = EnigmaMediaPlayerDevice._opener
         self._pwstate = True
         self._volume = 0
         self._muted = False
