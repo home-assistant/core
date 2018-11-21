@@ -48,7 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config, discovery_info=None):
+async def get_service(hass, config, discovery_info=None):
+    """Initialize the engima notify service."""
     if config.get(CONF_HOST) is not None:
         enigma = EnigmaNotify(config.get(CONF_HOST),
                               config.get(CONF_PORT),
