@@ -139,29 +139,7 @@ def platforms(hass, dtv_side_effect):
         hass.loop.run_until_complete(async_setup_component(
             hass, mp.DOMAIN, config))
         hass.loop.run_until_complete(hass.async_block_till_done())
-        main_media_entity = hass.data['media_player'].get_entity(
-            MAIN_ENTITY_ID)
-        main_media_entity.schedule_update_ha_state(True)
-        client_media_entity = hass.data['media_player'].get_entity(
-            CLIENT_ENTITY_ID)
-        client_media_entity.schedule_update_ha_state(True)
-        hass.loop.run_until_complete(hass.async_block_till_done())
         yield
-
-#    main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
-#    client_media_entity = hass.data['media_player'].get_entity(
-#        CLIENT_ENTITY_ID)
-
-#    # Set the client so it seems a recording is being watched.
-#    client_media_entity.dtv.attributes = RECORDING
-#    # Clients do not support turning on, setting it as client is on here.
-#    client_media_entity.dtv._standby = False
-
-#    main_media_entity.schedule_update_ha_state(True)
-#    client_media_entity.schedule_update_ha_state(True)
-#    hass.loop.run_until_complete(hass.async_block_till_done())
-
-    return
 
 
 async def async_turn_on(hass, entity_id=None):
@@ -297,8 +275,6 @@ async def test_setup_platform_config(hass):
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
     assert len(hass.states.async_entity_ids('media_player')) == 1
-    assert len(hass.data[DATA_DIRECTV]) == 1
-    assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
 
 
 async def test_setup_platform_discover(hass):
@@ -315,8 +291,6 @@ async def test_setup_platform_discover(hass):
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
     assert len(hass.states.async_entity_ids('media_player')) == 1
-    assert len(hass.data[DATA_DIRECTV]) == 1
-    assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
 
 
 async def test_setup_platform_discover_duplicate(hass):
@@ -335,8 +309,6 @@ async def test_setup_platform_discover_duplicate(hass):
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
     assert len(hass.states.async_entity_ids('media_player')) == 1
-    assert len(hass.data[DATA_DIRECTV]) == 1
-    assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
 
 
 async def test_setup_platform_discover_client(hass):
@@ -372,10 +344,6 @@ async def test_setup_platform_discover_client(hass):
     assert state
 
     assert len(hass.states.async_entity_ids('media_player')) == 3
-    assert len(hass.data[DATA_DIRECTV]) == 3
-    assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
-    assert (IP_ADDRESS, '1') in hass.data[DATA_DIRECTV]
-    assert (IP_ADDRESS, '2') in hass.data[DATA_DIRECTV]
 
 
 async def test_supported_features(hass, platforms):
