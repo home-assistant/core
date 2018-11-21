@@ -3,7 +3,6 @@ from unittest.mock import call, patch
 
 from datetime import datetime, timedelta
 import pytest
-import asyncio
 
 import homeassistant.components.media_player as mp
 from homeassistant.components.media_player import (
