@@ -101,11 +101,7 @@ def setup_auth(app, trusted_networks, use_auth,
         request[KEY_AUTHENTICATED] = authenticated
         return await handler(request)
 
-    async def auth_startup(app):
-        """Initialize auth middleware when app starts up."""
-        app.middlewares.append(auth_middleware)
-
-    app.on_startup.append(auth_startup)
+    app.middlewares.append(auth_middleware)
 
 
 def _is_trusted_ip(request, trusted_networks):
