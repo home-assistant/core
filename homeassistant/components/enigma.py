@@ -63,15 +63,15 @@ CONFIG_SCHEMA = vol.Schema({
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME):
-                                 cv.string,
+                        cv.string,
                     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
-                                 cv.string,
+                        cv.string,
                     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-                                 cv.socket_timeout,
+                        cv.socket_timeout,
                     vol.Optional(CONF_BOUQUET, default=DEFAULT_BOUQUET):
-                                 cv.string,
+                        cv.string,
                     vol.Optional(CONF_PICON, default=DEFAULT_PICON):
-                                 cv.string,
+                        cv.string,
                 }),
             ]),
         })
