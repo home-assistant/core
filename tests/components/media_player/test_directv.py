@@ -381,11 +381,10 @@ async def test_check_attributes(hass, platforms, mock_now):
     with patch('homeassistant.util.dt.utcnow', return_value=next_update):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
-    now = datetime(2018, 11, 19, 20, 0, 0, tzinfo=dt_util.UTC)
 
     # Start playing TV
-    with patch('homeassistant.helpers.condition.dt_util.now',
-               return_value=now):
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=next_update):
         await async_media_play(hass, CLIENT_ENTITY_ID)
         await hass.async_block_till_done()
 
@@ -399,7 +398,8 @@ async def test_check_attributes(hass, platforms, mock_now):
     assert state.attributes.get(mp.ATTR_MEDIA_DURATION) == \
         RECORDING['duration']
     assert state.attributes.get(mp.ATTR_MEDIA_POSITION) == 2
-    assert state.attributes.get(mp.ATTR_MEDIA_POSITION_UPDATED_AT) == now
+    assert state.attributes.get(
+        mp.ATTR_MEDIA_POSITION_UPDATED_AT) == next_update
     assert state.attributes.get(mp.ATTR_MEDIA_TITLE) == RECORDING['title']
     assert state.attributes.get(mp.ATTR_MEDIA_SERIES_TITLE) == \
         RECORDING['episodeTitle']
@@ -415,14 +415,15 @@ async def test_check_attributes(hass, platforms, mock_now):
 
     # Test to make sure that ATTR_MEDIA_POSITION_UPDATED_AT is not
     # updated if TV is paused.
-    with patch('homeassistant.helpers.condition.dt_util.now',
-               return_value=now + timedelta(minutes=5)):
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=next_update + timedelta(minutes=5)):
         await async_media_pause(hass, CLIENT_ENTITY_ID)
         await hass.async_block_till_done()
 
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert state.state == STATE_PAUSED
-    assert state.attributes.get(mp.ATTR_MEDIA_POSITION_UPDATED_AT) == now
+    assert state.attributes.get(
+        mp.ATTR_MEDIA_POSITION_UPDATED_AT) == next_update
 
 
 async def test_main_services(hass, platforms, main_dtv, mock_now):
