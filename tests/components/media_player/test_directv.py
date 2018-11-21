@@ -90,7 +90,33 @@ WORKING_CONFIG = {
 
 
 @pytest.fixture
-def platforms(hass):
+def client_dtv():
+    """Fixture for a client device."""
+    mocked_dtv = MockDirectvClass('mock_ip')
+    mocked_dtv.attributes = RECORDING
+    mocked_dtv._standby = False
+    return mocked_dtv
+
+
+@pytest.fixture
+def main_dtv():
+    """Fixture for main DVR."""
+    return MockDirectvClass('mock_ip')
+
+
+@pytest.fixture
+def dtv_side_effect(client_dtv, main_dtv):
+    """Fixture to create DIRECTV instance for main and client."""
+    def mock_dtv(ip, port, client_addr):
+        mocked_dtv = next(iter([main_dtv, client_dtv]))
+        mocked_dtv._host = ip
+        mocked_dtv._port = port
+        mocked_dtv._device = client_addr
+    return mock_dtv
+
+
+@pytest.fixture
+def platforms(hass, dtv_side_effect):
     """Fixture for setting up test platforms."""
     config = {
         'media_player': [{
@@ -109,23 +135,31 @@ def platforms(hass):
     }
 
     with MockDependency('DirectPy'), \
-            patch('DirectPy.DIRECTV', new=MockDirectvClass):
+            patch('DirectPy.DIRECTV', side_effect=dtv_side_effect):
         hass.loop.run_until_complete(async_setup_component(
             hass, mp.DOMAIN, config))
         hass.loop.run_until_complete(hass.async_block_till_done())
+        main_media_entity = hass.data['media_player'].get_entity(
+            MAIN_ENTITY_ID)
+        main_media_entity.schedule_update_ha_state(True)
+        client_media_entity = hass.data['media_player'].get_entity(
+            CLIENT_ENTITY_ID)
+        client_media_entity.schedule_update_ha_state(True)
+        hass.loop.run_until_complete(hass.async_block_till_done())
+        yield
 
-    main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
-    client_media_entity = hass.data['media_player'].get_entity(
-        CLIENT_ENTITY_ID)
+#    main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
+#    client_media_entity = hass.data['media_player'].get_entity(
+#        CLIENT_ENTITY_ID)
 
-    # Set the client so it seems a recording is being watched.
-    client_media_entity.dtv.attributes = RECORDING
-    # Clients do not support turning on, setting it as client is on here.
-    client_media_entity.dtv._standby = False
+#    # Set the client so it seems a recording is being watched.
+#    client_media_entity.dtv.attributes = RECORDING
+#    # Clients do not support turning on, setting it as client is on here.
+#    client_media_entity.dtv._standby = False
 
-    main_media_entity.schedule_update_ha_state(True)
-    client_media_entity.schedule_update_ha_state(True)
-    hass.loop.run_until_complete(hass.async_block_till_done())
+#    main_media_entity.schedule_update_ha_state(True)
+#    client_media_entity.schedule_update_ha_state(True)
+#    hass.loop.run_until_complete(hass.async_block_till_done())
 
     return
 
@@ -260,8 +294,9 @@ async def test_setup_platform_config(hass):
         await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
 
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state
     assert len(hass.states.async_entity_ids('media_player')) == 1
-    assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
     assert len(hass.data[DATA_DIRECTV]) == 1
     assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
 
@@ -277,8 +312,9 @@ async def test_setup_platform_discover(hass):
         )
         await hass.async_block_till_done()
 
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state
     assert len(hass.states.async_entity_ids('media_player')) == 1
-    assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
     assert len(hass.data[DATA_DIRECTV]) == 1
     assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
 
@@ -296,8 +332,9 @@ async def test_setup_platform_discover_duplicate(hass):
         )
         await hass.async_block_till_done()
 
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state
     assert len(hass.states.async_entity_ids('media_player')) == 1
-    assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
     assert len(hass.data[DATA_DIRECTV]) == 1
     assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
 
@@ -327,12 +364,14 @@ async def test_setup_platform_discover_client(hass):
 
     del LOCATIONS[-1]
     del LOCATIONS[-1]
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state
+    state = hass.states.get('media_player.client_1')
+    assert state
+    state = hass.states.get('media_player.client_2')
+    assert state
+
     assert len(hass.states.async_entity_ids('media_player')) == 3
-    assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
-    assert hass.data['media_player'].get_entity('media_player.client_1') \
-        is not None
-    assert hass.data['media_player'].get_entity('media_player.client_2') \
-        is not None
     assert len(hass.data[DATA_DIRECTV]) == 3
     assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
     assert (IP_ADDRESS, '1') in hass.data[DATA_DIRECTV]
@@ -402,7 +441,7 @@ async def test_check_attributes(hass, platforms):
     assert state.attributes.get(mp.ATTR_MEDIA_POSITION_UPDATED_AT) == now
 
 
-async def test_main_services(hass, platforms):
+async def test_main_services(hass, platforms, main_dtv):
     """Test the different services."""
     main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
     dtv_inst = main_media_entity.dtv
@@ -471,9 +510,11 @@ async def test_main_services(hass, platforms):
         assert state.state == STATE_OFF
 
         # There should have been 6 calls to check if DVR is in standby
+        assert main_dtv.get_standby.call_count == 6
         assert 6 == mock_get_standby.call_count
         # There should be 5 calls to get current info (only 1 time it will
         # not be called as DVR is in standby.)
+        assert 5 == main_dtv.get_tuned.call_count == 5
         assert 5 == mock_get_tuned.call_count
 
 
