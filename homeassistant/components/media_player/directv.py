@@ -9,9 +9,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MOVIE, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MOVIE, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     MediaPlayerDevice)
 from homeassistant.const import (
     CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED,
@@ -33,8 +33,12 @@ DEFAULT_NAME = "DirecTV Receiver"
 DEFAULT_PORT = 8080
 
 SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_SELECT_SOURCE | SUPPORT_STOP | \
-    SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
+
+SUPPORT_DTV_CLIENT = SUPPORT_PAUSE | \
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
 
 DATA_DIRECTV = 'data_directv'
 
@@ -126,10 +130,15 @@ class DirecTvDevice(MediaPlayerDevice):
         self._paused = None
         self._last_position = None
         self._is_recorded = None
+        self._is_client = device != '0'
         self._assumed_state = None
         self._available = False
 
-        _LOGGER.debug("Created DirecTV device for %s", self._name)
+        if self._is_client:
+            _LOGGER.debug("Created DirecTV client %s for device %s",
+                          self._name, device)
+        else:
+            _LOGGER.debug("Created DirecTV device for %s", self._name)
 
     def update(self):
         """Retrieve latest state."""
@@ -290,7 +299,7 @@ class DirecTvDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_DTV
+        return SUPPORT_DTV_CLIENT if self._is_client else SUPPORT_DTV
 
     @property
     def media_currently_recording(self):
@@ -327,11 +336,17 @@ class DirecTvDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on the receiver."""
+        if self._is_client:
+            raise NotImplementedError()
+
         _LOGGER.debug("Turn on %s", self._name)
         self.dtv.key_press('poweron')
 
     def turn_off(self):
         """Turn off the receiver."""
+        if self._is_client:
+            raise NotImplementedError()
+
         _LOGGER.debug("Turn off %s", self._name)
         self.dtv.key_press('poweroff')
 
@@ -360,7 +375,12 @@ class DirecTvDevice(MediaPlayerDevice):
         _LOGGER.debug("Fast forward on %s", self._name)
         self.dtv.key_press('ffwd')
 
-    def select_source(self, source):
+    def play_media(self, media_type, media_id, **kwargs):
         """Select input source."""
-        _LOGGER.debug("Changing channel on %s to %s", self._name, source)
-        self.dtv.tune_channel(source)
+        if media_type != MEDIA_TYPE_CHANNEL:
+            _LOGGER.error("Invalid media type %s. Only %s is supported",
+                          media_type, MEDIA_TYPE_CHANNEL)
+            return
+
+        _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
+        self.dtv.tune_channel(media_id)

@@ -89,13 +89,12 @@ class MqttCamera(Camera):
         """Return a unique ID."""
         return self._unique_id
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe MQTT events."""
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""
             self._last_image = payload
 
-        return mqtt.async_subscribe(
+        await mqtt.async_subscribe(
             self.hass, self._topic, message_received, self._qos, None)

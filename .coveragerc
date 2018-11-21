@@ -120,6 +120,9 @@ omit =
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
 
+    homeassistant/components/fibaro.py
+    homeassistant/components/*/fibaro.py
+
     homeassistant/components/gc100.py
     homeassistant/components/*/gc100.py
 
@@ -259,6 +262,10 @@ omit =
     homeassistant/components/pilight.py
     homeassistant/components/*/pilight.py
 
+    homeassistant/components/point/__init__.py
+    homeassistant/components/point/const.py
+    homeassistant/components/*/point.py
+
     homeassistant/components/switch/qwikswitch.py
     homeassistant/components/light/qwikswitch.py
 
@@ -268,7 +275,7 @@ omit =
     homeassistant/components/raincloud.py
     homeassistant/components/*/raincloud.py
 
-    homeassistant/components/rainmachine/*
+    homeassistant/components/rainmachine/__init__.py
     homeassistant/components/*/rainmachine.py
 
     homeassistant/components/raspihats.py
