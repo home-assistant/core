@@ -1,5 +1,5 @@
 """Test Axis component setup process."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components import axis
@@ -107,4 +107,3 @@ async def test_setup_return_false(hass):
         assert await axis.async_setup_entry(hass, entry) is False
 
     assert 'mac mock' in hass.data[axis.DOMAIN]
-

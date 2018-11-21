@@ -98,7 +98,8 @@ class AxisFlowHandler(config_entries.ConfigFlow):
                 }
                 device = await get_device(self.hass, self.device_config)
 
-                self.serial_number = device.vapix.get_param(VAPIX_SERIAL_NUMBER)
+                self.serial_number = device.vapix.get_param(
+                    VAPIX_SERIAL_NUMBER)
                 self.model_id = device.vapix.get_param(VAPIX_MODEL_ID)
 
                 if self.import_schema:
