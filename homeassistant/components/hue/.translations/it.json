@@ -17,7 +17,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "title": "Selezione il bridge Hue"
+                "title": "Seleziona il bridge Hue"
             },
             "link": {
                 "description": "Premi il pulsante sul bridge per registrare Philips Hue con Home Assistant\n\n![Posizione del pulsante sul bridge](/static/images/config_philips_hue.jpg)",
