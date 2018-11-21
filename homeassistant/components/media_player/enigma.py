@@ -22,13 +22,14 @@ import urllib.request
 import voluptuous as vol
 
 # From homeassitant
+
 from homeassistant.components.enigma import _LOGGER, DOMAIN as ENIGMA_DOMAIN
 from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, MEDIA_TYPE_TVSHOW, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, MediaPlayerDevice)
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import (STATE_OFF, STATE_ON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -56,16 +57,17 @@ SUPPORT_ENIGMA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 MAX_VOLUME = 100
 
-
+# SETUP PLATFORM
 async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+                         discovery_info=None):
     """Initialize the Enigma device."""
     devices = []
     enigma_list = hass.data[ENIGMA_DOMAIN]
 
-    for enigma in enigma_list:
-        _LOGGER.debug("Configured a new EnigmaMediaPlayer")
-        devices.append(EnigmaMediaPlayer(enigma))
+    for device in enigma_list:
+        _LOGGER.debug("Configured a new EnigmaMediaPlayer %s",
+                      device.get_host)
+        devices.append(EnigmaMediaPlayer(device))
 
     async_add_devices(devices, update_before_add=True)
 
@@ -76,15 +78,15 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
 
     def __init__(self, EnigmaMediaPlayerDevice):
         """Initialize the Enigma device."""
-        self._host = EnigmaMediaPlayerDevice._host
-        self._port = EnigmaMediaPlayerDevice._port
-        self._name = EnigmaMediaPlayerDevice._name
-        self._username = EnigmaMediaPlayerDevice._username
-        self._password = EnigmaMediaPlayerDevice._password
-        self._timeout = EnigmaMediaPlayerDevice._timeout
-        self._bouquet = EnigmaMediaPlayerDevice._bouquet
-        self._picon = EnigmaMediaPlayerDevice._picon
-        self._opener = EnigmaMediaPlayerDevice._opener
+        self._host = EnigmaMediaPlayerDevice.get_host
+        self._port = EnigmaMediaPlayerDevice.get_port
+        self._name = EnigmaMediaPlayerDevice.get_name
+        self._username = EnigmaMediaPlayerDevice.get_username
+        self._password = EnigmaMediaPlayerDevice.get_password
+        self._timeout = EnigmaMediaPlayerDevice.get_timeout
+        self._bouquet = EnigmaMediaPlayerDevice.get_bouquet
+        self._picon = EnigmaMediaPlayerDevice.get_picon
+        self._opener = EnigmaMediaPlayerDevice.get_opener
         self._pwstate = True
         self._volume = 0
         self._muted = False
@@ -93,6 +95,7 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         self._source_names = {}
         self._sources = {}
         self.load_sources()
+
 
     # Load channels from specified bouquet orfrom first available bouquet
     def load_sources(self):
@@ -260,6 +263,7 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
             self._selected_source = (servicename + ' - ' + eventtitle)
 
         return True
+
 
 # GET - Name
     @property

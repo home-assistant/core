@@ -41,6 +41,7 @@ DEFAULT_PICON = 'picon'
 # Local
 CONF_BOUQUET = 'bouquet'
 CONF_PICON = 'picon'
+CONF_OPENER = ''
 
 ENIGMA_CONFIG = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -152,3 +153,64 @@ class EnigmaDevice(Entity):
             handler = urllib.request.HTTPHandler()
             self._opener = urllib.request.build_opener(handler)
             self._opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+
+
+    @property
+    def get_host(self):
+        """Return the host of the device."""
+        return self._host
+
+    @property
+    def get_port(self):
+        """Return the host of the device."""
+        return self._port
+
+    @property
+    def get_name(self):
+        """Return the host of the device."""
+        return self._name
+
+    @property
+    def get_username(self):
+        """Return the host of the device."""
+        return self._username
+
+    @property
+    def get_password(self):
+        """Return the host of the device."""
+        return self._password
+
+    @property
+    def get_timeout(self):
+        """Return the host of the device."""
+        return self._timeout
+
+    @property
+    def get_bouquet(self):
+        """Return the host of the device."""
+        return self._bouquet
+
+    @property
+    def get_picon(self):
+        """Return the host of the device."""
+        return self._picon
+
+    @property
+    def get_opener(self):
+        """Return the host of the device."""
+        return self._opener
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

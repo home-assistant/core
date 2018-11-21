@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def get_service(hass, config, discovery_info=None):
-    """Initialize the engima notify service."""
+    """Initialize the enigma notify service."""
     if config.get(CONF_HOST) is not None:
         enigma = EnigmaNotify(config.get(CONF_HOST),
                               config.get(CONF_PORT),
@@ -88,7 +88,6 @@ class EnigmaNotify(BaseNotificationService):
             handler = urllib.request.HTTPHandler()
             self._opener = urllib.request.build_opener(handler)
             self._opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-        _LOGGER.debug("FODA 22222222222")
 
     def request_call(self, url):
         """Call web API request."""
