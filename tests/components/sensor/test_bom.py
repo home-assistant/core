@@ -27,7 +27,6 @@ VALID_CONFIG = {
 
 def mocked_requests(*args, **kwargs):
     """Mock requests.get invocations."""
-
     class MockResponse:
         """Class to represent a mocked response."""
 
