@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         qbittorrent = Client(config.get(CONF_URL))
         qbittorrent.login(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Connection to qBittorrent failed. Check config.")
         raise PlatformNotReady
 
@@ -100,7 +100,7 @@ class QBittorrentSensor(Entity):
         try:
             data = self.client.sync()
             self._available = True
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.error("Connection to qBittorrent lost. Check config.")
             self._available = False
             return
