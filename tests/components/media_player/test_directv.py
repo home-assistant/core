@@ -483,11 +483,11 @@ async def test_main_services(hass, platforms, main_dtv):
 
         # There should have been 6 calls to check if DVR is in standby
         assert main_dtv.get_standby.call_count == 6
-        assert 6 == mock_get_standby.call_count
+        assert mock_get_standby.call_count == 6
         # There should be 5 calls to get current info (only 1 time it will
         # not be called as DVR is in standby.)
-        assert 5 == main_dtv.get_tuned.call_count == 5
-        assert 5 == mock_get_tuned.call_count
+        assert main_dtv.get_tuned.call_count == 5
+        assert mock_get_tuned.call_count == 5
 
 
 async def test_available(hass, platforms):
