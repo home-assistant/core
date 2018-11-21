@@ -1233,6 +1233,9 @@ python-nmap==0.6.1
 # homeassistant.components.notify.pushover
 python-pushover==0.3
 
+# homeassistant.components.sensor.qbittorrent
+python-qbittorrent==0.3.1
+
 # homeassistant.components.sensor.ripple
 python-ripple-api==0.0.3
 
