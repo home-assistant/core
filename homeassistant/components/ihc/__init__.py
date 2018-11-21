@@ -53,8 +53,6 @@ DEVICE_SCHEMA = vol.Schema({
 
 
 SWITCH_SCHEMA = DEVICE_SCHEMA.extend({
-    vol.Required(CONF_ID): cv.positive_int,
-    vol.Optional(CONF_NAME): cv.string,
 })
 
 BINARY_SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
@@ -208,16 +206,18 @@ def ihc_setup(hass, config, conf, controller_id):
 
 def get_manual_configuration(hass, config, conf, ihc_controller,
                              controller_id):
-    """Get manual configuration IHC devices."""
+    """Get manual configuration for IHC devices."""
+    discovery_info = {}
     for component in IHC_PLATFORMS:
         if component in conf:
             component_setup = conf.get(component)
-            for sensor_id, sensor_cfg in component_setup.items():
+            for sensor_cfg in component_setup:
+                name = sensor_cfg[CONF_NAME]
                 device = {
-                    'ihc_id': sensor_id,
+                    'ihc_id': sensor_cfg[CONF_ID],
                     'ctrl_id': controller_id,
                     'product': {
-                        'name': sensor_cfg[CONF_NAME],
+                        'name': name,
                         'note': sensor_cfg.get(CONF_NOTE) or '',
                         'position': sensor_cfg.get(CONF_POSITION) or ''},
                     'product_cfg': {
@@ -227,9 +227,10 @@ def get_manual_configuration(hass, config, conf, ihc_controller,
                         'unit': sensor_cfg.get(CONF_UNIT_OF_MEASUREMENT)
                     }
                 }
-                discovery_info = {sensor_cfg[CONF_NAME]: device}
-                discovery.load_platform(hass, component, DOMAIN,
-                                        discovery_info, config)
+                discovery_info[name] = device
+    if discovery_info:
+        discovery.load_platform(hass, component, DOMAIN,
+                                discovery_info, config)
 
 
 def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller,
