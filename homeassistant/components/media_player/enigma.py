@@ -1,4 +1,9 @@
-"""Support for Enigma2 Set-top boxes."""
+"""
+Support for Enigma2 set-top boxes.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/enigma/
+"""
 #
 # For more details, please refer to github at
 # https://github.com/cinzas/homeassistant-enigma-player
@@ -8,49 +13,40 @@
 #
 
 # Imports and dependencies
-import logging
-import urllib.request
-import urllib.parse
-from urllib.error import URLError, HTTPError
-from datetime import timedelta
 import asyncio
+from datetime import timedelta
+from urllib.error import HTTPError, URLError
+import urllib.parse
+import urllib.request
+
 import voluptuous as vol
 
 # From homeassitant
-from homeassistant.util import Throttle
+from homeassistant.components.enigma import _LOGGER, DOMAIN as ENIGMA_DOMAIN
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_CHANNEL, SUPPORT_SELECT_SOURCE,
-    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    CONF_TIMEOUT, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_TVSHOW, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
-# Requirements
-REQUIREMENTS = ['beautifulsoup4==4.6.3']
+# Dependencies
+DEPENDENCIES = ['enigma']
 
-# Logging
-_LOGGER = logging.getLogger(__name__)
+# DEFAULTS
+DEFAULT_PORT = 80
+DEFAULT_NAME = "Enigma2 Satelite"
+DEFAULT_TIMEOUT = 30
+DEFAULT_USERNAME = 'root'
+DEFAULT_PASSWORD = ''
+DEFAULT_BOUQUET = 'bouquet'
+DEFAULT_PICON = 'picon'
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
-
-# DEFAULTS
-DATA_ENIGMA = 'enigma'
-DEFAULT_NAME = 'Enigma2 Satelite'
-DEFAULT_PORT = 80
-DEFAULT_TIMEOUT = 30
-DEFAULT_USERNAME = 'root'
-DEFAULT_PASSWORD = None
-DEFAULT_BOUQUET = 'bouquet'
-
-# Extend bouquet conf variable
-CONF_BOUQUET = 'bouquet'
-CONF_PICON = 'picon'
 
 SUPPORT_ENIGMA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
@@ -60,61 +56,35 @@ SUPPORT_ENIGMA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 MAX_VOLUME = 100
 
-# PLATFORM SCHEMA
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
-    vol.Optional(CONF_BOUQUET): cv.string,
-    vol.Optional(CONF_PICON): cv.string,
-})
 
-
-# SETUP PLATFORM
 async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+                         discovery_info=None):
     """Initialize the Enigma device."""
-    if DATA_ENIGMA not in hass.data:
-        hass.data[DATA_ENIGMA] = []
+    devices = []
+    enigma_list = hass.data[ENIGMA_DOMAIN]
 
-    enigmas = []
+    for enigma in enigma_list:
+        _LOGGER.debug("Configured a new EnigmaMediaPlayer")
+        devices.append(EnigmaMediaPlayer(enigma))
 
-    if config.get(CONF_HOST) is not None:
-        enigma = EnigmaDevice(config.get(CONF_NAME),
-                              config.get(CONF_HOST),
-                              config.get(CONF_PORT),
-                              config.get(CONF_USERNAME),
-                              config.get(CONF_PASSWORD),
-                              config.get(CONF_TIMEOUT),
-                              config.get(CONF_BOUQUET),
-                              config.get(CONF_PICON))
-
-        _LOGGER.info("Enigma receiver at host %s initialized.",
-                     config.get(CONF_HOST))
-        hass.data[DATA_ENIGMA].append(enigma)
-        enigmas.append(enigma)
-
-    async_add_devices(enigmas, update_before_add=True)
+    async_add_devices(devices, update_before_add=True)
 
 
-# Enigma Device
-class EnigmaDevice(MediaPlayerDevice):
-    """Representation of a Enigma device."""
+# Enigma Media Player Device
+class EnigmaMediaPlayer(MediaPlayerDevice):
+    """Representation of a Enigma Media Player device."""
 
-    def __init__(self, name, host, port, username, password, timeout,
-                 bouquet, picon):
+    def __init__(self, MediaPlayerDevice):
         """Initialize the Enigma device."""
-        self._name = name
-        self._host = host
-        self._port = port
-        self._username = username
-        self._password = password
-        self._timeout = timeout
-        self._bouquet = bouquet
-        self._picon = picon
+        self._host = MediaPlayerDevice._host
+        self._port = MediaPlayerDevice._port
+        self._name = MediaPlayerDevice._name
+        self._username = MediaPlayerDevice._username
+        self._password = MediaPlayerDevice._password
+        self._timeout = MediaPlayerDevice._timeout
+        self._bouquet = MediaPlayerDevice._bouquet
+        self._picon = MediaPlayerDevice._picon
+        self._opener = MediaPlayerDevice._opener
         self._pwstate = True
         self._volume = 0
         self._muted = False
@@ -122,23 +92,6 @@ class EnigmaDevice(MediaPlayerDevice):
         self._picon_url = None
         self._source_names = {}
         self._sources = {}
-        # Opener for http connection
-        self._opener = False
-
-        # Check if is password enabled
-        if self._password is not None:
-            # Handle HTTP Auth
-            mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-            mgr.add_password(None, self._host+":"+str(self._port),
-                             self._username, self._password)
-            handler = urllib.request.HTTPBasicAuthHandler(mgr)
-            self._opener = urllib.request.build_opener(handler)
-            self._opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-        else:
-            handler = urllib.request.HTTPHandler()
-            self._opener = urllib.request.build_opener(handler)
-            self._opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-
         self.load_sources()
 
     # Load channels from specified bouquet orfrom first available bouquet

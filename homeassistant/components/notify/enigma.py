@@ -1,4 +1,9 @@
-"""Support for Enigma2 notifications."""
+"""
+Support for Enigma2 set-top boxes.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/enigma/
+"""
 #
 # For more details,
 # please refer to github at
@@ -6,37 +11,32 @@
 #
 #
 # imports and dependecies
-import logging
-import urllib.request
-import urllib.parse
-from urllib.error import URLError, HTTPError
 import asyncio
+from urllib.error import HTTPError, URLError
+import urllib.parse
+import urllib.request
+
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
+
+from homeassistant.components.enigma import (
+    _LOGGER, DEFAULT_NAME, DEFAULT_PASSWORD,
+    DEFAULT_PORT, DEFAULT_USERNAME)
 from homeassistant.components.notify import (
-    ATTR_DATA, PLATFORM_SCHEMA,
-    BaseNotificationService)
-
-# Logging
-_LOGGER = logging.getLogger(__name__)
-
-# Default values
-DEFAULT_PORT = 80
-DEFAULT_NAME = 'dreambox'
-DEFAULT_USERNAME = 'root'
-DEFAULT_PASSWORD = None
+    ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
+    CONF_USERNAME)
+import homeassistant.helpers.config_validation as cv
 
 # Default value for display (if not passed as argument in data field)
 # 20 seconds for timeout
-DISPLAY_TIME = '20'
+DEFAULT_DISPLAY_TIME = '20'
 # Message type
 # 0 -> Yes/No
 # 1 -> Info
 # 2 -> Message
 # 3 -> Attention
-MESSAGE_TYPE = '2'
+DEFAULT_MESSAGE_TYPE = '2'
 
 # Get configs
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -48,12 +48,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_get_service(hass, config, discovery_info=None):
-    """Return the notify service."""
+def get_service(hass, config, discovery_info=None):
+    """Creates a notification service for Enigma device."""
     if config.get(CONF_HOST) is not None:
-        enigma = EnigmaNotify(config.get(CONF_NAME),
-                              config.get(CONF_HOST),
+        enigma = EnigmaNotify(config.get(CONF_HOST),
                               config.get(CONF_PORT),
+                              config.get(CONF_NAME),
                               config.get(CONF_USERNAME),
                               config.get(CONF_PASSWORD))
 
@@ -65,11 +65,11 @@ async def async_get_service(hass, config, discovery_info=None):
 class EnigmaNotify(BaseNotificationService):
     """Representation of a notification service for Enigma device."""
 
-    def __init__(self, name, host, port, username, password):
+    def __init__(self, host, port, name, username, password):
         """Initialize the Enigma device."""
-        self._name = name
         self._host = host
         self._port = port
+        self._name = name
         self._username = username
         self._password = password
         # Opener for http connection
@@ -88,6 +88,7 @@ class EnigmaNotify(BaseNotificationService):
             handler = urllib.request.HTTPHandler()
             self._opener = urllib.request.build_opener(handler)
             self._opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+        _LOGGER.debug("FODA 22222222222")
 
     def request_call(self, url):
         """Call web API request."""
@@ -105,8 +106,8 @@ class EnigmaNotify(BaseNotificationService):
     def async_send_message(self, message="", **kwargs):
         """Send message."""
         try:
-            displaytime = DISPLAY_TIME
-            messagetype = MESSAGE_TYPE
+            displaytime = DEFAULT_DISPLAY_TIME
+            messagetype = DEFAULT_MESSAGE_TYPE
             data = kwargs.get(ATTR_DATA) or {}
             if data:
                 if 'displaytime' in data:
