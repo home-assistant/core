@@ -3,6 +3,7 @@ from unittest.mock import call, patch
 
 from datetime import datetime, timedelta
 import pytest
+import asyncio
 
 import homeassistant.components.media_player as mp
 from homeassistant.components.media_player import (
@@ -90,7 +91,7 @@ WORKING_CONFIG = {
 
 
 @pytest.fixture
-async def platforms(hass):
+def platforms(hass):
     """Fixture for setting up test platforms."""
     config = {
         'media_player': [{
@@ -108,10 +109,13 @@ async def platforms(hass):
         }]
     }
 
+    hass_loop = asyncio.get_event_loop()
+
     with MockDependency('DirectPy'), \
             patch('DirectPy.DIRECTV', new=MockDirectvClass):
-        await async_setup_component(hass, mp.DOMAIN, config)
-        await hass.async_block_till_done()
+        hass_loop.run_until_complete(async_setup_component(
+            hass, mp.DOMAIN, config))
+        hass_loop.run_until_complete(hass.async_block_till_done())
 
     main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
     client_media_entity = hass.data['media_player'].get_entity(
@@ -124,9 +128,9 @@ async def platforms(hass):
 
     main_media_entity.schedule_update_ha_state(True)
     client_media_entity.schedule_update_ha_state(True)
-    await hass.async_block_till_done()
+    hass_loop.run_until_complete(hass.async_block_till_done())
 
-    return platforms
+    return
 
 
 async def async_turn_on(hass, entity_id=None):
@@ -340,8 +344,6 @@ async def test_setup_platform_discover_client(hass):
 
 async def test_supported_features(hass, platforms):
     """Test supported features."""
-    await platforms(hass)
-
     # Features supported for main DVR
     state = hass.states.get(MAIN_ENTITY_ID)
     assert mp.SUPPORT_PAUSE | mp.SUPPORT_TURN_ON | mp.SUPPORT_TURN_OFF |\
@@ -359,7 +361,6 @@ async def test_supported_features(hass, platforms):
 
 async def test_check_attributes(hass, platforms):
     """Test attributes."""
-    await platforms(hass)
     now = datetime(2018, 11, 19, 20, 0, 0, tzinfo=dt_util.UTC)
 
     # Start playing TV
@@ -406,8 +407,6 @@ async def test_check_attributes(hass, platforms):
 
 async def test_main_services(hass, platforms):
     """Test the different services."""
-    await platforms(hass)
-
     main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
     dtv_inst = main_media_entity.dtv
 
@@ -483,8 +482,6 @@ async def test_main_services(hass, platforms):
 
 async def test_available(hass, platforms):
     """Test available status."""
-    await platforms(hass)
-
     # Confirm service is currently set to available.
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state.state is not STATE_UNAVAILABLE
