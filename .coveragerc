@@ -203,6 +203,10 @@ omit =
     homeassistant/components/lametric.py
     homeassistant/components/*/lametric.py
 
+    homeassistant/components/lcn/__init__.py
+    homeassistant/components/lcn/core.py
+    homeassistant/components/*/lcn.py
+
     homeassistant/components/linode.py
     homeassistant/components/*/linode.py
 
