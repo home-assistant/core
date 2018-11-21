@@ -66,10 +66,8 @@ async def test_successful_setup(hass):
 
     })
     entry.add_to_hass(hass)
-    mock_registry = Mock()
-    with patch.object(axis, 'AxisNetworkDevice') as mock_device, \
-        patch('homeassistant.helpers.device_registry.async_get_registry',
-              return_value=mock_coro(mock_registry)):
+
+    with patch.object(axis, 'AxisNetworkDevice') as mock_device:
         mock_device.return_value.async_setup.return_value = mock_coro(True)
         mock_device.return_value.serial = '00:11:22:33:44:55'
         mock_device.return_value.model_id = 'model'
@@ -83,18 +81,6 @@ async def test_successful_setup(hass):
 
     assert p_hass is hass
     assert p_entry is entry
-
-    assert len(mock_registry.mock_calls) == 1
-    assert mock_registry.mock_calls[0][2] == {
-        'config_entry_id': entry.entry_id,
-        'connections': {
-            ('mac', '00:11:22:33:44:55')
-        },
-        'manufacturer': 'Axis Communications AB',
-        'model': "model product type",
-        'name': "name",
-        'sw_version': '1.2.3'
-    }
 
 
 async def test_setup_return_false(hass):
@@ -122,40 +108,3 @@ async def test_setup_return_false(hass):
 
     assert 'mac mock' in hass.data[axis.DOMAIN]
 
-
-async def test_unload_entry(hass):
-    """Test being able to unload an entry."""
-    entry = MockConfigEntry(domain=axis.DOMAIN, data={
-        'controller': {
-            'host': '0.0.0.0',
-            'username': 'user',
-            'password': 'pass',
-            'port': 80,
-        },
-        'mac': 'mac mock',
-        'model_id': 'model',
-        'name': 'name',
-        'camera': True,
-        'events': ['event1'],
-        'trigger_time': 0
-
-    })
-    entry.add_to_hass(hass)
-
-    with patch.object(axis, 'AxisNetworkDevice') as mock_device, \
-        patch('homeassistant.helpers.device_registry.async_get_registry',
-              return_value=mock_coro(Mock())):
-        mock_device.return_value.async_setup.return_value = mock_coro(True)
-        mock_device.return_value.serial = '00:11:22:33:44:55'
-        mock_device.return_value.model_id = 'model'
-        mock_device.return_value.name = 'name'
-        mock_device.return_value.fw_version = '1.2.3'
-        mock_device.return_value.product_type = 'product type'
-        assert await axis.async_setup_entry(hass, entry) is True
-
-    assert len(mock_device.return_value.mock_calls) == 1
-
-    mock_device.return_value.async_reset.return_value = mock_coro(True)
-    assert await axis.async_unload_entry(hass, entry)
-    assert len(mock_device.return_value.async_reset.mock_calls) == 1
-    assert hass.data[axis.DOMAIN] == {}

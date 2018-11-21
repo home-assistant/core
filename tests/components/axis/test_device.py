@@ -68,9 +68,7 @@ async def test_device_not_accessible():
     with patch.object(device, 'get_device', side_effect=errors.CannotConnect):
         assert await axis_device.async_setup() is False
 
-    assert len(hass.helpers.event.async_call_later.mock_calls) == 1
-    # Assert we are going to wait 2 seconds
-    assert hass.helpers.event.async_call_later.mock_calls[0][1][0] == 2
+    assert not hass.helpers.event.async_call_later.mock_calls
 
 
 async def test_device_unknown_error():
@@ -114,47 +112,6 @@ async def test_shutdown():
     axis_device.shutdown(None)
 
     assert len(axis_device.api.stop.mock_calls) == 1
-
-
-async def test_reset_after_successful_setup():
-    """Successful setup."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-    api = Mock()
-
-    axis_device = device.AxisNetworkDevice(hass, entry)
-
-    with patch.object(device, 'get_device', return_value=mock_coro(api)):
-        assert await axis_device.async_setup() is True
-
-    listener = Mock()
-    axis_device.listeners = [listener]
-
-    hass.config_entries.async_forward_entry_unload.return_value = \
-        mock_coro(True)
-    assert await axis_device.async_reset() is True
-
-    assert len(listener.mock_calls) == 1
-    assert len(axis_device.listeners) == 0
-
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 2
-
-
-async def test_reset_cancel_retry():
-    """Verify async reset can handle a scheduled retry."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-
-    axis_device = device.AxisNetworkDevice(hass, entry)
-
-    with patch.object(device, 'get_device', side_effect=errors.CannotConnect):
-        assert await axis_device.async_setup() is False
-
-    assert axis_device._cancel_retry_setup is not None
-
-    assert await axis_device.async_reset() is True
 
 
 async def test_get_device(hass):

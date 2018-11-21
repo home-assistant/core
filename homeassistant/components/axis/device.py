@@ -3,7 +3,6 @@
 import asyncio
 import async_timeout
 
-from homeassistant import config_entries
 from homeassistant.const import (
     CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME)
@@ -49,7 +48,7 @@ class AxisNetworkDevice:
         """Return the mac of this device."""
         return self.config_entry.data[CONF_MAC]
 
-    async def async_setup(self, tries=0):
+    async def async_setup(self):
         """Set up the device."""
         from axis.vapix import VAPIX_FW_VERSION, VAPIX_PROD_TYPE
 
@@ -63,22 +62,6 @@ class AxisNetworkDevice:
 
             self.fw_version = self.api.vapix.get_param(VAPIX_FW_VERSION)
             self.product_type = self.api.vapix.get_param(VAPIX_PROD_TYPE)
-
-        except CannotConnect:
-            retry_delay = 2 ** (tries + 1)
-            LOGGER.error("Error connecting to the Axis device on %s. Retrying "
-                         "in %d seconds", self.host, retry_delay)
-
-            async def retry_setup(_now):
-                """Retry setup."""
-                if await self.async_setup(tries + 1):
-                    # This feels hacky, we should find a better way to do this
-                    self.config_entry.state = config_entries.ENTRY_STATE_LOADED
-
-            self._cancel_retry_setup = hass.helpers.event.async_call_later(
-                retry_delay, retry_setup)
-
-            return False
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.error(
@@ -108,33 +91,6 @@ class AxisNetworkDevice:
     def shutdown(self, event):
         """Stop the event stream."""
         self.api.stop()
-
-    async def async_reset(self):
-        """Reset this device to default state.
-
-        Will cancel any scheduled setup retry and will unload
-        the config entry.
-        """
-        # If we have a retry scheduled, we were never setup.
-        if self._cancel_retry_setup is not None:
-            self._cancel_retry_setup()
-            self._cancel_retry_setup = None
-            return True
-
-        if self.config_entry.data[CONF_CAMERA]:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, 'camera')
-
-        if self.config_entry.data[CONF_EVENTS]:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, 'binary_sensor')
-            self.api.stop()
-
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
-
-        return True
 
 
 async def get_device(hass, config, event_types=None, signal_callback=None):

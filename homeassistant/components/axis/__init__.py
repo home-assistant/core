@@ -8,7 +8,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util.json import load_json, save_json
 
@@ -68,23 +67,6 @@ async def async_setup_entry(hass, config_entry):
     if not await device.async_setup():
         return False
 
-    device_registry = await \
-        hass.helpers.device_registry.async_get_registry()
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, device.serial)},
-        manufacturer="Axis Communications AB",
-        model="{} {}".format(device.model_id, device.product_type),
-        name=device.name,
-        sw_version=device.fw_version,
-    )
-
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
 
     return True
-
-
-async def async_unload_entry(hass, config_entry):
-    """Unload a config entry."""
-    device = hass.data[DOMAIN].pop(config_entry.data[CONF_MAC])
-    return await device.async_reset()

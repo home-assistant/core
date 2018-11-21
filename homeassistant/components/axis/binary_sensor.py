@@ -5,7 +5,6 @@ from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN, LOGGER
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_MAC, CONF_TRIGGER_TIME
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
@@ -41,11 +40,6 @@ class AxisBinarySensor(BinarySensorDevice):
         """Subscribe sensors events."""
         self.axis_event.callback = self.update_callback
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect sensor object when removed."""
-        self.axis_event.callback = None
-        self.axis_event = None
-
     def update_callback(self):
         """Update the sensor's state, if needed."""
         if self.remove_timer is not None:
@@ -80,29 +74,11 @@ class AxisBinarySensor(BinarySensorDevice):
             self.device.name, self.axis_event.event_type, self.axis_event.id)
 
     @property
-    def unique_id(self):
-        """Return a unique identifier for this sensor."""
-        return "{}-{}_{}".format(
-            self.device.serial, self.axis_event.event_type, self.axis_event.id)
-
-    @property
     def device_class(self):
         """Return the class of the event."""
         return self.axis_event.event_class
 
     @property
-    def available(self):
-        """Return True if device is available."""
-        return self.device.available
-
-    @property
     def should_poll(self):
         """No polling needed."""
         return False
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {
-            'connections': {(CONNECTION_NETWORK_MAC, self.device.serial)}
-        }

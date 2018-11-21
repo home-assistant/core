@@ -1,4 +1,5 @@
 """Support for Axis camera streaming."""
+
 from homeassistant.components.axis.const import (
     CONF_DEVICE, DOMAIN as AXIS_DOMAIN)
 from homeassistant.components.mjpeg.camera import (
@@ -6,8 +7,9 @@ from homeassistant.components.mjpeg.camera import (
 from homeassistant.const import (
     CONF_AUTHENTICATION, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD,
     CONF_PORT, CONF_USERNAME, HTTP_DIGEST_AUTHENTICATION)
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .const import CONF_DEVICE, DOMAIN as AXIS_DOMAIN
 
 DEPENDENCIES = [AXIS_DOMAIN]
 
@@ -53,29 +55,7 @@ class AxisCamera(MjpegCamera):
         self.unsub_dispatcher = async_dispatcher_connect(
             self.hass, 'axis_{}_new_ip'.format(self.device.name), self._new_ip)
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect camera object when removed."""
-        if self.unsub_dispatcher is not None:
-            self.unsub_dispatcher()
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this videostream."""
-        return "{}-videostream".format(self.device.serial)
-
-    @property
-    def available(self):
-        """Return True if device is available."""
-        return self.device.available
-
     def _new_ip(self, host):
         """Set new IP for video stream."""
         self._mjpeg_url = AXIS_VIDEO.format(host, self.port)
         self._still_image_url = AXIS_IMAGE.format(host, self.port)
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {
-            'connections': {(CONNECTION_NETWORK_MAC, self.device.serial)}
-        }
