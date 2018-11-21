@@ -112,6 +112,7 @@ def dtv_side_effect(client_dtv, main_dtv):
         mocked_dtv._host = ip
         mocked_dtv._port = port
         mocked_dtv._device = client_addr
+        return mocked_dtv
     return mock_dtv
 
 
