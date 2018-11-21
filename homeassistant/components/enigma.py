@@ -175,8 +175,11 @@ class EnigmaDevice(Entity):
             self._opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
+>>>>>>> pylint corrections.
+=======
 >>>>>>> pylint corrections.
     @property
     def get_host(self):
@@ -254,6 +257,7 @@ class EnigmaDevice(Entity):
 =======
         """Return the host of the device."""
         return self._opener
+<<<<<<< HEAD
 
 
 
@@ -269,4 +273,6 @@ class EnigmaDevice(Entity):
 
 
 
+>>>>>>> pylint corrections.
+=======
 >>>>>>> pylint corrections.

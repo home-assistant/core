@@ -58,12 +58,16 @@ SUPPORT_ENIGMA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 MAX_VOLUME = 100
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> pylint corrections.
+=======
+
+>>>>>>> pylint corrections.
 # SETUP PLATFORM
 async def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+                               discovery_info=None):
     """Initialize the Enigma device."""
     devices = []
     enigma_list = hass.data[ENIGMA_DOMAIN]
@@ -117,7 +121,6 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         self._source_names = {}
         self._sources = {}
         self.load_sources()
-
 
     # Load channels from specified bouquet orfrom first available bouquet
     def load_sources(self):
