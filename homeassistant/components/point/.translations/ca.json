@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Nom\u00e9s podeu configurar un compte de Point.",
+            "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
+            "authorize_url_timeout": "S'ha acabat el temps d'espera mentre \u00e9s generava l'URL d'autoritzaci\u00f3.",
+            "external_setup": "Point s'ha configurat correctament des d'un altre lloc.",
+            "no_flows": "Necessiteu configurar Point abans de poder autenticar-vos-hi. [Llegiu les instruccions](https://www.home-assistant.io/components/point/)."
+        },
+        "create_entry": {
+            "default": "Autenticaci\u00f3 exitosa amb Minut per als vostres dispositiu/s Point."
+        },
+        "error": {
+            "follow_link": "Si us plau seguiu l'enlla\u00e7 i autentiqueu-vos abans de pr\u00e9mer Enviar",
+            "no_token": "No s'ha autenticat amb Minut"
+        },
+        "step": {
+            "auth": {
+                "description": "Aneu a l'enlla\u00e7 seg\u00fcent i <b>Accepta</b> l'acc\u00e9s al vostre compte de Minut, despr\u00e9s torneu i premeu <b>Enviar</b> (a sota). \n\n[Enlla\u00e7]({authorization_url})",
+                "title": "Autenticar Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Prove\u00efdor"
+                },
+                "description": "Trieu a trav\u00e9s de quin prove\u00efdor d'autenticaci\u00f3 us voleu autenticar amb Point.",
+                "title": "Prove\u00efdor d'autenticaci\u00f3"
+            }
+        },
+        "title": "Minut Point"
+    }
+}
