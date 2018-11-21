@@ -302,12 +302,6 @@ class HomeAssistantHTTP:
 
     async def start(self):
         """Start the aiohttp server."""
-        # We misunderstood the startup signal. You're not allowed to change
-        # anything during startup. Temp workaround.
-        # pylint: disable=protected-access
-        self.app._on_startup.freeze()
-        await self.app.startup()
-
         if self.ssl_certificate:
             try:
                 if self.ssl_profile == SSL_INTERMEDIATE:
