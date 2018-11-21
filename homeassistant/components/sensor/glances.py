@@ -220,4 +220,3 @@ class GlancesData:
         except GlancesApiError:
             _LOGGER.error("Unable to fetch data from Glances")
             self.available = False
-
