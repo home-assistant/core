@@ -4,6 +4,9 @@ Camera platform that receives images through HTTP POST.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/camera.push/
 """
+import aiohttp
+import asyncio
+import async_timeout
 import logging
 
 from collections import deque
@@ -72,7 +75,13 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook POST with image files."""
-    data = dict(await request.post())
+    try:
+        with async_timeout.timeout(5, loop=hass.loop):
+            data = dict(await request.post())
+    except (asyncio.TimeoutError, aiohttp.web.HTTPException) as e:
+        _LOGGER.error("Could not get information from POST <%s>", e)
+        return
+
     camera = hass.data[PUSH_CAMERA_DATA][webhook_id]
 
     if camera.image_field not in data:
@@ -107,6 +116,11 @@ class PushCamera(Camera):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[PUSH_CAMERA_DATA][self.webhook_id] = self
+
+    @property
+    def image_field(self):
+        """HTTP field containing the image file."""
+        return self._image_field
 
     @property
     def state(self):
