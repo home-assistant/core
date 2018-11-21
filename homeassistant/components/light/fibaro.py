@@ -95,7 +95,8 @@ class FibaroLight(FibaroDevice, Light):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         async with self._update_lock:
-            await self.hass.async_add_executor_job(partial(self._turn_on, **kwargs))
+            await self.hass.async_add_executor_job(
+                partial(self._turn_on, **kwargs))
 
     def _turn_on(self, **kwargs):
         """Really turn the light on."""
