@@ -110,34 +110,35 @@ async def test_setup_platform(hass, mock_app, mock_image):
     assert hass.states.get(VALID_ENTITY_ID)
 
 
-@patch.object(Model, 'predict_by_base64', return_value=MOCK_RESPONSE)
 async def test_process_image(hass, mock_app, mock_image):
     """Test successful processing of an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
 
     data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-    await hass.services.async_call(ip.DOMAIN,
-                                   ip.SERVICE_SCAN,
-                                   service_data=data)
-    await hass.async_block_till_done()
+
+    with patch.object(Model, 'predict_by_base64', return_value=MOCK_RESPONSE):
+        await hass.services.async_call(ip.DOMAIN,
+                                       ip.SERVICE_SCAN,
+                                       service_data=data)
+        await hass.async_block_till_done()
 
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == 'dog'
     assert state.attributes.get('dog') == PARSED_CONCEPTS['dog']
 
 
-@patch.object(Model, 'predict_by_base64', side_effect=ERROR)
 async def test_process_with_error(hass, mock_app, mock_image,
                                   caplog):
     """Test processing with error from predict_by_base64."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
     data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-    await hass.services.async_call(ip.DOMAIN,
-                                   ip.SERVICE_SCAN,
-                                   service_data=data)
-    await hass.async_block_till_done()
+    with patch.object(Model, 'predict_by_base64', side_effect=ERROR):
+        await hass.services.async_call(ip.DOMAIN,
+                                       ip.SERVICE_SCAN,
+                                       service_data=data)
+        await hass.async_block_till_done()
 
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == STATE_UNKNOWN
