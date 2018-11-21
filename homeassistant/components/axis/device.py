@@ -56,16 +56,13 @@ class AxisNetworkDevice:
         hass = self.hass
 
         try:
-            self.api, _ = await get_device(
+            self.api = await get_device(
                 hass, self.config_entry.data[CONF_DEVICE],
                 event_types=self.config_entry.data[CONF_EVENTS],
                 signal_callback=self.async_signal_callback)
 
-            self.fw_version = await hass.async_add_executor_job(
-                self.api.vapix.get, VAPIX_FW_VERSION)
-
-            self.product_type = await hass.async_add_executor_job(
-                self.api.vapix.get, VAPIX_PROD_TYPE)
+            self.fw_version = self.api.vapix.get_param(VAPIX_FW_VERSION)
+            self.product_type = self.api.vapix.get_param(VAPIX_PROD_TYPE)
 
         except CannotConnect:
             retry_delay = 2 ** (tries + 1)
@@ -85,7 +82,7 @@ class AxisNetworkDevice:
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.error(
-                'Unknown error connecting with Axis device on %s.', self.host)
+                'Unknown error connecting with Axis device on %s', self.host)
             return False
 
         if self.config_entry.data[CONF_CAMERA]:
@@ -152,11 +149,9 @@ async def get_device(hass, config, event_types=None, signal_callback=None):
         event_types=event_types, signal=signal_callback)
 
     try:
-        with async_timeout.timeout(5):
-            serial_number = await hass.async_add_executor_job(
-                device.vapix.get, axis.vapix.VAPIX_SERIAL_NUMBER)
-
-        return device, serial_number
+        with async_timeout.timeout(15):
+            await hass.async_add_executor_job(device.vapix.load_params)
+        return device
 
     except axis.Unauthorized:
         LOGGER.warning("Connected to device at %s but not registered.",

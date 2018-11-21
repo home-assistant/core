@@ -81,7 +81,8 @@ class AxisFlowHandler(config_entries.ConfigFlow):
         Manage device specific parameters.
         """
         from axis.event import device_events
-        from axis.vapix import VAPIX_IMAGE_FORMAT, VAPIX_MODEL_ID
+        from axis.vapix import (
+            VAPIX_IMAGE_FORMAT, VAPIX_MODEL_ID, VAPIX_SERIAL_NUMBER)
         errors = {}
 
         if user_input is not None:
@@ -95,18 +96,16 @@ class AxisFlowHandler(config_entries.ConfigFlow):
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD]
                 }
-                device, self.serial_number = await get_device(
-                    self.hass, self.device_config)
+                device = await get_device(self.hass, self.device_config)
 
-                self.model_id = await self.hass.async_add_executor_job(
-                    device.vapix.get, VAPIX_MODEL_ID)
+                self.serial_number = device.vapix.get_param(VAPIX_SERIAL_NUMBER)
+                self.model_id = device.vapix.get_param(VAPIX_MODEL_ID)
 
                 if self.import_schema:
                     # Imported config is expected to have a working config
                     return await self._create_entry()
 
-                supported_formats = await self.hass.async_add_executor_job(
-                    device.vapix.get, VAPIX_IMAGE_FORMAT)
+                supported_formats = device.vapix.get_param(VAPIX_IMAGE_FORMAT)
                 self.supports_video = 'mjpeg' in supported_formats
 
                 supported_events = await self.hass.async_add_executor_job(
