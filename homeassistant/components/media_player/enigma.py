@@ -57,10 +57,13 @@ SUPPORT_ENIGMA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 MAX_VOLUME = 100
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> pylint corrections.
 # SETUP PLATFORM
 async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+                         discovery_info=None):
     """Initialize the Enigma device."""
     devices = []
     enigma_list = hass.data[ENIGMA_DOMAIN]
@@ -80,6 +83,9 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
     def __init__(self, EnigmaMediaPlayerDevice):
         """Initialize the Enigma device."""
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pylint corrections.
         self._host = EnigmaMediaPlayerDevice.get_host
         self._port = EnigmaMediaPlayerDevice.get_port
         self._name = EnigmaMediaPlayerDevice.get_name
@@ -89,6 +95,7 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         self._bouquet = EnigmaMediaPlayerDevice.get_bouquet
         self._picon = EnigmaMediaPlayerDevice.get_picon
         self._opener = EnigmaMediaPlayerDevice.get_opener
+<<<<<<< HEAD
 =======
         self._host = EnigmaMediaPlayerDevice._host
         self._port = EnigmaMediaPlayerDevice._port
@@ -100,6 +107,8 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         self._picon = EnigmaMediaPlayerDevice._picon
         self._opener = EnigmaMediaPlayerDevice._opener
 >>>>>>> Redefined outer name.
+=======
+>>>>>>> pylint corrections.
         self._pwstate = True
         self._volume = 0
         self._muted = False
@@ -108,6 +117,7 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         self._source_names = {}
         self._sources = {}
         self.load_sources()
+
 
     # Load channels from specified bouquet orfrom first available bouquet
     def load_sources(self):
