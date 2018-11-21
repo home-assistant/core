@@ -10,7 +10,15 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED)
 
-from tests.common import MockUser, CLIENT_ID
+from tests.common import MockUser, CLIENT_ID, mock_coro
+
+
+@pytest.fixture(autouse=True)
+def prevent_io():
+    """Fixture to prevent certain I/O from happening."""
+    with patch('homeassistant.components.http.ban.async_load_ip_bans_config',
+               side_effect=lambda *args: mock_coro([])):
+        yield
 
 
 @pytest.fixture
