@@ -10,25 +10,20 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (CONF_HOST, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import CONF_HOST
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['ghlocalapi==0.1.0']
 
 ICON = 'mdi:alarm'
 
-SENSOR_TYPE_TIMER = 'timer'
-SENSOR_TYPE_ALARM = 'alarm'
-
 SENSOR_TYPES = {
-    SENSOR_TYPE_TIMER: "Timer",
-    SENSOR_TYPE_ALARM: "Alarm",
+    'timer': "Timer",
+    'alarm': "Alarm",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['alarm', 'timer']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_HOST): cv.string
 })
 
 
@@ -44,7 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     name = devinfo.device_info['name']
 
     entities = []
-    for condition in config.get(CONF_MONITORED_CONDITIONS):
+    for condition in SENSOR_TYPES:
         device = GoogleHomeAlarmSensor(hass,
                                        name,
                                        host,
