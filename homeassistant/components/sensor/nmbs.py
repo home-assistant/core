@@ -50,7 +50,7 @@ def convert_ms_to_sec(delay=0):
 
 
 def get_ride_duration(departure_time, arrival_time, delay=0):
-    """Calculate the total travel time: duration + delay and return in minutes"""
+    """Calculate the total travel time in minutes"""
     duration = dt_util.utc_from_timestamp(
         int(arrival_time)) - dt_util.utc_from_timestamp(int(departure_time))
     duration_time = int(round((duration.total_seconds() / 60)))
