@@ -118,6 +118,10 @@ class AuthManager:
         """Retrieve a user."""
         return await self._store.async_get_user(user_id)
 
+    async def async_get_group(self, group_id: str) -> Optional[models.Group]:
+        """Retrieve all groups."""
+        return await self._store.async_get_group(group_id)
+
     async def async_get_user_by_credentials(
             self, credentials: models.Credentials) -> Optional[models.User]:
         """Get a user by credential, return None if not found."""
