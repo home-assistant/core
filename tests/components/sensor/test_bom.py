@@ -27,6 +27,7 @@ VALID_CONFIG = {
 
 def mocked_requests(*args, **kwargs):
     """Mock requests.get invocations."""
+
     class MockResponse:
         """Class to represent a mocked response."""
 
@@ -101,6 +102,8 @@ class TestBOMWeatherSensor(unittest.TestCase):
 
 
 class TestBOMCurrentData(unittest.TestCase):
+    """Test the BOM data container."""
+
     def test_should_update_initial(self):
         """Test that the first update always occurs."""
         bom_data = BOMCurrentData('IDN60901.94767')
