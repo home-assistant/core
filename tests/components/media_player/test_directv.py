@@ -1,5 +1,5 @@
 """The tests for the DirecTV Media player platform."""
-from unittest.mock import call, Mock, patch
+from unittest.mock import call, patch
 
 from datetime import datetime, timedelta
 import pytest
@@ -10,14 +10,12 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA)
 from homeassistant.components.media_player.directv import (
     ATTR_MEDIA_CURRENTLY_RECORDING, ATTR_MEDIA_RATING, ATTR_MEDIA_RECORDED,
-    ATTR_MEDIA_START_TIME, DATA_DIRECTV, DEFAULT_DEVICE, DEFAULT_PORT,
-    setup_platform)
+    ATTR_MEDIA_START_TIME, DATA_DIRECTV, DEFAULT_DEVICE, DEFAULT_PORT)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP, SERVICE_TURN_OFF,
     SERVICE_TURN_ON, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE)
-import homeassistant.core as ha
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -111,7 +109,7 @@ async def platforms(hass):
     }
 
     with MockDependency('DirectPy'), \
-         patch('DirectPy.DIRECTV', new=MockDirectvClass):
+            patch('DirectPy.DIRECTV', new=MockDirectvClass):
         await async_setup_component(hass, mp.DOMAIN, config)
         await hass.async_block_till_done()
 
@@ -261,49 +259,50 @@ async def test_setup_platform_config(hass):
         await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
 
+    assert sum(1 for item in hass.data['media_player'].entities) == 1
+    assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
     assert len(hass.data[DATA_DIRECTV]) == 1
     assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
 
 
 async def test_setup_platform_discover(hass):
     """Test setting up the platform from discovery."""
-    add_entities = Mock()
     with MockDependency('DirectPy'), \
             patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
         hass.async_create_task(
             async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
-                                ha.Config())
+                                {'media_player': {}})
         )
         await hass.async_block_till_done()
-#        setup_platform(hass, {}, add_entities,
-#                       discovery_info=DISCOVERY_INFO)
 
+    assert sum(1 for item in hass.data['media_player'].entities) == 1
+    assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
     assert len(hass.data[DATA_DIRECTV]) == 1
-    assert add_entities.call_count == 1
+    assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
 
 
 async def test_setup_platform_discover_duplicate(hass):
     """Test setting up the platform from discovery."""
-    add_entities = Mock()
-
     with MockDependency('DirectPy'), \
             patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
         await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
+        hass.async_create_task(
+            async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
+                                {'media_player': {}})
+        )
+        await hass.async_block_till_done()
 
-        setup_platform(hass, {}, add_entities,
-                       discovery_info=DISCOVERY_INFO)
-
+    assert sum(1 for item in hass.data['media_player'].entities) == 1
+    assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
     assert len(hass.data[DATA_DIRECTV]) == 1
-    assert add_entities.call_count == 1
+    assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
 
 
 async def test_setup_platform_discover_client(hass):
     """Test setting up the platform from discovery."""
-    add_entities = Mock()
-
     LOCATIONS.append({
         'locationName': 'Client 1',
         'clientAddr': '1'
@@ -319,12 +318,22 @@ async def test_setup_platform_discover_client(hass):
         await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
 
-        setup_platform(hass, {}, add_entities,
-                       discovery_info=DISCOVERY_INFO)
+        hass.async_create_task(
+            async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
+                                {'media_player': {}})
+        )
+        await hass.async_block_till_done()
 
     del LOCATIONS[-1]
     del LOCATIONS[-1]
+    assert sum(1 for item in hass.data['media_player'].entities) == 3
+    assert hass.data['media_player'].get_entity(MAIN_ENTITY_ID) is not None
+    assert hass.data['media_player'].get_entity('media_player.client_1') \
+        is not None
+    assert hass.data['media_player'].get_entity('media_player.client_2') \
+        is not None
     assert len(hass.data[DATA_DIRECTV]) == 3
+    assert (IP_ADDRESS, DEFAULT_DEVICE) in hass.data[DATA_DIRECTV]
     assert (IP_ADDRESS, '1') in hass.data[DATA_DIRECTV]
     assert (IP_ADDRESS, '2') in hass.data[DATA_DIRECTV]
 
