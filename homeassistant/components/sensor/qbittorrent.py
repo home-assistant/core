@@ -99,7 +99,7 @@ class QBittorrentSensor(Entity):
         """Get the latest data from qbittorrent and updates the state."""
         try:
             data = self.client.sync()
-            self._available = True 
+            self._available = True
         except Exception:
             _LOGGER.error("Connection to qBittorrent lost. Check config.")
             self._available = False
@@ -107,7 +107,7 @@ class QBittorrentSensor(Entity):
 
         download = data['server_state']['dl_info_speed']
         upload = data['server_state']['up_info_speed']
-        
+
         if self.type == SENSOR_TYPE_CURRENT_STATUS:
             if data:
                 if upload > 0 and download > 0:
