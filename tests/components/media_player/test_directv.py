@@ -108,7 +108,10 @@ def main_dtv():
 def dtv_side_effect(client_dtv, main_dtv):
     """Fixture to create DIRECTV instance for main and client."""
     def mock_dtv(ip, port, client_addr):
-        mocked_dtv = next(iter([main_dtv, client_dtv]))
+        if client_addr != '0':
+            mocked_dtv = client_dtv
+        else:
+            mocked_dtv = main_dtv
         mocked_dtv._host = ip
         mocked_dtv._port = port
         mocked_dtv._device = client_addr
