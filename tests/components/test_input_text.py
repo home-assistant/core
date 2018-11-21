@@ -184,7 +184,7 @@ def test_no_initial_state_and_no_restore_state(hass):
     assert str(state.state) == 'unknown'
 
 
-async def test_input_text_context(hass):
+async def test_input_text_context(hass, hass_admin_user):
     """Test that input_text context works."""
     assert await async_setup_component(hass, 'input_text', {
         'input_text': {
@@ -200,9 +200,9 @@ async def test_input_text_context(hass):
     await hass.services.async_call('input_text', 'set_value', {
         'entity_id': state.entity_id,
         'value': 'new_value',
-    }, True, Context(user_id='abcd'))
+    }, True, Context(user_id=hass_admin_user.id))
 
     state2 = hass.states.get('input_text.t1')
     assert state2 is not None
     assert state.state != state2.state
-    assert state2.context.user_id == 'abcd'
+    assert state2.context.user_id == hass_admin_user.id
