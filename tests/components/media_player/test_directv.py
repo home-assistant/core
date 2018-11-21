@@ -2,6 +2,7 @@
 from unittest.mock import call, patch
 
 from datetime import datetime, timedelta
+import requests
 import pytest
 
 import homeassistant.components.media_player as mp
@@ -10,7 +11,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA)
 from homeassistant.components.media_player.directv import (
     ATTR_MEDIA_CURRENTLY_RECORDING, ATTR_MEDIA_RATING, ATTR_MEDIA_RECORDED,
-    ATTR_MEDIA_START_TIME, DATA_DIRECTV, DEFAULT_DEVICE, DEFAULT_PORT)
+    ATTR_MEDIA_START_TIME, DEFAULT_DEVICE, DEFAULT_PORT)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
@@ -20,7 +21,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockDependency
+from tests.common import MockDependency, async_fire_time_changed
 
 CLIENT_ENTITY_ID = 'media_player.client_dvr'
 MAIN_ENTITY_ID = 'media_player.main_dvr'
@@ -415,22 +416,19 @@ async def test_check_attributes(hass, platforms):
 
 async def test_main_services(hass, platforms, main_dtv):
     """Test the different services."""
-    main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
-    dtv_inst = main_media_entity.dtv
-
     # DVR starts in turned off state.
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state.state == STATE_OFF
 
     # All these should call key_press in our class.
-    with patch.object(dtv_inst, 'key_press',
-                      wraps=dtv_inst.key_press) as mock_key_press, \
-        patch.object(dtv_inst, 'tune_channel',
-                     wraps=dtv_inst.tune_channel) as mock_tune_channel, \
-        patch.object(dtv_inst, 'get_tuned',
-                     wraps=dtv_inst.get_tuned) as mock_get_tuned, \
-        patch.object(dtv_inst, 'get_standby',
-                     wraps=dtv_inst.get_standby) as mock_get_standby:
+    with patch.object(main_dtv, 'key_press',
+                      wraps=main_dtv.key_press) as mock_key_press, \
+        patch.object(main_dtv, 'tune_channel',
+                     wraps=main_dtv.tune_channel) as mock_tune_channel, \
+        patch.object(main_dtv, 'get_tuned',
+                     wraps=main_dtv.get_tuned) as mock_get_tuned, \
+        patch.object(main_dtv, 'get_standby',
+                     wraps=main_dtv.get_standby) as mock_get_standby:
 
         # Turn main DVR on. When turning on DVR is playing.
         await async_turn_on(hass, MAIN_ENTITY_ID)
@@ -490,25 +488,35 @@ async def test_main_services(hass, platforms, main_dtv):
         assert mock_get_tuned.call_count == 5
 
 
-async def test_available(hass, platforms):
+async def test_available(hass, main_dtv):
     """Test available status."""
+    now = dt_util.utcnow()
+
+    with MockDependency('DirectPy'), \
+            patch('DirectPy.DIRECTV', return_value=main_dtv), \
+            patch('homeassistant.util.dt.utcnow', return_value=now):
+        await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
+        await hass.async_block_till_done()
+
     # Confirm service is currently set to available.
     state = hass.states.get(MAIN_ENTITY_ID)
-    assert state.state is not STATE_UNAVAILABLE
+    assert state.state != STATE_UNAVAILABLE
 
-    main_media_entity = hass.data['media_player'].get_entity(MAIN_ENTITY_ID)
     # Make update fail (i.e. DVR offline)
-    with patch.object(main_media_entity, 'dtv', None):
-        main_media_entity.schedule_update_ha_state(True)
-        await hass.async_block_till_done()
-        main_media_entity.schedule_update_ha_state(False)
+    next_update = now + timedelta(minutes=5)
+    with patch.object(
+            main_dtv, 'get_standby', side_effect=requests.RequestException), \
+            patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
     state = hass.states.get(MAIN_ENTITY_ID)
-    assert state.state is STATE_UNAVAILABLE
+    assert state.state == STATE_UNAVAILABLE
 
     # Recheck state, update should work again.
-    main_media_entity.schedule_update_ha_state(True)
-    await hass.async_block_till_done()
+    next_update = next_update + timedelta(minutes=5)
+    with patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
     state = hass.states.get(MAIN_ENTITY_ID)
-    assert state.state is not STATE_UNAVAILABLE
+    assert state.state != STATE_UNAVAILABLE
