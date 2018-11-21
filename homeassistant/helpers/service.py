@@ -192,9 +192,9 @@ async def entity_service_call(hass, platforms, func, call):
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
             raise UnknownUser(context=call.context)
-        perms = user.permissions
+        entity_perms = user.permissions.entity_func()
     else:
-        perms = None
+        entity_perms = None
 
     # Are we trying to target all entities
     target_all_entities = ATTR_ENTITY_ID not in call.data
@@ -218,7 +218,7 @@ async def entity_service_call(hass, platforms, func, call):
     # the service on.
     platforms_entities = []
 
-    if perms is None:
+    if entity_perms is None:
         for platform in platforms:
             if target_all_entities:
                 platforms_entities.append(list(platform.entities.values()))
@@ -234,7 +234,7 @@ async def entity_service_call(hass, platforms, func, call):
         for platform in platforms:
             platforms_entities.append([
                 entity for entity in platform.entities.values()
-                if perms.check_entity(entity.entity_id, POLICY_CONTROL)])
+                if entity_perms(entity.entity_id, POLICY_CONTROL)])
 
     else:
         for platform in platforms:
@@ -243,7 +243,7 @@ async def entity_service_call(hass, platforms, func, call):
                 if entity.entity_id not in entity_ids:
                     continue
 
-                if not perms.check_entity(entity.entity_id, POLICY_CONTROL):
+                if not entity_perms(entity.entity_id, POLICY_CONTROL):
                     raise Unauthorized(
                         context=call.context,
                         entity_id=entity.entity_id,

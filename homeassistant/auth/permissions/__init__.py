@@ -22,13 +22,19 @@ _LOGGER = logging.getLogger(__name__)
 class AbstractPermissions:
     """Default permissions class."""
 
+    def entity_func(self) -> Callable[[str, Tuple[str, ...]], bool]:
+        """Return a function that can test entity access."""
+        raise NotImplementedError
+
     def check_entity(self, entity_id: str, key: str) -> bool:
         """Test if we can access entity."""
-        raise NotImplementedError
+        return self.entity_func()(entity_id, (key,))
 
     def filter_states(self, states: List[State]) -> List[State]:
         """Filter a list of states for what the user is allowed to see."""
-        raise NotImplementedError
+        func = self.entity_func()
+        keys = ('read',)
+        return [entity for entity in states if func(entity.entity_id, keys)]
 
 
 class PolicyPermissions(AbstractPermissions):
@@ -39,16 +45,9 @@ class PolicyPermissions(AbstractPermissions):
         self._policy = policy
         self._compiled = {}  # type: Dict[str, Callable[..., bool]]
 
-    def check_entity(self, entity_id: str, key: str) -> bool:
-        """Test if we can access entity."""
-        func = self._policy_func(CAT_ENTITIES, compile_entities)
-        return func(entity_id, (key,))
-
-    def filter_states(self, states: List[State]) -> List[State]:
-        """Filter a list of states for what the user is allowed to see."""
-        func = self._policy_func(CAT_ENTITIES, compile_entities)
-        keys = ('read',)
-        return [entity for entity in states if func(entity.entity_id, keys)]
+    def entity_func(self) -> Callable[[str, Tuple[str, ...]], bool]:
+        """Return a function that can test entity access."""
+        return self._policy_func(CAT_ENTITIES, compile_entities)
 
     def _policy_func(self, category: str,
                      compile_func: Callable[[CategoryType], Callable]) \
@@ -78,13 +77,9 @@ class _OwnerPermissions(AbstractPermissions):
 
     # pylint: disable=no-self-use
 
-    def check_entity(self, entity_id: str, key: str) -> bool:
-        """Test if we can access entity."""
-        return True
-
-    def filter_states(self, states: List[State]) -> List[State]:
-        """Filter a list of states for what the user is allowed to see."""
-        return states
+    def entity_func(self) -> Callable[[str, Tuple[str, ...]], bool]:
+        """Return a function that can test entity access."""
+        return lambda entity_id, keys: True
 
 
 OwnerPermissions = _OwnerPermissions()  # pylint: disable=invalid-name
