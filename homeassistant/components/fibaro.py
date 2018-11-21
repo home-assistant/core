@@ -23,14 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'fibaro'
 FIBARO_DEVICES = 'fibaro_devices'
 FIBARO_CONTROLLER = 'fibaro_controller'
-FIBARO_ID_FORMAT = '{}_{}_{}'
 ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 CONF_PLUGINS = "plugins"
 
-FIBARO_COMPONENTS = [
-    'binary_sensor',
-]
+FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light', 'sensor', 'switch']
 
 FIBARO_TYPEMAP = {
     'com.fibaro.multilevelSensor': "sensor",
@@ -174,7 +171,7 @@ class FibaroController():
             else:
                 room_name = self._room_map[device.roomID].name
             device.friendly_name = room_name + ' ' + device.name
-            device.ha_id = FIBARO_ID_FORMAT.format(
+            device.ha_id = '{}_{}_{}'.format(
                 slugify(room_name), slugify(device.name), device.id)
             self._device_map[device.id] = device
         self.fibaro_devices = defaultdict(list)
@@ -232,13 +229,15 @@ class FibaroDevice(Entity):
         """Update the state."""
         self.schedule_update_ha_state(True)
 
-    def get_level(self):
+    @property
+    def level(self):
         """Get the level of Fibaro device."""
         if 'value' in self.fibaro_device.properties:
             return self.fibaro_device.properties.value
         return None
 
-    def get_level2(self):
+    @property
+    def level2(self):
         """Get the tilt level of Fibaro device."""
         if 'value2' in self.fibaro_device.properties:
             return self.fibaro_device.properties.value2
@@ -258,7 +257,21 @@ class FibaroDevice(Entity):
         if 'brightness' in self.fibaro_device.properties:
             self.fibaro_device.properties.brightness = level
 
-    def set_color(self, red, green, blue, white):
+    def set_level2(self, level):
+        """Set the level2 of Fibaro device."""
+        self.action("setValue2", level)
+        if 'value2' in self.fibaro_device.properties:
+            self.fibaro_device.properties.value2 = level
+
+    def call_turn_on(self):
+        """Turn on the Fibaro device."""
+        self.action("turnOn")
+
+    def call_turn_off(self):
+        """Turn off the Fibaro device."""
+        self.action("turnOff")
+
+    def call_set_color(self, red, green, blue, white):
         """Set the color of Fibaro device."""
         color_str = "{},{},{},{}".format(int(red), int(green),
                                          int(blue), int(white))
