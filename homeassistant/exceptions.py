@@ -39,7 +39,7 @@ class Unauthorized(HomeAssistantError):
     """When an action is unauthorized."""
 
     def __init__(self, context=None, user_id=None, entity_id=None,
-                 permission=None):
+                 permission=None) -> None:
         """Unauthorized error."""
         super().__init__(self.__class__.__name__)
         self.context = context
