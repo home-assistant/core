@@ -7,6 +7,7 @@ https://home-assistant.io/components/binary_sensor.point/
 
 import logging
 
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.point import MinutPointEntity
 from homeassistant.components.point.const import (
     DOMAIN as POINT_DOMAIN, NEW_DEVICE, SIGNAL_WEBHOOK)
@@ -45,7 +46,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         for device_class in EVENTS), True)
 
 
-class MinutPointBinarySensor(MinutPointEntity):
+class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
     """The platform class required by Home Assistant."""
 
     def __init__(self, point_client, device_id, device_class):
