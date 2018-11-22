@@ -63,7 +63,7 @@ SCHEMA_GET_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_UPDATE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_UPDATE_CARD,
     vol.Required('card_id'): str,
-    vol.Required('card_config'): vol.Any(str, Dict),
+    vol.Required('card_config'): vol.Any(str, dict),
     vol.Optional('format', default=FORMAT_YAML):
         vol.Any(FORMAT_JSON, FORMAT_YAML),
 })
@@ -71,7 +71,7 @@ SCHEMA_UPDATE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_ADD_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_ADD_CARD,
     vol.Required('view_id'): str,
-    vol.Required('card_config'): vol.Any(str, Dict),
+    vol.Required('card_config'): vol.Any(str, dict),
     vol.Optional('position'): int,
     vol.Optional('format', default=FORMAT_YAML):
         vol.Any(FORMAT_JSON, FORMAT_YAML),
@@ -99,14 +99,14 @@ SCHEMA_GET_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_UPDATE_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_UPDATE_VIEW,
     vol.Required('view_id'): str,
-    vol.Required('view_config'): vol.Any(str, Dict),
+    vol.Required('view_config'): vol.Any(str, dict),
     vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
                                                          FORMAT_YAML),
 })
 
 SCHEMA_ADD_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_ADD_VIEW,
-    vol.Required('view_config'): vol.Any(str, Dict),
+    vol.Required('view_config'): vol.Any(str, dict),
     vol.Optional('position'): int,
     vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
                                                          FORMAT_YAML),
