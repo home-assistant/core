@@ -7,7 +7,7 @@ at https://home-assistant.io/components/sensor.zha/
 import logging
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.components.zha.entities import Entity
+from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.components.zha import helpers
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.util.temperature import convert as convert_temperature
@@ -65,7 +65,7 @@ async def make_sensor(discovery_info):
     return sensor
 
 
-class Sensor(Entity):
+class Sensor(ZhaEntity):
     """Base ZHA sensor."""
 
     _domain = DOMAIN

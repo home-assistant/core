@@ -5,7 +5,7 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/fan.zha/
 """
 import logging
-from homeassistant.components.zha.entities import Entity
+from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.components.zha import helpers
 from homeassistant.components.fan import (
     DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
@@ -48,7 +48,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities([ZhaFan(**discovery_info)], update_before_add=True)
 
 
-class ZhaFan(Entity, FanEntity):
+class ZhaFan(ZhaEntity, FanEntity):
     """Representation of a ZHA fan."""
 
     _domain = DOMAIN

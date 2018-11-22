@@ -7,7 +7,7 @@ at https://home-assistant.io/components/binary_sensor.zha/
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
-from homeassistant.components.zha.entities import Entity
+from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.components.zha import helpers
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ async def _async_setup_remote(hass, config, async_add_entities,
     async_add_entities([remote], update_before_add=True)
 
 
-class BinarySensor(Entity, BinarySensorDevice):
+class BinarySensor(ZhaEntity, BinarySensorDevice):
     """The ZHA Binary Sensor."""
 
     _domain = DOMAIN
@@ -140,7 +140,7 @@ class BinarySensor(Entity, BinarySensorDevice):
             self._state = result.get('zone_status', self._state) & 3
 
 
-class Remote(Entity, BinarySensorDevice):
+class Remote(ZhaEntity, BinarySensorDevice):
     """ZHA switch/remote controller/button."""
 
     _domain = DOMAIN

@@ -9,7 +9,7 @@ from homeassistant.util import slugify
 from homeassistant.core import callback
 
 
-class Entity(entity.Entity):
+class ZhaEntity(entity.Entity):
     """A base class for ZHA entities."""
 
     _domain = None  # Must be overridden by subclasses

@@ -6,7 +6,7 @@ at https://home-assistant.io/components/light.zha/
 """
 import logging
 from homeassistant.components import light
-from homeassistant.components.zha.entities import Entity
+from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.components.zha import helpers
 import homeassistant.util.color as color_util
 
@@ -47,7 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities([Light(**discovery_info)], update_before_add=True)
 
 
-class Light(Entity, light.Light):
+class Light(ZhaEntity, light.Light):
     """Representation of a ZHA or ZLL light."""
 
     _domain = light.DOMAIN

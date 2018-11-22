@@ -7,7 +7,7 @@ at https://home-assistant.io/components/switch.zha/
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.components.zha.entities import Entity
+from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.components.zha import helpers
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities([switch], update_before_add=True)
 
 
-class Switch(Entity, SwitchDevice):
+class Switch(ZhaEntity, SwitchDevice):
     """ZHA switch."""
 
     _domain = DOMAIN
