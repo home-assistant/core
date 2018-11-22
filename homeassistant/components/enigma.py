@@ -258,6 +258,7 @@ class EnigmaDevice(Entity):
         """Return the host of the device."""
         return self._opener
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 
 
@@ -276,3 +277,6 @@ class EnigmaDevice(Entity):
 >>>>>>> pylint corrections.
 =======
 >>>>>>> pylint corrections.
+=======
+
+>>>>>>> Add missing blank line at the end.
