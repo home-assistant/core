@@ -1,5 +1,5 @@
 """
-Support for Enigma2 set-top boxes.
+Support for Enigma set-top boxes.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/enigma/
