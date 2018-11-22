@@ -9,7 +9,6 @@ import logging
 from homeassistant.components.lutron import (
     LutronDevice, LUTRON_DEVICES, LUTRON_CONTROLLER)
 from homeassistant.components.scene import Scene
-from homeassistant.const import (STATE_ON, STATE_OFF)
 
 _LOGGER = logging.getLogger(__name__)
 
