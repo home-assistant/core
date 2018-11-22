@@ -137,15 +137,21 @@ class FibaroLight(FibaroDevice, Light):
         # The simplest case is left for last. No dimming, just switch on
         self.call_turn_on()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the light off."""
+        async with self._update_lock:
+            await self.hass.async_add_executor_job(
+                partial(self._turn_off, **kwargs))
+
+    def _turn_off(self, **kwargs):
+        """Really turn the light off."""
+
         # Let's save the last brightness level before we switch it off
-        with self._update_lock:
-            if (self._supported_flags & SUPPORT_BRIGHTNESS) and \
-                    self._brightness and self._brightness > 0:
-                self._last_brightness = self._brightness
-            self._brightness = 0
-            self.call_turn_off()
+        if (self._supported_flags & SUPPORT_BRIGHTNESS) and \
+                self._brightness and self._brightness > 0:
+            self._last_brightness = self._brightness
+        self._brightness = 0
+        self.call_turn_off()
 
     @property
     def is_on(self):
