@@ -207,8 +207,8 @@ def ihc_setup(hass, config, conf, controller_id):
 def get_manual_configuration(hass, config, conf, ihc_controller,
                              controller_id):
     """Get manual configuration for IHC devices."""
-    discovery_info = {}
     for component in IHC_PLATFORMS:
+        discovery_info = {}
         if component in conf:
             component_setup = conf.get(component)
             for sensor_cfg in component_setup:
@@ -228,9 +228,9 @@ def get_manual_configuration(hass, config, conf, ihc_controller,
                     }
                 }
                 discovery_info[name] = device
-    if discovery_info:
-        discovery.load_platform(hass, component, DOMAIN,
-                                discovery_info, config)
+        if discovery_info:
+            discovery.load_platform(hass, component, DOMAIN,
+                                    discovery_info, config)
 
 
 def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller,
