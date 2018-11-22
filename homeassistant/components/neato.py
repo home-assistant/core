@@ -71,7 +71,7 @@ ERRORS = {
     'ui_error_brush_overloaded': 'Brush overloaded',
     'ui_error_bumper_stuck': 'Bumper stuck',
     'ui_error_check_battery_switch': 'Check battery',
-    'ui_error_corrupt_scb': 'Call customer service corrupt scb',
+    'ui_error_corrupt_scb': 'Call customer service corrupt board',
     'ui_error_deck_debris': 'Deck debris',
     'ui_error_dust_bin_missing': 'Dust bin missing',
     'ui_error_dust_bin_full': 'Dust bin full',
