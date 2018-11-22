@@ -1,5 +1,6 @@
 """Support for monitoring the qBittorrent API."""
 import logging
+from requests.exceptions import RequestException
 
 import voluptuous as vol
 
@@ -42,7 +43,7 @@ async def async_setup_platform(hass, config, add_entities,
     try:
         qbittorrent = Client(config.get(CONF_URL))
         qbittorrent.login(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
-    except:  # noqa: E722 pylint: disable=bare-except
+    except RequestException:  # noqa: E722 pylint: disable=bare-except
         _LOGGER.error("Connection to qBittorrent failed. Check config.")
         raise PlatformNotReady
 
@@ -98,10 +99,11 @@ class QBittorrentSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from qbittorrent and updates the state."""
+        data = self.client.sync()
         try:
             data = self.client.sync()
             self._available = True
-        except:  # noqa: E722 pylint: disable=bare-except
+        except RequestException:
             _LOGGER.error("Connection to qBittorrent lost. Check config.")
             self._available = False
             return
