@@ -25,7 +25,7 @@ from .const import (
     CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, NEW_DEVICE, SCAN_INTERVAL,
     SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
 
-REQUIREMENTS = ['pypoint==1.0.5']
+REQUIREMENTS = ['pypoint==1.0.6']
 DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,8 +113,8 @@ async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry,
     session.update_webhook(entry.data[CONF_WEBHOOK_URL],
                            entry.data[CONF_WEBHOOK_ID])
 
-    hass.components.webhook.async_register(entry.data[CONF_WEBHOOK_ID],
-                                           handle_webhook)
+    hass.components.webhook.async_register(
+        DOMAIN, 'Point', entry.data[CONF_WEBHOOK_ID], handle_webhook)
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
