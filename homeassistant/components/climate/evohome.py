@@ -424,7 +424,7 @@ class EvoController(EvoClimateDevice):
         super().__init__(evo_data, client, obj_ref)
 
         self._id = obj_ref.systemId
-        self._name = "_" + obj_ref.location.name
+        self._name = '_{}'.format(obj_ref.location.name)
         self._icon = "mdi:thermostat"
         self._type = EVO_PARENT
 
