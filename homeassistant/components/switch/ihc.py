@@ -3,47 +3,30 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.ihc/
 """
-import voluptuous as vol
-
 from homeassistant.components.ihc import (
-    validate_name, IHC_DATA, IHC_CONTROLLER, IHC_INFO)
+    IHC_DATA, IHC_CONTROLLER, IHC_INFO)
 from homeassistant.components.ihc.ihcdevice import IHCDevice
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_SWITCHES
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['ihc']
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SWITCHES, default=[]):
-        vol.All(cv.ensure_list, [
-            vol.All({
-                vol.Required(CONF_ID): cv.positive_int,
-                vol.Optional(CONF_NAME): cv.string,
-            }, validate_name)
-        ])
-})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC switch platform."""
-    ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
-    info = hass.data[IHC_DATA][IHC_INFO]
+    if discovery_info is None:
+        return
     devices = []
-    if discovery_info:
-        for name, device in discovery_info.items():
-            ihc_id = device['ihc_id']
-            product = device['product']
-            switch = IHCSwitch(ihc_controller, name, ihc_id, info, product)
-            devices.append(switch)
-    else:
-        switches = config[CONF_SWITCHES]
-        for switch in switches:
-            ihc_id = switch[CONF_ID]
-            name = switch[CONF_NAME]
-            sensor = IHCSwitch(ihc_controller, name, ihc_id, info)
-            devices.append(sensor)
+    for name, device in discovery_info.items():
+        ihc_id = device['ihc_id']
+        product = device['product']
+        # Find controller that corresponds with device id
+        ctrl_id = device['ctrl_id']
+        ihc_key = IHC_DATA.format(ctrl_id)
+        info = hass.data[ihc_key][IHC_INFO]
+        ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
 
+        switch = IHCSwitch(ihc_controller, name, ihc_id, info, product)
+        devices.append(switch)
     add_entities(devices)
 
 
