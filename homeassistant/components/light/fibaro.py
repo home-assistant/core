@@ -145,7 +145,6 @@ class FibaroLight(FibaroDevice, Light):
 
     def _turn_off(self, **kwargs):
         """Really turn the light off."""
-
         # Let's save the last brightness level before we switch it off
         if (self._supported_flags & SUPPORT_BRIGHTNESS) and \
                 self._brightness and self._brightness > 0:
