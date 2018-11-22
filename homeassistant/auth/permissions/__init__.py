@@ -61,7 +61,7 @@ class _OwnerPermissions(AbstractPermissions):
 
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""
-        return lambda entity_id, keys: True
+        return lambda entity_id, key: True
 
 
 OwnerPermissions = _OwnerPermissions()  # pylint: disable=invalid-name
