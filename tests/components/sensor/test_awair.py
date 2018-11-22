@@ -1,20 +1,22 @@
 """Tests for the Awair sensor platform."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import json
 import logging
 from unittest.mock import patch
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sensor.awair import (
-    DEVICE_CLASS_CARBON_DIOXIDE, DEVICE_CLASS_PM2_5, DEVICE_CLASS_SCORE,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS, TIME_FORMAT)
+    ATTR_LAST_API_UPDATE, ATTR_TIMESTAMP, DEVICE_CLASS_CARBON_DIOXIDE,
+    DEVICE_CLASS_PM2_5, DEVICE_CLASS_SCORE,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS)
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, STATE_UNAVAILABLE,
+    TEMP_CELSIUS)
 from homeassistant.setup import async_setup_component
-from homeassistant.util import utcnow
+from homeassistant.util.dt import parse_datetime, utcnow
 
-from tests.common import load_fixture, mock_coro
+from tests.common import async_fire_time_changed, load_fixture, mock_coro
 
 DISCOVERY_CONFIG = {
     'sensor': {
@@ -35,6 +37,13 @@ MANUAL_CONFIG = {
 
 _LOGGER = logging.getLogger(__name__)
 
+NOW = utcnow()
+AIR_DATA_FIXTURE = json.loads(load_fixture('awair_air_data_latest.json'))
+AIR_DATA_FIXTURE[0][ATTR_TIMESTAMP] = str(NOW)
+AIR_DATA_FIXTURE_UPDATED = json.loads(
+    load_fixture('awair_air_data_latest_updated.json'))
+AIR_DATA_FIXTURE_UPDATED[0][ATTR_TIMESTAMP] = str(NOW + timedelta(minutes=5))
+
 
 async def setup_awair(hass, config=None):
     """Load the Awair platform."""
@@ -42,8 +51,7 @@ async def setup_awair(hass, config=None):
     devices_mock = mock_coro(devices_json)
     devices_patch = patch('python_awair.AwairClient.devices',
                           return_value=devices_mock)
-    air_data_json = json.loads(load_fixture('awair_air_data_latest.json'))
-    air_data_mock = mock_coro(air_data_json)
+    air_data_mock = mock_coro(AIR_DATA_FIXTURE)
     air_data_patch = patch('python_awair.AwairClient.air_data_latest',
                            return_value=air_data_mock)
 
@@ -107,14 +115,13 @@ async def test_bad_platform_setup(hass):
         assert not hass.states.async_all()
 
 
-async def test_awair_attributes(hass):
+async def test_awair_misc_attributes(hass):
     """Test that desired attributes are set."""
     await setup_awair(hass)
 
     attributes = hass.states.get('sensor.awair_co2').attributes
-    fixture = json.loads(load_fixture('awair_air_data_latest.json'))
-    timestamp = datetime.strptime(fixture[0]['timestamp'], TIME_FORMAT)
-    assert attributes['timestamp'] == timestamp
+    assert (attributes[ATTR_LAST_API_UPDATE] ==
+            parse_datetime(AIR_DATA_FIXTURE[0][ATTR_TIMESTAMP]))
 
 
 async def test_awair_score(hass):
@@ -122,10 +129,9 @@ async def test_awair_score(hass):
     await setup_awair(hass)
 
     sensor = hass.states.get('sensor.awair_score')
-    entity = hass.data[SENSOR_DOMAIN].get_entity('sensor.awair_score')
     assert sensor.state == '78'
-    assert entity.device_class == DEVICE_CLASS_SCORE
-    assert entity.unit_of_measurement == '%'
+    assert sensor.attributes['device_class'] == DEVICE_CLASS_SCORE
+    assert sensor.attributes['unit_of_measurement'] == '%'
 
 
 async def test_awair_temp(hass):
@@ -133,10 +139,9 @@ async def test_awair_temp(hass):
     await setup_awair(hass)
 
     sensor = hass.states.get('sensor.awair_temperature')
-    entity = hass.data[SENSOR_DOMAIN].get_entity('sensor.awair_temperature')
     assert sensor.state == '22.4'
-    assert entity.device_class == DEVICE_CLASS_TEMPERATURE
-    assert entity.unit_of_measurement == TEMP_CELSIUS
+    assert sensor.attributes['device_class'] == DEVICE_CLASS_TEMPERATURE
+    assert sensor.attributes['unit_of_measurement'] == TEMP_CELSIUS
 
 
 async def test_awair_humid(hass):
@@ -144,10 +149,9 @@ async def test_awair_humid(hass):
     await setup_awair(hass)
 
     sensor = hass.states.get('sensor.awair_humidity')
-    entity = hass.data[SENSOR_DOMAIN].get_entity('sensor.awair_humidity')
     assert sensor.state == '32.73'
-    assert entity.device_class == DEVICE_CLASS_HUMIDITY
-    assert entity.unit_of_measurement == '%'
+    assert sensor.attributes['device_class'] == DEVICE_CLASS_HUMIDITY
+    assert sensor.attributes['unit_of_measurement'] == '%'
 
 
 async def test_awair_co2(hass):
@@ -155,10 +159,9 @@ async def test_awair_co2(hass):
     await setup_awair(hass)
 
     sensor = hass.states.get('sensor.awair_co2')
-    entity = hass.data[SENSOR_DOMAIN].get_entity('sensor.awair_co2')
     assert sensor.state == '612'
-    assert entity.device_class == DEVICE_CLASS_CARBON_DIOXIDE
-    assert entity.unit_of_measurement == 'ppm'
+    assert sensor.attributes['device_class'] == DEVICE_CLASS_CARBON_DIOXIDE
+    assert sensor.attributes['unit_of_measurement'] == 'ppm'
 
 
 async def test_awair_voc(hass):
@@ -166,10 +169,10 @@ async def test_awair_voc(hass):
     await setup_awair(hass)
 
     sensor = hass.states.get('sensor.awair_voc')
-    entity = hass.data[SENSOR_DOMAIN].get_entity('sensor.awair_voc')
     assert sensor.state == '1012'
-    assert entity.device_class == DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS
-    assert entity.unit_of_measurement == 'ppb'
+    assert (sensor.attributes['device_class'] ==
+            DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS)
+    assert sensor.attributes['unit_of_measurement'] == 'ppb'
 
 
 async def test_awair_dust(hass):
@@ -179,10 +182,9 @@ async def test_awair_dust(hass):
     # The Awair Gen1 that we mock actually returns 'DUST', but that
     # is mapped to pm25 internally so that it shows up in Homekit
     sensor = hass.states.get('sensor.awair_pm25')
-    entity = hass.data[SENSOR_DOMAIN].get_entity('sensor.awair_pm25')
     assert sensor.state == '6.2'
-    assert entity.device_class == DEVICE_CLASS_PM2_5
-    assert entity.unit_of_measurement == 'µg/m3'
+    assert sensor.attributes['device_class'] == DEVICE_CLASS_PM2_5
+    assert sensor.attributes['unit_of_measurement'] == 'µg/m3'
 
 
 async def test_awair_unsupported_sensors(hass):
@@ -195,25 +197,54 @@ async def test_awair_unsupported_sensors(hass):
     assert hass.states.get('sensor.awair_pm10') is None
 
 
+async def test_availability(hass):
+    """Ensure that we mark the component available/unavailable correctly."""
+    await setup_awair(hass)
+
+    assert hass.states.get('sensor.awair_score').state == '78'
+
+    future = NOW + timedelta(minutes=30)
+    data_patch = patch('python_awair.AwairClient.air_data_latest',
+                       return_value=mock_coro(AIR_DATA_FIXTURE))
+    time_patch = patch('homeassistant.util.utcnow',
+                       return_value=future)
+    available_patch = patch('homeassistant.components.sensor.awair.dt.utcnow',
+                            return_value=future)
+
+    with time_patch, data_patch, available_patch:
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+        assert hass.states.get('sensor.awair_score').state == STATE_UNAVAILABLE
+
+    future = NOW + timedelta(hours=1)
+    fixture = AIR_DATA_FIXTURE_UPDATED
+    fixture[0][ATTR_TIMESTAMP] = str(future)
+    data_patch = patch('python_awair.AwairClient.air_data_latest',
+                       return_value=mock_coro(fixture))
+    time_patch = patch('homeassistant.util.utcnow',
+                       return_value=future)
+    available_patch = patch('homeassistant.components.sensor.awair.dt.utcnow',
+                            return_value=future)
+
+    with time_patch, data_patch, available_patch:
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+        assert hass.states.get('sensor.awair_score').state == '79'
+
+
 async def test_async_update(hass):
     """Ensure we can update sensors."""
     await setup_awair(hass)
 
-    fixture = json.loads(load_fixture('awair_air_data_latest_updated.json'))
+    future = NOW + timedelta(minutes=10)
+    data_patch = patch('python_awair.AwairClient.air_data_latest',
+                       return_value=mock_coro(AIR_DATA_FIXTURE_UPDATED))
+    time_patch = patch('homeassistant.util.utcnow',
+                       return_value=future)
 
-    with patch('python_awair.AwairClient.air_data_latest',
-               return_value=mock_coro(fixture)):
-        entity = hass.data[SENSOR_DOMAIN].get_entity('sensor.awair_score')
-
-        # pylint: disable=protected-access
-        await entity._data.async_update(no_throttle=True)
-
-        # these sensors are marked as should_poll, so force the interval
-        for sensor in hass.states.async_all():
-            e_id = sensor.entity_id
-            await hass.helpers.entity_component.async_update_entity(e_id)
-
-    await hass.async_block_till_done()
+    with time_patch, data_patch:
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
     score_sensor = hass.states.get('sensor.awair_score')
     assert score_sensor.state == '79'
@@ -229,10 +260,8 @@ async def test_throttle_async_update(hass):
     """Ensure we throttle updates."""
     await setup_awair(hass)
 
-    fixture = json.loads(load_fixture('awair_air_data_latest_updated.json'))
-
     with patch('python_awair.AwairClient.air_data_latest',
-               return_value=mock_coro(fixture)):
+               return_value=mock_coro(AIR_DATA_FIXTURE_UPDATED)):
         entity = hass.data[SENSOR_DOMAIN].get_entity('sensor.awair_score')
 
         await entity._data.async_update()  # pylint: disable=protected-access
@@ -240,7 +269,7 @@ async def test_throttle_async_update(hass):
 
         assert hass.states.get('sensor.awair_score').state == '78'
 
-        later = utcnow() + timedelta(minutes=30)
+        later = NOW + timedelta(minutes=30)
         with patch('homeassistant.util.utcnow', return_value=later):
             # pylint: disable=protected-access
             await entity._data.async_update()

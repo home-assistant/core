@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.awair/
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import math
 
@@ -18,7 +18,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt
 
 REQUIREMENTS = ['python_awair==0.0.2']
 
@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SCORE = 'score'
 ATTR_TIMESTAMP = 'timestamp'
+ATTR_LAST_API_UPDATE = 'last_api_update'
 ATTR_COMPONENT = 'component'
 ATTR_VALUE = 'value'
 ATTR_SENSORS = 'sensors'
@@ -112,7 +113,8 @@ async def async_setup_platform(hass, config, async_add_entities,
             await awair_data.async_update()
             for sensor in SENSOR_TYPES:
                 if sensor in awair_data.data:
-                    awair_sensor = AwairSensor(awair_data, device, sensor)
+                    awair_sensor = AwairSensor(awair_data, device,
+                                               sensor, throttle)
                     all_devices.append(awair_sensor)
 
         async_add_entities(all_devices, True)
@@ -131,7 +133,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 class AwairSensor(Entity):
     """Implementation of an Awair device."""
 
-    def __init__(self, data, device, sensor_type):
+    def __init__(self, data, device, sensor_type, throttle):
         """Initialize the sensor."""
         self._uuid = device[CONF_UUID]
         self._device_class = SENSOR_TYPES[sensor_type]['device_class']
@@ -140,6 +142,7 @@ class AwairSensor(Entity):
         self._unit_of_measurement = unit
         self._data = data
         self._type = sensor_type
+        self._throttle = throttle
 
     @property
     def name(self):
@@ -166,6 +169,23 @@ class AwairSensor(Entity):
         """Return additional attributes."""
         return self._data.attrs
 
+    # The Awair device should be reporting metrics in quite regularly.
+    # Based on the raw data from the API, it looks like every ~10 seconds
+    # is normal. Here we assert that the device is not available if the
+    # last known API timestamp is more than (3 * throttle) minutes in the
+    # past. It implies that either hass is somehow unable to query the API
+    # for new data or that the device is not checking in. Either condition
+    # fits the definition for 'not available'. We pick (3 * throttle) minutes
+    # to allow for transient errors to correct themselves.
+    @property
+    def available(self):
+        """Device availability based on the last update timestamp."""
+        if ATTR_LAST_API_UPDATE not in self.device_state_attributes:
+            return False
+
+        last_api_data = self.device_state_attributes[ATTR_LAST_API_UPDATE]
+        return (dt.utcnow() - last_api_data) < (3 * self._throttle)
+
     @property
     def unique_id(self):
         """Return the unique id of this entity."""
@@ -175,11 +195,6 @@ class AwairSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """HA should poll us for state."""
-        return True
 
     async def async_update(self):
         """Get the latest data."""
@@ -200,10 +215,8 @@ class AwairData:
     async def _async_update(self):
         """Get the data from Awair API."""
         resp = await self._client.air_data_latest(self._uuid)
-
-        timestamp = datetime.strptime(resp[0][ATTR_TIMESTAMP], TIME_FORMAT)
-        self.attrs[ATTR_TIMESTAMP] = timestamp
-
+        timestamp = dt.parse_datetime(resp[0][ATTR_TIMESTAMP])
+        self.attrs[ATTR_LAST_API_UPDATE] = timestamp
         self.data[ATTR_SCORE] = resp[0][ATTR_SCORE]
 
         # The air_data_latest call only returns one item, so this should
