@@ -34,6 +34,8 @@ ATTR_CLEAN_BATTERY_START = 'battery_level_at_clean_start'
 ATTR_CLEAN_BATTERY_END = 'battery_level_at_clean_end'
 ATTR_CLEAN_SUSP_COUNT = 'clean_suspension_count'
 ATTR_CLEAN_SUSP_TIME = 'clean_suspension_time'
+ATTR_MODEL = 'model'
+ATTR_FIRMWARE = 'firmware'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -67,6 +69,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._available = False
         self._battery_level = None
         self._robot_serial = self.robot.serial
+        self._robot_model = None
+        self._robot_firmware = None
 
     def update(self):
         """Update the states of Neato Vacuums."""
@@ -133,6 +137,12 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
         self._battery_level = self._state['details']['charge']
 
+        if self._robot_model is None:
+            self._robot_model = self._state['meta']['modelName']
+
+        if self._robot_firmware is None:
+            self._robot_firmware = self._state['meta']['firmware']
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -190,6 +200,12 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             data[ATTR_CLEAN_BATTERY_START] = self.clean_battery_start
         if self.clean_battery_end is not None:
             data[ATTR_CLEAN_BATTERY_END] = self.clean_battery_end
+
+        if self._robot_model is not None:
+            data[ATTR_MODEL] = self._robot_model
+
+        if self._robot_firmware is not None:
+            data[ATTR_FIRMWARE] = self._robot_firmware
 
         return data
 
