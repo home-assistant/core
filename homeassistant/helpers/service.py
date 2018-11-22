@@ -192,7 +192,7 @@ async def entity_service_call(hass, platforms, func, call):
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
             raise UnknownUser(context=call.context)
-        entity_perms = user.permissions.entity_func()
+        entity_perms = user.permissions.check_entity
     else:
         entity_perms = None
 
