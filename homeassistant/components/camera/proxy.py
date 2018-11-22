@@ -71,16 +71,16 @@ def _precheck_image(image, opts):
     import io
 
     if not opts:
-        raise ValueError
+        raise ValueError()
     try:
         img = Image.open(io.BytesIO(image))
     except IOError:
         _LOGGER.warning("Failed to open image")
-        raise ValueError
+        raise ValueError()
     imgfmt = str(img.format)
     if imgfmt not in ('PNG', 'JPEG'):
         _LOGGER.warning("Image is of unsupported type: %s", imgfmt)
-        raise ValueError
+        raise ValueError()
     return img
 
 
@@ -267,7 +267,7 @@ class ProxyCamera(Camera):
             if not image:
                 return None
         except HomeAssistantError:
-            raise asyncio.CancelledError
+            raise asyncio.CancelledError()
 
         if self._mode == MODE_RESIZE:
             job = _resize_image
