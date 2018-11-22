@@ -890,6 +890,7 @@ omit =
     homeassistant/components/zwave/util.py
     homeassistant/components/notify/enigma.py
     homeassistant/components/media_player/enigma.py
+    homeassistant/components/enigma.py
 
 [report]
 # Regexes for lines to exclude from consideration
