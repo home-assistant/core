@@ -34,11 +34,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the qbittorrent sensors."""
     from qbittorrent import Client
-
-    name = config.get(CONF_NAME)
 
     try:
         qbittorrent = Client(config.get(CONF_URL))
@@ -47,11 +45,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Connection to qBittorrent failed. Check config.")
         raise PlatformNotReady
 
+    name = config.get(CONF_NAME)
+
     dev = []
     for sensor_type in SENSOR_TYPES:
         sensor = QBittorrentSensor(sensor_type, qbittorrent, name)
         dev.append(sensor)
-        sensor.update()
+        sensor.async_update()
 
     add_entities(dev)
 
@@ -95,7 +95,7 @@ class QBittorrentSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from qbittorrent and updates the state."""
         try:
             data = self.client.sync()
