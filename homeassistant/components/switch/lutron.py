@@ -23,7 +23,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devs.append(dev)
 
     add_entities(devs, True)
-    return True
 
 
 class LutronSwitch(LutronDevice, SwitchDevice):
@@ -41,7 +40,7 @@ class LutronSwitch(LutronDevice, SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
-        attr['Lutron Integration ID'] = self._lutron_device.id
+        attr['lutron_integration_id'] = self._lutron_device.id
         return attr
 
     @property

@@ -26,7 +26,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devs.append(dev)
 
     add_entities(devs, True)
-    return True
 
 
 class LutronScene(LutronDevice, Scene):
@@ -39,18 +38,13 @@ class LutronScene(LutronDevice, Scene):
                  lutron_led,
                  controller):
         """Initialize the scene/button."""
-        LutronDevice.__init__(self, area_name, lutron_device, controller)
+        super().__init__(area_name, lutron_device, controller)
         self._keypad_name = keypad_name
         self._led = lutron_led
 
     def activate(self):
         """Activate the scene."""
         self._lutron_device.press()
-
-    @property
-    def state(self):
-        """Return the state of the scene."""
-        return STATE_ON if self._led.state else STATE_OFF
 
     @property
     def name(self):
