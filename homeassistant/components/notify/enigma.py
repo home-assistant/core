@@ -18,14 +18,12 @@ import urllib.request
 
 import voluptuous as vol
 
-from homeassistant.enigma import (
-    _LOGGER, DEFAULT_NAME, DEFAULT_PASSWORD,
-    DEFAULT_PORT, DEFAULT_USERNAME)
 from homeassistant.components.notify import (
     ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_USERNAME)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
+from homeassistant.components.enigma import (
+    _LOGGER, DEFAULT_NAME, DEFAULT_PASSWORD, DEFAULT_PORT, DEFAULT_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
 # Default value for display (if not passed as argument in data field)
