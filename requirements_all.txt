@@ -11,7 +11,7 @@ cryptography==2.3.1
 pip>=8.0.3
 pytz>=2018.04
 pyyaml>=3.13,<4
-requests==2.20.0
+requests==2.20.1
 ruamel.yaml==0.15.78
 voluptuous==0.11.5
 voluptuous-serialize==2.0.0
@@ -186,7 +186,7 @@ bellows==0.7.0
 bimmer_connected==0.5.3
 
 # homeassistant.components.blink
-blinkpy==0.10.1
+blinkpy==0.10.3
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
@@ -428,7 +428,7 @@ ghlocalapi==0.1.0
 gitterpy==0.1.7
 
 # homeassistant.components.sensor.glances
-glances_api==0.1.0
+glances_api==0.2.0
 
 # homeassistant.components.notify.gntp
 gntp==1.0.3
@@ -485,7 +485,7 @@ hole==0.3.0
 holidays==0.9.8
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181112.0
+home-assistant-frontend==20181121.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.1
@@ -594,7 +594,7 @@ liveboxplaytv==2.0.2
 lmnotify==0.0.4
 
 # homeassistant.components.device_tracker.google_maps
-locationsharinglib==3.0.7
+locationsharinglib==3.0.8
 
 # homeassistant.components.logi_circle
 logi_circle==0.1.7
@@ -634,7 +634,7 @@ mficlient==0.3.0
 miflora==0.4.0
 
 # homeassistant.components.climate.mill
-millheater==0.2.7
+millheater==0.2.8
 
 # homeassistant.components.sensor.mitemp_bt
 mitemp_bt==0.0.1
@@ -715,6 +715,9 @@ orvibo==1.1.1
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
 paho-mqtt==1.4.0
+
+# homeassistant.components.media_player.panasonic_bluray
+panacotta==0.1
 
 # homeassistant.components.media_player.panasonic_viera
 panasonic_viera==0.3.1
@@ -886,7 +889,7 @@ pycsspeechtts==1.0.2
 
 # homeassistant.components.daikin
 # homeassistant.components.climate.daikin
-pydaikin==0.7
+pydaikin==0.8
 
 # homeassistant.components.deconz
 pydeconz==47
@@ -1096,7 +1099,7 @@ pyowm==2.9.0
 pypjlink2==1.2.0
 
 # homeassistant.components.point
-pypoint==1.0.5
+pypoint==1.0.6
 
 # homeassistant.components.sensor.pollen
 pypollencom==2.2.2
@@ -1222,7 +1225,7 @@ python-mpd2==1.0.0
 python-mystrom==0.4.4
 
 # homeassistant.components.nest
-python-nest==4.0.4
+python-nest==4.0.5
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.1
