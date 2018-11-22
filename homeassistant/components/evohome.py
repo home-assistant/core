@@ -24,6 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     HTTP_BAD_REQUEST, HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -151,6 +152,7 @@ def setup(hass, hass_config):
         async_load_platform(hass, 'climate', DOMAIN, {}, hass_config))
 
     # Inform the Controller when HA has started so it gets it's first update
+    @callback
     def _first_update(event):
         pkt = {'sender': 'setup()', 'signal': 'refresh', 'to': EVO_PARENT}
         async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)
