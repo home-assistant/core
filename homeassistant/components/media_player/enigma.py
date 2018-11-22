@@ -57,14 +57,7 @@ SUPPORT_ENIGMA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 MAX_VOLUME = 100
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-=======
->>>>>>> pylint corrections.
-=======
-
->>>>>>> pylint corrections.
 # SETUP PLATFORM
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
@@ -86,10 +79,6 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
 
     def __init__(self, EnigmaMediaPlayerDevice):
         """Initialize the Enigma device."""
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> pylint corrections.
         self._host = EnigmaMediaPlayerDevice.get_host
         self._port = EnigmaMediaPlayerDevice.get_port
         self._name = EnigmaMediaPlayerDevice.get_name
@@ -99,20 +88,6 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         self._bouquet = EnigmaMediaPlayerDevice.get_bouquet
         self._picon = EnigmaMediaPlayerDevice.get_picon
         self._opener = EnigmaMediaPlayerDevice.get_opener
-<<<<<<< HEAD
-=======
-        self._host = EnigmaMediaPlayerDevice._host
-        self._port = EnigmaMediaPlayerDevice._port
-        self._name = EnigmaMediaPlayerDevice._name
-        self._username = EnigmaMediaPlayerDevice._username
-        self._password = EnigmaMediaPlayerDevice._password
-        self._timeout = EnigmaMediaPlayerDevice._timeout
-        self._bouquet = EnigmaMediaPlayerDevice._bouquet
-        self._picon = EnigmaMediaPlayerDevice._picon
-        self._opener = EnigmaMediaPlayerDevice._opener
->>>>>>> Redefined outer name.
-=======
->>>>>>> pylint corrections.
         self._pwstate = True
         self._volume = 0
         self._muted = False

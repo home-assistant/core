@@ -64,8 +64,6 @@ CONFIG_SCHEMA = vol.Schema({
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME):
-<<<<<<< HEAD
-<<<<<<< HEAD
                         cv.string,
                     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
                         cv.string,
@@ -75,24 +73,6 @@ CONFIG_SCHEMA = vol.Schema({
                         cv.string,
                     vol.Optional(CONF_PICON, default=DEFAULT_PICON):
                         cv.string,
-=======
-                                 cv.string,
-=======
-                        cv.string,
->>>>>>> Flake8 indent corrections.
-                    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
-                        cv.string,
-                    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-                        cv.socket_timeout,
-                    vol.Optional(CONF_BOUQUET, default=DEFAULT_BOUQUET):
-                        cv.string,
-                    vol.Optional(CONF_PICON, default=DEFAULT_PICON):
-<<<<<<< HEAD
-                                 cv.string,
->>>>>>> pylint corrections.
-=======
-                        cv.string,
->>>>>>> Flake8 indent corrections.
                 }),
             ]),
         })
@@ -174,13 +154,6 @@ class EnigmaDevice(Entity):
             self._opener = urllib.request.build_opener(handler)
             self._opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> pylint corrections.
-=======
->>>>>>> pylint corrections.
     @property
     def get_host(self):
         """Return the host of the device."""
@@ -188,95 +161,41 @@ class EnigmaDevice(Entity):
 
     @property
     def get_port(self):
-<<<<<<< HEAD
-        """Return the port of the device."""
-=======
         """Return the host of the device."""
->>>>>>> pylint corrections.
         return self._port
 
     @property
     def get_name(self):
-<<<<<<< HEAD
-        """Return the name of the device."""
-=======
         """Return the host of the device."""
->>>>>>> pylint corrections.
         return self._name
 
     @property
     def get_username(self):
-<<<<<<< HEAD
-        """Return the username of the device."""
-=======
         """Return the host of the device."""
->>>>>>> pylint corrections.
         return self._username
 
     @property
     def get_password(self):
-<<<<<<< HEAD
-        """Return the password of the device."""
-=======
         """Return the host of the device."""
->>>>>>> pylint corrections.
         return self._password
 
     @property
     def get_timeout(self):
-<<<<<<< HEAD
-        """Return the timeout of the device."""
-=======
         """Return the host of the device."""
->>>>>>> pylint corrections.
         return self._timeout
 
     @property
     def get_bouquet(self):
-<<<<<<< HEAD
-        """Return the bouquet of the device."""
-=======
         """Return the host of the device."""
->>>>>>> pylint corrections.
         return self._bouquet
 
     @property
     def get_picon(self):
-<<<<<<< HEAD
-        """Return the picon of the device."""
-=======
         """Return the host of the device."""
->>>>>>> pylint corrections.
         return self._picon
 
     @property
     def get_opener(self):
-<<<<<<< HEAD
-        """Return the socket of the device."""
-        return self._opener
-=======
         """Return the host of the device."""
         return self._opener
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> pylint corrections.
-=======
->>>>>>> pylint corrections.
-=======
-
->>>>>>> Add missing blank line at the end.

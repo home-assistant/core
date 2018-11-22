@@ -48,21 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 async def get_service(hass, config, discovery_info=None):
     """Initialize the enigma notify service."""
-=======
-def get_service(hass, config, discovery_info=None):
->>>>>>> pylint corrections.
-=======
-async def get_service(hass, config, discovery_info=None):
-<<<<<<< HEAD
-    """Initialize the engima notify service."""
->>>>>>> Missing docstring.
-=======
-    """Initialize the enigma notify service."""
->>>>>>> pylint corrections.
     if config.get(CONF_HOST) is not None:
         enigma = EnigmaNotify(config.get(CONF_HOST),
                               config.get(CONF_PORT),
