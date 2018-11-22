@@ -980,7 +980,7 @@ pyialarm==0.3
 pyicloud==0.9.1
 
 # homeassistant.components.weather.ipma
-pyipma==1.1.4
+pyipma==1.1.7
 
 # homeassistant.components.sensor.irish_rail_transport
 pyirishrail==0.0.2
