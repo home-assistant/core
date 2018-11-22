@@ -179,26 +179,6 @@ class EvoClimateDevice(ClimateDevice):
         else:
             raise err
 
-    def _flatten_json(self, json):                                              # noqa: E501; pylint: disable=no-self-use
-        """Convert a JSON tree into a (flat) dict."""
-        # pylint: disable=invalid-name
-        out = {}
-
-        def _flatten(x, name=''):
-            if isinstance(x, dict):
-                for a in x:
-                    _flatten(x[a], name + a + '_')
-            elif isinstance(x, list):
-                i = 0
-                for a in x:
-                    _flatten(a, name + str(i) + '_')
-                    i += 1
-            else:
-                out[name[:-1]] = x
-
-        _flatten(json)
-        return out
-
     @property
     def name(self) -> str:
         """Return the name to use in the frontend UI."""
@@ -216,7 +196,7 @@ class EvoClimateDevice(ClimateDevice):
         This is state data that is not available otherwise, due to the
         restrictions placed upon ClimateDevice properties, etc. by HA.
         """
-        return self._flatten_json(self._status)
+        return self._status
 
     @property
     def available(self) -> bool:
@@ -467,7 +447,7 @@ class EvoController(EvoClimateDevice):
         if 'dhw' in status:
             del status['dhw']
 
-        return self._flatten_json(status)
+        return status
 
     @property
     def current_operation(self):
