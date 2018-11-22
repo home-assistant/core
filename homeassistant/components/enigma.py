@@ -161,41 +161,40 @@ class EnigmaDevice(Entity):
 
     @property
     def get_port(self):
-        """Return the host of the device."""
+        """Return the port of the device."""
         return self._port
 
     @property
     def get_name(self):
-        """Return the host of the device."""
+        """Return the name of the device."""
         return self._name
 
     @property
     def get_username(self):
-        """Return the host of the device."""
+        """Return the username of the device."""
         return self._username
 
     @property
     def get_password(self):
-        """Return the host of the device."""
+        """Return the password of the device."""
         return self._password
 
     @property
     def get_timeout(self):
-        """Return the host of the device."""
+        """Return the timeout of the device."""
         return self._timeout
 
     @property
     def get_bouquet(self):
-        """Return the host of the device."""
+        """Return the bouquet of the device."""
         return self._bouquet
 
     @property
     def get_picon(self):
-        """Return the host of the device."""
+        """Return the picon of the device."""
         return self._picon
 
     @property
     def get_opener(self):
-        """Return the host of the device."""
+        """Return the socket of the device."""
         return self._opener
-

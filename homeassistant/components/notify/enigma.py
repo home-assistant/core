@@ -18,7 +18,7 @@ import urllib.request
 
 import voluptuous as vol
 
-from homeassistant.components.enigma import (
+from homeassistant.enigma import (
     _LOGGER, DEFAULT_NAME, DEFAULT_PASSWORD,
     DEFAULT_PORT, DEFAULT_USERNAME)
 from homeassistant.components.notify import (

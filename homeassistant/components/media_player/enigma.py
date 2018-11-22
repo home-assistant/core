@@ -23,7 +23,7 @@ import voluptuous as vol
 
 # From homeassitant
 
-from homeassistant.components.enigma import _LOGGER, DOMAIN as ENIGMA_DOMAIN
+from homeassistant.enigma import _LOGGER, DOMAIN as ENIGMA_DOMAIN
 from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, MEDIA_TYPE_TVSHOW, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
@@ -57,10 +57,9 @@ SUPPORT_ENIGMA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 MAX_VOLUME = 100
 
-
 # SETUP PLATFORM
 async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+                         discovery_info=None):
     """Initialize the Enigma device."""
     devices = []
     enigma_list = hass.data[ENIGMA_DOMAIN]
@@ -96,6 +95,7 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
         self._source_names = {}
         self._sources = {}
         self.load_sources()
+
 
     # Load channels from specified bouquet orfrom first available bouquet
     def load_sources(self):
@@ -261,9 +261,7 @@ class EnigmaMediaPlayer(MediaPlayerDevice):
 
             # Concatenate Channel and Title name to display
             self._selected_source = (servicename + ' - ' + eventtitle)
-
         return True
-
 
 # GET - Name
     @property
