@@ -103,8 +103,10 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
 
     _LOGGER.debug(
-        "setup_platform(): Found Controller, id=%s, name=%s (location_idx=%s)",
-        tcs_obj_ref.systemId + " [" + tcs_obj_ref.modelType + "]",
+        "setup_platform(): Found Controller, id=%s [%s], "
+        "name=%s (location_idx=%s)",
+        tcs_obj_ref.systemId,
+        tcs_obj_ref.modelType,
         tcs_obj_ref.location.name,
         loc_idx
     )
@@ -115,8 +117,10 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     for zone_idx in tcs_obj_ref.zones:
         zone_obj_ref = tcs_obj_ref.zones[zone_idx]
         _LOGGER.debug(
-            "setup_platform(): Found Zone, id=%s, name=%s",
-            zone_obj_ref.zoneId + " [" + zone_obj_ref.zone_type + "]",
+            "setup_platform(): Found Zone, id=%s [%s], "
+            "name=%s",
+            zone_obj_ref.zoneId,
+            zone_obj_ref.zone_type,
             zone_obj_ref.name
         )
         zones.append(EvoZone(evo_data, client, zone_obj_ref))
