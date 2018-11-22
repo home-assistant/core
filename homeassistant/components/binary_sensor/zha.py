@@ -7,7 +7,8 @@ at https://home-assistant.io/components/binary_sensor.zha/
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
-from homeassistant.components import zha
+from homeassistant.components.zha.entities import Entity
+from homeassistant.components.zha import helpers
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ CLASS_MAPPING = {
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Zigbee Home Automation binary sensors."""
-    discovery_info = zha.get_discovery_info(hass, discovery_info)
+    discovery_info = helpers.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
@@ -72,13 +73,13 @@ async def _async_setup_remote(hass, config, async_add_entities,
         out_clusters = discovery_info['out_clusters']
         if OnOff.cluster_id in out_clusters:
             cluster = out_clusters[OnOff.cluster_id]
-            await zha.configure_reporting(
+            await helpers.configure_reporting(
                 remote.entity_id, cluster, 0, min_report=0, max_report=600,
                 reportable_change=1
             )
         if LevelControl.cluster_id in out_clusters:
             cluster = out_clusters[LevelControl.cluster_id]
-            await zha.configure_reporting(
+            await helpers.configure_reporting(
                 remote.entity_id, cluster, 0, min_report=1, max_report=600,
                 reportable_change=1
             )
@@ -86,7 +87,7 @@ async def _async_setup_remote(hass, config, async_add_entities,
     async_add_entities([remote], update_before_add=True)
 
 
-class BinarySensor(zha.Entity, BinarySensorDevice):
+class BinarySensor(Entity, BinarySensorDevice):
     """The ZHA Binary Sensor."""
 
     _domain = DOMAIN
@@ -130,16 +131,16 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
         """Retrieve latest state."""
         from zigpy.types.basic import uint16_t
 
-        result = await zha.safe_read(self._endpoint.ias_zone,
-                                     ['zone_status'],
-                                     allow_cache=False,
-                                     only_cache=(not self._initialized))
+        result = await helpers.safe_read(self._endpoint.ias_zone,
+                                         ['zone_status'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
         state = result.get('zone_status', self._state)
         if isinstance(state, (int, uint16_t)):
             self._state = result.get('zone_status', self._state) & 3
 
 
-class Remote(zha.Entity, BinarySensorDevice):
+class Remote(Entity, BinarySensorDevice):
     """ZHA switch/remote controller/button."""
 
     _domain = DOMAIN
@@ -252,7 +253,7 @@ class Remote(zha.Entity, BinarySensorDevice):
     async def async_update(self):
         """Retrieve latest state."""
         from zigpy.zcl.clusters.general import OnOff
-        result = await zha.safe_read(
+        result = await helpers.safe_read(
             self._endpoint.out_clusters[OnOff.cluster_id],
             ['on_off'],
             allow_cache=False,
