@@ -13,7 +13,7 @@ from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ["baidu-aip==1.6.6"]
+REQUIREMENTS = ["baidu-aip==2.2.8"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,21 +31,32 @@ CONF_PITCH = 'pitch'
 CONF_VOLUME = 'volume'
 CONF_PERSON = 'person'
 
+DEFAULT_SPEED = 5
+DEFAULT_PITCH = 5
+DEFAULT_VOLUME = 5
+DEFAULT_PERSON = 0
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
     vol.Required(CONF_APP_ID): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_SECRET_KEY): cv.string,
-    vol.Optional(CONF_SPEED, default=5): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=9)),
-    vol.Optional(CONF_PITCH, default=5): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=9)),
-    vol.Optional(CONF_VOLUME, default=5): vol.All(
+    vol.Optional(CONF_SPEED, default=DEFAULT_SPEED): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=15)),
-    vol.Optional(CONF_PERSON, default=0): vol.All(
+    vol.Optional(CONF_PITCH, default=DEFAULT_PITCH): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=15)),
+    vol.Optional(CONF_VOLUME, default=DEFAULT_VOLUME): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=15)),
+    vol.Optional(CONF_PERSON, default=DEFAULT_PERSON): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=4)),
 })
 
+SUPPORTED_OPTIONS = [
+    CONF_SPEED,
+    CONF_PITCH,
+    CONF_VOLUME,
+    CONF_PERSON,
+]
 
 def get_engine(hass, config):
     """Set up Baidu TTS component."""
@@ -68,7 +79,7 @@ class BaiduTTSProvider(Provider):
             'secretkey': conf.get(CONF_SECRET_KEY),
             }
 
-        self._speech_conf_data = {
+        self._speech_conf_options = {
             'spd': conf.get(CONF_SPEED),
             'pit': conf.get(CONF_PITCH),
             'vol': conf.get(CONF_VOLUME),
@@ -85,6 +96,11 @@ class BaiduTTSProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
+    @property
+    def supported_options(self):
+        """Return list of supported options."""
+        return SUPPORTED_OPTIONS
+
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from BaiduTTS."""
         from aip import AipSpeech
@@ -94,8 +110,18 @@ class BaiduTTSProvider(Provider):
             self._app_data['secretkey']
             )
 
+        if options:
+            present_options = {
+                'spd': options.get(CONF_SPEED, DEFAULT_SPEED),
+                'pit': options.get(CONF_PITCH, DEFAULT_PITCH),
+                'vol': options.get(CONF_VOLUME, DEFAULT_VOLUME),
+                'per': options.get(CONF_PERSON, DEFAULT_PERSON)
+                }
+        else:
+            present_options = self._speech_conf_options
+
         result = aip_speech.synthesis(
-            message, language, 1, self._speech_conf_data)
+            message, language, 1, present_options)
 
         if isinstance(result, dict):
             _LOGGER.error(
