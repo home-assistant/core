@@ -1,5 +1,5 @@
 """
-Platform to retrieve Jewish ritual times for Shabbat & Yom Tov from Hebcal API.
+Sensor to retrieve Jewish ritual times for Shabbat & Yom Tov from Hebcal API.
 
 
 """
@@ -415,7 +415,7 @@ class ShabbatTimes(Entity):
         self._last_update = params[LAST_UPDATE]
         self._title = params[TITLE]
         self._hebrew_title = params[HEBREW_TITLE]
-        _LOGGER.debug('New state: ' + str(self))
+        _LOGGER.debug('New state: ' + str(self.device_state_attributes()))
 
     @property
     def name(self):
