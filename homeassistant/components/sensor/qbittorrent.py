@@ -52,7 +52,7 @@ async def async_setup_platform(hass, config, add_entities,
     for sensor_type in SENSOR_TYPES:
         sensor = QBittorrentSensor(sensor_type, qbittorrent, name)
         dev.append(sensor)
-        sensor.async_update()
+        await sensor.async_update()
 
     add_entities(dev)
 
