@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 REQUIREMENTS = ['evohomeclient==0.2.8']
@@ -148,8 +148,7 @@ def setup(hass, hass_config):
 
         _LOGGER.debug("setup(): evo_data['config']=%s", tmp_loc)
 
-    hass.async_create_task(
-        async_load_platform(hass, 'climate', DOMAIN, {}, hass_config))
+    load_platform(hass, 'climate', DOMAIN, {}, hass_config)
 
     # Inform the Controller when HA has started so it gets it's first update
     @callback
