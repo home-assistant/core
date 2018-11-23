@@ -74,9 +74,11 @@ def setup(hass, hass_config):
     evo_data = hass.data[DATA_EVOHOME] = {}
     evo_data['timers'] = {}
 
-    # use a copy of config since scan_interval can be increased by the hub
+    # use a copy, since scan_interval is rounded up to nearest 60s
     evo_data['params'] = dict(hass_config[DOMAIN])
-    _LOGGER.warn("ZX td=%s", evo_data['params'])
+    td = evo_data['params'][CONF_SCAN_INTERVAL]
+    evo_data['params'][CONF_SCAN_INTERVAL] = \
+         timedelta(seconds=(td.total_seconds() + 59) // 60 * 60)
 
     from evohomeclient2 import EvohomeClient
 
