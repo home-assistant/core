@@ -1,5 +1,6 @@
 """Tests for the Awair sensor platform."""
 
+from contextlib import contextmanager
 from datetime import timedelta
 import json
 import logging
@@ -45,6 +46,15 @@ AIR_DATA_FIXTURE_UPDATED = json.loads(
 AIR_DATA_FIXTURE_UPDATED[0][ATTR_TIMESTAMP] = str(NOW + timedelta(minutes=5))
 
 
+@contextmanager
+def alter_time(retval):
+    """manage multiple time mocks."""
+    patch_one = patch('homeassistant.util.dt.utcnow', return_value=retval)
+    patch_two = patch('homeassistant.util.utcnow', return_value=retval)
+
+    with patch_one, patch_two:
+        yield
+
 async def setup_awair(hass, config=None):
     """Load the Awair platform."""
     devices_json = json.loads(load_fixture('awair_devices.json'))
@@ -58,7 +68,7 @@ async def setup_awair(hass, config=None):
     if config is None:
         config = DISCOVERY_CONFIG
 
-    with devices_patch, air_data_patch:
+    with devices_patch, air_data_patch, alter_time(NOW):
         assert await async_setup_component(hass, SENSOR_DOMAIN, config)
 
     await hass.async_block_till_done()
@@ -206,30 +216,24 @@ async def test_availability(hass):
     future = NOW + timedelta(minutes=30)
     data_patch = patch('python_awair.AwairClient.air_data_latest',
                        return_value=mock_coro(AIR_DATA_FIXTURE))
-    time_patch = patch('homeassistant.util.utcnow',
-                       return_value=future)
-    available_patch = patch('homeassistant.components.sensor.awair.dt.utcnow',
-                            return_value=future)
 
-    with time_patch, data_patch, available_patch:
+    with data_patch, alter_time(future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        assert hass.states.get('sensor.awair_score').state == STATE_UNAVAILABLE
+
+    assert hass.states.get('sensor.awair_score').state == STATE_UNAVAILABLE
 
     future = NOW + timedelta(hours=1)
     fixture = AIR_DATA_FIXTURE_UPDATED
     fixture[0][ATTR_TIMESTAMP] = str(future)
     data_patch = patch('python_awair.AwairClient.air_data_latest',
                        return_value=mock_coro(fixture))
-    time_patch = patch('homeassistant.util.utcnow',
-                       return_value=future)
-    available_patch = patch('homeassistant.components.sensor.awair.dt.utcnow',
-                            return_value=future)
 
-    with time_patch, data_patch, available_patch:
+    with data_patch, alter_time(future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        assert hass.states.get('sensor.awair_score').state == '79'
+
+    assert hass.states.get('sensor.awair_score').state == '79'
 
 
 async def test_async_update(hass):
@@ -239,12 +243,8 @@ async def test_async_update(hass):
     future = NOW + timedelta(minutes=10)
     data_patch = patch('python_awair.AwairClient.air_data_latest',
                        return_value=mock_coro(AIR_DATA_FIXTURE_UPDATED))
-    time_patch = patch('homeassistant.util.utcnow',
-                       return_value=future)
-    available_patch = patch('homeassistant.components.sensor.awair.dt.utcnow',
-                            return_value=future)
 
-    with time_patch, data_patch, available_patch:
+    with data_patch, alter_time(future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -262,19 +262,19 @@ async def test_throttle_async_update(hass):
     """Ensure we throttle updates."""
     await setup_awair(hass)
 
-    with patch('python_awair.AwairClient.air_data_latest',
-               return_value=mock_coro(AIR_DATA_FIXTURE_UPDATED)):
-        entity = hass.data[SENSOR_DOMAIN].get_entity('sensor.awair_score')
+    future = NOW + timedelta(minutes=1)
+    data_patch = patch('python_awair.AwairClient.air_data_latest',
+                       return_value=mock_coro(AIR_DATA_FIXTURE_UPDATED))
 
-        await entity._data.async_update()  # pylint: disable=protected-access
-        await entity.async_update_ha_state()
+    with data_patch, alter_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
-        assert hass.states.get('sensor.awair_score').state == '78'
+    assert hass.states.get('sensor.awair_score').state == '78'
 
-        later = NOW + timedelta(minutes=30)
-        with patch('homeassistant.util.utcnow', return_value=later):
-            # pylint: disable=protected-access
-            await entity._data.async_update()
-            await entity.async_update_ha_state()
+    future = NOW + timedelta(minutes=15)
+    with data_patch, alter_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
-        assert hass.states.get('sensor.awair_score').state == '79'
+    assert hass.states.get('sensor.awair_score').state == '79'
