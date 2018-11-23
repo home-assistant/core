@@ -1,7 +1,7 @@
 """ruamel.yaml utility functions."""
 import logging
 import os
-from os import O_CREAT, O_TRUNC, O_WRONLY
+from os import O_CREAT, O_TRUNC, O_WRONLY, stat_result
 from collections import OrderedDict
 from typing import Union, List, Dict
 
@@ -106,16 +106,15 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
     try:
         try:
             file_stat = os.stat(fname)
-            st_mode = file_stat.st_mode
         except OSError:
-            file_stat = None
-            st_mode = 0o644
+            file_stat = stat_result(
+                (0o644, -1, -1, -1, -1, -1, -1, -1, -1, -1))
         with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC,
-                          st_mode), 'w', encoding='utf-8') \
+                          file_stat.st_mode), 'w', encoding='utf-8') \
                 as temp_file:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
-        if hasattr(os, 'chown') and file_stat:
+        if hasattr(os, 'chown') and file_stat.st_ctime > -1:
             try:
                 os.chown(fname, file_stat.st_uid, file_stat.st_gid)
             except OSError:
