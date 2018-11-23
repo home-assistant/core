@@ -302,10 +302,9 @@ class DysonPureCoolDevice(FanEntity):
         self.hass = hass
         self._device = device
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        yield from self.hass.async_add_job(
+        self.hass.async_add_job(
             self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
@@ -344,13 +343,11 @@ class DysonPureCoolDevice(FanEntity):
 
     def turn_off(self, **kwargs):
         """Turn off the fan."""
-
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.turn_off()
 
     def oscillate(self, oscillating: bool) -> None:
         """Turn on/off oscillating."""
-
         _LOGGER.debug("Turn oscillation %s for device %s", oscillating,
                       self.name)
 
@@ -361,7 +358,6 @@ class DysonPureCoolDevice(FanEntity):
 
     def set_night_mode(self, night_mode: bool) -> None:
         """Turn on/off oscillating."""
-
         _LOGGER.debug("Turn night mode %s for device %s", night_mode,
                       self.name)
 
@@ -372,7 +368,6 @@ class DysonPureCoolDevice(FanEntity):
     
     def set_auto_mode(self, auto_mode: bool) -> None:
         """Turn on/off oscillating."""
-
         _LOGGER.debug("Turn auto mode %s for device %s", auto_mode,
                       self.name)
 
@@ -383,14 +378,13 @@ class DysonPureCoolDevice(FanEntity):
 
     def set_angle(self, angle_low: int, angle_high: int) -> None:
         """Set device angle."""
-
-        _LOGGER.debug("set low %s and high angle %s for device %s", angle_low, angle_high,
-                      self.name)
+        _LOGGER.debug("set low %s and high angle %s for device %s",
+                      angle_low, angle_high, self.name)
         self._device.enable_oscillation(angle_low, angle_high)
 
-    def set_flow_direction_front(self, flow_direction_front: bool) -> None:
+    def set_flow_direction_front(self,
+                                 flow_direction_front: bool) -> None:
         """Turn on/off oscillating."""
-
         _LOGGER.debug("Set frontal flow direction to %s for device %s",
                       flow_direction_front,
                       self.name)
@@ -402,7 +396,6 @@ class DysonPureCoolDevice(FanEntity):
 
     def set_timer(self, timer) -> None:
         """Set timer."""
-
         _LOGGER.debug("Set timer to %s for device %s", timer,
                       self.name)
 
