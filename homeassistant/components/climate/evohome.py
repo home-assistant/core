@@ -34,7 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
+    dispatcher_send,
     async_dispatcher_connect
 )
 
@@ -584,4 +584,4 @@ class EvoController(EvoClimateDevice):
 
         # inform the child devices that state data has been updated
         pkt = {'sender': 'controller', 'signal': 'refresh', 'to': EVO_CHILD}
-        async_dispatcher_send(self.hass, DISPATCHER_EVOHOME, pkt)
+        dispatcher_send(self.hass, DISPATCHER_EVOHOME, pkt)
