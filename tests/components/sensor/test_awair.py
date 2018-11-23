@@ -55,6 +55,7 @@ def alter_time(retval):
     with patch_one, patch_two:
         yield
 
+
 async def setup_awair(hass, config=None):
     """Load the Awair platform."""
     devices_json = json.loads(load_fixture('awair_devices.json'))
