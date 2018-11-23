@@ -212,7 +212,8 @@ class DysonParticulateMatter25Sensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson pm25 sensor."""
         super().__init__(device, 'particulate_matter')
-        self._name = "{} particulate matter 2.5 μg/m3".format(self._device.name)
+        self._name = "{} particulate matter 2.5 μg/m3"\
+            .format(self._device.name)
 
     @property
     def state(self):
@@ -266,7 +267,8 @@ class DysonVolatileOrganicCompoundsSensor(DysonSensor):
     def state(self):
         """Return voc level."""
         if self._device.state:
-            return int(self._device.environmental_state.volatile_organic_compounds)
+            return int(self._device.environmental_state.
+                       volatile_organic_compounds)
         return None
 
 

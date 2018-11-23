@@ -11,6 +11,7 @@ from tests.common import get_test_home_assistant
 from libpurecool.const import FanSpeed, FanMode, NightMode, Oscillation
 from libpurecool.dyson_pure_state import DysonPureCoolState
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+from libpurecool.dyson_pure_cool import DysonPureCool
 
 
 class MockDysonState(DysonPureCoolState):
@@ -64,6 +65,14 @@ def _get_device_on():
     return device
 
 
+def _get_purecool_device_on():
+    """Return a valid state on."""
+    device = mock.Mock(spec=DysonPureCool)
+    device.name = "Device_name"
+    device.state = mock.Mock()
+    return device
+
+
 class DysonTest(unittest.TestCase):
     """Dyson Sensor component test class."""
 
@@ -85,13 +94,16 @@ class DysonTest(unittest.TestCase):
     def test_setup_component(self):
         """Test setup component with devices."""
         def _add_device(devices):
-            assert len(devices) == 1
+            assert len(devices) == 2
             assert devices[0].name == "Device_name"
 
         device_fan = _get_device_on()
+        device_purecool_fan = _get_purecool_device_on()
         device_non_fan = _get_device_off()
 
-        self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
+        self.hass.data[dyson.DYSON_DEVICES] = [device_fan,
+                                               device_purecool_fan,
+                                               device_non_fan]
         dyson.setup_platform(self.hass, None, _add_device)
 
     @mock.patch('libpurecool.dyson.DysonAccount.devices',
@@ -111,8 +123,8 @@ class DysonTest(unittest.TestCase):
             dyson.DOMAIN,
             mocked_devices.return_value[0].name))
 
-        assert dyson.ATTR_IS_NIGHT_MODE in state.attributes
-        assert dyson.ATTR_IS_AUTO_MODE in state.attributes
+        assert dyson.ATTR_NIGHT_MODE in state.attributes
+        assert dyson.ATTR_AUTO_MODE in state.attributes
         assert ATTR_SPEED in state.attributes
         assert ATTR_SPEED_LIST in state.attributes
         assert ATTR_OSCILLATING in state.attributes
@@ -161,11 +173,11 @@ class DysonTest(unittest.TestCase):
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
         assert not component.should_poll
-        component.night_mode(True)
+        component.set_night_mode(True)
         set_config = device.set_configuration
         set_config.assert_called_with(night_mode=NightMode.NIGHT_MODE_ON)
 
-        component.night_mode(False)
+        component.set_night_mode(False)
         set_config = device.set_configuration
         set_config.assert_called_with(night_mode=NightMode.NIGHT_MODE_OFF)
 
@@ -173,22 +185,22 @@ class DysonTest(unittest.TestCase):
         """Test night mode."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        assert not component.is_night_mode
+        assert not component.night_mode
 
         device = _get_device_off()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        assert component.is_night_mode
+        assert component.night_mode
 
     def test_dyson_turn_auto_mode(self):
         """Test turn on/off fan with auto mode."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
         assert not component.should_poll
-        component.auto_mode(True)
+        component.set_auto_mode(True)
         set_config = device.set_configuration
         set_config.assert_called_with(fan_mode=FanMode.AUTO)
 
-        component.auto_mode(False)
+        component.set_auto_mode(False)
         set_config = device.set_configuration
         set_config.assert_called_with(fan_mode=FanMode.FAN)
 
@@ -196,11 +208,11 @@ class DysonTest(unittest.TestCase):
         """Test auto mode."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        assert not component.is_auto_mode
+        assert not component.auto_mode
 
         device = _get_device_auto()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        assert component.is_auto_mode
+        assert component.auto_mode
 
     def test_dyson_turn_on_speed(self):
         """Test turn on fan with specified speed."""
@@ -325,9 +337,39 @@ class DysonTest(unittest.TestCase):
         self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
                                 {"entity_id": "fan.bed_room",
                                  "night_mode": True}, True)
-        assert not dyson_device.night_mode.called
+        assert not dyson_device.set_night_mode.called
 
         self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
                                 {"entity_id": "fan.living_room",
                                  "night_mode": True}, True)
-        dyson_device.night_mode.assert_called_with(True)
+        dyson_device.set_night_mode.assert_called_with(True)
+
+    @mock.patch('libpurecool.dyson.DysonAccount.devices',
+                return_value=[_get_purecool_device_on()])
+    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+    def test_async_purecool_added_to_hass(self, mocked_login, mocked_devices):
+        """Test async added to hass."""
+        setup_component(self.hass, dyson_parent.DOMAIN, {
+            dyson_parent.DOMAIN: {
+                dyson_parent.CONF_USERNAME: "email",
+                dyson_parent.CONF_PASSWORD: "password",
+                dyson_parent.CONF_LANGUAGE: "US",
+                }
+            })
+        self.hass.block_till_done()
+        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
+        assert mocked_devices.return_value[0].add_message_listener.called
+
+    def test_dyson_purecool_set_speed(self):
+        """Test set fan speed for purecool device."""
+        device = _get_purecool_device_on()
+        component = dyson.DysonPureCoolDevice(self.hass, device)
+        assert not component.should_poll
+        component.set_speed("1")
+        set_config = device.set_configuration
+        set_config.assert_called_with(fan_speed=FanSpeed.FAN_SPEED_1)
+
+        component.set_speed("AUTO")
+        set_config = device.set_configuration
+        set_config.assert_called_with(fan_mode=FanMode.AUTO)
+
