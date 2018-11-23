@@ -1140,7 +1140,7 @@ pysma==0.2.2
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
 # homeassistant.components.switch.snmp
-pysnmp==4.4.5
+pysnmp==4.4.6
 
 # homeassistant.components.sonos
 pysonos==0.0.5
