@@ -104,13 +104,18 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
     yaml.indent(sequence=4, offset=2)
     tmp_fname = fname + "__TEMP__"
     try:
-        file_stat = os.stat(fname)
+        try:
+            file_stat = os.stat(fname)
+            st_mode = file_stat.st_mode
+        except OSError:
+            file_stat = None
+            st_mode = 0o644
         with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC,
-                          file_stat.st_mode), 'w', encoding='utf-8') \
+                          st_mode), 'w', encoding='utf-8') \
                 as temp_file:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
-        if hasattr(os, 'chown'):
+        if hasattr(os, 'chown') and file_stat:
             try:
                 os.chown(fname, file_stat.st_uid, file_stat.st_gid)
             except OSError:
