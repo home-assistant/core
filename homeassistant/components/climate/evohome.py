@@ -177,8 +177,7 @@ class EvoClimateDevice(ClimateDevice):
                 new_interval,
             )
 
-            self._timers['statusUpdated'] = datetime.now() + \
-                timedelta(seconds=new_interval * 3)
+            self._timers['statusUpdated'] = datetime.now() + new_interval * 3
 
         else:
             raise err
@@ -562,7 +561,7 @@ class EvoController(EvoClimateDevice):
         # should the latest evohome state data be retreived this cycle?
         timeout = datetime.now() + timedelta(seconds=55)
         expired = timeout > self._timers['statusUpdated'] + \
-            timedelta(seconds=self._params[CONF_SCAN_INTERVAL])
+            self._params[CONF_SCAN_INTERVAL]
 
         if not expired:
             return

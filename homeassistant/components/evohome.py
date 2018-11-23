@@ -14,6 +14,7 @@ https://home-assistant.io/components/evohome/
 #     0-1 DHW controller, (a.k.a. Boiler)
 # The TCS & Zones are implemented as Climate devices, Boiler as a WaterHeater
 
+from datetime import timedelta
 import logging
 
 from requests.exceptions import HTTPError
@@ -38,8 +39,8 @@ DATA_EVOHOME = 'data_' + DOMAIN
 DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
 
 CONF_LOCATION_IDX = 'location_idx'
-SCAN_INTERVAL_DEFAULT = 300
-SCAN_INTERVAL_MINIMUM = 180
+SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
+SCAN_INTERVAL_MINIMUM = timedelta(seconds=180)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -48,9 +49,13 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_LOCATION_IDX, default=0):
             cv.positive_int,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT):
-            vol.All(vol.Coerce(int), vol.Range(min=SCAN_INTERVAL_MINIMUM)),
+            vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+# cv.time_period,
+# vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
+# vol.All(vol.Coerce(int), vol.Range(min=SCAN_INTERVAL_MINIMUM)),
 
 # These are used to help prevent E501 (line too long) violations.
 GWS = 'gateways'
@@ -69,10 +74,9 @@ def setup(hass, hass_config):
     evo_data = hass.data[DATA_EVOHOME] = {}
     evo_data['timers'] = {}
 
-    # use a copy of config since scan_interval is rounded up to nearest 60s
+    # use a copy of config since scan_interval can be increased by the hub
     evo_data['params'] = dict(hass_config[DOMAIN])
-    evo_data['params'][CONF_SCAN_INTERVAL] = \
-        (hass_config[DOMAIN][CONF_SCAN_INTERVAL] + 59) // 60 * 60
+    _LOGGER.warn("ZX td=%s", evo_data['params'])
 
     from evohomeclient2 import EvohomeClient
 
