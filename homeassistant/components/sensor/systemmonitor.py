@@ -173,7 +173,7 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'last_boot':
             self._state = dt_util.as_local(
                 dt_util.utc_from_timestamp(psutil.boot_time())
-            ).date().isoformat()
+            ).isoformat()
         elif self.type == 'load_1m':
             self._state = os.getloadavg()[0]
         elif self.type == 'load_5m':
