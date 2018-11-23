@@ -117,7 +117,9 @@ async def test_process_image(hass, mock_app, mock_image):
 
     data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
 
-    with patch.object(Model, 'predict_by_base64', return_value=MOCK_RESPONSE):
+    with patch.object(
+        'clarifai.rest.client.Model', 'predict_by_base64', 
+        return_value=MOCK_RESPONSE):
         await hass.services.async_call(ip.DOMAIN,
                                        ip.SERVICE_SCAN,
                                        service_data=data)
@@ -134,7 +136,8 @@ async def test_process_with_error(hass, mock_app, mock_image,
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
     data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-    with patch.object(Model, 'predict_by_base64', side_effect=ERROR):
+    with patch.object(
+        'clarifai.rest.client.Model', 'predict_by_base64', side_effect=ERROR):
         await hass.services.async_call(ip.DOMAIN,
                                        ip.SERVICE_SCAN,
                                        service_data=data)
