@@ -76,9 +76,8 @@ def setup(hass, hass_config):
 
     # use a copy, since scan_interval is rounded up to nearest 60s
     evo_data['params'] = dict(hass_config[DOMAIN])
-    td = evo_data['params'][CONF_SCAN_INTERVAL]
-    evo_data['params'][CONF_SCAN_INTERVAL] = \
-        timedelta(seconds=(td.total_seconds() + 59) // 60 * 60)
+    td = evo_data['params'][CONF_SCAN_INTERVAL]                                 # noqa E501; pylint: disable=invalid-name
+    td = timedelta(seconds=(td.total_seconds() + 59) // 60 * 60)
 
     from evohomeclient2 import EvohomeClient
 

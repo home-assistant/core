@@ -321,7 +321,7 @@ class EvoZone(EvoClimateDevice):
         try:
             self._obj.set_temperature(temperature, until)
         except HTTPError as err:
-            self._handle_exception("HTTPError", str(err)):                      # noqa: E501; pylint: disable=no-member
+            self._handle_exception("HTTPError", str(err))                       # noqa: E501; pylint: disable=no-member
 
     def set_temperature(self, **kwargs):
         """Set new target temperature, indefinitely."""
@@ -371,7 +371,7 @@ class EvoZone(EvoClimateDevice):
             try:
                 self._obj.cancel_temp_override(self._obj)
             except HTTPError as err:
-                self._handle_exception("HTTPError", str(err)):                  # noqa: E501; pylint: disable=no-member
+                self._handle_exception("HTTPError", str(err))                   # noqa: E501; pylint: disable=no-member
 
         elif operation_mode == EVO_TEMPOVER:
             _LOGGER.error(
