@@ -25,8 +25,6 @@ REQUIREMENTS = ['websocket-client==0.37.0']
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOST_ENTITY_ID = 'host_entity_id'
-
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'GPM Desktop Player'
 DEFAULT_PORT = 5672
@@ -44,7 +42,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_HOST_ENTITY_ID): cv.string,
 })
 
 
@@ -111,7 +108,6 @@ def setup_gpmdp(hass, config, code, add_entities):
     """Set up gpmdp."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
-    host_entity_id = config.get(CONF_HOST_ENTITY_ID)
     port = config.get(CONF_PORT)
     url = 'ws://{}:{}'.format(host, port)
 
@@ -123,7 +119,7 @@ def setup_gpmdp(hass, config, code, add_entities):
         configurator = hass.components.configurator
         configurator.request_done(_CONFIGURING.pop('gpmdp'))
 
-    add_entities([GPMDP(name, url, host_entity_id, code)], True)
+    add_entities([GPMDP(name, url, code)], True)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -143,14 +139,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class GPMDP(MediaPlayerDevice):
     """Representation of a GPMDP."""
 
-    def __init__(self, name, url, host_entity_id, code):
+    def __init__(self, name, url, code):
         """Initialize the media player."""
         from websocket import create_connection
         self._connection = create_connection
         self._url = url
         self._authorization_code = code
         self._name = name
-        self._host_entity_id = host_entity_id
         self._status = STATE_OFF
         self._ws = None
         self._title = None
@@ -160,6 +155,7 @@ class GPMDP(MediaPlayerDevice):
         self._duration = None
         self._volume = None
         self._request_id = 0
+        self._available = True
 
     def get_ws(self):
         """Check if the websocket is setup and connected."""
@@ -205,29 +201,32 @@ class GPMDP(MediaPlayerDevice):
     def update(self):
         """Get the latest details from the player."""
         time.sleep(1)
-
-        if self._host_entity_id is not None:
-            state_obj = self.hass.states.get(self._host_entity_id)
-            if (state_obj is None) or (state_obj.state == 'off'):
-                self._status = 'off'
+        try:
+            self._available = True
+            playstate = self.send_gpmdp_msg('playback', 'getPlaybackState')
+            if playstate is None:
                 return
+            self._status = PLAYBACK_DICT[str(playstate['value'])]
+            time_data = self.send_gpmdp_msg('playback', 'getCurrentTime')
+            if time_data is not None:
+                self._seek_position = int(time_data['value'] / 1000)
+            track_data = self.send_gpmdp_msg('playback', 'getCurrentTrack')
+            if track_data is not None:
+                self._title = track_data['value']['title']
+                self._artist = track_data['value']['artist']
+                self._albumart = track_data['value']['albumArt']
+                self._duration = int(track_data['value']['duration'] / 1000)
+            volume_data = self.send_gpmdp_msg('volume', 'getVolume')
+            if volume_data is not None:
+                self._volume = volume_data['value'] / 100
+        except:
+            self._available = False
 
-        playstate = self.send_gpmdp_msg('playback', 'getPlaybackState')
-        if playstate is None:
-            return
-        self._status = PLAYBACK_DICT[str(playstate['value'])]
-        time_data = self.send_gpmdp_msg('playback', 'getCurrentTime')
-        if time_data is not None:
-            self._seek_position = int(time_data['value'] / 1000)
-        track_data = self.send_gpmdp_msg('playback', 'getCurrentTrack')
-        if track_data is not None:
-            self._title = track_data['value']['title']
-            self._artist = track_data['value']['artist']
-            self._albumart = track_data['value']['albumArt']
-            self._duration = int(track_data['value']['duration'] / 1000)
-        volume_data = self.send_gpmdp_msg('volume', 'getVolume')
-        if volume_data is not None:
-            self._volume = volume_data['value'] / 100
+
+    @property
+    def available(self):
+        """Return if media player is available"""
+        return self._available
 
     @property
     def media_content_type(self):
