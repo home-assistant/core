@@ -48,7 +48,7 @@ AIR_DATA_FIXTURE_UPDATED[0][ATTR_TIMESTAMP] = str(NOW + timedelta(minutes=5))
 
 @contextmanager
 def alter_time(retval):
-    """manage multiple time mocks."""
+    """Manage multiple time mocks."""
     patch_one = patch('homeassistant.util.dt.utcnow', return_value=retval)
     patch_two = patch('homeassistant.util.utcnow', return_value=retval)
 
