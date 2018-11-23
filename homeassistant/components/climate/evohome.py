@@ -152,9 +152,8 @@ class EvoClimateDevice(ClimateDevice):
 
     @callback
     def _connect(self, packet):
-        if packet['to'] & self._type:
-            if packet['signal'] == 'refresh':
-                self.async_schedule_update_ha_state(force_refresh=True)
+        if packet['to'] & self._type and packet['signal'] == 'refresh':
+            self.async_schedule_update_ha_state(force_refresh=True)
 
     def _handle_requests_exceptions(self, err):
         # evohomeclient v2 api (>=0.2.7) now exposes requests exceptions, e.g.:
