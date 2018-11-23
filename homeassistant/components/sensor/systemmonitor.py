@@ -41,7 +41,6 @@ SENSOR_TYPES = {
     'packets_out': ['Packets out', ' ', 'mdi:server-network'],
     'process': ['Process', ' ', 'mdi:memory'],
     'processor_use': ['Processor use', '%', 'mdi:memory'],
-    'since_last_boot': ['Since last boot', '', 'mdi:clock'],
     'swap_free': ['Swap free', 'MiB', 'mdi:harddisk'],
     'swap_use': ['Swap use', 'MiB', 'mdi:harddisk'],
     'swap_use_percent': ['Swap use (percent)', '%', 'mdi:harddisk'],
@@ -174,10 +173,7 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'last_boot':
             self._state = dt_util.as_local(
                 dt_util.utc_from_timestamp(psutil.boot_time())
-            ).date().isoformat()
-        elif self.type == 'since_last_boot':
-            self._state = dt_util.utcnow() - dt_util.utc_from_timestamp(
-                psutil.boot_time())
+            ).isoformat()
         elif self.type == 'load_1m':
             self._state = os.getloadavg()[0]
         elif self.type == 'load_5m':
