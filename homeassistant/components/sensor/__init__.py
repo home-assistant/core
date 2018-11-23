@@ -28,7 +28,7 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
-    DEVICE_CLASS_TIMESTAMP, # timestamp (ISO8601)
+    DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
     DEVICE_CLASS_PRESSURE,  # pressure (hPa/mbar)
 ]
 
