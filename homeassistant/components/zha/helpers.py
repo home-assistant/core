@@ -9,24 +9,6 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_discovery_info(hass, discovery_info):
-    """Get the full discovery info for a device.
-
-    Some of the info that needs to be passed to platforms is not JSON
-    serializable, so it cannot be put in the discovery_info dictionary. This
-    component places that info we need to pass to the platform in hass.data,
-    and this function is a helper for platforms to retrieve the complete
-    discovery info.
-    """
-    if discovery_info is None:
-        return
-
-    import homeassistant.components.zha.const as zha_const
-    discovery_key = discovery_info.get('discovery_key', None)
-    all_discovery_info = hass.data.get(zha_const.DISCOVERY_KEY, {})
-    return all_discovery_info.get(discovery_key, None)
-
-
 async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
     """Swallow all exceptions from network read.
 
