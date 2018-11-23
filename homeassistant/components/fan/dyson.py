@@ -390,7 +390,7 @@ class DysonPureCoolDevice(FanEntity):
                       self.name)
 
         if flow_direction_front:
-            self.enable_frontal_direction()
+            self._device.enable_frontal_direction()
         else:
             self._device.disable_frontal_direction()
 
@@ -434,7 +434,7 @@ class DysonPureCoolDevice(FanEntity):
 
     @property
     def auto_mode(self):
-        """Return Night mode."""
+        """Return Auto mode."""
         return self._device.state.auto_mode == "ON"
 
     @property
