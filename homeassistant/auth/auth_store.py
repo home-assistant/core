@@ -18,7 +18,6 @@ STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'
 GROUP_NAME_ADMIN = 'Administrators'
 GROUP_NAME_READ_ONLY = 'Read Only'
-_UNDEF = object()
 
 
 class AuthStore:
@@ -134,13 +133,21 @@ class AuthStore:
         self._users.pop(user.id)
         self._async_schedule_save()
 
-    async def async_update_user(self, user: models.User, name=_UNDEF,
-                                is_active=_UNDEF, group_ids=_UNDEF):
+    async def async_update_user(
+            self, user: models.User, name: Optional[str] = None,
+            is_active: Optional[bool] = None,
+            group_ids: Optional[List[str]] = None) -> None:
         """Update a user."""
-        if group_ids is not _UNDEF:
-            groups = [self._groups.get(grid) for grid in group_ids]
-            if any(group is None for group in groups):
-                raise ValueError("Invalid group specified.")
+        assert self._groups is not None
+
+        if group_ids is not None:
+            groups = []
+            for grid in group_ids:
+                group = self._groups.get(grid)
+                if group is None:
+                    raise ValueError("Invalid group specified.")
+                groups.append(group)
+
             user.groups = groups
             user.invalidate_permission_cache()
 
@@ -148,7 +155,7 @@ class AuthStore:
                 ('name', name),
                 ('is_active', is_active),
         ):
-            if value is not _UNDEF:
+            if value is not None:
                 setattr(user, attr_name, value)
 
         self._async_schedule_save()

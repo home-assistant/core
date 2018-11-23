@@ -133,7 +133,8 @@ class AuthManager:
         return None
 
     async def async_create_system_user(
-            self, name: str, group_ids: List[str] = None) -> models.User:
+            self, name: str,
+            group_ids: Optional[List[str]] = None) -> models.User:
         """Create a system user."""
         user = await self._store.async_create_user(
             name=name,
@@ -218,10 +219,11 @@ class AuthManager:
             'user_id': user.id
         })
 
-    async def async_update_user(self, user: models.User, name=None,
-                                group_ids=None):
+    async def async_update_user(self, user: models.User,
+                                name: Optional[str] = None,
+                                group_ids: Optional[List[str]] = None) -> None:
         """Update a user."""
-        kwargs = {}
+        kwargs = {}  # type: Dict[str,Any]
         if name is not None:
             kwargs['name'] = name
         if group_ids is not None:

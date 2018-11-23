@@ -49,7 +49,7 @@ class User:
     )  # type: Dict[str, RefreshToken]
 
     _permissions = attr.ib(
-        type=perm_mdl.PolicyPermissions,
+        type=Optional[perm_mdl.PolicyPermissions],
         init=False,
         cmp=False,
         default=None,
@@ -79,7 +79,7 @@ class User:
         return self.is_active and any(
             gr.id == GROUP_ID_ADMIN for gr in self.groups)
 
-    def invalidate_permission_cache(self):
+    def invalidate_permission_cache(self) -> None:
         """Invalidate permission cache."""
         self._permissions = None
 
