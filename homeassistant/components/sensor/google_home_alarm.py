@@ -76,6 +76,11 @@ class GoogleHomeAlarmSensor(Entity):
         return 'mdi:alarm'
 
     @property
+    def device_class(self):
+        """Return the device class."""
+        return 'timestamp'
+
+    @property
     def available(self):
         """Return the availability state."""
         return self._available
