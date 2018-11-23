@@ -57,7 +57,7 @@ SCHEMA_MIGRATE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_SAVE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_SAVE_CONFIG,
     vol.Required('config'): vol.Any(str, Dict),
-    vol.Optional('format', default=FORMAT_YAML):
+    vol.Optional('format', default=FORMAT_JSON):
         vol.Any(FORMAT_JSON, FORMAT_YAML),
 })
 
@@ -212,7 +212,7 @@ def migrate_config(fname: str) -> None:
         yaml.save_yaml(fname, config)
 
 
-def save_config(fname: str, config, data_format: str = FORMAT_YAML) -> None:
+def save_config(fname: str, config, data_format: str = FORMAT_JSON) -> None:
     """Save config to file."""
     if data_format == FORMAT_YAML:
         config = yaml.yaml_to_object(config)
@@ -541,7 +541,7 @@ async def websocket_lovelace_save_config(hass, connection, msg):
     """Save Lovelace UI configuration."""
     return await hass.async_add_executor_job(
         save_config, hass.config.path(LOVELACE_CONFIG_FILE), msg['config'],
-        msg.get('format', FORMAT_YAML))
+        msg.get('format', FORMAT_JSON))
 
 
 @websocket_api.async_response
