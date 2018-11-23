@@ -78,7 +78,7 @@ def setup(hass, hass_config):
     evo_data['params'] = dict(hass_config[DOMAIN])
     td = evo_data['params'][CONF_SCAN_INTERVAL]
     evo_data['params'][CONF_SCAN_INTERVAL] = \
-         timedelta(seconds=(td.total_seconds() + 59) // 60 * 60)
+        timedelta(seconds=(td.total_seconds() + 59) // 60 * 60)
 
     from evohomeclient2 import EvohomeClient
 
