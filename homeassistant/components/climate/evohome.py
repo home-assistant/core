@@ -156,11 +156,6 @@ class EvoClimateDevice(ClimateDevice):
             self.async_schedule_update_ha_state(force_refresh=True)
 
     def _handle_requests_exceptions(self, err):
-        # evohomeclient v2 api (>=0.2.7) now exposes requests exceptions, e.g.:
-        # - HTTP_BAD_REQUEST, is usually bad user credentials
-        # - HTTP_TOO_MANY_REQUESTS, is api usage limit exceeded
-        # - HTTP_SERVICE_UNAVAILABLE, is often vendor's fault
-
         if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
             # execute a backoff: pause, and also reduce rate
             old_interval = self._params[CONF_SCAN_INTERVAL]
@@ -179,7 +174,7 @@ class EvoClimateDevice(ClimateDevice):
             self._timers['statusUpdated'] = datetime.now() + new_interval * 3
 
         else:
-            raise err  # we don't handle any other exception
+            raise err  # we dont handle any other HTTPErrors
 
     @property
     def name(self) -> str:
