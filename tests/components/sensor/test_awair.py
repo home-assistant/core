@@ -241,8 +241,10 @@ async def test_async_update(hass):
                        return_value=mock_coro(AIR_DATA_FIXTURE_UPDATED))
     time_patch = patch('homeassistant.util.utcnow',
                        return_value=future)
+    available_patch = patch('homeassistant.components.sensor.awair.dt.utcnow',
+                            return_value=future)
 
-    with time_patch, data_patch:
+    with time_patch, data_patch, available_patch:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
