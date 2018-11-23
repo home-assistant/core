@@ -79,6 +79,10 @@ class User:
         return self.is_active and any(
             gr.id == GROUP_ID_ADMIN for gr in self.groups)
 
+    def invalidate_permission_cache(self):
+        """Invalidate permission cache."""
+        self._permissions = None
+
 
 @attr.s(slots=True)
 class RefreshToken:
