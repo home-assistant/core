@@ -53,10 +53,6 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-# cv.time_period,
-# vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
-# vol.All(vol.Coerce(int), vol.Range(min=SCAN_INTERVAL_MINIMUM)),
-
 # These are used to help prevent E501 (line too long) violations.
 GWS = 'gateways'
 TCS = 'temperatureControlSystems'
@@ -76,8 +72,9 @@ def setup(hass, hass_config):
 
     # use a copy, since scan_interval is rounded up to nearest 60s
     evo_data['params'] = dict(hass_config[DOMAIN])
-    td = evo_data['params'][CONF_SCAN_INTERVAL]                                 # noqa E501; pylint: disable=invalid-name
-    td = timedelta(seconds=(td.total_seconds() + 59) // 60 * 60)
+    scan_interval = evo_data['params'][CONF_SCAN_INTERVAL]
+    scan_interval = \
+        timedelta(minutes=(scan_interval.total_seconds() + 59) // 60)
 
     from evohomeclient2 import EvohomeClient
 

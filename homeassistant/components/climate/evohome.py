@@ -179,7 +179,7 @@ class EvoClimateDevice(ClimateDevice):
             self._timers['statusUpdated'] = datetime.now() + new_interval * 3
 
         else:
-            raise err
+            raise err  # we don't handle any other exception
 
     @property
     def name(self) -> str:
