@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.history_values/
 """
 
 import datetime
+from decimal import Decimal, InvalidOperation
 import logging
 import math
 
@@ -203,6 +204,9 @@ class HistoryValuesSensor(Entity):
             self.value = STATE_UNKNOWN
             return
 
+        history_list = [
+            state for state in history_list if state.state != STATE_UNKNOWN]
+
         if self._type in [TYPE_LOW, TYPE_PEAK, TYPE_RANGE]:
             value = self.get_min_max_range(history_list)[self._type]
         if self._type == TYPE_AVG:
@@ -239,7 +243,7 @@ class HistoryValuesSensor(Entity):
 
     @callback
     def get_average(self, state_list, end, now):
-        """Calculate and return the average value of @state_list."""
+        """Calculate and return the time-weighted average of @state_list."""
         if state_list is None:
             return
         total_value = 0
@@ -247,9 +251,6 @@ class HistoryValuesSensor(Entity):
         total_period = datetime.timedelta(seconds=0)
         last_idx = len(state_list)-1
         for state in state_list:
-            if state.state == STATE_UNKNOWN:
-                # Don't take this into account at all.
-                continue
             current_prec = self.get_precision(float(state.state))
             if current_prec > precision:
                 precision = current_prec
@@ -275,14 +276,13 @@ class HistoryValuesSensor(Entity):
         if state_list is None:
             return
         high = low = None
-        precision = 0
         for state in state_list:
-            if state.state == STATE_UNKNOWN:
+            try:
+                new = Decimal(state.state)
+            except (InvalidOperation, TypeError):
+                _LOGGER.error("%s: Not a numeric value: %s",
+                              self.entity_id, state.state)
                 continue
-            current_prec = self.get_precision(float(state.state))
-            if current_prec > precision:
-                precision = current_prec
-            new = float(state.state)
             if high is None or new > high:
                 high = new
             if low is None or new < low:
@@ -290,8 +290,7 @@ class HistoryValuesSensor(Entity):
         if high is None:  # low will be None as well
             val_range = None
         else:
-            formatstr = '{:.' + str(precision) + 'f}'
-            val_range = float(formatstr.format(high - low))
+            val_range = high - low
         return {
             TYPE_LOW: low,
             TYPE_PEAK: high,
