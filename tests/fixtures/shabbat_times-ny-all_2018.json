@@ -1,0 +1,2741 @@
+{
+  "latitude": "40.7128",
+  "location": {
+    "tzid": "America/New_York",
+    "geo": "pos",
+    "latitude": "40.7128",
+    "longitude": "-74.0060",
+    "title": "40.7128, -74.0060, America/New_York"
+  },
+  "longitude": "-74.0060",
+  "title": "Hebcal 2018 40.7128, -74.0060, America/New_York",
+  "items": [
+    {
+      "title": "Candle lighting: 4:25pm",
+      "date": "2018-01-05T16:25:00-05:00",
+      "hebrew": "הדלקת נרות",
+      "category": "candles"
+    },
+    {
+      "hebrew": "פרשת שמות",
+      "link": "https://www.hebcal.com/sedrot/shemot",
+      "date": "2018-01-06",
+      "title": "Parashat Shemot",
+      "category": "parashat",
+      "leyning": {
+        "1": "Exodus 1:1 - 1:17",
+        "2": "Exodus 1:18 - 2:10",
+        "3": "Exodus 2:11 - 2:25",
+        "4": "Exodus 3:1 - 3:15",
+        "5": "Exodus 3:16 - 4:17",
+        "6": "Exodus 4:18 - 4:31",
+        "7": "Exodus 5:1 - 6:1",
+        "torah": "Exodus 1:1 - 6:1",
+        "maftir": "Exodus 5:22 - 6:1",
+        "triennial": {
+          "1": "Exodus 3:1 - 3:6",
+          "2": "Exodus 3:7 - 3:10",
+          "3": "Exodus 3:11 - 3:15",
+          "4": "Exodus 3:16 - 3:22",
+          "5": "Exodus 4:1 - 4:5",
+          "6": "Exodus 4:6 - 4:9",
+          "7": "Exodus 4:10 - 4:17",
+          "maftir": "Exodus 4:14 - 4:17"
+        },
+        "haftarah": "Isaiah 27:6 - 28:13; 29:22 - 29:23"
+      }
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-01-06T17:37:00-05:00",
+      "title": "Havdalah (53 min): 5:37pm"
+    },
+    {
+      "category": "candles",
+      "date": "2018-01-12T16:32:00-05:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 4:32pm"
+    },
+    {
+      "leyning": {
+        "1": "Exodus 6:2 - 6:13",
+        "2": "Exodus 6:14 - 6:28",
+        "3": "Exodus 6:29 - 7:7",
+        "4": "Exodus 7:8 - 8:6",
+        "5": "Exodus 8:7 - 8:18",
+        "6": "Exodus 8:19 - 9:16",
+        "7": "Exodus 9:17 - 9:35",
+        "maftir": "Exodus 9:33 - 9:35",
+        "torah": "Exodus 6:2 - 9:35",
+        "haftarah": "Ezekiel 28:25 - 29:21",
+        "triennial": {
+          "1": "Exodus 7:8 - 7:13",
+          "2": "Exodus 7:14 - 7:18",
+          "3": "Exodus 7:19 - 7:25",
+          "4": "Exodus 7:26 - 7:29",
+          "5": "Exodus 8:1 - 8:6",
+          "6": "Exodus 8:7 - 8:11",
+          "7": "Exodus 8:12 - 8:15",
+          "maftir": "Exodus 8:12 - 8:15"
+        }
+      },
+      "category": "parashat",
+      "title": "Parashat Vaera",
+      "hebrew": "פרשת וארא",
+      "link": "https://www.hebcal.com/sedrot/vaera",
+      "date": "2018-01-13"
+    },
+    {
+      "date": "2018-01-13T17:44:00-05:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 5:44pm",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-01-19T16:40:00-05:00",
+      "title": "Candle lighting: 4:40pm"
+    },
+    {
+      "link": "https://www.hebcal.com/sedrot/bo",
+      "hebrew": "פרשת בא",
+      "date": "2018-01-20",
+      "title": "Parashat Bo",
+      "category": "parashat",
+      "leyning": {
+        "1": "Exodus 10:1 - 10:11",
+        "2": "Exodus 10:12 - 10:23",
+        "3": "Exodus 10:24 - 11:3",
+        "4": "Exodus 11:4 - 12:20",
+        "5": "Exodus 12:21 - 12:28",
+        "6": "Exodus 12:29 - 12:51",
+        "7": "Exodus 13:1 - 13:16",
+        "triennial": {
+          "1": "Exodus 11:4 - 11:10",
+          "2": "Exodus 12:1 - 12:10",
+          "3": "Exodus 12:11 - 12:13",
+          "4": "Exodus 12:14 - 12:16",
+          "5": "Exodus 12:17 - 12:20",
+          "6": "Exodus 12:21 - 12:24",
+          "7": "Exodus 12:25 - 12:28",
+          "maftir": "Exodus 12:25 - 12:28"
+        },
+        "haftarah": "Jeremiah 46:13 - 46:28",
+        "torah": "Exodus 10:1 - 13:16",
+        "maftir": "Exodus 13:14 - 13:16"
+      }
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-01-20T17:52:00-05:00",
+      "title": "Havdalah (53 min): 5:52pm"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 4:48pm",
+      "date": "2018-01-26T16:48:00-05:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "link": "https://www.hebcal.com/sedrot/beshalach",
+      "hebrew": "פרשת בשלח",
+      "date": "2018-01-27",
+      "title": "Parashat Beshalach",
+      "category": "parashat",
+      "leyning": {
+        "1": "Exodus 13:17 - 14:8",
+        "2": "Exodus 14:9 - 14:14",
+        "3": "Exodus 14:15 - 14:25",
+        "4": "Exodus 14:26 - 15:26",
+        "5": "Exodus 15:27 - 16:10",
+        "6": "Exodus 16:11 - 16:36",
+        "7": "Exodus 17:1 - 17:16",
+        "haftarah": "Judges 4:4 - 5:31",
+        "triennial": {
+          "1": "Exodus 14:15 - 14:20",
+          "2": "Exodus 14:21 - 14:25",
+          "3": "Exodus 14:26 - 15:21",
+          "4": "Exodus 15:22 - 15:26",
+          "5": "Exodus 15:27 - 16:3",
+          "6": "Exodus 16:4 - 16:7",
+          "7": "Exodus 16:8 - 16:10",
+          "maftir": "Exodus 16:8 - 16:10"
+        },
+        "maftir": "Exodus 17:14 - 17:16",
+        "torah": "Exodus 13:17 - 17:16"
+      }
+    },
+    {
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-01-27T18:01:00-05:00",
+      "title": "Havdalah (53 min): 6:01pm",
+      "category": "havdalah"
+    },
+    {
+      "memo": "New Year for Trees",
+      "category": "holiday",
+      "title": "Tu BiShvat",
+      "hebrew": "טו בשבט",
+      "link": "https://www.hebcal.com/holidays/tu-bishvat",
+      "date": "2018-01-31",
+      "subcat": "minor"
+    },
+    {
+      "title": "Candle lighting: 4:57pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-02-02T16:57:00-05:00",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Yitro",
+      "date": "2018-02-03",
+      "hebrew": "פרשת יתרו",
+      "link": "https://www.hebcal.com/sedrot/yitro",
+      "leyning": {
+        "1": "Exodus 18:1 - 18:12",
+        "2": "Exodus 18:13 - 18:23",
+        "3": "Exodus 18:24 - 18:27",
+        "4": "Exodus 19:1 - 19:6",
+        "5": "Exodus 19:7 - 19:19",
+        "6": "Exodus 19:20 - 20:14",
+        "7": "Exodus 20:15 - 20:23",
+        "maftir": "Exodus 20:19 - 20:23",
+        "torah": "Exodus 18:1 - 20:23",
+        "haftarah": "Isaiah 6:1 - 7:6; 9:5 - 9:6",
+        "triennial": {
+          "1": "Exodus 18:1 - 18:12",
+          "2": "Exodus 18:13 - 18:23",
+          "3": "Exodus 18:24 - 18:27",
+          "4": "Exodus 19:1 - 19:6",
+          "5": "Exodus 19:7 - 19:19",
+          "6": "Exodus 19:20 - 20:14",
+          "7": "Exodus 20:15 - 20:23",
+          "maftir": "Exodus 20:19 - 20:23"
+        }
+      },
+      "category": "parashat"
+    },
+    {
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-02-03T18:09:00-05:00",
+      "title": "Havdalah (53 min): 6:09pm",
+      "category": "havdalah"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "date": "2018-02-09T17:06:00-05:00",
+      "title": "Candle lighting: 5:06pm",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Mishpatim",
+      "date": "2018-02-10",
+      "hebrew": "פרשת משפטים",
+      "link": "https://www.hebcal.com/sedrot/mishpatim",
+      "leyning": {
+        "1": "Exodus 21:1 - 21:19",
+        "2": "Exodus 21:20 - 22:3",
+        "3": "Exodus 22:4 - 22:26",
+        "4": "Exodus 22:27 - 23:5",
+        "5": "Exodus 23:6 - 23:19",
+        "6": "Exodus 23:20 - 23:25",
+        "7": "Exodus 23:26 - 24:18",
+        "triennial": {
+          "1": "Exodus 22:4 - 22:8",
+          "2": "Exodus 22:9 - 22:12",
+          "3": "Exodus 22:13 - 22:18",
+          "4": "Exodus 22:19 - 22:26",
+          "5": "Exodus 22:27 - 23:5",
+          "6": "Exodus 23:6 - 23:13",
+          "7": "Exodus 23:14 - 23:19",
+          "maftir": "Exodus 30:11 - 30:16 | Shabbat Shekalim"
+        },
+        "haftarah": "II Kings 12:1 - 12:17 | Shabbat Shekalim",
+        "torah": "Exodus 21:1 - 24:18",
+        "maftir": "Exodus 30:11 - 30:16 | Shabbat Shekalim"
+      },
+      "category": "parashat"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-02-10T18:18:00-05:00",
+      "title": "Havdalah (53 min): 6:18pm"
+    },
+    {
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-02-16T17:14:00-05:00",
+      "title": "Candle lighting: 5:14pm"
+    },
+    {
+      "leyning": {
+        "1": "Exodus 25:1 - 25:16",
+        "2": "Exodus 25:17 - 25:30",
+        "3": "Exodus 25:31 - 26:14",
+        "4": "Exodus 26:15 - 26:30",
+        "5": "Exodus 26:31 - 26:37",
+        "6": "Exodus 27:1 - 27:8",
+        "7": "Exodus 27:9 - 27:19",
+        "torah": "Exodus 25:1 - 27:19",
+        "maftir": "Exodus 27:17 - 27:19",
+        "triennial": {
+          "1": "Exodus 26:1 - 26:3",
+          "2": "Exodus 26:4 - 26:6",
+          "3": "Exodus 26:7 - 26:11",
+          "4": "Exodus 26:12 - 26:14",
+          "5": "Exodus 26:15 - 26:21",
+          "6": "Exodus 26:22 - 26:25",
+          "7": "Exodus 26:26 - 26:30",
+          "maftir": "Exodus 26:26 - 26:30"
+        },
+        "haftarah": "I Kings 5:26 - 6:13"
+      },
+      "category": "parashat",
+      "title": "Parashat Terumah",
+      "hebrew": "פרשת תרומה",
+      "date": "2018-02-17",
+      "link": "https://www.hebcal.com/sedrot/terumah"
+    },
+    {
+      "title": "Havdalah (53 min): 6:26pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-02-17T18:26:00-05:00",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 5:22pm",
+      "date": "2018-02-23T17:22:00-05:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "hebrew": "פרשת תצוה",
+      "link": "https://www.hebcal.com/sedrot/tetzaveh",
+      "date": "2018-02-24",
+      "title": "Parashat Tetzaveh",
+      "category": "parashat",
+      "leyning": {
+        "1": "Exodus 27:20 - 28:12",
+        "2": "Exodus 28:13 - 28:30",
+        "3": "Exodus 28:31 - 28:43",
+        "4": "Exodus 29:1 - 29:18",
+        "5": "Exodus 29:19 - 29:37",
+        "6": "Exodus 29:38 - 29:46",
+        "7": "Exodus 30:1 - 30:10",
+        "maftir": "Deuteronomy 25:17 - 25:19 | Shabbat Zachor",
+        "torah": "Exodus 27:20 - 30:10",
+        "haftarah": "I Samuel 15:2 - 15:34 | Shabbat Zachor",
+        "triennial": {
+          "1": "Exodus 28:31 - 28:35",
+          "2": "Exodus 28:36 - 28:38",
+          "3": "Exodus 28:39 - 28:43",
+          "4": "Exodus 29:1 - 29:4",
+          "5": "Exodus 29:5 - 29:9",
+          "6": "Exodus 29:10 - 29:14",
+          "7": "Exodus 29:15 - 29:18",
+          "maftir": "Deuteronomy 25:17 - 25:19 | Shabbat Zachor"
+        }
+      }
+    },
+    {
+      "title": "Havdalah (53 min): 6:35pm",
+      "date": "2018-02-24T18:35:00-05:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah"
+    },
+    {
+      "memo": "Purim is one of the most joyous and fun holidays on the Jewish calendar",
+      "category": "holiday",
+      "hebrew": "ערב פורים",
+      "date": "2018-02-28",
+      "link": "https://www.hebcal.com/holidays/purim",
+      "subcat": "major",
+      "title": "Erev Purim"
+    },
+    {
+      "memo": "Purim is one of the most joyous and fun holidays on the Jewish calendar",
+      "category": "holiday",
+      "hebrew": "פורים",
+      "date": "2018-03-01",
+      "link": "https://www.hebcal.com/holidays/purim",
+      "subcat": "major",
+      "title": "Purim"
+    },
+    {
+      "title": "Shushan Purim",
+      "subcat": "minor",
+      "date": "2018-03-02",
+      "hebrew": "שושן פורים",
+      "link": "https://www.hebcal.com/holidays/shushan-purim",
+      "category": "holiday",
+      "memo": "Purim celebrated in Jerusalem and walled cities"
+    },
+    {
+      "category": "candles",
+      "date": "2018-03-02T17:30:00-05:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 5:30pm"
+    },
+    {
+      "hebrew": "פרשת כי תשא",
+      "link": "https://www.hebcal.com/sedrot/kitisa",
+      "date": "2018-03-03",
+      "title": "Parashat Ki Tisa",
+      "category": "parashat",
+      "leyning": {
+        "1": "Exodus 30:11 - 31:17",
+        "2": "Exodus 31:18 - 33:11",
+        "3": "Exodus 33:12 - 33:16",
+        "4": "Exodus 33:17 - 33:23",
+        "5": "Exodus 34:1 - 34:9",
+        "6": "Exodus 34:10 - 34:26",
+        "7": "Exodus 34:27 - 34:35",
+        "triennial": {
+          "1": "Exodus 31:18 - 32:6",
+          "2": "Exodus 32:7 - 32:11",
+          "3": "Exodus 32:12 - 32:14",
+          "4": "Exodus 32:15 - 32:24",
+          "5": "Exodus 32:25 - 32:29",
+          "6": "Exodus 32:30 - 33:6",
+          "7": "Exodus 33:7 - 33:11",
+          "maftir": "Exodus 33:9 - 33:11"
+        },
+        "haftarah": "I Kings 18:1 - 18:39",
+        "torah": "Exodus 30:11 - 34:35",
+        "maftir": "Exodus 34:33 - 34:35"
+      }
+    },
+    {
+      "category": "havdalah",
+      "date": "2018-03-03T18:43:00-05:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 6:43pm"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 5:38pm",
+      "date": "2018-03-09T17:38:00-05:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "date": "2018-03-10",
+      "hebrew": "פרשת ויקהל־פקודי",
+      "link": "https://www.hebcal.com/sedrot/vayakhelpekudei",
+      "title": "Parashat Vayakhel-Pekudei",
+      "category": "parashat",
+      "leyning": {
+        "1": "Exodus 35:1 - 35:29",
+        "2": "Exodus 35:30 - 37:16",
+        "3": "Exodus 37:17 - 37:29",
+        "4": "Exodus 38:1 - 39:1",
+        "5": "Exodus 39:2 - 39:21",
+        "6": "Exodus 39:22 - 39:43",
+        "7": "Exodus 40:1 - 40:38",
+        "triennial": {
+          "1": "Exodus 37:17 - 37:24",
+          "2": "Exodus 37:25 - 37:29",
+          "3": "Exodus 38:1 - 38:8",
+          "4": "Exodus 38:9 - 38:20",
+          "5": "Exodus 38:21 - 39:1",
+          "6": "Exodus 39:2 - 39:7",
+          "7": "Exodus 39:8 - 39:21",
+          "maftir": "Numbers 19:1 - 19:22 | Shabbat Parah"
+        },
+        "haftarah": "Ezekiel 36:16 - 36:38 | Shabbat Parah",
+        "torah": "Exodus 35:1 - 40:38",
+        "maftir": "Numbers 19:1 - 19:22 | Shabbat Parah"
+      }
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 6:50pm",
+      "date": "2018-03-10T18:50:00-05:00",
+      "hebrew": "הבדלה - 53 דקות"
+    },
+    {
+      "title": "Candle lighting: 6:46pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-03-16T18:46:00-04:00",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Vayikra",
+      "hebrew": "פרשת ויקרא",
+      "date": "2018-03-17",
+      "link": "https://www.hebcal.com/sedrot/vayikra",
+      "leyning": {
+        "1": "Leviticus 1:1 - 1:13",
+        "2": "Leviticus 1:14 - 2:6",
+        "3": "Leviticus 2:7 - 2:16",
+        "4": "Leviticus 3:1 - 3:17",
+        "5": "Leviticus 4:1 - 4:26",
+        "6": "Leviticus 4:27 - 5:26",
+        "7": "Numbers 28:9 - 28:15 | Shabbat HaChodesh (on Rosh Chodesh)",
+        "haftarah": "Ezekiel 45:16 - 46:18 | Shabbat HaChodesh (on Rosh Chodesh)",
+        "triennial": {
+          "1": "Leviticus 3:1 - 3:5",
+          "2": "Leviticus 3:6 - 3:11",
+          "3": "Leviticus 3:12 - 3:17",
+          "4": "Leviticus 4:1 - 4:7",
+          "5": "Leviticus 4:8 - 4:12",
+          "6": "Leviticus 4:13 - 4:26",
+          "7": "Numbers 28:9 - 28:15 | Shabbat HaChodesh (on Rosh Chodesh)",
+          "maftir": "Exodus 12:1 - 12:20 | Shabbat HaChodesh (on Rosh Chodesh)"
+        },
+        "maftir": "Exodus 12:1 - 12:20 | Shabbat HaChodesh (on Rosh Chodesh)",
+        "torah": "Leviticus 1:1 - 5:26"
+      },
+      "category": "parashat"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 7:58pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-03-17T19:58:00-04:00"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 6:53pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-03-23T18:53:00-04:00"
+    },
+    {
+      "leyning": {
+        "1": "Leviticus 6:1 - 6:11",
+        "2": "Leviticus 6:12 - 7:10",
+        "3": "Leviticus 7:11 - 7:38",
+        "4": "Leviticus 8:1 - 8:13",
+        "5": "Leviticus 8:14 - 8:21",
+        "6": "Leviticus 8:22 - 8:29",
+        "7": "Leviticus 8:30 - 8:36",
+        "maftir": "Leviticus 8:33 - 8:36",
+        "torah": "Leviticus 6:1 - 8:36",
+        "haftarah": "Malachi 3:4 - 3:24 | Shabbat HaGadol",
+        "triennial": {
+          "1": "Leviticus 7:11 - 7:15",
+          "2": "Leviticus 7:16 - 7:18",
+          "3": "Leviticus 7:19 - 7:21",
+          "4": "Leviticus 7:22 - 7:27",
+          "5": "Leviticus 7:28 - 7:31",
+          "6": "Leviticus 7:32 - 7:34",
+          "7": "Leviticus 7:35 - 7:38",
+          "maftir": "Leviticus 7:35 - 7:38"
+        }
+      },
+      "category": "parashat",
+      "title": "Parashat Tzav",
+      "link": "https://www.hebcal.com/sedrot/tzav",
+      "hebrew": "פרשת צו",
+      "date": "2018-03-24"
+    },
+    {
+      "category": "havdalah",
+      "date": "2018-03-24T20:05:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 8:05pm"
+    },
+    {
+      "hebrew": "ערב פסח",
+      "date": "2018-03-30",
+      "link": "https://www.hebcal.com/holidays/pesach",
+      "title": "Erev Pesach",
+      "category": "holiday",
+      "memo": "Passover, the Feast of Unleavened Bread"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 7:01pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-03-30T19:01:00-04:00"
+    },
+    {
+      "category": "holiday",
+      "link": "https://www.hebcal.com/holidays/pesach",
+      "subcat": "major",
+      "memo": "Passover, the Feast of Unleavened Bread",
+      "yomtov": true,
+      "title": "Pesach I",
+      "hebrew": "פסח יום א׳",
+      "date": "2018-03-31"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 8:13pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-03-31T20:13:00-04:00"
+    },
+    {
+      "category": "holiday",
+      "link": "https://www.hebcal.com/holidays/pesach",
+      "subcat": "major",
+      "memo": "Passover, the Feast of Unleavened Bread",
+      "yomtov": true,
+      "hebrew": "פסח יום ב׳",
+      "date": "2018-04-01",
+      "title": "Pesach II"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 8:14pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-04-01T20:14:00-04:00"
+    },
+    {
+      "category": "holiday",
+      "memo": "Passover, the Feast of Unleavened Bread",
+      "title": "Pesach III (CH''M)",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/pesach",
+      "hebrew": "פסח יום ג׳ (חול המועד)",
+      "date": "2018-04-02"
+    },
+    {
+      "title": "Pesach IV (CH''M)",
+      "link": "https://www.hebcal.com/holidays/pesach",
+      "hebrew": "פסח יום ד׳ (חול המועד)",
+      "date": "2018-04-03",
+      "subcat": "major",
+      "memo": "Passover, the Feast of Unleavened Bread",
+      "category": "holiday"
+    },
+    {
+      "memo": "Passover, the Feast of Unleavened Bread",
+      "category": "holiday",
+      "title": "Pesach V (CH''M)",
+      "link": "https://www.hebcal.com/holidays/pesach",
+      "hebrew": "פסח יום ה׳ (חול המועד)",
+      "date": "2018-04-04",
+      "subcat": "major"
+    },
+    {
+      "category": "holiday",
+      "memo": "Passover, the Feast of Unleavened Bread",
+      "title": "Pesach VI (CH''M)",
+      "subcat": "major",
+      "hebrew": "פסח יום ו׳ (חול המועד)",
+      "link": "https://www.hebcal.com/holidays/pesach",
+      "date": "2018-04-05"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "date": "2018-04-05T19:07:00-04:00",
+      "title": "Candle lighting: 7:07pm",
+      "category": "candles"
+    },
+    {
+      "category": "holiday",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/pesach",
+      "memo": "Passover, the Feast of Unleavened Bread",
+      "yomtov": true,
+      "hebrew": "פסח יום ז׳",
+      "date": "2018-04-06",
+      "title": "Pesach VII"
+    },
+    {
+      "date": "2018-04-06T19:08:00-04:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 7:08pm",
+      "category": "candles"
+    },
+    {
+      "hebrew": "פסח יום ח׳",
+      "date": "2018-04-07",
+      "title": "Pesach VIII",
+      "yomtov": true,
+      "memo": "Passover, the Feast of Unleavened Bread",
+      "link": "https://www.hebcal.com/holidays/pesach",
+      "subcat": "major",
+      "category": "holiday"
+    },
+    {
+      "category": "havdalah",
+      "date": "2018-04-07T20:20:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 8:20pm"
+    },
+    {
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-04-13T19:15:00-04:00",
+      "title": "Candle lighting: 7:15pm"
+    },
+    {
+      "link": "https://www.hebcal.com/sedrot/shmini",
+      "hebrew": "פרשת שמיני",
+      "date": "2018-04-14",
+      "title": "Parashat Shmini",
+      "category": "parashat",
+      "leyning": {
+        "1": "Leviticus 9:1 - 9:16",
+        "2": "Leviticus 9:17 - 9:23",
+        "3": "Leviticus 9:24 - 10:11",
+        "4": "Leviticus 10:12 - 10:15",
+        "5": "Leviticus 10:16 - 10:20",
+        "6": "Leviticus 11:1 - 11:32",
+        "7": "Leviticus 11:33 - 11:47",
+        "maftir": "Leviticus 11:45 - 11:47",
+        "torah": "Leviticus 9:1 - 11:47",
+        "haftarah": "I Samuel 20:18 - 20:42 | Shabbat Machar Chodesh",
+        "triennial": {
+          "1": "Leviticus 10:12 - 10:15",
+          "2": "Leviticus 10:16 - 10:20",
+          "3": "Leviticus 11:1 - 11:8",
+          "4": "Leviticus 11:9 - 11:12",
+          "5": "Leviticus 11:13 - 11:19",
+          "6": "Leviticus 11:20 - 11:28",
+          "7": "Leviticus 11:29 - 11:32",
+          "maftir": "Leviticus 11:29 - 11:32"
+        }
+      }
+    },
+    {
+      "title": "Havdalah (53 min): 8:27pm",
+      "date": "2018-04-14T20:27:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-04-20T19:23:00-04:00",
+      "title": "Candle lighting: 7:23pm"
+    },
+    {
+      "link": "https://www.hebcal.com/sedrot/tazriametzora",
+      "hebrew": "פרשת תזריע־מצרע",
+      "date": "2018-04-21",
+      "title": "Parashat Tazria-Metzora",
+      "category": "parashat",
+      "leyning": {
+        "1": "Leviticus 12:1 - 13:23",
+        "2": "Leviticus 13:24 - 13:39",
+        "3": "Leviticus 13:40 - 13:54",
+        "4": "Leviticus 13:55 - 14:20",
+        "5": "Leviticus 14:21 - 14:32",
+        "6": "Leviticus 14:33 - 15:15",
+        "7": "Leviticus 15:16 - 15:33",
+        "haftarah": "II Kings 7:3 - 7:20",
+        "triennial": {
+          "1": "Leviticus 13:40 - 13:46",
+          "2": "Leviticus 13:47 - 13:54",
+          "3": "Leviticus 13:55 - 13:59",
+          "4": "Leviticus 14:1 - 14:5",
+          "5": "Leviticus 14:6 - 14:12",
+          "6": "Leviticus 14:13 - 14:20",
+          "7": "Leviticus 14:21 - 14:32",
+          "maftir": "Leviticus 14:30 - 14:32"
+        },
+        "maftir": "Leviticus 15:31 - 15:33",
+        "torah": "Leviticus 12:1 - 15:33"
+      }
+    },
+    {
+      "title": "Havdalah (53 min): 8:35pm",
+      "date": "2018-04-21T20:35:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah"
+    },
+    {
+      "date": "2018-04-27T19:30:00-04:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 7:30pm",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Achrei Mot-Kedoshim",
+      "link": "https://www.hebcal.com/sedrot/achreimotkedoshim",
+      "hebrew": "פרשת אחרי מות־קדשים",
+      "date": "2018-04-28",
+      "leyning": {
+        "1": "Leviticus 16:1 - 16:24",
+        "2": "Leviticus 16:25 - 17:7",
+        "3": "Leviticus 17:8 - 18:21",
+        "4": "Leviticus 18:22 - 19:14",
+        "5": "Leviticus 19:15 - 19:32",
+        "6": "Leviticus 19:33 - 20:7",
+        "7": "Leviticus 20:8 - 20:27",
+        "triennial": {
+          "1": "Leviticus 17:8 - 17:12",
+          "2": "Leviticus 17:13 - 17:16",
+          "3": "Leviticus 18:1 - 18:5",
+          "4": "Leviticus 18:6 - 18:21",
+          "5": "Leviticus 18:22 - 18:30",
+          "6": "Leviticus 19:1 - 19:3",
+          "7": "Leviticus 19:4 - 19:14",
+          "maftir": "Leviticus 19:11 - 19:14"
+        },
+        "haftarah": "Amos 9:7 - 9:15",
+        "torah": "Leviticus 16:1 - 20:27",
+        "maftir": "Leviticus 20:25 - 20:27"
+      },
+      "category": "parashat"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-04-28T20:42:00-04:00",
+      "title": "Havdalah (53 min): 8:42pm"
+    },
+    {
+      "memo": "Second Passover, one month after Passover",
+      "category": "holiday",
+      "hebrew": "פסח שני",
+      "link": "https://www.hebcal.com/holidays/pesach-sheni",
+      "date": "2018-04-29",
+      "subcat": "minor",
+      "title": "Pesach Sheni"
+    },
+    {
+      "hebrew": "ל״ג בעומר",
+      "date": "2018-05-03",
+      "link": "https://www.hebcal.com/holidays/lag-baomer",
+      "subcat": "minor",
+      "title": "Lag BaOmer",
+      "memo": "33rd day of counting the Omer",
+      "category": "holiday"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 7:37pm",
+      "date": "2018-05-04T19:37:00-04:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "title": "Parashat Emor",
+      "link": "https://www.hebcal.com/sedrot/emor",
+      "hebrew": "פרשת אמור",
+      "date": "2018-05-05",
+      "leyning": {
+        "1": "Leviticus 21:1 - 21:15",
+        "2": "Leviticus 21:16 - 22:16",
+        "3": "Leviticus 22:17 - 22:33",
+        "4": "Leviticus 23:1 - 23:22",
+        "5": "Leviticus 23:23 - 23:32",
+        "6": "Leviticus 23:33 - 23:44",
+        "7": "Leviticus 24:1 - 24:23",
+        "maftir": "Leviticus 24:21 - 24:23",
+        "torah": "Leviticus 21:1 - 24:23",
+        "haftarah": "Ezekiel 44:15 - 44:31",
+        "triennial": {
+          "1": "Leviticus 22:17 - 22:20",
+          "2": "Leviticus 22:21 - 22:25",
+          "3": "Leviticus 22:26 - 22:33",
+          "4": "Leviticus 23:1 - 23:3",
+          "5": "Leviticus 23:4 - 23:8",
+          "6": "Leviticus 23:9 - 23:14",
+          "7": "Leviticus 23:15 - 23:22",
+          "maftir": "Leviticus 23:19 - 23:22"
+        }
+      },
+      "category": "parashat"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 8:49pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-05-05T20:49:00-04:00"
+    },
+    {
+      "category": "candles",
+      "date": "2018-05-11T19:44:00-04:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 7:44pm"
+    },
+    {
+      "hebrew": "פרשת בהר־בחקתי",
+      "date": "2018-05-12",
+      "link": "https://www.hebcal.com/sedrot/beharbechukotai",
+      "title": "Parashat Behar-Bechukotai",
+      "category": "parashat",
+      "leyning": {
+        "1": "Leviticus 25:1 - 25:18",
+        "2": "Leviticus 25:19 - 25:28",
+        "3": "Leviticus 25:29 - 25:38",
+        "4": "Leviticus 25:39 - 26:9",
+        "5": "Leviticus 26:10 - 26:46",
+        "6": "Leviticus 27:1 - 27:15",
+        "7": "Leviticus 27:16 - 27:34",
+        "torah": "Leviticus 25:1 - 27:34",
+        "maftir": "Leviticus 27:32 - 27:34",
+        "triennial": {
+          "1": "Leviticus 25:39 - 25:43",
+          "2": "Leviticus 25:44 - 25:46",
+          "3": "Leviticus 25:47 - 25:54",
+          "4": "Leviticus 25:55 - 26:2",
+          "5": "Leviticus 26:3 - 26:5",
+          "6": "Leviticus 26:6 - 26:9",
+          "7": "Leviticus 26:10 - 26:46",
+          "maftir": "Leviticus 26:44 - 26:46"
+        },
+        "haftarah": "Jeremiah 16:19 - 17:14"
+      }
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-05-12T20:56:00-04:00",
+      "title": "Havdalah (53 min): 8:56pm"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 7:51pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-05-18T19:51:00-04:00"
+    },
+    {
+      "link": "https://www.hebcal.com/sedrot/bamidbar",
+      "hebrew": "פרשת במדבר",
+      "date": "2018-05-19",
+      "title": "Parashat Bamidbar",
+      "category": "parashat",
+      "leyning": {
+        "1": "Numbers 1:1 - 1:19",
+        "2": "Numbers 1:20 - 1:54",
+        "3": "Numbers 2:1 - 2:34",
+        "4": "Numbers 3:1 - 3:13",
+        "5": "Numbers 3:14 - 3:39",
+        "6": "Numbers 3:40 - 3:51",
+        "7": "Numbers 4:1 - 4:20",
+        "torah": "Numbers 1:1 - 4:20",
+        "maftir": "Numbers 4:17 - 4:20",
+        "triennial": {
+          "1": "Numbers 2:1 - 2:9",
+          "2": "Numbers 2:10 - 2:16",
+          "3": "Numbers 2:17 - 2:24",
+          "4": "Numbers 2:25 - 2:31",
+          "5": "Numbers 2:32 - 2:34",
+          "6": "Numbers 3:1 - 3:4",
+          "7": "Numbers 3:5 - 3:13",
+          "maftir": "Numbers 3:11 - 3:13"
+        },
+        "haftarah": "Hosea 2:1 - 2:22"
+      }
+    },
+    {
+      "title": "Erev Shavuot",
+      "hebrew": "ערב שבועות",
+      "link": "https://www.hebcal.com/holidays/shavuot",
+      "date": "2018-05-19",
+      "memo": "Festival of Weeks, commemorates the giving of the Torah at Mount Sinai",
+      "category": "holiday"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 9:03pm",
+      "date": "2018-05-19T21:03:00-04:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "memo": "Festival of Weeks, commemorates the giving of the Torah at Mount Sinai",
+      "yomtov": true,
+      "title": "Shavuot I",
+      "date": "2018-05-20",
+      "hebrew": "שבועות יום א׳",
+      "category": "holiday",
+      "link": "https://www.hebcal.com/holidays/shavuot",
+      "subcat": "major"
+    },
+    {
+      "category": "candles",
+      "date": "2018-05-20T21:04:00-04:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 9:04pm"
+    },
+    {
+      "yomtov": true,
+      "memo": "Festival of Weeks, commemorates the giving of the Torah at Mount Sinai",
+      "title": "Shavuot II",
+      "date": "2018-05-21",
+      "hebrew": "שבועות יום ב׳",
+      "category": "holiday",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/shavuot"
+    },
+    {
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-05-21T21:05:00-04:00",
+      "title": "Havdalah (53 min): 9:05pm",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 7:57pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-05-25T19:57:00-04:00"
+    },
+    {
+      "title": "Parashat Nasso",
+      "hebrew": "פרשת נשא",
+      "link": "https://www.hebcal.com/sedrot/nasso",
+      "date": "2018-05-26",
+      "leyning": {
+        "1": "Numbers 4:21 - 4:37",
+        "2": "Numbers 4:38 - 4:49",
+        "3": "Numbers 5:1 - 5:10",
+        "4": "Numbers 5:11 - 6:27",
+        "5": "Numbers 7:1 - 7:41",
+        "6": "Numbers 7:42 - 7:71",
+        "7": "Numbers 7:72 - 7:89",
+        "haftarah": "Judges 13:2 - 13:25",
+        "triennial": {
+          "1": "Numbers 5:11 - 5:15",
+          "2": "Numbers 5:16 - 5:26",
+          "3": "Numbers 5:27 - 6:4",
+          "4": "Numbers 6:5 - 6:8",
+          "5": "Numbers 6:9 - 6:15",
+          "6": "Numbers 6:16 - 6:21",
+          "7": "Numbers 6:22 - 6:27",
+          "maftir": "Numbers 6:22 - 6:27"
+        },
+        "maftir": "Numbers 7:87 - 7:89",
+        "torah": "Numbers 4:21 - 7:89"
+      },
+      "category": "parashat"
+    },
+    {
+      "date": "2018-05-26T21:09:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 9:09pm",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 8:03pm",
+      "date": "2018-06-01T20:03:00-04:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "leyning": {
+        "1": "Numbers 8:1 - 8:14",
+        "2": "Numbers 8:15 - 8:26",
+        "3": "Numbers 9:1 - 9:14",
+        "4": "Numbers 9:15 - 10:10",
+        "5": "Numbers 10:11 - 10:34",
+        "6": "Numbers 10:35 - 11:29",
+        "7": "Numbers 11:30 - 12:16",
+        "haftarah": "Zechariah 2:14 - 4:7",
+        "triennial": {
+          "1": "Numbers 9:15 - 9:18",
+          "2": "Numbers 9:19 - 9:23",
+          "3": "Numbers 10:1 - 10:7",
+          "4": "Numbers 10:8 - 10:10",
+          "5": "Numbers 10:11 - 10:20",
+          "6": "Numbers 10:21 - 10:28",
+          "7": "Numbers 10:29 - 10:34",
+          "maftir": "Numbers 10:32 - 10:34"
+        },
+        "maftir": "Numbers 12:14 - 12:16",
+        "torah": "Numbers 8:1 - 12:16"
+      },
+      "category": "parashat",
+      "title": "Parashat Beha'alotcha",
+      "hebrew": "פרשת בהעלתך",
+      "date": "2018-06-02",
+      "link": "https://www.hebcal.com/sedrot/behaalotcha"
+    },
+    {
+      "date": "2018-06-02T21:15:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 9:15pm",
+      "category": "havdalah"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "date": "2018-06-08T20:07:00-04:00",
+      "title": "Candle lighting: 8:07pm",
+      "category": "candles"
+    },
+    {
+      "leyning": {
+        "1": "Numbers 13:1 - 13:20",
+        "2": "Numbers 13:21 - 14:7",
+        "3": "Numbers 14:8 - 14:25",
+        "4": "Numbers 14:26 - 15:7",
+        "5": "Numbers 15:8 - 15:16",
+        "6": "Numbers 15:17 - 15:26",
+        "7": "Numbers 15:27 - 15:41",
+        "torah": "Numbers 13:1 - 15:41",
+        "maftir": "Numbers 15:37 - 15:41",
+        "triennial": {
+          "1": "Numbers 14:8 - 14:10",
+          "2": "Numbers 14:11 - 14:20",
+          "3": "Numbers 14:21 - 14:25",
+          "4": "Numbers 14:26 - 14:38",
+          "5": "Numbers 14:39 - 14:42",
+          "6": "Numbers 14:43 - 15:3",
+          "7": "Numbers 15:4 - 15:7",
+          "maftir": "Numbers 15:4 - 15:7"
+        },
+        "haftarah": "Joshua 2:1 - 2:24"
+      },
+      "category": "parashat",
+      "title": "Parashat Sh'lach",
+      "hebrew": "פרשת שלח־לך",
+      "date": "2018-06-09",
+      "link": "https://www.hebcal.com/sedrot/shlach"
+    },
+    {
+      "date": "2018-06-09T21:19:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 9:19pm",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 8:11pm",
+      "date": "2018-06-15T20:11:00-04:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "category": "parashat",
+      "leyning": {
+        "1": "Numbers 16:1 - 16:13",
+        "2": "Numbers 16:14 - 16:19",
+        "3": "Numbers 16:20 - 17:8",
+        "4": "Numbers 17:9 - 17:15",
+        "5": "Numbers 17:16 - 17:24",
+        "6": "Numbers 17:25 - 18:20",
+        "7": "Numbers 18:21 - 18:32",
+        "haftarah": "I Samuel 11:14 - 12:22",
+        "triennial": {
+          "1": "Numbers 16:20 - 16:27",
+          "2": "Numbers 16:28 - 16:35",
+          "3": "Numbers 17:1 - 17:5",
+          "4": "Numbers 17:6 - 17:8",
+          "5": "Numbers 17:9 - 17:15",
+          "6": "Numbers 17:16 - 17:20",
+          "7": "Numbers 17:21 - 17:24",
+          "maftir": "Numbers 17:21 - 17:24"
+        },
+        "maftir": "Numbers 18:30 - 18:32",
+        "torah": "Numbers 16:1 - 18:32"
+      },
+      "link": "https://www.hebcal.com/sedrot/korach",
+      "hebrew": "פרשת קורח",
+      "date": "2018-06-16",
+      "title": "Parashat Korach"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-06-16T21:22:00-04:00",
+      "title": "Havdalah (53 min): 9:22pm"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "date": "2018-06-22T20:12:00-04:00",
+      "title": "Candle lighting: 8:12pm",
+      "category": "candles"
+    },
+    {
+      "category": "parashat",
+      "leyning": {
+        "1": "Numbers 19:1 - 19:17",
+        "2": "Numbers 19:18 - 20:6",
+        "3": "Numbers 20:7 - 20:13",
+        "4": "Numbers 20:14 - 20:21",
+        "5": "Numbers 20:22 - 21:9",
+        "6": "Numbers 21:10 - 21:20",
+        "7": "Numbers 21:21 - 22:1",
+        "triennial": {
+          "1": "Numbers 20:1 - 20:6",
+          "2": "Numbers 20:7 - 20:13",
+          "3": "Numbers 20:14 - 20:17",
+          "4": "Numbers 20:18 - 20:21",
+          "5": "Numbers 20:22 - 21:3",
+          "6": "Numbers 21:4 - 21:7",
+          "7": "Numbers 21:8 - 21:10",
+          "maftir": "Numbers 21:8 - 21:10"
+        },
+        "haftarah": "Judges 11:1 - 11:33",
+        "torah": "Numbers 19:1 - 22:1",
+        "maftir": "Numbers 21:34 - 22:1"
+      },
+      "date": "2018-06-23",
+      "hebrew": "פרשת חקת",
+      "link": "https://www.hebcal.com/sedrot/chukat",
+      "title": "Parashat Chukat"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 9:24pm",
+      "date": "2018-06-23T21:24:00-04:00",
+      "hebrew": "הבדלה - 53 דקות"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 8:13pm",
+      "date": "2018-06-29T20:13:00-04:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "hebrew": "פרשת בלק",
+      "link": "https://www.hebcal.com/sedrot/balak",
+      "date": "2018-06-30",
+      "title": "Parashat Balak",
+      "category": "parashat",
+      "leyning": {
+        "1": "Numbers 22:2 - 22:12",
+        "2": "Numbers 22:13 - 22:20",
+        "3": "Numbers 22:21 - 22:38",
+        "4": "Numbers 22:39 - 23:12",
+        "5": "Numbers 23:13 - 23:26",
+        "6": "Numbers 23:27 - 24:13",
+        "7": "Numbers 24:14 - 25:9",
+        "torah": "Numbers 22:2 - 25:9",
+        "maftir": "Numbers 25:7 - 25:9",
+        "triennial": {
+          "1": "Numbers 22:39 - 22:41",
+          "2": "Numbers 23:1 - 23:3",
+          "3": "Numbers 23:4 - 23:6",
+          "4": "Numbers 23:7 - 23:12",
+          "5": "Numbers 23:13 - 23:15",
+          "6": "Numbers 23:16 - 23:18",
+          "7": "Numbers 23:19 - 23:26",
+          "maftir": "Numbers 23:19 - 23:26"
+        },
+        "haftarah": "Micah 5:6 - 6:8"
+      }
+    },
+    {
+      "date": "2018-06-30T21:24:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 9:24pm",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "date": "2018-07-06T20:11:00-04:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 8:11pm"
+    },
+    {
+      "hebrew": "פרשת פינחס",
+      "date": "2018-07-07",
+      "link": "https://www.hebcal.com/sedrot/pinchas",
+      "title": "Parashat Pinchas",
+      "category": "parashat",
+      "leyning": {
+        "1": "Numbers 25:10 - 26:4",
+        "2": "Numbers 26:5 - 26:51",
+        "3": "Numbers 26:52 - 27:5",
+        "4": "Numbers 27:6 - 27:23",
+        "5": "Numbers 28:1 - 28:15",
+        "6": "Numbers 28:16 - 29:11",
+        "7": "Numbers 29:12 - 30:1",
+        "torah": "Numbers 25:10 - 30:1",
+        "maftir": "Numbers 29:35 - 30:1",
+        "triennial": {
+          "1": "Numbers 26:52 - 26:56",
+          "2": "Numbers 26:57 - 26:62",
+          "3": "Numbers 26:63 - 27:5",
+          "4": "Numbers 27:6 - 27:14",
+          "5": "Numbers 27:15 - 27:23",
+          "6": "Numbers 28:1 - 28:10",
+          "7": "Numbers 28:11 - 28:15",
+          "maftir": "Numbers 28:11 - 28:15"
+        },
+        "haftarah": "Jeremiah 1:1 - 2:3 | Pinchas occurring after 17 Tammuz"
+      }
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-07-07T21:22:00-04:00",
+      "title": "Havdalah (53 min): 9:22pm"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 8:08pm",
+      "date": "2018-07-13T20:08:00-04:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "title": "Parashat Matot-Masei",
+      "hebrew": "פרשת מטות־מסעי",
+      "link": "https://www.hebcal.com/sedrot/matotmasei",
+      "date": "2018-07-14",
+      "leyning": {
+        "1": "Numbers 30:2 - 31:12",
+        "2": "Numbers 31:13 - 31:54",
+        "3": "Numbers 32:1 - 32:19",
+        "4": "Numbers 32:20 - 33:49",
+        "5": "Numbers 33:50 - 34:15",
+        "6": "Numbers 34:16 - 35:8",
+        "7": "Numbers 35:9 - 36:13",
+        "triennial": {
+          "1": "Numbers 32:1 - 32:4",
+          "2": "Numbers 32:5 - 32:19",
+          "3": "Numbers 32:20 - 32:27",
+          "4": "Numbers 32:28 - 32:42",
+          "5": "Numbers 33:1 - 33:10",
+          "6": "Numbers 33:11 - 33:36",
+          "7": "Numbers 33:37 - 33:49",
+          "maftir": "Numbers 33:47 - 33:49"
+        },
+        "haftarah": "Jeremiah 2:4 - 28; 3:4",
+        "torah": "Numbers 30:2 - 36:13",
+        "maftir": "Numbers 36:11 - 36:13"
+      },
+      "category": "parashat"
+    },
+    {
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-07-14T21:19:00-04:00",
+      "title": "Havdalah (53 min): 9:19pm",
+      "category": "havdalah"
+    },
+    {
+      "title": "Candle lighting: 8:04pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-07-20T20:04:00-04:00",
+      "category": "candles"
+    },
+    {
+      "category": "parashat",
+      "leyning": {
+        "1": "Deuteronomy 1:1 - 1:10",
+        "2": "Deuteronomy 1:11 - 1:21",
+        "3": "Deuteronomy 1:22 - 1:38",
+        "4": "Deuteronomy 1:39 - 2:1",
+        "5": "Deuteronomy 2:2 - 2:30",
+        "6": "Deuteronomy 2:31 - 3:14",
+        "7": "Deuteronomy 3:15 - 3:22",
+        "torah": "Deuteronomy 1:1 - 3:22",
+        "maftir": "Deuteronomy 3:20 - 3:22",
+        "triennial": {
+          "1": "Deuteronomy 2:2 - 2:5",
+          "2": "Deuteronomy 2:6 - 2:12",
+          "3": "Deuteronomy 2:13 - 2:16",
+          "4": "Deuteronomy 2:17 - 2:19",
+          "5": "Deuteronomy 2:20 - 2:22",
+          "6": "Deuteronomy 2:23 - 2:25",
+          "7": "Deuteronomy 2:26 - 2:30",
+          "maftir": "Deuteronomy 2:28 - 2:30"
+        },
+        "haftarah": "Isaiah 1:1 - 1:27"
+      },
+      "hebrew": "פרשת דברים",
+      "date": "2018-07-21",
+      "link": "https://www.hebcal.com/sedrot/devarim",
+      "title": "Parashat Devarim"
+    },
+    {
+      "category": "holiday",
+      "memo": "The Ninth of Av, fast commemorating the destruction of the two Temples",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/tisha-bav",
+      "hebrew": "ערב תשעה באב",
+      "date": "2018-07-21",
+      "title": "Erev Tish'a B'Av"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-07-21T21:14:00-04:00",
+      "title": "Havdalah (53 min): 9:14pm"
+    },
+    {
+      "title": "Tish'a B'Av",
+      "link": "https://www.hebcal.com/holidays/tisha-bav",
+      "hebrew": "תשעה באב",
+      "date": "2018-07-22",
+      "subcat": "major",
+      "memo": "The Ninth of Av, fast commemorating the destruction of the two Temples",
+      "category": "holiday"
+    },
+    {
+      "memo": "Jewish holiday of love, similar to Valentine's Day",
+      "category": "holiday",
+      "title": "Tu B'Av",
+      "hebrew": "טו באב",
+      "date": "2018-07-27",
+      "link": "https://www.hebcal.com/holidays/tu-bav",
+      "subcat": "minor"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 7:58pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-07-27T19:58:00-04:00"
+    },
+    {
+      "hebrew": "פרשת ואתחנן",
+      "date": "2018-07-28",
+      "link": "https://www.hebcal.com/sedrot/vaetchanan",
+      "title": "Parashat Vaetchanan",
+      "category": "parashat",
+      "leyning": {
+        "1": "Deuteronomy 3:23 - 4:4",
+        "2": "Deuteronomy 4:5 - 4:40",
+        "3": "Deuteronomy 4:41 - 4:49",
+        "4": "Deuteronomy 5:1 - 5:18",
+        "5": "Deuteronomy 5:19 - 6:3",
+        "6": "Deuteronomy 6:4 - 6:25",
+        "7": "Deuteronomy 7:1 - 7:11",
+        "haftarah": "Isaiah 40:1 - 40:26",
+        "triennial": {
+          "1": "Deuteronomy 5:1 - 5:18",
+          "2": "Deuteronomy 5:19 - 5:24",
+          "3": "Deuteronomy 5:25 - 5:30",
+          "4": "Deuteronomy 6:1 - 6:3",
+          "5": "Deuteronomy 6:4 - 6:9",
+          "6": "Deuteronomy 6:10 - 6:19",
+          "7": "Deuteronomy 6:20 - 6:25",
+          "maftir": "Deuteronomy 6:23 - 6:25"
+        },
+        "maftir": "Deuteronomy 7:9 - 7:11",
+        "torah": "Deuteronomy 3:23 - 7:11"
+      }
+    },
+    {
+      "category": "havdalah",
+      "date": "2018-07-28T21:08:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 9:08pm"
+    },
+    {
+      "title": "Candle lighting: 7:50pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-08-03T19:50:00-04:00",
+      "category": "candles"
+    },
+    {
+      "category": "parashat",
+      "leyning": {
+        "1": "Deuteronomy 7:12 - 8:10",
+        "2": "Deuteronomy 8:11 - 9:3",
+        "3": "Deuteronomy 9:4 - 9:29",
+        "4": "Deuteronomy 10:1 - 10:11",
+        "5": "Deuteronomy 10:12 - 11:9",
+        "6": "Deuteronomy 11:10 - 11:21",
+        "7": "Deuteronomy 11:22 - 11:25",
+        "triennial": {
+          "1": "Deuteronomy 9:4 - 9:10",
+          "2": "Deuteronomy 9:11 - 9:14",
+          "3": "Deuteronomy 9:15 - 9:21",
+          "4": "Deuteronomy 9:22 - 9:29",
+          "5": "Deuteronomy 10:1 - 10:5",
+          "6": "Deuteronomy 10:6 - 10:8",
+          "7": "Deuteronomy 10:9 - 10:11",
+          "maftir": "Deuteronomy 10:9 - 10:11"
+        },
+        "haftarah": "Isaiah 49:14 - 51:3",
+        "torah": "Deuteronomy 7:12 - 11:25",
+        "maftir": "Deuteronomy 11:22 - 11:25"
+      },
+      "date": "2018-08-04",
+      "hebrew": "פרשת עקב",
+      "link": "https://www.hebcal.com/sedrot/eikev",
+      "title": "Parashat Eikev"
+    },
+    {
+      "date": "2018-08-04T21:00:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 9:00pm",
+      "category": "havdalah"
+    },
+    {
+      "date": "2018-08-10T19:42:00-04:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 7:42pm",
+      "category": "candles"
+    },
+    {
+      "category": "parashat",
+      "leyning": {
+        "1": "Deuteronomy 11:26 - 12:10",
+        "2": "Deuteronomy 12:11 - 12:28",
+        "3": "Deuteronomy 12:29 - 13:19",
+        "4": "Deuteronomy 14:1 - 14:21",
+        "5": "Deuteronomy 14:22 - 14:29",
+        "6": "Deuteronomy 15:1 - 15:18",
+        "7": "Deuteronomy 15:19 - 16:17",
+        "maftir": "Numbers 28:9 - 28:15 | Shabbat Rosh Chodesh",
+        "torah": "Deuteronomy 11:26 - 16:17",
+        "haftarah": "Isaiah 66:1 - 66:24 | Shabbat Rosh Chodesh",
+        "triennial": {
+          "1": "Deuteronomy 12:29 - 13:1",
+          "2": "Deuteronomy 13:2 - 13:6",
+          "3": "Deuteronomy 13:7 - 13:12",
+          "4": "Deuteronomy 13:13 - 13:19",
+          "5": "Deuteronomy 14:1 - 14:8",
+          "6": "Deuteronomy 14:9 - 14:21",
+          "7": "Deuteronomy 14:22 - 14:29",
+          "maftir": "Numbers 28:9 - 28:15 | Shabbat Rosh Chodesh"
+        }
+      },
+      "date": "2018-08-11",
+      "hebrew": "פרשת ראה",
+      "link": "https://www.hebcal.com/sedrot/reeh",
+      "title": "Parashat Re'eh"
+    },
+    {
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-08-11T20:51:00-04:00",
+      "title": "Havdalah (53 min): 8:51pm",
+      "category": "havdalah"
+    },
+    {
+      "title": "Candle lighting: 7:32pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-08-17T19:32:00-04:00",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Shoftim",
+      "link": "https://www.hebcal.com/sedrot/shoftim",
+      "hebrew": "פרשת שופטים",
+      "date": "2018-08-18",
+      "leyning": {
+        "1": "Deuteronomy 16:18 - 17:13",
+        "2": "Deuteronomy 17:14 - 17:20",
+        "3": "Deuteronomy 18:1 - 18:5",
+        "4": "Deuteronomy 18:6 - 18:13",
+        "5": "Deuteronomy 18:14 - 19:13",
+        "6": "Deuteronomy 19:14 - 20:9",
+        "7": "Deuteronomy 20:10 - 21:9",
+        "triennial": {
+          "1": "Deuteronomy 18:6 - 18:8",
+          "2": "Deuteronomy 18:9 - 18:13",
+          "3": "Deuteronomy 18:14 - 18:17",
+          "4": "Deuteronomy 18:18 - 18:22",
+          "5": "Deuteronomy 19:1 - 19:7",
+          "6": "Deuteronomy 19:8 - 19:10",
+          "7": "Deuteronomy 19:11 - 19:13",
+          "maftir": "Deuteronomy 19:11 - 19:13"
+        },
+        "haftarah": "Isaiah 51:12 - 52:12",
+        "torah": "Deuteronomy 16:18 - 21:9",
+        "maftir": "Deuteronomy 21:7 - 21:9"
+      },
+      "category": "parashat"
+    },
+    {
+      "date": "2018-08-18T20:42:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 8:42pm",
+      "category": "havdalah"
+    },
+    {
+      "date": "2018-08-24T19:22:00-04:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 7:22pm",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Ki Teitzei",
+      "date": "2018-08-25",
+      "hebrew": "פרשת כי־תצא",
+      "link": "https://www.hebcal.com/sedrot/kiteitzei",
+      "leyning": {
+        "1": "Deuteronomy 21:10 - 21:21",
+        "2": "Deuteronomy 21:22 - 22:7",
+        "3": "Deuteronomy 22:8 - 23:7",
+        "4": "Deuteronomy 23:8 - 23:24",
+        "5": "Deuteronomy 23:25 - 24:4",
+        "6": "Deuteronomy 24:5 - 24:13",
+        "7": "Deuteronomy 24:14 - 25:19",
+        "maftir": "Deuteronomy 25:17 - 25:19",
+        "torah": "Deuteronomy 21:10 - 25:19",
+        "haftarah": "Isaiah 54:1 - 54:10",
+        "triennial": {
+          "1": "Deuteronomy 23:8 - 23:12",
+          "2": "Deuteronomy 23:13 - 23:15",
+          "3": "Deuteronomy 23:16 - 23:19",
+          "4": "Deuteronomy 23:20 - 23:24",
+          "5": "Deuteronomy 23:25 - 24:4",
+          "6": "Deuteronomy 24:5 - 24:9",
+          "7": "Deuteronomy 24:10 - 24:13",
+          "maftir": "Deuteronomy 24:10 - 24:13"
+        }
+      },
+      "category": "parashat"
+    },
+    {
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-08-25T20:31:00-04:00",
+      "title": "Havdalah (53 min): 8:31pm",
+      "category": "havdalah"
+    },
+    {
+      "title": "Candle lighting: 7:11pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-08-31T19:11:00-04:00",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Ki Tavo",
+      "hebrew": "פרשת כי־תבוא",
+      "link": "https://www.hebcal.com/sedrot/kitavo",
+      "date": "2018-09-01",
+      "leyning": {
+        "1": "Deuteronomy 26:1 - 26:11",
+        "2": "Deuteronomy 26:12 - 26:15",
+        "3": "Deuteronomy 26:16 - 26:19",
+        "4": "Deuteronomy 27:1 - 27:10",
+        "5": "Deuteronomy 27:11 - 28:6",
+        "6": "Deuteronomy 28:7 - 28:69",
+        "7": "Deuteronomy 29:1 - 29:8",
+        "haftarah": "Isaiah 60:1 - 60:22",
+        "triennial": {
+          "1": "Deuteronomy 26:12 - 26:15",
+          "2": "Deuteronomy 26:16 - 26:19",
+          "3": "Deuteronomy 27:1 - 27:3",
+          "4": "Deuteronomy 27:4 - 27:8",
+          "5": "Deuteronomy 27:6 - 27:10",
+          "6": "Deuteronomy 27:11 - 28:3",
+          "7": "Deuteronomy 28:4 - 28:6",
+          "maftir": "Deuteronomy 28:4 - 28:6"
+        },
+        "maftir": "Deuteronomy 29:6 - 29:8",
+        "torah": "Deuteronomy 26:1 - 29:8"
+      },
+      "category": "parashat"
+    },
+    {
+      "hebrew": "סליחות",
+      "link": "https://www.hebcal.com/holidays/leil-selichot",
+      "date": "2018-09-01",
+      "subcat": "minor",
+      "title": "Leil Selichot",
+      "memo": "Prayers for forgiveness in preparation for the High Holidays",
+      "category": "holiday"
+    },
+    {
+      "title": "Havdalah (53 min): 8:20pm",
+      "date": "2018-09-01T20:20:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 6:59pm",
+      "date": "2018-09-07T18:59:00-04:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "category": "parashat",
+      "leyning": {
+        "1": "Deuteronomy 29:9 - 29:11",
+        "2": "Deuteronomy 29:12 - 29:14",
+        "3": "Deuteronomy 29:15 - 29:28",
+        "4": "Deuteronomy 30:1 - 30:6",
+        "5": "Deuteronomy 30:7 - 30:10",
+        "6": "Deuteronomy 30:11 - 30:14",
+        "7": "Deuteronomy 30:15 - 30:20",
+        "triennial": {
+          "1": "Deuteronomy 29:9 - 29:11",
+          "2": "Deuteronomy 29:12 - 29:14",
+          "3": "Deuteronomy 29:15 - 29:28",
+          "4": "Deuteronomy 30:1 - 30:6",
+          "5": "Deuteronomy 30:7 - 30:10",
+          "6": "Deuteronomy 30:11 - 30:14",
+          "7": "Deuteronomy 30:15 - 30:20",
+          "maftir": "Deuteronomy 30:15 - 30:20"
+        },
+        "haftarah": "Isaiah 61:10 - 63:9",
+        "torah": "Deuteronomy 29:9 - 30:20",
+        "maftir": "Deuteronomy 30:15 - 30:20"
+      },
+      "hebrew": "פרשת נצבים",
+      "date": "2018-09-08",
+      "link": "https://www.hebcal.com/sedrot/nitzavim",
+      "title": "Parashat Nitzavim"
+    },
+    {
+      "date": "2018-09-08T20:09:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 8:09pm",
+      "category": "havdalah"
+    },
+    {
+      "link": "https://www.hebcal.com/holidays/rosh-hashana",
+      "hebrew": "ערב ראש השנה",
+      "date": "2018-09-09",
+      "title": "Erev Rosh Hashana",
+      "category": "holiday",
+      "memo": "The Jewish New Year"
+    },
+    {
+      "title": "Candle lighting: 6:56pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-09-09T18:56:00-04:00",
+      "category": "candles"
+    },
+    {
+      "memo": "The Jewish New Year",
+      "yomtov": true,
+      "category": "holiday",
+      "date": "2018-09-10",
+      "hebrew": "ראש השנה 5779",
+      "link": "https://www.hebcal.com/holidays/rosh-hashana",
+      "title": "Rosh Hashana 5779"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 8:05pm",
+      "date": "2018-09-10T20:05:00-04:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "yomtov": true,
+      "memo": "The Jewish New Year",
+      "title": "Rosh Hashana II",
+      "hebrew": "ראש השנה יום ב׳",
+      "date": "2018-09-11",
+      "category": "holiday",
+      "link": "https://www.hebcal.com/holidays/rosh-hashana",
+      "subcat": "major"
+    },
+    {
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-09-11T20:03:00-04:00",
+      "title": "Havdalah (53 min): 8:03pm",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 6:47pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-09-14T18:47:00-04:00"
+    },
+    {
+      "title": "Parashat Vayeilech",
+      "date": "2018-09-15",
+      "hebrew": "פרשת וילך",
+      "link": "https://www.hebcal.com/sedrot/vayeilech",
+      "leyning": {
+        "1": "Deuteronomy 31:1 - 31:3",
+        "2": "Deuteronomy 31:4 - 31:6",
+        "3": "Deuteronomy 31:7 - 31:9",
+        "4": "Deuteronomy 31:10 - 31:13",
+        "5": "Deuteronomy 31:14 - 31:19",
+        "6": "Deuteronomy 31:20 - 31:24",
+        "7": "Deuteronomy 31:25 - 31:30",
+        "haftarah": "Hosea 14:2-10; Micah 7:18-20; Joel 2:15-27 | Shabbat Shuva",
+        "triennial": {
+          "1": "Deuteronomy 31:1 - 31:3",
+          "2": "Deuteronomy 31:4 - 31:6",
+          "3": "Deuteronomy 31:7 - 31:9",
+          "4": "Deuteronomy 31:10 - 31:13",
+          "5": "Deuteronomy 31:14 - 31:19",
+          "6": "Deuteronomy 31:20 - 31:24",
+          "7": "Deuteronomy 31:25 - 31:30",
+          "maftir": "Deuteronomy 31:28 - 31:30"
+        },
+        "maftir": "Deuteronomy 31:28 - 31:30",
+        "torah": "Deuteronomy 31:1 - 31:30"
+      },
+      "category": "parashat"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 7:57pm",
+      "date": "2018-09-15T19:57:00-04:00",
+      "hebrew": "הבדלה - 53 דקות"
+    },
+    {
+      "memo": "Day of Atonement",
+      "category": "holiday",
+      "title": "Erev Yom Kippur",
+      "hebrew": "ערב יום כפור",
+      "link": "https://www.hebcal.com/holidays/yom-kippur",
+      "date": "2018-09-18"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 6:41pm",
+      "date": "2018-09-18T18:41:00-04:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "memo": "Day of Atonement",
+      "yomtov": true,
+      "title": "Yom Kippur",
+      "date": "2018-09-19",
+      "hebrew": "יום כפור",
+      "category": "holiday",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/yom-kippur"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-09-19T19:50:00-04:00",
+      "title": "Havdalah (53 min): 7:50pm"
+    },
+    {
+      "date": "2018-09-21T18:36:00-04:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 6:36pm",
+      "category": "candles"
+    },
+    {
+      "hebrew": "פרשת האזינו",
+      "link": "https://www.hebcal.com/sedrot/haazinu",
+      "date": "2018-09-22",
+      "title": "Parashat Ha'Azinu",
+      "category": "parashat",
+      "leyning": {
+        "1": "Deuteronomy 32:1 - 32:6",
+        "2": "Deuteronomy 32:7 - 32:12",
+        "3": "Deuteronomy 32:13 - 32:18",
+        "4": "Deuteronomy 32:19 - 32:28",
+        "5": "Deuteronomy 32:29 - 32:39",
+        "6": "Deuteronomy 32:40 - 32:43",
+        "7": "Deuteronomy 32:44 - 32:52",
+        "maftir": "Deuteronomy 32:48 - 32:52",
+        "torah": "Deuteronomy 32:1 - 32:52",
+        "haftarah": "II Samuel 22:1 - 22:51",
+        "triennial": {
+          "1": "Deuteronomy 32:1 - 32:6",
+          "2": "Deuteronomy 32:7 - 32:12",
+          "3": "Deuteronomy 32:13 - 32:18",
+          "4": "Deuteronomy 32:19 - 32:28",
+          "5": "Deuteronomy 32:29 - 32:39",
+          "6": "Deuteronomy 32:40 - 32:43",
+          "7": "Deuteronomy 32:44 - 32:52",
+          "maftir": "Deuteronomy 32:48 - 32:52"
+        }
+      }
+    },
+    {
+      "date": "2018-09-22T19:45:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 7:45pm",
+      "category": "havdalah"
+    },
+    {
+      "category": "holiday",
+      "memo": "Feast of Tabernacles",
+      "hebrew": "ערב סוכות",
+      "date": "2018-09-23",
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "title": "Erev Sukkot"
+    },
+    {
+      "title": "Candle lighting: 6:32pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-09-23T18:32:00-04:00",
+      "category": "candles"
+    },
+    {
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "subcat": "major",
+      "category": "holiday",
+      "title": "Sukkot I",
+      "date": "2018-09-24",
+      "hebrew": "סוכות יום א׳",
+      "memo": "Feast of Tabernacles",
+      "yomtov": true
+    },
+    {
+      "title": "Candle lighting: 7:42pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-09-24T19:42:00-04:00",
+      "category": "candles"
+    },
+    {
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "subcat": "major",
+      "category": "holiday",
+      "hebrew": "סוכות יום ב׳",
+      "date": "2018-09-25",
+      "title": "Sukkot II",
+      "memo": "Feast of Tabernacles",
+      "yomtov": true
+    },
+    {
+      "date": "2018-09-25T19:40:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 7:40pm",
+      "category": "havdalah"
+    },
+    {
+      "memo": "Feast of Tabernacles",
+      "category": "holiday",
+      "date": "2018-09-26",
+      "hebrew": "סוכות יום ג׳ (חול המועד)",
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "subcat": "major",
+      "title": "Sukkot III (CH''M)"
+    },
+    {
+      "subcat": "major",
+      "hebrew": "סוכות יום ד׳ (חול המועד)",
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "date": "2018-09-27",
+      "title": "Sukkot IV (CH''M)",
+      "category": "holiday",
+      "memo": "Feast of Tabernacles"
+    },
+    {
+      "title": "Sukkot V (CH''M)",
+      "subcat": "major",
+      "hebrew": "סוכות יום ה׳ (חול המועד)",
+      "date": "2018-09-28",
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "category": "holiday",
+      "memo": "Feast of Tabernacles"
+    },
+    {
+      "title": "Candle lighting: 6:24pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-09-28T18:24:00-04:00",
+      "category": "candles"
+    },
+    {
+      "hebrew": "סוכות יום ו׳ (חול המועד)",
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "date": "2018-09-29",
+      "subcat": "major",
+      "title": "Sukkot VI (CH''M)",
+      "memo": "Feast of Tabernacles",
+      "category": "holiday"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 7:33pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-09-29T19:33:00-04:00"
+    },
+    {
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "hebrew": "סוכות יום ז׳ (הושענא רבה)",
+      "date": "2018-09-30",
+      "title": "Sukkot VII (Hoshana Raba)",
+      "category": "holiday",
+      "memo": "Feast of Tabernacles"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "date": "2018-09-30T18:20:00-04:00",
+      "title": "Candle lighting: 6:20pm",
+      "category": "candles"
+    },
+    {
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/shmini-atzeret",
+      "category": "holiday",
+      "title": "Shmini Atzeret",
+      "date": "2018-10-01",
+      "hebrew": "שמיני עצרת",
+      "memo": "Eighth Day of Assembly",
+      "yomtov": true
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "date": "2018-10-01T19:30:00-04:00",
+      "title": "Candle lighting: 7:30pm",
+      "category": "candles"
+    },
+    {
+      "category": "holiday",
+      "link": "https://www.hebcal.com/holidays/simchat-torah",
+      "subcat": "major",
+      "yomtov": true,
+      "memo": "Day of Celebrating the Torah",
+      "hebrew": "שמחת תורה",
+      "date": "2018-10-02",
+      "title": "Simchat Torah"
+    },
+    {
+      "date": "2018-10-02T19:28:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 7:28pm",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 6:12pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-10-05T18:12:00-04:00"
+    },
+    {
+      "category": "parashat",
+      "leyning": {
+        "1": "Genesis 1:1 - 2:3",
+        "2": "Genesis 2:4 - 2:19",
+        "3": "Genesis 2:20 - 3:21",
+        "4": "Genesis 3:22 - 4:18",
+        "5": "Genesis 4:19 - 4:22",
+        "6": "Genesis 4:23 - 5:24",
+        "7": "Genesis 5:25 - 6:8",
+        "haftarah": "Isaiah 42:5 - 43:10",
+        "triennial": {
+          "1": "Genesis 5:1 - 5:5",
+          "2": "Genesis 5:6 - 5:8",
+          "3": "Genesis 5:9 - 5:14",
+          "4": "Genesis 5:15 - 5:20",
+          "5": "Genesis 5:21 - 5:24",
+          "6": "Genesis 5:25 - 5:31",
+          "7": "Genesis 5:32 - 6:8",
+          "maftir": "Genesis 6:5 - 6:8"
+        },
+        "maftir": "Genesis 6:5 - 6:8",
+        "torah": "Genesis 1:1 - 6:8"
+      },
+      "hebrew": "פרשת בראשית",
+      "link": "https://www.hebcal.com/sedrot/bereshit",
+      "date": "2018-10-06",
+      "title": "Parashat Bereshit"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-10-06T19:22:00-04:00",
+      "title": "Havdalah (53 min): 7:22pm"
+    },
+    {
+      "title": "Candle lighting: 6:01pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-10-12T18:01:00-04:00",
+      "category": "candles"
+    },
+    {
+      "leyning": {
+        "1": "Genesis 6:9 - 6:22",
+        "2": "Genesis 7:1 - 7:16",
+        "3": "Genesis 7:17 - 8:14",
+        "4": "Genesis 8:15 - 9:7",
+        "5": "Genesis 9:8 - 9:17",
+        "6": "Genesis 9:18 - 10:32",
+        "7": "Genesis 11:1 - 11:32",
+        "maftir": "Genesis 11:29 - 11:32",
+        "torah": "Genesis 6:9 - 11:32",
+        "haftarah": "Isaiah 54:1 - 55:5",
+        "triennial": {
+          "1": "Genesis 11:1 - 11:4",
+          "2": "Genesis 11:5 - 11:9",
+          "3": "Genesis 11:10 - 11:13",
+          "4": "Genesis 11:14 - 11:17",
+          "5": "Genesis 11:18 - 11:21",
+          "6": "Genesis 11:22 - 11:25",
+          "7": "Genesis 11:26 - 11:32",
+          "maftir": "Genesis 11:29 - 11:32"
+        }
+      },
+      "category": "parashat",
+      "title": "Parashat Noach",
+      "hebrew": "פרשת נח",
+      "date": "2018-10-13",
+      "link": "https://www.hebcal.com/sedrot/noach"
+    },
+    {
+      "date": "2018-10-13T19:11:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 7:11pm",
+      "category": "havdalah"
+    },
+    {
+      "title": "Candle lighting: 5:51pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-10-19T17:51:00-04:00",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Lech-Lecha",
+      "hebrew": "פרשת לך־לך",
+      "link": "https://www.hebcal.com/sedrot/lechlecha",
+      "date": "2018-10-20",
+      "leyning": {
+        "1": "Genesis 12:1 - 12:13",
+        "2": "Genesis 12:14 - 13:4",
+        "3": "Genesis 13:5 - 13:18",
+        "4": "Genesis 14:1 - 14:20",
+        "5": "Genesis 14:21 - 15:6",
+        "6": "Genesis 15:7 - 17:6",
+        "7": "Genesis 17:7 - 17:27",
+        "haftarah": "Isaiah 40:27 - 41:16",
+        "triennial": {
+          "1": "Genesis 16:1 - 16:6",
+          "2": "Genesis 16:7 - 16:9",
+          "3": "Genesis 16:10 - 16:16",
+          "4": "Genesis 17:1 - 17:6",
+          "5": "Genesis 17:7 - 17:17",
+          "6": "Genesis 17:18 - 17:23",
+          "7": "Genesis 17:24 - 17:27",
+          "maftir": "Genesis 17:24 - 17:27"
+        },
+        "maftir": "Genesis 17:24 - 17:27",
+        "torah": "Genesis 12:1 - 17:27"
+      },
+      "category": "parashat"
+    },
+    {
+      "category": "havdalah",
+      "date": "2018-10-20T19:00:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 7:00pm"
+    },
+    {
+      "date": "2018-10-26T17:41:00-04:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 5:41pm",
+      "category": "candles"
+    },
+    {
+      "hebrew": "פרשת וירא",
+      "date": "2018-10-27",
+      "link": "https://www.hebcal.com/sedrot/vayera",
+      "title": "Parashat Vayera",
+      "category": "parashat",
+      "leyning": {
+        "1": "Genesis 18:1 - 18:14",
+        "2": "Genesis 18:15 - 18:33",
+        "3": "Genesis 19:1 - 19:20",
+        "4": "Genesis 19:21 - 21:4",
+        "5": "Genesis 21:5 - 21:21",
+        "6": "Genesis 21:22 - 21:34",
+        "7": "Genesis 22:1 - 22:24",
+        "torah": "Genesis 18:1 - 22:24",
+        "maftir": "Genesis 22:20 - 22:24",
+        "triennial": {
+          "1": "Genesis 21:1 - 21:4",
+          "2": "Genesis 21:5 - 21:13",
+          "3": "Genesis 21:14 - 21:21",
+          "4": "Genesis 21:22 - 21:34",
+          "5": "Genesis 22:1 - 22:8",
+          "6": "Genesis 22:9 - 22:19",
+          "7": "Genesis 22:20 - 22:24",
+          "maftir": "Genesis 22:20 - 22:24"
+        },
+        "haftarah": "II Kings 4:1 - 4:37"
+      }
+    },
+    {
+      "title": "Havdalah (53 min): 6:51pm",
+      "date": "2018-10-27T18:51:00-04:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 5:32pm",
+      "date": "2018-11-02T17:32:00-04:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "leyning": {
+        "1": "Genesis 23:1 - 23:16",
+        "2": "Genesis 23:17 - 24:9",
+        "3": "Genesis 24:10 - 24:26",
+        "4": "Genesis 24:27 - 24:52",
+        "5": "Genesis 24:53 - 24:67",
+        "6": "Genesis 25:1 - 25:11",
+        "7": "Genesis 25:12 - 25:18",
+        "haftarah": "I Kings 1:1 - 1:31",
+        "triennial": {
+          "1": "Genesis 24:53 - 24:58",
+          "2": "Genesis 24:59 - 24:61",
+          "3": "Genesis 24:62 - 24:67",
+          "4": "Genesis 25:1 - 25:6",
+          "5": "Genesis 25:7 - 25:11",
+          "6": "Genesis 25:12 - 25:15",
+          "7": "Genesis 25:16 - 25:18",
+          "maftir": "Genesis 25:16 - 25:18"
+        },
+        "maftir": "Genesis 25:16 - 25:18",
+        "torah": "Genesis 23:1 - 25:18"
+      },
+      "category": "parashat",
+      "title": "Parashat Chayei Sara",
+      "link": "https://www.hebcal.com/sedrot/chayeisara",
+      "hebrew": "פרשת חיי שרה",
+      "date": "2018-11-03"
+    },
+    {
+      "title": "Havdalah (53 min): 6:42pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-11-03T18:42:00-04:00",
+      "category": "havdalah"
+    },
+    {
+      "title": "Candle lighting: 4:24pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-11-09T16:24:00-05:00",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Toldot",
+      "hebrew": "פרשת תולדות",
+      "date": "2018-11-10",
+      "link": "https://www.hebcal.com/sedrot/toldot",
+      "leyning": {
+        "1": "Genesis 25:19 - 26:5",
+        "2": "Genesis 26:6 - 26:12",
+        "3": "Genesis 26:13 - 26:22",
+        "4": "Genesis 26:23 - 26:29",
+        "5": "Genesis 26:30 - 27:27",
+        "6": "Genesis 27:28 - 28:4",
+        "7": "Genesis 28:5 - 28:9",
+        "haftarah": "Malachi 1:1 - 2:7",
+        "triennial": {
+          "1": "Genesis 27:28 - 27:30",
+          "2": "Genesis 27:31 - 27:33",
+          "3": "Genesis 27:34 - 27:37",
+          "4": "Genesis 27:38 - 27:40",
+          "5": "Genesis 27:41 - 27:46",
+          "6": "Genesis 28:1 - 28:4",
+          "7": "Genesis 28:5 - 28:9",
+          "maftir": "Genesis 28:7 - 28:9"
+        },
+        "maftir": "Genesis 28:7 - 28:9",
+        "torah": "Genesis 25:19 - 28:9"
+      },
+      "category": "parashat"
+    },
+    {
+      "date": "2018-11-10T17:34:00-05:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 5:34pm",
+      "category": "havdalah"
+    },
+    {
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-11-16T16:18:00-05:00",
+      "title": "Candle lighting: 4:18pm"
+    },
+    {
+      "category": "parashat",
+      "leyning": {
+        "1": "Genesis 28:10 - 28:22",
+        "2": "Genesis 29:1 - 29:17",
+        "3": "Genesis 29:18 - 30:13",
+        "4": "Genesis 30:14 - 30:27",
+        "5": "Genesis 30:28 - 31:16",
+        "6": "Genesis 31:17 - 31:42",
+        "7": "Genesis 31:43 - 32:3",
+        "maftir": "Genesis 32:1 - 32:3",
+        "torah": "Genesis 28:10 - 32:3",
+        "haftarah": "Hosea 12:13 - 14:10",
+        "triennial": {
+          "1": "Genesis 31:17 - 31:21",
+          "2": "Genesis 31:22 - 31:24",
+          "3": "Genesis 31:25 - 31:35",
+          "4": "Genesis 31:36 - 31:42",
+          "5": "Genesis 31:43 - 31:45",
+          "6": "Genesis 31:46 - 31:50",
+          "7": "Genesis 31:51 - 32:3",
+          "maftir": "Genesis 32:1 - 32:3"
+        }
+      },
+      "link": "https://www.hebcal.com/sedrot/vayetzei",
+      "hebrew": "פרשת ויצא",
+      "date": "2018-11-17",
+      "title": "Parashat Vayetzei"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 5:29pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-11-17T17:29:00-05:00"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 4:14pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-11-23T16:14:00-05:00"
+    },
+    {
+      "category": "parashat",
+      "leyning": {
+        "1": "Genesis 32:4 - 32:13",
+        "2": "Genesis 32:14 - 32:30",
+        "3": "Genesis 32:31 - 33:5",
+        "4": "Genesis 33:6 - 33:20",
+        "5": "Genesis 34:1 - 35:11",
+        "6": "Genesis 35:12 - 36:19",
+        "7": "Genesis 36:20 - 36:43",
+        "haftarah": "Obadiah 1:1 - 1:21",
+        "triennial": {
+          "1": "Genesis 35:16 - 35:26",
+          "2": "Genesis 35:27 - 35:29",
+          "3": "Genesis 36:1 - 36:8",
+          "4": "Genesis 36:9 - 36:19",
+          "5": "Genesis 36:20 - 36:30",
+          "6": "Genesis 36:31 - 36:39",
+          "7": "Genesis 36:40 - 36:43",
+          "maftir": "Genesis 36:40 - 36:43"
+        },
+        "maftir": "Genesis 36:40 - 36:43",
+        "torah": "Genesis 32:4 - 36:43"
+      },
+      "date": "2018-11-24",
+      "hebrew": "פרשת וישלח",
+      "link": "https://www.hebcal.com/sedrot/vayishlach",
+      "title": "Parashat Vayishlach"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-11-24T17:24:00-05:00",
+      "title": "Havdalah (53 min): 5:24pm"
+    },
+    {
+      "title": "Candle lighting: 4:11pm",
+      "date": "2018-11-30T16:11:00-05:00",
+      "hebrew": "הדלקת נרות",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Vayeshev",
+      "date": "2018-12-01",
+      "hebrew": "פרשת וישב",
+      "link": "https://www.hebcal.com/sedrot/vayeshev",
+      "leyning": {
+        "1": "Genesis 37:1 - 37:11",
+        "2": "Genesis 37:12 - 37:22",
+        "3": "Genesis 37:23 - 37:36",
+        "4": "Genesis 38:1 - 38:30",
+        "5": "Genesis 39:1 - 39:6",
+        "6": "Genesis 39:7 - 39:23",
+        "7": "Genesis 40:1 - 40:23",
+        "triennial": {
+          "1": "Genesis 39:1 - 39:6",
+          "2": "Genesis 39:7 - 39:10",
+          "3": "Genesis 39:11 - 39:18",
+          "4": "Genesis 39:19 - 39:23",
+          "5": "Genesis 40:1 - 40:8",
+          "6": "Genesis 40:9 - 40:15",
+          "7": "Genesis 40:16 - 40:23",
+          "maftir": "Genesis 40:20 - 40:23"
+        },
+        "haftarah": "Amos 2:6 - 3:8",
+        "torah": "Genesis 37:1 - 40:23",
+        "maftir": "Genesis 40:20 - 40:23"
+      },
+      "category": "parashat"
+    },
+    {
+      "category": "havdalah",
+      "date": "2018-12-01T17:22:00-05:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 5:22pm"
+    },
+    {
+      "category": "holiday",
+      "memo": "The Jewish festival of rededication, also known as the Festival of Lights",
+      "title": "Chanukah: 1 Candle: 5:21pm",
+      "subcat": "major",
+      "date": "2018-12-02T17:21:00-05:00",
+      "hebrew": "חנוכה: א׳ נר",
+      "link": "https://www.hebcal.com/holidays/chanukah"
+    },
+    {
+      "hebrew": "חנוכה: ב׳ נרות",
+      "link": "https://www.hebcal.com/holidays/chanukah",
+      "date": "2018-12-03T17:21:00-05:00",
+      "subcat": "major",
+      "title": "Chanukah: 2 Candles: 5:21pm",
+      "memo": "The Jewish festival of rededication, also known as the Festival of Lights",
+      "category": "holiday"
+    },
+    {
+      "hebrew": "חנוכה: ג׳ נרות",
+      "date": "2018-12-04T17:21:00-05:00",
+      "link": "https://www.hebcal.com/holidays/chanukah",
+      "subcat": "major",
+      "title": "Chanukah: 3 Candles: 5:21pm",
+      "memo": "The Jewish festival of rededication, also known as the Festival of Lights",
+      "category": "holiday"
+    },
+    {
+      "subcat": "major",
+      "hebrew": "חנוכה: ד׳ נרות",
+      "link": "https://www.hebcal.com/holidays/chanukah",
+      "date": "2018-12-05T17:21:00-05:00",
+      "title": "Chanukah: 4 Candles: 5:21pm",
+      "category": "holiday",
+      "memo": "The Jewish festival of rededication, also known as the Festival of Lights"
+    },
+    {
+      "category": "holiday",
+      "memo": "The Jewish festival of rededication, also known as the Festival of Lights",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/chanukah",
+      "hebrew": "חנוכה: ה׳ נרות",
+      "date": "2018-12-06T17:21:00-05:00",
+      "title": "Chanukah: 5 Candles: 5:21pm"
+    },
+    {
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/chanukah",
+      "hebrew": "חנוכה: ו׳ נרות",
+      "date": "2018-12-07T16:10:00-05:00",
+      "title": "Chanukah: 6 Candles: 4:10pm",
+      "category": "holiday",
+      "memo": "The Jewish festival of rededication, also known as the Festival of Lights"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "date": "2018-12-07T16:10:00-05:00",
+      "title": "Candle lighting: 4:10pm",
+      "category": "candles"
+    },
+    {
+      "leyning": {
+        "1": "Genesis 41:1 - 41:14",
+        "2": "Genesis 41:15 - 41:38",
+        "3": "Genesis 41:39 - 41:52",
+        "4": "Genesis 41:53 - 42:18",
+        "5": "Genesis 42:19 - 43:15",
+        "6": "Genesis 43:16 - 43:29",
+        "7": "Genesis 43:30 - 44:17",
+        "8": "Numbers 28:9 - 28:15 | Shabbat Rosh Chodesh Chanukah",
+        "triennial": {
+          "1": "Genesis 43:16 - 43:18",
+          "2": "Genesis 43:19 - 43:25",
+          "3": "Genesis 43:26 - 43:29",
+          "4": "Genesis 43:30 - 43:34",
+          "5": "Genesis 44:1 - 44:6",
+          "6": "Genesis 44:7 - 44:10",
+          "7": "Genesis 44:11 - 44:17",
+          "8": "Numbers 28:9 - 28:15 | Shabbat Rosh Chodesh Chanukah",
+          "maftir": "Numbers 7:42 - 7:47 | Shabbat Rosh Chodesh Chanukah"
+        },
+        "haftarah": "Zechariah 2:14-4:7 | Shabbat Rosh Chodesh Chanukah",
+        "torah": "Genesis 41:1 - 44:17",
+        "maftir": "Numbers 7:42 - 7:47 | Shabbat Rosh Chodesh Chanukah"
+      },
+      "category": "parashat",
+      "title": "Parashat Miketz",
+      "link": "https://www.hebcal.com/sedrot/miketz",
+      "hebrew": "פרשת מקץ",
+      "date": "2018-12-08"
+    },
+    {
+      "title": "Chanukah: 7 Candles: 5:21pm",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/chanukah",
+      "hebrew": "חנוכה: ז׳ נרות",
+      "date": "2018-12-08T17:21:00-05:00",
+      "category": "holiday",
+      "memo": "The Jewish festival of rededication, also known as the Festival of Lights"
+    },
+    {
+      "date": "2018-12-09T17:21:00-05:00",
+      "hebrew": "חנוכה: ח׳ נרות",
+      "link": "https://www.hebcal.com/holidays/chanukah",
+      "subcat": "major",
+      "title": "Chanukah: 8 Candles: 5:21pm",
+      "memo": "The Jewish festival of rededication, also known as the Festival of Lights",
+      "category": "holiday"
+    },
+    {
+      "hebrew": "חנוכה: יום ח׳",
+      "link": "https://www.hebcal.com/holidays/chanukah",
+      "date": "2018-12-10",
+      "subcat": "major",
+      "title": "Chanukah: 8th Day",
+      "memo": "The Jewish festival of rededication, also known as the Festival of Lights",
+      "category": "holiday"
+    },
+    {
+      "title": "Candle lighting: 4:11pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-12-14T16:11:00-05:00",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Vayigash",
+      "date": "2018-12-15",
+      "hebrew": "פרשת ויגש",
+      "link": "https://www.hebcal.com/sedrot/vayigash",
+      "leyning": {
+        "1": "Genesis 44:18 - 44:30",
+        "2": "Genesis 44:31 - 45:7",
+        "3": "Genesis 45:8 - 45:18",
+        "4": "Genesis 45:19 - 45:27",
+        "5": "Genesis 45:28 - 46:27",
+        "6": "Genesis 46:28 - 47:10",
+        "7": "Genesis 47:11 - 47:27",
+        "torah": "Genesis 44:18 - 47:27",
+        "maftir": "Genesis 47:25 - 47:27",
+        "triennial": {
+          "1": "Genesis 46:28 - 46:30",
+          "2": "Genesis 46:31 - 46:34",
+          "3": "Genesis 47:1 - 47:6",
+          "4": "Genesis 47:7 - 47:10",
+          "5": "Genesis 47:11 - 47:19",
+          "6": "Genesis 47:20 - 47:22",
+          "7": "Genesis 47:23 - 47:27",
+          "maftir": "Genesis 47:25 - 47:27"
+        },
+        "haftarah": "Ezekiel 37:15 - 37:28"
+      },
+      "category": "parashat"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 5:22pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-12-15T17:22:00-05:00"
+    },
+    {
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "date": "2018-12-21T16:14:00-05:00",
+      "title": "Candle lighting: 4:14pm"
+    },
+    {
+      "leyning": {
+        "1": "Genesis 47:28 - 48:9",
+        "2": "Genesis 48:10 - 48:16",
+        "3": "Genesis 48:17 - 48:22",
+        "4": "Genesis 49:1 - 49:18",
+        "5": "Genesis 49:19 - 49:26",
+        "6": "Genesis 49:27 - 50:20",
+        "7": "Genesis 50:21 - 50:26",
+        "torah": "Genesis 47:28 - 50:26",
+        "maftir": "Genesis 50:23 - 50:26",
+        "triennial": {
+          "1": "Genesis 49:27 - 49:30",
+          "2": "Genesis 49:31 - 49:33",
+          "3": "Genesis 50:1 - 50:6",
+          "4": "Genesis 50:7 - 50:9",
+          "5": "Genesis 50:10 - 50:14",
+          "6": "Genesis 50:15 - 50:20",
+          "7": "Genesis 50:21 - 50:26",
+          "maftir": "Genesis 50:23 - 50:26"
+        },
+        "haftarah": "I Kings 2:1 - 2:12"
+      },
+      "category": "parashat",
+      "title": "Parashat Vayechi",
+      "date": "2018-12-22",
+      "hebrew": "פרשת ויחי",
+      "link": "https://www.hebcal.com/sedrot/vayechi"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 5:25pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-12-22T17:25:00-05:00"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "date": "2018-12-28T16:18:00-05:00",
+      "title": "Candle lighting: 4:18pm",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Shemot",
+      "hebrew": "פרשת שמות",
+      "link": "https://www.hebcal.com/sedrot/shemot",
+      "date": "2018-12-29",
+      "leyning": {
+        "1": "Exodus 1:1 - 1:17",
+        "2": "Exodus 1:18 - 2:10",
+        "3": "Exodus 2:11 - 2:25",
+        "4": "Exodus 3:1 - 3:15",
+        "5": "Exodus 3:16 - 4:17",
+        "6": "Exodus 4:18 - 4:31",
+        "7": "Exodus 5:1 - 6:1",
+        "torah": "Exodus 1:1 - 6:1",
+        "maftir": "Exodus 5:22 - 6:1",
+        "triennial": {
+          "1": "Exodus 4:18 - 4:20",
+          "2": "Exodus 4:21 - 4:26",
+          "3": "Exodus 4:27 - 4:31",
+          "4": "Exodus 5:1 - 5:5",
+          "5": "Exodus 5:6 - 5:9",
+          "6": "Exodus 5:10 - 5:14",
+          "7": "Exodus 5:15 - 6:1",
+          "maftir": "Exodus 5:22 - 6:1"
+        },
+        "haftarah": "Isaiah 27:6 - 28:13; 29:22 - 29:23"
+      },
+      "category": "parashat"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-12-29T17:30:00-05:00",
+      "title": "Havdalah (53 min): 5:30pm"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "date": "2019-01-04T16:24:00-05:00",
+      "title": "Candle lighting: 4:24pm",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Vaera",
+      "category": "parashat",
+      "date": "2019-01-05",
+      "link": "https://www.hebcal.com/sedrot/vaera",
+      "leyning": {
+        "1": "Exodus 6:2 - 6:13",
+        "2": "Exodus 6:14 - 6:28",
+        "3": "Exodus 6:29 - 7:7",
+        "4": "Exodus 7:8 - 8:6",
+        "5": "Exodus 8:7 - 8:18",
+        "6": "Exodus 8:19 - 9:16",
+        "7": "Exodus 9:17 - 9:35",
+        "triennial": {
+          "1": "Exodus 8:16 - 8:23",
+          "2": "Exodus 8:24 - 8:28",
+          "3": "Exodus 9:1 - 9:7",
+          "4": "Exodus 9:8 - 9:16",
+          "5": "Exodus 9:17 - 9:21",
+          "6": "Exodus 9:22 - 9:26",
+          "7": "Exodus 9:27 - 9:35",
+          "maftir": "Exodus 9:33 - 9:35"
+        },
+        "maftir": "Exodus 9:33 - 9:35",
+        "haftarah": "Ezekiel 28:25 - 29:21",
+        "torah": "Exodus 6:2 - 9:35"
+      },
+      "hebrew": "פרשת וארא"
+    },
+    {
+      "date": "2019-01-05T17:36:00-05:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 5:36pm"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 4:31pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2019-01-11T16:31:00-05:00"
+    },
+    {
+      "category": "parashat",
+      "title": "Parashat Bo",
+      "date": "2019-01-12",
+      "leyning": {
+        "1": "Exodus 10:1 - 10:11",
+        "2": "Exodus 10:12 - 10:23",
+        "3": "Exodus 10:24 - 11:3",
+        "4": "Exodus 11:4 - 12:20",
+        "5": "Exodus 12:21 - 12:28",
+        "6": "Exodus 12:29 - 12:51",
+        "7": "Exodus 13:1 - 13:16",
+        "maftir": "Exodus 13:14 - 13:16",
+        "haftarah": "Jeremiah 46:13 - 46:28",
+        "triennial": {
+          "1": "Exodus 12:29 - 12:32",
+          "2": "Exodus 12:33 - 12:36",
+          "3": "Exodus 12:37 - 12:42",
+          "4": "Exodus 12:43 - 12:51",
+          "5": "Exodus 13:1 - 13:4",
+          "6": "Exodus 13:5 - 13:10",
+          "7": "Exodus 13:11 - 13:16",
+          "maftir": "Exodus 13:14 - 13:16"
+        },
+        "torah": "Exodus 10:1 - 13:16"
+      },
+      "link": "https://www.hebcal.com/sedrot/bo",
+      "hebrew": "פרשת בא"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 5:43pm",
+      "date": "2019-01-12T17:43:00-05:00",
+      "hebrew": "הבדלה - 53 דקות"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 4:39pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2019-01-18T16:39:00-05:00"
+    },
+    {
+      "category": "parashat",
+      "title": "Parashat Beshalach",
+      "date": "2019-01-19",
+      "link": "https://www.hebcal.com/sedrot/beshalach",
+      "leyning": {
+        "1": "Exodus 13:17 - 14:8",
+        "2": "Exodus 14:9 - 14:14",
+        "3": "Exodus 14:15 - 14:25",
+        "4": "Exodus 14:26 - 15:26",
+        "5": "Exodus 15:27 - 16:10",
+        "6": "Exodus 16:11 - 16:36",
+        "7": "Exodus 17:1 - 17:16",
+        "maftir": "Exodus 17:14 - 17:16",
+        "haftarah": "Judges 4:4 - 5:31",
+        "triennial": {
+          "1": "Exodus 14:26 - 15:21",
+          "2": "Exodus 15:22 - 15:26",
+          "3": "Exodus 15:27 - 16:10",
+          "4": "Exodus 16:11 - 16:27",
+          "5": "Exodus 16:28 - 16:36",
+          "6": "Exodus 17:1 - 17:7",
+          "7": "Exodus 17:8 - 17:16",
+          "maftir": "Exodus 17:14 - 17:16"
+        },
+        "torah": "Exodus 13:17 - 17:16"
+      },
+      "hebrew": "פרשת בשלח"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 5:51pm",
+      "date": "2019-01-19T17:51:00-05:00",
+      "hebrew": "הבדלה - 53 דקות"
+    },
+    {
+      "title": "Tu BiShvat",
+      "category": "holiday",
+      "subcat": "minor",
+      "date": "2019-01-21",
+      "memo": "New Year for Trees",
+      "hebrew": "טו בשבט",
+      "link": "https://www.hebcal.com/holidays/tu-bishvat"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 4:47pm",
+      "date": "2019-01-25T16:47:00-05:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "title": "Parashat Yitro",
+      "category": "parashat",
+      "date": "2019-01-26",
+      "link": "https://www.hebcal.com/sedrot/yitro",
+      "leyning": {
+        "1": "Exodus 18:1 - 18:12",
+        "2": "Exodus 18:13 - 18:23",
+        "3": "Exodus 18:24 - 18:27",
+        "4": "Exodus 19:1 - 19:6",
+        "5": "Exodus 19:7 - 19:19",
+        "6": "Exodus 19:20 - 20:14",
+        "7": "Exodus 20:15 - 20:23",
+        "maftir": "Exodus 20:19 - 20:23",
+        "haftarah": "Isaiah 6:1 - 7:6; 9:5 - 9:6",
+        "triennial": {
+          "1": "Exodus 18:1 - 18:12",
+          "2": "Exodus 18:13 - 18:23",
+          "3": "Exodus 18:24 - 18:27",
+          "4": "Exodus 19:1 - 19:6",
+          "5": "Exodus 19:7 - 19:19",
+          "6": "Exodus 19:20 - 20:14",
+          "7": "Exodus 20:15 - 20:23",
+          "maftir": "Exodus 20:19 - 20:23"
+        },
+        "torah": "Exodus 18:1 - 20:23"
+      },
+      "hebrew": "פרשת יתרו"
+    },
+    {
+      "title": "Havdalah (53 min): 5:59pm",
+      "category": "havdalah",
+      "date": "2019-01-26T17:59:00-05:00",
+      "hebrew": "הבדלה - 53 דקות"
+    }
+  ],
+  "link": "https://www.hebcal.com/hebcal/?v=1;maj=on;min=on;mod=off;nx=off;s=on;year=2018;month=x;ss=off;mf=off;c=on;geo=pos;latitude=40.7128;longitude=-74.0060;tzid=America%2FNew_York;m=53;i=off;b=18",
+  "date": "2018-10-28T05:29:05-00:00"
+}

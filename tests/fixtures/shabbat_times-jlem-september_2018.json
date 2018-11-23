@@ -1,0 +1,244 @@
+{
+  "link": "https://www.hebcal.com/hebcal/?b=18;c=on;geo=pos;i=on;latitude=31.778;longitude=35.235;m=53;maj=on;mf=off;min=on;mod=off;month=9;nx=off;s=off;ss=off;tzid=Asia%2FJerusalem;v=1;year=2018",
+  "latitude": "31.778",
+  "title": "Hebcal September 2018 31.778, 35.235, Asia/Jerusalem",
+  "date": "2018-11-23T04:51:56-00:00",
+  "longitude": "35.235",
+  "items": [
+    {
+      "link": "https://www.hebcal.com/holidays/leil-selichot",
+      "subcat": "minor",
+      "title": "Leil Selichot",
+      "memo": "Prayers for forgiveness in preparation for the High Holidays",
+      "date": "2018-09-01",
+      "category": "holiday",
+      "hebrew": "סליחות"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 7:56pm",
+      "date": "2018-09-01T19:56:00+03:00"
+    },
+    {
+      "date": "2018-09-07T18:37:00+03:00",
+      "title": "Candle lighting: 6:37pm",
+      "hebrew": "הדלקת נרות",
+      "category": "candles"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 7:47pm",
+      "date": "2018-09-08T19:47:00+03:00"
+    },
+    {
+      "link": "https://www.hebcal.com/holidays/rosh-hashana",
+      "memo": "The Jewish New Year",
+      "date": "2018-09-09",
+      "title": "Erev Rosh Hashana",
+      "hebrew": "ערב ראש השנה",
+      "category": "holiday"
+    },
+    {
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 6:34pm",
+      "date": "2018-09-09T18:34:00+03:00"
+    },
+    {
+      "hebrew": "ראש השנה 5779",
+      "category": "holiday",
+      "memo": "The Jewish New Year",
+      "date": "2018-09-10",
+      "title": "Rosh Hashana 5779",
+      "link": "https://www.hebcal.com/holidays/rosh-hashana",
+      "yomtov": true
+    },
+    {
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 7:44pm",
+      "date": "2018-09-10T19:44:00+03:00"
+    },
+    {
+      "yomtov": true,
+      "title": "Rosh Hashana II",
+      "date": "2018-09-11",
+      "link": "https://www.hebcal.com/holidays/rosh-hashana",
+      "subcat": "major",
+      "memo": "The Jewish New Year",
+      "category": "holiday",
+      "hebrew": "ראש השנה יום ב׳"
+    },
+    {
+      "date": "2018-09-11T19:43:00+03:00",
+      "title": "Havdalah (53 min): 7:43pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah"
+    },
+    {
+      "title": "Candle lighting: 6:28pm",
+      "date": "2018-09-14T18:28:00+03:00",
+      "category": "candles",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "date": "2018-09-15T19:38:00+03:00",
+      "title": "Havdalah (53 min): 7:38pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah"
+    },
+    {
+      "link": "https://www.hebcal.com/holidays/yom-kippur",
+      "date": "2018-09-18",
+      "memo": "Day of Atonement",
+      "title": "Erev Yom Kippur",
+      "hebrew": "ערב יום כפור",
+      "category": "holiday"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "category": "candles",
+      "date": "2018-09-18T18:23:00+03:00",
+      "title": "Candle lighting: 6:23pm"
+    },
+    {
+      "memo": "Day of Atonement",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/yom-kippur",
+      "hebrew": "יום כפור",
+      "category": "holiday",
+      "date": "2018-09-19",
+      "title": "Yom Kippur",
+      "yomtov": true
+    },
+    {
+      "title": "Havdalah (53 min): 7:32pm",
+      "date": "2018-09-19T19:32:00+03:00",
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות"
+    },
+    {
+      "date": "2018-09-21T18:19:00+03:00",
+      "title": "Candle lighting: 6:19pm",
+      "hebrew": "הדלקת נרות",
+      "category": "candles"
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 7:28pm",
+      "date": "2018-09-22T19:28:00+03:00"
+    },
+    {
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "date": "2018-09-23",
+      "memo": "Feast of Tabernacles",
+      "title": "Erev Sukkot",
+      "hebrew": "ערב סוכות",
+      "category": "holiday"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "category": "candles",
+      "date": "2018-09-23T18:16:00+03:00",
+      "title": "Candle lighting: 6:16pm"
+    },
+    {
+      "date": "2018-09-24",
+      "title": "Sukkot I",
+      "yomtov": true,
+      "hebrew": "סוכות יום א׳",
+      "category": "holiday",
+      "memo": "Feast of Tabernacles",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/sukkot"
+    },
+    {
+      "date": "2018-09-24T19:26:00+03:00",
+      "title": "Havdalah (53 min): 7:26pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah"
+    },
+    {
+      "category": "holiday",
+      "hebrew": "סוכות יום ב׳ (חול המועד)",
+      "subcat": "major",
+      "title": "Sukkot II (CH''M)",
+      "memo": "Feast of Tabernacles",
+      "date": "2018-09-25",
+      "link": "https://www.hebcal.com/holidays/sukkot"
+    },
+    {
+      "hebrew": "סוכות יום ג׳ (חול המועד)",
+      "category": "holiday",
+      "date": "2018-09-26",
+      "memo": "Feast of Tabernacles",
+      "title": "Sukkot III (CH''M)",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/sukkot"
+    },
+    {
+      "hebrew": "סוכות יום ד׳ (חול המועד)",
+      "category": "holiday",
+      "date": "2018-09-27",
+      "memo": "Feast of Tabernacles",
+      "subcat": "major",
+      "title": "Sukkot IV (CH''M)",
+      "link": "https://www.hebcal.com/holidays/sukkot"
+    },
+    {
+      "title": "Sukkot V (CH''M)",
+      "subcat": "major",
+      "memo": "Feast of Tabernacles",
+      "date": "2018-09-28",
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "category": "holiday",
+      "hebrew": "סוכות יום ה׳ (חול המועד)"
+    },
+    {
+      "title": "Candle lighting: 6:10pm",
+      "date": "2018-09-28T18:10:00+03:00",
+      "category": "candles",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "category": "holiday",
+      "hebrew": "סוכות יום ו׳ (חול המועד)",
+      "title": "Sukkot VI (CH''M)",
+      "subcat": "major",
+      "date": "2018-09-29",
+      "memo": "Feast of Tabernacles",
+      "link": "https://www.hebcal.com/holidays/sukkot"
+    },
+    {
+      "title": "Havdalah (53 min): 7:19pm",
+      "date": "2018-09-29T19:19:00+03:00",
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות"
+    },
+    {
+      "date": "2018-09-30",
+      "memo": "Feast of Tabernacles",
+      "title": "Sukkot VII (Hoshana Raba)",
+      "subcat": "major",
+      "link": "https://www.hebcal.com/holidays/sukkot",
+      "hebrew": "סוכות יום ז׳ (הושענא רבה)",
+      "category": "holiday"
+    },
+    {
+      "date": "2018-09-30T18:07:00+03:00",
+      "title": "Candle lighting: 6:07pm",
+      "hebrew": "הדלקת נרות",
+      "category": "candles"
+    }
+  ],
+  "location": {
+    "geo": "pos",
+    "longitude": "35.235",
+    "tzid": "Asia/Jerusalem",
+    "title": "31.778, 35.235, Asia/Jerusalem",
+    "latitude": "31.778"
+  }
+}

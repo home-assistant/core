@@ -1,0 +1,189 @@
+{
+  "title": "Hebcal January 2019 40.7128, -74.0060, America/New_York",
+  "location": {
+    "tzid": "America/New_York",
+    "geo": "pos",
+    "title": "40.7128, -74.0060, America/New_York",
+    "longitude": "-74.0060",
+    "latitude": "40.7128"
+  },
+  "longitude": "-74.0060",
+  "latitude": "40.7128",
+  "items": [
+    {
+      "hebrew": "הדלקת נרות",
+      "date": "2019-01-04T16:24:00-05:00",
+      "title": "Candle lighting: 4:24pm",
+      "category": "candles"
+    },
+    {
+      "title": "Parashat Vaera",
+      "category": "parashat",
+      "date": "2019-01-05",
+      "link": "https://www.hebcal.com/sedrot/vaera",
+      "leyning": {
+        "1": "Exodus 6:2 - 6:13",
+        "2": "Exodus 6:14 - 6:28",
+        "3": "Exodus 6:29 - 7:7",
+        "4": "Exodus 7:8 - 8:6",
+        "5": "Exodus 8:7 - 8:18",
+        "6": "Exodus 8:19 - 9:16",
+        "7": "Exodus 9:17 - 9:35",
+        "triennial": {
+          "1": "Exodus 8:16 - 8:23",
+          "2": "Exodus 8:24 - 8:28",
+          "3": "Exodus 9:1 - 9:7",
+          "4": "Exodus 9:8 - 9:16",
+          "5": "Exodus 9:17 - 9:21",
+          "6": "Exodus 9:22 - 9:26",
+          "7": "Exodus 9:27 - 9:35",
+          "maftir": "Exodus 9:33 - 9:35"
+        },
+        "maftir": "Exodus 9:33 - 9:35",
+        "haftarah": "Ezekiel 28:25 - 29:21",
+        "torah": "Exodus 6:2 - 9:35"
+      },
+      "hebrew": "פרשת וארא"
+    },
+    {
+      "date": "2019-01-05T17:36:00-05:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 5:36pm"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 4:31pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2019-01-11T16:31:00-05:00"
+    },
+    {
+      "category": "parashat",
+      "title": "Parashat Bo",
+      "date": "2019-01-12",
+      "leyning": {
+        "1": "Exodus 10:1 - 10:11",
+        "2": "Exodus 10:12 - 10:23",
+        "3": "Exodus 10:24 - 11:3",
+        "4": "Exodus 11:4 - 12:20",
+        "5": "Exodus 12:21 - 12:28",
+        "6": "Exodus 12:29 - 12:51",
+        "7": "Exodus 13:1 - 13:16",
+        "maftir": "Exodus 13:14 - 13:16",
+        "haftarah": "Jeremiah 46:13 - 46:28",
+        "triennial": {
+          "1": "Exodus 12:29 - 12:32",
+          "2": "Exodus 12:33 - 12:36",
+          "3": "Exodus 12:37 - 12:42",
+          "4": "Exodus 12:43 - 12:51",
+          "5": "Exodus 13:1 - 13:4",
+          "6": "Exodus 13:5 - 13:10",
+          "7": "Exodus 13:11 - 13:16",
+          "maftir": "Exodus 13:14 - 13:16"
+        },
+        "torah": "Exodus 10:1 - 13:16"
+      },
+      "link": "https://www.hebcal.com/sedrot/bo",
+      "hebrew": "פרשת בא"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 5:43pm",
+      "date": "2019-01-12T17:43:00-05:00",
+      "hebrew": "הבדלה - 53 דקות"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 4:39pm",
+      "hebrew": "הדלקת נרות",
+      "date": "2019-01-18T16:39:00-05:00"
+    },
+    {
+      "category": "parashat",
+      "title": "Parashat Beshalach",
+      "date": "2019-01-19",
+      "link": "https://www.hebcal.com/sedrot/beshalach",
+      "leyning": {
+        "1": "Exodus 13:17 - 14:8",
+        "2": "Exodus 14:9 - 14:14",
+        "3": "Exodus 14:15 - 14:25",
+        "4": "Exodus 14:26 - 15:26",
+        "5": "Exodus 15:27 - 16:10",
+        "6": "Exodus 16:11 - 16:36",
+        "7": "Exodus 17:1 - 17:16",
+        "maftir": "Exodus 17:14 - 17:16",
+        "haftarah": "Judges 4:4 - 5:31",
+        "triennial": {
+          "1": "Exodus 14:26 - 15:21",
+          "2": "Exodus 15:22 - 15:26",
+          "3": "Exodus 15:27 - 16:10",
+          "4": "Exodus 16:11 - 16:27",
+          "5": "Exodus 16:28 - 16:36",
+          "6": "Exodus 17:1 - 17:7",
+          "7": "Exodus 17:8 - 17:16",
+          "maftir": "Exodus 17:14 - 17:16"
+        },
+        "torah": "Exodus 13:17 - 17:16"
+      },
+      "hebrew": "פרשת בשלח"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 5:51pm",
+      "date": "2019-01-19T17:51:00-05:00",
+      "hebrew": "הבדלה - 53 דקות"
+    },
+    {
+      "title": "Tu BiShvat",
+      "category": "holiday",
+      "subcat": "minor",
+      "date": "2019-01-21",
+      "memo": "New Year for Trees",
+      "hebrew": "טו בשבט",
+      "link": "https://www.hebcal.com/holidays/tu-bishvat"
+    },
+    {
+      "category": "candles",
+      "title": "Candle lighting: 4:47pm",
+      "date": "2019-01-25T16:47:00-05:00",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "title": "Parashat Yitro",
+      "category": "parashat",
+      "date": "2019-01-26",
+      "link": "https://www.hebcal.com/sedrot/yitro",
+      "leyning": {
+        "1": "Exodus 18:1 - 18:12",
+        "2": "Exodus 18:13 - 18:23",
+        "3": "Exodus 18:24 - 18:27",
+        "4": "Exodus 19:1 - 19:6",
+        "5": "Exodus 19:7 - 19:19",
+        "6": "Exodus 19:20 - 20:14",
+        "7": "Exodus 20:15 - 20:23",
+        "maftir": "Exodus 20:19 - 20:23",
+        "haftarah": "Isaiah 6:1 - 7:6; 9:5 - 9:6",
+        "triennial": {
+          "1": "Exodus 18:1 - 18:12",
+          "2": "Exodus 18:13 - 18:23",
+          "3": "Exodus 18:24 - 18:27",
+          "4": "Exodus 19:1 - 19:6",
+          "5": "Exodus 19:7 - 19:19",
+          "6": "Exodus 19:20 - 20:14",
+          "7": "Exodus 20:15 - 20:23",
+          "maftir": "Exodus 20:19 - 20:23"
+        },
+        "torah": "Exodus 18:1 - 20:23"
+      },
+      "hebrew": "פרשת יתרו"
+    },
+    {
+      "title": "Havdalah (53 min): 5:59pm",
+      "category": "havdalah",
+      "date": "2019-01-26T17:59:00-05:00",
+      "hebrew": "הבדלה - 53 דקות"
+    }
+  ],
+  "link": "https://www.hebcal.com/hebcal/?v=1;maj=on;min=on;mod=off;nx=off;s=on;year=2019;month=1;ss=off;mf=off;c=on;geo=pos;latitude=40.7128;longitude=-74.0060;tzid=America%2FNew_York;m=53;i=off;b=18",
+  "date": "2018-10-28T04:56:31-00:00"
+}

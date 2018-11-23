@@ -1,0 +1,70 @@
+{
+  "longitude": "35.235",
+  "link": "https://www.hebcal.com/hebcal/?b=18;c=on;geo=pos;i=on;latitude=31.778;longitude=35.235;m=53;maj=on;mf=off;min=on;mod=off;month=8;nx=off;s=off;ss=off;tzid=Asia%2FJerusalem;v=1;year=2018",
+  "date": "2018-11-23T04:50:59-00:00",
+  "items": [
+    {
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 7:16pm",
+      "category": "candles",
+      "date": "2018-08-03T19:16:00+03:00"
+    },
+    {
+      "category": "havdalah",
+      "date": "2018-08-04T20:26:00+03:00",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 8:26pm"
+    },
+    {
+      "category": "candles",
+      "date": "2018-08-10T19:09:00+03:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 7:09pm"
+    },
+    {
+      "date": "2018-08-11T20:19:00+03:00",
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 8:19pm"
+    },
+    {
+      "category": "candles",
+      "date": "2018-08-17T19:02:00+03:00",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 7:02pm"
+    },
+    {
+      "category": "havdalah",
+      "date": "2018-08-18T20:12:00+03:00",
+      "title": "Havdalah (53 min): 8:12pm",
+      "hebrew": "הבדלה - 53 דקות"
+    },
+    {
+      "date": "2018-08-24T18:54:00+03:00",
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 6:54pm"
+    },
+    {
+      "title": "Havdalah (53 min): 8:04pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah",
+      "date": "2018-08-25T20:04:00+03:00"
+    },
+    {
+      "date": "2018-08-31T18:46:00+03:00",
+      "category": "candles",
+      "title": "Candle lighting: 6:46pm",
+      "hebrew": "הדלקת נרות"
+    }
+  ],
+  "title": "Hebcal August 2018 31.778, 35.235, Asia/Jerusalem",
+  "latitude": "31.778",
+  "location": {
+    "geo": "pos",
+    "longitude": "35.235",
+    "tzid": "Asia/Jerusalem",
+    "title": "31.778, 35.235, Asia/Jerusalem",
+    "latitude": "31.778"
+  }
+}

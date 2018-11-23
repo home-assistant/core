@@ -4,26 +4,30 @@ Sensor to retrieve Jewish ritual times for Shabbat & Yom Tov from Hebcal API.
 
 """
 import asyncio
+from collections import namedtuple
 import datetime
-import logging
 import json
+import logging
+
 import requests
 import voluptuous as vol
-from collections import namedtuple
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL, CONF_LONGITUDE, CONF_LATITUDE, CONF_NAME,
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_SCAN_INTERVAL,
     CONF_TIME_ZONE)
-from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import async_get_last_state
-import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Shabbat Time"
+DEFAULT_NAME = "Shabbat Times"
 HAVDALAH_MINUTES = 'havdalah_minutes_after_sundown'
 CANDLE_LIGHT_MINUTES = 'candle_lighting_minutes_before_sunset'
+DIASPORA = 'diaspora'
 
 HAVDALAH_DEFAULT = 53
 CANDLE_LIGHT_DEFAULT = 18
@@ -40,6 +44,7 @@ SENSOR_ATTRIBUTES = [HAVDALAH_MINUTES, CANDLE_LIGHT_MINUTES,
                      TITLE, HEBREW_TITLE]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    # TODO fixme
     vol.Inclusive(CONF_LATITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
@@ -48,6 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(HAVDALAH_MINUTES, default=HAVDALAH_DEFAULT): int,
     vol.Optional(CANDLE_LIGHT_MINUTES, default=CANDLE_LIGHT_DEFAULT): int,
+    vol.Optional(DIASPORA, default=True): bool,
     vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period
 })
 
@@ -58,13 +64,14 @@ UNKNOWN_END = datetime.datetime.max
 async def async_setup_platform(hass, config, add_devices, discovery_info=None):
     havdalah = config.get(HAVDALAH_MINUTES)
     candle_light = config.get(CANDLE_LIGHT_MINUTES)
+    diaspora = config.get(DIASPORA)
     name = config.get(CONF_NAME)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     timezone = config.get(CONF_TIME_ZONE, hass.config.time_zone)
 
     add_devices([ShabbatTimes(hass, latitude, longitude, timezone, name,
-                              havdalah, candle_light)])
+                              havdalah, candle_light, diaspora)])
 
 ###
 # Supporting components
@@ -94,39 +101,42 @@ def _parse_time(timestr, includes_timezone=True):
 class ShabbatTimesFetcher:
     """Utility class for fetching Shabbat/YomTov times from Hebcal."""
 
-    def __init__(self, latitude, longitude, timezone, havdalah, candle_light):
+    def __init__(self, latitude, longitude, timezone, havdalah, candle_light,
+                 diaspora):
         self._latitude = latitude
         self._longitude = longitude
         self._timezone = timezone
         self._havdalah = havdalah
         self._candle_light = candle_light
+        self._diaspora = diaspora
         self.error = None
 
-    def _fetchHebcalResponse(self, year, month):
+    def _fetch_hebcal_response(self, year, month):
         """Fetches a JSON object from Hebcal for a given month+year.
 
         This relies on correct setting of parameters in the constructor, e.g.
         latlng.
         """
-        hebcal_url = ("http://www.hebcal.com/hebcal/?v=1&cfg=json&maj=off&"
-                      "min=off&mod=off&nx=off&s=on&year=%d&month=%d&ss=off"
+        hebcal_url = ("http://www.hebcal.com/hebcal/?v=1&cfg=json&maj=on&"
+                      "min=on&mod=off&nx=off&s=on&year=%d&month=%d&ss=off"
                       "&mf=off&c=on&geo=pos&latitude=%f&longitude=%f&"
-                      "tzid=%s&m=%d&s=off&i=off&b=%d") % (
+                      "tzid=%s&m=%d&s=off&b=%d&i=%s") % (
             year, month, self._latitude, self._longitude,
-            self._timezone, self._havdalah, self._candle_light)
+            self._timezone, self._havdalah, self._candle_light,
+            'off' if self._diaspora else 'on')
         _LOGGER.debug(hebcal_url)
         hebcal_response = requests.get(hebcal_url)
         hebcal_json_input = hebcal_response.text
         return json.loads(hebcal_json_input)
 
-    def fetchTimes(self, year, month):
+    def fetch_times(self, year, month):
         """Fetches JSON for times for year/month.
 
         Returns:
           A list of ShabbatIntervals for that month.
         """
         self.error = None
-        hebcal_decoded = self._fetchHebcalResponse(year, month)
+        hebcal_decoded = self._fetch_hebcal_response(year, month)
         intervals = []
 
         if 'error' in hebcal_decoded:
@@ -134,7 +144,7 @@ class ShabbatTimesFetcher:
             _LOGGER.error('Hebcal error: ' + hebcal_decoded['error'])
             return []
 
-        def IsMajorHoliday(item):
+        def is_major_holiday(item):
             """Returns true if item is a major holiday."""
             return (item['category'] == 'holiday' and
                     (item.get('subcat', '') == 'major' or
@@ -154,7 +164,7 @@ class ShabbatTimesFetcher:
             elif (cur_title == '' and
                   (cur_interval or 'yomtov' in item or
                    item['category'] == 'parashat') and
-                  (IsMajorHoliday(item) or item['category'] == 'parashat')):
+                  (is_major_holiday(item) or item['category'] == 'parashat')):
                 # Parse the Shabbat or Yom Tov title attribute.
                 # Conditions for setting title:
                 # 1) Title has not yet been set (take the first of a multi-day
@@ -206,11 +216,11 @@ class ShabbatTimesFetcher:
             # Leftover half-open interval.
             intervals.append(ShabbatInterval(
                 cur_interval[0], UNKNOWN_END, cur_title, cur_hebrew_title))
-        _LOGGER.debug("Shabbat intervals: " + str(intervals))
+        _LOGGER.debug("Shabbat intervals: %s", intervals)
         return intervals
 
 
-def _IsAdjacentHalfOpenInterval(half_open_interval, next_interval):
+def _is_adjacent_half_open_interval(half_open_interval, next_interval):
     """Returns true if the two intervals are adjacent and the first is half-open.
 
     If the first interval is a half-open interval on the end, and the second
@@ -244,7 +254,7 @@ class ShabbatTimesParser:
         Returns a ShabbatInterval corresponding to the most relevant Shabbat
         or Yom Tov with respect to the 'now' parameter, or None if error.
         """
-        _LOGGER.info("Updating Shabbat Times (now=" + str(now) + ")")
+        _LOGGER.info("Updating Shabbat Times (now=%s)", now)
         self.error = None
         assert now
         today = datetime.datetime(now.year, now.month, now.day)
@@ -259,7 +269,7 @@ class ShabbatTimesParser:
         # Retrieve parsed times for the month & year of the upcoming Friday.
         # TODO: Add a unit test to see if YT is Tues/Wed/Thurs at end of month,
         # and Friday is in the next month, and ensure this case works.
-        intervals = self._fetcher.fetchTimes(friday.year, friday.month)
+        intervals = self._fetcher.fetch_times(friday.year, friday.month)
         if not intervals:
             self.error = 'Could not retrieve intervals.'
             _LOGGER.error(self.error)
@@ -274,7 +284,7 @@ class ShabbatTimesParser:
             friday = friday + datetime.timedelta(+7)
             saturday = friday + datetime.timedelta(+1)
             _LOGGER.debug(friday)
-            intervals = self._fetcher.fetchTimes(friday.year, friday.month)
+            intervals = self._fetcher.fetch_times(friday.year, friday.month)
             if not intervals:
                 _LOGGER.error('Could not retrieve next intervals!')
                 return None
@@ -291,7 +301,7 @@ class ShabbatTimesParser:
             _LOGGER.debug(
                 'Current month ends with open interval; '
                 'retrieving next month (%04d-%02d)' % (next_year, next_month))
-            next_intervals = self._fetcher.fetchTimes(next_year, next_month)
+            next_intervals = self._fetcher.fetch_times(next_year, next_month)
             if not next_intervals:
                 _LOGGER.error('Could not retrieve next intervals!')
                 return None
@@ -301,7 +311,7 @@ class ShabbatTimesParser:
             # (e.g. Sep 30 Erev YT Day 1, Oct 1 night starts YT Day 2,
             # end Oct 2) then it is considered to be a valid completion.
             if (next_intervals[0].start_time != UNKNOWN_START and
-                    not _IsAdjacentHalfOpenInterval(
+                    not _is_adjacent_half_open_interval(
                     intervals[-1], next_intervals[0])):
                 _LOGGER.error(
                     "Current month ends with open interval; "
@@ -329,7 +339,7 @@ class ShabbatTimesParser:
             _LOGGER.debug(
                 'Current month starts with open interval; '
                 'fetching previous month')
-            prev_intervals = self._fetcher.fetchTimes(year, month)
+            prev_intervals = self._fetcher.fetch_times(year, month)
             # _LOGGER.debug(prev_intervals)
             if not prev_intervals:
                 _LOGGER.error('Could not retrieve previous intervals!')
@@ -372,7 +382,7 @@ class ShabbatTimesParser:
 class ShabbatTimes(Entity):
 
     def __init__(self, hass, latitude, longitude, timezone, name,
-                 havdalah, candle_light):
+                 havdalah, candle_light, diaspora):
         self._hass = hass
         self._latitude = latitude
         self._longitude = longitude
@@ -380,6 +390,7 @@ class ShabbatTimes(Entity):
         self._name = "Shabbat Times " + name
         self._havdalah = havdalah
         self._candle_light = candle_light
+        self._diaspora = diaspora
         self._state = 'Awaiting Update'
         self._shabbat_start = None
         self._shabbat_end = None
@@ -398,8 +409,9 @@ class ShabbatTimes(Entity):
             await self.async_update()
             return
 
+        now = dt_util.now()
         old_shabbat_end = _parse_time(old_state.attributes[SHABBAT_END], False)
-        if old_shabbat_end < datetime.datetime.now():
+        if old_shabbat_end < now:
             _LOGGER.error(
                 "Current time is newer than shabbat end time. Updating.")
             await self.async_update()
@@ -446,9 +458,9 @@ class ShabbatTimes(Entity):
 
         fetcher = ShabbatTimesFetcher(
             self._latitude, self._longitude, self._timezone, self._havdalah,
-            self._candle_light)
+            self._candle_light, self._diaspora)
         parser = ShabbatTimesParser(fetcher)
-        now = datetime.datetime.now()
+        now = dt_util.now()
         current_interval = parser.update(now)
         if current_interval is None:
             _LOGGER.error('Could not parse Shabbat Times!')

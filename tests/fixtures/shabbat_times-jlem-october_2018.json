@@ -1,0 +1,80 @@
+{
+  "items": [
+    {
+      "link": "https://www.hebcal.com/holidays/shmini-atzeret",
+      "subcat": "major",
+      "hebrew": "שמיני עצרת",
+      "category": "holiday",
+      "memo": "Eighth Day of Assembly",
+      "date": "2018-10-01",
+      "title": "Shmini Atzeret",
+      "yomtov": true
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 7:17pm",
+      "date": "2018-10-01T19:17:00+03:00"
+    },
+    {
+      "date": "2018-10-05T18:01:00+03:00",
+      "category": "candles",
+      "title": "Candle lighting: 6:01pm",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "date": "2018-10-06T19:10:00+03:00",
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 7:10pm"
+    },
+    {
+      "date": "2018-10-12T17:52:00+03:00",
+      "category": "candles",
+      "title": "Candle lighting: 5:52pm",
+      "hebrew": "הדלקת נרות"
+    },
+    {
+      "title": "Havdalah (53 min): 7:02pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah",
+      "date": "2018-10-13T19:02:00+03:00"
+    },
+    {
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 5:44pm",
+      "date": "2018-10-19T17:44:00+03:00"
+    },
+    {
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 6:54pm",
+      "category": "havdalah",
+      "date": "2018-10-20T18:54:00+03:00"
+    },
+    {
+      "category": "candles",
+      "hebrew": "הדלקת נרות",
+      "title": "Candle lighting: 5:37pm",
+      "date": "2018-10-26T17:37:00+03:00"
+    },
+    {
+      "category": "havdalah",
+      "title": "Havdalah (53 min): 6:47pm",
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-10-27T18:47:00+03:00"
+    }
+  ],
+  "title": "Hebcal October 2018 31.778, 35.235, Asia/Jerusalem",
+  "location": {
+    "longitude": "35.235",
+    "latitude": "31.778",
+    "geo": "pos",
+    "tzid": "Asia/Jerusalem",
+    "title": "31.778, 35.235, Asia/Jerusalem"
+  },
+  "link": "https://www.hebcal.com/hebcal/?b=18;c=on;geo=pos;i=on;latitude=31.778;longitude=35.235;m=53;maj=on;mf=off;min=on;mod=off;month=10;nx=off;s=off;ss=off;tzid=Asia%2FJerusalem;v=1;year=2018",
+  "longitude": "35.235",
+  "latitude": "31.778",
+  "date": "2018-11-23T04:51:24-00:00"
+}
