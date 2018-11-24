@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
     """Set up MQTT sensors through configuration.yaml."""
-    await _async_setup_entity(hass, config, async_add_entities)
+    await _async_setup_entity(config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -66,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover_sensor(discovery_payload):
         """Discover and add a discovered MQTT sensor."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(hass, config, async_add_entities,
+        await _async_setup_entity(config, async_add_entities,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(hass,
@@ -74,19 +74,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                              async_discover_sensor)
 
 
-async def _async_setup_entity(hass: HomeAssistantType, config: ConfigType,
-                              async_add_entities, discovery_hash=None):
+async def _async_setup_entity(config: ConfigType, async_add_entities,
+                              discovery_hash=None):
     """Set up MQTT sensor."""
-    async_add_entities([MqttSensor(hass, config, discovery_hash)])
+    async_add_entities([MqttSensor(config, discovery_hash)])
 
 
 class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                  Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
-    def __init__(self, hass, config, discovery_hash):
+    def __init__(self, config, discovery_hash):
         """Initialize the sensor."""
-        self.hass = hass
         self._state = STATE_UNKNOWN
         self._sub_state = None
         self._expiration_trigger = None
@@ -142,16 +141,15 @@ class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._expire_after = config.get(CONF_EXPIRE_AFTER)
         self._icon = config.get(CONF_ICON)
         self._device_class = config.get(CONF_DEVICE_CLASS)
-        value_template = config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = self.hass
-        self._template = value_template
+        self._template = config.get(CONF_VALUE_TEMPLATE)
         self._json_attributes = set(config.get(CONF_JSON_ATTRS))
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._unique_id = config.get(CONF_UNIQUE_ID)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
+        if self._template is not None:
+            self._template.hass = self.hass
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""
