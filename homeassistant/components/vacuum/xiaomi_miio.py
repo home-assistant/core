@@ -21,7 +21,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.3', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -266,7 +266,8 @@ class MiroboVacuum(StateVacuumDevice):
         """Call a vacuum command handling error messages."""
         from miio import DeviceException
         try:
-            await self.hass.async_add_job(partial(func, *args, **kwargs))
+            await self.hass.async_add_executor_job(
+                partial(func, *args, **kwargs))
             return True
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)

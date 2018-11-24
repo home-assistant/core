@@ -7,8 +7,9 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components.cloud import (
-    Cloud, iot, auth_api, MODE_DEV, STORAGE_ENABLE_ALEXA,
-    STORAGE_ENABLE_GOOGLE)
+    Cloud, iot, auth_api, MODE_DEV)
+from homeassistant.components.cloud.const import (
+    PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE)
 from tests.components.alexa import test_smart_home as test_alexa
 from tests.common import mock_coro
 
@@ -308,7 +309,7 @@ def test_handler_alexa(hass):
 @asyncio.coroutine
 def test_handler_alexa_disabled(hass, mock_cloud_fixture):
     """Test handler Alexa when user has disabled it."""
-    mock_cloud_fixture[STORAGE_ENABLE_ALEXA] = False
+    mock_cloud_fixture[PREF_ENABLE_ALEXA] = False
 
     resp = yield from iot.async_handle_alexa(
         hass, hass.data['cloud'],
@@ -326,6 +327,8 @@ def test_handler_google_actions(hass):
         'switch.test', 'on', {'friendly_name': "Test switch"})
     hass.states.async_set(
         'switch.test2', 'on', {'friendly_name': "Test switch 2"})
+    hass.states.async_set(
+        'group.all_locks', 'on', {'friendly_name': "Evil locks"})
 
     with patch('homeassistant.components.cloud.Cloud.async_start',
                return_value=mock_coro()):
@@ -375,7 +378,7 @@ def test_handler_google_actions(hass):
 
 async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
     """Test handler Google Actions when user has disabled it."""
-    mock_cloud_fixture[STORAGE_ENABLE_GOOGLE] = False
+    mock_cloud_fixture[PREF_ENABLE_GOOGLE] = False
 
     with patch('homeassistant.components.cloud.Cloud.async_start',
                return_value=mock_coro()):

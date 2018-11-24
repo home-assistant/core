@@ -13,6 +13,7 @@ from homeassistant.core import callback, HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, models
+from .const import GROUP_ID_ADMIN
 from .mfa_modules import auth_mfa_module_from_config, MultiFactorAuthModule
 from .providers import auth_provider_from_config, AuthProvider, LoginFlow
 
@@ -117,6 +118,10 @@ class AuthManager:
         """Retrieve a user."""
         return await self._store.async_get_user(user_id)
 
+    async def async_get_group(self, group_id: str) -> Optional[models.Group]:
+        """Retrieve all groups."""
+        return await self._store.async_get_group(group_id)
+
     async def async_get_user_by_credentials(
             self, credentials: models.Credentials) -> Optional[models.User]:
         """Get a user by credential, return None if not found."""
@@ -133,7 +138,7 @@ class AuthManager:
             name=name,
             system_generated=True,
             is_active=True,
-            groups=[],
+            group_ids=[],
         )
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {
@@ -144,11 +149,10 @@ class AuthManager:
 
     async def async_create_user(self, name: str) -> models.User:
         """Create a user."""
-        group = (await self._store.async_get_groups())[0]
         kwargs = {
             'name': name,
             'is_active': True,
-            'groups': [group]
+            'group_ids': [GROUP_ID_ADMIN]
         }  # type: Dict[str, Any]
 
         if await self._user_should_be_owner():

@@ -22,6 +22,7 @@ class Group:
     name = attr.ib(type=str)  # type: Optional[str]
     policy = attr.ib(type=perm_mdl.PolicyType)
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
+    system_generated = attr.ib(type=bool, default=False)
 
 
 @attr.s(slots=True)

@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from homeassistant import auth, core as ha, config_entries
 from homeassistant.auth import (
     models as auth_models, auth_store, providers as auth_providers)
+from homeassistant.auth.permissions import system_policies
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -294,6 +295,7 @@ def async_mock_mqtt_component(hass, config=None):
     with patch('paho.mqtt.client.Client') as mock_client:
         mock_client().connect.return_value = 0
         mock_client().subscribe.return_value = (0, 0)
+        mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
 
         result = yield from async_setup_component(hass, mqtt.DOMAIN, {
@@ -349,7 +351,7 @@ class MockGroup(auth_models.Group):
     """Mock a group in Home Assistant."""
 
     def __init__(self, id=None, name='Mock Group',
-                 policy=auth_store.DEFAULT_POLICY):
+                 policy=system_policies.ADMIN_POLICY):
         """Mock a group."""
         kwargs = {
             'name': name,

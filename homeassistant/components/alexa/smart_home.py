@@ -16,9 +16,9 @@ from homeassistant.components import (
     input_boolean, light, lock, media_player, scene, script, sensor, switch)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
-    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, SERVICE_LOCK,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CLOUD_NEVER_EXPOSED_ENTITIES,
+    CONF_NAME, SERVICE_LOCK, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET, STATE_LOCKED, STATE_ON, STATE_UNLOCKED,
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -474,6 +474,26 @@ class _AlexaColorController(_AlexaInterface):
     def name(self):
         return 'Alexa.ColorController'
 
+    def properties_supported(self):
+        return [{'name': 'color'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'color':
+            raise _UnsupportedProperty(name)
+
+        hue, saturation = self.entity.attributes.get(
+            light.ATTR_HS_COLOR, (0, 0))
+
+        return {
+            'hue': hue,
+            'saturation': saturation / 100.0,
+            'brightness': self.entity.attributes.get(
+                light.ATTR_BRIGHTNESS, 0) / 255.0,
+        }
+
 
 class _AlexaColorTemperatureController(_AlexaInterface):
     """Implements Alexa.ColorTemperatureController.
@@ -717,6 +737,9 @@ class _ClimateCapabilities(_AlexaEntity):
         return [_DisplayCategory.THERMOSTAT]
 
     def interfaces(self):
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & climate.SUPPORT_ON_OFF:
+            yield _AlexaPowerController(self.entity)
         yield _AlexaThermostatController(self.hass, self.entity)
         yield _AlexaTemperatureSensor(self.hass, self.entity)
 
@@ -1194,6 +1217,11 @@ async def async_api_discovery(hass, config, directive, context):
     discovery_endpoints = []
 
     for entity in hass.states.async_all():
+        if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+            _LOGGER.debug("Not exposing %s because it is never exposed",
+                          entity.entity_id)
+            continue
+
         if not config.should_expose(entity.entity_id):
             _LOGGER.debug("Not exposing %s because filtered by config",
                           entity.entity_id)
@@ -1205,7 +1233,7 @@ async def async_api_discovery(hass, config, directive, context):
 
         endpoint = {
             'displayCategories': alexa_entity.display_categories(),
-            'additionalApplianceDetails': {},
+            'cookie': {},
             'endpointId': alexa_entity.entity_id(),
             'friendlyName': alexa_entity.friendly_name(),
             'description': alexa_entity.description(),

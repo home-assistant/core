@@ -12,24 +12,20 @@ import os
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_NAME)
+    EVENT_HOMEASSISTANT_START, CLOUD_NEVER_EXPOSED_ENTITIES, CONF_REGION,
+    CONF_MODE, CONF_NAME)
 from homeassistant.helpers import entityfilter, config_validation as cv
 from homeassistant.util import dt as dt_util
 from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import helpers as ga_h
 from homeassistant.components.google_assistant import const as ga_c
 
-from . import http_api, iot, auth_api
+from . import http_api, iot, auth_api, prefs
 from .const import CONFIG_DIR, DOMAIN, SERVERS
 
 REQUIREMENTS = ['warrant==0.6.1']
-STORAGE_KEY = DOMAIN
-STORAGE_VERSION = 1
-STORAGE_ENABLE_ALEXA = 'alexa_enabled'
-STORAGE_ENABLE_GOOGLE = 'google_enabled'
 
 _LOGGER = logging.getLogger(__name__)
-_UNDEF = object()
 
 CONF_ALEXA = 'alexa'
 CONF_ALIASES = 'aliases'
@@ -68,7 +64,7 @@ ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
 })
 
 GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}
+    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA},
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -122,14 +118,13 @@ class Cloud:
         self.hass = hass
         self.mode = mode
         self.alexa_config = alexa
-        self._google_actions = google_actions
+        self.google_actions_user_conf = google_actions
         self._gactions_config = None
-        self._prefs = None
+        self.prefs = prefs.CloudPreferences(hass)
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
         self.iot = iot.CloudIoT(self)
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
         if mode == MODE_DEV:
             self.cognito_client_id = cognito_client_id
@@ -180,29 +175,23 @@ class Cloud:
     def gactions_config(self):
         """Return the Google Assistant config."""
         if self._gactions_config is None:
-            conf = self._google_actions
+            conf = self.google_actions_user_conf
 
             def should_expose(entity):
                 """If an entity should be exposed."""
+                if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+                    return False
+
                 return conf['filter'](entity.entity_id)
 
             self._gactions_config = ga_h.Config(
                 should_expose=should_expose,
                 agent_user_id=self.claims['cognito:username'],
                 entity_config=conf.get(CONF_ENTITY_CONFIG),
+                allow_unlock=self.prefs.google_allow_unlock,
             )
 
         return self._gactions_config
-
-    @property
-    def alexa_enabled(self):
-        """Return if Alexa is enabled."""
-        return self._prefs[STORAGE_ENABLE_ALEXA]
-
-    @property
-    def google_enabled(self):
-        """Return if Google is enabled."""
-        return self._prefs[STORAGE_ENABLE_GOOGLE]
 
     def path(self, *parts):
         """Get config path inside cloud dir.
@@ -243,20 +232,6 @@ class Cloud:
 
     async def async_start(self, _):
         """Start the cloud component."""
-        prefs = await self._store.async_load()
-        if prefs is None:
-            prefs = {}
-        if self.mode not in prefs:
-            # Default to True if already logged in to make this not a
-            # breaking change.
-            enabled = await self.hass.async_add_executor_job(
-                os.path.isfile, self.user_info_path)
-            prefs = {
-                STORAGE_ENABLE_ALEXA: enabled,
-                STORAGE_ENABLE_GOOGLE: enabled,
-            }
-        self._prefs = prefs
-
         def load_config():
             """Load config."""
             # Ensure config dir exists
@@ -273,6 +248,8 @@ class Cloud:
 
         info = await self.hass.async_add_job(load_config)
 
+        await self.prefs.async_initialize(not info)
+
         if info is None:
             return
 
@@ -281,15 +258,6 @@ class Cloud:
         self.refresh_token = info['refresh_token']
 
         self.hass.add_job(self.iot.connect())
-
-    async def update_preferences(self, *, google_enabled=_UNDEF,
-                                 alexa_enabled=_UNDEF):
-        """Update user preferences."""
-        if google_enabled is not _UNDEF:
-            self._prefs[STORAGE_ENABLE_GOOGLE] = google_enabled
-        if alexa_enabled is not _UNDEF:
-            self._prefs[STORAGE_ENABLE_ALEXA] = alexa_enabled
-        await self._store.async_save(self._prefs)
 
     def _decode_claims(self, token):  # pylint: disable=no-self-use
         """Decode the claims in a token."""

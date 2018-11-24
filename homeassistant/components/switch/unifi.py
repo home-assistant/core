@@ -129,7 +129,8 @@ async def async_update_items(controller, async_add_entities,
         # Network device with active POE
         if not client.is_wired or client.sw_mac not in devices or \
            not devices[client.sw_mac].ports[client.sw_port].port_poe or \
-           not devices[client.sw_mac].ports[client.sw_port].poe_enable:
+           not devices[client.sw_mac].ports[client.sw_port].poe_enable or \
+           controller.mac == client.mac:
             continue
 
         # Multiple POE-devices on same port means non UniFi POE driven switch

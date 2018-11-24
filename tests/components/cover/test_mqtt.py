@@ -50,24 +50,6 @@ class TestCoverMQTT(unittest.TestCase):
         assert STATE_UNKNOWN == state.state
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
-        fire_mqtt_message(self.hass, 'state-topic', '0')
-        self.hass.block_till_done()
-
-        state = self.hass.states.get('cover.test')
-        assert STATE_CLOSED == state.state
-
-        fire_mqtt_message(self.hass, 'state-topic', '50')
-        self.hass.block_till_done()
-
-        state = self.hass.states.get('cover.test')
-        assert STATE_OPEN == state.state
-
-        fire_mqtt_message(self.hass, 'state-topic', '100')
-        self.hass.block_till_done()
-
-        state = self.hass.states.get('cover.test')
-        assert STATE_OPEN == state.state
-
         fire_mqtt_message(self.hass, 'state-topic', STATE_CLOSED)
         self.hass.block_till_done()
 
@@ -75,6 +57,39 @@ class TestCoverMQTT(unittest.TestCase):
         assert STATE_CLOSED == state.state
 
         fire_mqtt_message(self.hass, 'state-topic', STATE_OPEN)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        assert STATE_OPEN == state.state
+
+    def test_position_via_position_topic(self):
+        """Test the controlling state via topic."""
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'position_topic': 'get-position-topic',
+                'position_open': 100,
+                'position_closed': 0,
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP'
+            }
+        }))
+
+        state = self.hass.states.get('cover.test')
+        assert STATE_UNKNOWN == state.state
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '0')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        assert STATE_CLOSED == state.state
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '100')
         self.hass.block_till_done()
 
         state = self.hass.states.get('cover.test')
@@ -89,7 +104,12 @@ class TestCoverMQTT(unittest.TestCase):
                 'state_topic': 'state-topic',
                 'command_topic': 'command-topic',
                 'qos': 0,
-                'value_template': '{{ (value | multiply(0.01)) | int }}',
+                'value_template': '\
+                    {% if (value | multiply(0.01) | int) == 0  %}\
+                      closed\
+                    {% else %}\
+                      open\
+                    {% endif %}'
             }
         })
 
@@ -107,6 +127,40 @@ class TestCoverMQTT(unittest.TestCase):
 
         state = self.hass.states.get('cover.test')
         assert STATE_CLOSED == state.state
+
+    def test_position_via_template(self):
+        """Test the controlling state via topic."""
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'position_topic': 'get-position-topic',
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'value_template': '{{ (value | multiply(0.01)) | int }}'
+            }
+        }))
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_UNKNOWN, state.state)
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '10000')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_OPEN, state.state)
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '5000')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_OPEN, state.state)
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '99')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_CLOSED, state.state)
 
     def test_optimistic_state_change(self):
         """Test changing state optimistically."""
@@ -225,8 +279,10 @@ class TestCoverMQTT(unittest.TestCase):
             cover.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
-                'state_topic': 'state-topic',
+                'position_topic': 'get-position-topic',
                 'command_topic': 'command-topic',
+                'position_open': 100,
+                'position_closed': 0,
                 'payload_open': 'OPEN',
                 'payload_close': 'CLOSE',
                 'payload_stop': 'STOP'
@@ -240,39 +296,40 @@ class TestCoverMQTT(unittest.TestCase):
         assert not (4 & self.hass.states.get(
             'cover.test').attributes['supported_features'] == 4)
 
-        fire_mqtt_message(self.hass, 'state-topic', '0')
+        fire_mqtt_message(self.hass, 'get-position-topic', '0')
         self.hass.block_till_done()
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
         assert 0 == current_cover_position
 
-        fire_mqtt_message(self.hass, 'state-topic', '50')
+        fire_mqtt_message(self.hass, 'get-position-topic', '50')
         self.hass.block_till_done()
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
         assert 50 == current_cover_position
 
-        fire_mqtt_message(self.hass, 'state-topic', '101')
+        fire_mqtt_message(self.hass, 'get-position-topic', 'non-numeric')
         self.hass.block_till_done()
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
         assert 50 == current_cover_position
 
-        fire_mqtt_message(self.hass, 'state-topic', 'non-numeric')
+        fire_mqtt_message(self.hass, 'get-position-topic', '101')
         self.hass.block_till_done()
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
-        assert 50 == current_cover_position
+        assert 100 == current_cover_position
 
-    def test_set_cover_position(self):
-        """Test setting cover position."""
+    def test_current_cover_position_inverted(self):
+        """Test the current cover position."""
         assert setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
-                'state_topic': 'state-topic',
+                'position_topic': 'get-position-topic',
                 'command_topic': 'command-topic',
-                'set_position_topic': 'position-topic',
+                'position_open': 0,
+                'position_closed': 100,
                 'payload_open': 'OPEN',
                 'payload_close': 'CLOSE',
                 'payload_stop': 'STOP'
@@ -283,11 +340,74 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test').attributes
         assert not ('current_position' in state_attributes_dict)
         assert not ('current_tilt_position' in state_attributes_dict)
+        assert not (4 & self.hass.states.get(
+            'cover.test').attributes['supported_features'] == 4)
 
+        fire_mqtt_message(self.hass, 'get-position-topic', '100')
+        self.hass.block_till_done()
+        current_percentage_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 0 == current_percentage_cover_position
+        assert STATE_CLOSED == self.hass.states.get(
+            'cover.test').state
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '0')
+        self.hass.block_till_done()
+        current_percentage_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 100 == current_percentage_cover_position
+        assert STATE_OPEN == self.hass.states.get(
+            'cover.test').state
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '50')
+        self.hass.block_till_done()
+        current_percentage_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 50 == current_percentage_cover_position
+        assert STATE_OPEN == self.hass.states.get(
+            'cover.test').state
+
+        fire_mqtt_message(self.hass, 'get-position-topic', 'non-numeric')
+        self.hass.block_till_done()
+        current_percentage_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 50 == current_percentage_cover_position
+        assert STATE_OPEN == self.hass.states.get(
+            'cover.test').state
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '101')
+        self.hass.block_till_done()
+        current_percentage_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 0 == current_percentage_cover_position
+        assert STATE_CLOSED == self.hass.states.get(
+            'cover.test').state
+
+    def test_set_cover_position(self):
+        """Test setting cover position."""
+        assert setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'position_topic': 'get-position-topic',
+                'command_topic': 'command-topic',
+                'set_position_topic': 'set-position-topic',
+                'position_open': 100,
+                'position_closed': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP'
+            }
+        })
+
+        state_attributes_dict = self.hass.states.get(
+            'cover.test').attributes
+        assert not ('current_position' in state_attributes_dict)
+        assert not ('current_tilt_position' in state_attributes_dict)
         assert 4 & self.hass.states.get(
             'cover.test').attributes['supported_features'] == 4
 
-        fire_mqtt_message(self.hass, 'state-topic', '22')
+        fire_mqtt_message(self.hass, 'get-position-topic', '22')
         self.hass.block_till_done()
         state_attributes_dict = self.hass.states.get(
             'cover.test').attributes
@@ -303,9 +423,11 @@ class TestCoverMQTT(unittest.TestCase):
             cover.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
-                'state_topic': 'state-topic',
+                'position_topic': 'get-position-topic',
                 'command_topic': 'command-topic',
-                'set_position_topic': 'position-topic',
+                'position_open': 100,
+                'position_closed': 0,
+                'set_position_topic': 'set-position-topic',
                 'set_position_template': '{{100-62}}',
                 'payload_open': 'OPEN',
                 'payload_close': 'CLOSE',
@@ -319,7 +441,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
-            'position-topic', '38', 0, False)
+            'set-position-topic', '38', 0, False)
 
     def test_set_position_untemplated(self):
         """Test setting cover position via template."""
@@ -327,7 +449,7 @@ class TestCoverMQTT(unittest.TestCase):
             cover.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
-                'state_topic': 'state-topic',
+                'position_topic': 'state-topic',
                 'command_topic': 'command-topic',
                 'set_position_topic': 'position-topic',
                 'payload_open': 'OPEN',
@@ -612,90 +734,210 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_percentage_in_range_defaults(self):
         """Test find percentage in range with default range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'state-topic', 'command-topic', None,
-            'tilt-command-topic', 'tilt-status-topic', 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 100, 0, 0, 100, False, False, None, None, None,
-            None, None)
+            name='cover.test',
+            state_topic='state-topic',
+            get_position_topic=None,
+            command_topic='command-topic',
+            availability_topic=None,
+            tilt_command_topic='tilt-command-topic',
+            tilt_status_topic='tilt-status-topic',
+            qos=0,
+            retain=False,
+            state_open='OPEN', state_closed='CLOSE',
+            position_open=100,  position_closed=0,
+            payload_open='OPEN', payload_close='CLOSE', payload_stop='STOP',
+            payload_available=None, payload_not_available=None,
+            optimistic=False, value_template=None,
+            tilt_open_position=100, tilt_closed_position=0,
+            tilt_min=0, tilt_max=100, tilt_optimistic=False,
+            tilt_invert=False,
+            set_position_topic=None, set_position_template=None,
+            unique_id=None, device_config=None, discovery_hash=None)
 
         assert 44 == mqtt_cover.find_percentage_in_range(44)
+        assert 44 == mqtt_cover.find_percentage_in_range(44, 'cover')
 
     def test_find_percentage_in_range_altered(self):
         """Test find percentage in range with altered range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'state-topic', 'command-topic', None,
-            'tilt-command-topic', 'tilt-status-topic', 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 180, 80, 80, 180, False, False, None, None, None,
-            None, None)
+            name='cover.test',
+            state_topic='state-topic',
+            get_position_topic=None,
+            command_topic='command-topic',
+            availability_topic=None,
+            tilt_command_topic='tilt-command-topic',
+            tilt_status_topic='tilt-status-topic',
+            qos=0,
+            retain=False,
+            state_open='OPEN', state_closed='CLOSE',
+            position_open=180, position_closed=80,
+            payload_open='OPEN', payload_close='CLOSE', payload_stop='STOP',
+            payload_available=None, payload_not_available=None,
+            optimistic=False, value_template=None,
+            tilt_open_position=180, tilt_closed_position=80,
+            tilt_min=80, tilt_max=180, tilt_optimistic=False,
+            tilt_invert=False,
+            set_position_topic=None, set_position_template=None,
+            unique_id=None, device_config=None, discovery_hash=None)
 
         assert 40 == mqtt_cover.find_percentage_in_range(120)
+        assert 40 == mqtt_cover.find_percentage_in_range(120, 'cover')
 
     def test_find_percentage_in_range_defaults_inverted(self):
         """Test find percentage in range with default range but inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'state-topic', 'command-topic', None,
-            'tilt-command-topic', 'tilt-status-topic', 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 100, 0, 0, 100, False, True, None, None, None,
-            None, None)
+            name='cover.test',
+            state_topic='state-topic',
+            get_position_topic=None,
+            command_topic='command-topic',
+            availability_topic=None,
+            tilt_command_topic='tilt-command-topic',
+            tilt_status_topic='tilt-status-topic',
+            qos=0,
+            retain=False,
+            state_open='OPEN', state_closed='CLOSE',
+            position_open=0, position_closed=100,
+            payload_open='OPEN', payload_close='CLOSE', payload_stop='STOP',
+            payload_available=None, payload_not_available=None,
+            optimistic=False, value_template=None,
+            tilt_open_position=100, tilt_closed_position=0,
+            tilt_min=0, tilt_max=100, tilt_optimistic=False,
+            tilt_invert=True,
+            set_position_topic=None, set_position_template=None,
+            unique_id=None, device_config=None, discovery_hash=None)
 
         assert 56 == mqtt_cover.find_percentage_in_range(44)
+        assert 56 == mqtt_cover.find_percentage_in_range(44, 'cover')
 
     def test_find_percentage_in_range_altered_inverted(self):
         """Test find percentage in range with altered range and inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'state-topic', 'command-topic', None,
-            'tilt-command-topic', 'tilt-status-topic', 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 180, 80, 80, 180, False, True, None, None, None,
-            None, None)
+            name='cover.test',
+            state_topic='state-topic',
+            get_position_topic=None,
+            command_topic='command-topic',
+            availability_topic=None,
+            tilt_command_topic='tilt-command-topic',
+            tilt_status_topic='tilt-status-topic',
+            qos=0,
+            retain=False,
+            state_open='OPEN', state_closed='CLOSE',
+            position_open=80, position_closed=180,
+            payload_open='OPEN', payload_close='CLOSE', payload_stop='STOP',
+            payload_available=None, payload_not_available=None,
+            optimistic=False, value_template=None,
+            tilt_open_position=180, tilt_closed_position=80,
+            tilt_min=80, tilt_max=180, tilt_optimistic=False,
+            tilt_invert=True,
+            set_position_topic=None, set_position_template=None,
+            unique_id=None, device_config=None, discovery_hash=None)
 
         assert 60 == mqtt_cover.find_percentage_in_range(120)
+        assert 60 == mqtt_cover.find_percentage_in_range(120, 'cover')
 
     def test_find_in_range_defaults(self):
         """Test find in range with default range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'state-topic', 'command-topic', None,
-            'tilt-command-topic', 'tilt-status-topic', 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 100, 0, 0, 100, False, False, None, None, None,
-            None, None)
+            name='cover.test',
+            state_topic='state-topic',
+            get_position_topic=None,
+            command_topic='command-topic',
+            availability_topic=None,
+            tilt_command_topic='tilt-command-topic',
+            tilt_status_topic='tilt-status-topic',
+            qos=0,
+            retain=False,
+            state_open='OPEN', state_closed='CLOSE',
+            position_open=100, position_closed=0,
+            payload_open='OPEN', payload_close='CLOSE', payload_stop='STOP',
+            payload_available=None, payload_not_available=None,
+            optimistic=False, value_template=None,
+            tilt_open_position=100, tilt_closed_position=0,
+            tilt_min=0, tilt_max=100, tilt_optimistic=False,
+            tilt_invert=False,
+            set_position_topic=None, set_position_template=None,
+            unique_id=None, device_config=None, discovery_hash=None)
 
         assert 44 == mqtt_cover.find_in_range_from_percent(44)
+        assert 44 == mqtt_cover.find_in_range_from_percent(44, 'cover')
 
     def test_find_in_range_altered(self):
         """Test find in range with altered range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'state-topic', 'command-topic', None,
-            'tilt-command-topic', 'tilt-status-topic', 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 180, 80, 80, 180, False, False, None, None, None,
-            None, None)
+            name='cover.test',
+            state_topic='state-topic',
+            get_position_topic=None,
+            command_topic='command-topic',
+            availability_topic=None,
+            tilt_command_topic='tilt-command-topic',
+            tilt_status_topic='tilt-status-topic',
+            qos=0,
+            retain=False,
+            state_open='OPEN', state_closed='CLOSE',
+            position_open=180, position_closed=80,
+            payload_open='OPEN', payload_close='CLOSE', payload_stop='STOP',
+            payload_available=None, payload_not_available=None,
+            optimistic=False, value_template=None,
+            tilt_open_position=180, tilt_closed_position=80,
+            tilt_min=80, tilt_max=180, tilt_optimistic=False,
+            tilt_invert=False,
+            set_position_topic=None, set_position_template=None,
+            unique_id=None, device_config=None, discovery_hash=None)
 
         assert 120 == mqtt_cover.find_in_range_from_percent(40)
+        assert 120 == mqtt_cover.find_in_range_from_percent(40, 'cover')
 
     def test_find_in_range_defaults_inverted(self):
         """Test find in range with default range but inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'state-topic', 'command-topic', None,
-            'tilt-command-topic', 'tilt-status-topic', 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 100, 0, 0, 100, False, True, None, None, None,
-            None, None)
+            name='cover.test',
+            state_topic='state-topic',
+            get_position_topic=None,
+            command_topic='command-topic',
+            availability_topic=None,
+            tilt_command_topic='tilt-command-topic',
+            tilt_status_topic='tilt-status-topic',
+            qos=0,
+            retain=False,
+            state_open='OPEN', state_closed='CLOSE',
+            position_open=0, position_closed=100,
+            payload_open='OPEN', payload_close='CLOSE', payload_stop='STOP',
+            payload_available=None, payload_not_available=None,
+            optimistic=False, value_template=None,
+            tilt_open_position=100, tilt_closed_position=0,
+            tilt_min=0, tilt_max=100, tilt_optimistic=False,
+            tilt_invert=True,
+            set_position_topic=None, set_position_template=None,
+            unique_id=None, device_config=None, discovery_hash=None)
 
         assert 44 == mqtt_cover.find_in_range_from_percent(56)
+        assert 44 == mqtt_cover.find_in_range_from_percent(56, 'cover')
 
     def test_find_in_range_altered_inverted(self):
         """Test find in range with altered range and inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'state-topic', 'command-topic', None,
-            'tilt-command-topic', 'tilt-status-topic', 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 180, 80, 80, 180, False, True, None, None, None,
-            None, None)
+            name='cover.test',
+            state_topic='state-topic',
+            get_position_topic=None,
+            command_topic='command-topic',
+            availability_topic=None,
+            tilt_command_topic='tilt-command-topic',
+            tilt_status_topic='tilt-status-topic',
+            qos=0,
+            retain=False,
+            state_open='OPEN', state_closed='CLOSE',
+            position_open=80, position_closed=180,
+            payload_open='OPEN', payload_close='CLOSE', payload_stop='STOP',
+            payload_available=None, payload_not_available=None,
+            optimistic=False, value_template=None,
+            tilt_open_position=180, tilt_closed_position=80,
+            tilt_min=80, tilt_max=180, tilt_optimistic=False,
+            tilt_invert=True,
+            set_position_topic=None, set_position_template=None,
+            unique_id=None, device_config=None, discovery_hash=None)
 
         assert 120 == mqtt_cover.find_in_range_from_percent(60)
+        assert 120 == mqtt_cover.find_in_range_from_percent(60, 'cover')
 
     def test_availability_without_topic(self):
         """Test availability without defined availability topic."""

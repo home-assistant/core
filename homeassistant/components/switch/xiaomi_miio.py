@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.4.2', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.3', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'zimi.powerstrip.v2',
          'chuangmi.plug.m1',
          'chuangmi.plug.v2',
-         'chuangmi.plug.v3']),
+         'chuangmi.plug.v3',
+         ]),
 })
 
 ATTR_POWER = 'power'
@@ -247,7 +248,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
         """Call a plug command handling error messages."""
         from miio import DeviceException
         try:
-            result = await self.hass.async_add_job(
+            result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs))
 
             _LOGGER.debug("Response received from plug: %s", result)
@@ -290,7 +291,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             return
 
         try:
-            state = await self.hass.async_add_job(self._plug.status)
+            state = await self.hass.async_add_executor_job(self._plug.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -366,7 +367,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
             return
 
         try:
-            state = await self.hass.async_add_job(self._plug.status)
+            state = await self.hass.async_add_executor_job(self._plug.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -463,7 +464,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             return
 
         try:
-            state = await self.hass.async_add_job(self._plug.status)
+            state = await self.hass.async_add_executor_job(self._plug.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True

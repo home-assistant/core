@@ -10,16 +10,16 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ClimateDevice, DOMAIN, PLATFORM_SCHEMA,
+    ClimateDevice, DOMAIN, PLATFORM_SCHEMA, STATE_HEAT,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
-    SUPPORT_ON_OFF)
+    SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME,
     STATE_ON, STATE_OFF, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['millheater==0.2.2']
+REQUIREMENTS = ['millheater==0.2.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ MIN_TEMP = 5
 SERVICE_SET_ROOM_TEMP = 'mill_set_room_temperature'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
-                 SUPPORT_FAN_MODE | SUPPORT_ON_OFF)
+                 SUPPORT_FAN_MODE)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -91,12 +91,14 @@ class MillHeater(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        if self._heater.is_gen1:
+            return SUPPORT_FLAGS
+        return SUPPORT_FLAGS | SUPPORT_ON_OFF | SUPPORT_OPERATION_MODE
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._heater.device_status == 0  # weird api choice
+        return self._heater.available
 
     @property
     def unique_id(self):
@@ -111,16 +113,18 @@ class MillHeater(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._heater.room:
-            room = self._heater.room.name
-        else:
-            room = "Independent device"
-        return {
-            "room": room,
+        res = {
             "open_window": self._heater.open_window,
             "heating": self._heater.is_heating,
             "controlled_by_tibber": self._heater.tibber_control,
+            "heater_generation": 1 if self._heater.is_gen1 else 2,
         }
+        if self._heater.room:
+            res['room'] = self._heater.room.name
+            res['avg_room_temp'] = self._heater.room.avg_temp
+        else:
+            res['room'] = "Independent device"
+        return res
 
     @property
     def temperature_unit(self):
@@ -155,6 +159,8 @@ class MillHeater(ClimateDevice):
     @property
     def is_on(self):
         """Return true if heater is on."""
+        if self._heater.is_gen1:
+            return True
         return self._heater.power_status == 1
 
     @property
@@ -166,6 +172,18 @@ class MillHeater(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature."""
         return MAX_TEMP
+
+    @property
+    def current_operation(self):
+        """Return current operation."""
+        return STATE_HEAT if self.is_on else STATE_OFF
+
+    @property
+    def operation_list(self):
+        """List of available operation modes."""
+        if self._heater.is_gen1:
+            return None
+        return [STATE_HEAT, STATE_OFF]
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -194,3 +212,12 @@ class MillHeater(ClimateDevice):
     async def async_update(self):
         """Retrieve latest state."""
         self._heater = await self._conn.update_device(self._heater.device_id)
+
+    async def async_set_operation_mode(self, operation_mode):
+        """Set operation mode."""
+        if operation_mode == STATE_HEAT:
+            await self.async_turn_on()
+        elif operation_mode == STATE_OFF and not self._heater.is_gen1:
+            await self.async_turn_off()
+        else:
+            _LOGGER.error("Unrecognized operation mode: %s", operation_mode)

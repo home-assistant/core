@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 82
+MINOR_VERSION = 84
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -140,6 +140,7 @@ CONF_TIME_ZONE = 'time_zone'
 CONF_TIMEOUT = 'timeout'
 CONF_TOKEN = 'token'
 CONF_TRIGGER_TIME = 'trigger_time'
+CONF_TTL = 'ttl'
 CONF_TYPE = 'type'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 CONF_UNIT_SYSTEM = 'unit_system'
@@ -176,6 +177,7 @@ DEVICE_CLASS_BATTERY = 'battery'
 DEVICE_CLASS_HUMIDITY = 'humidity'
 DEVICE_CLASS_ILLUMINANCE = 'illuminance'
 DEVICE_CLASS_TEMPERATURE = 'temperature'
+DEVICE_CLASS_TIMESTAMP = 'timestamp'
 DEVICE_CLASS_PRESSURE = 'pressure'
 
 # #### STATES ####
@@ -448,3 +450,7 @@ WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 PRECISION_WHOLE = 1
 PRECISION_HALVES = 0.5
 PRECISION_TENTHS = 0.1
+
+# Static list of entities that will never be exposed to
+# cloud, alexa, or google_home components
+CLOUD_NEVER_EXPOSED_ENTITIES = ['group.all_locks']
