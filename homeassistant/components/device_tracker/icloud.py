@@ -443,7 +443,8 @@ class Icloud(DeviceScanner):
         self.api.authenticate()
 
         for device in self.api.devices:
-            if devicename is None or device == self.devices[devicename]:
+            if devicename is None or \
+               str(device) == str(self.devices[devicename]):
                 device.play_sound()
 
     def update_icloud(self, devicename=None):
