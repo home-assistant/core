@@ -1233,7 +1233,7 @@ async def async_api_discovery(hass, config, directive, context):
 
         endpoint = {
             'displayCategories': alexa_entity.display_categories(),
-            'additionalApplianceDetails': {},
+            'cookie': {},
             'endpointId': alexa_entity.entity_id(),
             'friendlyName': alexa_entity.friendly_name(),
             'description': alexa_entity.description(),
