@@ -68,7 +68,6 @@ SENSOR_TYPES = {
               'icon': 'mdi:percent'},
 }
 
-TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 AWAIR_QUOTA = 300
 
 # This is the minimum time between throttled update calls.
@@ -81,7 +80,8 @@ AWAIR_DEVICE_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_DEVICES): [AWAIR_DEVICE_SCHEMA]
+    vol.Optional(CONF_DEVICES): vol.All(
+        cv.ensure_list, [AWAIR_DEVICE_SCHEMA]),
 })
 
 
