@@ -56,7 +56,7 @@ SCHEMA_MIGRATE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 
 SCHEMA_SAVE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_SAVE_CONFIG,
-    vol.Required('config'): vol.Any(str, Dict),
+    vol.Required('config'): vol.Any(str, dict),
     vol.Optional('format', default=FORMAT_JSON):
         vol.Any(FORMAT_JSON, FORMAT_YAML),
 })
