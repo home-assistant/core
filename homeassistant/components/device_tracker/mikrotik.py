@@ -128,7 +128,7 @@ class MikrotikScanner(DeviceScanner):
                         librouteros.exceptions.ConnectionError):
                     self.wireless_exist = False
 
-                if not self.wireless_exist and not self.capsman_exist or self.method == 'ip':
+                if not self.wireless_exist or self.method == 'ip':
                     _LOGGER.info(
                         "Mikrotik %s: Wireless adapters not found. Try to "
                         "use DHCP lease table as presence tracker source. "
