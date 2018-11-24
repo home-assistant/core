@@ -51,8 +51,10 @@ def alter_time(retval):
     """Manage multiple time mocks."""
     patch_one = patch('homeassistant.util.dt.utcnow', return_value=retval)
     patch_two = patch('homeassistant.util.utcnow', return_value=retval)
+    patch_three = patch('homeassistant.components.sensor.awair.dt.utcnow',
+                        return_value=retval)
 
-    with patch_one, patch_two:
+    with patch_one, patch_two, patch_three:
         yield
 
 
@@ -71,8 +73,7 @@ async def setup_awair(hass, config=None):
 
     with devices_patch, air_data_patch, alter_time(NOW):
         assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
 
 async def test_platform_manually_configured(hass):
