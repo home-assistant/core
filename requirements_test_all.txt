@@ -104,7 +104,7 @@ homematicip==0.9.8
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==5.0.0
+influxdb==5.2.0
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
