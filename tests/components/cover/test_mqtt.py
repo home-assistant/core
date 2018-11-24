@@ -671,7 +671,6 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_percentage_in_range_defaults(self):
         """Test find percentage in range with default range."""
         mqtt_cover = MqttCover(
-            self.hass,
             {
                 'name': 'cover.test',
                 'state_topic': 'state-topic',
@@ -702,7 +701,6 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_percentage_in_range_altered(self):
         """Test find percentage in range with altered range."""
         mqtt_cover = MqttCover(
-            self.hass,
             {
                 'name': 'cover.test',
                 'state_topic': 'state-topic',
@@ -733,7 +731,6 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_percentage_in_range_defaults_inverted(self):
         """Test find percentage in range with default range but inverted."""
         mqtt_cover = MqttCover(
-            self.hass,
             {
                 'name': 'cover.test',
                 'state_topic': 'state-topic',
@@ -764,7 +761,6 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_percentage_in_range_altered_inverted(self):
         """Test find percentage in range with altered range and inverted."""
         mqtt_cover = MqttCover(
-            self.hass,
             {
                 'name': 'cover.test',
                 'state_topic': 'state-topic',
@@ -795,7 +791,6 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_in_range_defaults(self):
         """Test find in range with default range."""
         mqtt_cover = MqttCover(
-            self.hass,
             {
                 'name': 'cover.test',
                 'state_topic': 'state-topic',
@@ -826,7 +821,6 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_in_range_altered(self):
         """Test find in range with altered range."""
         mqtt_cover = MqttCover(
-            self.hass,
             {
                 'name': 'cover.test',
                 'state_topic': 'state-topic',
@@ -857,7 +851,6 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_in_range_defaults_inverted(self):
         """Test find in range with default range but inverted."""
         mqtt_cover = MqttCover(
-            self.hass,
             {
                 'name': 'cover.test',
                 'state_topic': 'state-topic',
@@ -888,7 +881,6 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_in_range_altered_inverted(self):
         """Test find in range with altered range and inverted."""
         mqtt_cover = MqttCover(
-            self.hass,
             {
                 'name': 'cover.test',
                 'state_topic': 'state-topic',

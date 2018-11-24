@@ -129,7 +129,7 @@ PLATFORM_SCHEMA = vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
     """Set up MQTT cover through configuration.yaml."""
-    await _async_setup_entity(hass, config, async_add_entities)
+    await _async_setup_entity(config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -137,7 +137,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add an MQTT cover."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(hass, config, async_add_entities,
+        await _async_setup_entity(config, async_add_entities,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
@@ -145,19 +145,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(hass, config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities,
                               discovery_hash=None):
     """Set up the MQTT Cover."""
-    async_add_entities([MqttCover(hass, config, discovery_hash)])
+    async_add_entities([MqttCover(config, discovery_hash)])
 
 
 class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                 CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, hass, config, discovery_hash):
+    def __init__(self, config, discovery_hash):
         """Initialize the cover."""
-        self.hass = hass
         self._position = None
         self._state = None
         self._sub_state = None
@@ -237,10 +236,7 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._optimistic = (config.get(CONF_OPTIMISTIC) or
                             (self._state_topic is None and
                              self._get_position_topic is None))
-        value_template = config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = self.hass
-        self._template = value_template
+        self._template = config.get(CONF_VALUE_TEMPLATE)
         self._tilt_open_position = config.get(CONF_TILT_OPEN_POSITION)
         self._tilt_closed_position = config.get(CONF_TILT_CLOSED_POSITION)
         self._tilt_min = config.get(CONF_TILT_MIN)
@@ -248,15 +244,17 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._tilt_optimistic = config.get(CONF_TILT_STATE_OPTIMISTIC)
         self._tilt_invert = config.get(CONF_TILT_INVERT_STATE)
         self._set_position_topic = config.get(CONF_SET_POSITION_TOPIC)
-        set_position_template = config.get(CONF_SET_POSITION_TEMPLATE)
-        if set_position_template is not None:
-            set_position_template.hass = self.hass
-        self._set_position_template = set_position_template
+        self._set_position_template = config.get(CONF_SET_POSITION_TEMPLATE)
 
         self._unique_id = config.get(CONF_UNIQUE_ID)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
+        if self._template is not None:
+            self._template.hass = self.hass
+        if self._set_position_template is not None:
+            self._set_position_template.hass = self.hass
+
         topics = {}
 
         @callback
