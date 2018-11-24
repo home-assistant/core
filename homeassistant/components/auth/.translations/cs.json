@@ -1,0 +1,26 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "\u017d\u00e1dn\u00e9 oznamovac\u00ed slu\u017eby nejsou k dispozici."
+            },
+            "error": {
+                "invalid_code": "Neplatn\u00fd k\u00f3d, zkuste to znovu."
+            },
+            "step": {
+                "init": {
+                    "description": "Vyberte pros\u00edm jednu z oznamovac\u00edch slu\u017eeb:",
+                    "title": "Nastavte jednor\u00e1zov\u00e9 heslo dodan\u00e9 komponentou notify"
+                },
+                "setup": {
+                    "title": "Ov\u011b\u0159en\u00ed nastaven\u00ed"
+                }
+            }
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "Neplatn\u00fd k\u00f3d, zkuste to znovu. Pokud se tato chyba opakuje, ujist\u011bte se, \u017ee hodiny syst\u00e9mu Home Assistant jsou spr\u00e1vn\u011b nastaveny."
+            }
+        }
+    }
+}

@@ -57,7 +57,7 @@ class MikrotikScanner(DeviceScanner):
                 self.port = MTK_DEFAULT_API_PORT
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        self.method = config[CONF_METHOD]
+        self.method = config.get(CONF_METHOD)
 
         self.connected = False
         self.success_init = False
