@@ -193,7 +193,7 @@ class EvoClimateDevice(ClimateDevice):
         This is state data that is not available otherwise, due to the
         restrictions placed upon ClimateDevice properties, etc. by HA.
         """
-        return self._status
+        return {'status': self._status}
 
     @property
     def available(self) -> bool:
@@ -442,7 +442,7 @@ class EvoController(EvoClimateDevice):
         if 'dhw' in status:
             del status['dhw']
 
-        return status
+        return {'status': status}
 
     @property
     def current_operation(self):
