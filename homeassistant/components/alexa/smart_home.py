@@ -48,6 +48,7 @@ API_TEMP_UNITS = {
 # back to HA state.
 API_THERMOSTAT_MODES = OrderedDict([
     (climate.STATE_HEAT, 'HEAT'),
+    (climate.STATE_MANUAL, 'HEAT'),
     (climate.STATE_COOL, 'COOL'),
     (climate.STATE_AUTO, 'AUTO'),
     (climate.STATE_ECO, 'ECO'),
