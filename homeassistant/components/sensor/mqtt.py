@@ -144,12 +144,12 @@ class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._json_attributes = set(config.get(CONF_JSON_ATTRS))
         self._unique_id = config.get(CONF_UNIQUE_ID)
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         if self._template is not None:
             self._template.hass = self.hass
+
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""
