@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.history_values/
 """
 
 import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 import logging
 import math
 
@@ -20,14 +20,15 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import async_generate_entity_id, Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_change
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = [history.DOMAIN]
 
 DOMAIN = 'history_values'
-DEPENDENCIES = [history.DOMAIN]
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_NEW_STATE = 'new_state'
 
@@ -204,8 +205,18 @@ class HistoryValuesSensor(Entity):
             self.value = STATE_UNKNOWN
             return
 
-        history_list = [
-            state for state in history_list if state.state != STATE_UNKNOWN]
+        def is_castable_to_float(str):
+            """Return True if @str is castable to float."""
+            try:
+                float(str)
+            except (TypeError, ValueError):
+                _LOGGER.error("%s: Not a numeric value: %s",
+                              self.entity_id, str)
+                return False
+            return True
+
+        history_list = [state for state in history_list
+                        if is_castable_to_float(state.state)]
 
         if self._type in [TYPE_LOW, TYPE_PEAK, TYPE_RANGE]:
             value = self.get_min_max_range(history_list)[self._type]
@@ -247,13 +258,9 @@ class HistoryValuesSensor(Entity):
         if state_list is None:
             return
         total_value = 0
-        precision = 0
         total_period = datetime.timedelta(seconds=0)
-        last_idx = len(state_list)-1
+        last_idx = len(state_list) - 1
         for state in state_list:
-            current_prec = self.get_precision(float(state.state))
-            if current_prec > precision:
-                precision = current_prec
             next_updated = state_list.index(state) + 1
             if next_updated > last_idx:
                 if end > now:
@@ -267,6 +274,18 @@ class HistoryValuesSensor(Entity):
             total_value += float(state.state) * state_period.total_seconds()
         if total_period.total_seconds() == 0:
             return None
+
+        def get_precision(float_num, max_prec=10):
+            """Return the precision of @float up to @max."""
+            count = 0
+            orig_num = float_num
+            while int(float_num) != float_num and count < max_prec:
+                count += 1
+                float_num = orig_num * 10**count
+            return count
+
+        precision = max([
+            get_precision(float(state.state)) for state in state_list])
         formatstr = '{:.' + str(precision) + 'f}'
         return formatstr.format(total_value / total_period.total_seconds())
 
@@ -277,12 +296,7 @@ class HistoryValuesSensor(Entity):
             return
         high = low = None
         for state in state_list:
-            try:
-                new = Decimal(state.state)
-            except (InvalidOperation, TypeError):
-                _LOGGER.error("%s: Not a numeric value: %s",
-                              self.entity_id, state.state)
-                continue
+            new = Decimal(state.state)
             if high is None or new > high:
                 high = new
             if low is None or new < low:
@@ -296,17 +310,6 @@ class HistoryValuesSensor(Entity):
             TYPE_PEAK: high,
             TYPE_RANGE: val_range,
             }
-
-    @callback
-    @staticmethod
-    def get_precision(float_num, max_prec=10):
-        """Return the precision of @float up to @max."""
-        count = 0
-        orig_num = float_num
-        while int(float_num) != float_num and count < max_prec:
-            count += 1
-            float_num = orig_num * 10**count
-        return count
 
     async def update_period(self):
         """Parse the templates and store a datetime tuple in _period."""
