@@ -1,6 +1,4 @@
 """Manage cloud webhooks."""
-import asyncio
-
 import async_timeout
 
 from . import cloud_api
@@ -12,20 +10,14 @@ class Webhooks:
     def __init__(self, cloud):
         """Initialize webhooks."""
         self.cloud = cloud
-        self.hass = cloud.hass
-        self._cloud_hooks = None
+        self.cloud.iot.register_on_connect(self.async_publish_webhooks)
 
-    async def _on_connect(self):
-        """Called when the websocket connection is connected."""
-        tasks = [
-            {
-                'publish': True,
-                'webhook_id': info['cloud_id']
-            } for info in self.cloud.prefs.webhooks.values()
-        ]
-
-        if tasks:
-            await asyncio.wait(tasks)
+    async def async_publish_webhooks(self):
+        """Inform the Relayer of the webhooks that we expect."""
+        await self.cloud.iot.async_send_message('webhook-register', {
+            'webhook_ids': [info['cloud_id'] for info
+                            in self.cloud.prefs.webhooks.values()]
+        })
 
     async def async_enable(self, webhook_id):
         """Enable a webhook."""
@@ -54,11 +46,7 @@ class Webhooks:
         }
         await self.cloud.prefs.async_update(webhooks=webhooks)
 
-        # Tell relayer to active cloud hook
-        await self.cloud.iot.async_send_message('webhook-register', {
-            'publish': True,
-            'webhook_id': cloud_id
-        })
+        await self.async_publish_webhooks()
 
         return hook
 
@@ -74,9 +62,4 @@ class Webhooks:
         webhooks.pop(webhook_id)
         await self.cloud.prefs.async_update(webhooks=webhooks)
 
-        # Tell relayer to deactivate cloud hook if we're connected
-        if self.cloud.iot.connected:
-            await self.cloud.iot.async_send_message('webhook-register', {
-                'publish': False,
-                'webhook_id': webhook_id
-            })
+        await self.async_publish_webhooks()
