@@ -210,8 +210,8 @@ class HistoryValuesSensor(Entity):
             try:
                 float(str)
             except (TypeError, ValueError):
-                _LOGGER.error("%s: Not a numeric value: %s",
-                              self.entity_id, str)
+                _LOGGER.warning("%s: Not a numeric value: %s",
+                                self.entity_id, str)
                 return False
             return True
 
