@@ -19,7 +19,7 @@ from lightwave.lightwave import LWLink
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv
 
-DEPENDENCIES = ['lightwave']
+REQUIREMENTS = ['lightwave==0.14']
 LIGHTWAVE_LINK = 'lightwave_link'
 DOMAIN = 'lightwave'
 
