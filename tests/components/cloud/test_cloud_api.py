@@ -15,6 +15,7 @@ def mock_check_token():
 
 
 async def test_create_webhook(hass, aioclient_mock):
+    """Test creating a webhook."""
     aioclient_mock.post('https://example.com/bla', json={
         'webhook_id': 'mock-webhook'
     })

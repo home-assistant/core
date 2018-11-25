@@ -32,7 +32,8 @@ class ErrorMessage(Exception):
     """Exception raised when there was error handling message in the cloud."""
 
     def __init__(self, error):
-        super.__init__(self, "Error in Cloud")
+        """Initialize Error Message."""
+        super().__init__(self, "Error in Cloud")
         self.error = error
 
 
@@ -57,9 +58,9 @@ class CloudIoT:
         self._on_connect = []
 
     @callback
-    def register_on_connect(self, callback):
+    def register_on_connect(self, cb):
         """Register an async on_connect callback."""
-        self._on_connect.append(callback)
+        self._on_connect.append(cb)
 
     @property
     def connected(self):
@@ -124,6 +125,9 @@ class CloudIoT:
             'handler': handler,
             'payload': payload,
         }
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Publishing message:\n%s\n",
+                          pprint.pformat(message))
         await self.client.send_json(message)
 
     @asyncio.coroutine
@@ -311,6 +315,19 @@ def async_handle_cloud(hass, cloud, payload):
 @HANDLERS.register('webhook')
 async def async_handle_webhook(hass, cloud, payload):
     """Handle an incoming IoT message for webhook component."""
+    cloud_id = payload['webhook_id']
+
+    found = None
+    for cloud_hook in cloud.prefs.webhooks.values():
+        if cloud_hook['cloud_id'] == cloud_id:
+            found = cloud_hook
+            break
+
+    if found is None:
+        return {
+            'status': 200
+        }
+
     request = MockRequest(
         content=payload['body'].encode('utf-8'),
         headers=payload['headers'],
@@ -318,8 +335,8 @@ async def async_handle_webhook(hass, cloud, payload):
         query_string=payload['query'],
     )
 
-    response = await hass.components.webhook.async_get_handler(
-        hass, payload['webhook_id'], request)
+    response = await hass.components.webhook.async_handle_webhook(
+        found['webhook_id'], request)
 
     # Response
     return {

@@ -10,6 +10,7 @@ from tests.common import mock_coro
 
 @pytest.fixture
 def mock_webhooks(hass):
+    """Mock webhooks class."""
     cloud = Mock()
     cloud.hass = hass
     cloud.hass.async_add_executor_job = Mock(return_value=mock_coro())
