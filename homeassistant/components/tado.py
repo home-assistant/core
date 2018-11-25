@@ -124,14 +124,8 @@ class TadoDataStore:
 
     def set_zone_overlay(
             self, zone_id, device_type, overlay_mode,
-            temperature=None, duration=None, mode=None, device_is_active=True):
+            temperature=None, duration=None, mode=None, power=True):
         """Wrap for setZoneOverlay(..)."""
-        power = "ON"
-        if device_type == "HOT_WATER":
-            if device_is_active:
-                power = "OFF"
-        elif temperature is None:
-            power = "OFF"
 
         self.tado.setZoneOverlay(zone_id,
                                  overlay_mode,

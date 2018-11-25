@@ -409,7 +409,7 @@ class TadoClimate(ClimateDevice):
             _LOGGER.info("Obtained current and target temperature. "
                          "Tado thermostat active")
 
-        if not self._active or self._current_operation == self._overlay_mode:
+        if not self._active and not self._device_type == "HOT_WATER" or self._current_operation == self._overlay_mode:
             return
 
         if self._current_operation == CONST_MODE_SMART_SCHEDULE:
@@ -423,7 +423,7 @@ class TadoClimate(ClimateDevice):
             _LOGGER.info("Switching mytado.com to OFF for zone %s",
                          self.zone_name)
             self._store.set_zone_overlay(self.zone_id, self._device_type,
-                                         CONST_OVERLAY_MANUAL)
+                                         CONST_OVERLAY_MANUAL, None, None, None, "OFF")
             self._overlay_mode = self._current_operation
             return
 
@@ -436,6 +436,6 @@ class TadoClimate(ClimateDevice):
                                      self._target_temp,
                                      None,
                                      self._mode,
-                                     self._device_is_active)
+                                     "ON")
 
         self._overlay_mode = self._current_operation
