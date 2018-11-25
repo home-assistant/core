@@ -64,7 +64,7 @@ def async_generate_url(hass, webhook_id):
 
 @bind_hass
 async def async_handle_webhook(hass, webhook_id, request):
-    """Get a webhook handler."""
+    """Handle a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
     webhook = handlers.get(webhook_id)
 
