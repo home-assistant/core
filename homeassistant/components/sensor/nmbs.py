@@ -30,13 +30,13 @@ REQUIREMENTS = ['pyrail==0.0.3']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_FROM): cv.string,
     vol.Required(CONF_STATION_TO): cv.string,
-    vol.Optional(CONF_STATION_LIVE, default=""): cv.string,
+    vol.Optional(CONF_STATION_LIVE, default=None): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 def get_time_until(departure_time=None):
-    """Calculate the time between now and a train's departure time"""
+    """Calculate the time between now and a train's departure time."""
     if departure_time is None:
         return 0
 
@@ -58,7 +58,7 @@ def get_ride_duration(departure_time, arrival_time, delay=0):
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Velo sensor."""
+    """Set up the NMBS sensor with iRail API."""
     from pyrail import iRail
     api_client = iRail()
 
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = [NMBSSensor(name, station_from, station_to, api_client)]
 
-    if station_live is not "":
+    if station_live is not None:
         sensors.append(NMBSLiveBoard(station_live, api_client))
 
     add_entities(sensors, True)
@@ -79,6 +79,7 @@ class NMBSLiveBoard(Entity):
     """Get the next train from a station's liveboard."""
 
     def __init__(self, live_station, api_client):
+        """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
         self._state = None
@@ -107,10 +108,10 @@ class NMBSLiveBoard(Entity):
         departure = get_time_until(self._attrs['time'])
 
         return {
-            "Delay": "{} minutes".format(delay) if delay > 0 else "None",
+            "Delay": "{} minutes".format(delay) if delay > 0 else None,
             "Vehicle ID": self._attrs['vehicle'],
             "Occupancy": self._attrs['occupancy']['name'],
-            "Extra train": 'Yes' if int(self._attrs['isExtra']) > 0 else 'No',
+            "Extra train": True if int(self._attrs['isExtra']) > 0 else False,
             "Departure": "In {} minutes".format(departure),
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
