@@ -522,7 +522,7 @@ ihcsdk==2.2.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==5.0.0
+influxdb==5.2.0
 
 # homeassistant.components.insteon
 insteonplm==0.15.1
