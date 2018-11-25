@@ -340,7 +340,7 @@ async def async_handle_webhook(hass, cloud, payload):
 
     # Response
     return {
-        'text': response.text,
+        'body': response.text,
         'status': response.status,
         'headers': dict(response.headers),
     }
