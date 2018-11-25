@@ -2,14 +2,12 @@
   "config": {
     "title": "ZHA",
     "step": {
-      "init": {
+      "user": {
         "title": "ZHA",
         "description": "",
         "data": {
-          "database_path": "Database Path",
           "usb_path": "USB Device Path",
-          "radio_type": "Radio Type",
-          "baudrate": "Baudrate"
+          "radio_type": "Radio Type"
         }
       }
     },

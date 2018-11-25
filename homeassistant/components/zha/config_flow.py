@@ -4,10 +4,9 @@ from collections import OrderedDict
 import voluptuous as vol
 
 from homeassistant import config_entries
-
+from .helpers import check_zigpy_connection
 from .const import (
-    DOMAIN, BAUD_RATES, CONF_BAUDRATE, CONF_DATABASE, CONF_RADIO_TYPE,
-    CONF_USB_PATH, RadioType
+    DOMAIN, CONF_RADIO_TYPE, CONF_USB_PATH, RadioType
 )
 
 
@@ -25,22 +24,23 @@ class ZhaFlowHandler(config_entries.ConfigFlow):
 
         errors = {}
 
-        if user_input is not None:
-            return self.async_create_entry(
-                title=user_input[CONF_USB_PATH], data=user_input)
-
         fields = OrderedDict()
-        fields[vol.Required(CONF_DATABASE)] = str
         fields[vol.Required(CONF_USB_PATH)] = str
         fields[vol.Optional(CONF_RADIO_TYPE, default='ezsp')] = vol.In(
             RadioType.list()
         )
-        fields[vol.Optional(CONF_BAUDRATE, default=57600)] = vol.All(
-            vol.Coerce(int), vol.In(BAUD_RATES)
-        )
+
+        if user_input is not None:
+            test = await check_zigpy_connection(user_input[CONF_USB_PATH],
+                                                user_input[CONF_RADIO_TYPE])
+            if not test:
+                errors['base'] = 'cannot_connect'
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_USB_PATH], data=user_input)
 
         return self.async_show_form(
-            step_id='init', data_schema=vol.Schema(fields), errors=errors
+            step_id='user', data_schema=vol.Schema(fields), errors=errors
         )
 
     async def async_step_import(self, import_info):
@@ -48,7 +48,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow):
         if self._async_current_entries():
             return self.async_abort(reason='single_instance_allowed')
 
-        import_info[CONF_RADIO_TYPE] = import_info[CONF_RADIO_TYPE].name
         return self.async_create_entry(
             title=import_info[CONF_USB_PATH],
             data=import_info

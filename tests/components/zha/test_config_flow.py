@@ -1,6 +1,7 @@
 """Tests for ZHA config flow."""
+from asynctest import patch
 from homeassistant.components.zha import config_flow
-from homeassistant.components.zha.const import DOMAIN, RadioType
+from homeassistant.components.zha.const import DOMAIN
 from tests.common import MockConfigEntry
 
 
@@ -9,14 +10,23 @@ async def test_user_flow(hass):
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user(
-        user_input={'database_path': 'zigbee.db', 'usb_path': '/dev/ttyUSB1'})
+    with patch('homeassistant.components.zha.config_flow'
+               '.check_zigpy_connection', return_value=False):
+        result = await flow.async_step_user(
+            user_input={'usb_path': '/dev/ttyUSB1', 'radio_type': 'ezsp'})
+
+    assert result['errors'] == {'base': 'cannot_connect'}
+
+    with patch('homeassistant.components.zha.config_flow'
+               '.check_zigpy_connection', return_value=True):
+        result = await flow.async_step_user(
+            user_input={'usb_path': '/dev/ttyUSB1', 'radio_type': 'ezsp'})
 
     assert result['type'] == 'create_entry'
     assert result['title'] == '/dev/ttyUSB1'
     assert result['data'] == {
-        'database_path': 'zigbee.db',
-        'usb_path': '/dev/ttyUSB1'
+        'usb_path': '/dev/ttyUSB1',
+        'radio_type': 'ezsp'
     }
 
 
@@ -40,28 +50,14 @@ async def test_import_flow(hass):
 
     result = await flow.async_step_import({
         'usb_path': '/dev/ttyUSB1',
-        'database_path': 'zigbee.db',
-        'baudrate': 28800,
-        'radio_type': RadioType.xbee,
-        'device_config': {
-            '01:23:45:67:89:ab:cd:ef-1': {
-                'type': 'light'
-            }
-        }
+        'radio_type': 'xbee',
     })
 
     assert result['type'] == 'create_entry'
     assert result['title'] == '/dev/ttyUSB1'
     assert result['data'] == {
-        'database_path': 'zigbee.db',
         'usb_path': '/dev/ttyUSB1',
-        'baudrate': 28800,
-        'radio_type': 'xbee',
-        'device_config': {
-            '01:23:45:67:89:ab:cd:ef-1': {
-                'type': 'light'
-            }
-        }
+        'radio_type': 'xbee'
     }
 
 
@@ -75,9 +71,7 @@ async def test_import_flow_existing_config_entry(hass):
 
     result = await flow.async_step_import({
         'usb_path': '/dev/ttyUSB1',
-        'database_path': 'zigbee.db',
-        'baudrate': 28800,
-        'radio_type': RadioType.xbee,
+        'radio_type': 'xbee',
     })
 
     assert result['type'] == 'abort'

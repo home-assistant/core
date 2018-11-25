@@ -21,7 +21,9 @@ from . import config_flow  # noqa  # pylint: disable=unused-import
 from .const import (
     DOMAIN, COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_RADIO_TYPE,
     CONF_USB_PATH, CONF_DEVICE_CONFIG, ZHA_DISCOVERY_NEW, DATA_ZHA,
-    DATA_ZHA_BRIDGE_ID, DATA_ZHA_RADIO, DATA_ZHA_DISPATCHERS, RadioType
+    DATA_ZHA_CONFIG, DATA_ZHA_BRIDGE_ID, DATA_ZHA_RADIO, DATA_ZHA_DISPATCHERS,
+    DEFAULT_RADIO_TYPE, DEFAULT_DATABASE_PATH, DEFAULT_BAUDRATE,
+    RadioType
 )
 
 REQUIREMENTS = [
@@ -36,10 +38,13 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_RADIO_TYPE, default='ezsp'): cv.enum(RadioType),
+        vol.Optional(
+            CONF_RADIO_TYPE,
+            default=DEFAULT_RADIO_TYPE
+        ): cv.enum(RadioType),
         CONF_USB_PATH: cv.string,
-        vol.Optional(CONF_BAUDRATE, default=57600): cv.positive_int,
-        CONF_DATABASE: cv.string,
+        vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
+        vol.Optional(CONF_DATABASE, default=DEFAULT_DATABASE_PATH): cv.string,
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
     })
@@ -71,13 +76,23 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up ZHA from config."""
-    if DOMAIN in config:
-        if not hass.config_entries.async_entries(DOMAIN):
-            hass.async_create_task(hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={'source': config_entries.SOURCE_IMPORT},
-                data=config[DOMAIN]
-            ))
+    hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
+
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+    hass.data[DATA_ZHA][DATA_ZHA_CONFIG] = conf
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={'source': config_entries.SOURCE_IMPORT},
+            data={
+                CONF_USB_PATH: conf[CONF_USB_PATH],
+                CONF_RADIO_TYPE: conf.get(CONF_RADIO_TYPE).value
+            }
+        ))
     return True
 
 
@@ -88,11 +103,12 @@ async def async_setup_entry(hass, config_entry):
     """
     global APPLICATION_CONTROLLER
 
-    hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
 
+    config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
+
     usb_path = config_entry.data.get(CONF_USB_PATH)
-    baudrate = config_entry.data.get(CONF_BAUDRATE)
+    baudrate = config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
     radio_type = config_entry.data.get(CONF_RADIO_TYPE)
     if radio_type == RadioType.ezsp.name:
         import bellows.ezsp
@@ -106,9 +122,9 @@ async def async_setup_entry(hass, config_entry):
     await radio.connect(usb_path, baudrate)
     hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
 
-    database = config_entry.data.get(CONF_DATABASE)
+    database = config.get(CONF_DATABASE, DEFAULT_DATABASE_PATH)
     APPLICATION_CONTROLLER = ControllerApplication(radio, database)
-    listener = ApplicationListener(hass, config_entry)
+    listener = ApplicationListener(hass, config)
     APPLICATION_CONTROLLER.add_listener(listener)
     await APPLICATION_CONTROLLER.startup(auto_form=True)
 
@@ -175,10 +191,10 @@ async def async_unload_entry(hass, config_entry):
 class ApplicationListener:
     """All handlers for events that happen on the ZigBee application."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass, config):
         """Initialize the listener."""
         self._hass = hass
-        self._config_entry = config_entry
+        self._config = config
         self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._device_registry = collections.defaultdict(list)
         zha_const.populate_data()
@@ -235,8 +251,8 @@ class ApplicationListener:
             profile_clusters = ([], [])
             device_key = "{}-{}".format(device.ieee, endpoint_id)
             node_config = {}
-            if CONF_DEVICE_CONFIG in self._config_entry.data:
-                node_config = self._config_entry.data[CONF_DEVICE_CONFIG].get(
+            if CONF_DEVICE_CONFIG in self._config:
+                node_config = self._config[CONF_DEVICE_CONFIG].get(
                     device_key, {}
                 )
 
