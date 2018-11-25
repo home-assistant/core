@@ -30,6 +30,8 @@ PACKAGES=(
   ffmpeg
   # homeassistant.components.sensor.iperf3
   iperf3
+  # To allow automations that evaluate ssl cert status
+  ssl-cert-check
 )
 
 # Required debian packages for building dependencies
