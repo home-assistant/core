@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mqtt/
 """
 import logging
-from typing import Optional
 
 import voluptuous as vol
 
@@ -19,7 +18,8 @@ from homeassistant.const import (
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo)
+    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
+    subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -79,21 +79,8 @@ async def _async_setup_entity(hass, config, async_add_entities,
         value_template.hass = hass
 
     async_add_entities([MqttBinarySensor(
-        config.get(CONF_NAME),
-        config.get(CONF_STATE_TOPIC),
-        config.get(CONF_AVAILABILITY_TOPIC),
-        config.get(CONF_DEVICE_CLASS),
-        config.get(CONF_QOS),
-        config.get(CONF_FORCE_UPDATE),
-        config.get(CONF_OFF_DELAY),
-        config.get(CONF_PAYLOAD_ON),
-        config.get(CONF_PAYLOAD_OFF),
-        config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-        value_template,
-        config.get(CONF_UNIQUE_ID),
-        config.get(CONF_DEVICE),
-        discovery_hash,
+        config,
+        discovery_hash
     )])
 
 
@@ -101,35 +88,71 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
                        MqttEntityDeviceInfo, BinarySensorDevice):
     """Representation a binary sensor that is updated by MQTT."""
 
-    def __init__(self, name, state_topic, availability_topic, device_class,
-                 qos, force_update, off_delay, payload_on, payload_off,
-                 payload_available, payload_not_available, value_template,
-                 unique_id: Optional[str], device_config: Optional[ConfigType],
-                 discovery_hash):
+    def __init__(self, config, discovery_hash):
         """Initialize the MQTT binary sensor."""
-        MqttAvailability.__init__(self, availability_topic, qos,
-                                  payload_available, payload_not_available)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash)
-        MqttEntityDeviceInfo.__init__(self, device_config)
-        self._name = name
+        self._config = config
         self._state = None
-        self._state_topic = state_topic
-        self._device_class = device_class
-        self._payload_on = payload_on
-        self._payload_off = payload_off
-        self._qos = qos
-        self._force_update = force_update
-        self._off_delay = off_delay
-        self._template = value_template
-        self._unique_id = unique_id
-        self._discovery_hash = discovery_hash
+        self._sub_state = None
         self._delay_listener = None
+
+        self._name = None
+        self._state_topic = None
+        self._device_class = None
+        self._payload_on = None
+        self._payload_off = None
+        self._qos = None
+        self._force_update = None
+        self._off_delay = None
+        self._template = None
+        self._unique_id = None
+
+        # Load config
+        self._setup_from_config(config)
+
+        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
+        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
+        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+        device_config = config.get(CONF_DEVICE)
+
+        MqttAvailability.__init__(self, availability_topic, self._qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash,
+                                     self.discovery_update)
+        MqttEntityDeviceInfo.__init__(self, device_config)
 
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
         await MqttAvailability.async_added_to_hass(self)
         await MqttDiscoveryUpdate.async_added_to_hass(self)
+        await self._subscribe_topics()
 
+    async def discovery_update(self, discovery_payload):
+        """Handle updated discovery message."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        self._setup_from_config(config)
+        await self.availability_discovery_update(config)
+        await self._subscribe_topics()
+        self.async_schedule_update_ha_state()
+
+    def _setup_from_config(self, config):
+        """(Re)Setup the entity."""
+        self._name = config.get(CONF_NAME)
+        self._state_topic = config.get(CONF_STATE_TOPIC)
+        self._device_class = config.get(CONF_DEVICE_CLASS)
+        self._qos = config.get(CONF_QOS)
+        self._force_update = config.get(CONF_FORCE_UPDATE)
+        self._off_delay = config.get(CONF_OFF_DELAY)
+        self._payload_on = config.get(CONF_PAYLOAD_ON)
+        self._payload_off = config.get(CONF_PAYLOAD_OFF)
+        value_template = config.get(CONF_VALUE_TEMPLATE)
+        if value_template is not None and value_template.hass is None:
+            value_template.hass = self.hass
+        self._template = value_template
+
+        self._unique_id = config.get(CONF_UNIQUE_ID)
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
         @callback
         def off_delay_listener(now):
             """Switch device off after a delay."""
@@ -155,6 +178,7 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
 
             if self._delay_listener is not None:
                 self._delay_listener()
+                self._delay_listener = None
 
             if (self._state and self._off_delay is not None):
                 self._delay_listener = evt.async_call_later(
@@ -162,8 +186,16 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
 
             self.async_schedule_update_ha_state()
 
-        await mqtt.async_subscribe(
-            self.hass, self._state_topic, state_message_received, self._qos)
+        self._sub_state = await subscription.async_subscribe_topics(
+            self.hass, self._sub_state,
+            {'state_topic': {'topic': self._state_topic,
+                             'msg_callback': state_message_received,
+                             'qos': self._qos}})
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
     def should_poll(self):

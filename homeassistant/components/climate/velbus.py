@@ -7,18 +7,17 @@ https://home-assistant.io/components/climate.velbus/
 import logging
 
 from homeassistant.components.climate import (
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    STATE_HEAT, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.components.velbus import (
     DOMAIN as VELBUS_DOMAIN, VelbusEntity)
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import (
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['velbus']
 
-OPERATION_LIST = ['comfort', 'day', 'night', 'safe']
-
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
 
 
 async def async_setup_platform(
@@ -47,7 +46,9 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit this state is expressed in."""
-        return self._module.get_unit(self._channel)
+        if self._module.get_unit(self._channel) == '°C':
+            return TEMP_CELSIUS
+        return TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
@@ -56,26 +57,18 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
 
     @property
     def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
-        return self._module.get_climate_mode()
-
-    @property
-    def operation_list(self):
-        """Return the list of available operation modes."""
-        return OPERATION_LIST
+        """Return current operation."""
+        return STATE_HEAT
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._module.get_climate_target()
 
-    def set_operation_mode(self, operation_mode):
-        """Set new target operation mode."""
-        self._module.set_mode(operation_mode)
-        self.schedule_update_ha_state()
-
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._module.set_temp(kwargs.get(ATTR_TEMPERATURE))
-            self.schedule_update_ha_state()
+        temp = kwargs.get(ATTR_TEMPERATURE)
+        if temp is None:
+            return
+        self._module.set_temp(temp)
+        self.schedule_update_ha_state()

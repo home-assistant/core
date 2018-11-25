@@ -1,5 +1,6 @@
 """All constants related to the ZHA component."""
 
+DISCOVERY_KEY = 'zha_discovery_info'
 DEVICE_CLASS = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
@@ -17,7 +18,12 @@ def populate_data():
     from zigpy.profiles import PROFILES, zha, zll
     from homeassistant.components.sensor import zha as sensor_zha
 
-    DEVICE_CLASS[zha.PROFILE_ID] = {
+    if zha.PROFILE_ID not in DEVICE_CLASS:
+        DEVICE_CLASS[zha.PROFILE_ID] = {}
+    if zll.PROFILE_ID not in DEVICE_CLASS:
+        DEVICE_CLASS[zll.PROFILE_ID] = {}
+
+    DEVICE_CLASS[zha.PROFILE_ID].update({
         zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
         zha.DeviceType.LEVEL_CONTROL_SWITCH: 'binary_sensor',
         zha.DeviceType.REMOTE_CONTROL: 'binary_sensor',
@@ -29,8 +35,8 @@ def populate_data():
         zha.DeviceType.ON_OFF_LIGHT_SWITCH: 'binary_sensor',
         zha.DeviceType.DIMMER_SWITCH: 'binary_sensor',
         zha.DeviceType.COLOR_DIMMER_SWITCH: 'binary_sensor',
-    }
-    DEVICE_CLASS[zll.PROFILE_ID] = {
+    })
+    DEVICE_CLASS[zll.PROFILE_ID].update({
         zll.DeviceType.ON_OFF_LIGHT: 'light',
         zll.DeviceType.ON_OFF_PLUGIN_UNIT: 'switch',
         zll.DeviceType.DIMMABLE_LIGHT: 'light',
@@ -43,7 +49,7 @@ def populate_data():
         zll.DeviceType.CONTROLLER: 'binary_sensor',
         zll.DeviceType.SCENE_CONTROLLER: 'binary_sensor',
         zll.DeviceType.ON_OFF_SENSOR: 'binary_sensor',
-    }
+    })
 
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',

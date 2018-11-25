@@ -1,5 +1,4 @@
 """Tests for deCONZ config flow."""
-from unittest.mock import patch
 import pytest
 
 import voluptuous as vol
@@ -45,7 +44,7 @@ async def test_flow_already_registered_bridge(hass):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_init()
     assert result['type'] == 'abort'
 
 
@@ -55,8 +54,9 @@ async def test_flow_no_discovered_bridges(hass, aioclient_mock):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user()
-    assert result['type'] == 'abort'
+    result = await flow.async_step_init()
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'user'
 
 
 async def test_flow_one_bridge_discovered(hass, aioclient_mock):
@@ -67,7 +67,7 @@ async def test_flow_one_bridge_discovered(hass, aioclient_mock):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_init()
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
 
@@ -81,9 +81,9 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_init()
     assert result['type'] == 'form'
-    assert result['step_id'] == 'user'
+    assert result['step_id'] == 'init'
 
     with pytest.raises(vol.Invalid):
         assert result['data_schema']({'host': '0.0.0.0'})
@@ -101,10 +101,24 @@ async def test_flow_two_bridges_selection(hass, aioclient_mock):
         {'bridgeid': 'id2', 'host': '5.6.7.8', 'port': 80}
     ]
 
-    result = await flow.async_step_user(user_input={'host': '1.2.3.4'})
+    result = await flow.async_step_init(user_input={'host': '1.2.3.4'})
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
     assert flow.deconz_config['host'] == '1.2.3.4'
+
+
+async def test_flow_manual_configuration(hass, aioclient_mock):
+    """Test config flow with manual input."""
+    aioclient_mock.get(pydeconz.utils.URL_DISCOVER, json=[])
+    flow = config_flow.DeconzFlowHandler()
+    flow.hass = hass
+
+    user_input = {'host': '1.2.3.4', 'port': 80}
+
+    result = await flow.async_step_init(user_input)
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'link'
+    assert flow.deconz_config == user_input
 
 
 async def test_link_no_api_key(hass, aioclient_mock):
@@ -138,57 +152,14 @@ async def test_link_already_registered_bridge(hass):
 
 
 async def test_bridge_discovery(hass):
-    """Test a bridge being discovered with no additional config file."""
+    """Test a bridge being discovered."""
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
-    with patch.object(config_flow, 'load_json', return_value={}):
-        result = await flow.async_step_discovery({
-            'host': '1.2.3.4',
-            'port': 80,
-            'serial': 'id'
-        })
-
-    assert result['type'] == 'form'
-    assert result['step_id'] == 'link'
-
-
-async def test_bridge_discovery_config_file(hass):
-    """Test a bridge being discovered with a corresponding config file."""
-    flow = config_flow.DeconzFlowHandler()
-    flow.hass = hass
-    with patch.object(config_flow, 'load_json',
-                      return_value={'host': '1.2.3.4',
-                                    'port': 8080,
-                                    'api_key': '1234567890ABCDEF'}):
-        result = await flow.async_step_discovery({
-            'host': '1.2.3.4',
-            'port': 80,
-            'serial': 'id'
-        })
-
-    assert result['type'] == 'create_entry'
-    assert result['title'] == 'deCONZ-id'
-    assert result['data'] == {
-        'bridgeid': 'id',
+    result = await flow.async_step_discovery({
         'host': '1.2.3.4',
         'port': 80,
-        'api_key': '1234567890ABCDEF',
-        'allow_clip_sensor': True,
-        'allow_deconz_groups': True
-    }
-
-
-async def test_bridge_discovery_other_config_file(hass):
-    """Test a bridge being discovered with another bridges config file."""
-    flow = config_flow.DeconzFlowHandler()
-    flow.hass = hass
-    with patch.object(config_flow, 'load_json',
-                      return_value={'host': '5.6.7.8', 'api_key': '5678'}):
-        result = await flow.async_step_discovery({
-            'host': '1.2.3.4',
-            'port': 80,
-            'serial': 'id'
-        })
+        'serial': 'id'
+    })
 
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'

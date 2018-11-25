@@ -3,6 +3,10 @@ DOMAIN = 'cloud'
 CONFIG_DIR = '.cloud'
 REQUEST_TIMEOUT = 10
 
+PREF_ENABLE_ALEXA = 'alexa_enabled'
+PREF_ENABLE_GOOGLE = 'google_enabled'
+PREF_GOOGLE_ALLOW_UNLOCK = 'google_allow_unlock'
+
 SERVERS = {
     'production': {
         'cognito_client_id': '60i2uvhvbiref2mftj7rgcrt9u',

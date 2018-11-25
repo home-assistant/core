@@ -42,7 +42,7 @@ from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import (check_node_schema, check_value_schema, node_name,
                    check_has_unique_id, is_node_parsed)
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.11']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'homeassistant-pyozw==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
 SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover', 'fan',
-                       'light', 'sensor', 'switch']
+                       'lock', 'light', 'sensor', 'switch']
 
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),

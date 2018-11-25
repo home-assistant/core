@@ -47,8 +47,8 @@ async def async_setup(hass, config):
         modules = controller.get_modules()
         discovery_info = {
             'switch': [],
-            'climate': [],
             'binary_sensor': [],
+            'climate': [],
             'sensor': []
         }
         for module in modules:
