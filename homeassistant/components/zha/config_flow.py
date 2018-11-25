@@ -33,11 +33,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             test = await check_zigpy_connection(user_input[CONF_USB_PATH],
                                                 user_input[CONF_RADIO_TYPE])
-            if not test:
-                errors['base'] = 'cannot_connect'
-            else:
+            if test:
                 return self.async_create_entry(
                     title=user_input[CONF_USB_PATH], data=user_input)
+            errors['base'] = 'cannot_connect'
 
         return self.async_show_form(
             step_id='user', data_schema=vol.Schema(fields), errors=errors
