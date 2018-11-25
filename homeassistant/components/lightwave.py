@@ -1,21 +1,11 @@
 """
-homeassistant.components.lightwave.
+Support for device connected via Lightwave WiFi-link hub.
 
-Implements communication with LightwaveRF.
-
-My understanding of the LightWave Hub is that devices cannot be discovered
-so must be registered manually. This is done in the configuration file.
-
-lightwave:
-    host: ip_address
-
-Where ip_address is the ip address of your LightwaveRF hub
-
-For more details on the api see: https://api.lightwaverf.com/
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/lightwave/
 """
 import voluptuous as vol
 
-from lightwave.lightwave import LWLink
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv
 
@@ -32,6 +22,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Try to start embedded Lightwave broker."""
-    host = config[DOMAIN].get(CONF_HOST)
+    from lightwave.lightwave import LWLink
+
+    host = config[DOMAIN][CONF_HOST]
     hass.data[LIGHTWAVE_LINK] = LWLink(host)
     return True

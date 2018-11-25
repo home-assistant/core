@@ -11,18 +11,18 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA)
+from homeassistant.components.lightwave import LIGHTWAVE_LINK
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}
+    vol.Required(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}
 })
 
 _LOGGER = logging.getLogger(__name__)
 
-LIGHTWAVE_LINK = 'lightwave_link'
 DEPENDENCIES = ['lightwave']
 
 
