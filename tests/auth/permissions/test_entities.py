@@ -10,7 +10,7 @@ def test_entities_none():
     """Test entity ID policy."""
     policy = None
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is False
+    assert compiled('light.kitchen', 'read') is False
 
 
 def test_entities_empty():
@@ -18,7 +18,7 @@ def test_entities_empty():
     policy = {}
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is False
+    assert compiled('light.kitchen', 'read') is False
 
 
 def test_entities_false():
@@ -33,7 +33,7 @@ def test_entities_true():
     policy = True
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is True
+    assert compiled('light.kitchen', 'read') is True
 
 
 def test_entities_domains_true():
@@ -43,7 +43,7 @@ def test_entities_domains_true():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is True
+    assert compiled('light.kitchen', 'read') is True
 
 
 def test_entities_domains_domain_true():
@@ -55,8 +55,8 @@ def test_entities_domains_domain_true():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is True
-    assert compiled('switch.kitchen', ('read',)) is False
+    assert compiled('light.kitchen', 'read') is True
+    assert compiled('switch.kitchen', 'read') is False
 
 
 def test_entities_domains_domain_false():
@@ -77,7 +77,7 @@ def test_entities_entity_ids_true():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is True
+    assert compiled('light.kitchen', 'read') is True
 
 
 def test_entities_entity_ids_false():
@@ -98,8 +98,8 @@ def test_entities_entity_ids_entity_id_true():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is True
-    assert compiled('switch.kitchen', ('read',)) is False
+    assert compiled('light.kitchen', 'read') is True
+    assert compiled('switch.kitchen', 'read') is False
 
 
 def test_entities_entity_ids_entity_id_false():
@@ -124,9 +124,9 @@ def test_entities_control_only():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is True
-    assert compiled('light.kitchen', ('control',)) is False
-    assert compiled('light.kitchen', ('edit',)) is False
+    assert compiled('light.kitchen', 'read') is True
+    assert compiled('light.kitchen', 'control') is False
+    assert compiled('light.kitchen', 'edit') is False
 
 
 def test_entities_read_control():
@@ -141,9 +141,9 @@ def test_entities_read_control():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is True
-    assert compiled('light.kitchen', ('control',)) is True
-    assert compiled('light.kitchen', ('edit',)) is False
+    assert compiled('light.kitchen', 'read') is True
+    assert compiled('light.kitchen', 'control') is True
+    assert compiled('light.kitchen', 'edit') is False
 
 
 def test_entities_all_allow():
@@ -153,9 +153,9 @@ def test_entities_all_allow():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is True
-    assert compiled('light.kitchen', ('control',)) is True
-    assert compiled('switch.kitchen', ('read',)) is True
+    assert compiled('light.kitchen', 'read') is True
+    assert compiled('light.kitchen', 'control') is True
+    assert compiled('switch.kitchen', 'read') is True
 
 
 def test_entities_all_read():
@@ -167,9 +167,9 @@ def test_entities_all_read():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is True
-    assert compiled('light.kitchen', ('control',)) is False
-    assert compiled('switch.kitchen', ('read',)) is True
+    assert compiled('light.kitchen', 'read') is True
+    assert compiled('light.kitchen', 'control') is False
+    assert compiled('switch.kitchen', 'read') is True
 
 
 def test_entities_all_control():
@@ -181,7 +181,7 @@ def test_entities_all_control():
     }
     ENTITY_POLICY_SCHEMA(policy)
     compiled = compile_entities(policy)
-    assert compiled('light.kitchen', ('read',)) is False
-    assert compiled('light.kitchen', ('control',)) is True
-    assert compiled('switch.kitchen', ('read',)) is False
-    assert compiled('switch.kitchen', ('control',)) is True
+    assert compiled('light.kitchen', 'read') is False
+    assert compiled('light.kitchen', 'control') is True
+    assert compiled('switch.kitchen', 'read') is False
+    assert compiled('switch.kitchen', 'control') is True
