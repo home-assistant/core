@@ -170,8 +170,15 @@ class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload, self._state)
-            self._state = payload
-            self.async_schedule_update_ha_state()
+
+            # If payload is null or a varient of null, skip update
+            if payload is None or payload.lower() == 'nan':
+                _LOGGER.warning(
+                    "%s value for %s. Skipping state update. Current state: %s",
+                    payload, self._name, self._state)
+            else:
+                self._state = payload
+                self.async_schedule_update_ha_state()
 
         await mqtt.async_subscribe(self.hass, self._state_topic,
                                    message_received, self._qos)
