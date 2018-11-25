@@ -312,15 +312,15 @@ def async_handle_cloud(hass, cloud, payload):
         _LOGGER.warning("Received unknown cloud action: %s", action)
 
 
-@HANDLERS.register('webhook')
-async def async_handle_webhook(hass, cloud, payload):
-    """Handle an incoming IoT message for webhook component."""
-    cloud_id = payload['webhook_id']
+@HANDLERS.register('cloudhook')
+async def async_handle_cloudhook(hass, cloud, payload):
+    """Handle an incoming IoT message for cloud webhooks."""
+    cloudhook_id = payload['cloudhook_id']
 
     found = None
-    for cloud_hook in cloud.prefs.webhooks.values():
-        if cloud_hook['cloud_id'] == cloud_id:
-            found = cloud_hook
+    for cloudhook in cloud.prefs.cloudhooks.values():
+        if cloudhook['cloudhook_id'] == cloudhook_id:
+            found = cloudhook
             break
 
     if found is None:

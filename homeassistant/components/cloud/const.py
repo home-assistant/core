@@ -6,7 +6,7 @@ REQUEST_TIMEOUT = 10
 PREF_ENABLE_ALEXA = 'alexa_enabled'
 PREF_ENABLE_GOOGLE = 'google_enabled'
 PREF_GOOGLE_ALLOW_UNLOCK = 'google_allow_unlock'
-PREF_WEBHOOKS = 'webhooks'
+PREF_CLOUDHOOKS = 'cloudhooks'
 
 SERVERS = {
     'production': {
@@ -18,7 +18,7 @@ SERVERS = {
                                     'amazonaws.com/prod/smart_home_sync'),
         'subscription_info_url': ('https://stripe-api.nabucasa.com/payments/'
                                   'subscription_info'),
-        'webhook_create_url': 'https://webhook-api.nabucasa.com/generate'
+        'cloudhook_create_url': 'https://webhook-api.nabucasa.com/generate'
     }
 }
 

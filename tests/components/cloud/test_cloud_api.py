@@ -22,7 +22,7 @@ async def test_create_webhook(hass, aioclient_mock):
     cloud = Mock(
         hass=hass,
         id_token='mock-id-token',
-        webhook_create_url='https://example.com/bla',
+        cloudhook_create_url='https://example.com/bla',
     )
-    await cloud_api.async_create_webhook(cloud, 'mock-webhook')
+    await cloud_api.async_create_cloudhook(cloud, 'mock-webhook')
     assert len(aioclient_mock.mock_calls) == 1

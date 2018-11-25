@@ -45,16 +45,16 @@ SCHEMA_WS_SUBSCRIPTION = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 })
 
 
-WS_TYPE_HOOK_ENABLE = 'cloud/webhook/enable'
-SCHEMA_WS_HOOK_ENABLE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): WS_TYPE_HOOK_ENABLE,
+WS_TYPE_HOOK_CREATE = 'cloud/cloudhook/create'
+SCHEMA_WS_HOOK_CREATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_HOOK_CREATE,
     vol.Required('webhook_id'): str
 })
 
 
-WS_TYPE_HOOK_DISABLE = 'cloud/webhook/disable'
-SCHEMA_WS_HOOK_DISABLE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): WS_TYPE_HOOK_DISABLE,
+WS_TYPE_HOOK_DELETE = 'cloud/cloudhook/delete'
+SCHEMA_WS_HOOK_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_HOOK_DELETE,
     vol.Required('webhook_id'): str
 })
 
@@ -74,12 +74,12 @@ async def async_setup(hass):
         SCHEMA_WS_UPDATE_PREFS
     )
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_HOOK_ENABLE, websocket_hook_enable,
-        SCHEMA_WS_HOOK_ENABLE
+        WS_TYPE_HOOK_CREATE, websocket_hook_create,
+        SCHEMA_WS_HOOK_CREATE
     )
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_HOOK_DISABLE, websocket_hook_disable,
-        SCHEMA_WS_HOOK_DISABLE
+        WS_TYPE_HOOK_DELETE, websocket_hook_delete,
+        SCHEMA_WS_HOOK_DELETE
     )
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
@@ -349,19 +349,19 @@ async def websocket_update_prefs(hass, connection, msg):
 @_require_cloud_login
 @websocket_api.async_response
 @_handle_aiohttp_errors
-async def websocket_hook_enable(hass, connection, msg):
+async def websocket_hook_create(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
-    hook = await cloud.webhooks.async_enable(msg['webhook_id'])
+    hook = await cloud.cloudhooks.async_create(msg['webhook_id'])
     connection.send_message(websocket_api.result_message(msg['id'], hook))
 
 
 @_require_cloud_login
 @websocket_api.async_response
-async def websocket_hook_disable(hass, connection, msg):
+async def websocket_hook_delete(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
-    await cloud.webhooks.async_disable(msg['webhook_id'])
+    await cloud.cloudhooks.async_delete(msg['webhook_id'])
     connection.send_message(websocket_api.result_message(msg['id']))
 
 

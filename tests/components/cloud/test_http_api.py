@@ -536,11 +536,11 @@ async def test_enabling_webhook(hass, hass_ws_client, setup_api):
         'custom:sub-exp': '2018-01-03'
     }, 'test')
     client = await hass_ws_client(hass)
-    with patch('homeassistant.components.cloud.webhooks.Webhooks.async_enable',
-               return_value=mock_coro()) as mock_enable:
+    with patch('homeassistant.components.cloud.cloudhooks.Cloudhooks'
+               '.async_create', return_value=mock_coro()) as mock_enable:
         await client.send_json({
             'id': 5,
-            'type': 'cloud/webhook/enable',
+            'type': 'cloud/cloudhook/create',
             'webhook_id': 'mock-webhook-id',
         })
         response = await client.receive_json()
@@ -557,11 +557,11 @@ async def test_disabling_webhook(hass, hass_ws_client, setup_api):
         'custom:sub-exp': '2018-01-03'
     }, 'test')
     client = await hass_ws_client(hass)
-    with patch('homeassistant.components.cloud.webhooks.Webhooks'
-               '.async_disable', return_value=mock_coro()) as mock_disable:
+    with patch('homeassistant.components.cloud.cloudhooks.Cloudhooks'
+               '.async_delete', return_value=mock_coro()) as mock_disable:
         await client.send_json({
             'id': 5,
-            'type': 'cloud/webhook/disable',
+            'type': 'cloud/cloudhook/delete',
             'webhook_id': 'mock-webhook-id',
         })
         response = await client.receive_json()

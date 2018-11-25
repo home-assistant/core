@@ -16,11 +16,11 @@ def _check_token(func):
 
 
 @_check_token
-async def async_create_webhook(cloud, webhook_id):
-    """Create a webhook in the cloud."""
+async def async_create_cloudhook(cloud, webhook_id):
+    """Create a cloudhook."""
     websession = cloud.hass.helpers.aiohttp_client.async_get_clientsession()
     return await websession.post(
-        cloud.webhook_create_url, headers={
+        cloud.cloudhook_create_url, headers={
             'authorization': cloud.id_token
         }, json={
             'webhook_id': webhook_id

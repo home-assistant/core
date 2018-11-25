@@ -20,7 +20,7 @@ from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import helpers as ga_h
 from homeassistant.components.google_assistant import const as ga_c
 
-from . import http_api, iot, auth_api, prefs, webhooks
+from . import http_api, iot, auth_api, prefs, cloudhooks
 from .const import CONFIG_DIR, DOMAIN, SERVERS
 
 REQUIREMENTS = ['warrant==0.6.1']
@@ -37,7 +37,7 @@ CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
 CONF_GOOGLE_ACTIONS_SYNC_URL = 'google_actions_sync_url'
 CONF_SUBSCRIPTION_INFO_URL = 'subscription_info_url'
-CONF_WEBHOOK_CREATE_URL = 'webhook_create_url'
+CONF_WEBHOOK_CREATE_URL = 'cloudhook_create_url'
 
 DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
@@ -115,7 +115,7 @@ class Cloud:
     def __init__(self, hass, mode, alexa, google_actions,
                  cognito_client_id=None, user_pool_id=None, region=None,
                  relayer=None, google_actions_sync_url=None,
-                 subscription_info_url=None, webhook_create_url=None):
+                 subscription_info_url=None, cloudhook_create_url=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
@@ -127,7 +127,7 @@ class Cloud:
         self.access_token = None
         self.refresh_token = None
         self.iot = iot.CloudIoT(self)
-        self.webhooks = webhooks.Webhooks(self)
+        self.cloudhooks = cloudhooks.Cloudhooks(self)
 
         if mode == MODE_DEV:
             self.cognito_client_id = cognito_client_id
@@ -136,7 +136,7 @@ class Cloud:
             self.relayer = relayer
             self.google_actions_sync_url = google_actions_sync_url
             self.subscription_info_url = subscription_info_url
-            self.webhook_create_url = webhook_create_url
+            self.cloudhook_create_url = cloudhook_create_url
 
         else:
             info = SERVERS[mode]
@@ -147,7 +147,7 @@ class Cloud:
             self.relayer = info['relayer']
             self.google_actions_sync_url = info['google_actions_sync_url']
             self.subscription_info_url = info['subscription_info_url']
-            self.webhook_create_url = info['webhook_create_url']
+            self.cloudhook_create_url = info['cloudhook_create_url']
 
     @property
     def is_logged_in(self):
