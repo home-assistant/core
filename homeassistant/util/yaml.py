@@ -283,7 +283,7 @@ def secret_yaml(loader: SafeLineLoader,
         if node.value in secrets:
             _LOGGER.debug("Secret %s retrieved from secrets.yaml in "
                           "folder %s", node.value, secret_path)
-            # return a deepcopy so users can't corrupt the internal secret cache
+            # return a deepcopy so the internal cache can't be corrupted
             return copy.deepcopy(secrets[node.value])
 
         if secret_path == os.path.dirname(sys.path[0]):
