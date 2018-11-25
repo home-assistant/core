@@ -1,5 +1,5 @@
 """Test cloud webhooks."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
