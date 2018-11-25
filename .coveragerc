@@ -200,6 +200,9 @@ omit =
     homeassistant/components/linode.py
     homeassistant/components/*/linode.py
 
+    homeassistant/components/lightwave.py
+    homeassistant/components/*/lightwave.py
+
     homeassistant/components/logi_circle.py
     homeassistant/components/*/logi_circle.py
 
