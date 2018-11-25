@@ -14,7 +14,8 @@ from contextlib import contextmanager
 
 from homeassistant import auth, core as ha, config_entries
 from homeassistant.auth import (
-    models as auth_models, auth_store, providers as auth_providers)
+    models as auth_models, auth_store, providers as auth_providers,
+    permissions as auth_permissions)
 from homeassistant.auth.permissions import system_policies
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
@@ -399,6 +400,10 @@ class MockUser(auth_models.User):
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._users[self.id] = self
         return self
+
+    def mock_policy(self, policy):
+        """Mock a policy for a user."""
+        self._permissions = auth_permissions.PolicyPermissions(policy)
 
 
 async def register_auth_provider(hass, config):
