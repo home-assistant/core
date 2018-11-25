@@ -1,6 +1,5 @@
 """Support for monitoring the qBittorrent API."""
 import logging
-from requests.exceptions import RequestException
 
 import voluptuous as vol
 
@@ -10,6 +9,10 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
+
+from requests.exceptions import RequestException
+
+from qbittorrent.client import LoginRequired
 
 REQUIREMENTS = ['python-qbittorrent==0.3.1']
 
@@ -38,11 +41,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, add_entities,
                                discovery_info=None):
     """Set up the qbittorrent sensors."""
-    from qbittorrent import Client
+    from qbittorrent.client import Client
 
     try:
         qbittorrent = Client(config.get(CONF_URL))
         qbittorrent.login(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
+    except LoginRequired:
+        _LOGGER.info("Invalid authentication for qBittorrent. Check config.")
+        return
     except RequestException:
         _LOGGER.error("Connection to qBittorrent failed. Check config.")
         raise PlatformNotReady
@@ -99,13 +105,15 @@ class QBittorrentSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from qbittorrent and updates the state."""
-        data = self.client.sync()
         try:
             data = self.client.sync()
             self._available = True
         except RequestException:
-            _LOGGER.error("Connection to qBittorrent lost. Check config.")
+            _LOGGER.error("Connection to qBittorrent lost.")
             self._available = False
+            return
+        except LoginRequired:
+            _LOGGER.info("Invalid authentication for qBittorrent. Check config.")
             return
 
         download = data['server_state']['dl_info_speed']
