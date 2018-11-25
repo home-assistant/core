@@ -19,14 +19,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DemoAirPollutants(AirPollutantsEntity):
     """Representation of Air Pollutants data."""
 
-    def __init__(self, name, pm_2_5, pm_10, n2o, temperature, temperature_unit):
+    def __init__(self, name, pm_2_5, pm_10, n2o, temp, temperature_unit):
         """Initialize the Demo Air Pollutants."""
         self._name = name
         self._pm_2_5 = pm_2_5
         self._pm_10 = pm_10
         self._n2o = n2o
         self._temperature_unit = temperature_unit
-        self._temperature = temperature
+        self._temperature = temp
 
     @property
     def name(self):
