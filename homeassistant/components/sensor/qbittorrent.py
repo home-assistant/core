@@ -113,8 +113,8 @@ class QBittorrentSensor(Entity):
             self._available = False
             return
         except LoginRequired:
-            _LOGGER
-                .info("Invalid authentication for qBittorrent. Check config.")
+            _LOGGER.info("Invalid authentication for qBittorrent."
+                         " Check config.")
             return
 
         download = data['server_state']['dl_info_speed']
