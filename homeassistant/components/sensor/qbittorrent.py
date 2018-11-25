@@ -71,7 +71,8 @@ def format_speed(speed):
 class QBittorrentSensor(Entity):
     """Representation of an qbittorrent sensor."""
 
-    def __init__(self, sensor_type, qbittorrent_client, client_name, exception):
+    def __init__(self, sensor_type, qbittorrent_client,
+                 client_name, exception):
         """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self.client = qbittorrent_client
