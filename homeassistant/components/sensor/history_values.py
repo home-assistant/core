@@ -205,13 +205,13 @@ class HistoryValuesSensor(Entity):
             self.value = STATE_UNKNOWN
             return
 
-        def is_castable_to_float(str):
+        def is_castable_to_float(in_str):
             """Return True if @str is castable to float."""
             try:
-                float(str)
+                float(in_str)
             except (TypeError, ValueError):
                 _LOGGER.warning("%s: Not a numeric value: %s",
-                                self.entity_id, str)
+                                self.entity_id, in_str)
                 return False
             return True
 
@@ -275,22 +275,25 @@ class HistoryValuesSensor(Entity):
         if total_period.total_seconds() == 0:
             return None
 
-        def get_precision(float_num, max_prec=10):
-            """Return the precision of @float up to @max."""
-            count = 0
-            orig_num = float_num
-            while int(float_num) != float_num and count < max_prec:
-                count += 1
-                float_num = orig_num * 10**count
-            return count
-
         precision = max([
-            get_precision(float(state.state)) for state in state_list])
+            self.get_precision(float(state.state)) for state in state_list])
         formatstr = '{:.' + str(precision) + 'f}'
         return formatstr.format(total_value / total_period.total_seconds())
 
     @callback
-    def get_min_max_range(self, state_list):
+    @staticmethod
+    def get_precision(float_num, max_prec=10):
+        """Return the precision of @float up to @max."""
+        count = 0
+        orig_num = float_num
+        while int(float_num) != float_num and count < max_prec:
+            count += 1
+            float_num = orig_num * 10**count
+        return count
+
+    @callback
+    @staticmethod
+    def get_min_max_range(state_list):
         """Return a dict with highest, lowest and range of @state_list."""
         if state_list is None:
             return
