@@ -529,9 +529,43 @@ async def test_websocket_update_preferences(hass, hass_ws_client,
     assert not setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
 
 
-async def test_enabling_webhook():
-    assert False
+async def test_enabling_webhook(hass, hass_ws_client, setup_api):
+    """Test we call right code to enable webhooks."""
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.webhooks.Webhooks.async_enable',
+               return_value=mock_coro()) as mock_enable:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/webhook/enable',
+            'webhook_id': 'mock-webhook-id',
+        })
+        response = await client.receive_json()
+    assert response['success']
+
+    assert len(mock_enable.mock_calls) == 1
+    assert mock_enable.mock_calls[0][1][0] == 'mock-webhook-id'
 
 
-async def test_disabling_webhook():
-    assert False
+async def test_disabling_webhook(hass, hass_ws_client, setup_api):
+    """Test we call right code to disable webhooks."""
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.webhooks.Webhooks'
+               '.async_disable', return_value=mock_coro()) as mock_disable:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/webhook/disable',
+            'webhook_id': 'mock-webhook-id',
+        })
+        response = await client.receive_json()
+    assert response['success']
+
+    assert len(mock_disable.mock_calls) == 1
+    assert mock_disable.mock_calls[0][1][0] == 'mock-webhook-id'
