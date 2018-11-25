@@ -4,6 +4,7 @@ Support for the IKEA Tradfri platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.tradfri/
 """
+import asyncio
 import logging
 
 from homeassistant.core import callback
@@ -47,6 +48,7 @@ class TradfriSwitch(SwitchDevice):
         self._name = None
         self._available = True
         self._gateway_id = gateway_id
+        self._lock = asyncio.Lock()
 
         self._refresh(switch)
 
@@ -97,11 +99,13 @@ class TradfriSwitch(SwitchDevice):
 
     async def async_turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
-        await self._api(self._socket_control.set_state(False))
+        async with self._lock:
+            await self._api(self._socket_control.set_state(False))
 
     async def async_turn_on(self, **kwargs):
         """Instruct the switch to turn on."""
-        await self._api(self._socket_control.set_state(True))
+        async with self._lock:
+            await self._api(self._socket_control.set_state(True))
 
     @callback
     def _async_start_observe(self, exc=None):
@@ -133,5 +137,6 @@ class TradfriSwitch(SwitchDevice):
     @callback
     def _observe_update(self, tradfri_device):
         """Receive new state data for this switch."""
-        self._refresh(tradfri_device)
-        self.async_schedule_update_ha_state()
+        if not self._lock.locked():
+            self._refresh(tradfri_device)
+            self.async_schedule_update_ha_state()
