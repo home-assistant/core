@@ -12,8 +12,6 @@ from homeassistant.exceptions import PlatformNotReady
 
 from requests.exceptions import RequestException
 
-import qbittorrent
-
 REQUIREMENTS = ['python-qbittorrent==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,12 +39,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, add_entities,
                                discovery_info=None):
     """Set up the qbittorrent sensors."""
-    from qbittorrent.client import Client
+    from qbittorrent.client import Client, LoginRequired
 
     try:
         client = Client(config.get(CONF_URL))
         client.login(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
-    except qbittorrent.client.LoginRequired:
+    except LoginRequired:
         _LOGGER.info("Invalid authentication for qBittorrent. Check config.")
         return
     except RequestException:
@@ -57,7 +55,7 @@ async def async_setup_platform(hass, config, add_entities,
 
     dev = []
     for sensor_type in SENSOR_TYPES:
-        sensor = QBittorrentSensor(sensor_type, client, name)
+        sensor = QBittorrentSensor(sensor_type, client, name, LoginRequired)
         dev.append(sensor)
         await sensor.async_update()
 
@@ -73,7 +71,7 @@ def format_speed(speed):
 class QBittorrentSensor(Entity):
     """Representation of an qbittorrent sensor."""
 
-    def __init__(self, sensor_type, qbittorrent_client, client_name):
+    def __init__(self, sensor_type, qbittorrent_client, client_name, exception):
         """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self.client = qbittorrent_client
@@ -82,6 +80,7 @@ class QBittorrentSensor(Entity):
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._available = False
+        self._exception = exception
 
     @property
     def name(self):
@@ -112,7 +111,7 @@ class QBittorrentSensor(Entity):
             _LOGGER.error("Connection to qBittorrent lost.")
             self._available = False
             return
-        except qbittorrent.client.LoginRequired:
+        except self._exception:
             _LOGGER.info("Invalid authentication for qBittorrent."
                          " Check config.")
             return
