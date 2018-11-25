@@ -3,14 +3,14 @@ import logging
 
 import voluptuous as vol
 
+from requests.exceptions import RequestException
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME, STATE_IDLE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
-
-from requests.exceptions import RequestException
 
 REQUIREMENTS = ['python-qbittorrent==0.3.1']
 
