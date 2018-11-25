@@ -133,6 +133,27 @@ class TestSensorMQTT(unittest.TestCase):
 
         assert '100' == state.state
 
+    def test_nan_payload_from_mqtt_json_message(self):
+        """Test using MQTT with JSON payload with a NaN value."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'value_template': '{{ value_json.val }}'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', '{ "val": 21.4 }')
+        self.hass.block_till_done()
+        fire_mqtt_message(self.hass, 'test-topic', '{ "val": NaN }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        assert '21.4' == state.state
+
     def test_force_update_disabled(self):
         """Test force update option."""
         mock_component(self.hass, 'mqtt')
