@@ -6,6 +6,7 @@ https://home-assistant.io/components/zha/
 """
 import collections
 import logging
+import os
 
 import voluptuous as vol
 
@@ -22,7 +23,7 @@ from .const import (
     DOMAIN, COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_RADIO_TYPE,
     CONF_USB_PATH, CONF_DEVICE_CONFIG, ZHA_DISCOVERY_NEW, DATA_ZHA,
     DATA_ZHA_CONFIG, DATA_ZHA_BRIDGE_ID, DATA_ZHA_RADIO, DATA_ZHA_DISPATCHERS,
-    DEFAULT_RADIO_TYPE, DEFAULT_DATABASE_PATH, DEFAULT_BAUDRATE,
+    DEFAULT_RADIO_TYPE, DEFAULT_DATABASE_NAME, DEFAULT_BAUDRATE,
     RadioType
 )
 
@@ -44,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema({
         ): cv.enum(RadioType),
         CONF_USB_PATH: cv.string,
         vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
-        vol.Optional(CONF_DATABASE, default=DEFAULT_DATABASE_PATH): cv.string,
+        vol.Optional(CONF_DATABASE): cv.string,
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
     })
@@ -122,7 +123,10 @@ async def async_setup_entry(hass, config_entry):
     await radio.connect(usb_path, baudrate)
     hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
 
-    database = config.get(CONF_DATABASE, DEFAULT_DATABASE_PATH)
+    if CONF_DATABASE in config:
+        database = config[CONF_DATABASE]
+    else:
+        database = os.path.join(hass.config.config_dir, DEFAULT_DATABASE_NAME)
     APPLICATION_CONTROLLER = ControllerApplication(radio, database)
     listener = ApplicationListener(hass, config)
     APPLICATION_CONTROLLER.add_listener(listener)

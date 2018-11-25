@@ -5,7 +5,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import logging
-from .const import RadioType, DEFAULT_BAUDRATE, DEFAULT_DATABASE_PATH
+import asyncio
+from .const import RadioType, DEFAULT_BAUDRATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
         )
 
 
-async def check_zigpy_connection(usb_path, radio_type):
+async def check_zigpy_connection(usb_path, radio_type, database_path):
     """Test zigpy radio connection."""
     if radio_type == RadioType.ezsp.name:
         import bellows.ezsp
@@ -79,8 +80,8 @@ async def check_zigpy_connection(usb_path, radio_type):
         radio = zigpy_xbee.api.XBee()
     try:
         await radio.connect(usb_path, DEFAULT_BAUDRATE)
-        controller = ControllerApplication(radio, DEFAULT_DATABASE_PATH)
-        await controller.startup(auto_form=True)
+        controller = ControllerApplication(radio, database_path)
+        await asyncio.wait_for(controller.startup(auto_form=True), timeout=30)
         radio.close()
     except Exception:  # pylint: disable=broad-except
         return False

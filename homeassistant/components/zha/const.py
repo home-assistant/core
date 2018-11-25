@@ -1,7 +1,5 @@
 """All constants related to the ZHA component."""
 import enum
-import os
-import homeassistant.config as config_util
 
 DOMAIN = 'zha'
 
@@ -33,9 +31,7 @@ DATA_DEVICE_CONFIG = 'zha_device_config'
 
 DEFAULT_RADIO_TYPE = 'ezsp'
 DEFAULT_BAUDRATE = 57600
-DEFAULT_DATABASE_PATH = os.path.join(
-    config_util.get_default_config_dir(), 'zigbee.db'
-)
+DEFAULT_DATABASE_NAME = 'zigbee.db'
 
 
 class RadioType(enum.Enum):

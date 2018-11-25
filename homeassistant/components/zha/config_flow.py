@@ -1,4 +1,5 @@
 """Config flow for ZHA."""
+import os
 from collections import OrderedDict
 
 import voluptuous as vol
@@ -6,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from .helpers import check_zigpy_connection
 from .const import (
-    DOMAIN, CONF_RADIO_TYPE, CONF_USB_PATH, RadioType
+    DOMAIN, CONF_RADIO_TYPE, CONF_USB_PATH, DEFAULT_DATABASE_NAME, RadioType
 )
 
 
@@ -31,8 +32,11 @@ class ZhaFlowHandler(config_entries.ConfigFlow):
         )
 
         if user_input is not None:
+            database = os.path.join(self.hass.config.config_dir,
+                                    DEFAULT_DATABASE_NAME)
             test = await check_zigpy_connection(user_input[CONF_USB_PATH],
-                                                user_input[CONF_RADIO_TYPE])
+                                                user_input[CONF_RADIO_TYPE],
+                                                database)
             if test:
                 return self.async_create_entry(
                     title=user_input[CONF_USB_PATH], data=user_input)
