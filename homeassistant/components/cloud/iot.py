@@ -11,6 +11,7 @@ from homeassistant.components.alexa import smart_home as alexa
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.core import callback
 from homeassistant.util.decorator import Registry
+from homeassistant.util.aiohttp import MockRequest
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
 from .const import MESSAGE_EXPIRATION, MESSAGE_AUTH_FAIL
@@ -305,3 +306,24 @@ def async_handle_cloud(hass, cloud, payload):
                       payload['reason'])
     else:
         _LOGGER.warning("Received unknown cloud action: %s", action)
+
+
+@HANDLERS.register('webhook')
+async def async_handle_webhook(hass, cloud, payload):
+    """Handle an incoming IoT message for webhook component."""
+    request = MockRequest(
+        content=payload['body'].encode('utf-8'),
+        headers=payload['headers'],
+        method=payload['method'],
+        query_string=payload['query'],
+    )
+
+    response = await hass.components.webhook.async_get_handler(
+        hass, payload['webhook_id'], request)
+
+    # Response
+    return {
+        'text': response.text,
+        'status': response.status,
+        'headers': dict(response.headers),
+    }
