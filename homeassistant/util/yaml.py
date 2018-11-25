@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import fnmatch
+import copy
 from collections import OrderedDict
 from typing import Union, List, Dict, Iterator, overload, TypeVar
 
@@ -282,7 +283,8 @@ def secret_yaml(loader: SafeLineLoader,
         if node.value in secrets:
             _LOGGER.debug("Secret %s retrieved from secrets.yaml in "
                           "folder %s", node.value, secret_path)
-            return secrets[node.value]
+            # return a deepcopy so users can't corrupt the internal secret cache
+            return copy.deepcopy(secrets[node.value])
 
         if secret_path == os.path.dirname(sys.path[0]):
             break  # sys.path[0] set to config/deps folder by bootstrap
