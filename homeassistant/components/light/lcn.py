@@ -9,16 +9,15 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.lcn import LcnDevice
+from homeassistant.components.lcn.core import (
+    CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, OUTPUT_PORTS,
+    is_address)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_TRANSITION, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
     SUPPORT_TRANSITION, Light)
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-
-from ..lcn import LcnDevice
-from ..lcn.core import (
-    CONF_ADDRESS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, OUTPUT_PORTS,
-    is_address)
 
 DEPENDENCIES = ['lcn']
 

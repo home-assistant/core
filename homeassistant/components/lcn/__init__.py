@@ -6,16 +6,17 @@ https://home-assistant.io/components/lcn/
 """
 
 import logging
+
 import voluptuous as vol
 
+from homeassistant.components.lcn.core import (
+    CONF_CONNECTIONS, CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES,
+    get_connection)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
+    CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT,
+    CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-from .core import (
-    CONF_ADDRESS, CONF_CONNECTIONS, CONF_DIM_MODE, CONF_SK_NUM_TRIES,
-    DIM_MODES, get_connection)
 
 REQUIREMENTS = ['pypck==0.5.5']
 
@@ -28,7 +29,7 @@ DEFAULT_NAME = 'pchk'
 
 CONNECTION_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.positive_int,
+    vol.Required(CONF_PORT): cv.port,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_SK_NUM_TRIES, default=3): cv.positive_int,
@@ -85,9 +86,10 @@ async def async_setup(hass, config):
         except TimeoutError:
             _LOGGER.error('Connection to PCHK server "{:s}" failed.'.format(
                 connection_name))
+            return False
 
     hass.data[DATA_LCN][CONF_CONNECTIONS] = connections
-    return len(connections) > 0
+    return True
 
 
 class LcnDevice(Entity):

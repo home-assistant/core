@@ -1,5 +1,7 @@
 """Core dependencies for LCN component."""
+
 import re
+
 import voluptuous as vol
 
 # definitions
@@ -9,7 +11,6 @@ CONF_OUTPUT = 'output'
 CONF_TRANSITION = 'transition'
 CONF_DIMMABLE = 'dimmable'
 CONF_CONNECTIONS = 'connections'
-CONF_ADDRESS = 'address'
 
 DIM_MODES = ['steps50', 'steps200']
 OUTPUT_PORTS = ['output1', 'output2', 'output3', 'output4']
