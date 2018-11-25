@@ -21,7 +21,7 @@ class Cloudhooks:
         })
 
     async def async_create(self, webhook_id):
-        """Create a webhook."""
+        """Create a cloud webhook."""
         cloudhooks = self.cloud.prefs.cloudhooks
 
         if webhook_id in cloudhooks:
@@ -53,7 +53,7 @@ class Cloudhooks:
         return hook
 
     async def async_delete(self, webhook_id):
-        """Delete a webhook."""
+        """Delete a cloud webhook."""
         cloudhooks = self.cloud.prefs.cloudhooks
 
         if webhook_id not in cloudhooks:

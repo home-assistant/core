@@ -37,7 +37,7 @@ CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
 CONF_GOOGLE_ACTIONS_SYNC_URL = 'google_actions_sync_url'
 CONF_SUBSCRIPTION_INFO_URL = 'subscription_info_url'
-CONF_WEBHOOK_CREATE_URL = 'cloudhook_create_url'
+CONF_CLOUDHOOK_CREATE_URL = 'cloudhook_create_url'
 
 DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
@@ -79,7 +79,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_RELAYER): str,
         vol.Optional(CONF_GOOGLE_ACTIONS_SYNC_URL): str,
         vol.Optional(CONF_SUBSCRIPTION_INFO_URL): str,
-        vol.Optional(CONF_WEBHOOK_CREATE_URL): str,
+        vol.Optional(CONF_CLOUDHOOK_CREATE_URL): str,
         vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
         vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
     }),
