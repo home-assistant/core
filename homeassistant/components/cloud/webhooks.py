@@ -14,9 +14,9 @@ class Webhooks:
 
     async def async_publish_webhooks(self):
         """Inform the Relayer of the webhooks that we expect."""
+        webhooks = self.cloud.prefs.webhooks
         await self.cloud.iot.async_send_message('webhook-register', {
-            'webhook_ids': [info['cloud_id'] for info
-                            in self.cloud.prefs.webhooks.values()]
+            'webhook_ids': [info['cloud_id'] for info in webhooks.values()]
         })
 
     async def async_enable(self, webhook_id):
