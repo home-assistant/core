@@ -22,7 +22,7 @@ class MockRequest:
         self._content = content
 
     @property
-    def query(self) -> MultiDict[str]:
+    def query(self) -> 'MultiDict[str]':
         """Return a dictionary with the query variables."""
         return MultiDict(parse_qsl(self.query_string, keep_blank_values=True))
 
@@ -35,7 +35,7 @@ class MockRequest:
         """Return the body as JSON."""
         return json.loads(self._text)
 
-    async def post(self) -> MultiDict[str]:
+    async def post(self) -> 'MultiDict[str]':
         """Return POST parameters."""
         return MultiDict(parse_qsl(self._text, keep_blank_values=True))
 

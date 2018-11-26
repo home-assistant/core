@@ -14,15 +14,20 @@ def mock_check_token():
         yield mock_check_token
 
 
-async def test_create_webhook(hass, aioclient_mock):
-    """Test creating a webhook."""
+async def test_create_cloudhook(hass, aioclient_mock):
+    """Test creating a cloudhook."""
     aioclient_mock.post('https://example.com/bla', json={
-        'webhook_id': 'mock-webhook'
+        'cloudhook_id': 'mock-webhook',
+        'url': 'https://blabla'
     })
     cloud = Mock(
         hass=hass,
         id_token='mock-id-token',
         cloudhook_create_url='https://example.com/bla',
     )
-    await cloud_api.async_create_cloudhook(cloud, 'mock-webhook')
+    resp = await cloud_api.async_create_cloudhook(cloud)
     assert len(aioclient_mock.mock_calls) == 1
+    assert await resp.json() == {
+        'cloudhook_id': 'mock-webhook',
+        'url': 'https://blabla'
+    }

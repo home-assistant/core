@@ -32,8 +32,7 @@ class Cloudhooks:
 
         # Create cloud hook
         with async_timeout.timeout(10):
-            resp = await cloud_api.async_create_cloudhook(
-                self.cloud, webhook_id)
+            resp = await cloud_api.async_create_cloudhook(self.cloud)
 
         data = await resp.json()
         cloudhook_id = data['cloudhook_id']
