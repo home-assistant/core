@@ -1,6 +1,6 @@
 """The tests for the geojson platform."""
 import datetime
-from unittest.mock import patch, MagicMock, call
+from asynctest.mock import patch, MagicMock, call
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -79,8 +79,8 @@ async def test_setup(hass):
     mock_entry_4 = _generate_mock_feed_entry('4567', 'Title 4', 12.5,
                                              (-31.3, 150.3))
 
-    # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
+    # Patching 'utcnow' to gain more control over the timed update.
     with patch('homeassistant.util.dt.utcnow', return_value=utcnow), \
             patch('geojson_client.nsw_rural_fire_service_feed.'
                   'NswRuralFireServiceFeed') as mock_feed:
