@@ -242,7 +242,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light, RestoreEntity):
         templates = {}
         for key, tpl in list(self._templates.items()):
             if tpl is None:
-                templates[key] = lambda value: value
+                templates[key] = lambda value, error_value: value
             else:
                 tpl.hass = self.hass
                 templates[key] = tpl.async_render_with_possible_json_value
@@ -252,7 +252,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light, RestoreEntity):
         @callback
         def state_received(topic, payload, qos):
             """Handle new MQTT messages."""
-            payload = templates[CONF_STATE](payload)
+            payload = templates[CONF_STATE](payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty state message from '%s'", topic)
                 return
@@ -273,7 +273,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light, RestoreEntity):
         @callback
         def brightness_received(topic, payload, qos):
             """Handle new MQTT messages for the brightness."""
-            payload = templates[CONF_BRIGHTNESS](payload)
+            payload = templates[CONF_BRIGHTNESS](payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty brightness message from '%s'",
                               topic)
@@ -300,7 +300,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light, RestoreEntity):
         @callback
         def rgb_received(topic, payload, qos):
             """Handle new MQTT messages for RGB."""
-            payload = templates[CONF_RGB](payload)
+            payload = templates[CONF_RGB](payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty rgb message from '%s'", topic)
                 return
@@ -327,7 +327,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light, RestoreEntity):
         @callback
         def color_temp_received(topic, payload, qos):
             """Handle new MQTT messages for color temperature."""
-            payload = templates[CONF_COLOR_TEMP](payload)
+            payload = templates[CONF_COLOR_TEMP](payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty color temp message from '%s'",
                               topic)
@@ -352,7 +352,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light, RestoreEntity):
         @callback
         def effect_received(topic, payload, qos):
             """Handle new MQTT messages for effect."""
-            payload = templates[CONF_EFFECT](payload)
+            payload = templates[CONF_EFFECT](payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty effect message from '%s'", topic)
                 return
@@ -376,7 +376,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light, RestoreEntity):
         @callback
         def hs_received(topic, payload, qos):
             """Handle new MQTT messages for hs color."""
-            payload = templates[CONF_HS](payload)
+            payload = templates[CONF_HS](payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty hs message from '%s'", topic)
                 return
@@ -403,7 +403,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light, RestoreEntity):
         @callback
         def white_value_received(topic, payload, qos):
             """Handle new MQTT messages for white value."""
-            payload = templates[CONF_WHITE_VALUE](payload)
+            payload = templates[CONF_WHITE_VALUE](payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty white value message from '%s'",
                               topic)
@@ -430,7 +430,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light, RestoreEntity):
         @callback
         def xy_received(topic, payload, qos):
             """Handle new MQTT messages for xy color."""
-            payload = templates[CONF_XY](payload)
+            payload = templates[CONF_XY](payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty xy-color message from '%s'",
                               topic)
