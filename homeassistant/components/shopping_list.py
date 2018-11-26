@@ -326,4 +326,4 @@ async def websocket_handle_update(hass, connection, msg):
             msg_id, item))
     except KeyError:
         connection.send_message(websocket_api.error_message(
-            msg_id, 'shopping_list_update_failed', 'Item not found'))
+            msg_id, 'item_not_found', 'Item not found'))
