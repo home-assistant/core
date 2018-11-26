@@ -14,7 +14,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-systemair-savecair==0.0.6']
+REQUIREMENTS = ['python-systemair-savecair==1.0.0']
 
 ATTR_SUPPLY_AIR_TEMPERATURE = "supply_air_temperature"
 ATTR_SUPPLY_AIR_FAN_SPEED = "supply_air_fan_speed"
@@ -43,15 +43,10 @@ SAVECAIR_FAN_MODES = {
 }
 
 SAVECAIR_OPERATION_MODES = {
-    0: STATE_AUTO,
-    1: STATE_IDLE,
-    2: STATE_MANUAL,
+    STATE_AUTO: STATE_AUTO,
+    STATE_IDLE: STATE_IDLE,
+    STATE_MANUAL: STATE_MANUAL,
 }
-
-HA_OPERATION_MODES = {
-    val: key for key, val in SAVECAIR_OPERATION_MODES.items()
-}
-
 
 CONF_IAM_ID = "iam_id"
 DEFAULT_NAME = "SystemAIR"
@@ -71,8 +66,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     password = config[CONF_PASSWORD]
 
     # Create savecair client
-    from systemair.savecair import SaveCairClient
-    client = SaveCairClient(iam_id, password, loop=hass.loop)
+    from systemair.savecair import SavecairClient
+    client = SavecairClient(iam_id, password, loop=hass.loop, retry=True)
     climate = SystemAIRClimate(client, name)
     async_add_entities([climate])
 
@@ -94,7 +89,8 @@ class SystemAIRClimate(ClimateDevice):
         """Register update signal handler."""
         async def async_update_state():
             self.async_schedule_update_ha_state()
-        self._client.cb_update.append(async_update_state)
+        self._client.on_update.append(async_update_state)
+        self._client.on_connect.append(async_update_state)
 
     @property
     def device_state_attributes(self):
@@ -259,7 +255,7 @@ class SystemAIRClimate(ClimateDevice):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set the operation mode."""
-        mode = HA_OPERATION_MODES[operation_mode]
+        mode = SAVECAIR_OPERATION_MODES[operation_mode]
 
         await self._client.set_operation_mode(mode)
 
