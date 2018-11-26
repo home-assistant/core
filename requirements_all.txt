@@ -485,7 +485,7 @@ hole==0.3.0
 holidays==0.9.8
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181121.0
+home-assistant-frontend==20181126.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.1
@@ -522,7 +522,7 @@ ihcsdk==2.2.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==5.0.0
+influxdb==5.2.0
 
 # homeassistant.components.insteon
 insteonplm==0.15.1
@@ -634,7 +634,7 @@ mficlient==0.3.0
 miflora==0.4.0
 
 # homeassistant.components.climate.mill
-millheater==0.2.8
+millheater==0.2.9
 
 # homeassistant.components.sensor.mitemp_bt
 mitemp_bt==0.0.1
@@ -980,7 +980,7 @@ pyialarm==0.3
 pyicloud==0.9.1
 
 # homeassistant.components.weather.ipma
-pyipma==1.1.4
+pyipma==1.1.6
 
 # homeassistant.components.sensor.irish_rail_transport
 pyirishrail==0.0.2
@@ -1099,7 +1099,7 @@ pyowm==2.9.0
 pypjlink2==1.2.0
 
 # homeassistant.components.point
-pypoint==1.0.5
+pypoint==1.0.6
 
 # homeassistant.components.sensor.pollen
 pypollencom==2.2.2
@@ -1140,7 +1140,7 @@ pysma==0.2.2
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
 # homeassistant.components.switch.snmp
-pysnmp==4.4.5
+pysnmp==4.4.6
 
 # homeassistant.components.sonos
 pysonos==0.0.5
@@ -1265,6 +1265,9 @@ python-vlc==1.1.2
 
 # homeassistant.components.wink
 python-wink==1.10.1
+
+# homeassistant.components.sensor.awair
+python_awair==0.0.2
 
 # homeassistant.components.sensor.swiss_public_transport
 python_opendata_transport==0.1.4
@@ -1643,7 +1646,7 @@ yeelight==0.4.3
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.11.07
+youtube_dl==2018.11.23
 
 # homeassistant.components.light.zengge
 zengge==0.2

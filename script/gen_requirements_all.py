@@ -91,6 +91,7 @@ TEST_REQUIREMENTS = (
     'pyspcwebgw',
     'python-forecastio',
     'python-nest',
+    'python_awair',
     'pytradfri\\[async\\]',
     'pyunifi',
     'pyupnp-async',

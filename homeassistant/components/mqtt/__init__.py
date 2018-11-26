@@ -827,12 +827,13 @@ class MqttAvailability(Entity):
                  payload_available: Optional[str],
                  payload_not_available: Optional[str]) -> None:
         """Initialize the availability mixin."""
+        self._availability_sub_state = None
+
         self._availability_topic = availability_topic
         self._availability_qos = qos
-        self._available = availability_topic is None  # type: bool
+        self._available = self._availability_topic is None  # type: bool
         self._payload_available = payload_available
         self._payload_not_available = payload_not_available
-        self._availability_sub_state = None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events.
@@ -849,6 +850,8 @@ class MqttAvailability(Entity):
     def _availability_setup_from_config(self, config):
         """(Re)Setup."""
         self._availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
+        self._availability_qos = config.get(CONF_QOS)
+        self._available = self._availability_topic is None  # type: bool
         self._payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
         self._payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
 

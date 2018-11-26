@@ -14,6 +14,7 @@ from aiohttp.web_exceptions import HTTPUnauthorized, HTTPInternalServerError
 from homeassistant.components.http.ban import process_success_login
 from homeassistant.core import Context, is_callback
 from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant import exceptions
 from homeassistant.helpers.json import JSONEncoder
 
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP
@@ -107,10 +108,13 @@ def request_handler_factory(view, handler):
         _LOGGER.info('Serving %s to %s (auth: %s)',
                      request.path, request.get(KEY_REAL_IP), authenticated)
 
-        result = handler(request, **request.match_info)
+        try:
+            result = handler(request, **request.match_info)
 
-        if asyncio.iscoroutine(result):
-            result = await result
+            if asyncio.iscoroutine(result):
+                result = await result
+        except exceptions.Unauthorized:
+            raise HTTPUnauthorized()
 
         if isinstance(result, web.StreamResponse):
             # The method handler returned a ready-made Response, how nice of it
