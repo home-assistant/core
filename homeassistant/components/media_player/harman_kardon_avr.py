@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.harman_kardon_avr/
 """
 import logging
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -15,7 +16,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 
-REQUIREMENTS = ['hkavr==0.0.3']
+REQUIREMENTS = ['hkavr==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ SUPPORT_HARMAN_KARDON_AVR = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
                             SUPPORT_SELECT_SOURCE
 
 SOURCES = ["Disc", "STB", "Cable Sat", "Media Server", "DVR", "Radio", "TV",
-           "USB", "Game", "Home Network", "AUX"]
+           "USB", "Game", "Home Network", "AUX", "AVR"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -49,7 +50,8 @@ def setup_platform(hass, config, add_devices, discover_info=None):
     avr_device = HkAvrDevice(avr)
     if avr_device is None:
         _LOGGER.warning("Could not connect to AVR")
-        return False
+        return
+
     add_devices([avr_device], True)
 
 
@@ -59,21 +61,24 @@ class HkAvrDevice(MediaPlayerDevice):
     def __init__(self, avr):
         """Initialize a new HarmanKardonAVR."""
         self._avr = avr
+
         self._name = avr.name
         self._host = avr.host
         self._port = avr.port
 
+        self._source_list = SOURCES
+
         self._state = avr.state
         self._power = avr.power
-        self._muted = self._avr.muted
-        self._source_list = SOURCES
+        self._muted = avr.muted
+        self._current_source = avr.current_source
 
     def update(self):
         """Update the state of this media_player."""
-        self._avr.update()
-        self._power = self._avr.power
         self._state = self._avr.state
+        self._power = self._avr.power
         self._muted = self._avr.muted
+        self._current_source = self._avr.current_source
 
     @property
     def name(self):
@@ -91,6 +96,11 @@ class HkAvrDevice(MediaPlayerDevice):
         return self._muted
 
     @property
+    def source(self):
+        """Return the current input source."""
+        return self._current_source
+
+    @property
     def source_list(self):
         """Available sources."""
         return self._source_list
@@ -102,13 +112,11 @@ class HkAvrDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the AVR on."""
-        if self._avr.power_on():
-            self._state = STATE_ON
+        self._avr.power_on()
 
     def turn_off(self):
         """Turn off the AVR."""
-        if self._avr.power_off():
-            self._state = STATE_OFF
+        self._avr.power_off()
 
     def select_source(self, source):
         """Select input source."""
