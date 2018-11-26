@@ -1110,7 +1110,7 @@ class ServiceRegistry:
         if not blocking:
             self._hass.async_create_task(
                 self._catched_execute(handler, service_call))
-            return
+            return None
 
         try:
             with timeout(SERVICE_CALL_LIMIT):
@@ -1120,7 +1120,8 @@ class ServiceRegistry:
         except asyncio.TimeoutError:
             return False
 
-    async def _catched_execute(self, handler, service_call):
+    async def _catched_execute(self, handler: Service,
+                               service_call: ServiceCall) -> None:
         """Execute a service and catch exceptions."""
         try:
             await self._execute_service(handler, service_call)
@@ -1130,7 +1131,8 @@ class ServiceRegistry:
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error executing service %s', service_call)
 
-    async def _execute_service(self, handler, service_call):
+    async def _execute_service(self, handler: Service,
+                               service_call: ServiceCall) -> None:
         """Execute a service."""
         if handler.is_callback:
             handler.func(service_call)
