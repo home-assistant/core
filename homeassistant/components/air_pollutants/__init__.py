@@ -85,27 +85,27 @@ class AirPollutantsEntity(Entity):
 
     @property
     def temperature_unit(self):
-        """Return the unit of measurement."""
+        """Return the unit of measurement of the temperature."""
         return None
 
     @property
     def air_quality_index(self):
-        """Return the Air Quality Index."""
+        """Return the Air Quality Index (AQI)."""
         return None
 
     @property
     def ozone(self):
-        """Return the ozone (O3) level."""
+        """Return the O3 (ozone) level."""
         return None
 
     @property
     def carbon_monoxide(self):
-        """Return the carbon monoxide (CO) level."""
+        """Return the CO (carbon monoxide) level."""
         return None
 
     @property
     def carbon_dioxide(self):
-        """Return the carbon dioxide (CO2) level."""
+        """Return the CO2 (carbon dioxide) level."""
         return None
 
     @property
@@ -115,7 +115,7 @@ class AirPollutantsEntity(Entity):
 
     @property
     def particulate_matter(self):
-        """Return the particulate matter level."""
+        """Return the general particulate matter level."""
         return None
 
     @property
@@ -125,27 +125,27 @@ class AirPollutantsEntity(Entity):
 
     @property
     def sulphur_dioxide(self):
-        """Return the sulphur dioxide (SO2) level."""
+        """Return the SO2 (sulphur dioxide) level."""
         return None
 
     @property
     def nitrogen_oxide(self):
-        """Return the nitrogen oxide (NO2) level."""
+        """Return the N2O (nitrogen oxide) level."""
         return None
 
     @property
     def nitrogen_monoxide(self):
-        """Return the nitrogen monoxide (NO) level."""
+        """Return the NO (nitrogen monoxide) level."""
         return None
 
     @property
     def nitrogen_dioxide(self):
-        """Return the nitrogen dioxide (NO2) level."""
+        """Return the NO2 (nitrogen dioxide) level."""
         return None
 
     @property
     def volatile_organic_compounds(self):
-        """Return the volatile organic compounds level."""
+        """Return the volatile organic compounds (VOC) level."""
         return None
 
     @property

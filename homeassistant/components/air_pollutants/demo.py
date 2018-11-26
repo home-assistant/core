@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.air_pollutants import AirPollutantsEntity
-from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_H)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
