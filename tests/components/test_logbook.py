@@ -72,6 +72,10 @@ class TestComponentLogbook(unittest.TestCase):
         assert 'switch' == last_call.data.get(logbook.ATTR_DOMAIN)
         assert 'switch.test_switch' == last_call.data.get(
             logbook.ATTR_ENTITY_ID)
+        events = list(logbook._get_events(
+            self.hass, {}, dt_util.utcnow() - timedelta(hours=1),
+            dt_util.utcnow() + timedelta(hours=1)))
+        assert len(events) == 1
 
     def test_service_call_create_log_book_entry_no_message(self):
         """Test if service call create log book entry without message."""
