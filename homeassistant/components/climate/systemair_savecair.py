@@ -14,7 +14,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-systemair-savecair==1.0.0']
+REQUIREMENTS = ['python-systemair-savecair==1.0.1']
 
 ATTR_SUPPLY_AIR_TEMPERATURE = "supply_air_temperature"
 ATTR_SUPPLY_AIR_FAN_SPEED = "supply_air_fan_speed"

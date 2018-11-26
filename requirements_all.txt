@@ -1249,7 +1249,7 @@ python-songpal==0.0.8
 python-synology==0.2.0
 
 # homeassistant.components.climate.systemair_savecair
-python-systemair-savecair==0.0.6
+python-systemair-savecair==1.0.1
 
 # homeassistant.components.tado
 python-tado==0.2.3
