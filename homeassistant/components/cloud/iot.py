@@ -58,9 +58,9 @@ class CloudIoT:
         self._on_connect = []
 
     @callback
-    def register_on_connect(self, cb):
+    def register_on_connect(self, on_connect_cb):
         """Register an async on_connect callback."""
-        self._on_connect.append(cb)
+        self._on_connect.append(on_connect_cb)
 
     @property
     def connected(self):
