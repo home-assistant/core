@@ -12,6 +12,7 @@ DATA_ZHA_CONFIG = 'config'
 DATA_ZHA_BRIDGE_ID = 'zha_bridge_id'
 DATA_ZHA_RADIO = 'zha_radio'
 DATA_ZHA_DISPATCHERS = 'zha_dispatchers'
+DATA_ZHA_CORE_COMPONENT = 'zha_core_component'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
 COMPONENTS = [

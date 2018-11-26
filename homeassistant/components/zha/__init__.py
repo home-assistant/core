@@ -23,8 +23,8 @@ from .const import (
     DOMAIN, COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_RADIO_TYPE,
     CONF_USB_PATH, CONF_DEVICE_CONFIG, ZHA_DISCOVERY_NEW, DATA_ZHA,
     DATA_ZHA_CONFIG, DATA_ZHA_BRIDGE_ID, DATA_ZHA_RADIO, DATA_ZHA_DISPATCHERS,
-    DEFAULT_RADIO_TYPE, DEFAULT_DATABASE_NAME, DEFAULT_BAUDRATE,
-    RadioType
+    DATA_ZHA_CORE_COMPONENT, DEFAULT_RADIO_TYPE, DEFAULT_DATABASE_NAME,
+    DEFAULT_BAUDRATE, RadioType
 )
 
 REQUIREMENTS = [
@@ -104,6 +104,7 @@ async def async_setup_entry(hass, config_entry):
     """
     global APPLICATION_CONTROLLER
 
+    hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
 
     config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
@@ -185,6 +186,12 @@ async def async_unload_entry(hass, config_entry):
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
 
+    # clean up device entities
+    component = hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT]
+    entity_ids = [entity.entity_id for entity in component.entities]
+    for entity_id in entity_ids:
+        await component.async_remove_entity(entity_id)
+
     _LOGGER.debug("Closing zha radio")
     hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()
 
@@ -207,6 +214,7 @@ class ApplicationListener:
             hass.data[DATA_ZHA][component] = (
                 hass.data[DATA_ZHA].get(component, {})
             )
+        hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
 
     def device_joined(self, device):
         """Handle device joined.
