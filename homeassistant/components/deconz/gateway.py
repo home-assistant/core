@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util import slugify
 
 from .const import (
-    _LOGGER, CONF_ALLOW_CLIP_SENSOR, SUPPORTED_PLATFORMS)
+    _LOGGER, DECONZ_REACHABLE, CONF_ALLOW_CLIP_SENSOR, SUPPORTED_PLATFORMS)
 
 
 class DeconzGateway:
@@ -18,6 +18,7 @@ class DeconzGateway:
         """Initialize the system."""
         self.hass = hass
         self.config_entry = config_entry
+        self.available = True
         self.api = None
         self._cancel_retry_setup = None
 
@@ -30,7 +31,8 @@ class DeconzGateway:
         hass = self.hass
 
         self.api = await get_gateway(
-            hass, self.config_entry.data, self.async_add_device_callback
+            hass, self.config_entry.data, self.async_add_device_callback,
+            self.async_connection_status_callback
         )
 
         if self.api is False:
@@ -64,6 +66,13 @@ class DeconzGateway:
         self.api.start()
 
         return True
+
+    @callback
+    def async_connection_status_callback(self, available):
+        """Handle signals of gateway connection status."""
+        self.available = available
+        async_dispatcher_send(
+            self.hass, DECONZ_REACHABLE, {'state': True, 'attr': 'reachable'})
 
     @callback
     def async_add_device_callback(self, device_type, device):
@@ -122,13 +131,15 @@ class DeconzGateway:
         return True
 
 
-async def get_gateway(hass, config, async_add_device_callback):
+async def get_gateway(hass, config, async_add_device_callback,
+                      async_connection_status_callback):
     """Create a gateway object and verify configuration."""
     from pydeconz import DeconzSession
 
     session = aiohttp_client.async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, session, **config,
-                           async_add_device=async_add_device_callback)
+                           async_add_device=async_add_device_callback,
+                           connection_status=async_connection_status_callback)
     result = await deconz.async_load_parameters()
 
     if result:

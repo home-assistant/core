@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_BINARY_SENSORS, CONF_SENSORS, CONF_FILENAME,
     CONF_MONITORED_CONDITIONS, TEMP_FAHRENHEIT)
 
-REQUIREMENTS = ['blinkpy==0.10.1']
+REQUIREMENTS = ['blinkpy==0.10.3']
 
 _LOGGER = logging.getLogger(__name__)
 

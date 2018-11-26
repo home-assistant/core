@@ -7,7 +7,8 @@ at https://home-assistant.io/components/sensor.zha/
 import logging
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.components import zha
+from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.components.zha import helpers
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -19,7 +20,7 @@ DEPENDENCIES = ['zha']
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up Zigbee Home Automation sensors."""
-    discovery_info = zha.get_discovery_info(hass, discovery_info)
+    discovery_info = helpers.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
@@ -56,7 +57,7 @@ async def make_sensor(discovery_info):
 
     if discovery_info['new_join']:
         cluster = list(in_clusters.values())[0]
-        await zha.configure_reporting(
+        await helpers.configure_reporting(
             sensor.entity_id, cluster, sensor.value_attribute,
             reportable_change=sensor.min_reportable_change
         )
@@ -64,7 +65,7 @@ async def make_sensor(discovery_info):
     return sensor
 
 
-class Sensor(zha.Entity):
+class Sensor(ZhaEntity):
     """Base ZHA sensor."""
 
     _domain = DOMAIN
@@ -92,7 +93,7 @@ class Sensor(zha.Entity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await zha.safe_read(
+        result = await helpers.safe_read(
             list(self._in_clusters.values())[0],
             [self.value_attribute],
             allow_cache=False,
@@ -224,7 +225,7 @@ class ElectricalMeasurementSensor(Sensor):
         """Retrieve latest state."""
         _LOGGER.debug("%s async_update", self.entity_id)
 
-        result = await zha.safe_read(
+        result = await helpers.safe_read(
             self._endpoint.electrical_measurement, ['active_power'],
             allow_cache=False, only_cache=(not self._initialized))
         self._state = result.get('active_power', self._state)

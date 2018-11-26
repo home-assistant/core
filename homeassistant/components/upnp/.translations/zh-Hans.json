@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "UPnP/IGD \u5df2\u914d\u7f6e\u5b8c\u6210",
+            "incomplete_device": "\u5ffd\u7565\u4e0d\u5b8c\u6574\u7684 UPnP \u8bbe\u5907",
             "no_devices_discovered": "\u672a\u53d1\u73b0 UPnP/IGD",
             "no_sensors_or_port_mapping": "\u81f3\u5c11\u542f\u7528\u4f20\u611f\u5668\u6216\u7aef\u53e3\u6620\u5c04"
         },

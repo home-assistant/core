@@ -29,7 +29,7 @@ from .config_flow import async_ensure_domain_data
 from .device import Device
 
 
-REQUIREMENTS = ['async-upnp-client==0.13.0']
+REQUIREMENTS = ['async-upnp-client==0.13.2']
 
 NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'

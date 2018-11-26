@@ -12,10 +12,10 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyialarm==0.2']
+REQUIREMENTS = ['pyialarm==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,6 +89,8 @@ class IAlarmPanel(alarm.AlarmControlPanel):
             state = STATE_ALARM_ARMED_AWAY
         elif status == self._client.ARMED_STAY:
             state = STATE_ALARM_ARMED_HOME
+        elif status == self._client.TRIGGERED:
+            state = STATE_ALARM_TRIGGERED
         else:
             state = None
 

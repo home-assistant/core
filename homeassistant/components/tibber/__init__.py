@@ -16,7 +16,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN,
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['pyTibber==0.7.2']
+REQUIREMENTS = ['pyTibber==0.8.2']
 
 DOMAIN = 'tibber'
 
@@ -46,6 +46,9 @@ async def async_setup(hass, config):
     try:
         await tibber_connection.update_info()
     except (asyncio.TimeoutError, aiohttp.ClientError):
+        return False
+    except tibber.InvalidLogin as exp:
+        _LOGGER.error("Failed to login. %s", exp)
         return False
 
     for component in ['sensor', 'notify']:
