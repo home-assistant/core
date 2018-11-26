@@ -1,11 +1,9 @@
 """The tests for the Shabbat Times sensor platform."""
 from collections import namedtuple
-from datetime import time
 from datetime import timedelta
 from datetime import datetime as dt
 from unittest.mock import patch
 
-import json
 import pytest
 import requests_mock
 
@@ -31,13 +29,28 @@ BASE_URL = ("http://www.hebcal.com/hebcal/?v=1&cfg=json&maj=on&"
 
 
 def nyc_url(month, year):
+    """Generate a Hebcal URL for NYC."""
     return BASE_URL % (month, year, NYC_LATLNG.lat, NYC_LATLNG.lng,
                        'America/New_York', 18, 53, 'off')
 
 
 def jlem_url(month, year):
+    """Generate a Hebcal URL for Jerusalem."""
     return BASE_URL % (month, year, JERUSALEM_LATLNG.lat,
                        JERUSALEM_LATLNG.lng, 'Asia/Jerusalem', 18, 53, 'on')
+
+
+def make_nyc_test_params(dtime, results):
+    """Make test params for NYC."""
+    return (dtime, CANDLE_LIGHT_DEFAULT, HAVDALAH_DEFAULT, True,
+            'America/New_York', NYC_LATLNG.lat, NYC_LATLNG.lng, results)
+
+
+def make_jerusalem_test_params(dtime, results):
+    """Make test params for Jerusalem."""
+    return (dtime, CANDLE_LIGHT_DEFAULT, HAVDALAH_DEFAULT, False,
+            'Asia/Jerusalem', JERUSALEM_LATLNG.lat, JERUSALEM_LATLNG.lng,
+            results)
 
 
 def get_requests_mocker():
@@ -72,7 +85,6 @@ class TestShabbatTimes():
     def setup_method(self, method):
         """Set up things to run when tests begin."""
         self.hass = get_test_home_assistant()
-        print(self.hass)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -95,15 +107,13 @@ class TestShabbatTimes():
     def assign_golden_interval(self, d, golden_intervals):
         """Finds a corresponding golden interval for a datetime.
 
-        Assumes the list is sorted by start_time.
+        Assumes the list is sorted (ascending) by start_time.
         """
         for golden_interval in golden_intervals:
             # Skip intervals in the past.
             if golden_interval.end_time < d:
                 continue
-            if (golden_interval.start_time > d
-                or (golden_interval.start_time <= d
-                    and golden_interval.end_time > d)):
+            if golden_interval.end_time > d:
                 return golden_interval
         raise ValueError("No corresponding golden interval for {}!".format(d))
 
@@ -114,7 +124,7 @@ class TestShabbatTimes():
         This uses the entire 2018 calendar response as a golden set of values
         (with no need to fetch subsequent months).
         """
-        with get_requests_mocker() as mocker:
+        with get_requests_mocker():
             fetcher = ShabbatTimesFetcher(NYC_LATLNG.lat, NYC_LATLNG.lng,
                                           "America/New_York", 18, 53, True)
             golden_intervals = fetcher.fetch_times(2018, 0)
@@ -136,15 +146,6 @@ class TestShabbatTimes():
                 d = d + timedelta(1)
             return
 
-    def make_nyc_test_params(dtime, results):
-        return (dtime, CANDLE_LIGHT_DEFAULT, HAVDALAH_DEFAULT, True,
-                'America/New_York', NYC_LATLNG.lat, NYC_LATLNG.lng, results)
-
-    def make_jerusalem_test_params(dtime, results):
-        return (dtime, CANDLE_LIGHT_DEFAULT, HAVDALAH_DEFAULT, False,
-                'Asia/Jerusalem', JERUSALEM_LATLNG.lat, JERUSALEM_LATLNG.lng,
-                results)
-
     def test_shabbat_times_min_config(self):
         """Test minimum shabbat times configuration."""
         config = {
@@ -152,7 +153,8 @@ class TestShabbatTimes():
                 'platform': 'shabbat_times'
             }
         }
-        assert setup_component(self.hass, 'sensor', config)
+        with requests_mock.Mocker():
+            assert setup_component(self.hass, 'sensor', config)
 
     test_params = [
         make_nyc_test_params(
@@ -256,7 +258,7 @@ class TestShabbatTimes():
             timezone=tz, name="Shabbat Times", havdalah=havdalah,
             candle_light=candle_lighting, diaspora=diaspora)
         with patch('homeassistant.util.dt.now', return_value=test_time), \
-                get_requests_mocker() as mocker:
+                get_requests_mocker():
             run_coroutine_threadsafe(
                 sensor.async_update(),
                 self.hass.loop).result()
@@ -323,7 +325,7 @@ class TestShabbatTimes():
         "valid_previous_state",
     ]
 
-    @pytest.mark.parametrize(["now", "previous_state", "should_fetch", 
+    @pytest.mark.parametrize(["now", "previous_state", "should_fetch",
                               "result"], test_params, ids=test_ids)
     def test_shabbat_times_async_readded(
             self, now, previous_state, should_fetch, result):
@@ -340,7 +342,6 @@ class TestShabbatTimes():
                 'sensor.shabbat_times',
                 state='Updated',
                 attributes=previous_state)}
-        print(self.hass.data)
         sensor = ShabbatTimes(
             self.hass, latitude=NYC_LATLNG.lat, longitude=NYC_LATLNG.lng,
             timezone=tz, name="Shabbat Times", havdalah=HAVDALAH_DEFAULT,
