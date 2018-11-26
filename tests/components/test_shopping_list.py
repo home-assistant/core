@@ -262,7 +262,7 @@ async def test_ws_update_item_fail(hass, hass_ws_client):
     assert msg['success'] is False
     data = msg['error']
     assert data == {
-        'code': 'shopping_list_update_failed',
+        'code': 'item_not_found',
         'message': 'Item not found'
     }
     await client.send_json({
