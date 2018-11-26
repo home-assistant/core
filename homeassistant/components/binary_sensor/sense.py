@@ -80,6 +80,7 @@ class SenseDevice(BinarySensorDevice):
         self._icon = sense_to_mdi(device['icon'])
         self._data = data
         self._state = False
+        self._current_power = 0
 
     @property
     def is_on(self):
@@ -106,12 +107,23 @@ class SenseDevice(BinarySensorDevice):
         """Return the device class of the binary sensor."""
         return BIN_SENSOR_CLASS
 
+    @property
+    def current_power_w(self):
+        """Return the current power usage in W."""
+        return round(self._current_power)
+
+    @property
+    def state_attributes(self):
+        return { 'current_power_w': self.current_power_w }
+
     def update(self):
         """Retrieve latest state."""
         from sense_energy.sense_api import SenseAPITimeoutException
         try:
-            self._data.get_realtime()
+            realtime = self._data.get_realtime()
         except SenseAPITimeoutException:
             _LOGGER.error("Timeout retrieving data")
             return
         self._state = self._name in self._data.active_devices
+        if realtime:
+            self._current_power = next((d['w'] for d in realtime['devices'] if d['id'] == self._id), 0)
