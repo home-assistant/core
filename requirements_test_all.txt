@@ -97,14 +97,14 @@ hdate==0.7.5
 holidays==0.9.8
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181121.0
+home-assistant-frontend==20181126.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==5.0.0
+influxdb==5.2.0
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
@@ -197,6 +197,9 @@ python-forecastio==1.4.0
 
 # homeassistant.components.nest
 python-nest==4.0.5
+
+# homeassistant.components.sensor.awair
+python_awair==0.0.2
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3

@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "Nelze se p\u0159ipojit k br\u00e1n\u011b.",
+            "invalid_key": "Nepoda\u0159ilo se zaregistrovat pomoc\u00ed zadan\u00e9ho kl\u00ed\u010de. Pokud se situace opakuje, zkuste restartovat gateway.",
             "timeout": "\u010casov\u00fd limit ov\u011b\u0159ov\u00e1n\u00ed k\u00f3du vypr\u0161el"
         },
         "step": {

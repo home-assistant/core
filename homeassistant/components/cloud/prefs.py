@@ -1,7 +1,7 @@
 """Preference management for cloud."""
 from .const import (
     DOMAIN, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
-    PREF_GOOGLE_ALLOW_UNLOCK)
+    PREF_GOOGLE_ALLOW_UNLOCK, PREF_CLOUDHOOKS)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -26,17 +26,20 @@ class CloudPreferences:
                 PREF_ENABLE_ALEXA: logged_in,
                 PREF_ENABLE_GOOGLE: logged_in,
                 PREF_GOOGLE_ALLOW_UNLOCK: False,
+                PREF_CLOUDHOOKS: {}
             }
 
         self._prefs = prefs
 
     async def async_update(self, *, google_enabled=_UNDEF,
-                           alexa_enabled=_UNDEF, google_allow_unlock=_UNDEF):
+                           alexa_enabled=_UNDEF, google_allow_unlock=_UNDEF,
+                           cloudhooks=_UNDEF):
         """Update user preferences."""
         for key, value in (
                 (PREF_ENABLE_GOOGLE, google_enabled),
                 (PREF_ENABLE_ALEXA, alexa_enabled),
                 (PREF_GOOGLE_ALLOW_UNLOCK, google_allow_unlock),
+                (PREF_CLOUDHOOKS, cloudhooks),
         ):
             if value is not _UNDEF:
                 self._prefs[key] = value
@@ -61,3 +64,8 @@ class CloudPreferences:
     def google_allow_unlock(self):
         """Return if Google is allowed to unlock locks."""
         return self._prefs.get(PREF_GOOGLE_ALLOW_UNLOCK, False)
+
+    @property
+    def cloudhooks(self):
+        """Return the published cloud webhooks."""
+        return self._prefs.get(PREF_CLOUDHOOKS, {})
