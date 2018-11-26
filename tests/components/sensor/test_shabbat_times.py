@@ -54,34 +54,38 @@ def make_jerusalem_test_params(dtime, results):
 
 
 def get_requests_mocker():
-    """Returns a requests_mocker pointing to the correct fixtures."""
-    m = requests_mock.Mocker()
-    m.get(nyc_url(2018, 0),
-          text=load_fixture('shabbat_times-ny-all_2018.json'))
-    m.get(nyc_url(2018, 8),
-          text=load_fixture('shabbat_times-ny-august_2018.json'))
-    m.get(nyc_url(2018, 9),
-          text=load_fixture('shabbat_times-ny-september_2018.json'))
-    m.get(nyc_url(2018, 10),
-          text=load_fixture('shabbat_times-ny-october_2018.json'))
-    m.get(nyc_url(2018, 11),
-          text=load_fixture('shabbat_times-ny-november_2018.json'))
-    m.get(nyc_url(2018, 12),
-          text=load_fixture('shabbat_times-ny-december_2018.json'))
-    m.get(nyc_url(2019, 1),
-          text=load_fixture('shabbat_times-ny-january_2019.json'))
-    m.get(jlem_url(2018, 8),
-          text=load_fixture('shabbat_times-jlem-august_2018.json'))
-    m.get(jlem_url(2018, 9),
-          text=load_fixture('shabbat_times-jlem-september_2018.json'))
-    m.get(jlem_url(2018, 10),
-          text=load_fixture('shabbat_times-jlem-october_2018.json'))
-    return m
+    """Return a requests_mocker pointing to the correct fixtures."""
+    mocker = requests_mock.Mocker()
+    mocker.get(nyc_url(2018, 0),
+               text=load_fixture('shabbat_times-ny-all_2018.json'))
+    mocker.get(nyc_url(2018, 8),
+               text=load_fixture('shabbat_times-ny-august_2018.json'))
+    mocker.get(nyc_url(2018, 9),
+               text=load_fixture('shabbat_times-ny-september_2018.json'))
+    mocker.get(nyc_url(2018, 10),
+               text=load_fixture('shabbat_times-ny-october_2018.json'))
+    mocker.get(nyc_url(2018, 11),
+               text=load_fixture('shabbat_times-ny-november_2018.json'))
+    mocker.get(nyc_url(2018, 12),
+               text=load_fixture('shabbat_times-ny-december_2018.json'))
+    mocker.get(nyc_url(2019, 1),
+               text=load_fixture('shabbat_times-ny-january_2019.json'))
+    mocker.get(jlem_url(2018, 8),
+               text=load_fixture('shabbat_times-jlem-august_2018.json'))
+    mocker.get(jlem_url(2018, 9),
+               text=load_fixture('shabbat_times-jlem-september_2018.json'))
+    mocker.get(jlem_url(2018, 10),
+               text=load_fixture('shabbat_times-jlem-october_2018.json'))
+    return mocker
 
 
 class TestShabbatTimes():
     """Test the Shabbat Times sensor."""
 
+    def __init__(self):
+        self.hass = None
+
+    # pylint: disable=no-self-use
     def setup_method(self, method):
         """Set up things to run when tests begin."""
         self.hass = get_test_home_assistant()
@@ -104,25 +108,26 @@ class TestShabbatTimes():
                 'hebrew_title')}
         assert expected_attrs == actual_attrs
 
-    def assign_golden_interval(self, d, golden_intervals):
-        """Finds a corresponding golden interval for a datetime.
+    def assign_golden_interval(self, dtime, golden_intervals):
+        """Find a corresponding golden interval for a datetime.
 
         Assumes the list is sorted (ascending) by start_time.
         """
         for golden_interval in golden_intervals:
             # Skip intervals in the past.
-            if golden_interval.end_time < d:
+            if golden_interval.end_time < dtime:
                 continue
-            if golden_interval.end_time > d:
+            if golden_interval.end_time > dtime:
                 return golden_interval
-        raise ValueError("No corresponding golden interval for {}!".format(d))
+        raise ValueError("No corresponding golden interval for {}!".format(
+            dtime))
 
     def test_shabbat_times_parser(self):
         """Test Shabbat Times parser, independent of HASS.
 
-        There should always be a valid interval for every single value of 'now'.
-        This uses the entire 2018 calendar response as a golden set of values
-        (with no need to fetch subsequent months).
+        There should always be a valid interval for every single value of
+        'now'. This uses the entire 2018 calendar response as a golden set of
+        values (with no need to fetch subsequent months).
         """
         with get_requests_mocker():
             fetcher = ShabbatTimesFetcher(NYC_LATLNG.lat, NYC_LATLNG.lng,
@@ -132,18 +137,18 @@ class TestShabbatTimes():
             parser = ShabbatTimesParser(fetcher)
 
             # Test values from August 1, 2018 through (exclusive) Jan 1, 2019.
-            tz = get_time_zone("America/New_York")
-            d = tz.localize(dt(2018, 8, 1, 22, 0))
-            end = tz.localize(dt(2019, 1, 1, 0, 0))
-            while d < end:
+            time_zone = get_time_zone("America/New_York")
+            dtime = time_zone.localize(dt(2018, 8, 1, 22, 0))
+            end = time_zone.localize(dt(2019, 1, 1, 0, 0))
+            while dtime < end:
                 golden_interval = self.assign_golden_interval(
-                    d, golden_intervals)
-                parsed_interval = parser.update(d)
+                    dtime, golden_intervals)
+                parsed_interval = parser.update(dtime)
 
                 assert parsed_interval == golden_interval, \
                     "Interval mismatch! Expected {}, got {}".format(
                         golden_interval, parsed_interval)
-                d = d + timedelta(1)
+                dtime = dtime + timedelta(1)
             return
 
     def test_shabbat_times_min_config(self):
@@ -246,16 +251,16 @@ class TestShabbatTimes():
                                   diaspora, tzname, latitude, longitude,
                                   result):
         """Test Shabbat Times sensor output."""
-        tz = get_time_zone(tzname)
-        set_default_time_zone(tz)
-        test_time = tz.localize(now)
-        result['shabbat_start'] = tz.localize(result['shabbat_start'])
-        result['shabbat_end'] = tz.localize(result['shabbat_end'])
+        time_zone = get_time_zone(tzname)
+        set_default_time_zone(time_zone)
+        test_time = time_zone.localize(now)
+        result['shabbat_start'] = time_zone.localize(result['shabbat_start'])
+        result['shabbat_end'] = time_zone.localize(result['shabbat_end'])
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
         sensor = ShabbatTimes(
             self.hass, latitude=latitude, longitude=longitude,
-            timezone=tz, name="Shabbat Times", havdalah=havdalah,
+            timezone=time_zone, name="Shabbat Times", havdalah=havdalah,
             candle_light=candle_lighting, diaspora=diaspora)
         with patch('homeassistant.util.dt.now', return_value=test_time), \
                 get_requests_mocker():
@@ -330,11 +335,11 @@ class TestShabbatTimes():
     def test_shabbat_times_async_readded(
             self, now, previous_state, should_fetch, result):
         """Test reading of prior Shabbat Times states."""
-        tz = get_time_zone('America/New_York')
-        set_default_time_zone(tz)
-        test_time = tz.localize(now)
-        result['shabbat_start'] = tz.localize(result['shabbat_start'])
-        result['shabbat_end'] = tz.localize(result['shabbat_end'])
+        time_zone = get_time_zone('America/New_York')
+        set_default_time_zone(time_zone)
+        test_time = time_zone.localize(now)
+        result['shabbat_start'] = time_zone.localize(result['shabbat_start'])
+        result['shabbat_end'] = time_zone.localize(result['shabbat_end'])
         self.hass.config.latitude = NYC_LATLNG.lat
         self.hass.config.longitude = NYC_LATLNG.lng
         self.hass.data[DATA_RESTORE_CACHE] = {
@@ -344,7 +349,7 @@ class TestShabbatTimes():
                 attributes=previous_state)}
         sensor = ShabbatTimes(
             self.hass, latitude=NYC_LATLNG.lat, longitude=NYC_LATLNG.lng,
-            timezone=tz, name="Shabbat Times", havdalah=HAVDALAH_DEFAULT,
+            timezone=time_zone, name="Shabbat Times", havdalah=HAVDALAH_DEFAULT,
             candle_light=CANDLE_LIGHT_DEFAULT, diaspora=True)
         sensor.entity_id = 'sensor.shabbat_times'
         with patch('homeassistant.util.dt.now', return_value=test_time), \
