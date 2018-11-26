@@ -80,7 +80,8 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
         yaml = YAML(typ='rt')
         yaml.preserve_quotes = True
     else:
-        ExtSafeConstructor.name = fname
+        if not hasattr(ExtSafeConstructor, 'name'):
+            ExtSafeConstructor.name = fname
         yaml = YAML(typ='safe')
         yaml.Constructor = ExtSafeConstructor
 

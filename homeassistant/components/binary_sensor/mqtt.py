@@ -155,6 +155,7 @@ class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
 
             if self._delay_listener is not None:
                 self._delay_listener()
+                self._delay_listener = None
 
             if (self._state and self._off_delay is not None):
                 self._delay_listener = evt.async_call_later(

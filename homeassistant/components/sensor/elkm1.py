@@ -91,6 +91,7 @@ class ElkKeypad(ElkSensor):
         attrs['last_user'] = self._element.last_user + 1
         attrs['code'] = self._element.code
         attrs['last_user_name'] = username(self._elk, self._element.last_user)
+        attrs['last_keypress'] = self._element.last_keypress
         return attrs
 
     def _element_changed(self, element, changeset):

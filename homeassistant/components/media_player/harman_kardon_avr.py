@@ -9,9 +9,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_PLAY, PLATFORM_SCHEMA, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE,
+    PLATFORM_SCHEMA, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE,
     MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
@@ -28,7 +27,7 @@ SUPPORT_HARMAN_KARDON_AVR = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
                             SUPPORT_SELECT_SOURCE
 
 SOURCES = ["Disc", "STB", "Cable Sat", "Media Server", "DVR", "Radio", "TV",
-            "USB", "Game", "Home Network", "AUX"]
+           "USB", "Game", "Home Network", "AUX"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -36,11 +35,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
-def setup_platform(hass, config, add_devices, discover_info=None):
 
+def setup_platform(hass, config, add_devices, discover_info=None):
+    """Set up the AVR platform."""
     import hkavr
 
-    """Set up the AVR platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -90,10 +89,10 @@ class HkAvrDevice(MediaPlayerDevice):
     def is_volume_muted(self):
         """Muted status not available."""
         return self._muted
-        
+
     @property
     def source_list(self):
-        """Available sources"""
+        """Available sources."""
         return self._source_list
 
     @property
@@ -112,6 +111,7 @@ class HkAvrDevice(MediaPlayerDevice):
             self._state = STATE_OFF
 
     def select_source(self, source):
+        """Select input source."""
         return self._avr.select_source(source)
 
     def volume_up(self):

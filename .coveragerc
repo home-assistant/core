@@ -120,6 +120,9 @@ omit =
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
 
+    homeassistant/components/fibaro.py
+    homeassistant/components/*/fibaro.py
+
     homeassistant/components/gc100.py
     homeassistant/components/*/gc100.py
 
@@ -268,7 +271,7 @@ omit =
     homeassistant/components/raincloud.py
     homeassistant/components/*/raincloud.py
 
-    homeassistant/components/rainmachine/*
+    homeassistant/components/rainmachine/__init__.py
     homeassistant/components/*/rainmachine.py
 
     homeassistant/components/raspihats.py
@@ -541,6 +544,7 @@ omit =
     homeassistant/components/light/lw12wifi.py
     homeassistant/components/light/mystrom.py
     homeassistant/components/light/nanoleaf_aurora.py
+    homeassistant/components/light/niko_home_control.py
     homeassistant/components/light/opple.py
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/piglow.py
@@ -579,6 +583,7 @@ omit =
     homeassistant/components/media_player/frontier_silicon.py
     homeassistant/components/media_player/gpmdp.py
     homeassistant/components/media_player/gstreamer.py
+    homeassistant/components/media_player/harman_kardon_avr.py
     homeassistant/components/media_player/horizon.py
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py

@@ -183,7 +183,10 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'Living Room Fan'
     },
-    'traits': ['action.devices.traits.OnOff'],
+    'traits': [
+        'action.devices.traits.FanSpeed',
+        'action.devices.traits.OnOff'
+        ],
     'type': 'action.devices.types.FAN',
     'willReportState': False
 }, {
@@ -191,7 +194,10 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'Ceiling Fan'
     },
-    'traits': ['action.devices.traits.OnOff'],
+    'traits': [
+        'action.devices.traits.FanSpeed',
+        'action.devices.traits.OnOff'
+        ],
     'type': 'action.devices.types.FAN',
     'willReportState': False
 }, {
