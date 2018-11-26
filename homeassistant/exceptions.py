@@ -58,3 +58,8 @@ class Unauthorized(HomeAssistantError):
 
 class UnknownUser(Unauthorized):
     """When call is made with user ID that doesn't exist."""
+
+
+class ServiceNotFound(HomeAssistantError):
+    """Raised when a service is not found."""
+    pass
