@@ -9,7 +9,8 @@ from homeassistant.components.remote import (RemoteDevice, PLATFORM_SCHEMA,
                                              ATTR_NUM_REPEATS, ATTR_DELAY_SECS,
                                              DEFAULT_DELAY_SECS)
 from homeassistant.const import (CONF_HOST, CONF_NAME,
-                                 CONF_ACCESS_TOKEN, DEVICE_DEFAULT_NAME, STATE_OFF)
+                                 CONF_ACCESS_TOKEN, DEVICE_DEFAULT_NAME,
+                                 STATE_OFF)
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import time
