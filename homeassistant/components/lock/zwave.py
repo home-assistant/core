@@ -331,14 +331,14 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
     def lock(self, **kwargs):
         """Lock the device."""
         if self._clear_alarms_workaround and self.values.alarm_type:
-            self.values.alarm_type.data = None
+            self.values.alarm_type = None
 
         self.values.primary.data = True
 
     def unlock(self, **kwargs):
         """Unlock the device."""
         if self._clear_alarms_workaround and self.values.alarm_type:
-            self.values.alarm_type.data = None
+            self.values.alarm_type = None
 
         self.values.primary.data = False
 
