@@ -1,14 +1,14 @@
 """The tests for the geojson platform."""
 from asynctest.mock import patch, MagicMock, call
 
-import homeassistant
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.geo_location.geo_json_events import \
-    SCAN_INTERVAL, ATTR_EXTERNAL_ID
+    SCAN_INTERVAL, ATTR_EXTERNAL_ID, SIGNAL_DELETE_ENTITY, SIGNAL_UPDATE_ENTITY
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_START, \
     CONF_RADIUS, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME, \
     ATTR_UNIT_OF_MEASUREMENT, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 from tests.common import assert_setup_component, async_fire_time_changed
 import homeassistant.util.dt as dt_util
@@ -176,6 +176,8 @@ async def test_setup_race_condition(hass):
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
         '1234', 'Title 1', 15.5, (-31.0, 150.0))
+    delete_signal = SIGNAL_DELETE_ENTITY.format('1234')
+    update_signal = SIGNAL_UPDATE_ENTITY.format('1234')
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
@@ -185,70 +187,58 @@ async def test_setup_race_condition(hass):
             assert await async_setup_component(
                 hass, geo_location.DOMAIN, CONFIG)
 
-            # This gives us the ability to assert the '_delete_callback'
-            # has been called while still executing it.
-            original_delete_callback = homeassistant.components\
-                .geo_location.geo_json_events.GeoJsonLocationEvent\
-                ._delete_callback
+            mock_feed.return_value.update.return_value = 'OK', [
+                mock_entry_1]
 
-            def mock_delete_callback(entity):
-                original_delete_callback(entity)
+            # Artificially trigger update.
+            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+            # Collect events.
+            await hass.async_block_till_done()
 
-            with patch('homeassistant.components.geo_location'
-                       '.geo_json_events.GeoJsonLocationEvent'
-                       '._delete_callback',
-                       side_effect=mock_delete_callback,
-                       autospec=True) as mocked_delete_callback:
+            all_states = hass.states.async_all()
+            assert len(all_states) == 1
+            assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
+            assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
 
-                mock_feed.return_value.update.return_value = 'OK', [
-                    mock_entry_1]
+            # Simulate an update - empty data, removes all entities
+            mock_feed.return_value.update.return_value = 'ERROR', None
+            async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
+            await hass.async_block_till_done()
 
-                # Artificially trigger update.
-                hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-                # Collect events.
-                await hass.async_block_till_done()
+            all_states = hass.states.async_all()
+            assert len(all_states) == 0
+            assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 0
+            assert len(hass.data[DATA_DISPATCHER][update_signal]) == 0
 
-                all_states = hass.states.async_all()
-                assert len(all_states) == 1
+            # Simulate an update - 1 entry
+            mock_feed.return_value.update.return_value = 'OK', [
+                mock_entry_1]
+            async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
+            await hass.async_block_till_done()
 
-                # Simulate an update - empty data, removes all entities
-                mock_feed.return_value.update.return_value = 'ERROR', None
-                async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
-                await hass.async_block_till_done()
+            all_states = hass.states.async_all()
+            assert len(all_states) == 1
+            assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
+            assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
 
-                assert mocked_delete_callback.call_count == 1
-                all_states = hass.states.async_all()
-                assert len(all_states) == 0
+            # Simulate an update - 1 entry
+            mock_feed.return_value.update.return_value = 'OK', [
+                mock_entry_1]
+            async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
+            await hass.async_block_till_done()
 
-                # Simulate an update - 1 entry
-                mock_feed.return_value.update.return_value = 'OK', [
-                    mock_entry_1]
-                async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
-                await hass.async_block_till_done()
+            all_states = hass.states.async_all()
+            assert len(all_states) == 1
+            assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
+            assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
 
-                all_states = hass.states.async_all()
-                assert len(all_states) == 1
+            # Simulate an update - empty data, removes all entities
+            mock_feed.return_value.update.return_value = 'ERROR', None
+            async_fire_time_changed(hass, utcnow + 4 * SCAN_INTERVAL)
+            await hass.async_block_till_done()
 
-                # Simulate an update - 1 entry
-                mock_feed.return_value.update.return_value = 'OK', [
-                    mock_entry_1]
-                async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
-                await hass.async_block_till_done()
-
-                all_states = hass.states.async_all()
-                assert len(all_states) == 1
-
-                # Reset mocked method for the next test.
-                # Due to bug https://bugs.python.org/issue31177 the following
-                # line raises an AttributeError. Instead of resetting this
-                # mock, check that the call_count has increased from 1 to 2.
-                # mocked_delete_callback.reset_mock()
-
-                # Simulate an update - empty data, removes all entities
-                mock_feed.return_value.update.return_value = 'ERROR', None
-                async_fire_time_changed(hass, utcnow + 4 * SCAN_INTERVAL)
-                await hass.async_block_till_done()
-
-                assert mocked_delete_callback.call_count == 2
-                all_states = hass.states.async_all()
-                assert len(all_states) == 0
+            all_states = hass.states.async_all()
+            assert len(all_states) == 0
+            # Ensure that delete and update signal targets are now empty.
+            assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 0
+            assert len(hass.data[DATA_DISPATCHER][update_signal]) == 0
