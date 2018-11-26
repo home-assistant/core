@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
+    CONF_HOST, CONF_NAME, CONF_PORT)
 
 REQUIREMENTS = ['hkavr==0.0.4']
 
