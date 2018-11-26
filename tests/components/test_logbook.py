@@ -62,6 +62,12 @@ class TestComponentLogbook(unittest.TestCase):
         # Our service call will unblock when the event listeners have been
         # scheduled. This means that they may not have been processed yet.
         self.hass.block_till_done()
+        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+
+        events = list(logbook._get_events(
+            self.hass, {}, dt_util.utcnow() - timedelta(hours=1),
+            dt_util.utcnow() + timedelta(hours=1)))
+        assert len(events) == 2
 
         assert 1 == len(calls)
         last_call = calls[-1]
@@ -72,10 +78,6 @@ class TestComponentLogbook(unittest.TestCase):
         assert 'switch' == last_call.data.get(logbook.ATTR_DOMAIN)
         assert 'switch.test_switch' == last_call.data.get(
             logbook.ATTR_ENTITY_ID)
-        events = list(logbook._get_events(
-            self.hass, {}, dt_util.utcnow() - timedelta(hours=1),
-            dt_util.utcnow() + timedelta(hours=1)))
-        assert len(events) == 1
 
     def test_service_call_create_log_book_entry_no_message(self):
         """Test if service call create log book entry without message."""
