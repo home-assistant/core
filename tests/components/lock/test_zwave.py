@@ -62,7 +62,7 @@ def test_lock_value_changed(mock_openzwave):
     assert device.is_locked
 
 
-def test_lock_value_changed_workaround(mock_openzwave):
+def test_lock_state_workaround(mock_openzwave):
     """Test value changed for Z-Wave lock using notification state."""
     node = MockNode(manufacturer_id='0090', product_id='0440')
     values = MockEntityValues(
@@ -76,6 +76,36 @@ def test_lock_value_changed_workaround(mock_openzwave):
     values.access_control.data = 2
     value_changed(values.access_control)
     assert not device.is_locked
+
+
+def test_clear_alarms_workaround(mock_openzwave):
+    """Test value changed for Z-Wave lock by alarm-clearing workaround."""
+    node = MockNode(manufacturer_id='003B', product_id='5044')
+    values = MockEntityValues(
+        primary=MockValue(data=True, node=node),
+        access_control=None,
+        alarm_type=None,
+        alarm_level=None,
+    )
+    device = zwave.get_device(node=node, values=values)
+    assert device.is_locked
+    assert device.device_state_attributes[zwave.ATTR_NOTIFICATION] == 'RF Lock'
+
+    values.access_control = MockValue(data=6, node=node)
+    values.alarm_type = MockValue(data=19, node=node)
+    values.alarm_level = MockValue(data=3, node=node)
+    value_changed(values.access_control)
+    value_changed(values.alarm_type)
+    value_changed(values.alarm_type)
+    assert not device.is_locked
+    assert device.device_state_attributes[zwave.ATTR_LOCK_STATUS] == \
+        'Unlocked with Keypad by user 3'
+
+    device.lock()
+    value_changed(values.primary)
+    assert device.is_locked
+    assert not values.alarm_type.data
+    assert device.device_state_attributes[zwave.ATTR_NOTIFICATION] == 'RF Lock'
 
 
 def test_v2btze_value_changed(mock_openzwave):
