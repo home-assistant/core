@@ -24,6 +24,8 @@ UPDATE_URL = 'https://dnsapi4.mythic-beasts.com/'
 
 CONF_UPDATE_INTERVAL = 'update_interval'
 
+TIMEOUT = 20
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -55,7 +57,7 @@ async def async_setup(hass, config):
 
     async_track_time_interval(hass, update_domain_interval, update_interval)
 
-    return result
+    return True
 
 
 async def _update_mythicbeastsdns(session, domain, password, host):
@@ -66,19 +68,26 @@ async def _update_mythicbeastsdns(session, domain, password, host):
         'command': "REPLACE {} 5 A DYNAMIC_IP".format(host)
     }
 
-    resp = await session.post(UPDATE_URL, data=data)
-    body = await resp.text()
+    try:
+        resp = await session.post(UPDATE_URL, data=data, timeout=TIMEOUT)
+        body = await resp.text()
 
-    if body.startswith("REPLACE"):
-        _LOGGER.debug("Updating Mythic Beasts successful: %s", body)
-        return True
+        if body.startswith("REPLACE"):
+            _LOGGER.debug("Updating Mythic Beasts successful: %s", body)
+            return True
 
-    if body.startswith("ERR"):
-        _LOGGER.error("Updating Mythic Beasts failed: %s",
-                      body.partition(' ')[2])
+        if body.startswith("ERR"):
+            _LOGGER.error("Updating Mythic Beasts failed: %s",
+                          body.partition(' ')[2])
 
-    if body.startswith("NREPLACE"):
-        _LOGGER.warning("Updating Mythic Beasts failed: %s",
-                        body.partition(';')[2])
+        if body.startswith("NREPLACE"):
+            _LOGGER.warning("Updating Mythic Beasts failed: %s",
+                            body.partition(';')[2])
+
+    except session.ServerTimeoutError:
+        _LOGGER.error("Updating Mythic Beasts failed due to timeout")
+
+    except session.ClientError:
+        _LOGGER.error("Updating Mythic Beasts failed.")
 
     return False
