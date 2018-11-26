@@ -114,7 +114,7 @@ class SenseDevice(BinarySensorDevice):
 
     @property
     def state_attributes(self):
-        return { 'current_power_w': self.current_power_w }
+        return {'current_power_w': self.current_power_w}
 
     def update(self):
         """Retrieve latest state."""
@@ -126,4 +126,5 @@ class SenseDevice(BinarySensorDevice):
             return
         self._state = self._name in self._data.active_devices
         if realtime:
-            self._current_power = next((d['w'] for d in realtime['devices'] if d['id'] == self._id), 0)
+            self._current_power = next((d['w'] for d in realtime['devices']
+                                   if d['id'] == self._id), 0)
