@@ -15,7 +15,7 @@ class MockRequest:
         self.url = url
         self.status = status
         self.headers = CIMultiDict(headers or {})
-        self.query_string = query_string
+        self.query_string = query_string or ''
         self._content = content
 
     @property
@@ -39,3 +39,12 @@ class MockRequest:
     async def text(self):
         """Return the body as text."""
         return self._text
+
+
+def serialize_response(response):
+    """Serialize an aiohttp response to a dictionary."""
+    return {
+        'status': response.status,
+        'body': response.body,
+        'headers': dict(response.headers),
+    }
