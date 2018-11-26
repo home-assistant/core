@@ -1,5 +1,5 @@
 """The tests for the geojson platform."""
-from unittest.mock import patch, MagicMock, call
+from asynctest.mock import patch, MagicMock, call
 
 import homeassistant
 from homeassistant.components import geo_location
@@ -239,13 +239,16 @@ async def test_setup_race_condition(hass):
                 assert len(all_states) == 1
 
                 # Reset mocked method for the next test.
-                mocked_delete_callback.reset_mock()
+                # Due to bug https://bugs.python.org/issue31177 the following
+                # line raises an AttributeError. Instead of resetting this
+                # mock, check that the call_count has increased from 1 to 2.
+                # mocked_delete_callback.reset_mock()
 
                 # Simulate an update - empty data, removes all entities
                 mock_feed.return_value.update.return_value = 'ERROR', None
                 async_fire_time_changed(hass, utcnow + 4 * SCAN_INTERVAL)
                 await hass.async_block_till_done()
 
-                assert mocked_delete_callback.call_count == 1
+                assert mocked_delete_callback.call_count == 2
                 all_states = hass.states.async_all()
                 assert len(all_states) == 0
