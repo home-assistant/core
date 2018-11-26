@@ -14,11 +14,12 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ecoal_boiler"
+DATA_ECOAL_BOILER = 'data_' + DOMAIN
+
 
 CONF_USERNAME = "username"
 DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "admin"
-
 
 # CONFIG_SCHEMA = vol.Schema({
 #    DOMAIN: vol.Schema({
@@ -34,16 +35,14 @@ DEFAULT_PASSWORD = "admin"
 #   [homeassistant] is an invalid option for [ecoal_boiler].
 
 # In fact it is variable, set during setup
-ECOAL_CONTR = None
+## ECOAL_CONTR = None
 
 
 async def async_setup(hass, config):
-    """Set up global ECOAL_CONTR same for sensors and switches."""
-    global ECOAL_CONTR
+    """Set up global ECoalControler instance same for sensors and switches."""
     _LOGGER.debug("async_setup(): config: %r", config)
     from .http_iface import ECoalControler
 
-    # hass.states.set('hello.world', 'Paulus')_LOGGE
     conf = config.get(DOMAIN)
     _LOGGER.debug(
         "async_setup(): conf: %r  conf.keys(): %r", conf, conf.keys()
@@ -55,6 +54,6 @@ async def async_setup(hass, config):
     _LOGGER.debug(
         "async_setup(): host: %r username: %r passwd: %r", host, username, passwd
     )
-    ECOAL_CONTR = ECoalControler(host, username, passwd)
-    # _LOGGER.debug("async_setup(): ECOAL_CONTR: %r", ECOAL_CONTR)
+    ecoal_contr = ECoalControler(host, username, passwd)
+    hass.data[DATA_ECOAL_BOILER] = ecoal_contr
     return True

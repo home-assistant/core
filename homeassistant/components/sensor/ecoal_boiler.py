@@ -22,11 +22,10 @@ ecoal_boiler:
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.ecoal_boiler import DATA_ECOAL_BOILER
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ["requests==2.20.1"]
 
 # Available temp sensor ids
 SENSOR_IDS = (
@@ -53,15 +52,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ecoal sensors."""
-    from ..ecoal_boiler import ECOAL_CONTR
 
     devices = []
     config_enable = config.get(CONF_ENABLE, {})
-
+    ecoal_contr = hass.data[DATA_ECOAL_BOILER]
     for sensor_id in SENSOR_IDS:
         name = config_enable.get(sensor_id)
         if name:
-            devices.append(EcoalTempSensor(ECOAL_CONTR, name, sensor_id))
+            devices.append(EcoalTempSensor(ecoal_contr, name, sensor_id))
     add_devices(devices)
 
 

@@ -27,6 +27,7 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.ecoal_boiler import DATA_ECOAL_BOILER
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
@@ -50,15 +51,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switches based on ecoal interface."""
-    from ..ecoal_boiler import ECOAL_CONTR
-
+    ecoal_contr = hass.data[DATA_ECOAL_BOILER]
     config_enable = config.get(CONF_ENABLE, {})
     # _LOGGER.debug("config_enable: %r", config_enable)
     switches = []
     for pump_id in PUMP_IDNAMES:     # pylint: disable=W0621
         name = config_enable.get(pump_id)
         if name:
-            switches.append(EcoalSwitch(ECOAL_CONTR, name, pump_id))
+            switches.append(EcoalSwitch(ecoal_contr, name, pump_id))
     add_entities(switches)
 
 
@@ -97,9 +97,6 @@ class EcoalSwitch(ToggleEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        # Old values read 0.5 back can still be used
-        # _LOGGER.debug("CALLED: %r.update(max_cache_period=%r)",
-        #       self, max_cache_period)
         status = self._ecoal_contr.get_cached_status()
         self._state = getattr(status, self._state_attr)
 
