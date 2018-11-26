@@ -62,4 +62,3 @@ class UnknownUser(Unauthorized):
 
 class ServiceNotFound(HomeAssistantError):
     """Raised when a service is not found."""
-    pass
