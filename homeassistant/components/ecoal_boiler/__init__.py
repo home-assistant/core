@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "ecoal_boiler"
 
 CONF_USERNAME = "username"
-DEFULT_USERNAME = "admin"
+DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "admin"
 
 
@@ -24,7 +24,7 @@ DEFAULT_PASSWORD = "admin"
 #    DOMAIN: vol.Schema({
 #        vol.Required(CONF_HOST): cv.string,
 #        vol.Optional(CONF_USERNAME,
-#                        default=DEFULT_USERNAME): cv.string,
+#                        default=DEFAULT_USERNAME): cv.string,
 #        vol.Optional(CONF_PASSWORD,
 #                        default=DEFAULT_PASSWORD): cv.string,
 #    })
