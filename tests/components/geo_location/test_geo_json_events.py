@@ -187,8 +187,7 @@ async def test_setup_race_condition(hass):
             assert await async_setup_component(
                 hass, geo_location.DOMAIN, CONFIG)
 
-            mock_feed.return_value.update.return_value = 'OK', [
-                mock_entry_1]
+            mock_feed.return_value.update.return_value = 'OK', [mock_entry_1]
 
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -211,8 +210,7 @@ async def test_setup_race_condition(hass):
             assert len(hass.data[DATA_DISPATCHER][update_signal]) == 0
 
             # Simulate an update - 1 entry
-            mock_feed.return_value.update.return_value = 'OK', [
-                mock_entry_1]
+            mock_feed.return_value.update.return_value = 'OK', [mock_entry_1]
             async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
@@ -222,8 +220,7 @@ async def test_setup_race_condition(hass):
             assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
 
             # Simulate an update - 1 entry
-            mock_feed.return_value.update.return_value = 'OK', [
-                mock_entry_1]
+            mock_feed.return_value.update.return_value = 'OK', [mock_entry_1]
             async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
