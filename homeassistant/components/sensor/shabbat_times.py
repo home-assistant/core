@@ -91,17 +91,6 @@ ShabbatInterval = namedtuple('ShabbatInterval',
                               'title', 'hebrew_title'])
 
 
-def _parse_time(timestr, includes_timezone=True):
-    """Parses a time string from Hebcal to datetime, maybe with timezone."""
-    if includes_timezone:
-      return dt_util.parse_datetime(timestr)
-      #return datetime.datetime.strptime(timestr, '%Y-%m-%dT%H:%M:%S%z')
-    # TODO make ALL datetimes offset-aware (incl async restored ones)
-    return datetime.datetime.strptime(
-        timestr[0:-6] if includes_timezone else timestr,
-        '%Y-%m-%dT%H:%M:%S')
-
-
 class ShabbatTimesFetcher:
     """Utility class for fetching Shabbat/YomTov times from Hebcal."""
 
@@ -164,7 +153,7 @@ class ShabbatTimesFetcher:
         for item in hebcal_decoded['items']:
             if (item['category'] == 'candles'):
                 # Parse the candle-lighting attribute.
-                cur_interval.append(_parse_time(item['date']))
+                cur_interval.append(dt_util.parse_datetime(item['date']))
             elif (cur_title == '' and
                   (cur_interval or 'yomtov' in item or
                    item['category'] == 'parashat') and
@@ -194,7 +183,7 @@ class ShabbatTimesFetcher:
                     half_open_start = True
             elif (item['category'] == 'havdalah'):
                 # Parse the havdalah attribute.
-                ret_date = _parse_time(item['date'])
+                ret_date = dt_util.parse_datetime(item['date'])
                 if cur_interval:
                     if half_open_start:
                         intervals.append(ShabbatInterval(
@@ -271,9 +260,6 @@ class ShabbatTimesParser:
         saturday = friday + datetime.timedelta(+1)
 
         # Retrieve parsed times for the month & year of the upcoming Friday.
-        # TODO: Add a unit test to see if YT is Tues/Wed/Thurs at end of month,
-        # and Friday is in the next month, and ensure this case works.
-        print('{} {}'.format(friday.year, friday.month))
         intervals = self._fetcher.fetch_times(friday.year, friday.month)
         if not intervals:
             self.error = 'Could not retrieve intervals.'
@@ -284,8 +270,6 @@ class ShabbatTimesParser:
         # we need to advance the month and try again.
         # This only happens on Motzei Shabbat because of the line above where we
         # back up to the preceding Friday.
-        print(intervals[-1].end_time)
-        print(now)
         if (intervals[-1].end_time != UNKNOWN_END and 
             intervals[-1].end_time < now):
             _LOGGER.debug('Last monthly Motzei Shabbat; advancing times')
@@ -393,10 +377,9 @@ class ShabbatTimes(Entity):
 
     def __init__(self, hass, latitude, longitude, timezone, name,
                  havdalah, candle_light, diaspora):
-        self._hass = hass
+        self.hass = hass
         self._latitude = latitude
         self._longitude = longitude
-        print('st {},{}'.format(latitude, longitude))
         self._timezone = timezone
         self._name = "Shabbat Times " + name
         self._havdalah = havdalah
@@ -413,15 +396,15 @@ class ShabbatTimes(Entity):
         """ Restore original state."""
         old_state = await async_get_last_state(self.hass, self.entity_id)
         _LOGGER.debug('Old state: ' + str(old_state))
-        if (not old_state or
-            old_state.attributes[LAST_UPDATE] is None or
-            old_state.attributes[SHABBAT_START] is None or
-                old_state.attributes[SHABBAT_END] is None):
+        if (not old_state 
+            or old_state.attributes.get(LAST_UPDATE, None) is None 
+            or old_state.attributes.get(SHABBAT_START, None) is None 
+            or old_state.attributes.get(SHABBAT_END, None) is None):
             await self.async_update()
             return
 
         now = dt_util.now()
-        old_shabbat_end = _parse_time(old_state.attributes[SHABBAT_END], False)
+        old_shabbat_end = dt_util.parse_datetime(old_state.attributes[SHABBAT_END])
         if old_shabbat_end < now:
             _LOGGER.error(
                 "Current time is newer than shabbat end time. Updating.")
@@ -433,12 +416,12 @@ class ShabbatTimes(Entity):
         self._state = old_state.state
         self._havdalah = params[HAVDALAH_MINUTES]
         self._candle_light = params[CANDLE_LIGHT_MINUTES]
-        self._shabbat_start = params[SHABBAT_START]
-        self._shabbat_end = params[SHABBAT_END]
-        self._last_update = params[LAST_UPDATE]
+        self._shabbat_start = dt_util.parse_datetime(params[SHABBAT_START])
+        self._shabbat_end = dt_util.parse_datetime(params[SHABBAT_END])
+        self._last_update = dt_util.parse_datetime(params[LAST_UPDATE])
         self._title = params[TITLE]
         self._hebrew_title = params[HEBREW_TITLE]
-        _LOGGER.debug('New state: ' + str(self.device_state_attributes()))
+        _LOGGER.debug('New state: {}'.format(self.device_state_attributes))
 
     @property
     def name(self):
