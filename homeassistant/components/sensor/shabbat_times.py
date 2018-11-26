@@ -8,7 +8,7 @@ from collections import namedtuple
 import datetime
 import json
 import logging
-
+import pprint # REMOVEME
 import requests
 import voluptuous as vol
 
@@ -93,6 +93,10 @@ ShabbatInterval = namedtuple('ShabbatInterval',
 
 def _parse_time(timestr, includes_timezone=True):
     """Parses a time string from Hebcal to datetime, maybe with timezone."""
+    if includes_timezone:
+      return dt_util.parse_datetime(timestr)
+      #return datetime.datetime.strptime(timestr, '%Y-%m-%dT%H:%M:%S%z')
+    # TODO make ALL datetimes offset-aware (incl async restored ones)
     return datetime.datetime.strptime(
         timestr[0:-6] if includes_timezone else timestr,
         '%Y-%m-%dT%H:%M:%S')
@@ -101,13 +105,13 @@ def _parse_time(timestr, includes_timezone=True):
 class ShabbatTimesFetcher:
     """Utility class for fetching Shabbat/YomTov times from Hebcal."""
 
-    def __init__(self, latitude, longitude, timezone, havdalah, candle_light,
+    def __init__(self, latitude, longitude, timezone, candle_light, havdalah, 
                  diaspora):
         self._latitude = latitude
         self._longitude = longitude
         self._timezone = timezone
-        self._havdalah = havdalah
         self._candle_light = candle_light
+        self._havdalah = havdalah
         self._diaspora = diaspora
         self.error = None
 
@@ -120,9 +124,9 @@ class ShabbatTimesFetcher:
         hebcal_url = ("http://www.hebcal.com/hebcal/?v=1&cfg=json&maj=on&"
                       "min=on&mod=off&nx=off&s=on&year=%d&month=%d&ss=off"
                       "&mf=off&c=on&geo=pos&latitude=%f&longitude=%f&"
-                      "tzid=%s&m=%d&s=off&b=%d&i=%s") % (
+                      "tzid=%s&b=%d&m=%d&i=%s") % (
             year, month, self._latitude, self._longitude,
-            self._timezone, self._havdalah, self._candle_light,
+            self._timezone, self._candle_light, self._havdalah, 
             'off' if self._diaspora else 'on')
         _LOGGER.debug(hebcal_url)
         hebcal_response = requests.get(hebcal_url)
@@ -216,7 +220,7 @@ class ShabbatTimesFetcher:
             # Leftover half-open interval.
             intervals.append(ShabbatInterval(
                 cur_interval[0], UNKNOWN_END, cur_title, cur_hebrew_title))
-        _LOGGER.debug("Shabbat intervals: %s", intervals)
+        _LOGGER.debug("Shabbat intervals: %s", pprint.pformat(intervals))
         return intervals
 
 
@@ -269,6 +273,7 @@ class ShabbatTimesParser:
         # Retrieve parsed times for the month & year of the upcoming Friday.
         # TODO: Add a unit test to see if YT is Tues/Wed/Thurs at end of month,
         # and Friday is in the next month, and ensure this case works.
+        print('{} {}'.format(friday.year, friday.month))
         intervals = self._fetcher.fetch_times(friday.year, friday.month)
         if not intervals:
             self.error = 'Could not retrieve intervals.'
@@ -279,7 +284,10 @@ class ShabbatTimesParser:
         # we need to advance the month and try again.
         # This only happens on Motzei Shabbat because of the line above where we
         # back up to the preceding Friday.
-        if intervals[-1].end_time < now:
+        print(intervals[-1].end_time)
+        print(now)
+        if (intervals[-1].end_time != UNKNOWN_END and 
+            intervals[-1].end_time < now):
             _LOGGER.debug('Last monthly Motzei Shabbat; advancing times')
             friday = friday + datetime.timedelta(+7)
             saturday = friday + datetime.timedelta(+1)
@@ -358,6 +366,8 @@ class ShabbatTimesParser:
 
         # Sort intervals by start time.
         intervals.sort(key=lambda x: x.start_time)
+        
+        _LOGGER.debug('All intervals: {}'.format(pprint.pformat(intervals)))
 
         # Find first interval after "now".
         for interval in intervals:
@@ -386,6 +396,7 @@ class ShabbatTimes(Entity):
         self._hass = hass
         self._latitude = latitude
         self._longitude = longitude
+        print('st {},{}'.format(latitude, longitude))
         self._timezone = timezone
         self._name = "Shabbat Times " + name
         self._havdalah = havdalah
@@ -457,8 +468,8 @@ class ShabbatTimes(Entity):
         self._title = None
 
         fetcher = ShabbatTimesFetcher(
-            self._latitude, self._longitude, self._timezone, self._havdalah,
-            self._candle_light, self._diaspora)
+            self._latitude, self._longitude, self._timezone, self._candle_light,
+            self._havdalah, self._diaspora)
         parser = ShabbatTimesParser(fetcher)
         now = dt_util.now()
         current_interval = parser.update(now)

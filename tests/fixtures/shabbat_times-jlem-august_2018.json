@@ -1,53 +1,128 @@
 {
-  "longitude": "35.235",
-  "link": "https://www.hebcal.com/hebcal/?b=18;c=on;geo=pos;i=on;latitude=31.778;longitude=35.235;m=53;maj=on;mf=off;min=on;mod=off;month=8;nx=off;s=off;ss=off;tzid=Asia%2FJerusalem;v=1;year=2018",
-  "date": "2018-11-23T04:50:59-00:00",
+  "title": "Hebcal August 2018 31.778, 35.235, Asia/Jerusalem",
+  "link": "https://www.hebcal.com/hebcal/?b=18;c=on;geo=pos;i=on;latitude=31.778;longitude=35.235;m=53;maj=on;mf=off;min=on;mod=off;month=8;nx=off;s=on;ss=off;tzid=Asia%2FJerusalem;v=1;year=2018",
   "items": [
     {
-      "hebrew": "הדלקת נרות",
       "title": "Candle lighting: 7:16pm",
+      "hebrew": "הדלקת נרות",
       "category": "candles",
       "date": "2018-08-03T19:16:00+03:00"
     },
     {
+      "link": "https://www.hebcal.com/sedrot/eikev",
+      "date": "2018-08-04",
+      "category": "parashat",
+      "leyning": {
+        "1": "Deuteronomy 7:12 - 8:10",
+        "2": "Deuteronomy 8:11 - 9:3",
+        "3": "Deuteronomy 9:4 - 9:29",
+        "4": "Deuteronomy 10:1 - 10:11",
+        "5": "Deuteronomy 10:12 - 11:9",
+        "6": "Deuteronomy 11:10 - 11:21",
+        "7": "Deuteronomy 11:22 - 11:25",
+        "haftarah": "Isaiah 49:14 - 51:3",
+        "maftir": "Deuteronomy 11:22 - 11:25",
+        "torah": "Deuteronomy 7:12 - 11:25"
+      },
+      "hebrew": "פרשת עקב",
+      "title": "Parashat Eikev"
+    },
+    {
       "category": "havdalah",
-      "date": "2018-08-04T20:26:00+03:00",
+      "title": "Havdalah (53 min): 8:26pm",
       "hebrew": "הבדלה - 53 דקות",
-      "title": "Havdalah (53 min): 8:26pm"
+      "date": "2018-08-04T20:26:00+03:00"
     },
     {
       "category": "candles",
-      "date": "2018-08-10T19:09:00+03:00",
+      "title": "Candle lighting: 7:09pm",
       "hebrew": "הדלקת נרות",
-      "title": "Candle lighting: 7:09pm"
+      "date": "2018-08-10T19:09:00+03:00"
     },
     {
-      "date": "2018-08-11T20:19:00+03:00",
-      "category": "havdalah",
+      "date": "2018-08-11",
+      "link": "https://www.hebcal.com/sedrot/reeh",
+      "hebrew": "פרשת ראה",
+      "title": "Parashat Re'eh",
+      "category": "parashat",
+      "leyning": {
+        "1": "Deuteronomy 11:26 - 12:10",
+        "2": "Deuteronomy 12:11 - 12:28",
+        "3": "Deuteronomy 12:29 - 13:19",
+        "4": "Deuteronomy 14:1 - 14:21",
+        "5": "Deuteronomy 14:22 - 14:29",
+        "6": "Deuteronomy 15:1 - 15:18",
+        "7": "Deuteronomy 15:19 - 16:17",
+        "maftir": "Numbers 28:9 - 28:15 | Shabbat Rosh Chodesh",
+        "torah": "Deuteronomy 11:26 - 16:17",
+        "haftarah": "Isaiah 66:1 - 66:24 | Shabbat Rosh Chodesh"
+      }
+    },
+    {
+      "title": "Havdalah (53 min): 8:19pm",
       "hebrew": "הבדלה - 53 דקות",
-      "title": "Havdalah (53 min): 8:19pm"
+      "category": "havdalah",
+      "date": "2018-08-11T20:19:00+03:00"
     },
     {
       "category": "candles",
-      "date": "2018-08-17T19:02:00+03:00",
       "hebrew": "הדלקת נרות",
-      "title": "Candle lighting: 7:02pm"
+      "title": "Candle lighting: 7:02pm",
+      "date": "2018-08-17T19:02:00+03:00"
+    },
+    {
+      "hebrew": "פרשת שופטים",
+      "title": "Parashat Shoftim",
+      "category": "parashat",
+      "leyning": {
+        "1": "Deuteronomy 16:18 - 17:13",
+        "2": "Deuteronomy 17:14 - 17:20",
+        "3": "Deuteronomy 18:1 - 18:5",
+        "4": "Deuteronomy 18:6 - 18:13",
+        "5": "Deuteronomy 18:14 - 19:13",
+        "6": "Deuteronomy 19:14 - 20:9",
+        "7": "Deuteronomy 20:10 - 21:9",
+        "haftarah": "Isaiah 51:12 - 52:12",
+        "torah": "Deuteronomy 16:18 - 21:9",
+        "maftir": "Deuteronomy 21:7 - 21:9"
+      },
+      "date": "2018-08-18",
+      "link": "https://www.hebcal.com/sedrot/shoftim"
     },
     {
       "category": "havdalah",
-      "date": "2018-08-18T20:12:00+03:00",
       "title": "Havdalah (53 min): 8:12pm",
-      "hebrew": "הבדלה - 53 דקות"
+      "hebrew": "הבדלה - 53 דקות",
+      "date": "2018-08-18T20:12:00+03:00"
     },
     {
       "date": "2018-08-24T18:54:00+03:00",
-      "category": "candles",
       "hebrew": "הדלקת נרות",
-      "title": "Candle lighting: 6:54pm"
+      "title": "Candle lighting: 6:54pm",
+      "category": "candles"
     },
     {
-      "title": "Havdalah (53 min): 8:04pm",
+      "link": "https://www.hebcal.com/sedrot/kiteitzei",
+      "date": "2018-08-25",
+      "category": "parashat",
+      "leyning": {
+        "1": "Deuteronomy 21:10 - 21:21",
+        "2": "Deuteronomy 21:22 - 22:7",
+        "3": "Deuteronomy 22:8 - 23:7",
+        "4": "Deuteronomy 23:8 - 23:24",
+        "5": "Deuteronomy 23:25 - 24:4",
+        "6": "Deuteronomy 24:5 - 24:13",
+        "7": "Deuteronomy 24:14 - 25:19",
+        "haftarah": "Isaiah 54:1 - 54:10",
+        "maftir": "Deuteronomy 25:17 - 25:19",
+        "torah": "Deuteronomy 21:10 - 25:19"
+      },
+      "hebrew": "פרשת כי־תצא",
+      "title": "Parashat Ki Teitzei"
+    },
+    {
       "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 8:04pm",
       "category": "havdalah",
       "date": "2018-08-25T20:04:00+03:00"
     },
@@ -58,13 +133,14 @@
       "hebrew": "הדלקת נרות"
     }
   ],
-  "title": "Hebcal August 2018 31.778, 35.235, Asia/Jerusalem",
   "latitude": "31.778",
+  "longitude": "35.235",
   "location": {
-    "geo": "pos",
+    "latitude": "31.778",
     "longitude": "35.235",
     "tzid": "Asia/Jerusalem",
     "title": "31.778, 35.235, Asia/Jerusalem",
-    "latitude": "31.778"
-  }
+    "geo": "pos"
+  },
+  "date": "2018-11-26T03:05:38-00:00"
 }

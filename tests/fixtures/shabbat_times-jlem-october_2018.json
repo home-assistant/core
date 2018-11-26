@@ -1,80 +1,156 @@
 {
+  "date": "2018-11-26T03:06:25-00:00",
+  "latitude": "31.778",
   "items": [
     {
-      "link": "https://www.hebcal.com/holidays/shmini-atzeret",
-      "subcat": "major",
-      "hebrew": "שמיני עצרת",
       "category": "holiday",
-      "memo": "Eighth Day of Assembly",
-      "date": "2018-10-01",
       "title": "Shmini Atzeret",
-      "yomtov": true
+      "link": "https://www.hebcal.com/holidays/shmini-atzeret",
+      "yomtov": true,
+      "hebrew": "שמיני עצרת",
+      "date": "2018-10-01",
+      "subcat": "major",
+      "memo": "Eighth Day of Assembly"
     },
     {
-      "category": "havdalah",
-      "hebrew": "הבדלה - 53 דקות",
       "title": "Havdalah (53 min): 7:17pm",
-      "date": "2018-10-01T19:17:00+03:00"
-    },
-    {
-      "date": "2018-10-05T18:01:00+03:00",
-      "category": "candles",
-      "title": "Candle lighting: 6:01pm",
-      "hebrew": "הדלקת נרות"
-    },
-    {
-      "date": "2018-10-06T19:10:00+03:00",
-      "category": "havdalah",
+      "date": "2018-10-01T19:17:00+03:00",
       "hebrew": "הבדלה - 53 דקות",
-      "title": "Havdalah (53 min): 7:10pm"
-    },
-    {
-      "date": "2018-10-12T17:52:00+03:00",
-      "category": "candles",
-      "title": "Candle lighting: 5:52pm",
-      "hebrew": "הדלקת נרות"
-    },
-    {
-      "title": "Havdalah (53 min): 7:02pm",
-      "hebrew": "הבדלה - 53 דקות",
-      "category": "havdalah",
-      "date": "2018-10-13T19:02:00+03:00"
+      "category": "havdalah"
     },
     {
       "category": "candles",
       "hebrew": "הדלקת נרות",
-      "title": "Candle lighting: 5:44pm",
-      "date": "2018-10-19T17:44:00+03:00"
+      "date": "2018-10-05T18:01:00+03:00",
+      "title": "Candle lighting: 6:01pm"
+    },
+    {
+      "title": "Parashat Bereshit",
+      "date": "2018-10-06",
+      "hebrew": "פרשת בראשית",
+      "category": "parashat",
+      "leyning": {
+        "1": "Genesis 1:1 - 2:3",
+        "2": "Genesis 2:4 - 2:19",
+        "3": "Genesis 2:20 - 3:21",
+        "4": "Genesis 3:22 - 4:18",
+        "5": "Genesis 4:19 - 4:22",
+        "6": "Genesis 4:23 - 5:24",
+        "7": "Genesis 5:25 - 6:8",
+        "torah": "Genesis 1:1 - 6:8",
+        "maftir": "Genesis 6:5 - 6:8",
+        "haftarah": "Isaiah 42:5 - 43:10"
+      },
+      "link": "https://www.hebcal.com/sedrot/bereshit"
     },
     {
       "hebrew": "הבדלה - 53 דקות",
-      "title": "Havdalah (53 min): 6:54pm",
       "category": "havdalah",
+      "title": "Havdalah (53 min): 7:10pm",
+      "date": "2018-10-06T19:10:00+03:00"
+    },
+    {
+      "hebrew": "הדלקת נרות",
+      "category": "candles",
+      "date": "2018-10-12T17:52:00+03:00",
+      "title": "Candle lighting: 5:52pm"
+    },
+    {
+      "leyning": {
+        "1": "Genesis 6:9 - 6:22",
+        "2": "Genesis 7:1 - 7:16",
+        "3": "Genesis 7:17 - 8:14",
+        "4": "Genesis 8:15 - 9:7",
+        "5": "Genesis 9:8 - 9:17",
+        "6": "Genesis 9:18 - 10:32",
+        "7": "Genesis 11:1 - 11:32",
+        "torah": "Genesis 6:9 - 11:32",
+        "maftir": "Genesis 11:29 - 11:32",
+        "haftarah": "Isaiah 54:1 - 55:5"
+      },
+      "link": "https://www.hebcal.com/sedrot/noach",
+      "title": "Parashat Noach",
+      "date": "2018-10-13",
+      "hebrew": "פרשת נח",
+      "category": "parashat"
+    },
+    {
+      "hebrew": "הבדלה - 53 דקות",
+      "category": "havdalah",
+      "date": "2018-10-13T19:02:00+03:00",
+      "title": "Havdalah (53 min): 7:02pm"
+    },
+    {
+      "title": "Candle lighting: 5:44pm",
+      "date": "2018-10-19T17:44:00+03:00",
+      "hebrew": "הדלקת נרות",
+      "category": "candles"
+    },
+    {
+      "category": "parashat",
+      "hebrew": "פרשת לך־לך",
+      "title": "Parashat Lech-Lecha",
+      "date": "2018-10-20",
+      "link": "https://www.hebcal.com/sedrot/lechlecha",
+      "leyning": {
+        "1": "Genesis 12:1 - 12:13",
+        "2": "Genesis 12:14 - 13:4",
+        "3": "Genesis 13:5 - 13:18",
+        "4": "Genesis 14:1 - 14:20",
+        "5": "Genesis 14:21 - 15:6",
+        "6": "Genesis 15:7 - 17:6",
+        "7": "Genesis 17:7 - 17:27",
+        "maftir": "Genesis 17:24 - 17:27",
+        "torah": "Genesis 12:1 - 17:27",
+        "haftarah": "Isaiah 40:27 - 41:16"
+      }
+    },
+    {
+      "category": "havdalah",
+      "hebrew": "הבדלה - 53 דקות",
+      "title": "Havdalah (53 min): 6:54pm",
       "date": "2018-10-20T18:54:00+03:00"
     },
     {
-      "category": "candles",
       "hebrew": "הדלקת נרות",
+      "category": "candles",
       "title": "Candle lighting: 5:37pm",
       "date": "2018-10-26T17:37:00+03:00"
     },
     {
+      "hebrew": "פרשת וירא",
+      "category": "parashat",
+      "title": "Parashat Vayera",
+      "date": "2018-10-27",
+      "link": "https://www.hebcal.com/sedrot/vayera",
+      "leyning": {
+        "1": "Genesis 18:1 - 18:14",
+        "2": "Genesis 18:15 - 18:33",
+        "3": "Genesis 19:1 - 19:20",
+        "4": "Genesis 19:21 - 21:4",
+        "5": "Genesis 21:5 - 21:21",
+        "6": "Genesis 21:22 - 21:34",
+        "7": "Genesis 22:1 - 22:24",
+        "maftir": "Genesis 22:20 - 22:24",
+        "torah": "Genesis 18:1 - 22:24",
+        "haftarah": "II Kings 4:1 - 4:37"
+      }
+    },
+    {
+      "hebrew": "הבדלה - 53 דקות",
       "category": "havdalah",
       "title": "Havdalah (53 min): 6:47pm",
-      "hebrew": "הבדלה - 53 דקות",
       "date": "2018-10-27T18:47:00+03:00"
     }
   ],
   "title": "Hebcal October 2018 31.778, 35.235, Asia/Jerusalem",
-  "location": {
-    "longitude": "35.235",
-    "latitude": "31.778",
-    "geo": "pos",
-    "tzid": "Asia/Jerusalem",
-    "title": "31.778, 35.235, Asia/Jerusalem"
-  },
-  "link": "https://www.hebcal.com/hebcal/?b=18;c=on;geo=pos;i=on;latitude=31.778;longitude=35.235;m=53;maj=on;mf=off;min=on;mod=off;month=10;nx=off;s=off;ss=off;tzid=Asia%2FJerusalem;v=1;year=2018",
   "longitude": "35.235",
-  "latitude": "31.778",
-  "date": "2018-11-23T04:51:24-00:00"
+  "location": {
+    "title": "31.778, 35.235, Asia/Jerusalem",
+    "latitude": "31.778",
+    "longitude": "35.235",
+    "tzid": "Asia/Jerusalem",
+    "geo": "pos"
+  },
+  "link": "https://www.hebcal.com/hebcal/?b=18;c=on;geo=pos;i=on;latitude=31.778;longitude=35.235;m=53;maj=on;mf=off;min=on;mod=off;month=10;nx=off;s=on;ss=off;tzid=Asia%2FJerusalem;v=1;year=2018"
 }
