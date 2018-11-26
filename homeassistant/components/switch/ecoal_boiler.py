@@ -80,7 +80,6 @@ class EcoalSwitch(ToggleEntity):
         # No setting value, read instead
         # self._state = self.is_on
         self._state = None
-        ## self.reread_update()
 
     @property
     def name(self) -> Optional[str]:

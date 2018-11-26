@@ -1,5 +1,6 @@
 """
-Provides functionality allowing control ecoal/esterownik.pl coal/wood boiler controller.
+Provides functionality allowing control ecoal/esterownik.pl
+coal/wood boiler controller.
 
 Allows read various readings available in controller
 and set very basic switches.
