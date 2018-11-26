@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config_enable.get(sensor_id)
         if name:
             devices.append(EcoalTempSensor(ecoal_contr, name, sensor_id))
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class EcoalTempSensor(Entity):
@@ -72,7 +72,6 @@ class EcoalTempSensor(Entity):
         self._name = name
         self._status_attr = status_attr
         self._state = None
-        self.update()
 
     @property
     def name(self):
