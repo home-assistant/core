@@ -174,8 +174,7 @@ class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             # If payload is null or a varient of null, skip update
             if payload is None or str(payload).lower() == 'nan':
                 _LOGGER.warning(
-                    "%s value for %s. Skipping state update. "
-                    + "Current state: %s",
+                    "%s value for %s. Skipping update. Current state: %s",
                     payload, self._name, self._state)
             else:
                 self._state = payload
