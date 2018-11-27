@@ -82,9 +82,7 @@ def get_requests_mocker():
 class TestShabbatTimes():
     """Test the Shabbat Times sensor."""
 
-    def __init__(self):
-        self.hass = None
-
+    # pylint: disable=attribute-defined-outside-init
     # pylint: disable=no-self-use
     def setup_method(self, method):
         """Set up things to run when tests begin."""
