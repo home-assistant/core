@@ -2,7 +2,8 @@
 import unittest
 import requests_mock
 
-import homeassistant.components.notify.notifyme as notifyme
+from homeassistant.components.notify import notifyme
+from tests.common import get_test_home_assistant
 
 
 class TestNotifyMe(unittest.TestCase):
@@ -10,8 +11,9 @@ class TestNotifyMe(unittest.TestCase):
 
     def setUp(self):
         """Set up test variables."""
+        hass = get_test_home_assistant()
         access_token = "dummy-access-token"
-        self.notifyme = notifyme.NotifymeNotificationService(access_token)
+        self.notifyme = notifyme.NotifymeNotificationService(hass, access_token)
 
     @requests_mock.Mocker()
     async def test_send_simple_message(self, mock):
