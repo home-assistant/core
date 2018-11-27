@@ -11,7 +11,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME, CONF_ACCESS_TOKEN)
-from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['wunderpy2==0.1.6']
 
@@ -45,16 +44,16 @@ def setup(hass, config):
     conf = config[DOMAIN]
     client_id = conf.get(CONF_CLIENT_ID)
     access_token = conf.get(CONF_ACCESS_TOKEN)
-    entity = Wunderlist(access_token, client_id)
-    if not entity.check_credentials():
+    data = Wunderlist(access_token, client_id)
+    if not data.check_credentials():
         _LOGGER.error("Invalid credentials")
         return False
 
-    hass.services.register(DOMAIN, 'create_task', entity.create_task)
+    hass.services.register(DOMAIN, 'create_task', data.create_task)
     return True
 
 
-class Wunderlist(Entity):
+class Wunderlist:
     """Representation of an interface to Wunderlist."""
 
     def __init__(self, access_token, client_id):
