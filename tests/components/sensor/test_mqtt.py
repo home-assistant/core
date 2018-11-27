@@ -257,7 +257,6 @@ class TestSensorMQTT(unittest.TestCase):
                 'name': 'test',
                 'state_topic': 'test-topic',
                 'unit_of_measurement': 'fav unit',
-                'json_attributes': 'val'
             }
         })
 
@@ -268,8 +267,7 @@ class TestSensorMQTT(unittest.TestCase):
         assert '100' == \
             state.attributes.get('val')
 
-    @patch('homeassistant.components.sensor.mqtt._LOGGER')
-    def test_update_with_json_attrs_not_dict(self, mock_logger):
+    def test_update_with_json_attrs_not_dict(self):
         """Test attributes get extracted from a JSON result."""
         mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, sensor.DOMAIN, {
@@ -278,7 +276,6 @@ class TestSensorMQTT(unittest.TestCase):
                 'name': 'test',
                 'state_topic': 'test-topic',
                 'unit_of_measurement': 'fav unit',
-                'json_attributes': 'val'
             }
         })
 
@@ -287,7 +284,6 @@ class TestSensorMQTT(unittest.TestCase):
         state = self.hass.states.get('sensor.test')
 
         assert state.attributes.get('val') is None
-        assert mock_logger.warning.called
 
     @patch('homeassistant.components.sensor.mqtt._LOGGER')
     def test_update_with_json_attrs_bad_JSON(self, mock_logger):
@@ -299,7 +295,6 @@ class TestSensorMQTT(unittest.TestCase):
                 'name': 'test',
                 'state_topic': 'test-topic',
                 'unit_of_measurement': 'fav unit',
-                'json_attributes': 'val'
             }
         })
 
@@ -308,7 +303,6 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test')
         assert state.attributes.get('val') is None
-        assert mock_logger.warning.called
         assert mock_logger.debug.called
 
     def test_update_with_json_attrs_and_template(self):
@@ -321,7 +315,6 @@ class TestSensorMQTT(unittest.TestCase):
                 'state_topic': 'test-topic',
                 'unit_of_measurement': 'fav unit',
                 'value_template': '{{ value_json.val }}',
-                'json_attributes': 'val'
             }
         })
 
