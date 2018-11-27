@@ -1109,7 +1109,7 @@ class ServiceRegistry:
 
         if not blocking:
             self._hass.async_create_task(
-                self._catched_execute(handler, service_call))
+                self._safe_execute(handler, service_call))
             return None
 
         try:
@@ -1120,8 +1120,8 @@ class ServiceRegistry:
         except asyncio.TimeoutError:
             return False
 
-    async def _catched_execute(self, handler: Service,
-                               service_call: ServiceCall) -> None:
+    async def _safe_execute(self, handler: Service,
+                            service_call: ServiceCall) -> None:
         """Execute a service and catch exceptions."""
         try:
             await self._execute_service(handler, service_call)
