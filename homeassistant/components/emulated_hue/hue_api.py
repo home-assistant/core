@@ -351,14 +351,15 @@ def get_entity_state(config, entity):
     if cached_state is None:
         final_state = entity.state != STATE_OFF
         final_brightness = entity.attributes.get(
-            ATTR_BRIGHTNESS, 255 if final_state else 0)
+            ATTR_BRIGHTNESS, None)
 
         # Make sure the entity actually supports brightness
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if entity.domain == "light":
             if entity_features & SUPPORT_BRIGHTNESS:
-                pass
+                if final_brightness is None:
+                    final_brightness = (255 if final_state else 0)
 
         elif entity.domain == "media_player":
             level = entity.attributes.get(
@@ -377,23 +378,25 @@ def get_entity_state(config, entity):
                 final_brightness = 255
     else:
         final_state, final_brightness = cached_state
-        # Make sure brightness is valid
-        if final_brightness is None:
-            final_brightness = 255 if final_state else 0
 
     return (final_state, final_brightness)
 
-
 def entity_to_json(config, entity, is_on=None, brightness=None):
     """Convert an entity to its Hue bridge JSON representation."""
+    state = {
+        'reachable': True,
+        HUE_API_STATE_ON: is_on,
+    }
+
+    if brightness is not None:
+        state[HUE_API_STATE_BRI] = brightness
+        light_type = 'Dimmable light'
+    else:
+        light_type = 'On/Off light'
+
     return {
-        'state':
-        {
-            HUE_API_STATE_ON: is_on,
-            HUE_API_STATE_BRI: brightness,
-            'reachable': True
-        },
-        'type': 'Dimmable light',
+        'state': state,
+        'type': light_type,
         'name': config.get_entity_name(entity),
         'modelid': 'HASS123',
         'uniqueid': entity.entity_id,
