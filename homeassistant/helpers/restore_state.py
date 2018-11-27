@@ -104,16 +104,14 @@ class RestoreStateData():
                 self.async_dump_states()))
 
     @callback
-    def async_register_entity(
-            self, entity: 'RestoreEntity') -> None:
+    def async_register_entity(self, entity_id: str) -> None:
         """Store this entity's state when hass is shutdown."""
-        self.entity_ids.add(entity.entity_id)
+        self.entity_ids.add(entity_id)
 
     @callback
-    def async_unregister_entity(
-            self, entity: 'RestoreEntity') -> None:
+    def async_unregister_entity(self, entity_id: str) -> None:
         """Unregister this entity from saving state."""
-        self.entity_ids.remove(entity.entity_id)
+        self.entity_ids.remove(entity_id)
 
 
 class RestoreEntity(Entity):
@@ -125,7 +123,7 @@ class RestoreEntity(Entity):
             super().async_added_to_hass(),
             RestoreStateData.async_get_instance(self.hass),
         )
-        data.async_register_entity(self)
+        data.async_register_entity(self.entity_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -133,7 +131,7 @@ class RestoreEntity(Entity):
             super().async_will_remove_from_hass(),
             RestoreStateData.async_get_instance(self.hass),
         )
-        data.async_unregister_entity(self)
+        data.async_unregister_entity(self.entity_id)
 
     async def async_get_last_state(self) -> Optional[State]:
         """Get the entity state from the previous run."""
