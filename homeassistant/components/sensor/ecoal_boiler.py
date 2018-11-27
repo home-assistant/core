@@ -52,7 +52,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ecoal sensors."""
-
     devices = []
     config_enable = config.get(CONF_ENABLE, {})
     ecoal_contr = hass.data[DATA_ECOAL_BOILER]
