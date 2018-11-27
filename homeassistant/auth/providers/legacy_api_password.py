@@ -8,11 +8,12 @@ from typing import Any, Dict, Optional, cast, TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
-from ..models import Credentials, UserMeta
+from .. import AuthManager
+from ..models import Credentials, UserMeta, User
 
 if TYPE_CHECKING:
     from homeassistant.components.http import HomeAssistantHTTP  # noqa: F401
@@ -33,11 +34,12 @@ class InvalidAuthError(HomeAssistantError):
     """Raised when submitting invalid authentication."""
 
 
-async def async_get_user(hass):
+async def async_get_user(hass: HomeAssistant) -> User:
     """Return the legacy API password user."""
+    auth = cast(AuthManager, hass.auth)  # type: ignore
     found = None
 
-    for prv in hass.auth.auth_providers:
+    for prv in auth.auth_providers:
         if prv.type == 'legacy_api_password':
             found = prv
             break
@@ -45,7 +47,7 @@ async def async_get_user(hass):
     if found is None:
         raise ValueError('Legacy API password provider not found')
 
-    return await hass.auth.async_get_or_create_user(
+    return await auth.async_get_or_create_user(
         await found.async_get_or_create_credentials({})
     )
 
