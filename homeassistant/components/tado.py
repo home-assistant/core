@@ -126,7 +126,6 @@ class TadoDataStore:
             self, zone_id, device_type, overlay_mode,
             temperature=None, duration=None, mode=None, power=True):
         """Wrap for setZoneOverlay(..)."""
-
         self.tado.setZoneOverlay(zone_id,
                                  overlay_mode,
                                  temperature,
