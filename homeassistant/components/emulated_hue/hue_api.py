@@ -381,6 +381,7 @@ def get_entity_state(config, entity):
 
     return (final_state, final_brightness)
 
+
 def entity_to_json(config, entity, is_on=None, brightness=None):
     """Convert an entity to its Hue bridge JSON representation."""
     state = {
