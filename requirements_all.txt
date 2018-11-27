@@ -1413,7 +1413,7 @@ shodan==1.10.4
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==3.1.13
+simplisafe-python==3.1.14
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.1
