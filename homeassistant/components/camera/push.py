@@ -25,8 +25,6 @@ DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
 
-RECEIVED_DATA = 'push_camera_received'
-
 CONF_BUFFER_SIZE = 'buffer'
 CONF_IMAGE_FIELD = 'field'
 
@@ -61,14 +59,6 @@ async def async_setup_platform(hass, config, async_add_entities,
                           config[CONF_TIMEOUT],
                           config[CONF_IMAGE_FIELD],
                           webhook_id)]
-
-    try:
-        hass.components.webhook.async_register(DOMAIN, 'push',
-                                               webhook_id, handle_webhook)
-    except ValueError:
-        _LOGGER.error("In <%s>, webhook_id <%s> already used",
-                      config[CONF_NAME], webhook_id)
-        return
 
     async_add_entities(cameras)
 
@@ -116,6 +106,15 @@ class PushCamera(Camera):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[PUSH_CAMERA_DATA][self.webhook_id] = self
+
+        try:
+            self.hass.components.webhook.async_register(DOMAIN,
+                                                        self.entity_id,
+                                                        self.webhook_id,
+                                                        handle_webhook)
+        except ValueError:
+            _LOGGER.error("In <%s>, webhook_id <%s> already used",
+                          self.name, self.webhook_id)
 
     @property
     def image_field(self):
