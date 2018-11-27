@@ -127,3 +127,8 @@ class TelldusLiveSensor(TelldusLiveEntity):
         """Return the device class."""
         return SENSOR_TYPES[self._type][3] \
             if self._type in SENSOR_TYPES else None
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return "-".join(self._id[0:2])
