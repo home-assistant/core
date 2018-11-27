@@ -357,6 +357,9 @@ class XiaomiVibration(XiaomiBinarySensor):
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)
+        if value is None:
+            return False
+
         if value not in ('vibrate', 'tilt', 'free_fall'):
             _LOGGER.warning("Unsupported movement_type detected: %s",
                             value)

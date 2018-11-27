@@ -11,6 +11,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.components import websocket_api
+from homeassistant.components.alexa import smart_home as alexa_sh
+from homeassistant.components.google_assistant import smart_home as google_sh
 
 from . import auth_api
 from .const import DOMAIN, REQUEST_TIMEOUT
@@ -307,5 +309,9 @@ def _account_data(cloud):
         'email': claims['email'],
         'cloud': cloud.iot.state,
         'google_enabled': cloud.google_enabled,
+        'google_entities': cloud.google_actions_user_conf['filter'].config,
+        'google_domains': list(google_sh.DOMAIN_TO_GOOGLE_TYPES),
         'alexa_enabled': cloud.alexa_enabled,
+        'alexa_entities': cloud.alexa_config.should_expose.config,
+        'alexa_domains': list(alexa_sh.ENTITY_ADAPTERS),
     }

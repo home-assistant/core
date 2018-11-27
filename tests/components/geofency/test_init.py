@@ -1,16 +1,14 @@
 """The tests for the Geofency device tracker platform."""
 # pylint: disable=redefined-outer-name
-import asyncio
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import zone
-import homeassistant.components.device_tracker as device_tracker
-from homeassistant.components.device_tracker.geofency import (
-    CONF_MOBILE_BEACONS, URL)
+from homeassistant.components.geofency import (
+    CONF_MOBILE_BEACONS, URL, DOMAIN)
 from homeassistant.const import (
-    CONF_PLATFORM, HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, STATE_HOME,
+    HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, STATE_HOME,
     STATE_NOT_HOME)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
@@ -110,9 +108,8 @@ BEACON_EXIT_CAR = {
 def geofency_client(loop, hass, aiohttp_client):
     """Geofency mock client."""
     assert loop.run_until_complete(async_setup_component(
-        hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'geofency',
+        hass, DOMAIN, {
+            DOMAIN: {
                 CONF_MOBILE_BEACONS: ['Car 1']
             }}))
 
@@ -133,11 +130,10 @@ def setup_zones(loop, hass):
             }}))
 
 
-@asyncio.coroutine
-def test_data_validation(geofency_client):
+async def test_data_validation(geofency_client):
     """Test data validation."""
     # No data
-    req = yield from geofency_client.post(URL)
+    req = await geofency_client.post(URL)
     assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
     missing_attributes = ['address', 'device',
@@ -147,15 +143,15 @@ def test_data_validation(geofency_client):
     for attribute in missing_attributes:
         copy = GPS_ENTER_HOME.copy()
         del copy[attribute]
-        req = yield from geofency_client.post(URL, data=copy)
+        req = await geofency_client.post(URL, data=copy)
         assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
 
-@asyncio.coroutine
-def test_gps_enter_and_exit_home(hass, geofency_client):
+async def test_gps_enter_and_exit_home(hass, geofency_client):
     """Test GPS based zone enter and exit."""
     # Enter the Home zone
-    req = yield from geofency_client.post(URL, data=GPS_ENTER_HOME)
+    req = await geofency_client.post(URL, data=GPS_ENTER_HOME)
+    await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify(GPS_ENTER_HOME['device'])
     state_name = hass.states.get('{}.{}'.format(
@@ -163,7 +159,8 @@ def test_gps_enter_and_exit_home(hass, geofency_client):
     assert STATE_HOME == state_name
 
     # Exit the Home zone
-    req = yield from geofency_client.post(URL, data=GPS_EXIT_HOME)
+    req = await geofency_client.post(URL, data=GPS_EXIT_HOME)
+    await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify(GPS_EXIT_HOME['device'])
     state_name = hass.states.get('{}.{}'.format(
@@ -175,7 +172,8 @@ def test_gps_enter_and_exit_home(hass, geofency_client):
     data['currentLatitude'] = NOT_HOME_LATITUDE
     data['currentLongitude'] = NOT_HOME_LONGITUDE
 
-    req = yield from geofency_client.post(URL, data=data)
+    req = await geofency_client.post(URL, data=data)
+    await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify(GPS_EXIT_HOME['device'])
     current_latitude = hass.states.get('{}.{}'.format(
@@ -186,11 +184,11 @@ def test_gps_enter_and_exit_home(hass, geofency_client):
     assert NOT_HOME_LONGITUDE == current_longitude
 
 
-@asyncio.coroutine
-def test_beacon_enter_and_exit_home(hass, geofency_client):
+async def test_beacon_enter_and_exit_home(hass, geofency_client):
     """Test iBeacon based zone enter and exit - a.k.a stationary iBeacon."""
     # Enter the Home zone
-    req = yield from geofency_client.post(URL, data=BEACON_ENTER_HOME)
+    req = await geofency_client.post(URL, data=BEACON_ENTER_HOME)
+    await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify("beacon_{}".format(BEACON_ENTER_HOME['name']))
     state_name = hass.states.get('{}.{}'.format(
@@ -198,7 +196,8 @@ def test_beacon_enter_and_exit_home(hass, geofency_client):
     assert STATE_HOME == state_name
 
     # Exit the Home zone
-    req = yield from geofency_client.post(URL, data=BEACON_EXIT_HOME)
+    req = await geofency_client.post(URL, data=BEACON_EXIT_HOME)
+    await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify("beacon_{}".format(BEACON_ENTER_HOME['name']))
     state_name = hass.states.get('{}.{}'.format(
@@ -206,11 +205,11 @@ def test_beacon_enter_and_exit_home(hass, geofency_client):
     assert STATE_NOT_HOME == state_name
 
 
-@asyncio.coroutine
-def test_beacon_enter_and_exit_car(hass, geofency_client):
+async def test_beacon_enter_and_exit_car(hass, geofency_client):
     """Test use of mobile iBeacon."""
     # Enter the Car away from Home zone
-    req = yield from geofency_client.post(URL, data=BEACON_ENTER_CAR)
+    req = await geofency_client.post(URL, data=BEACON_ENTER_CAR)
+    await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify("beacon_{}".format(BEACON_ENTER_CAR['name']))
     state_name = hass.states.get('{}.{}'.format(
@@ -218,7 +217,8 @@ def test_beacon_enter_and_exit_car(hass, geofency_client):
     assert STATE_NOT_HOME == state_name
 
     # Exit the Car away from Home zone
-    req = yield from geofency_client.post(URL, data=BEACON_EXIT_CAR)
+    req = await geofency_client.post(URL, data=BEACON_EXIT_CAR)
+    await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify("beacon_{}".format(BEACON_ENTER_CAR['name']))
     state_name = hass.states.get('{}.{}'.format(
@@ -229,7 +229,8 @@ def test_beacon_enter_and_exit_car(hass, geofency_client):
     data = BEACON_ENTER_CAR.copy()
     data['latitude'] = HOME_LATITUDE
     data['longitude'] = HOME_LONGITUDE
-    req = yield from geofency_client.post(URL, data=data)
+    req = await geofency_client.post(URL, data=data)
+    await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify("beacon_{}".format(data['name']))
     state_name = hass.states.get('{}.{}'.format(
@@ -237,7 +238,8 @@ def test_beacon_enter_and_exit_car(hass, geofency_client):
     assert STATE_HOME == state_name
 
     # Exit the Car in the Home zone
-    req = yield from geofency_client.post(URL, data=data)
+    req = await geofency_client.post(URL, data=data)
+    await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify("beacon_{}".format(data['name']))
     state_name = hass.states.get('{}.{}'.format(

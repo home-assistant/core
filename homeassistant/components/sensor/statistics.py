@@ -173,12 +173,20 @@ class StatisticsSensor(Entity):
         """Remove states which are older than self._max_age."""
         now = dt_util.utcnow()
 
+        _LOGGER.debug("%s: purging records older then %s(%s)",
+                      self.entity_id, dt_util.as_local(now - self._max_age),
+                      self._max_age)
+
         while self.ages and (now - self.ages[0]) > self._max_age:
+            _LOGGER.debug("%s: purging record with datetime %s(%s)",
+                          self.entity_id, dt_util.as_local(self.ages[0]),
+                          (now - self.ages[0]))
             self.ages.popleft()
             self.states.popleft()
 
     async def async_update(self):
         """Get the latest data and updates the states."""
+        _LOGGER.debug("%s: updating statistics.", self.entity_id)
         if self._max_age is not None:
             self._purge_old()
 
@@ -191,7 +199,7 @@ class StatisticsSensor(Entity):
                 self.median = round(statistics.median(self.states),
                                     self._precision)
             except statistics.StatisticsError as err:
-                _LOGGER.debug(err)
+                _LOGGER.debug("%s: %s", self.entity_id, err)
                 self.mean = self.median = STATE_UNKNOWN
 
             try:  # require at least two data points
@@ -200,7 +208,7 @@ class StatisticsSensor(Entity):
                 self.variance = round(statistics.variance(self.states),
                                       self._precision)
             except statistics.StatisticsError as err:
-                _LOGGER.debug(err)
+                _LOGGER.debug("%s: %s", self.entity_id, err)
                 self.stdev = self.variance = STATE_UNKNOWN
 
             if self.states:
@@ -239,14 +247,27 @@ class StatisticsSensor(Entity):
         The query will get the list of states in DESCENDING order so that we
         can limit the result to self._sample_size. Afterwards reverse the
         list so that we get it in the right order again.
+
+        If MaxAge is provided then query will restrict to entries younger then
+        current datetime - MaxAge.
         """
         from homeassistant.components.recorder.models import States
-        _LOGGER.debug("initializing values for %s from the database",
+        _LOGGER.debug("%s: initializing values from the database",
                       self.entity_id)
 
         with session_scope(hass=self._hass) as session:
             query = session.query(States)\
-                .filter(States.entity_id == self._entity_id.lower())\
+                .filter(States.entity_id == self._entity_id.lower())
+
+            if self._max_age is not None:
+                records_older_then = dt_util.utcnow() - self._max_age
+                _LOGGER.debug("%s: retrieve records not older then %s",
+                              self.entity_id, records_older_then)
+                query = query.filter(States.last_updated >= records_older_then)
+            else:
+                _LOGGER.debug("%s: retrieving all records.", self.entity_id)
+
+            query = query\
                 .order_by(States.last_updated.desc())\
                 .limit(self._sampling_size)
             states = execute(query)
@@ -254,4 +275,5 @@ class StatisticsSensor(Entity):
         for state in reversed(states):
             self._add_state_to_queue(state)
 
-        _LOGGER.debug("initializing from database completed")
+        _LOGGER.debug("%s: initializing from database completed",
+                      self.entity_id)

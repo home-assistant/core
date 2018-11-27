@@ -45,6 +45,7 @@ CONFIG_ENTRY_PLATFORMS = {
     'camera': ['mqtt'],
     'cover': ['mqtt'],
     'light': ['mqtt'],
+    'lock': ['mqtt'],
     'sensor': ['mqtt'],
     'switch': ['mqtt'],
     'climate': ['mqtt'],

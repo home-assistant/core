@@ -32,15 +32,3 @@ def test_owner_permissions():
         State('light.balcony', 'on'),
     ]
     assert permissions.OwnerPermissions.filter_states(states) == states
-
-
-def test_default_policy_allow_all():
-    """Test that the default policy is to allow all entity actions."""
-    perm = permissions.PolicyPermissions(permissions.DEFAULT_POLICY)
-    assert perm.check_entity('light.kitchen', 'read')
-    states = [
-        State('light.kitchen', 'on'),
-        State('light.living_room', 'off'),
-        State('light.balcony', 'on'),
-    ]
-    assert perm.filter_states(states) == states

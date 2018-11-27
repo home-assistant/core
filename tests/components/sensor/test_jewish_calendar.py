@@ -64,7 +64,7 @@ class TestJewishCalenderSensor():
         (dt(2018, 9, 3), 'UTC', 31.778, 35.235, "english", "date",
          False, "23 Elul 5778"),
         (dt(2018, 9, 3), 'UTC', 31.778, 35.235, "hebrew", "date",
-         False, "כ\"ג באלול ה\' תשע\"ח"),
+         False, "כ\"ג אלול ה\' תשע\"ח"),
         (dt(2018, 9, 10), 'UTC', 31.778, 35.235, "hebrew", "holiday_name",
          False, "א\' ראש השנה"),
         (dt(2018, 9, 10), 'UTC', 31.778, 35.235, "english", "holiday_name",
@@ -72,17 +72,17 @@ class TestJewishCalenderSensor():
         (dt(2018, 9, 10), 'UTC', 31.778, 35.235, "english", "holyness",
          False, 1),
         (dt(2018, 9, 8), 'UTC', 31.778, 35.235, "hebrew", "weekly_portion",
-         False, "פרשת נצבים"),
+         False, "נצבים"),
         (dt(2018, 9, 8), 'America/New_York', 40.7128, -74.0060, "hebrew",
          "first_stars", True, time(19, 48)),
         (dt(2018, 9, 8), "Asia/Jerusalem", 31.778, 35.235, "hebrew",
          "first_stars", False, time(19, 21)),
         (dt(2018, 10, 14), "Asia/Jerusalem", 31.778, 35.235, "hebrew",
-         "weekly_portion", False, "פרשת לך לך"),
+         "weekly_portion", False, "לך לך"),
         (dt(2018, 10, 14, 17, 0, 0), "Asia/Jerusalem", 31.778, 35.235,
-         "hebrew", "date", False, "ה\' בחשון ה\' תשע\"ט"),
+         "hebrew", "date", False, "ה\' מרחשוון ה\' תשע\"ט"),
         (dt(2018, 10, 14, 19, 0, 0), "Asia/Jerusalem", 31.778, 35.235,
-         "hebrew", "date", False, "ו\' בחשון ה\' תשע\"ט")
+         "hebrew", "date", False, "ו\' מרחשוון ה\' תשע\"ט")
     ]
 
     test_ids = [

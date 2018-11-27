@@ -326,6 +326,8 @@ def test_handler_google_actions(hass):
         'switch.test', 'on', {'friendly_name': "Test switch"})
     hass.states.async_set(
         'switch.test2', 'on', {'friendly_name': "Test switch 2"})
+    hass.states.async_set(
+        'group.all_locks', 'on', {'friendly_name': "Evil locks"})
 
     with patch('homeassistant.components.cloud.Cloud.async_start',
                return_value=mock_coro()):

@@ -1322,19 +1322,19 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
         mock_component(self.hass, 'group')
         mock_component(self.hass, 'zone')
 
-        patch_load = patch(
+        self.patch_load = patch(
             'homeassistant.components.device_tracker.async_load_config',
             return_value=mock_coro([]))
-        patch_load.start()
-        self.addCleanup(patch_load.stop)
+        self.patch_load.start()
 
-        patch_save = patch('homeassistant.components.device_tracker.'
-                           'DeviceTracker.async_update_config')
-        patch_save.start()
-        self.addCleanup(patch_save.stop)
+        self.patch_save = patch('homeassistant.components.device_tracker.'
+                                'DeviceTracker.async_update_config')
+        self.patch_save.start()
 
     def teardown_method(self, method):
         """Tear down resources."""
+        self.patch_load.stop()
+        self.patch_save.stop()
         self.hass.stop()
 
     @patch('homeassistant.components.device_tracker.owntracks.get_cipher',

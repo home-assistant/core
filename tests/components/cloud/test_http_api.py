@@ -35,6 +35,16 @@ def setup_api(hass):
         'relayer': 'relayer',
         'google_actions_sync_url': GOOGLE_ACTIONS_SYNC_URL,
         'subscription_info_url': SUBSCRIPTION_INFO_URL,
+        'google_actions': {
+            'filter': {
+                'include_domains': 'light'
+            }
+        },
+        'alexa': {
+            'filter': {
+                'include_entities': ['light.kitchen', 'switch.ac']
+            }
+        }
     })
     return mock_cloud_prefs(hass)
 
@@ -325,17 +335,37 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture):
     }, 'test')
     hass.data[DOMAIN].iot.state = iot.STATE_CONNECTED
     client = await hass_ws_client(hass)
-    await client.send_json({
-        'id': 5,
-        'type': 'cloud/status'
-    })
-    response = await client.receive_json()
+
+    with patch.dict(
+        'homeassistant.components.google_assistant.smart_home.'
+        'DOMAIN_TO_GOOGLE_TYPES', {'light': None}, clear=True
+    ), patch.dict('homeassistant.components.alexa.smart_home.ENTITY_ADAPTERS',
+                  {'switch': None}, clear=True):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/status'
+        })
+        response = await client.receive_json()
     assert response['result'] == {
         'logged_in': True,
         'email': 'hello@home-assistant.io',
         'cloud': 'connected',
         'alexa_enabled': True,
+        'alexa_entities': {
+            'include_domains': [],
+            'include_entities': ['light.kitchen', 'switch.ac'],
+            'exclude_domains': [],
+            'exclude_entities': [],
+        },
+        'alexa_domains': ['switch'],
         'google_enabled': True,
+        'google_entities': {
+            'include_domains': ['light'],
+            'include_entities': [],
+            'exclude_domains': [],
+            'exclude_entities': [],
+        },
+        'google_domains': ['light'],
     }
 
 

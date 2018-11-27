@@ -109,10 +109,11 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
                 as temp_file:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
-        try:
-            os.chown(fname, file_stat.st_uid, file_stat.st_gid)
-        except OSError:
-            pass
+        if hasattr(os, 'chown'):
+            try:
+                os.chown(fname, file_stat.st_uid, file_stat.st_gid)
+            except OSError:
+                pass
     except YAMLError as exc:
         _LOGGER.error(str(exc))
         raise HomeAssistantError(exc)

@@ -145,6 +145,7 @@ FLOWS = [
     'ios',
     'lifx',
     'mailgun',
+    'luftdaten',
     'mqtt',
     'nest',
     'openuv',

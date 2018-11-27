@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "UPnP/IGD jest ju\u017c skonfigurowane",
+            "incomplete_device": "Ignorowanie niekompletnego urz\u0105dzenia UPnP",
             "no_devices_discovered": "Nie wykryto urz\u0105dze\u0144 UPnP/IGD",
             "no_sensors_or_port_mapping": "W\u0142\u0105cz przynajmniej sensory lub mapowanie port\u00f3w"
         },

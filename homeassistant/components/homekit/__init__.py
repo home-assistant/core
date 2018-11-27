@@ -170,7 +170,8 @@ def get_accessory(hass, driver, state, aid, config):
         switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
         a_type = SWITCH_TYPES[switch_type]
 
-    elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
+    elif state.domain in ('automation', 'input_boolean', 'remote', 'scene',
+                          'script'):
         a_type = 'Switch'
 
     elif state.domain == 'water_heater':
