@@ -1,12 +1,8 @@
 """
 NotifyMe platform for notify component.
 
-NotifyMe is an Alexa Skill which allows you to send any message to your
-Amazon Echo devices via a simple REST API.
-
-You have to install and set up the skill first to acquire an access code
-before you can set up this platform. See http://www.thomptronics.com/notify-me
-for complete instructions.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.notifyme/
 """
 import logging
 import aiohttp
