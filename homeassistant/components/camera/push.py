@@ -109,7 +109,7 @@ class PushCamera(Camera):
 
         try:
             self.hass.components.webhook.async_register(DOMAIN,
-                                                        self.entity_id,
+                                                        self.name,
                                                         self.webhook_id,
                                                         handle_webhook)
         except ValueError:
