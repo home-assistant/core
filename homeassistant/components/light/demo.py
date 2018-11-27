@@ -6,10 +6,13 @@ https://home-assistant.io/components/demo/
 """
 import random
 
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
-    ATTR_WHITE_VALUE, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
-    SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
+    ATTR_WHITE_VALUE, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
 
 LIGHT_COLORS = [
     (56, 86),
@@ -23,17 +26,27 @@ LIGHT_TEMPS = [240, 380]
 SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
                 SUPPORT_COLOR | SUPPORT_WHITE_VALUE)
 
+CONF_WITH_BASIC = 'demo_with_basic'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_WITH_BASIC, default=False): cv.boolean,
+})
+
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the demo light platform."""
-    add_entities_callback([
+    lights = [
         DemoLight(1, "Bed Light", False, True, effect_list=LIGHT_EFFECT_LIST,
                   effect=LIGHT_EFFECT_LIST[0]),
         DemoLight(2, "Ceiling Lights", True, True,
                   LIGHT_COLORS[0], LIGHT_TEMPS[1]),
         DemoLight(3, "Kitchen Lights", True, True,
                   LIGHT_COLORS[1], LIGHT_TEMPS[0])
-    ])
+    ]
+    if config.get(CONF_WITH_BASIC, False):
+        lights.append(BasicDemoLight(4, "Outside Light", True, True))
+
+    add_entities_callback(lights)
 
 
 class DemoLight(Light):
@@ -134,6 +147,64 @@ class DemoLight(Light):
 
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]
+
+        # As we have disabled polling, we need to inform
+        # Home Assistant about updates in our state ourselves.
+        self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs) -> None:
+        """Turn the light off."""
+        self._state = False
+
+        # As we have disabled polling, we need to inform
+        # Home Assistant about updates in our state ourselves.
+        self.schedule_update_ha_state()
+
+
+class BasicDemoLight(Light):
+    """Representation of a demo light without any features."""
+
+    def __init__(self, unique_id, name, state, available=False):
+        """Initialize the light."""
+        self._unique_id = unique_id
+        self._name = name
+        self._state = state
+        self._available = True
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed for a demo light."""
+        return False
+
+    @property
+    def name(self) -> str:
+        """Return the name of the light if any."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique ID for light."""
+        return self._unique_id
+
+    @property
+    def available(self) -> bool:
+        """Return availability."""
+        # This demo light is always available, but well-behaving components
+        # should implement this to inform Home Assistant accordingly.
+        return self._available
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Light does not support any extra features"""
+        return 0
+
+    def turn_on(self, **kwargs) -> None:
+        self._state = True
 
         # As we have disabled polling, we need to inform
         # Home Assistant about updates in our state ourselves.

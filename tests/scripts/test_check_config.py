@@ -73,7 +73,7 @@ class TestCheckConfig(unittest.TestCase):
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir())
             assert res['components'].keys() == {'homeassistant', 'light'}
-            assert res['components']['light'] == [{'platform': 'demo'}]
+            assert res['components']['light'] == [{'platform': 'demo'}, {'demo_with_basic': False}]
             assert res['except'] == {}
             assert res['secret_cache'] == {}
             assert res['secrets'] == {}

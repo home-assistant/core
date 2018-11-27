@@ -29,6 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 HUE_API_STATE_ON = 'on'
 HUE_API_STATE_BRI = 'bri'
 
+HUE_API_TYPE_ON_OFF = 'On/Off light'
+HUE_API_TYPE_DIMMABLE = "Dimmable light"
+
 
 class HueUsernameView(HomeAssistantView):
     """Handle requests to create a username for the emulated hue bridge."""
@@ -391,9 +394,9 @@ def entity_to_json(config, entity, is_on=None, brightness=None):
 
     if brightness is not None:
         state[HUE_API_STATE_BRI] = brightness
-        light_type = 'Dimmable light'
+        light_type = HUE_API_TYPE_DIMMABLE
     else:
-        light_type = 'On/Off light'
+        light_type = HUE_API_TYPE_ON_OFF
 
     return {
         'state': state,

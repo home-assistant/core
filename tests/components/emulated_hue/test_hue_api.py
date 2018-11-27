@@ -12,9 +12,11 @@ from homeassistant import core, const, setup
 import homeassistant.components as core_components
 from homeassistant.components import (
     fan, http, light, script, emulated_hue, media_player)
+from homeassistant.components.light.demo import CONF_WITH_BASIC
 from homeassistant.components.emulated_hue import Config
 from homeassistant.components.emulated_hue.hue_api import (
-    HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView, HueOneLightStateView,
+    HUE_API_STATE_ON, HUE_API_STATE_BRI, HUE_API_TYPE_DIMMABLE,
+    HUE_API_TYPE_ON_OFF, HueUsernameView, HueOneLightStateView,
     HueAllLightsStateView, HueOneLightChangeView)
 from homeassistant.const import STATE_ON, STATE_OFF
 
@@ -51,6 +53,7 @@ def hass_hue(loop, hass):
             'light': [
                 {
                     'platform': 'demo',
+                    CONF_WITH_BASIC: True,
                 }
             ]
         }))
@@ -154,6 +157,7 @@ def test_discover_lights(hue_client):
     # Make sure the lights we added to the config are there
     assert 'light.ceiling_lights' in devices
     assert 'light.bed_light' not in devices
+    assert 'light.outside_light' in devices
     assert 'script.set_kitchen_light' in devices
     assert 'light.kitchen_lights' not in devices
     assert 'media_player.living_room' in devices
@@ -191,8 +195,12 @@ def test_get_light_state(hass_hue, hue_client):
     result_json = yield from result.json()
 
     assert 'light.ceiling_lights' in result_json
+    assert result_json['light.ceiling_lights']['type'] == HUE_API_TYPE_DIMMABLE
     assert result_json['light.ceiling_lights']['state'][HUE_API_STATE_BRI] == \
         127
+
+    assert 'light.outside_light' in result_json
+    assert result_json['light.outside_light']['type'] == HUE_API_TYPE_ON_OFF
 
     # Turn office light off
     yield from hass_hue.services.async_call(
@@ -206,7 +214,12 @@ def test_get_light_state(hass_hue, hue_client):
         hue_client, 'light.ceiling_lights', 200)
 
     assert office_json['state'][HUE_API_STATE_ON] is False
+    assert office_json['type'] == HUE_API_TYPE_DIMMABLE
     assert office_json['state'][HUE_API_STATE_BRI] == 0
+
+    outside_json = yield from perform_get_light_state(
+        hue_client, 'light.outside_light', 200)
+    assert outside_json['type'] == HUE_API_TYPE_ON_OFF
 
     # Make sure bedroom light isn't accessible
     yield from perform_get_light_state(
