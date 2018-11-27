@@ -5,6 +5,8 @@ MINOR_VERSION = 84
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
+APPLICATION_NAME = 'Home Assistant'
+APPLICATION_NAME_VER = '{} - {}'.format(APPLICATION_NAME, __version__)
 REQUIRED_PYTHON_VER = (3, 5, 3)
 
 # Format for platforms
