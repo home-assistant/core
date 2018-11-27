@@ -200,10 +200,11 @@ class BasicDemoLight(Light):
 
     @property
     def supported_features(self) -> int:
-        """Light does not support any extra features"""
+        """Light does not support any extra features."""
         return 0
 
     def turn_on(self, **kwargs) -> None:
+        """Turn the light on."""
         self._state = True
 
         # As we have disabled polling, we need to inform
