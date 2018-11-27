@@ -11,8 +11,10 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
-from homeassistant.core import callback
+from homeassistant.core import callback, State, CoreState
+from homeassistant.setup import async_setup_component
 
+from tests.common import mock_component, mock_restore_cache
 from ..test_rflink import mock_rflink
 
 DOMAIN = 'light'
@@ -560,3 +562,45 @@ def test_disable_automatic_add(hass, monkeypatch):
 
     # make sure new device is not added
     assert not hass.states.get(DOMAIN + '.protocol_0_0')
+
+
+@asyncio.coroutine
+def test_restore_state(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(hass, (
+        State('light.l1', 'on'),
+        State('light.l2', 'off'),
+        State('light.l3', 'on'),
+    ))
+
+    hass.state = CoreState.starting
+    mock_component(hass, 'recorder')
+
+    yield from async_setup_component(hass, DOMAIN, {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'l1': {
+                    'name': 'test',
+                    'aliases': ['test_alias_0_0'],
+                },
+                'l2': {
+                    'name': 'dim_test',
+                    'type': 'dimmable',
+                },
+                'l3': {
+                    'name': 'switch_test',
+                    'type': 'switchable',
+                }
+            }}})
+
+    state = hass.states.get('light.l1')
+    assert state
+    assert state.state == 'on'
+
+    state = hass.states.get('light.l2')
+    assert state
+    assert state.state == 'off'
