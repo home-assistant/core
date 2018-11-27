@@ -388,6 +388,47 @@ async def test_onoff_media_player(hass):
     }
 
 
+async def test_onoff_climate(hass):
+    """Test OnOff trait support for climate domain."""
+    assert trait.OnOffTrait.supported(climate.DOMAIN, climate.SUPPORT_ON_OFF)
+
+    trt_on = trait.OnOffTrait(hass, State('climate.bla', STATE_ON),
+                              BASIC_CONFIG)
+
+    assert trt_on.sync_attributes() == {}
+
+    assert trt_on.query_attributes() == {
+        'on': True
+    }
+
+    trt_off = trait.OnOffTrait(hass, State('climate.bla', STATE_OFF),
+                               BASIC_CONFIG)
+
+    assert trt_off.query_attributes() == {
+        'on': False
+    }
+
+    on_calls = async_mock_service(hass, climate.DOMAIN, SERVICE_TURN_ON)
+    await trt_on.execute(trait.COMMAND_ONOFF, {
+        'on': True
+    })
+    assert len(on_calls) == 1
+    assert on_calls[0].data == {
+        ATTR_ENTITY_ID: 'climate.bla',
+    }
+
+    off_calls = async_mock_service(hass, climate.DOMAIN,
+                                   SERVICE_TURN_OFF)
+
+    await trt_on.execute(trait.COMMAND_ONOFF, {
+        'on': False
+    })
+    assert len(off_calls) == 1
+    assert off_calls[0].data == {
+        ATTR_ENTITY_ID: 'climate.bla',
+    }
+
+
 async def test_dock_vacuum(hass):
     """Test dock trait support for vacuum domain."""
     assert trait.DockTrait.supported(vacuum.DOMAIN, 0)
