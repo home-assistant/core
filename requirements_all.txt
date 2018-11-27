@@ -604,9 +604,6 @@ logi_circle==0.1.7
 luftdaten==0.3.4
 
 # homeassistant.components.lupusec
-lupupy==0.0.10
-
-# homeassistant.components.lupusec
 lupupy==0.0.13
 
 # homeassistant.components.light.lw12wifi
