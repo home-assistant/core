@@ -137,7 +137,7 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
     gateway.metric = hass.config.units.is_metric
     gateway.optimistic = conf[CONF_OPTIMISTIC]
     gateway.device = device
-    gateway.event_callback = _gw_callback_factory(hass)
+    gateway.event_callback = _gw_callback_factory(hass, config)
     gateway.nodes_config = gateway_conf[CONF_NODES]
     if persistence:
         await gateway.start_persistence()
@@ -145,12 +145,13 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
     return gateway
 
 
-async def finish_setup(hass, gateways):
+async def finish_setup(hass, hass_config, gateways):
     """Load any persistent devices and platforms and start gateway."""
     discover_tasks = []
     start_tasks = []
     for gateway in gateways.values():
-        discover_tasks.append(_discover_persistent_devices(hass, gateway))
+        discover_tasks.append(_discover_persistent_devices(
+            hass, hass_config, gateway))
         start_tasks.append(_gw_start(hass, gateway))
     if discover_tasks:
         # Make sure all devices and platforms are loaded before gateway start.
@@ -159,7 +160,7 @@ async def finish_setup(hass, gateways):
         await asyncio.wait(start_tasks, loop=hass.loop)
 
 
-async def _discover_persistent_devices(hass, gateway):
+async def _discover_persistent_devices(hass, hass_config, gateway):
     """Discover platforms for devices loaded via persistence file."""
     tasks = []
     new_devices = defaultdict(list)
@@ -170,17 +171,18 @@ async def _discover_persistent_devices(hass, gateway):
             for platform, dev_ids in validated.items():
                 new_devices[platform].extend(dev_ids)
     for platform, dev_ids in new_devices.items():
-        tasks.append(_discover_mysensors_platform(hass, platform, dev_ids))
+        tasks.append(_discover_mysensors_platform(
+            hass, hass_config, platform, dev_ids))
     if tasks:
         await asyncio.wait(tasks, loop=hass.loop)
 
 
 @callback
-def _discover_mysensors_platform(hass, platform, new_devices):
+def _discover_mysensors_platform(hass, hass_config, platform, new_devices):
     """Discover a MySensors platform."""
     task = hass.async_create_task(discovery.async_load_platform(
         hass, platform, DOMAIN,
-        {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN}))
+        {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN}, hass_config))
     return task
 
 
@@ -215,7 +217,7 @@ async def _gw_start(hass, gateway):
         hass.data.pop(gateway_ready_key, None)
 
 
-def _gw_callback_factory(hass):
+def _gw_callback_factory(hass, hass_config):
     """Return a new callback for the gateway."""
     @callback
     def mysensors_callback(msg):
@@ -246,7 +248,8 @@ def _gw_callback_factory(hass):
                 else:
                     new_dev_ids.append(dev_id)
             if new_dev_ids:
-                _discover_mysensors_platform(hass, platform, new_dev_ids)
+                _discover_mysensors_platform(
+                    hass, hass_config, platform, new_dev_ids)
         for signal in set(signals):
             # Only one signal per device is needed.
             # A device can have multiple platforms, ie multiple schemas.

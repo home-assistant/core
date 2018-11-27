@@ -46,7 +46,7 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         @asyncio.coroutine
         def mock_setup_scanner(hass, config, see, discovery_info=None):
             """Check that Qos was added by validation."""
-            self.assertTrue('qos' in config)
+            assert 'qos' in config
 
         with patch('homeassistant.components.device_tracker.mqtt_json.'
                    'async_setup_scanner', autospec=True,
@@ -77,8 +77,8 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
         state = self.hass.states.get('device_tracker.zanzito')
-        self.assertEqual(state.attributes.get('latitude'), 2.0)
-        self.assertEqual(state.attributes.get('longitude'), 1.0)
+        assert state.attributes.get('latitude') == 2.0
+        assert state.attributes.get('longitude') == 1.0
 
     def test_non_json_message(self):
         """Test receiving a non JSON message."""
@@ -96,10 +96,9 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         with self.assertLogs(level='ERROR') as test_handle:
             fire_mqtt_message(self.hass, topic, location)
             self.hass.block_till_done()
-            self.assertIn(
-                "ERROR:homeassistant.components.device_tracker.mqtt_json:"
-                "Error parsing JSON payload: home",
-                test_handle.output[0])
+            assert "ERROR:homeassistant.components.device_tracker.mqtt_json:" \
+                "Error parsing JSON payload: home" in \
+                test_handle.output[0]
 
     def test_incomplete_message(self):
         """Test receiving an incomplete message."""
@@ -117,11 +116,10 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         with self.assertLogs(level='ERROR') as test_handle:
             fire_mqtt_message(self.hass, topic, location)
             self.hass.block_till_done()
-            self.assertIn(
-                "ERROR:homeassistant.components.device_tracker.mqtt_json:"
-                "Skipping update for following data because of missing "
-                "or malformatted data: {\"longitude\": 2.0}",
-                test_handle.output[0])
+            assert "ERROR:homeassistant.components.device_tracker.mqtt_json:" \
+                "Skipping update for following data because of missing " \
+                "or malformatted data: {\"longitude\": 2.0}" in \
+                test_handle.output[0]
 
     def test_single_level_wildcard_topic(self):
         """Test single level wildcard topic."""
@@ -139,8 +137,8 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
         state = self.hass.states.get('device_tracker.zanzito')
-        self.assertEqual(state.attributes.get('latitude'), 2.0)
-        self.assertEqual(state.attributes.get('longitude'), 1.0)
+        assert state.attributes.get('latitude') == 2.0
+        assert state.attributes.get('longitude') == 1.0
 
     def test_multi_level_wildcard_topic(self):
         """Test multi level wildcard topic."""
@@ -158,8 +156,8 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
         state = self.hass.states.get('device_tracker.zanzito')
-        self.assertEqual(state.attributes.get('latitude'), 2.0)
-        self.assertEqual(state.attributes.get('longitude'), 1.0)
+        assert state.attributes.get('latitude') == 2.0
+        assert state.attributes.get('longitude') == 1.0
 
     def test_single_level_wildcard_topic_not_matching(self):
         """Test not matching single level wildcard topic."""
@@ -177,7 +175,7 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertIsNone(self.hass.states.get(entity_id))
+        assert self.hass.states.get(entity_id) is None
 
     def test_multi_level_wildcard_topic_not_matching(self):
         """Test not matching multi level wildcard topic."""
@@ -195,4 +193,4 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertIsNone(self.hass.states.get(entity_id))
+        assert self.hass.states.get(entity_id) is None

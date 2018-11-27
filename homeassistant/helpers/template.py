@@ -9,6 +9,7 @@ import re
 import jinja2
 from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
+from jinja2.utils import Namespace
 
 from homeassistant.const import (
     ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
@@ -31,6 +32,7 @@ _RE_GET_ENTITIES = re.compile(
     r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
+_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
 
 
 @bind_hass
@@ -59,7 +61,10 @@ def render_complex(value, variables=None):
 
 def extract_entities(template, variables=None):
     """Extract all entities for state_changed listener from template string."""
-    if template is None or _RE_NONE_ENTITIES.search(template):
+    if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
+        return []
+
+    if _RE_NONE_ENTITIES.search(template):
         return MATCH_ALL
 
     extraction = _RE_GET_ENTITIES.findall(template)
@@ -367,18 +372,9 @@ class TemplateMethods:
 
         while to_process:
             value = to_process.pop(0)
+            point_state = self._resolve_state(value)
 
-            if isinstance(value, State):
-                latitude = value.attributes.get(ATTR_LATITUDE)
-                longitude = value.attributes.get(ATTR_LONGITUDE)
-
-                if latitude is None or longitude is None:
-                    _LOGGER.warning(
-                        "Distance:State does not contains a location: %s",
-                        value)
-                    return None
-
-            else:
+            if point_state is None:
                 # We expect this and next value to be lat&lng
                 if not to_process:
                     _LOGGER.warning(
@@ -393,6 +389,22 @@ class TemplateMethods:
                 if latitude is None or longitude is None:
                     _LOGGER.warning("Distance:Unable to process latitude and "
                                     "longitude: %s, %s", value, value_2)
+                    return None
+
+            else:
+                if not loc_helper.has_location(point_state):
+                    _LOGGER.warning(
+                        "distance:State does not contain valid location: %s",
+                        point_state)
+                    return None
+
+                latitude = point_state.attributes.get(ATTR_LATITUDE)
+                longitude = point_state.attributes.get(ATTR_LONGITUDE)
+
+                if latitude is None or longitude is None:
+                    _LOGGER.warning(
+                        "Distance:State does not contains a location: %s",
+                        value)
                     return None
 
             locations.append((latitude, longitude))
@@ -606,6 +618,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
+
+    def is_safe_attribute(self, obj, attr, value):
+        """Test if attribute is safe."""
+        return isinstance(obj, Namespace) or \
+            super().is_safe_attribute(obj, attr, value)
 
 
 ENV = TemplateEnvironment()

@@ -1,4 +1,9 @@
-"""Module for retrieving latest GitLab CI job information."""
+"""
+Sensor for retrieving latest GitLab CI job information.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.gitlab_ci/
+"""
 from datetime import timedelta
 import logging
 
@@ -11,38 +16,41 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-CONF_GITLAB_ID = 'gitlab_id'
-CONF_ATTRIBUTION = "Information provided by https://gitlab.com/"
-
-ICON_HAPPY = 'mdi:emoticon-happy'
-ICON_SAD = 'mdi:emoticon-happy'
-ICON_OTHER = 'mdi:git'
-
-ATTR_BUILD_ID = 'build id'
-ATTR_BUILD_STATUS = 'build_status'
-ATTR_BUILD_STARTED = 'build_started'
-ATTR_BUILD_FINISHED = 'build_finished'
-ATTR_BUILD_DURATION = 'build_duration'
-ATTR_BUILD_COMMIT_ID = 'commit id'
-ATTR_BUILD_COMMIT_DATE = 'commit date'
-ATTR_BUILD_BRANCH = 'build branch'
-
-SCAN_INTERVAL = timedelta(seconds=300)
+REQUIREMENTS = ['python-gitlab==1.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TOKEN): cv.string,
-    vol.Required(CONF_GITLAB_ID): cv.string,
-    vol.Optional(CONF_NAME, default='GitLab CI Status'): cv.string,
-    vol.Optional(CONF_URL, default='https://gitlab.com'): cv.string
-})
+ATTR_BUILD_BRANCH = 'build branch'
+ATTR_BUILD_COMMIT_DATE = 'commit date'
+ATTR_BUILD_COMMIT_ID = 'commit id'
+ATTR_BUILD_DURATION = 'build_duration'
+ATTR_BUILD_FINISHED = 'build_finished'
+ATTR_BUILD_ID = 'build id'
+ATTR_BUILD_STARTED = 'build_started'
+ATTR_BUILD_STATUS = 'build_status'
 
-REQUIREMENTS = ['python-gitlab==1.6.0']
+CONF_ATTRIBUTION = "Information provided by https://gitlab.com/"
+CONF_GITLAB_ID = 'gitlab_id'
+
+DEFAULT_NAME = 'GitLab CI Status'
+DEFAULT_URL = 'https://gitlab.com'
+
+ICON_HAPPY = 'mdi:emoticon-happy'
+ICON_OTHER = 'mdi:git'
+ICON_SAD = 'mdi:emoticon-happy'
+
+SCAN_INTERVAL = timedelta(seconds=300)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_GITLAB_ID): cv.string,
+    vol.Required(CONF_TOKEN): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Sensor platform setup."""
+    """Set up the GitLab sensor platform."""
     _name = config.get(CONF_NAME)
     _interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     _url = config.get(CONF_URL)
@@ -58,10 +66,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class GitLabSensor(Entity):
-    """Representation of a Sensor."""
+    """Representation of a GitLab sensor."""
 
     def __init__(self, gitlab_data, name):
-        """Initialize the sensor."""
+        """Initialize the GitLab sensor."""
         self._available = False
         self._state = None
         self._started_at = None

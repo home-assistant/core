@@ -11,9 +11,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
+from homeassistant.components.light import (
+    ATTR_PROFILE, ATTR_TRANSITION, DOMAIN as DOMAIN_LIGHT)
 from homeassistant.const import (
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_HOME, STATE_NOT_HOME)
-from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_HOME,
+    STATE_NOT_HOME, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_state_change)
 from homeassistant.helpers.sun import is_up, get_astral_event_next
@@ -77,7 +79,7 @@ async def async_setup(hass, config):
 
         Async friendly.
         """
-        next_setting = get_astral_event_next(hass, 'sunset')
+        next_setting = get_astral_event_next(hass, SUN_EVENT_SUNSET)
         if not next_setting:
             return None
         return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
@@ -88,10 +90,10 @@ async def async_setup(hass, config):
             return
         hass.async_create_task(
             hass.services.async_call(
-                DOMAIN_LIGHT, SERVICE_TURN_ON, dict(
-                    entity_id=light_id,
-                    transition=LIGHT_TRANSITION_TIME.seconds,
-                    profile=light_profile)))
+                DOMAIN_LIGHT, SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: light_id,
+                    ATTR_TRANSITION: LIGHT_TRANSITION_TIME.seconds,
+                    ATTR_PROFILE: light_profile}))
 
     def async_turn_on_factory(light_id):
         """Generate turn on callbacks as factory."""
@@ -121,7 +123,8 @@ async def async_setup(hass, config):
                 start_point + index * LIGHT_TRANSITION_TIME)
 
     async_track_point_in_utc_time(hass, schedule_light_turn_on,
-                                  get_astral_event_next(hass, 'sunrise'))
+                                  get_astral_event_next(hass,
+                                                        SUN_EVENT_SUNRISE))
 
     # If the sun is already above horizon schedule the time-based pre-sun set
     # event.
@@ -144,14 +147,15 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 hass.services.async_call(
                     DOMAIN_LIGHT, SERVICE_TURN_ON,
-                    dict(entity_id=light_ids, profile=light_profile)))
+                    {ATTR_ENTITY_ID: light_ids, ATTR_PROFILE: light_profile}))
 
         # Are we in the time span were we would turn on the lights
         # if someone would be home?
         # Check this by seeing if current time is later then the point
         # in time when we would start putting the lights on.
         elif (start_point and
-              start_point < now < get_astral_event_next(hass, 'sunset')):
+              start_point < now < get_astral_event_next(hass,
+                                                        SUN_EVENT_SUNSET)):
 
             # Check for every light if it would be on if someone was home
             # when the fading in started and turn it on if so
@@ -160,7 +164,7 @@ async def async_setup(hass, config):
                     hass.async_create_task(
                         hass.services.async_call(
                             DOMAIN_LIGHT, SERVICE_TURN_ON,
-                            dict(entity_id=light_id)))
+                            {ATTR_ENTITY_ID: light_id}))
 
                 else:
                     # If this light didn't happen to be turned on yet so
@@ -184,7 +188,7 @@ async def async_setup(hass, config):
             "Everyone has left but there are lights on. Turning them off")
         hass.async_create_task(
             hass.services.async_call(
-                DOMAIN_LIGHT, SERVICE_TURN_OFF, dict(entity_id=light_ids)))
+                DOMAIN_LIGHT, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: light_ids}))
 
     async_track_state_change(
         hass, device_group, turn_off_lights_when_all_leave,

@@ -160,3 +160,23 @@ class TestMicrosoftFaceDetect:
         assert face_events[0].data['gender'] == 'male'
         assert face_events[0].data['entity_id'] == \
             'image_processing.test_local'
+
+        # Test that later, if a request is made that results in no face
+        # being detected, that this is reflected in the state object
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(
+            self.endpoint_url.format("detect"),
+            text="[]",
+            params={'returnFaceAttributes': "age,gender"}
+        )
+
+        common.scan(self.hass, entity_id='image_processing.test_local')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('image_processing.test_local')
+
+        # No more face events were fired
+        assert len(face_events) == 1
+        # Total faces and actual qualified number of faces reset to zero
+        assert state.attributes.get('total_faces') == 0
+        assert state.state == '0'

@@ -40,10 +40,19 @@ ATTR_WEATHER_WIND_SPEED = 'wind_speed'
 
 async def async_setup(hass, config):
     """Set up the weather component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-
+    component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup(config)
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class WeatherEntity(Entity):

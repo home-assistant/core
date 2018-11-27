@@ -18,7 +18,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyhomematic==0.1.50']
+REQUIREMENTS = ['pyhomematic==0.1.51']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ HM_DEVICE_TYPES = {
         'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
         'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
-        'IPWeatherSensorBasic'],
+        'IPWeatherSensorBasic', 'IPBrightnessSensor'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
@@ -97,17 +97,21 @@ HM_IGNORE_DISCOVERY_NODE = [
 ]
 
 HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
-    'ACTUAL_TEMPERATURE': ['IPAreaThermostat', 'IPWeatherSensor'],
+    'ACTUAL_TEMPERATURE': [
+        'IPAreaThermostat', 'IPWeatherSensor',
+        'IPWeatherSensorPlus', 'IPWeatherSensorBasic'],
 }
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
+    'ERROR_SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_PEER': ['rssi', {}],
     'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
+    'LEVEL': ['level', {}],
     'BATTERY_STATE': ['battery', {}],
     'CONTROL_MODE': ['mode', {
         0: 'Auto',
@@ -775,8 +779,7 @@ class HMDevice(Entity):
             # Link events from pyhomematic
             self._subscribe_homematic_events()
             self._available = not self._hmdevice.UNREACH
-        # pylint: disable=broad-except
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             self._connected = False
             _LOGGER.error("Exception while linking %s: %s",
                           self._address, str(err))
@@ -795,11 +798,8 @@ class HMDevice(Entity):
                 has_changed = True
 
         # Availability has changed
-        if attribute == 'UNREACH':
-            self._available = not bool(value)
-            has_changed = True
-        elif not self.available:
-            self._available = False
+        if self.available != (not self._hmdevice.UNREACH):
+            self._available = not self._hmdevice.UNREACH
             has_changed = True
 
         # If it has changed data point, update HASS
@@ -809,7 +809,6 @@ class HMDevice(Entity):
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""
         channels_to_sub = set()
-        channels_to_sub.add(0)  # Add channel 0 for UNREACH
 
         # Push data to channels_to_sub from hmdevice metadata
         for metadata in (self._hmdevice.SENSORNODE, self._hmdevice.BINARYNODE,

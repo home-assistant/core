@@ -92,6 +92,7 @@ def _user_info(user):
         'is_owner': user.is_owner,
         'is_active': user.is_active,
         'system_generated': user.system_generated,
+        'group_ids': [group.id for group in user.groups],
         'credentials': [
             {
                 'type': c.auth_provider_type,

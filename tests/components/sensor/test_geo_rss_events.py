@@ -81,8 +81,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         # Patching 'utcnow' to gain more control over the timed update.
         with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
             with assert_setup_component(1, sensor.DOMAIN):
-                self.assertTrue(setup_component(self.hass, sensor.DOMAIN,
-                                                VALID_CONFIG))
+                assert setup_component(self.hass, sensor.DOMAIN, VALID_CONFIG)
                 # Artificially trigger update.
                 self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
                 # Collect events.
@@ -92,7 +91,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
                 assert len(all_states) == 1
 
                 state = self.hass.states.get("sensor.event_service_any")
-                self.assertIsNotNone(state)
+                assert state is not None
                 assert state.name == "Event Service Any"
                 assert int(state.state) == 2
                 assert state.attributes == {
@@ -123,6 +122,10 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
                 assert len(all_states) == 1
                 state = self.hass.states.get("sensor.event_service_any")
                 assert int(state.state) == 0
+                assert state.attributes == {
+                    ATTR_FRIENDLY_NAME: "Event Service Any",
+                    ATTR_UNIT_OF_MEASUREMENT: "Events",
+                    ATTR_ICON: "mdi:alert"}
 
     @mock.patch('georss_client.generic_feed.GenericFeed')
     def test_setup_with_categories(self, mock_feed):
@@ -138,8 +141,8 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
                                                             mock_entry_2]
 
         with assert_setup_component(1, sensor.DOMAIN):
-            self.assertTrue(setup_component(self.hass, sensor.DOMAIN,
-                                            VALID_CONFIG_WITH_CATEGORIES))
+            assert setup_component(self.hass, sensor.DOMAIN,
+                                   VALID_CONFIG_WITH_CATEGORIES)
             # Artificially trigger update.
             self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
             # Collect events.
@@ -149,7 +152,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
             assert len(all_states) == 1
 
             state = self.hass.states.get("sensor.event_service_category_1")
-            self.assertIsNotNone(state)
+            assert state is not None
             assert state.name == "Event Service Category 1"
             assert int(state.state) == 2
             assert state.attributes == {

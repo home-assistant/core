@@ -16,9 +16,6 @@ REQUIREMENTS = ['pyspcwebgw==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DISCOVER_DEVICES = 'devices'
-ATTR_DISCOVER_AREAS = 'areas'
-
 CONF_WS_URL = 'ws_url'
 CONF_API_URL = 'api_url'
 
@@ -66,13 +63,11 @@ async def async_setup(hass, config):
 
     # add sensor devices for each zone (typically motion/fire/door sensors)
     hass.async_create_task(discovery.async_load_platform(
-        hass, 'binary_sensor', DOMAIN,
-        {ATTR_DISCOVER_DEVICES: spc.zones.values()}, config))
+        hass, 'binary_sensor', DOMAIN, {}, config))
 
     # create a separate alarm panel for each area
     hass.async_create_task(discovery.async_load_platform(
-        hass, 'alarm_control_panel', DOMAIN,
-        {ATTR_DISCOVER_AREAS: spc.areas.values()}, config))
+        hass, 'alarm_control_panel', DOMAIN, {}, config))
 
     # start listening for incoming events over websocket
     spc.start()

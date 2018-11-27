@@ -18,9 +18,10 @@ from aiohttp.web_exceptions import HTTPBadGateway
 from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 
+from .const import X_HASSIO
+
 _LOGGER = logging.getLogger(__name__)
 
-X_HASSIO = 'X-HASSIO-KEY'
 
 NO_TIMEOUT = re.compile(
     r'^(?:'

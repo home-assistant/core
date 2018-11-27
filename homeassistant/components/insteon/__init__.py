@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.14.2']
+REQUIREMENTS = ['insteonplm==0.15.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -464,6 +464,16 @@ class InsteonEntity(Entity):
     def group(self):
         """Return the INSTEON group that the entity responds to."""
         return self._insteon_device_state.group
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self._insteon_device_state.group == 0x01:
+            uid = self._insteon_device.id
+        else:
+            uid = '{:s}_{:d}'.format(self._insteon_device.id,
+                                     self._insteon_device_state.group)
+        return uid
 
     @property
     def name(self):

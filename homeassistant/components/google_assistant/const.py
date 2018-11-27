@@ -14,7 +14,8 @@ CONF_ROOM_HINT = 'room'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
-    'switch', 'light', 'group', 'media_player', 'fan', 'cover', 'climate'
+    'climate', 'cover', 'fan', 'group', 'input_boolean', 'light',
+    'media_player', 'scene', 'script', 'switch', 'vacuum',
 ]
 CLIMATE_MODE_HEATCOOL = 'heatcool'
 CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', CLIMATE_MODE_HEATCOOL}
@@ -22,7 +23,9 @@ CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', CLIMATE_MODE_HEATCOOL}
 PREFIX_TYPES = 'action.devices.types.'
 TYPE_LIGHT = PREFIX_TYPES + 'LIGHT'
 TYPE_SWITCH = PREFIX_TYPES + 'SWITCH'
+TYPE_VACUUM = PREFIX_TYPES + 'VACUUM'
 TYPE_SCENE = PREFIX_TYPES + 'SCENE'
+TYPE_FAN = PREFIX_TYPES + 'FAN'
 TYPE_THERMOSTAT = PREFIX_TYPES + 'THERMOSTAT'
 
 SERVICE_REQUEST_SYNC = 'request_sync'

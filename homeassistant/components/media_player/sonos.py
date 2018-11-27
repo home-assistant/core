@@ -133,9 +133,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Sync version of async add devices."""
         hass.add_job(async_add_entities, devices, update_before_add)
 
-    hass.add_job(_setup_platform, hass,
-                 hass.data[SONOS_DOMAIN].get('media_player', {}),
-                 add_entities, None)
+    hass.async_add_executor_job(
+        _setup_platform, hass, hass.data[SONOS_DOMAIN].get('media_player', {}),
+        add_entities, None)
 
 
 def _setup_platform(hass, config, add_entities, discovery_info):
@@ -335,7 +335,7 @@ class SonosDevice(MediaPlayerDevice):
     def __init__(self, player):
         """Initialize the Sonos device."""
         self._receives_events = False
-        self._volume_increment = 5
+        self._volume_increment = 2
         self._unique_id = player.uid
         self._player = player
         self._model = None
@@ -366,7 +366,7 @@ class SonosDevice(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
         self.hass.data[DATA_SONOS].devices.append(self)
-        self.hass.async_add_job(self._subscribe_to_player_events)
+        self.hass.async_add_executor_job(self._subscribe_to_player_events)
 
     @property
     def unique_id(self):
@@ -447,16 +447,15 @@ class SonosDevice(MediaPlayerDevice):
         """Set available favorites."""
         # SoCo 0.16 raises a generic Exception on invalid xml in favorites.
         # Filter those out now so our list is safe to use.
-        # pylint: disable=broad-except
         try:
             self._favorites = []
             for fav in self.soco.music_library.get_sonos_favorites():
                 try:
                     if fav.reference.get_uri():
                         self._favorites.append(fav)
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     _LOGGER.debug("Ignoring invalid favorite '%s'", fav.title)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.debug("Ignoring invalid favorite list")
 
     def _radio_artwork(self, url):

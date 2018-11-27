@@ -2,7 +2,7 @@
 Entity to track connections to stream API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.api_stream/
+https://home-assistant.io/components/sensor.api_streams/
 """
 import logging
 
@@ -47,9 +47,9 @@ class StreamHandler(logging.Handler):
         self.entity.schedule_update_ha_state()
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
-    """Set up the API stream platform."""
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the API streams platform."""
     entity = APICount()
     handler = StreamHandler(entity)
 
@@ -68,7 +68,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 class APICount(Entity):
-    """Entity to represent how many people are connected to stream API."""
+    """Entity to represent how many people are connected to the stream API."""
 
     def __init__(self):
         """Initialize the API count."""

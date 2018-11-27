@@ -111,7 +111,7 @@ async def async_setup(hass, config):
 
     hass.data[MYSENSORS_GATEWAYS] = gateways
 
-    hass.async_create_task(finish_setup(hass, gateways))
+    hass.async_create_task(finish_setup(hass, config, gateways))
 
     return True
 

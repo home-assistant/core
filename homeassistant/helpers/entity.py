@@ -346,7 +346,7 @@ class Entity:
             if hasattr(self, 'async_update'):
                 await self.async_update()
             elif hasattr(self, 'update'):
-                await self.hass.async_add_job(self.update)
+                await self.hass.async_add_executor_job(self.update)
         finally:
             self._update_staged = False
             if warning:
@@ -363,14 +363,16 @@ class Entity:
 
     async def async_remove(self):
         """Remove entity from Home Assistant."""
+        will_remove = getattr(self, 'async_will_remove_from_hass', None)
+
+        if will_remove:
+            await will_remove()  # pylint: disable=not-callable
+
         if self._on_remove is not None:
             while self._on_remove:
                 self._on_remove.pop()()
 
-        if self.platform is not None:
-            await self.platform.async_remove_entity(self.entity_id)
-        else:
-            self.hass.states.async_remove(self.entity_id)
+        self.hass.states.async_remove(self.entity_id)
 
     @callback
     def async_registry_updated(self, old, new):

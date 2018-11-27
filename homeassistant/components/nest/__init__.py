@@ -55,7 +55,7 @@ SENSOR_SCHEMA = vol.Schema({
 
 AWAY_SCHEMA = vol.Schema({
     vol.Required(ATTR_HOME_MODE): vol.In([HOME_MODE_AWAY, HOME_MODE_HOME]),
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string),
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_TRIP_ID): cv.string,
     vol.Optional(ATTR_ETA): cv.time_period,
     vol.Optional(ATTR_ETA_WINDOW): cv.time_period
@@ -65,7 +65,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string),
+        vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
         vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA
     })

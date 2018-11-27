@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.helpers.config_validation as cv
@@ -85,6 +85,7 @@ def setup_account(account_config: dict, hass, name: str) \
     password = account_config[CONF_PASSWORD]
     region = account_config[CONF_REGION]
     read_only = account_config[CONF_READ_ONLY]
+
     _LOGGER.debug('Adding new account %s', name)
     cd_account = BMWConnectedDriveAccount(username, password, region, name,
                                           read_only)

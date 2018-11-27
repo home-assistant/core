@@ -54,6 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for sensor in config[CONF_MONITORED_CONDITIONS]:
             sensors.append(ZMSensorEvents(monitor, include_archived, sensor))
 
+    sensors.append(ZMSensorRunState(zm_client))
     add_entities(sensors)
 
 
@@ -114,3 +115,26 @@ class ZMSensorEvents(Entity):
         """Update the sensor."""
         self._state = self._monitor.get_events(
             self.time_period, self._include_archived)
+
+
+class ZMSensorRunState(Entity):
+    """Get the ZoneMinder run state."""
+
+    def __init__(self, client):
+        """Initialize run state sensor."""
+        self._state = None
+        self._client = client
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return 'Run State'
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    def update(self):
+        """Update the sensor."""
+        self._state = self._client.get_active_state()

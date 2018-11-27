@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 from itertools import chain
+import logging
 
 from homeassistant import config as conf_util
 from homeassistant.setup import async_prepare_setup_platform
@@ -11,10 +12,33 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from .entity_platform import EntityPlatform
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
+DATA_INSTANCES = 'entity_components'
+
+
+@bind_hass
+async def async_update_entity(hass, entity_id):
+    """Trigger an update for an entity."""
+    domain = entity_id.split('.', 1)[0]
+    entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
+
+    if entity_comp is None:
+        logging.getLogger(__name__).warning(
+            'Forced update failed. Component for %s not loaded.', entity_id)
+        return
+
+    entity = entity_comp.get_entity(entity_id)
+
+    if entity is None:
+        logging.getLogger(__name__).warning(
+            'Forced update failed. Entity %s not found.', entity_id)
+        return
+
+    await entity.async_update_ha_state(True)
 
 
 class EntityComponent:
@@ -44,6 +68,8 @@ class EntityComponent:
         }
         self.async_add_entities = self._platforms[domain].async_add_entities
         self.add_entities = self._platforms[domain].add_entities
+
+        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
 
     @property
     def entities(self):

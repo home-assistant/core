@@ -36,7 +36,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         @asyncio.coroutine
         def mock_setup_scanner(hass, config, see, discovery_info=None):
             """Check that Qos was added by validation."""
-            self.assertTrue('qos' in config)
+            assert 'qos' in config
 
         with patch('homeassistant.components.device_tracker.mqtt.'
                    'async_setup_scanner', autospec=True,
@@ -68,7 +68,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertEqual(location, self.hass.states.get(entity_id).state)
+        assert location == self.hass.states.get(entity_id).state
 
     def test_single_level_wildcard_topic(self):
         """Test single level wildcard topic."""
@@ -87,7 +87,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertEqual(location, self.hass.states.get(entity_id).state)
+        assert location == self.hass.states.get(entity_id).state
 
     def test_multi_level_wildcard_topic(self):
         """Test multi level wildcard topic."""
@@ -106,7 +106,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertEqual(location, self.hass.states.get(entity_id).state)
+        assert location == self.hass.states.get(entity_id).state
 
     def test_single_level_wildcard_topic_not_matching(self):
         """Test not matching single level wildcard topic."""
@@ -125,7 +125,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertIsNone(self.hass.states.get(entity_id))
+        assert self.hass.states.get(entity_id) is None
 
     def test_multi_level_wildcard_topic_not_matching(self):
         """Test not matching multi level wildcard topic."""
@@ -144,4 +144,4 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertIsNone(self.hass.states.get(entity_id))
+        assert self.hass.states.get(entity_id) is None

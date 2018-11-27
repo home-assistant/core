@@ -4,6 +4,7 @@ from unittest.mock import patch, Mock
 
 import pytest
 
+from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
 
@@ -33,6 +34,7 @@ def hassio_client(hassio_env, hass, aiohttp_client):
             patch('homeassistant.components.hassio.HassIO.'
                   'get_homeassistant_info',
                   Mock(side_effect=HassioAPIError())):
+        hass.state = CoreState.starting
         hass.loop.run_until_complete(async_setup_component(hass, 'hassio', {
             'http': {
                 'api_password': API_PASSWORD

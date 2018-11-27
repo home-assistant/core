@@ -87,8 +87,8 @@ class DeviceRegistry:
             device.id,
             add_config_entry_id=config_entry_id,
             hub_device_id=hub_device_id,
-            merge_connections=connections,
-            merge_identifiers=identifiers,
+            merge_connections=connections or _UNDEF,
+            merge_identifiers=identifiers or _UNDEF,
             manufacturer=manufacturer,
             model=model,
             name=name,
@@ -128,7 +128,8 @@ class DeviceRegistry:
                 ('identifiers', merge_identifiers),
         ):
             old_value = getattr(old, attr_name)
-            if value is not _UNDEF and value != old_value:
+            # If not undefined, check if `value` contains new items.
+            if value is not _UNDEF and not value.issubset(old_value):
                 changes[attr_name] = old_value | value
 
         for attr_name, value in (

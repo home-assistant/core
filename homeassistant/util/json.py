@@ -4,7 +4,7 @@ from typing import Union, List, Dict
 
 import json
 import os
-from os import O_WRONLY, O_CREAT, O_TRUNC
+import tempfile
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -46,13 +46,17 @@ def save_json(filename: str, data: Union[List, Dict],
 
     Returns True on success.
     """
-    tmp_filename = filename + "__TEMP__"
+    tmp_filename = ""
+    tmp_path = os.path.split(filename)[0]
     try:
         json_data = json.dumps(data, sort_keys=True, indent=4)
-        mode = 0o600 if private else 0o644
-        with open(os.open(tmp_filename, O_WRONLY | O_CREAT | O_TRUNC, mode),
-                  'w', encoding='utf-8') as fdesc:
+        # Modern versions of Python tempfile create this file with mode 0o600
+        with tempfile.NamedTemporaryFile(mode="w", encoding='utf-8',
+                                         dir=tmp_path, delete=False) as fdesc:
             fdesc.write(json_data)
+            tmp_filename = fdesc.name
+        if not private:
+            os.chmod(tmp_filename, 0o644)
         os.replace(tmp_filename, filename)
     except TypeError as error:
         _LOGGER.exception('Failed to serialize to JSON: %s',

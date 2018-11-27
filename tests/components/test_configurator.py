@@ -26,19 +26,19 @@ class TestConfigurator(unittest.TestCase):
         request_id = configurator.request_config(
             self.hass, "Test Request", lambda _: None)
 
-        self.assertEqual(
-            1, len(self.hass.services.services.get(configurator.DOMAIN, [])),
-            "No new service registered")
+        assert 1 == \
+            len(self.hass.services.services.get(configurator.DOMAIN, [])), \
+            "No new service registered"
 
         states = self.hass.states.all()
 
-        self.assertEqual(1, len(states), "Expected a new state registered")
+        assert 1 == len(states), "Expected a new state registered"
 
         state = states[0]
 
-        self.assertEqual(configurator.STATE_CONFIGURE, state.state)
-        self.assertEqual(
-            request_id, state.attributes.get(configurator.ATTR_CONFIGURE_ID))
+        assert configurator.STATE_CONFIGURE == state.state
+        assert \
+            request_id == state.attributes.get(configurator.ATTR_CONFIGURE_ID)
 
     def test_request_all_info(self):
         """Test request config with all possible info."""
@@ -67,10 +67,10 @@ class TestConfigurator(unittest.TestCase):
         }
 
         states = self.hass.states.all()
-        self.assertEqual(1, len(states))
+        assert 1 == len(states)
         state = states[0]
 
-        self.assertEqual(configurator.STATE_CONFIGURE, state.state)
+        assert configurator.STATE_CONFIGURE == state.state
         assert exp_attr == state.attributes
 
     def test_callback_called_on_configure(self):
@@ -84,7 +84,7 @@ class TestConfigurator(unittest.TestCase):
             {configurator.ATTR_CONFIGURE_ID: request_id})
 
         self.hass.block_till_done()
-        self.assertEqual(1, len(calls), "Callback not called")
+        assert 1 == len(calls), "Callback not called"
 
     def test_state_change_on_notify_errors(self):
         """Test state change on notify errors."""
@@ -94,7 +94,7 @@ class TestConfigurator(unittest.TestCase):
         configurator.notify_errors(self.hass, request_id, error)
 
         state = self.hass.states.all()[0]
-        self.assertEqual(error, state.attributes.get(configurator.ATTR_ERRORS))
+        assert error == state.attributes.get(configurator.ATTR_ERRORS)
 
     def test_notify_errors_fail_silently_on_bad_request_id(self):
         """Test if notify errors fails silently with a bad request id."""
@@ -105,11 +105,11 @@ class TestConfigurator(unittest.TestCase):
         request_id = configurator.request_config(
             self.hass, "Test Request", lambda _: None)
         configurator.request_done(self.hass, request_id)
-        self.assertEqual(1, len(self.hass.states.all()))
+        assert 1 == len(self.hass.states.all())
 
         self.hass.bus.fire(EVENT_TIME_CHANGED)
         self.hass.block_till_done()
-        self.assertEqual(0, len(self.hass.states.all()))
+        assert 0 == len(self.hass.states.all())
 
     def test_request_done_fail_silently_on_bad_request_id(self):
         """Test that request_done fails silently with a bad request id."""

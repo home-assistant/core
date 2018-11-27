@@ -176,13 +176,13 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
             })
         }
         xiaomi.get_scanner(self.hass, config)
-        self.assertEqual(xiaomi_mock.call_count, 1)
-        self.assertEqual(xiaomi_mock.call_args, mock.call(config[DOMAIN]))
+        assert xiaomi_mock.call_count == 1
+        assert xiaomi_mock.call_args == mock.call(config[DOMAIN])
         call_arg = xiaomi_mock.call_args[0][0]
-        self.assertEqual(call_arg['username'], 'admin')
-        self.assertEqual(call_arg['password'], 'passwordTest')
-        self.assertEqual(call_arg['host'], '192.168.0.1')
-        self.assertEqual(call_arg['platform'], 'device_tracker')
+        assert call_arg['username'] == 'admin'
+        assert call_arg['password'] == 'passwordTest'
+        assert call_arg['host'] == '192.168.0.1'
+        assert call_arg['platform'] == 'device_tracker'
 
     @mock.patch(
         'homeassistant.components.device_tracker.xiaomi.XiaomiDeviceScanner',
@@ -198,13 +198,13 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
             })
         }
         xiaomi.get_scanner(self.hass, config)
-        self.assertEqual(xiaomi_mock.call_count, 1)
-        self.assertEqual(xiaomi_mock.call_args, mock.call(config[DOMAIN]))
+        assert xiaomi_mock.call_count == 1
+        assert xiaomi_mock.call_args == mock.call(config[DOMAIN])
         call_arg = xiaomi_mock.call_args[0][0]
-        self.assertEqual(call_arg['username'], 'alternativeAdminName')
-        self.assertEqual(call_arg['password'], 'passwordTest')
-        self.assertEqual(call_arg['host'], '192.168.0.1')
-        self.assertEqual(call_arg['platform'], 'device_tracker')
+        assert call_arg['username'] == 'alternativeAdminName'
+        assert call_arg['password'] == 'passwordTest'
+        assert call_arg['host'] == '192.168.0.1'
+        assert call_arg['platform'] == 'device_tracker'
 
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
@@ -218,7 +218,7 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
                 CONF_PASSWORD: 'passwordTest'
             })
         }
-        self.assertIsNone(get_scanner(self.hass, config))
+        assert get_scanner(self.hass, config) is None
 
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
@@ -233,12 +233,12 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
             })
         }
         scanner = get_scanner(self.hass, config)
-        self.assertIsNotNone(scanner)
-        self.assertEqual(2, len(scanner.scan_devices()))
-        self.assertEqual("Device1",
-                         scanner.get_device_name("23:83:BF:F6:38:A0"))
-        self.assertEqual("Device2",
-                         scanner.get_device_name("1D:98:EC:5E:D5:A6"))
+        assert scanner is not None
+        assert 2 == len(scanner.scan_devices())
+        assert "Device1" == \
+            scanner.get_device_name("23:83:BF:F6:38:A0")
+        assert "Device2" == \
+            scanner.get_device_name("1D:98:EC:5E:D5:A6")
 
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
@@ -256,9 +256,9 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
             })
         }
         scanner = get_scanner(self.hass, config)
-        self.assertIsNotNone(scanner)
-        self.assertEqual(2, len(scanner.scan_devices()))
-        self.assertEqual("Device1",
-                         scanner.get_device_name("23:83:BF:F6:38:A0"))
-        self.assertEqual("Device2",
-                         scanner.get_device_name("1D:98:EC:5E:D5:A6"))
+        assert scanner is not None
+        assert 2 == len(scanner.scan_devices())
+        assert "Device1" == \
+            scanner.get_device_name("23:83:BF:F6:38:A0")
+        assert "Device2" == \
+            scanner.get_device_name("1D:98:EC:5E:D5:A6")

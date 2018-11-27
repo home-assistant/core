@@ -299,7 +299,8 @@ class Camera(Entity):
         a direct stream from the camera.
         This method must be run in the event loop.
         """
-        await self.handle_async_still_stream(request, self.frame_interval)
+        return await self.handle_async_still_stream(
+            request, self.frame_interval)
 
     @property
     def state(self):

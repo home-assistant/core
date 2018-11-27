@@ -1,5 +1,6 @@
 """The test for the Template sensor platform."""
-from homeassistant.setup import setup_component
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -52,7 +53,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "State",
+                            'value_template':
+                                "{{ states.sensor.test_state.state }}",
                             'icon_template':
                                 "{% if states.sensor.test_state.state == "
                                 "'Works' %}"
@@ -82,7 +84,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "State",
+                            'value_template':
+                                "{{ states.sensor.test_state.state }}",
                             'entity_picture_template':
                                 "{% if states.sensor.test_state.state == "
                                 "'Works' %}"
@@ -112,7 +115,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "State",
+                            'value_template':
+                                "{{ states.sensor.test_state.state }}",
                             'friendly_name_template':
                                 "It {{ states.sensor.test_state.state }}."
                         }
@@ -276,7 +280,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test': {
-                            'value_template': '{{ foo }}',
+                            'value_template':
+                                '{{ states.sensor.test_sensor.state }}',
                             'device_class': 'foobarnotreal',
                         },
                     },
@@ -291,10 +296,14 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test1': {
-                            'value_template': '{{ foo }}',
+                            'value_template':
+                                '{{ states.sensor.test_sensor.state }}',
                             'device_class': 'temperature',
                         },
-                        'test2': {'value_template': '{{ foo }}'},
+                        'test2': {
+                            'value_template':
+                                '{{ states.sensor.test_sensor.state }}'
+                        },
                     }
                 }
             })
@@ -304,3 +313,83 @@ class TestTemplateSensor:
         assert state.attributes['device_class'] == 'temperature'
         state = self.hass.states.get('sensor.test2')
         assert 'device_class' not in state.attributes
+
+
+async def test_no_template_match_all(hass, caplog):
+    """Test that we do not allow sensors that match on all."""
+    hass.states.async_set('sensor.test_sensor', 'startup')
+
+    await async_setup_component(hass, 'sensor', {
+        'sensor': {
+            'platform': 'template',
+            'sensors': {
+                'invalid_state': {
+                    'value_template': '{{ 1 + 1 }}',
+                },
+                'invalid_icon': {
+                    'value_template':
+                        '{{ states.sensor.test_sensor.state }}',
+                    'icon_template': '{{ 1 + 1 }}',
+                },
+                'invalid_entity_picture': {
+                    'value_template':
+                        '{{ states.sensor.test_sensor.state }}',
+                    'entity_picture_template': '{{ 1 + 1 }}',
+                },
+                'invalid_friendly_name': {
+                    'value_template':
+                        '{{ states.sensor.test_sensor.state }}',
+                    'friendly_name_template': '{{ 1 + 1 }}',
+                },
+            }
+        }
+    })
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 5
+    assert ('Template sensor invalid_state has no entity ids '
+            'configured to track nor were we able to extract the entities to '
+            'track from the value template') in caplog.text
+    assert ('Template sensor invalid_icon has no entity ids '
+            'configured to track nor were we able to extract the entities to '
+            'track from the icon template') in caplog.text
+    assert ('Template sensor invalid_entity_picture has no entity ids '
+            'configured to track nor were we able to extract the entities to '
+            'track from the entity_picture template') in caplog.text
+    assert ('Template sensor invalid_friendly_name has no entity ids '
+            'configured to track nor were we able to extract the entities to '
+            'track from the friendly_name template') in caplog.text
+
+    assert hass.states.get('sensor.invalid_state').state == 'unknown'
+    assert hass.states.get('sensor.invalid_icon').state == 'unknown'
+    assert hass.states.get('sensor.invalid_entity_picture').state == 'unknown'
+    assert hass.states.get('sensor.invalid_friendly_name').state == 'unknown'
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert hass.states.get('sensor.invalid_state').state == '2'
+    assert hass.states.get('sensor.invalid_icon').state == 'startup'
+    assert hass.states.get('sensor.invalid_entity_picture').state == 'startup'
+    assert hass.states.get('sensor.invalid_friendly_name').state == 'startup'
+
+    hass.states.async_set('sensor.test_sensor', 'hello')
+    await hass.async_block_till_done()
+
+    assert hass.states.get('sensor.invalid_state').state == '2'
+    assert hass.states.get('sensor.invalid_icon').state == 'startup'
+    assert hass.states.get('sensor.invalid_entity_picture').state == 'startup'
+    assert hass.states.get('sensor.invalid_friendly_name').state == 'startup'
+
+    await hass.helpers.entity_component.async_update_entity(
+        'sensor.invalid_state')
+    await hass.helpers.entity_component.async_update_entity(
+        'sensor.invalid_icon')
+    await hass.helpers.entity_component.async_update_entity(
+        'sensor.invalid_entity_picture')
+    await hass.helpers.entity_component.async_update_entity(
+        'sensor.invalid_friendly_name')
+
+    assert hass.states.get('sensor.invalid_state').state == '2'
+    assert hass.states.get('sensor.invalid_icon').state == 'hello'
+    assert hass.states.get('sensor.invalid_entity_picture').state == 'hello'
+    assert hass.states.get('sensor.invalid_friendly_name').state == 'hello'

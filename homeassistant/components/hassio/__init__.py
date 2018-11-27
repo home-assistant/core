@@ -19,6 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
+from .auth import async_setup_auth
 from .handler import HassIO, HassioAPIError
 from .discovery import async_setup_discovery
 from .http import HassIOView
@@ -142,9 +143,10 @@ async def async_check_config(hass):
         result = await hassio.check_homeassistant_config()
     except HassioAPIError as err:
         _LOGGER.error("Error on Hass.io API: %s", err)
+    else:
+        if result['result'] == "error":
+            return result['message']
 
-    if result['result'] == "error":
-        return result['message']
     return None
 
 
@@ -279,5 +281,8 @@ async def async_setup(hass, config):
 
     # Init discovery Hass.io feature
     async_setup_discovery(hass, hassio, config)
+
+    # Init auth Hass.io feature
+    async_setup_auth(hass)
 
     return True

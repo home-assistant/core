@@ -9,7 +9,8 @@ from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.const import (
-    __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL)
+    __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID,
+    ATTR_SERVICE)
 from homeassistant.core import callback as ha_callback
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.event import (
@@ -17,9 +18,10 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    BRIDGE_MODEL, BRIDGE_SERIAL_NUMBER, CHAR_BATTERY_LEVEL,
-    CHAR_CHARGING_STATE, CHAR_STATUS_LOW_BATTERY, DEBOUNCE_TIMEOUT,
-    MANUFACTURER, SERV_BATTERY_SERVICE)
+    ATTR_DISPLAY_NAME, ATTR_VALUE, BRIDGE_MODEL, BRIDGE_SERIAL_NUMBER,
+    CHAR_BATTERY_LEVEL, CHAR_CHARGING_STATE, CHAR_STATUS_LOW_BATTERY,
+    DEBOUNCE_TIMEOUT, EVENT_HOMEKIT_CHANGED, MANUFACTURER,
+    SERV_BATTERY_SERVICE)
 from .util import (
     convert_to_float, show_setup_message, dismiss_setup_message)
 
@@ -33,7 +35,7 @@ def debounce(func):
         """Handle call_later callback."""
         debounce_params = self.debounce.pop(func.__name__, None)
         if debounce_params:
-            self.hass.async_add_job(func, self, *debounce_params[1:])
+            self.hass.async_add_executor_job(func, self, *debounce_params[1:])
 
     @wraps(func)
     def wrapper(self, *args):
@@ -92,8 +94,15 @@ class HomeAccessory(Accessory):
 
         Run inside the HAP-python event loop.
         """
+        self.hass.add_job(self.run_handler)
+
+    async def run_handler(self):
+        """Handle accessory driver started event.
+
+        Run inside the Home Assistant event loop.
+        """
         state = self.hass.states.get(self.entity_id)
-        self.hass.add_job(self.update_state_callback, None, None, state)
+        self.hass.async_add_job(self.update_state_callback, None, None, state)
         async_track_state_change(
             self.hass, self.entity_id, self.update_state_callback)
 
@@ -105,8 +114,8 @@ class HomeAccessory(Accessory):
         if new_state is None:
             return
         if self._support_battery_level:
-            self.hass.async_add_job(self.update_battery, new_state)
-        self.hass.async_add_job(self.update_state, new_state)
+            self.hass.async_add_executor_job(self.update_battery, new_state)
+        self.hass.async_add_executor_job(self.update_state, new_state)
 
     def update_battery(self, new_state):
         """Update battery service if available.
@@ -136,6 +145,27 @@ class HomeAccessory(Accessory):
         Overridden by accessory types.
         """
         raise NotImplementedError()
+
+    def call_service(self, domain, service, service_data, value=None):
+        """Fire event and call service for changes from HomeKit."""
+        self.hass.add_job(
+            self.async_call_service, domain, service, service_data, value)
+
+    async def async_call_service(self, domain, service, service_data,
+                                 value=None):
+        """Fire event and call service for changes from HomeKit.
+
+        This method must be run in the event loop.
+        """
+        event_data = {
+            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_DISPLAY_NAME: self.display_name,
+            ATTR_SERVICE: service,
+            ATTR_VALUE: value
+        }
+
+        self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data)
+        await self.hass.services.async_call(domain, service, service_data)
 
 
 class HomeBridge(Bridge):

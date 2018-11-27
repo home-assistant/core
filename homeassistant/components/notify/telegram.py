@@ -47,7 +47,7 @@ class TelegramNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        service_data = dict(target=kwargs.get(ATTR_TARGET, self._chat_id))
+        service_data = {ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id)}
         if ATTR_TITLE in kwargs:
             service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
         if message:

@@ -12,6 +12,8 @@ import itertools as it
 import logging
 from typing import Awaitable
 
+import voluptuous as vol
+
 import homeassistant.core as ha
 import homeassistant.config as conf_util
 from homeassistant.exceptions import HomeAssistantError
@@ -21,11 +23,16 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
     RESTART_EXIT_CODE)
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_RELOAD_CORE_CONFIG = 'reload_core_config'
 SERVICE_CHECK_CONFIG = 'check_config'
+SERVICE_UPDATE_ENTITY = 'update_entity'
+SCHEMA_UPDATE_ENTITY = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids
+})
 
 
 def is_on(hass, entity_id=None):
@@ -133,12 +140,23 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
             hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
 
+    async def async_handle_update_service(call):
+        """Service handler for updating an entity."""
+        tasks = [hass.helpers.entity_component.async_update_entity(entity)
+                 for entity in call.data[ATTR_ENTITY_ID]]
+
+        if tasks:
+            await asyncio.wait(tasks)
+
     hass.services.async_register(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)
     hass.services.async_register(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service)
     hass.services.async_register(
         ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service)
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_UPDATE_ENTITY, async_handle_update_service,
+        schema=SCHEMA_UPDATE_ENTITY)
 
     async def async_handle_reload_config(call):
         """Service handler for reloading core config."""

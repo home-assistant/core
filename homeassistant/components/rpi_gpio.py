@@ -4,7 +4,6 @@ Support for controlling GPIO pins of a Raspberry Pi.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rpi_gpio/
 """
-# pylint: disable=import-error
 import logging
 
 from homeassistant.const import (
@@ -19,7 +18,7 @@ DOMAIN = 'rpi_gpio'
 
 def setup(hass, config):
     """Set up the Raspberry PI GPIO component."""
-    from RPi import GPIO
+    from RPi import GPIO  # pylint: disable=import-error
 
     def cleanup_gpio(event):
         """Stuff to do before stopping."""
@@ -36,32 +35,32 @@ def setup(hass, config):
 
 def setup_output(port):
     """Set up a GPIO as output."""
-    from RPi import GPIO
+    from RPi import GPIO  # pylint: disable=import-error
     GPIO.setup(port, GPIO.OUT)
 
 
 def setup_input(port, pull_mode):
     """Set up a GPIO as input."""
-    from RPi import GPIO
+    from RPi import GPIO  # pylint: disable=import-error
     GPIO.setup(port, GPIO.IN,
                GPIO.PUD_DOWN if pull_mode == 'DOWN' else GPIO.PUD_UP)
 
 
 def write_output(port, value):
     """Write a value to a GPIO."""
-    from RPi import GPIO
+    from RPi import GPIO  # pylint: disable=import-error
     GPIO.output(port, value)
 
 
 def read_input(port):
     """Read a value from a GPIO."""
-    from RPi import GPIO
+    from RPi import GPIO  # pylint: disable=import-error
     return GPIO.input(port)
 
 
 def edge_detect(port, event_callback, bounce):
     """Add detection for RISING and FALLING events."""
-    from RPi import GPIO
+    from RPi import GPIO  # pylint: disable=import-error
     GPIO.add_event_detect(
         port,
         GPIO.BOTH,

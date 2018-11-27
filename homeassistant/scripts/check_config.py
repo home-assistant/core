@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 MOCKS = {
     'load': ("homeassistant.util.yaml.load_yaml", yaml.load_yaml),
     'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
-    'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
+    'secrets': ("homeassistant.util.yaml.secret_yaml", yaml.secret_yaml),
 }
 SILENCE = (
     'homeassistant.scripts.check_config.yaml.clear_secret_cache',
@@ -198,7 +198,7 @@ def check(config_dir, secrets=False):
 
     if secrets:
         # Ensure !secrets point to the patched function
-        yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+        yaml.yaml.SafeLoader.add_constructor('!secret', yaml.secret_yaml)
 
     try:
         hass = core.HomeAssistant()
@@ -223,7 +223,7 @@ def check(config_dir, secrets=False):
             pat.stop()
         if secrets:
             # Ensure !secrets point to the original function
-            yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+            yaml.yaml.SafeLoader.add_constructor('!secret', yaml.secret_yaml)
         bootstrap.clear_secret_cache()
 
     return res

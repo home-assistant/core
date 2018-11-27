@@ -5,8 +5,8 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components.homekit import (
-    generate_aid, HomeKit, STATUS_READY, STATUS_RUNNING,
-    STATUS_STOPPED, STATUS_WAIT)
+    generate_aid, HomeKit, MAX_DEVICES, STATUS_READY,
+    STATUS_RUNNING, STATUS_STOPPED, STATUS_WAIT)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     CONF_AUTO_START, BRIDGE_NAME, DEFAULT_PORT, DOMAIN, HOMEKIT_FILE,
@@ -173,7 +173,8 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
     """Test HomeKit start method."""
     pin = b'123-45-678'
     homekit = HomeKit(hass, None, None, None, {}, {'cover.demo': {}})
-    homekit.bridge = 'bridge'
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = []
     homekit.driver = hk_driver
 
     hass.states.async_set('light.demo', 'on')
@@ -190,7 +191,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
 
     mock_add_acc.assert_called_with(state)
     mock_setup_msg.assert_called_with(hass, pin)
-    hk_driver_add_acc.assert_called_with('bridge')
+    hk_driver_add_acc.assert_called_with(homekit.bridge)
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
 
@@ -217,3 +218,18 @@ async def test_homekit_stop(hass):
     homekit.status = STATUS_RUNNING
     await hass.async_add_job(homekit.stop)
     assert homekit.driver.stop.called is True
+
+
+async def test_homekit_too_many_accessories(hass, hk_driver):
+    """Test adding too many accessories to HomeKit."""
+    homekit = HomeKit(hass, None, None, None, None, None)
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = range(MAX_DEVICES + 1)
+    homekit.driver = hk_driver
+
+    with patch('pyhap.accessory_driver.AccessoryDriver.start'), \
+            patch('pyhap.accessory_driver.AccessoryDriver.add_accessory'), \
+            patch('homeassistant.components.homekit._LOGGER.warning') \
+            as mock_warn:
+        await hass.async_add_job(homekit.start)
+        assert mock_warn.called is True

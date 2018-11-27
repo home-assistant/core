@@ -73,97 +73,95 @@ class TestInputNumber(unittest.TestCase):
             }},
         ]
         for cfg in invalid_configs:
-            self.assertFalse(
-                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+            assert not setup_component(self.hass, DOMAIN, {DOMAIN: cfg})
 
     def test_set_value(self):
         """Test set_value method."""
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+        assert setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_1': {
                 'initial': 50,
                 'min': 0,
                 'max': 100,
             },
-        }}))
+        }})
         entity_id = 'input_number.test_1'
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(50, float(state.state))
+        assert 50 == float(state.state)
 
         set_value(self.hass, entity_id, '30.4')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(30.4, float(state.state))
+        assert 30.4 == float(state.state)
 
         set_value(self.hass, entity_id, '70')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(70, float(state.state))
+        assert 70 == float(state.state)
 
         set_value(self.hass, entity_id, '110')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(70, float(state.state))
+        assert 70 == float(state.state)
 
     def test_increment(self):
         """Test increment method."""
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+        assert setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_2': {
                 'initial': 50,
                 'min': 0,
                 'max': 51,
             },
-        }}))
+        }})
         entity_id = 'input_number.test_2'
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(50, float(state.state))
+        assert 50 == float(state.state)
 
         increment(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(51, float(state.state))
+        assert 51 == float(state.state)
 
         increment(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(51, float(state.state))
+        assert 51 == float(state.state)
 
     def test_decrement(self):
         """Test decrement method."""
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+        assert setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_3': {
                 'initial': 50,
                 'min': 49,
                 'max': 100,
             },
-        }}))
+        }})
         entity_id = 'input_number.test_3'
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(50, float(state.state))
+        assert 50 == float(state.state)
 
         decrement(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(49, float(state.state))
+        assert 49 == float(state.state)
 
         decrement(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(49, float(state.state))
+        assert 49 == float(state.state)
 
     def test_mode(self):
         """Test mode settings."""
-        self.assertTrue(
-            setup_component(self.hass, DOMAIN, {DOMAIN: {
+        assert setup_component(self.hass, DOMAIN, {DOMAIN: {
                 'test_default_slider': {
                     'min': 0,
                     'max': 100,
@@ -178,19 +176,19 @@ class TestInputNumber(unittest.TestCase):
                     'max': 100,
                     'mode': 'slider',
                 },
-            }}))
+            }})
 
         state = self.hass.states.get('input_number.test_default_slider')
         assert state
-        self.assertEqual('slider', state.attributes['mode'])
+        assert 'slider' == state.attributes['mode']
 
         state = self.hass.states.get('input_number.test_explicit_box')
         assert state
-        self.assertEqual('box', state.attributes['mode'])
+        assert 'box' == state.attributes['mode']
 
         state = self.hass.states.get('input_number.test_explicit_slider')
         assert state
-        self.assertEqual('slider', state.attributes['mode'])
+        assert 'slider' == state.attributes['mode']
 
 
 @asyncio.coroutine

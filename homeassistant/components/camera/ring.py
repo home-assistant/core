@@ -98,6 +98,11 @@ class RingCam(Camera):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._camera.id
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
@@ -134,10 +139,12 @@ class RingCam(Camera):
         await stream.open_camera(
             self._video_url, extra_cmd=self._ffmpeg_arguments)
 
-        await async_aiohttp_proxy_stream(
-            self.hass, request, stream,
-            'multipart/x-mixed-replace;boundary=ffserver')
-        await stream.close()
+        try:
+            return await async_aiohttp_proxy_stream(
+                self.hass, request, stream,
+                'multipart/x-mixed-replace;boundary=ffserver')
+        finally:
+            await stream.close()
 
     @property
     def should_poll(self):

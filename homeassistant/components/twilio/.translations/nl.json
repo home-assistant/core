@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Slechts \u00e9\u00e9n exemplaar is nodig."
+        },
+        "step": {
+            "user": {
+                "description": "Weet u zeker dat u Twilio wilt instellen?",
+                "title": "Stel de Twilio Webhook in"
+            }
+        },
+        "title": "Twilio"
+    }
+}

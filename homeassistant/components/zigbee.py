@@ -1,5 +1,5 @@
 """
-Support for ZigBee devices.
+Support for Zigbee devices.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zigbee/
@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Set up the connection to the ZigBee device."""
+    """Set up the connection to the Zigbee device."""
     global DEVICE
     global GPIO_DIGITAL_OUTPUT_LOW
     global GPIO_DIGITAL_OUTPUT_HIGH
@@ -91,13 +91,13 @@ def setup(hass, config):
     try:
         ser = Serial(usb_device, baud)
     except SerialException as exc:
-        _LOGGER.exception("Unable to open serial port for ZigBee: %s", exc)
+        _LOGGER.exception("Unable to open serial port for Zigbee: %s", exc)
         return False
     DEVICE = ZigBee(ser)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_serial_port)
 
     def _frame_received(frame):
-        """Run when a ZigBee frame is received.
+        """Run when a Zigbee frame is received.
 
         Pickles the frame, then encodes it into base64 since it contains
         non JSON serializable binary.
@@ -110,7 +110,7 @@ def setup(hass, config):
 
 
 def close_serial_port(*args):
-    """Close the serial port we're using to communicate with the ZigBee."""
+    """Close the serial port we're using to communicate with the Zigbee."""
     DEVICE.zb.serial.close()
 
 
@@ -141,7 +141,7 @@ class ZigBeeConfig:
         """Return the address of the device.
 
         If an address has been provided, unhexlify it, otherwise return None
-        as we're talking to our local ZigBee device.
+        as we're talking to our local Zigbee device.
         """
         address = self._config.get("address")
         if address is not None:
@@ -167,7 +167,7 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
     """A subclass of ZigBeePinConfig."""
 
     def __init__(self, config):
-        """Initialise the ZigBee Digital input config."""
+        """Initialise the Zigbee Digital input config."""
         super(ZigBeeDigitalInConfig, self).__init__(config)
         self._bool2state, self._state2bool = self.boolean_maps
 
@@ -194,7 +194,7 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
 
     @property
     def bool2state(self):
-        """Return a dictionary mapping the internal value to the ZigBee value.
+        """Return a dictionary mapping the internal value to the Zigbee value.
 
         For the translation of on/off as being pin high or low.
         """
@@ -202,7 +202,7 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
 
     @property
     def state2bool(self):
-        """Return a dictionary mapping the ZigBee value to the internal value.
+        """Return a dictionary mapping the Zigbee value to the internal value.
 
         For the translation of pin high/low as being on or off.
         """
@@ -217,7 +217,7 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
     """
 
     def __init__(self, config):
-        """Initialize the ZigBee Digital out."""
+        """Initialize the Zigbee Digital out."""
         super(ZigBeeDigitalOutConfig, self).__init__(config)
         self._bool2state, self._state2bool = self.boolean_maps
         self._should_poll = config.get("poll", False)
@@ -260,7 +260,7 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
 
 
 class ZigBeeAnalogInConfig(ZigBeePinConfig):
-    """Representation of a ZigBee GPIO pin set to analog in."""
+    """Representation of a Zigbee GPIO pin set to analog in."""
 
     @property
     def max_voltage(self):
@@ -321,7 +321,7 @@ class ZigBeeDigitalIn(Entity):
         return self._state
 
     def update(self):
-        """Ask the ZigBee device what state its input pin is in."""
+        """Ask the Zigbee device what state its input pin is in."""
         try:
             sample = DEVICE.get_sample(self._config.address)
         except ZIGBEE_TX_FAILURE:
@@ -331,12 +331,12 @@ class ZigBeeDigitalIn(Entity):
             return
         except ZIGBEE_EXCEPTION as exc:
             _LOGGER.exception(
-                "Unable to get sample from ZigBee device: %s", exc)
+                "Unable to get sample from Zigbee device: %s", exc)
             return
         pin_name = DIGITAL_PINS[self._config.pin]
         if pin_name not in sample:
             _LOGGER.warning(
-                "Pin %s (%s) was not in the sample provided by ZigBee device "
+                "Pin %s (%s) was not in the sample provided by Zigbee device "
                 "%s.",
                 self._config.pin, pin_name, hexlify(self._config.address))
             return

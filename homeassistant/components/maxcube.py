@@ -73,8 +73,8 @@ def setup(hass, config):
     if connection_failed >= len(gateways):
         return False
 
-    load_platform(hass, 'climate', DOMAIN)
-    load_platform(hass, 'binary_sensor', DOMAIN)
+    load_platform(hass, 'climate', DOMAIN, {}, config)
+    load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
     return True
 

@@ -227,11 +227,9 @@ def async_handle_message(hass, cloud, handler_name, payload):
 @asyncio.coroutine
 def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
-    if not cloud.alexa_enabled:
-        return alexa.turned_off_response(payload)
-
     result = yield from alexa.async_handle_message(
-        hass, cloud.alexa_config, payload)
+        hass, cloud.alexa_config, payload,
+        enabled=cloud.alexa_enabled)
     return result
 
 

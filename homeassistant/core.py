@@ -29,11 +29,11 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
-    ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
+    ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, ATTR_SECONDS, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REMOVED,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REMOVED, __version__)
+    EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, MATCH_ALL, __version__)
 from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, InvalidStateError)
@@ -1297,8 +1297,11 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         hass.bus.async_fire(EVENT_TIME_CHANGED,
                             {ATTR_NOW: now})
 
-        if monotonic() > target + 1:
-            _LOGGER.error('Timer got out of sync. Resetting')
+        # If we are more than a second late, a tick was missed
+        late = monotonic() - target
+        if late > 1:
+            hass.bus.async_fire(EVENT_TIMER_OUT_OF_SYNC,
+                                {ATTR_SECONDS: late})
 
         schedule_tick(now)
 

@@ -1,5 +1,5 @@
 """
-Support for ZigBee Home Automation devices.
+Support for Zigbee Home Automation devices.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
@@ -71,7 +71,7 @@ SERVICE_SCHEMAS = {
 }
 
 
-# ZigBee definitions
+# Zigbee definitions
 CENTICELSIUS = 'C-100'
 # Key in hass.data dict containing discovery info
 DISCOVERY_KEY = 'zha_discovery_info'
@@ -276,13 +276,21 @@ class ApplicationListener:
                                              device_classes, discovery_attr,
                                              is_new_join):
         """Try to set up an entity from a "bare" cluster."""
+        import homeassistant.components.zha.const as zha_const
         if cluster.cluster_id in profile_clusters:
             return
 
-        component = None
+        component = sub_component = None
         for cluster_type, candidate_component in device_classes.items():
             if isinstance(cluster, cluster_type):
                 component = candidate_component
+                break
+
+        for signature, comp in zha_const.CUSTOM_CLUSTER_MAPPINGS.items():
+            if (isinstance(endpoint.device, signature[0]) and
+                    cluster.cluster_id == signature[1]):
+                component = comp[0]
+                sub_component = comp[1]
                 break
 
         if component is None:
@@ -301,6 +309,8 @@ class ApplicationListener:
             'entity_suffix': '_{}'.format(cluster.cluster_id),
         }
         discovery_info[discovery_attr] = {cluster.cluster_id: cluster}
+        if sub_component:
+            discovery_info.update({'sub_component': sub_component})
         self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
 
         await discovery.async_load_platform(

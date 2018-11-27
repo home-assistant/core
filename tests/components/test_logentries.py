@@ -29,10 +29,10 @@ class TestLogentries(unittest.TestCase):
             }
         }
         self.hass.bus.listen = mock.MagicMock()
-        self.assertTrue(setup_component(self.hass, logentries.DOMAIN, config))
-        self.assertTrue(self.hass.bus.listen.called)
-        self.assertEqual(EVENT_STATE_CHANGED,
-                         self.hass.bus.listen.call_args_list[0][0][0])
+        assert setup_component(self.hass, logentries.DOMAIN, config)
+        assert self.hass.bus.listen.called
+        assert EVENT_STATE_CHANGED == \
+            self.hass.bus.listen.call_args_list[0][0][0]
 
     def test_setup_config_defaults(self):
         """Test setup with defaults."""
@@ -42,10 +42,10 @@ class TestLogentries(unittest.TestCase):
             }
         }
         self.hass.bus.listen = mock.MagicMock()
-        self.assertTrue(setup_component(self.hass, logentries.DOMAIN, config))
-        self.assertTrue(self.hass.bus.listen.called)
-        self.assertEqual(EVENT_STATE_CHANGED,
-                         self.hass.bus.listen.call_args_list[0][0][0])
+        assert setup_component(self.hass, logentries.DOMAIN, config)
+        assert self.hass.bus.listen.called
+        assert EVENT_STATE_CHANGED == \
+            self.hass.bus.listen.call_args_list[0][0][0]
 
     def _setup(self, mock_requests):
         """Test the setup."""
@@ -91,9 +91,7 @@ class TestLogentries(unittest.TestCase):
                        'logs/token',
                        'event': body}
             self.handler_method(event)
-            self.assertEqual(self.mock_post.call_count, 1)
-            self.assertEqual(
-                self.mock_post.call_args,
+            assert self.mock_post.call_count == 1
+            assert self.mock_post.call_args == \
                 mock.call(payload['host'], data=payload, timeout=10)
-            )
             self.mock_post.reset_mock()

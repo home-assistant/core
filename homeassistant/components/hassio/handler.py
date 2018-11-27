@@ -16,9 +16,9 @@ from homeassistant.components.http import (
     CONF_SSL_CERTIFICATE)
 from homeassistant.const import CONF_TIME_ZONE, SERVER_PORT
 
-_LOGGER = logging.getLogger(__name__)
+from .const import X_HASSIO
 
-X_HASSIO = 'X-HASSIO-KEY'
+_LOGGER = logging.getLogger(__name__)
 
 
 class HassioAPIError(RuntimeError):
@@ -105,7 +105,7 @@ class HassIO:
 
         This method return a coroutine.
         """
-        return self.send_command("/homeassistant/check", timeout=300)
+        return self.send_command("/homeassistant/check", timeout=600)
 
     @_api_data
     def retrieve_discovery_messages(self):

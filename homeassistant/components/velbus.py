@@ -12,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_PORT
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-velbus==2.0.20']
+REQUIREMENTS = ['python-velbus==2.0.21']
 
 _LOGGER = logging.getLogger(__name__)
 

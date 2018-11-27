@@ -144,8 +144,7 @@ class GraphiteFeeder(threading.Thread):
                 try:
                     self._report_attributes(
                         event.data['entity_id'], event.data['new_state'])
-                # pylint: disable=broad-except
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     # Catch this so we can avoid the thread dying and
                     # make it visible.
                     _LOGGER.exception("Failed to process STATE_CHANGED event")

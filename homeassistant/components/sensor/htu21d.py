@@ -38,12 +38,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=import-error
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the HTU21D sensor."""
-    import smbus
-    from i2csense.htu21d import HTU21D
+    import smbus  # pylint: disable=import-error
+    from i2csense.htu21d import HTU21D  # pylint: disable=import-error
 
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)

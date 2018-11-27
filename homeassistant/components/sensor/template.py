@@ -57,21 +57,35 @@ async def async_setup_platform(hass, config, async_add_entities,
 
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
+        invalid_templates = []
 
-        for template in (state_template, icon_template,
-                         entity_picture_template, friendly_name_template):
+        for tpl_name, template in (
+                (CONF_VALUE_TEMPLATE, state_template),
+                (CONF_ICON_TEMPLATE, icon_template),
+                (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
+                (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
+        ):
             if template is None:
                 continue
             template.hass = hass
 
-            if entity_ids == MATCH_ALL or manual_entity_ids is not None:
+            if manual_entity_ids is not None:
                 continue
 
             template_entity_ids = template.extract_entities()
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL
-            else:
+                # Cut off _template from name
+                invalid_templates.append(tpl_name[:-9])
+            elif entity_ids != MATCH_ALL:
                 entity_ids |= set(template_entity_ids)
+
+        if invalid_templates:
+            _LOGGER.warning(
+                'Template sensor %s has no entity ids configured to track nor'
+                ' were we able to extract the entities to track from the %s '
+                'template(s). This entity will only be able to be updated '
+                'manually.', device, ', '.join(invalid_templates))
 
         if manual_entity_ids is not None:
             entity_ids = manual_entity_ids
@@ -131,8 +145,10 @@ class SensorTemplate(Entity):
         @callback
         def template_sensor_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_sensor_state_listener)
+            if self._entities != MATCH_ALL:
+                # Track state change only for valid templates
+                async_track_state_change(
+                    self.hass, self._entities, template_sensor_state_listener)
 
             self.async_schedule_update_ha_state(True)
 

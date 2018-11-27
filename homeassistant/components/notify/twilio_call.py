@@ -42,7 +42,7 @@ class TwilioCallNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Call to specified target users."""
-        from twilio import TwilioRestException
+        from twilio.base.exceptions import TwilioRestException
 
         targets = kwargs.get(ATTR_TARGET)
 

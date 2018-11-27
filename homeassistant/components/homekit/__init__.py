@@ -24,14 +24,17 @@ from .const import (
     BRIDGE_NAME, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST,
     CONF_FILTER, DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2, DEVICE_CLASS_PM25, DOMAIN, HOMEKIT_FILE,
-    SERVICE_HOMEKIT_START, TYPE_OUTLET, TYPE_SWITCH)
+    SERVICE_HOMEKIT_START, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER,
+    TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
-TYPES = Registry()
+REQUIREMENTS = ['HAP-python==2.2.2']
+
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==2.2.2']
+MAX_DEVICES = 100
+TYPES = Registry()
 
 # #### Driver Status ####
 STATUS_READY = 0
@@ -39,8 +42,13 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
-SWITCH_TYPES = {TYPE_OUTLET: 'Outlet',
-                TYPE_SWITCH: 'Switch'}
+SWITCH_TYPES = {
+    TYPE_FAUCET: 'Valve',
+    TYPE_OUTLET: 'Outlet',
+    TYPE_SHOWER: 'Valve',
+    TYPE_SPRINKLER: 'Valve',
+    TYPE_SWITCH: 'Switch',
+    TYPE_VALVE: 'Valve'}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
@@ -70,7 +78,7 @@ async def async_setup(hass, config):
 
     homekit = HomeKit(hass, name, port, ip_address, entity_filter,
                       entity_config)
-    await hass.async_add_job(homekit.setup)
+    await hass.async_add_executor_job(homekit.setup)
 
     if auto_start:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
@@ -165,6 +173,9 @@ def get_accessory(hass, driver, state, aid, config):
     elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
         a_type = 'Switch'
 
+    elif state.domain == 'water_heater':
+        a_type = 'WaterHeater'
+
     if a_type is None:
         return None
 
@@ -238,6 +249,10 @@ class HomeKit():
 
         if not self.driver.state.paired:
             show_setup_message(self.hass, self.driver.state.pincode)
+
+        if len(self.bridge.accessories) > MAX_DEVICES:
+            _LOGGER.warning('You have exceeded the device limit, which might '
+                            'cause issues. Consider using the filter option.')
 
         _LOGGER.debug('Driver start')
         self.hass.add_job(self.driver.start)

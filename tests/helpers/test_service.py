@@ -45,10 +45,10 @@ class TestServiceHelpers(unittest.TestCase):
         service.call_from_config(self.hass, config)
         self.hass.block_till_done()
 
-        self.assertEqual('goodbye', self.calls[0].data['hello'])
-        self.assertEqual('complex', self.calls[0].data['data']['value'])
-        self.assertEqual('simple', self.calls[0].data['data']['simple'])
-        self.assertEqual('list', self.calls[0].data['list'][0])
+        assert 'goodbye' == self.calls[0].data['hello']
+        assert 'complex' == self.calls[0].data['data']['value']
+        assert 'simple' == self.calls[0].data['data']['simple']
+        assert 'list' == self.calls[0].data['list'][0]
 
     def test_passing_variables_to_templates(self):
         """Test passing variables to templates."""
@@ -66,7 +66,7 @@ class TestServiceHelpers(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual('goodbye', self.calls[0].data['hello'])
+        assert 'goodbye' == self.calls[0].data['hello']
 
     def test_bad_template(self):
         """Test passing bad template."""
@@ -84,7 +84,7 @@ class TestServiceHelpers(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual(len(self.calls), 0)
+        assert len(self.calls) == 0
 
     def test_split_entity_string(self):
         """Test splitting of entity string."""
@@ -93,8 +93,8 @@ class TestServiceHelpers(unittest.TestCase):
             'entity_id': 'hello.world, sensor.beer'
         })
         self.hass.block_till_done()
-        self.assertEqual(['hello.world', 'sensor.beer'],
-                         self.calls[-1].data.get('entity_id'))
+        assert ['hello.world', 'sensor.beer'] == \
+            self.calls[-1].data.get('entity_id')
 
     def test_not_mutate_input(self):
         """Test for immutable input."""
@@ -122,15 +122,15 @@ class TestServiceHelpers(unittest.TestCase):
     def test_fail_silently_if_no_service(self, mock_log):
         """Test failing if service is missing."""
         service.call_from_config(self.hass, None)
-        self.assertEqual(1, mock_log.call_count)
+        assert 1 == mock_log.call_count
 
         service.call_from_config(self.hass, {})
-        self.assertEqual(2, mock_log.call_count)
+        assert 2 == mock_log.call_count
 
         service.call_from_config(self.hass, {
             'service': 'invalid'
         })
-        self.assertEqual(3, mock_log.call_count)
+        assert 3 == mock_log.call_count
 
     def test_extract_entity_ids(self):
         """Test extract_entity_ids method."""
@@ -144,17 +144,17 @@ class TestServiceHelpers(unittest.TestCase):
         call = ha.ServiceCall('light', 'turn_on',
                               {ATTR_ENTITY_ID: 'light.Bowl'})
 
-        self.assertEqual(['light.bowl'],
-                         service.extract_entity_ids(self.hass, call))
+        assert ['light.bowl'] == \
+            service.extract_entity_ids(self.hass, call)
 
         call = ha.ServiceCall('light', 'turn_on',
                               {ATTR_ENTITY_ID: 'group.test'})
 
-        self.assertEqual(['light.ceiling', 'light.kitchen'],
-                         service.extract_entity_ids(self.hass, call))
+        assert ['light.ceiling', 'light.kitchen'] == \
+            service.extract_entity_ids(self.hass, call)
 
-        self.assertEqual(['group.test'], service.extract_entity_ids(
-            self.hass, call, expand_group=False))
+        assert ['group.test'] == service.extract_entity_ids(
+            self.hass, call, expand_group=False)
 
 
 @asyncio.coroutine

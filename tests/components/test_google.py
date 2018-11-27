@@ -31,7 +31,7 @@ class TestGoogle(unittest.TestCase):
             }
         }
 
-        self.assertTrue(setup_component(self.hass, 'google', config))
+        assert setup_component(self.hass, 'google', config)
 
     def test_get_calendar_info(self):
         """Test getting the calendar info."""
@@ -52,7 +52,7 @@ class TestGoogle(unittest.TestCase):
         }
 
         calendar_info = google.get_calendar_info(self.hass, calendar)
-        self.assertEqual(calendar_info, {
+        assert calendar_info == {
             'cal_id': 'qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com',
             'entities': [{
                 'device_id': 'we_are_we_are_a_test_calendar',
@@ -60,7 +60,7 @@ class TestGoogle(unittest.TestCase):
                 'track': True,
                 'ignore_availability': True,
             }]
-        })
+        }
 
     def test_found_calendar(self):
         """Test when a calendar is found."""
@@ -85,8 +85,8 @@ class TestGoogle(unittest.TestCase):
 
         calendar_service = google.GoogleCalendarService(
             self.hass.config.path(google.TOKEN_FILE))
-        self.assertTrue(google.setup_services(self.hass, True,
-                                              calendar_service))
+        assert google.setup_services(
+            self.hass, {'google': {}}, True, calendar_service)
         # self.hass.services.call('google', 'found_calendar', calendar,
         #                         blocking=True)
 

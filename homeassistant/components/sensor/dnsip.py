@@ -87,8 +87,13 @@ class WanIpSensor(Entity):
 
     async def async_update(self):
         """Get the current DNS IP address for hostname."""
-        response = await self.resolver.query(self.hostname,
-                                             self.querytype)
+        from aiodns.error import DNSError
+        try:
+            response = await self.resolver.query(self.hostname,
+                                                 self.querytype)
+        except DNSError as err:
+            _LOGGER.warning("Exception while resolving host: %s", err)
+            response = None
         if response:
             self._state = response[0].host
         else:

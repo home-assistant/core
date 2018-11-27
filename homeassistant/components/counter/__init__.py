@@ -20,6 +20,7 @@ ATTR_INITIAL = 'initial'
 ATTR_STEP = 'step'
 
 CONF_INITIAL = 'initial'
+CONF_RESTORE = 'restore'
 CONF_STEP = 'step'
 
 DEFAULT_INITIAL = 0
@@ -43,6 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
                 cv.positive_int,
             vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_RESTORE, default=True): cv.boolean,
             vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
         }, None)
     })
@@ -61,10 +63,11 @@ async def async_setup(hass, config):
 
         name = cfg.get(CONF_NAME)
         initial = cfg.get(CONF_INITIAL)
+        restore = cfg.get(CONF_RESTORE)
         step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
 
-        entities.append(Counter(object_id, name, initial, step, icon))
+        entities.append(Counter(object_id, name, initial, restore, step, icon))
 
     if not entities:
         return False
@@ -86,10 +89,11 @@ async def async_setup(hass, config):
 class Counter(Entity):
     """Representation of a counter."""
 
-    def __init__(self, object_id, name, initial, step, icon):
+    def __init__(self, object_id, name, initial, restore, step, icon):
         """Initialize a counter."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
+        self._restore = restore
         self._step = step
         self._state = self._initial = initial
         self._icon = icon
@@ -124,12 +128,12 @@ class Counter(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
-        # If not None, we got an initial value.
-        if self._state is not None:
-            return
-
-        state = await async_get_last_state(self.hass, self.entity_id)
-        self._state = state and state.state == state
+        # __init__ will set self._state to self._initial, only override
+        # if needed.
+        if self._restore:
+            state = await async_get_last_state(self.hass, self.entity_id)
+            if state is not None:
+                self._state = int(state.state)
 
     async def async_decrement(self):
         """Decrement the counter."""
