@@ -416,6 +416,7 @@ geizhals==0.0.7
 
 # homeassistant.components.geo_location.geo_json_events
 # homeassistant.components.geo_location.nsw_rural_fire_service_feed
+# homeassistant.components.geo_location.usgs_earthquakes_feed
 geojson_client==0.3
 
 # homeassistant.components.sensor.geo_rss_events
