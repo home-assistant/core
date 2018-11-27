@@ -14,10 +14,10 @@ from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
 
 DOMAIN = "velux"
 DATA_VELUX = "data_velux"
-SUPPORTED_DOMAINS = ['scene']
+SUPPORTED_DOMAINS = ['cover', 'scene']
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyvlx==0.1.3']
+REQUIREMENTS = ['pyvlx==0.2.2']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -59,3 +59,4 @@ class VeluxModule:
     async def async_start(self):
         """Start velux component."""
         await self.pyvlx.load_scenes()
+        await self.pyvlx.load_nodes()
