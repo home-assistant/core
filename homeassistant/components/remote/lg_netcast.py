@@ -5,16 +5,16 @@ Remote control support for the LG Netcast TV.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/remove.lg_netcast/
 """
+import time
+from requests import RequestException
+import voluptuous as vol
 from homeassistant.components.remote import (RemoteDevice, PLATFORM_SCHEMA,
                                              ATTR_NUM_REPEATS, ATTR_DELAY_SECS,
                                              DEFAULT_DELAY_SECS)
 from homeassistant.const import (CONF_HOST, CONF_NAME,
                                  CONF_ACCESS_TOKEN, DEVICE_DEFAULT_NAME,
                                  STATE_OFF)
-import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-import time
-from requests import RequestException
 
 REQUIREMENTS = ['pylgnetcast-homeassistant==0.2.0.dev0']
 
