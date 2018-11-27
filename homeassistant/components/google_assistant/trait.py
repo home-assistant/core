@@ -197,6 +197,8 @@ class OnOffTrait(_Trait):
     @staticmethod
     def supported(domain, features):
         """Test if state is supported."""
+        if domain == climate.DOMAIN:
+            return features & climate.SUPPORT_ON_OFF != 0
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
