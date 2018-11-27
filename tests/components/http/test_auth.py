@@ -83,7 +83,8 @@ async def test_access_without_password(app, aiohttp_client):
     assert resp.status == 200
 
 
-async def test_access_with_password_in_header(app, aiohttp_client):
+async def test_access_with_password_in_header(app, aiohttp_client,
+                                              legacy_auth):
     """Test access with password in header."""
     setup_auth(app, [], False, api_password=API_PASSWORD)
     client = await aiohttp_client(app)
@@ -97,7 +98,7 @@ async def test_access_with_password_in_header(app, aiohttp_client):
     assert req.status == 401
 
 
-async def test_access_with_password_in_query(app, aiohttp_client):
+async def test_access_with_password_in_query(app, aiohttp_client, legacy_auth):
     """Test access with password in URL."""
     setup_auth(app, [], False, api_password=API_PASSWORD)
     client = await aiohttp_client(app)
@@ -219,7 +220,8 @@ async def test_auth_active_access_with_trusted_ip(app2, aiohttp_client):
             "{} should be trusted".format(remote_addr)
 
 
-async def test_auth_active_blocked_api_password_access(app, aiohttp_client):
+async def test_auth_active_blocked_api_password_access(
+        app, aiohttp_client, legacy_auth):
     """Test access using api_password should be blocked when auth.active."""
     setup_auth(app, [], True, api_password=API_PASSWORD)
     client = await aiohttp_client(app)
@@ -239,7 +241,8 @@ async def test_auth_active_blocked_api_password_access(app, aiohttp_client):
     assert req.status == 401
 
 
-async def test_auth_legacy_support_api_password_access(app, aiohttp_client):
+async def test_auth_legacy_support_api_password_access(
+        app, aiohttp_client, legacy_auth):
     """Test access using api_password if auth.support_legacy."""
     setup_auth(app, [], True, support_legacy=True, api_password=API_PASSWORD)
     client = await aiohttp_client(app)

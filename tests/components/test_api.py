@@ -16,12 +16,10 @@ from tests.common import async_mock_service
 
 
 @pytest.fixture
-def mock_api_client(hass, aiohttp_client, hass_access_token):
+def mock_api_client(hass, hass_client):
     """Start the Hass HTTP component and return admin API client."""
     hass.loop.run_until_complete(async_setup_component(hass, 'api', {}))
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app, headers={
-        'Authorization': 'Bearer {}'.format(hass_access_token)
-    }))
+    return hass.loop.run_until_complete(hass_client())
 
 
 @asyncio.coroutine
@@ -408,7 +406,7 @@ def _listen_count(hass):
 
 
 async def test_api_error_log(hass, aiohttp_client, hass_access_token,
-                             hass_admin_user):
+                             hass_admin_user, legacy_auth):
     """Test if we can fetch the error log."""
     hass.data[DATA_LOGGING] = '/some/path'
     await async_setup_component(hass, 'api', {
@@ -566,5 +564,17 @@ async def test_rendering_template_admin(hass, mock_api_client,
                                         hass_admin_user):
     """Test rendering a template requires admin."""
     hass_admin_user.groups = []
-    resp = await mock_api_client.post('/api/template')
+    resp = await mock_api_client.post(const.URL_API_TEMPLATE)
+    assert resp.status == 401
+
+
+async def test_rendering_template_legacy_user(
+        hass, mock_api_client, aiohttp_client, legacy_auth):
+    """Test rendering a template with legacy API password."""
+    hass.states.async_set('sensor.temperature', 10)
+    client = await aiohttp_client(hass.http.app)
+    resp = await client.post(
+        const.URL_API_TEMPLATE,
+        json={"template": '{{ states.sensor.temperature.state }}'}
+    )
     assert resp.status == 401
