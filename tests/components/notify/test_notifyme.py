@@ -13,7 +13,8 @@ class TestNotifyMe(unittest.TestCase):
         """Set up test variables."""
         hass = get_test_home_assistant()
         access_token = "dummy-access-token"
-        self.notifyme = notifyme.NotifymeNotificationService(hass, access_token)
+        self.notifyme = notifyme.NotifymeNotificationService(hass, 
+                                                             access_token)
 
     @requests_mock.Mocker()
     async def test_send_simple_message(self, mock):
