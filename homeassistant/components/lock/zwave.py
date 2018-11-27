@@ -188,7 +188,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.info("Usercode at slot %s is: %s", value.index, value.data)
             break
 
-
     def clear_usercode(service):
         """Set usercode to slot X on the lock."""
         node_id = service.data.get(zwave.const.ATTR_NODE_ID)
@@ -285,7 +284,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                 _LOGGER.debug("set state to %s based on message tracking",
                               self._state)
                 if self._previous_message == \
-                    zwave.const.COMMAND_CLASS_DOOR_LOCK:
+                        zwave.const.COMMAND_CLASS_DOOR_LOCK:
                     if self._state:
                         self._notification = \
                             LOCK_NOTIFICATION[NOTIFICATION_RF_LOCK]

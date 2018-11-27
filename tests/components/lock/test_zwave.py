@@ -81,7 +81,7 @@ def test_lock_state_workaround(mock_openzwave):
 def test_track_message_workaround(mock_openzwave):
     """Test value changed for Z-Wave lock by alarm-clearing workaround."""
     node = MockNode(manufacturer_id='003B', product_id='5044',
-                    stats={'lastReceivedMessage':[0] * 6})
+                    stats={'lastReceivedMessage': [0] * 6})
     values = MockEntityValues(
         primary=MockValue(data=True, node=node),
         access_control=None,
