@@ -5,26 +5,10 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import logging
+import asyncio
+from .const import RadioType, DEFAULT_BAUDRATE
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def get_discovery_info(hass, discovery_info):
-    """Get the full discovery info for a device.
-
-    Some of the info that needs to be passed to platforms is not JSON
-    serializable, so it cannot be put in the discovery_info dictionary. This
-    component places that info we need to pass to the platform in hass.data,
-    and this function is a helper for platforms to retrieve the complete
-    discovery info.
-    """
-    if discovery_info is None:
-        return
-
-    import homeassistant.components.zha.const as zha_const
-    discovery_key = discovery_info.get('discovery_key', None)
-    all_discovery_info = hass.data.get(zha_const.DISCOVERY_KEY, {})
-    return all_discovery_info.get(discovery_key, None)
 
 
 async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
@@ -82,3 +66,23 @@ async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
             "%s: failed to set reporting for '%s' attr on '%s' cluster: %s",
             entity_id, attr_name, cluster_name, str(ex)
         )
+
+
+async def check_zigpy_connection(usb_path, radio_type, database_path):
+    """Test zigpy radio connection."""
+    if radio_type == RadioType.ezsp.name:
+        import bellows.ezsp
+        from bellows.zigbee.application import ControllerApplication
+        radio = bellows.ezsp.EZSP()
+    elif radio_type == RadioType.xbee.name:
+        import zigpy_xbee.api
+        from zigpy_xbee.zigbee.application import ControllerApplication
+        radio = zigpy_xbee.api.XBee()
+    try:
+        await radio.connect(usb_path, DEFAULT_BAUDRATE)
+        controller = ControllerApplication(radio, database_path)
+        await asyncio.wait_for(controller.startup(auto_form=True), timeout=30)
+        radio.close()
+    except Exception:  # pylint: disable=broad-except
+        return False
+    return True
