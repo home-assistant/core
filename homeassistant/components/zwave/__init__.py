@@ -67,7 +67,7 @@ DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
 SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover', 'fan',
-                       'light', 'sensor', 'switch']
+                       'lock', 'light', 'sensor', 'switch']
 
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -420,7 +420,7 @@ async def async_setup_entry(hass, config_entry):
 
     def remove_node(service):
         """Switch into exclusion mode."""
-        _LOGGER.info("Z-Wwave remove_node have been initialized")
+        _LOGGER.info("Z-Wave remove_node have been initialized")
         network.controller.remove_node()
 
     def cancel_command(service):

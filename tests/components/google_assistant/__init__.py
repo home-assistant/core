@@ -183,7 +183,10 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'Living Room Fan'
     },
-    'traits': ['action.devices.traits.OnOff'],
+    'traits': [
+        'action.devices.traits.FanSpeed',
+        'action.devices.traits.OnOff'
+        ],
     'type': 'action.devices.types.FAN',
     'willReportState': False
 }, {
@@ -191,7 +194,10 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'Ceiling Fan'
     },
-    'traits': ['action.devices.traits.OnOff'],
+    'traits': [
+        'action.devices.traits.FanSpeed',
+        'action.devices.traits.OnOff'
+        ],
     'type': 'action.devices.types.FAN',
     'willReportState': False
 }, {
@@ -219,7 +225,10 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'HeatPump'
     },
-    'traits': ['action.devices.traits.TemperatureSetting'],
+    'traits': [
+        'action.devices.traits.OnOff',
+        'action.devices.traits.TemperatureSetting'
+    ],
     'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False
 }, {
@@ -229,5 +238,29 @@ DEMO_DEVICES = [{
     },
     'traits': ['action.devices.traits.TemperatureSetting'],
     'type': 'action.devices.types.THERMOSTAT',
+    'willReportState': False
+}, {
+    'id': 'lock.front_door',
+    'name': {
+        'name': 'Front Door'
+    },
+    'traits': ['action.devices.traits.LockUnlock'],
+    'type': 'action.devices.types.LOCK',
+    'willReportState': False
+}, {
+    'id': 'lock.kitchen_door',
+    'name': {
+        'name': 'Kitchen Door'
+    },
+    'traits': ['action.devices.traits.LockUnlock'],
+    'type': 'action.devices.types.LOCK',
+    'willReportState': False
+}, {
+    'id': 'lock.openable_lock',
+    'name': {
+        'name': 'Openable Lock'
+    },
+    'traits': ['action.devices.traits.LockUnlock'],
+    'type': 'action.devices.types.LOCK',
     'willReportState': False
 }]

@@ -9,7 +9,7 @@ from aiohttp.web import middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -36,13 +36,14 @@ SCHEMA_IP_BAN_ENTRY = vol.Schema({
 @callback
 def setup_bans(hass, app, login_threshold):
     """Create IP Ban middleware for the app."""
+    app.middlewares.append(ban_middleware)
+    app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
+    app[KEY_LOGIN_THRESHOLD] = login_threshold
+
     async def ban_startup(app):
         """Initialize bans when app starts up."""
-        app.middlewares.append(ban_middleware)
-        app[KEY_BANNED_IPS] = await hass.async_add_job(
-            load_ip_bans_config, hass.config.path(IP_BANS_FILE))
-        app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
-        app[KEY_LOGIN_THRESHOLD] = login_threshold
+        app[KEY_BANNED_IPS] = await async_load_ip_bans_config(
+            hass, hass.config.path(IP_BANS_FILE))
 
     app.on_startup.append(ban_startup)
 
@@ -149,7 +150,7 @@ class IpBan:
         self.banned_at = banned_at or datetime.utcnow()
 
 
-def load_ip_bans_config(path: str):
+async def async_load_ip_bans_config(hass: HomeAssistant, path: str):
     """Load list of banned IPs from config file."""
     ip_list = []
 
@@ -157,7 +158,7 @@ def load_ip_bans_config(path: str):
         return ip_list
 
     try:
-        list_ = load_yaml_config_file(path)
+        list_ = await hass.async_add_executor_job(load_yaml_config_file, path)
     except HomeAssistantError as err:
         _LOGGER.error('Unable to load %s: %s', path, str(err))
         return ip_list
