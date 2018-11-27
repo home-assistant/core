@@ -45,12 +45,12 @@ def get_time_until(departure_time=None):
 
 
 def convert_ms_to_sec(delay=0):
-    """Calculate the delay in minutes. Delays are expressed in seconds"""
+    """Calculate the delay in minutes. Delays are expressed in seconds."""
     return round((int(delay) / 60))
 
 
 def get_ride_duration(departure_time, arrival_time, delay=0):
-    """Calculate the total travel time in minutes"""
+    """Calculate the total travel time in minutes."""
     duration = dt_util.utc_from_timestamp(
         int(arrival_time)) - dt_util.utc_from_timestamp(int(departure_time))
     duration_time = int(round((duration.total_seconds() / 60)))
@@ -86,10 +86,12 @@ class NMBSLiveBoard(Entity):
 
     @property
     def name(self):
+        """Return the sensor default name."""
         return DEFAULT_NAME_LIVE
 
     @property
     def icon(self):
+        """Return the sensor default icon or an alert icon if there are delays."""
         if self._attrs is not None and int(self._attrs["delay"]) > 0:
             return DEFAULT_ICON_ALERT
 
@@ -97,10 +99,12 @@ class NMBSLiveBoard(Entity):
 
     @property
     def state(self):
+        """Return sensor state."""
         return self._state
 
     @property
     def device_state_attributes(self):
+        """Return the sensor attributes if data is available."""
         if self._state is None or self._attrs is None:
             return None
 
@@ -117,7 +121,7 @@ class NMBSLiveBoard(Entity):
         }
 
     def update(self):
-        """Set the state equal to the next departure"""
+        """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
         next_departure = liveboard["departures"]["departure"][0]
 
@@ -143,10 +147,12 @@ class NMBSSensor(Entity):
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of measurement."""
         return "min"
 
     @property
     def icon(self):
+        """Return the sensor default icon or an alert icon if any delay."""
         delay = convert_ms_to_sec(self._attrs["departure"]["delay"])
         if self._attrs is not None and delay > 0:
             return "mdi:alert-octagon"
@@ -155,6 +161,7 @@ class NMBSSensor(Entity):
 
     @property
     def device_state_attributes(self):
+        """Return sensor attributes if data is available."""
         if self._state is None or self._attrs is None:
             return None
 
