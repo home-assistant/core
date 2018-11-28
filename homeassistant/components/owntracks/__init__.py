@@ -7,6 +7,7 @@ import re
 from aiohttp.web import json_response
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.components import mqtt
@@ -41,7 +42,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SECRET): vol.Any(
             vol.Schema({vol.Optional(cv.string): cv.string}),
             cv.string),
-        vol.Optional(CONF_REGION_MAPPING, default={}): dict
+        vol.Optional(CONF_REGION_MAPPING, default={}): dict,
+        vol.Optional(CONF_WEBHOOK_ID): cv.string,
     }
 }, extra=vol.ALLOW_EXTRA)
 
@@ -53,6 +55,12 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {
         'config': config[DOMAIN]
     }
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            data={}
+        ))
+
     return True
 
 
@@ -71,12 +79,14 @@ async def async_setup_entry(hass, entry):
                                waypoint_import, waypoint_whitelist,
                                region_mapping, events_only, mqtt_topic)
 
+    webhook_id = config.get(CONF_WEBHOOK_ID) or entry.data[CONF_WEBHOOK_ID]
+
     hass.data[DOMAIN]['context'] = context
 
     async_when_setup(hass, 'mqtt', async_connect_mqtt)
 
     hass.components.webhook.async_register(
-        DOMAIN, 'OwnTracks', entry.data[CONF_WEBHOOK_ID], handle_webhook)
+        DOMAIN, 'OwnTracks', webhook_id, handle_webhook)
 
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'device_tracker'))

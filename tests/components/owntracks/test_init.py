@@ -33,15 +33,6 @@ LOCATION_MESSAGE = {
 }
 
 
-# @pytest.fixture(autouse=True)
-# def owntracks_http_cleanup(hass):
-#     """Remove known_devices.yaml."""
-#     try:
-#         os.remove(hass.config.path(device_tracker.YAML_DEVICES))
-#     except OSError:
-#         pass
-
-
 @pytest.fixture
 def mock_client(hass, aiohttp_client):
     """Start the Hass HTTP component."""
@@ -144,3 +135,15 @@ def test_returns_error_missing_device(mock_client):
 
     json = yield from resp.json()
     assert json == []
+
+
+async def test_config_flow_import(hass):
+    """Test that we automatically create a config flow."""
+    assert not hass.config_entries.async_entries('owntracks')
+    assert await async_setup_component(hass, 'owntracks', {
+        'owntracks': {
+
+        }
+    })
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entries('owntracks')

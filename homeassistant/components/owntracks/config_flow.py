@@ -56,7 +56,24 @@ class OwnTracksFlow(config_entries.ConfigFlow):
             description_placeholders={
                 'secret': secret_desc,
                 'webhook_url': webhook_url,
+                'android_url':
+                'https://play.google.com/store/apps/details?'
+                'id=org.owntracks.android',
+                'ios_url':
+                'https://itunes.apple.com/us/app/owntracks/id692424691?mt=8',
                 'docs_url':
                 'https://www.home-assistant.io/components/owntracks/'
+            }
+        )
+
+    async def async_step_import(self, user_input):
+        """Import a config flow from configuration."""
+        webhook_id = self.hass.components.webhook.async_generate_id()
+        secret = generate_secret(16)
+        return self.async_create_entry(
+            title="OwnTracks",
+            data={
+                CONF_WEBHOOK_ID: webhook_id,
+                CONF_SECRET: secret
             }
         )
