@@ -6,6 +6,22 @@ ais_update_system:
         text: "Aktualizuje system do najnowszej wersji. Do usłyszenia."
     - service: ais_shell_command.execute_upgrade
 
+ais_restart_system:
+  alias: 'Restart bramki'
+  sequence:
+    - service: ais_ai_service.say_it
+      data:
+        text: "Restartuję. Do usłyszenia."
+    - service: ais_shell_command.execute_restart
+
+ais_stop_system:
+  alias: 'Wyłączenie bramki'
+  sequence:
+    - service: ais_ai_service.say_it
+      data:
+        text: "OK wyłączam. Do usłyszenia."
+    - service: ais_shell_command.execute_stop
+
 ais_button_click:
   alias: 'Button Click'
   sequence:

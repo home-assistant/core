@@ -5,6 +5,12 @@ sensor:
       - 'date'
   - platform: template
     sensors:
+      daytodisplay:
+        entity_id: sensor.date
+        friendly_name: 'Data'
+        value_template: '{{ as_timestamp(now()) | timestamp_custom("%d/%m", True) }}'
+  - platform: template
+    sensors:
       nextsunrise:
         entity_id: sun.sun
         friendly_name: 'Wschód słońca'

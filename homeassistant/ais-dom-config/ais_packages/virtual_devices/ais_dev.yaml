@@ -1,8 +1,5 @@
 binary_sensor:
   - platform: mqtt
-    state_topic: ais/mic/sensor
-    name: ais_remote_mic
-  - platform: mqtt
     state_topic: ais/button/sensor
     name: ais_remote_button
   - platform: mqtt
@@ -54,16 +51,16 @@ input_select:
   assistant_voice:
     name: "Głos"
     options:
-      - "Kobieta online"
-      - "Kobieta lokalnie"
-      - "Kobieta 1"
-      - "Kobieta 2"
-      - "Kobieta 3"
-      - "Mężczyzna 1"
-      - "Mężczyzna 2"
-      - "Mężczyzna 3"
+      - "Jola online"
+      - "Jola lokalnie"
+      - "Celina"
+      - "Anżela"
+      - "Asia"
+      - "Sebastian"
+      - "Bartek"
+      - "Andrzej"
     icon: mdi:voice
-    initial: "Kobieta lokalnie"
+    initial: "Jola lokalnie"
   tts_player:
     name: 'Powiadamiaj dodatkowo'
     options:
@@ -98,7 +95,6 @@ group:
     control: hidden
     entities:
       - input_text.buttons_ais_remote
-      - binary_sensor.ais_remote_mic
       - binary_sensor.ais_remote_button
       - binary_sensor.selected_entity
   ais_host_rename:

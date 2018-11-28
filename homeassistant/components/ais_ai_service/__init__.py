@@ -78,8 +78,10 @@ GROUP_VIEWS = ['Pomoc', 'Twój Dom', 'Audio', 'Ustawienia']
 CURR_GROUP_VIEW = None
 # group entities in each group view, see main_ais_groups.yaml
 GROUP_ENTITIES = []
+ALL_AIS_SENSORS = []
 CURR_GROUP = None
 CURR_ENTITIE = None
+CURR_ENTITIE_SELECTED = False
 CURR_BUTTON_CODE = None
 CURR_BUTTON_LONG_PRESS = False
 CURR_ENTITIE_POSITION = None
@@ -240,9 +242,11 @@ def set_curr_group_view():
     global CURR_GROUP_VIEW
     global CURR_GROUP
     global CURR_ENTITIE
+    global CURR_ENTITIE_SELECTED
     global CURR_ENTITIE_POSITION
     CURR_GROUP = None
     CURR_ENTITIE = None
+    CURR_ENTITIE_SELECTED = False
     CURR_ENTITIE_POSITION = None
     CURR_GROUP_VIEW = get_curr_group_view()
 
@@ -298,8 +302,11 @@ def set_curr_group(hass, group):
     global CURR_GROUP_VIEW
     global CURR_GROUP
     global CURR_ENTITIE
+    global CURR_ENTITIE_SELECTED
     global CURR_ENTITIE_POSITION
+    # the entitie can be selected or focused
     CURR_ENTITIE = None
+    CURR_ENTITIE_SELECTED = False
     CURR_ENTITIE_POSITION = None
     if group is None:
         CURR_GROUP = get_curr_group()
@@ -395,13 +402,14 @@ def set_curr_entity(hass, entity):
 def set_next_entity(hass):
     # set next entity
     global CURR_ENTITIE
-    idx = get_curr_entity_idx()
-    l_group_len = len(GROUP_ENTITIES[get_curr_group_idx()]['entities'])
-    if (idx + 1 == l_group_len):
-        idx = 0
+    entity_idx = get_curr_entity_idx()
+    group_idx = get_curr_group_idx()
+    l_group_len = len(GROUP_ENTITIES[group_idx]['entities'])
+    if entity_idx + 1 == l_group_len:
+        entity_idx = 0
     else:
-        idx = idx + 1
-    CURR_ENTITIE = GROUP_ENTITIES[get_curr_group_idx()]['entities'][idx]
+        entity_idx = entity_idx + 1
+    CURR_ENTITIE = GROUP_ENTITIES[group_idx]['entities'][entity_idx]
     # to reset variables
     set_curr_entity(hass, None)
     say_curr_entity(hass)
@@ -426,6 +434,9 @@ def say_curr_entity(hass):
     # check if we have selected item
     entity_id = get_curr_entity()
     state = hass.states.get(entity_id)
+    if state is None:
+        _say_it(hass, "Brak pozycji", None)
+        return
     text = state.attributes.get('text')
     info_name = state.attributes.get('friendly_name')
     info_data = state.state
@@ -570,6 +581,7 @@ def set_prev_position(hass):
 
 def select_entity(hass, long_press):
     # on remote OK, select group view, group or entity
+    global CURR_ENTITIE_SELECTED
     # OK on remote
     if CURR_GROUP_VIEW is None:
         # no group view was selected
@@ -583,21 +595,24 @@ def select_entity(hass, long_press):
         say_curr_group(hass)
         return
     if CURR_ENTITIE is None:
-        # no entity is selected - we need to select the first one
+        # no entity is selected - we need to focus the first one
         set_curr_entity(hass, None)
         say_curr_entity(hass)
+        CURR_ENTITIE_SELECTED = False
+        return
+
+    if CURR_ENTITIE_SELECTED is False:
+        # check if the entity option can be selected
+        if can_entity_be_changed(hass, CURR_ENTITIE):
+            set_next_position(hass)
+            CURR_ENTITIE_SELECTED = True
+        else:
+            # eneter on unchanged item
+            _say_it(hass, "Tej pozycji nie można zmieniać", None)
         return
 
     # check if we can change this item
-    if CURR_ENTITIE.startswith((
-        "media_player.",
-        "input_select.",
-        "input_boolean.",
-        "switch.",
-        "input_number.",
-        "script.",
-        "light."
-    )):
+    if can_entity_be_changed(hass, CURR_ENTITIE):
         # these items can be controlled from remote
         # if we are here it means that the enter on the same item was
         # pressed twice, we should do something - to mange the item status
@@ -618,43 +633,43 @@ def select_entity(hass, long_press):
             else:
                 _say_it(hass,  "graj", None)
                 hass.services.call('media_player', 'media_play', {"entity_id": CURR_ENTITIE})
-        elif (CURR_ENTITIE.startswith('input_boolean.')):
+        elif CURR_ENTITIE.startswith('input_boolean.'):
             curr_state = hass.states.get(CURR_ENTITIE).state
-            if (curr_state == 'on'):
+            if curr_state == 'on':
                 _say_it(hass, "ok, wyłączam", None)
-            if (curr_state == 'off'):
+            if curr_state == 'off':
                 _say_it(hass,  "ok, włączam", None)
             hass.services.call(
                 'input_boolean',
                 'toggle', {
                     "entity_id": CURR_ENTITIE})
-        elif (CURR_ENTITIE.startswith('switch.')):
+        elif CURR_ENTITIE.startswith('switch.'):
             curr_state = hass.states.get(CURR_ENTITIE).state
-            if (curr_state == 'on'):
+            if curr_state == 'on':
                 _say_it(hass, "ok, wyłączam", None)
-            if (curr_state == 'off'):
+            if curr_state == 'off':
                 _say_it(hass,  "ok, włączam", None)
-            if (curr_state == 'unavailable'):
+            if curr_state == 'unavailable':
                 _say_it(hass,  "przełącznik jest niedostępny", None)
             hass.services.call(
                 'switch',
                 'toggle', {
                     "entity_id": CURR_ENTITIE})
-        elif (CURR_ENTITIE.startswith('light.')):
+        elif CURR_ENTITIE.startswith('light.'):
             curr_state = hass.states.get(CURR_ENTITIE).state
-            if (curr_state == 'on'):
+            if curr_state == 'on':
                 _say_it(hass, "ok, wyłączam", None)
-            elif (curr_state == 'off'):
+            elif curr_state == 'off':
                 _say_it(hass,  "ok, włączam", None)
-            elif (curr_state == 'unavailable'):
+            elif curr_state == 'unavailable':
                 _say_it(hass,  "oświetlnie jest niedostępne", None)
             hass.services.call(
                 'light',
                 'toggle', {
                     "entity_id": CURR_ENTITIE})
-        elif (CURR_ENTITIE.startswith('input_text.')):
+        elif CURR_ENTITIE.startswith('input_text.'):
             _say_it(hass, "Powiedz co mam zrobić?", None)
-        elif (CURR_ENTITIE.startswith('script.')):
+        elif CURR_ENTITIE.startswith('script.'):
             hass.services.call(
                 'script',
                 CURR_ENTITIE.split('.')[1]
@@ -662,11 +677,11 @@ def select_entity(hass, long_press):
 
     else:
         # do some special staff for some entries
-        if (CURR_ENTITIE == 'sensor.version_info'):
+        if CURR_ENTITIE == 'sensor.version_info':
             # get the info about upgrade
             state = hass.states.get(CURR_ENTITIE)
             upgrade = state.attributes.get('reinstall_dom_app')
-            if (upgrade is True):
+            if upgrade is True:
                 _say_it(
                     hass,
                     "Aktualizuje system do najnowszej wersji. Do usłyszenia.", None)
@@ -688,16 +703,18 @@ def can_entity_be_changed(hass, entity):
         "input_select.",
         "input_boolean.",
         "switch.",
-        "input_number."
+        "input_number.",
+        "script.",
+        "light."
     )):
         return True
     else:
         return False
 
 
-def set_focus_on_down_entity(hass, long_press):
-    # down on joystick
-    if CURR_ENTITIE is not None:
+def set_on_dpad_down(hass, long_press):
+    #
+    if CURR_ENTITIE is not None and CURR_ENTITIE_SELECTED is True:
         if CURR_ENTITIE.startswith("media_player."):
             # speed up on remote
             state = hass.states.get('input_number.media_player_speed')
@@ -719,22 +736,11 @@ def set_focus_on_down_entity(hass, long_press):
                     "entity_id": "input_number.media_player_speed",
                     "value": _curr})
             return
-    # no group is selected go to next in the groups view menu
-    if CURR_GROUP is None:
-            select_entity(hass, False)
-            return
-    # group is selected
-    # check if the entity in the group is selected if not go to the group
-    if CURR_ENTITIE is None:
-            select_entity(hass, False)
-            return
-    # entity in the group is selected
-    set_next_entity(hass)
 
 
-def set_focus_on_up_entity(hass, long_press):
-    # on joystick up
-    if CURR_ENTITIE is not None:
+def set_on_dpad_up(hass, long_press):
+    #
+    if CURR_ENTITIE is not None and CURR_ENTITIE_SELECTED is True:
         if CURR_ENTITIE.startswith("media_player."):
             # speed up on remote
             state = hass.states.get('input_number.media_player_speed')
@@ -756,30 +762,11 @@ def set_focus_on_up_entity(hass, long_press):
                     "entity_id": "input_number.media_player_speed",
                     "value": _curr})
             return
-    # no group is selected go to prev in the groups view menu
-    if CURR_GROUP is None:
-            set_prev_group_view()
-            say_curr_group_view(hass)
-            return
-    # group is selected
-    # check if the entity in the group is selected
-    if CURR_ENTITIE is None:
-            set_curr_group_view()
-            say_curr_group_view(hass)
-            return
-    # entity in the group is selected
-    # check if we can go to up entity
-    if get_curr_entity_idx() == 0:
-        # go to group view
-        set_curr_group(hass, None)
-        say_curr_group(hass)
-    else:
-        set_prev_entity(hass)
 
 
 def set_focus_on_prev_entity(hass, long_press):
     # prev on joystick
-    if long_press and CURR_ENTITIE is not None:
+    if long_press and CURR_ENTITIE is not None and CURR_ENTITIE_SELECTED is True:
         if CURR_ENTITIE.startswith("media_player."):
             # seek back on remote
             _LOGGER.info("seek back in the player - info from remote")
@@ -798,16 +785,16 @@ def set_focus_on_prev_entity(hass, long_press):
             return
     # entity in the group is selected
     # check if the entity option can be selected
-    if can_entity_be_changed(hass, CURR_ENTITIE):
+    if can_entity_be_changed(hass, CURR_ENTITIE) and CURR_ENTITIE_SELECTED is True:
         set_prev_position(hass)
     else:
-        # no way to change the entity, go to next one
+        # entity not selected or no way to change the entity, go to next one
         set_prev_entity(hass)
 
 
 def set_focus_on_next_entity(hass, long_press):
     # next on joystick
-    if long_press and CURR_ENTITIE is not None:
+    if long_press and CURR_ENTITIE is not None and CURR_ENTITIE_SELECTED is True:
         if CURR_ENTITIE.startswith("media_player."):
             # seek next on remote
             _LOGGER.info("seek next in the player - info from remote")
@@ -826,15 +813,16 @@ def set_focus_on_next_entity(hass, long_press):
             return
     # entity in the group is selected
     # check if the entity option can be selected
-    if can_entity_be_changed(hass, CURR_ENTITIE):
+    if can_entity_be_changed(hass, CURR_ENTITIE) and CURR_ENTITIE_SELECTED is True:
         set_next_position(hass)
     else:
-        # no way to change the entity, go to next one
+        # entity not selected or no way to change the entity, go to next one
         set_next_entity(hass)
 
 
 def go_up_in_menu(hass):
     # on back on remote
+    global CURR_ENTITIE_SELECTED
     # check if the entity in the group is selected
     if CURR_ENTITIE is not None:
         # check if we are browsing files
@@ -846,9 +834,17 @@ def go_up_in_menu(hass):
                 _beep_it(hass, 33)
                 hass.services.call('ais_drives_service', 'browse_path', {"path": "..", "say": True})
                 return
-        # go up in the group menu
-        set_curr_group(hass, None)
-        say_curr_group(hass)
+            else:
+                # go up in the group menu
+                set_curr_group(hass, None)
+                say_curr_group(hass)
+        elif not CURR_ENTITIE_SELECTED:
+            # go up in the group menu
+            set_curr_group(hass, None)
+            say_curr_group(hass)
+        else:
+            CURR_ENTITIE_SELECTED = False
+            say_curr_entity(hass)
         return
     # no entity is selected, check if the group is selected
     elif CURR_GROUP is not None:
@@ -856,19 +852,20 @@ def go_up_in_menu(hass):
         set_curr_group_view()
         say_curr_group_view(hass)
         return
-    # go to next group view
-    set_next_group_view()
-    say_curr_group_view(hass)
+    # can't go up, beep
+    _beep_it(hass, 33)
 
 
 def go_to_player(hass, say):
     # selecting the player to control via remote
+    global CURR_ENTITIE_SELECTED
     if len(GROUP_ENTITIES) == 0:
         get_groups(hass)
     for group in GROUP_ENTITIES:
         if group['entity_id'] == 'group.audio_player':
             set_curr_group(hass, group)
             set_curr_entity(hass, 'media_player.wbudowany_glosnik')
+            CURR_ENTITIE_SELECTED = True
             if say:
                 _say_it(hass, "Sterowanie odtwarzaczem", None)
 
@@ -882,23 +879,23 @@ def go_home(hass):
     set_curr_group_view()
     say_curr_group_view(hass)
 
+
 def get_groups(hass):
     global GROUP_ENTITIES
+    global ALL_AIS_SENSORS
     entities = hass.states.async_all()
     GROUP_ENTITIES = []
 
-    def add_menu_item(entity):
-        _LOGGER.debug('add_menu_item ' + str(entity))
-        group = {}
-        group['friendly_name'] = entity.attributes.get('friendly_name')
-        group['order'] = entity.attributes.get('order')
-        group['entity_id'] = entity.entity_id
-        group['entities'] = entity.attributes.get('entity_id')
-        group['context_key_words'] = entity.attributes.get('context_key_words')
-        group['context_answer'] = entity.attributes.get('context_answer')
-        group['context_suffix'] = entity.attributes.get('context_suffix')
-        group['remote_group_view'] = entity.attributes.get('remote_group_view')
-        GROUP_ENTITIES.append(group)
+    def add_menu_item(l_entity):
+        l_group = {'friendly_name': l_entity.attributes.get('friendly_name'),
+                   'order': l_entity.attributes.get('order'),
+                   'entity_id': l_entity.entity_id,
+                   'entities': l_entity.attributes.get('entity_id'),
+                   'context_key_words': l_entity.attributes.get('context_key_words'),
+                   'context_answer': l_entity.attributes.get('context_answer'),
+                   'context_suffix': l_entity.attributes.get('context_suffix'),
+                   'remote_group_view': l_entity.attributes.get('remote_group_view')}
+        GROUP_ENTITIES.append(l_group)
 
     def getKey(item):
         return item['order']
@@ -906,22 +903,40 @@ def get_groups(hass):
     for entity in entities:
         if entity.entity_id.startswith('group.'):
             remote = entity.attributes.get('remote_group_view')
-            if (remote is not None):
-                if (entity.entity_id != 'group.ais_pilot'):
+            if remote is not None:
+                if entity.entity_id != 'group.ais_pilot':
                     add_menu_item(entity)
         elif entity.entity_id.startswith('sensor.'):
             # add sensors to the all_ais_sensors group
             device_class = entity.attributes.get('device_class', None)
             if device_class is not None:
+                # new_sensor = {
+                #     "entity_id": entity.entity_id,
+                #     "friendly_name": entity.attributes.get('friendly_name', "Brak nazwy")}
+                # ALL_AIS_SENSORS.append(new_sensor)
+                # # sort by name
+                # entities = []
+                # for sorted_sensors in sorted(ALL_AIS_SENSORS, key=lambda i: i['friendly_name']):
+                #     entities.append(sorted_sensors['entity_id'])
+                # # distinct
+                # entities = list(set(entities))
+                ALL_AIS_SENSORS.append(entity.entity_id)
+                all_unique_sensors = list(set(ALL_AIS_SENSORS))
+                all_unique_sensors.sort()
                 hass.async_add_job(
                     hass.services.async_call(
                         'group',
                         'set', {
                             "object_id": "all_ais_sensors",
-                            "add_entities": [entity.entity_id]
+                            "entities": all_unique_sensors
                         }
                     )
                 )
+                # update sensors on remote
+                for group in GROUP_ENTITIES:
+                    if group['entity_id'] == 'group.all_ais_sensors':
+                        group['entities'] = tuple(all_unique_sensors)
+
     GROUP_ENTITIES = sorted(GROUP_ENTITIES, key=getKey)
 
 
@@ -963,7 +978,8 @@ async def async_setup(hass, config):
         """Welcome message."""
         text = "Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?"
         if ais_global.G_OFFLINE_MODE:
-            text = "Uwaga, uruchomienie bez dostępu do sieci, część usług może nie działać poprawnie. Sprawdź połączenie z Internetem."
+            text = "Uwaga, uruchomienie bez dostępu do sieci, część usług może nie działać poprawnie." \
+                   "Sprawdź połączenie z Internetem."
         _say_it(hass, text, None)
 
     @asyncio.coroutine
@@ -1581,7 +1597,7 @@ def _process_code(hass, data, callback):
     elif action == 2:
         # ACTION_MULTIPLE = 2;
         # check if long press will be send to us
-        _LOGGER.error("long press on " + str(data))
+        _LOGGER.info("long press on " + str(data))
         return
 
     elif action == 1:
@@ -1623,16 +1639,18 @@ def _process_code(hass, data, callback):
         pass
     elif code == 71:
         # MIC DOWN -> KEYCODE_LEFT_BRACKET
-        hass.states.set('binary_sensor.ais_remote_mic', 'on')
+        pass
     elif code == 72:
         # MIC UP -> KEYCODE_RIGHT_BRACKET
-        hass.states.set('binary_sensor.ais_remote_mic', 'off')
+        pass
     elif code == 19:
         # Dpad up -> KEYCODE_DPAD_UP
-        set_focus_on_up_entity(hass, CURR_BUTTON_LONG_PRESS)
+        set_on_dpad_up(hass, CURR_BUTTON_LONG_PRESS)
+        pass
     elif code == 20:
         # Dpad down -> KEYCODE_DPAD_DOWN
-        set_focus_on_down_entity(hass, CURR_BUTTON_LONG_PRESS)
+        set_on_dpad_down(hass, CURR_BUTTON_LONG_PRESS)
+        pass
     elif code == 21:
         # Dpad left -> KEYCODE_DPAD_LEFT
         set_focus_on_prev_entity(hass, CURR_BUTTON_LONG_PRESS)
@@ -1744,7 +1762,7 @@ def _process(hass, text, callback):
             m = ws_resp.text
 
     except Exception as e:
-        _LOGGER.error('_process: ' + str(e))
+        _LOGGER.warning('_process: ' + str(e))
         m = "Przepraszam, ale mam problem ze zrozumieniem: " + text
     # return response to the ais dom
     if m != 'DO_NOT_SAY':

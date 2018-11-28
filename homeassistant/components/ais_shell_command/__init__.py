@@ -36,6 +36,14 @@ def async_setup(hass, config):
         yield from _execute_upgrade(hass, service)
 
     @asyncio.coroutine
+    def execute_restart(service):
+        yield from _execute_restart(hass, service)
+
+    @asyncio.coroutine
+    def execute_stop(service):
+        yield from _execute_stop(hass, service)
+
+    @asyncio.coroutine
     def key_event(service):
         yield from _key_event(hass, service)
 
@@ -73,6 +81,10 @@ def async_setup(hass, config):
         DOMAIN, 'execute_script', execute_script)
     hass.services.async_register(
         DOMAIN, 'execute_upgrade', execute_upgrade)
+    hass.services.async_register(
+        DOMAIN, 'execute_restart', execute_restart)
+    hass.services.async_register(
+        DOMAIN, 'execute_stop', execute_stop)
     hass.services.async_register(
         DOMAIN, 'key_event', key_event)
     hass.services.async_register(
@@ -230,6 +242,22 @@ def _execute_upgrade(hass, call):
         process.wait()
         _LOGGER.info("_execute_upgrade, return: " + str(process.returncode))
         yield from hass.services.async_call('homeassistant', 'stop')
+
+
+@asyncio.coroutine
+def _execute_restart(hass, call):
+    import subprocess
+    subprocess.Popen(
+        "su -c reboot",
+        shell=True, stdout=None, stderr=None)
+
+
+@asyncio.coroutine
+def _execute_stop(hass, call):
+    import subprocess
+    subprocess.Popen(
+        "su -c shutdown",
+        shell=True, stdout=None, stderr=None)
 
 
 @asyncio.coroutine

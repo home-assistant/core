@@ -39,4 +39,10 @@ group:
       - input_select.rss_news_item
       - input_select.rss_news_player
       - sensor.rss_news_text
-
+  ais_rss_news_remote:
+    control: hidden
+    name: Wiadomości
+    entities:
+      - input_select.rss_news_category
+      - input_select.rss_news_channel
+      - input_select.rss_news_item

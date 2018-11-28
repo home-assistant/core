@@ -107,14 +107,14 @@ class ExoPlayerDevice(MediaPlayerDevice):
         """Fetch status from ExoPlayer."""
         _LOGGER.debug("_fetch_status")
         # TODO maybe we should do this for other players in network...
-        self.hass.services.call(
-            'ais_ai_service',
-            'publish_command_to_frame', {
-                "key": 'getAudioStatus',
-                "val": True,
-                "ip": self._device_ip
-                }
-            )
+        # self.hass.services.call(
+        #     'ais_ai_service',
+        #     'publish_command_to_frame', {
+        #         "key": 'getAudioStatus',
+        #         "val": True,
+        #         "ip": self._device_ip
+        #         }
+        #     )
 
     @property
     def source(self):

@@ -2,10 +2,14 @@ sensor:
   - platform: template
     sensors:
       ais_connect_iot_device_info:
-        value_template: "a) podłącz urządzenie do prądu\n
-                        b) uruchom 'Skanuj w poszukiwaniu nowych urządzeń'\n
-                        c) wybierz sieć wifi, jeśli podłączasz urządzenie do zabezpieczonej sieci to podaj też hasło\n
-                        d) podaj nazwę dla nowego urządzenia i uruchom 'Dołącz nowe urządzenie'"
+        value_template: "Podłącz urządzenie do prądu i uruchom 'Skanuj w poszukiwaniu nowych urządzeń'.
+                        Następnie wybierz sieć wifi do której dołączasz urządzenie oraz nazwę nowego urządzenia.
+                        Żeby zatwierdzić wybierz 'Dołącz nowe urządzenie'"
+
+
+      ais_android_wifi_current_network_info:
+        value_template: "Brak informacji o połączeniu WiFi"
+
   - platform: ais_android_cmd
     command: getprop net.hostname
     name: local_host_name
@@ -22,15 +26,6 @@ sensor:
     name: ais_rss_help_text
     package: homeassistant.components.ais_cloud
     method: get_rss_help_text
-  - platform: rest
-    name: ais_android_wifi_current_network_info
-    resource: http://localhost:8122/command
-    method: POST
-    payload: '{ "WifiConnectionInfo" : true }'
-    verify_ssl: false
-    headers:
-      User-Agent: AIS dom
-      Content-Type: application/json
 weblink:
   entities:
     - name: http_url
@@ -105,7 +100,6 @@ group:
     control: hidden
     entities:
       - sensor.local_host_name
-      - sensor.external_ip_address
       - sensor.internal_ip_address
       - sensor.ais_android_wifi_current_network_info
       - script.ais_scan_android_wifi_network
@@ -134,4 +128,8 @@ group:
     entities:
       - input_select.ais_rss_help_topic
       - sensor.ais_rss_help_text
-
+  ais_rss_help_remote:
+    control: hidden
+    name: Strony pomocy
+    entities:
+      - input_select.ais_rss_help_topic

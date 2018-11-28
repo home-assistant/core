@@ -5,7 +5,7 @@ group:
     icon: mdi:home-outline
     entities:
       - sensor.time
-      - sensor.date
+      - sensor.daytodisplay
       - sun.sun
       - group.ais_wyszukiwarka
       - media_player.wbudowany_glosnik
@@ -69,5 +69,15 @@ group:
         - group.ais_pilot
         - group.ais_dev_ssh
         - group.ais_host_rename
-        - group.system_status
         - group.ais_devices_in_network
+
+  # special groups for remote
+  pomoc_remote:
+    name: Pomoc
+    entities:
+      - group.dom_system_version
+      - group.ais_rss_help_remote
+  news_remote:
+    name: Wiadomości
+    entities:
+      - group.ais_rss_news_remote

@@ -12,6 +12,10 @@ sensor.version_info:
   custom_ui_state_card: state-card-text
 script.ais_update_system:
   icon: mdi:download
+script.ais_restart_system:
+  icon: mdi:restart
+script.ais_stop_system:
+  icon: mdi:stop
 sun.sun:
   friendly_name: Pozycja słońca
 sensor.time:
@@ -20,10 +24,6 @@ sensor.date:
   friendly_name: Dzień
 script.ais_change_host_name:
   icon: mdi:alert
-binary_sensor.ais_remote_mic:
-  friendly_name: Mikrofon w pilocie
-  custom_ui_state_card: state-card-ais-microphone
-  icon: mdi:microphone
 binary_sensor.ais_remote_button:
   friendly_name: Przycisk w pilocie
 binary_sensor.selected_entity:
@@ -55,28 +55,28 @@ input_text.buttons_ais_remote:
     column_width: 110px
     row_height: 22px
     entities:
-    - entity: script.ais_button_click
-      data:
-        code: '{"KeyCode":190, "Action": 1}'
-      row: 1
-      column: 1
-      icon: mdi:play-pause
-      color: tomato
-    - entity: script.ais_button_click
-      label: Up
-      data:
-        code: '{"KeyCode":19, "Action": 1}'
-      icon: mdi:arrow-up
-      row: 1
-      column: 2
-      row_span: 2
-      color: silver
+#    - entity: script.ais_button_click
+#      data:
+#        code: '{"KeyCode":190, "Action": 1}'
+#      row: 1
+#      column: 1
+#      icon: mdi:play-pause
+#      color: tomato
+#    - entity: script.ais_button_click
+#      label: Up
+#      data:
+#        code: '{"KeyCode":19, "Action": 1}'
+#      icon: mdi:arrow-up
+#      row: 1
+#      column: 2
+#      row_span: 2
+#      color: silver
     - entity: script.ais_button_click
       data:
         code: '{"KeyCode":21, "Action": 1}'
       label: Left
       icon: mdi:arrow-left
-      row: 3
+      row: 1
       column: 1
       row_span: 2
       color: silver
@@ -84,7 +84,7 @@ input_text.buttons_ais_remote:
       data:
         code: '{"KeyCode":23, "Action": 0}'
       label: OK
-      row: 3
+      row: 1
       column: 2
       row_span: 2
       color: grey
@@ -93,46 +93,46 @@ input_text.buttons_ais_remote:
         code: '{"KeyCode":22, "Action": 1}'
       label: Right
       icon: mdi:arrow-right
-      row: 3
+      row: 1
       column: 3
       row_span: 2
       color: silver
-    - entity: script.ais_button_click
-      data:
-        code: '{"KeyCode":20, "Action": 1}'
-      label: Down
-      icon: mdi:arrow-down
-      row: 5
-      column: 2
-      row_span: 2
-      color: silver
-    - entity: script.ais_button_click
-      data:
-        code: '{"KeyCode":190, "Action": 1}'
-      label: Home
-      row: 7
-      column: 1
-      row_span: 2
-      icon: mdi:home
+#    - entity: script.ais_button_click
+#      data:
+#        code: '{"KeyCode":20, "Action": 1}'
+#      label: Down
+#      icon: mdi:arrow-down
+#      row: 5
+#      column: 2
+#      row_span: 2
+#      color: silver
+#    - entity: script.ais_button_click
+#      data:
+#        code: '{"KeyCode":190, "Action": 1}'
+#      label: Home
+#      row: 7
+#      column: 1
+#      row_span: 2
+#      icon: mdi:home
     - entity: script.ais_button_click
       data:
         code: '{"KeyCode":4, "Action": 1}'
       label: Back
-      row: 7
+      row: 3
       column: 3
       row_span: 2
       icon: mdi:backup-restore
-    - entity: script.ais_button_click
-      data:
-        code: '{"KeyCode":71, "Action": 1}'
-      label: Mic
-      row: 8
-      column: 2
-      row_span: 2
-      color: dodgerblue
-      color_on: red
-      color_off: green
-      icon: mdi:microphone-settings
+#    - entity: script.ais_button_click
+#      data:
+#        code: '{"KeyCode":71, "Action": 1}'
+#      label: Mic
+#      row: 8
+#      column: 2
+#      row_span: 2
+#      color: dodgerblue
+#      color_on: red
+#      color_off: green
+#      icon: mdi:microphone-settings
 weblink.klucz_ssh:
   friendly_name: 'KLUCZ SSH'
 weblink.ftp_url:
@@ -156,9 +156,6 @@ sensor.internal_ip_address:
 sensor.ais_android_wifi_current_network_info:
   friendly_name: Połączenie Wifi
   custom_ui_state_card: state-card-text
-sensor.external_ip_address:
-  friendly_name: Zewnętrzny adres IP
-  icon: mdi:server-network
 sensor.local_host_name:
   friendly_name: Lokalna nazwa hosta
   icon: mdi:dns
@@ -179,6 +176,7 @@ sensor.wolna_pamiec:
   friendly_name: Wolna pamięć
 sensor.ais_rss_help_text:
   custom_ui_state_card: state-card-text
+  friendly_name: Tekst strony
 script.ais_scan_android_wifi_network:
   icon: mdi:router-wireless
 script.ais_scan_iot_devices_in_network:
@@ -195,6 +193,7 @@ sensor.ais_knowledge_answer:
   custom_ui_state_card: state-card-text
 sensor.rss_news_text:
   custom_ui_state_card: state-card-text
+  friendly_name: Tekst strony
 media_player.wbudowany_glosnik:
   friendly_name: Podłączony głośnik
 sensor.yweather_condition:
@@ -235,23 +234,20 @@ sensor.yw_day1_humidity:
   icon: mdi:water-percent
 sensor.yw_day1_visibility:
   friendly_name: Widoczność jutro
+sensor.ais_drives_info:
+  custom_ui_state_card: state-card-text
+  friendly_name: "Stan dysków:"
 group.dom_system_version:
   context_key_words: wersja,aktualizacja,wersja systemu
   context_answer: OK, wybrano informację o wersji. Możesz nawigować pilotem by sprawdzić
     dostępność aktualizacji systemu
-  friendly_name: Wersja systemu
+  friendly_name: System
   remote_group_view: Pomoc
   order: 1
 #group.dom_cloud:
 #  friendly_name: Usługi AIS dom
 #  order: 2
-group.system_status:
-  context_key_words: system,status systemu
-  context_answer: OK, wybrano status systemu. Możesz nawigować pilotem by uzyskać
-    informację o statusie elementów systemu
-  remote_group_view: Pomoc
-  order: 3
-group.ais_rss_help:
+group.ais_rss_help_remote:
   context_key_words: instrukcja,pomoc,pomocy,help
   context_answer: OK, wybierz pilotem stronę pomocy
   remote_group_view: Pomoc
@@ -319,7 +315,7 @@ group.bookmarks:
 #  context_answer: Powiedz proszę jakie informację mam wyszukać?
 #  context_suffix: Znajdź informacje o
 #  remote_group_view: Twój Dom
-group.ais_rss_news:
+group.ais_rss_news_remote:
   order: 1
   context_key_words: wiadomości,informacje
   context_answer: OK, wybierz pilotem kategorię, kanał i artykuł który mam przeczytać

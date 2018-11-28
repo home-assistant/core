@@ -40,7 +40,7 @@ def check_url(url_address):
         return url_address
 
 
-    # Get player id by his name
+# Get player id by his name
 def get_player_data(player_name):
     for player in G_PLAYERS:
         if player["friendly_name"] == player_name:
@@ -115,7 +115,6 @@ def async_setup(hass, config):
         _LOGGER.info("select_rss_help_item")
         data.select_rss_help_item(call)
 
-
     # register services
     hass.services.async_register(
         DOMAIN, 'get_radio_types', get_radio_types)
@@ -146,7 +145,6 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, 'select_rss_help_item', select_rss_help_item)
 
-
     def device_discovered(service):
         """ Called when a device has been discovered. """
         _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
@@ -176,15 +174,14 @@ def async_setup(hass, config):
             # prepare menu
             hass.async_add_job(
                 hass.services.async_call(
-                'ais_ai_service',
-                'prepare_remote_menu'
+                    'ais_ai_service',
+                    'prepare_remote_menu'
                 )
             )
         except Exception as e:
             _LOGGER.error("device_discovered: " + str(e))
 
     hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, device_discovered)
-
 
     def state_changed(state_event):
         """ Called on state change """
@@ -203,21 +200,21 @@ def async_setup(hass, config):
                 )
         elif entity_id == 'input_select.assistant_voice':
             voice = hass.states.get(entity_id).state
-            if (voice == 'Kobieta online'):
+            if voice == 'Jola online':
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda-network'
-            elif (voice == 'Kobieta lokalnie'):
+            elif voice == 'Jola lokalnie':
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda-local'
-            elif (voice == 'Kobieta 1'):
+            elif voice == 'Celina':
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda#female_1-local'
-            elif (voice == 'Kobieta 2'):
+            elif voice == 'Anżela':
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda#female_2-local'
-            elif (voice == 'Kobieta 3'):
+            elif voice == 'Asia':
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda#female_3-local'
-            elif (voice == 'Mężczyzna 1'):
+            elif voice == 'Sebastian':
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda#male_1-local'
-            elif (voice == 'Mężczyzna 2'):
+            elif voice == 'Bartek':
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda#male_2-local'
-            elif (voice == 'Mężczyzna 3'):
+            elif voice == 'Andrzej':
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda#male_3-local'
             else:
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda-local'
@@ -280,7 +277,7 @@ class AisCloudWS:
             rest_url = self.url + 'token_info?token=' + token
             ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
             json_ws_resp = ws_resp.json()
-            if (json_ws_resp["valid"] == 1):
+            if json_ws_resp["valid"] == 1:
                 self.fomatCloudToken(token)
                 return token
         except Exception as e:
@@ -319,15 +316,15 @@ class AisCloudWS:
             _LOGGER.error("Can't connect to AIS Cloud!!!")
             ais_global.G_OFFLINE_MODE = True
 
-    def audio_name(self, nature, type):
+    def audio_name(self, nature, a_type):
         rest_url = self.url + "audio_name?nature=" + nature
-        rest_url += "&type=" + type
+        rest_url += "&type=" + a_type
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
         return ws_resp
 
-    def audio(self, item, type, text_input):
+    def audio(self, item, a_type, text_input):
         rest_url = self.url + "audio?item=" + item + "&type="
-        rest_url += type + "&text_input=" + text_input
+        rest_url += a_type + "&text_input=" + text_input
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
         return ws_resp
 
@@ -481,7 +478,7 @@ class AisColudData:
 
     def get_radio_names(self, call):
         """Load stations of the for the selected type."""
-        if ("radio_type" not in call.data):
+        if "radio_type" not in call.data:
             _LOGGER.error("No radio_type")
             return []
         if call.data["radio_type"] == ais_global.G_EMPTY_OPTION:
@@ -534,7 +531,7 @@ class AisColudData:
 
     def select_radio_name(self, call):
         """Get station stream url for the selected name."""
-        if ("radio_name" not in call.data):
+        if "radio_name" not in call.data:
             _LOGGER.error("No radio_name")
             return
 
@@ -590,7 +587,7 @@ class AisColudData:
 
     def get_podcast_names(self, call):
         """Load podcasts names for the selected type."""
-        if ("podcast_type" not in call.data):
+        if "podcast_type" not in call.data:
             _LOGGER.error("No podcast_type")
             return []
         if call.data["podcast_type"] == ais_global.G_EMPTY_OPTION:
@@ -629,8 +626,7 @@ class AisColudData:
 
     def get_podcast_tracks(self, call):
         import feedparser
-        selected_by_voice_command = False
-        if ("podcast_name" not in call.data):
+        if "podcast_name" not in call.data:
             _LOGGER.error("No podcast_name")
             return
         if call.data["podcast_name"] == ais_global.G_EMPTY_OPTION:
@@ -642,7 +638,7 @@ class AisColudData:
                     "options": [ais_global.G_EMPTY_OPTION]})
             return
         podcast_name = call.data["podcast_name"]
-        if ("lookup_url" in call.data):
+        if "lookup_url" in call.data:
             _lookup_url = call.data["lookup_url"]
             _image_url = call.data["image_url"]
             selected_by_voice_command = True
@@ -668,9 +664,7 @@ class AisColudData:
                 tracks = [ais_global.G_EMPTY_OPTION]
                 self.podcast_tracks = []
                 for e in d.entries:
-                    track = {}
-                    track['title'] = e.title
-                    track['link'] = e.enclosures[0]
+                    track = {'title': e.title, 'link': e.enclosures[0]}
                     try:
                         track['image_url'] = d.feed.image.href
                     except Exception:
@@ -683,7 +677,7 @@ class AisColudData:
                         "entity_id": "input_select.podcast_track",
                         "options": tracks})
 
-                if (selected_by_voice_command):
+                if selected_by_voice_command:
                     track = self.podcast_tracks[0]
                     self.hass.services.call(
                         'ais_ai_service',
@@ -731,7 +725,7 @@ class AisColudData:
 
     def select_podcast_track(self, call):
         """Get track stream url for the selected name."""
-        if ("podcast_track" not in call.data):
+        if "podcast_track" not in call.data:
             _LOGGER.error("No podcast_track")
             return
         if call.data["podcast_track"] == ais_global.G_EMPTY_OPTION:
@@ -786,7 +780,7 @@ class AisColudData:
 
     def play_audio(self, call):
         audio_type = call.data["audio_type"]
-        if (audio_type == ais_global.G_AN_RADIO):
+        if audio_type == ais_global.G_AN_RADIO:
             self.hass.services.call(
                 'input_select',
                 'select_option', {
@@ -813,10 +807,8 @@ class AisColudData:
                 })
             # set stream image and title
             if player["device_ip"] is not None:
-                _audio_info = {}
-                _audio_info["IMAGE_URL"] = call.data["image_url"]
-                _audio_info["NAME"] = call.data["name"]
-                _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_RADIO
+                _audio_info = {"IMAGE_URL": call.data["image_url"], "NAME": call.data["name"],
+                               "MEDIA_SOURCE": ais_global.G_AN_RADIO}
                 _audio_info = json.dumps(_audio_info)
                 self.hass.services.call(
                     'media_player',
@@ -825,7 +817,7 @@ class AisColudData:
                         "media_content_type": "ais_info",
                         "media_content_id": _audio_info
                     })
-        if (audio_type == ais_global.G_AN_PODCAST):
+        if audio_type == ais_global.G_AN_PODCAST:
             self.hass.services.call(
                 'input_select',
                 'select_option', {
@@ -846,7 +838,7 @@ class AisColudData:
                     "entity_id": "input_select.podcast_name",
                     "option": call.data["name"]})
 
-        if (audio_type == ais_global.G_AN_MUSIC):
+        if audio_type == ais_global.G_AN_MUSIC:
             self.hass.services.call(
                 'input_text',
                 'set_value', {
@@ -854,7 +846,7 @@ class AisColudData:
                     "value": call.data["text"]})
 
     def select_media_player(self, call):
-        if ("media_player_type" not in call.data):
+        if "media_player_type" not in call.data:
             _LOGGER.error("No media_player_type")
             return
         player_name = None
@@ -916,12 +908,10 @@ class AisColudData:
                 'input_select.book_player').state
             import homeassistant.components.ais_gm_service as gm
             for ch in gm.G_SELECTED_TRACKS:
-                if(ch["name"] == chapter_name):
+                if ch["name"] == chapter_name:
                     _url = gm.G_GM_MOBILE_CLIENT_API.get_stream_url(ch["id"])
-                    _audio_info = {}
-                    _audio_info["IMAGE_URL"] = ch["image"]
-                    _audio_info["NAME"] = ch["name"]
-                    _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_AUDIOBOOK
+                    _audio_info = {"IMAGE_URL": ch["image"], "NAME": ch["name"],
+                                   "MEDIA_SOURCE": ais_global.G_AN_AUDIOBOOK}
         if player_name is not None:
             player = get_player_data(player_name)
         if _url is not None:
@@ -947,11 +937,11 @@ class AisColudData:
         global G_PLAYERS
         G_PLAYERS = []
         players_lv = []
-        if ("device_name" in call.data):
+        if "device_name" in call.data:
             # check if this device already exists
             name = slugify(call.data.get('device_name'))
-            palyer = hass.states.get('media_player.' + name)
-            if palyer is None:
+            m_player = hass.states.get('media_player.' + name)
+            if m_player is None:
                 _LOGGER.info("Adding new ais dom player " + name)
                 hass.async_run_job(
                     async_load_platform(
@@ -1030,10 +1020,9 @@ class AisColudData:
         import homeassistant.components.ais_ai_service as ais_ai
         ais_ai.get_groups(hass)
 
-
     def get_rss_news_channels(self, call):
         """Load news channels of the for the selected category."""
-        if ("rss_news_category" not in call.data):
+        if "rss_news_category" not in call.data:
             _LOGGER.error("No rss_news_category")
             return []
         if call.data["rss_news_category"] == ais_global.G_EMPTY_OPTION:
@@ -1072,8 +1061,7 @@ class AisColudData:
 
     def get_rss_news_items(self, call):
         import feedparser
-        selected_by_voice_command = False
-        if ("rss_news_channel" not in call.data):
+        if "rss_news_channel" not in call.data:
             _LOGGER.error("No rss_news_channel")
             return
         if call.data["rss_news_channel"] == ais_global.G_EMPTY_OPTION:
@@ -1085,7 +1073,7 @@ class AisColudData:
                     "options": [ais_global.G_EMPTY_OPTION]})
             return
         rss_news_channel = call.data["rss_news_channel"]
-        if ("lookup_url" in call.data):
+        if "lookup_url" in call.data:
             _lookup_url = call.data["lookup_url"]
             _image_url = call.data["image_url"]
             selected_by_voice_command = True
@@ -1111,11 +1099,7 @@ class AisColudData:
                 items = [ais_global.G_EMPTY_OPTION]
                 self.news_items = []
                 for e in d.entries:
-                    item = {}
-                    item['title'] = e.title
-                    item['link'] = e.link
-                    item['image_url'] = _image_url
-                    item['description'] = e.description
+                    item = {'title': e.title, 'link': e.link, 'image_url': _image_url, 'description': e.description}
                     if e.title not in items:
                         items.append(e.title)
                         self.news_items.append(item)
@@ -1125,7 +1109,7 @@ class AisColudData:
                         "entity_id": "input_select.rss_news_item",
                         "options": items})
 
-                if (selected_by_voice_command):
+                if selected_by_voice_command:
                     item = self.news_items[0]
                     self.hass.services.call(
                         'ais_ai_service',
@@ -1170,16 +1154,17 @@ class AisColudData:
     def select_rss_news_item(self, call):
         """Get text for the selected item."""
         global GLOBAL_RSS_NEWS_TEXT
-        if ("rss_news_item" not in call.data):
+        if "rss_news_item" not in call.data:
             _LOGGER.error("No rss_news_item")
             return
         if call.data["rss_news_item"] == ais_global.G_EMPTY_OPTION:
             # reset status for item below
             GLOBAL_RSS_NEWS_TEXT = ''
             self.hass.states.async_set(
-                'sensor.rss_news_text', 'ok', {
+                'sensor.rss_news_text', '-', {
                     'custom_ui_state_card': 'state-card-text',
-                    'text': "" + GLOBAL_RSS_NEWS_TEXT
+                    'text': "" + GLOBAL_RSS_NEWS_TEXT,
+                    'friendly_name': 'Tekst strony'
                     })
             return
         # the station was selected from select list in app
@@ -1215,29 +1200,32 @@ class AisColudData:
         text += '*' + rss_news_item + "\n" + GLOBAL_RSS_NEWS_TEXT
         GLOBAL_RSS_NEWS_TEXT = text
         self.hass.states.async_set(
-            'sensor.rss_news_text', 'ok', {
+            'sensor.rss_news_text', GLOBAL_RSS_NEWS_TEXT[:200], {
                 'custom_ui_state_card': 'state-card-text',
-                'text': "" + GLOBAL_RSS_NEWS_TEXT
+                'text': "" + GLOBAL_RSS_NEWS_TEXT,
+                'friendly_name': 'Tekst strony'
                 })
 
     def select_rss_help_item(self, call):
         """Get text for the selected item."""
         global GLOBAL_RSS_HELP_TEXT
         GLOBAL_RSS_HELP_TEXT = ''
-        if ("rss_help_topic" not in call.data):
+        if "rss_help_topic" not in call.data:
             _LOGGER.error("No rss_help_topic")
             return
         if call.data["rss_help_topic"] == ais_global.G_EMPTY_OPTION:
             # reset status for item below
             self.hass.states.async_set(
-                'sensor.ais_rss_help_text', 'ok', {
+                'sensor.ais_rss_help_text', "-", {
                     'custom_ui_state_card': 'state-card-text',
-                    'text': "" + GLOBAL_RSS_HELP_TEXT
+                    'text': "" + GLOBAL_RSS_HELP_TEXT,
+                    'friendly_name': "Tekst strony"
                 })
             return
         # we need to build the url and get the text to read
         rss_help_topic = call.data["rss_help_topic"]
-        _url = check_url("https://raw.githubusercontent.com/wiki/sviete/AIS-WWW/" + rss_help_topic.replace(" ", "-") + ".md")
+        _url = check_url(
+            "https://raw.githubusercontent.com/wiki/sviete/AIS-WWW/" + rss_help_topic.replace(" ", "-") + ".md")
         import requests
         from readability import Document
         response = requests.get(_url)
@@ -1258,7 +1246,8 @@ class AisColudData:
         text += '*' + rss_help_topic + "\n" + GLOBAL_RSS_HELP_TEXT
         GLOBAL_RSS_HELP_TEXT = text
         self.hass.states.async_set(
-            'sensor.ais_rss_help_text', 'ok', {
+            'sensor.ais_rss_help_text', GLOBAL_RSS_HELP_TEXT[:200], {
                 'custom_ui_state_card': 'state-card-text',
-                'text': "" + GLOBAL_RSS_HELP_TEXT
+                'text': "" + GLOBAL_RSS_HELP_TEXT,
+                'friendly_name': "Tekst strony"
             })

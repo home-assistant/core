@@ -1,12 +1,17 @@
+sensor:
+  - platform: template
+    sensors:
+      ais_drives_info:
+        value_template: "informacja o poszczególnych dyskach, funkcjonalność w przygotowaniu"
 input_select:
   folder_name:
-    name: Przeglądaj
+    name: "Przeglądaj zawartość:"
     options:
      - "-"
     icon: mdi:folder-search
     #icon: mdi:folder-google-drive
   file_player:
-    name: 'Głośnik:'
+    name: 'Odtwarzaj pliki na głośniku:'
     options:
      - Podłączony głośnik
     icon: mdi:speaker-wireless
@@ -16,4 +21,5 @@ group:
     name: Dyski
     entities:
     - input_select.folder_name
+    - sensor.ais_drives_info
     - input_select.file_player
