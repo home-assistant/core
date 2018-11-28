@@ -4,7 +4,7 @@
             "one_instance_allowed": "Only a single instance is necessary."
         },
         "create_entry": {
-            "default": "To configure OwnTracks, open the app, go to preferences -> connection. Change the following settings\n\n - Mode: Private HTTP\n - Host: {webhook_url}\n - Identification:\n   - Username: `<Your name>`\n   - Device ID: `<Your device name>`\n\n{secret}\n\nSee [the documentation]({docs_url}) for more information."
+            "default": "To configure OwnTracks, open the app, go to preferences -> connection. Change the following settings\n\n - Mode: Private HTTP\n - Host: {webhook_url}\n - Identification/Authentication:\n   - Username: `<Your name>`\n   - Device ID (Android only): `<Your device name>`\n\n{secret}\n\nSee [the documentation]({docs_url}) for more information."
         },
         "step": {
             "user": {
