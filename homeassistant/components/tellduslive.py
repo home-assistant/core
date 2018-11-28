@@ -9,11 +9,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.discovery import SERVICE_TELLDUSLIVE
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, CONF_HOST, CONF_TOKEN, DEVICE_DEFAULT_NAME,
+    ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME,
+    CONF_TOKEN, CONF_HOST,
     EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers import discovery
+from homeassistant.components.discovery import SERVICE_TELLDUSLIVE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_utc_time
@@ -359,8 +360,3 @@ class TelldusLiveEntity(Entity):
         """Return the last update of a device."""
         return str(datetime.fromtimestamp(self.device.lastUpdated)) \
             if self.device.lastUpdated else None
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._id

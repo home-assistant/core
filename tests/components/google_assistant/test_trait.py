@@ -1,6 +1,10 @@
 """Tests for the Google Assistant traits."""
 import pytest
 
+from homeassistant.const import (
+    STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES)
+from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.components import (
     climate,
     cover,
@@ -16,11 +20,8 @@ from homeassistant.components import (
     group,
 )
 from homeassistant.components.google_assistant import trait, helpers, const
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES)
-from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.util import color
+
 from tests.common import async_mock_service
 
 BASIC_CONFIG = helpers.Config(
@@ -385,47 +386,6 @@ async def test_onoff_media_player(hass):
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'media_player.bla',
-    }
-
-
-async def test_onoff_climate(hass):
-    """Test OnOff trait support for climate domain."""
-    assert trait.OnOffTrait.supported(climate.DOMAIN, climate.SUPPORT_ON_OFF)
-
-    trt_on = trait.OnOffTrait(hass, State('climate.bla', STATE_ON),
-                              BASIC_CONFIG)
-
-    assert trt_on.sync_attributes() == {}
-
-    assert trt_on.query_attributes() == {
-        'on': True
-    }
-
-    trt_off = trait.OnOffTrait(hass, State('climate.bla', STATE_OFF),
-                               BASIC_CONFIG)
-
-    assert trt_off.query_attributes() == {
-        'on': False
-    }
-
-    on_calls = async_mock_service(hass, climate.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, {
-        'on': True
-    })
-    assert len(on_calls) == 1
-    assert on_calls[0].data == {
-        ATTR_ENTITY_ID: 'climate.bla',
-    }
-
-    off_calls = async_mock_service(hass, climate.DOMAIN,
-                                   SERVICE_TURN_OFF)
-
-    await trt_on.execute(trait.COMMAND_ONOFF, {
-        'on': False
-    })
-    assert len(off_calls) == 1
-    assert off_calls[0].data == {
-        ATTR_ENTITY_ID: 'climate.bla',
     }
 
 
@@ -834,85 +794,4 @@ async def test_lock_unlock_unlock(hass):
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'lock.front_door'
-    }
-
-
-async def test_fan_speed(hass):
-    """Test FanSpeed trait speed control support for fan domain."""
-    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED)
-
-    trt = trait.FanSpeedTrait(
-        hass, State(
-            'fan.living_room_fan', fan.SPEED_HIGH, attributes={
-                'speed_list': [
-                    fan.SPEED_OFF, fan.SPEED_LOW, fan.SPEED_MEDIUM,
-                    fan.SPEED_HIGH
-                ],
-                'speed': 'low'
-            }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {
-        'availableFanSpeeds': {
-            'ordered': True,
-            'speeds': [
-                {
-                    'speed_name': 'off',
-                    'speed_values': [
-                        {
-                            'speed_synonym': ['stop', 'off'],
-                            'lang': 'en'
-                        }
-                    ]
-                },
-                {
-                    'speed_name': 'low',
-                    'speed_values': [
-                        {
-                            'speed_synonym': [
-                                'slow', 'low', 'slowest', 'lowest'],
-                            'lang': 'en'
-                        }
-                    ]
-                },
-                {
-                    'speed_name': 'medium',
-                    'speed_values': [
-                        {
-                            'speed_synonym': ['medium', 'mid', 'middle'],
-                            'lang': 'en'
-                        }
-                    ]
-                },
-                {
-                    'speed_name': 'high',
-                    'speed_values': [
-                        {
-                            'speed_synonym': [
-                                'high', 'max', 'fast', 'highest', 'fastest',
-                                'maximum'],
-                            'lang': 'en'
-                        }
-                    ]
-                }
-            ]
-        },
-        'reversible': False
-    }
-
-    assert trt.query_attributes() == {
-        'currentFanSpeedSetting': 'low',
-        'on': True,
-        'online': True
-    }
-
-    assert trt.can_execute(
-        trait.COMMAND_FANSPEED, params={'fanSpeed': 'medium'})
-
-    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_SPEED)
-    await trt.execute(trait.COMMAND_FANSPEED, params={'fanSpeed': 'medium'})
-
-    assert len(calls) == 1
-    assert calls[0].data == {
-        'entity_id': 'fan.living_room_fan',
-        'speed': 'medium'
     }

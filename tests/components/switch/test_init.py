@@ -91,7 +91,7 @@ class TestSwitch(unittest.TestCase):
         )
 
 
-async def test_switch_context(hass, hass_admin_user):
+async def test_switch_context(hass):
     """Test that switch context works."""
     assert await async_setup_component(hass, 'switch', {
         'switch': {
@@ -104,9 +104,9 @@ async def test_switch_context(hass, hass_admin_user):
 
     await hass.services.async_call('switch', 'toggle', {
         'entity_id': state.entity_id,
-    }, True, core.Context(user_id=hass_admin_user.id))
+    }, True, core.Context(user_id='abcd'))
 
     state2 = hass.states.get('switch.ac')
     assert state2 is not None
     assert state.state != state2.state
-    assert state2.context.user_id == hass_admin_user.id
+    assert state2.context.user_id == 'abcd'

@@ -16,10 +16,10 @@ from tests.common import async_mock_service
 
 
 @pytest.fixture
-def mock_api_client(hass, hass_client):
-    """Start the Hass HTTP component and return admin API client."""
+def mock_api_client(hass, aiohttp_client):
+    """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'api', {}))
-    return hass.loop.run_until_complete(hass_client())
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @asyncio.coroutine
@@ -405,8 +405,7 @@ def _listen_count(hass):
     return sum(hass.bus.async_listeners().values())
 
 
-async def test_api_error_log(hass, aiohttp_client, hass_access_token,
-                             hass_admin_user, legacy_auth):
+async def test_api_error_log(hass, aiohttp_client):
     """Test if we can fetch the error log."""
     hass.data[DATA_LOGGING] = '/some/path'
     await async_setup_component(hass, 'api', {
@@ -417,7 +416,7 @@ async def test_api_error_log(hass, aiohttp_client, hass_access_token,
     client = await aiohttp_client(hass.http.app)
 
     resp = await client.get(const.URL_API_ERROR_LOG)
-    # Verify auth required
+    # Verufy auth required
     assert resp.status == 401
 
     with patch(
@@ -425,20 +424,13 @@ async def test_api_error_log(hass, aiohttp_client, hass_access_token,
                 return_value=web.Response(status=200, text='Hello')
             ) as mock_file:
         resp = await client.get(const.URL_API_ERROR_LOG, headers={
-            'Authorization': 'Bearer {}'.format(hass_access_token)
+            'x-ha-access': 'yolo'
         })
 
     assert len(mock_file.mock_calls) == 1
     assert mock_file.mock_calls[0][1][0] == hass.data[DATA_LOGGING]
     assert resp.status == 200
     assert await resp.text() == 'Hello'
-
-    # Verify we require admin user
-    hass_admin_user.groups = []
-    resp = await client.get(const.URL_API_ERROR_LOG, headers={
-        'Authorization': 'Bearer {}'.format(hass_access_token)
-    })
-    assert resp.status == 401
 
 
 async def test_api_fire_event_context(hass, mock_api_client,
@@ -502,79 +494,3 @@ async def test_api_set_state_context(hass, mock_api_client, hass_access_token):
 
     state = hass.states.get('light.kitchen')
     assert state.context.user_id == refresh_token.user.id
-
-
-async def test_event_stream_requires_admin(hass, mock_api_client,
-                                           hass_admin_user):
-    """Test user needs to be admin to access event stream."""
-    hass_admin_user.groups = []
-    resp = await mock_api_client.get('/api/stream')
-    assert resp.status == 401
-
-
-async def test_states_view_filters(hass, mock_api_client, hass_admin_user):
-    """Test filtering only visible states."""
-    hass_admin_user.mock_policy({
-        'entities': {
-            'entity_ids': {
-                'test.entity': True
-            }
-        }
-    })
-    hass.states.async_set('test.entity', 'hello')
-    hass.states.async_set('test.not_visible_entity', 'invisible')
-    resp = await mock_api_client.get(const.URL_API_STATES)
-    assert resp.status == 200
-    json = await resp.json()
-    assert len(json) == 1
-    assert json[0]['entity_id'] == 'test.entity'
-
-
-async def test_get_entity_state_read_perm(hass, mock_api_client,
-                                          hass_admin_user):
-    """Test getting a state requires read permission."""
-    hass_admin_user.mock_policy({})
-    resp = await mock_api_client.get('/api/states/light.test')
-    assert resp.status == 401
-
-
-async def test_post_entity_state_admin(hass, mock_api_client, hass_admin_user):
-    """Test updating state requires admin."""
-    hass_admin_user.groups = []
-    resp = await mock_api_client.post('/api/states/light.test')
-    assert resp.status == 401
-
-
-async def test_delete_entity_state_admin(hass, mock_api_client,
-                                         hass_admin_user):
-    """Test deleting entity requires admin."""
-    hass_admin_user.groups = []
-    resp = await mock_api_client.delete('/api/states/light.test')
-    assert resp.status == 401
-
-
-async def test_post_event_admin(hass, mock_api_client, hass_admin_user):
-    """Test sending event requires admin."""
-    hass_admin_user.groups = []
-    resp = await mock_api_client.post('/api/events/state_changed')
-    assert resp.status == 401
-
-
-async def test_rendering_template_admin(hass, mock_api_client,
-                                        hass_admin_user):
-    """Test rendering a template requires admin."""
-    hass_admin_user.groups = []
-    resp = await mock_api_client.post(const.URL_API_TEMPLATE)
-    assert resp.status == 401
-
-
-async def test_rendering_template_legacy_user(
-        hass, mock_api_client, aiohttp_client, legacy_auth):
-    """Test rendering a template with legacy API password."""
-    hass.states.async_set('sensor.temperature', 10)
-    client = await aiohttp_client(hass.http.app)
-    resp = await client.post(
-        const.URL_API_TEMPLATE,
-        json={"template": '{{ states.sensor.temperature.state }}'}
-    )
-    assert resp.status == 401

@@ -7,10 +7,10 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def mock_client(hass, hass_client):
+def mock_client(hass, aiohttp_client):
     """Create http client for webhooks."""
     hass.loop.run_until_complete(async_setup_component(hass, 'webhook', {}))
-    return hass.loop.run_until_complete(hass_client())
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 async def test_unregistering_webhook(hass, mock_client):

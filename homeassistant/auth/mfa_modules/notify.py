@@ -4,7 +4,7 @@ Sending HOTP through notify service
 """
 import logging
 from collections import OrderedDict
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, Tuple, List  # noqa: F401
 
 import attr
 import voluptuous as vol

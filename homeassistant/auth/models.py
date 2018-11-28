@@ -8,7 +8,6 @@ import attr
 from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
-from .const import GROUP_ID_ADMIN
 from .util import generate_secret
 
 TOKEN_TYPE_NORMAL = 'normal'
@@ -49,7 +48,7 @@ class User:
     )  # type: Dict[str, RefreshToken]
 
     _permissions = attr.ib(
-        type=Optional[perm_mdl.PolicyPermissions],
+        type=perm_mdl.PolicyPermissions,
         init=False,
         cmp=False,
         default=None,
@@ -69,19 +68,6 @@ class User:
                 group.policy for group in self.groups]))
 
         return self._permissions
-
-    @property
-    def is_admin(self) -> bool:
-        """Return if user is part of the admin group."""
-        if self.is_owner:
-            return True
-
-        return self.is_active and any(
-            gr.id == GROUP_ID_ADMIN for gr in self.groups)
-
-    def invalidate_permission_cache(self) -> None:
-        """Invalidate permission cache."""
-        self._permissions = None
 
 
 @attr.s(slots=True)

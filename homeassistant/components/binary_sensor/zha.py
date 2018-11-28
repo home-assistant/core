@@ -7,12 +7,7 @@ at https://home-assistant.io/components/binary_sensor.zha/
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
-from homeassistant.components.zha.entities import ZhaEntity
-from homeassistant.components.zha import helpers
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.components.zha.const import (
-    ZHA_DISCOVERY_NEW, DATA_ZHA, DATA_ZHA_DISPATCHERS
-)
+from homeassistant.components import zha
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,43 +26,23 @@ CLASS_MAPPING = {
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Old way of setting up Zigbee Home Automation binary sensors."""
-    pass
+    """Set up the Zigbee Home Automation binary sensors."""
+    discovery_info = zha.get_discovery_info(hass, discovery_info)
+    if discovery_info is None:
+        return
+
+    from zigpy.zcl.clusters.general import OnOff
+    from zigpy.zcl.clusters.security import IasZone
+    if IasZone.cluster_id in discovery_info['in_clusters']:
+        await _async_setup_iaszone(hass, config, async_add_entities,
+                                   discovery_info)
+    elif OnOff.cluster_id in discovery_info['out_clusters']:
+        await _async_setup_remote(hass, config, async_add_entities,
+                                  discovery_info)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Zigbee Home Automation binary sensor from config entry."""
-    async def async_discover(discovery_info):
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    [discovery_info])
-
-    unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
-
-    binary_sensors = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
-    if binary_sensors is not None:
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    binary_sensors.values())
-        del hass.data[DATA_ZHA][DOMAIN]
-
-
-async def _async_setup_entities(hass, config_entry, async_add_entities,
-                                discovery_infos):
-    """Set up the ZHA binary sensors."""
-    entities = []
-    for discovery_info in discovery_infos:
-        from zigpy.zcl.clusters.general import OnOff
-        from zigpy.zcl.clusters.security import IasZone
-        if IasZone.cluster_id in discovery_info['in_clusters']:
-            entities.append(await _async_setup_iaszone(discovery_info))
-        elif OnOff.cluster_id in discovery_info['out_clusters']:
-            entities.append(await _async_setup_remote(discovery_info))
-
-    async_add_entities(entities, update_before_add=True)
-
-
-async def _async_setup_iaszone(discovery_info):
+async def _async_setup_iaszone(hass, config, async_add_entities,
+                               discovery_info):
     device_class = None
     from zigpy.zcl.clusters.security import IasZone
     cluster = discovery_info['in_clusters'][IasZone.cluster_id]
@@ -83,10 +58,13 @@ async def _async_setup_iaszone(discovery_info):
         # If we fail to read from the device, use a non-specific class
         pass
 
-    return BinarySensor(device_class, **discovery_info)
+    sensor = BinarySensor(device_class, **discovery_info)
+    async_add_entities([sensor], update_before_add=True)
 
 
-async def _async_setup_remote(discovery_info):
+async def _async_setup_remote(hass, config, async_add_entities,
+                              discovery_info):
+
     remote = Remote(**discovery_info)
 
     if discovery_info['new_join']:
@@ -94,21 +72,21 @@ async def _async_setup_remote(discovery_info):
         out_clusters = discovery_info['out_clusters']
         if OnOff.cluster_id in out_clusters:
             cluster = out_clusters[OnOff.cluster_id]
-            await helpers.configure_reporting(
+            await zha.configure_reporting(
                 remote.entity_id, cluster, 0, min_report=0, max_report=600,
                 reportable_change=1
             )
         if LevelControl.cluster_id in out_clusters:
             cluster = out_clusters[LevelControl.cluster_id]
-            await helpers.configure_reporting(
+            await zha.configure_reporting(
                 remote.entity_id, cluster, 0, min_report=1, max_report=600,
                 reportable_change=1
             )
 
-    return remote
+    async_add_entities([remote], update_before_add=True)
 
 
-class BinarySensor(ZhaEntity, BinarySensorDevice):
+class BinarySensor(zha.Entity, BinarySensorDevice):
     """The ZHA Binary Sensor."""
 
     _domain = DOMAIN
@@ -152,16 +130,16 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         """Retrieve latest state."""
         from zigpy.types.basic import uint16_t
 
-        result = await helpers.safe_read(self._endpoint.ias_zone,
-                                         ['zone_status'],
-                                         allow_cache=False,
-                                         only_cache=(not self._initialized))
+        result = await zha.safe_read(self._endpoint.ias_zone,
+                                     ['zone_status'],
+                                     allow_cache=False,
+                                     only_cache=(not self._initialized))
         state = result.get('zone_status', self._state)
         if isinstance(state, (int, uint16_t)):
             self._state = result.get('zone_status', self._state) & 3
 
 
-class Remote(ZhaEntity, BinarySensorDevice):
+class Remote(zha.Entity, BinarySensorDevice):
     """ZHA switch/remote controller/button."""
 
     _domain = DOMAIN
@@ -274,7 +252,7 @@ class Remote(ZhaEntity, BinarySensorDevice):
     async def async_update(self):
         """Retrieve latest state."""
         from zigpy.zcl.clusters.general import OnOff
-        result = await helpers.safe_read(
+        result = await zha.safe_read(
             self._endpoint.out_clusters[OnOff.cluster_id],
             ['on_off'],
             allow_cache=False,

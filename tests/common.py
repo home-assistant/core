@@ -14,8 +14,7 @@ from contextlib import contextmanager
 
 from homeassistant import auth, core as ha, config_entries
 from homeassistant.auth import (
-    models as auth_models, auth_store, providers as auth_providers,
-    permissions as auth_permissions)
+    models as auth_models, auth_store, providers as auth_providers)
 from homeassistant.auth.permissions import system_policies
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
@@ -296,7 +295,6 @@ def async_mock_mqtt_component(hass, config=None):
     with patch('paho.mqtt.client.Client') as mock_client:
         mock_client().connect.return_value = 0
         mock_client().subscribe.return_value = (0, 0)
-        mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
 
         result = yield from async_setup_component(hass, mqtt.DOMAIN, {
@@ -400,10 +398,6 @@ class MockUser(auth_models.User):
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._users[self.id] = self
         return self
-
-    def mock_policy(self, policy):
-        """Mock a policy for a user."""
-        self._permissions = auth_permissions.PolicyPermissions(policy)
 
 
 async def register_auth_provider(hass, config):

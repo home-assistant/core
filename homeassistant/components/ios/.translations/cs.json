@@ -2,7 +2,6 @@
     "config": {
         "step": {
             "confirm": {
-                "description": "Chcete nastavit komponenty Home Assistant iOS?",
                 "title": "Home Assistant iOS"
             }
         },

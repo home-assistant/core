@@ -3,7 +3,6 @@ import voluptuous as vol
 
 from homeassistant.const import MATCH_ALL, EVENT_TIME_CHANGED
 from homeassistant.core import callback, DOMAIN as HASS_DOMAIN
-from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_get_all_descriptions
 
@@ -99,9 +98,6 @@ def handle_subscribe_events(hass, connection, msg):
 
     Async friendly.
     """
-    if not connection.user.is_admin:
-        raise Unauthorized
-
     async def forward_events(event):
         """Forward events to websocket."""
         if event.event_type == EVENT_TIME_CHANGED:
@@ -153,14 +149,8 @@ def handle_get_states(hass, connection, msg):
 
     Async friendly.
     """
-    entity_perm = connection.user.permissions.check_entity
-    states = [
-        state for state in hass.states.async_all()
-        if entity_perm(state.entity_id, 'read')
-    ]
-
     connection.send_message(messages.result_message(
-        msg['id'], states))
+        msg['id'], hass.states.async_all()))
 
 
 @decorators.async_response

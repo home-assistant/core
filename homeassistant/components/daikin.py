@@ -19,11 +19,12 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pydaikin==0.8']
+REQUIREMENTS = ['pydaikin==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'daikin'
+HTTP_RESOURCES = ['aircon/get_sensor_info', 'aircon/get_control_info']
 
 ATTR_TARGET_TEMPERATURE = 'target_temperature'
 ATTR_INSIDE_TEMPERATURE = 'inside_temperature'
@@ -127,13 +128,11 @@ class DaikinApi:
     def update(self, **kwargs):
         """Pull the latest data from Daikin."""
         try:
-            self.device.update_status()
+            for resource in HTTP_RESOURCES:
+                self.device.values.update(
+                    self.device.get_resource(resource)
+                )
         except timeout:
             _LOGGER.warning(
                 "Connection failed for %s", self.ip_address
             )
-
-    @property
-    def mac(self):
-        """Return mac-address of device."""
-        return self.device.values.get('mac')

@@ -160,8 +160,6 @@ homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/counter/* @fabaff
 
 # D
-homeassistant/components/daikin.py @fredrike @rofrantz
-homeassistant/components/*/daikin.py @fredrike @rofrantz
 homeassistant/components/*/deconz.py @kane610
 homeassistant/components/digital_ocean.py @fabaff
 homeassistant/components/*/digital_ocean.py @fabaff
@@ -205,10 +203,6 @@ homeassistant/components/*/mystrom.py @fabaff
 # O
 homeassistant/components/openuv/* @bachya
 homeassistant/components/*/openuv.py @bachya
-
-# P
-homeassistant/components/point/* @fredrike
-homeassistant/components/*/point.py @fredrike
 
 # Q
 homeassistant/components/qwikswitch.py @kellerza

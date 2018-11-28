@@ -10,7 +10,6 @@ import jwt
 
 from homeassistant.core import callback
 from homeassistant.const import HTTP_HEADER_HA_AUTH
-from homeassistant.auth.providers import legacy_api_password
 from homeassistant.auth.util import generate_secret
 from homeassistant.util import dt as dt_util
 
@@ -79,16 +78,12 @@ def setup_auth(app, trusted_networks, use_auth,
                   request.headers[HTTP_HEADER_HA_AUTH].encode('utf-8'))):
             # A valid auth header has been set
             authenticated = True
-            request['hass_user'] = await legacy_api_password.async_get_user(
-                app['hass'])
 
         elif (legacy_auth and DATA_API_PASSWORD in request.query and
               hmac.compare_digest(
                   api_password.encode('utf-8'),
                   request.query[DATA_API_PASSWORD].encode('utf-8'))):
             authenticated = True
-            request['hass_user'] = await legacy_api_password.async_get_user(
-                app['hass'])
 
         elif _is_trusted_ip(request, trusted_networks):
             authenticated = True
@@ -101,7 +96,11 @@ def setup_auth(app, trusted_networks, use_auth,
         request[KEY_AUTHENTICATED] = authenticated
         return await handler(request)
 
-    app.middlewares.append(auth_middleware)
+    async def auth_startup(app):
+        """Initialize auth middleware when app starts up."""
+        app.middlewares.append(auth_middleware)
+
+    app.on_startup.append(auth_startup)
 
 
 def _is_trusted_ip(request, trusted_networks):

@@ -15,7 +15,6 @@ ATTR_CHILD_ID = 'child_id'
 ATTR_DESCRIPTION = 'description'
 ATTR_DEVICE = 'device'
 ATTR_NODE_ID = 'node_id'
-ATTR_HEARTBEAT = 'heartbeat'
 MYSENSORS_PLATFORM_DEVICES = 'mysensors_devices_{}'
 
 
@@ -52,7 +51,6 @@ class MySensorsDevice:
         child = node.children[self.child_id]
         attr = {
             ATTR_BATTERY_LEVEL: node.battery_level,
-            ATTR_HEARTBEAT: node.heartbeat,
             ATTR_CHILD_ID: self.child_id,
             ATTR_DESCRIPTION: child.description,
             ATTR_DEVICE: self.gateway.device,

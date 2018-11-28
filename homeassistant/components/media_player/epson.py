@@ -75,7 +75,7 @@ async def async_setup_platform(
             if service.service == SERVICE_SELECT_CMODE:
                 cmode = service.data.get(ATTR_CMODE)
                 await device.select_cmode(cmode)
-            device.async_schedule_update_ha_state(True)
+            await device.update()
 
     epson_schema = MEDIA_PLAYER_SCHEMA.extend({
         vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))
@@ -102,7 +102,7 @@ class EpsonProjector(MediaPlayerDevice):
         self._volume = None
         self._state = None
 
-    async def async_update(self):
+    async def update(self):
         """Update state of device."""
         from epson_projector.const import (
             EPSON_CODES, POWER, CMODE, CMODE_LIST, SOURCE, VOLUME, BUSY,

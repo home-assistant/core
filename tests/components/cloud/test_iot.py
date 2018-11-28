@@ -2,14 +2,13 @@
 import asyncio
 from unittest.mock import patch, MagicMock, PropertyMock
 
-from aiohttp import WSMsgType, client_exceptions, web
+from aiohttp import WSMsgType, client_exceptions
 import pytest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components.cloud import (
-    Cloud, iot, auth_api, MODE_DEV)
-from homeassistant.components.cloud.const import (
-    PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE)
+    Cloud, iot, auth_api, MODE_DEV, STORAGE_ENABLE_ALEXA,
+    STORAGE_ENABLE_GOOGLE)
 from tests.components.alexa import test_smart_home as test_alexa
 from tests.common import mock_coro
 
@@ -309,7 +308,7 @@ def test_handler_alexa(hass):
 @asyncio.coroutine
 def test_handler_alexa_disabled(hass, mock_cloud_fixture):
     """Test handler Alexa when user has disabled it."""
-    mock_cloud_fixture[PREF_ENABLE_ALEXA] = False
+    mock_cloud_fixture[STORAGE_ENABLE_ALEXA] = False
 
     resp = yield from iot.async_handle_alexa(
         hass, hass.data['cloud'],
@@ -378,7 +377,7 @@ def test_handler_google_actions(hass):
 
 async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
     """Test handler Google Actions when user has disabled it."""
-    mock_cloud_fixture[PREF_ENABLE_GOOGLE] = False
+    mock_cloud_fixture[STORAGE_ENABLE_GOOGLE] = False
 
     with patch('homeassistant.components.cloud.Cloud.async_start',
                return_value=mock_coro()):
@@ -406,48 +405,3 @@ async def test_refresh_token_expired(hass):
 
     assert len(mock_check_token.mock_calls) == 1
     assert len(mock_create.mock_calls) == 1
-
-
-async def test_webhook_msg(hass):
-    """Test webhook msg."""
-    cloud = Cloud(hass, MODE_DEV, None, None)
-    await cloud.prefs.async_initialize(True)
-    await cloud.prefs.async_update(cloudhooks={
-        'hello': {
-            'webhook_id': 'mock-webhook-id',
-            'cloudhook_id': 'mock-cloud-id'
-        }
-    })
-
-    received = []
-
-    async def handler(hass, webhook_id, request):
-        """Handle a webhook."""
-        received.append(request)
-        return web.json_response({'from': 'handler'})
-
-    hass.components.webhook.async_register(
-        'test', 'Test', 'mock-webhook-id', handler)
-
-    response = await iot.async_handle_webhook(hass, cloud, {
-        'cloudhook_id': 'mock-cloud-id',
-        'body': '{"hello": "world"}',
-        'headers': {
-            'content-type': 'application/json'
-        },
-        'method': 'POST',
-        'query': None,
-    })
-
-    assert response == {
-        'status': 200,
-        'body': '{"from": "handler"}',
-        'headers': {
-            'Content-Type': 'application/json'
-        }
-    }
-
-    assert len(received) == 1
-    assert await received[0].json() == {
-        'hello': 'world'
-    }

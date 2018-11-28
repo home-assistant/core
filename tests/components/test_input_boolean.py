@@ -147,7 +147,7 @@ def test_initial_state_overrules_restore_state(hass):
     assert state.state == 'on'
 
 
-async def test_input_boolean_context(hass, hass_admin_user):
+async def test_input_boolean_context(hass):
     """Test that input_boolean context works."""
     assert await async_setup_component(hass, 'input_boolean', {
         'input_boolean': {
@@ -160,9 +160,9 @@ async def test_input_boolean_context(hass, hass_admin_user):
 
     await hass.services.async_call('input_boolean', 'turn_off', {
         'entity_id': state.entity_id,
-    }, True, Context(user_id=hass_admin_user.id))
+    }, True, Context(user_id='abcd'))
 
     state2 = hass.states.get('input_boolean.ac')
     assert state2 is not None
     assert state.state != state2.state
-    assert state2.context.user_id == hass_admin_user.id
+    assert state2.context.user_id == 'abcd'

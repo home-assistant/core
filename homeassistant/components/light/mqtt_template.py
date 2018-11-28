@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light,
+    ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light, PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
     SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF
@@ -44,7 +44,7 @@ CONF_RED_TEMPLATE = 'red_template'
 CONF_STATE_TEMPLATE = 'state_template'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 
-PLATFORM_SCHEMA_TEMPLATE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
     vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
     vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
@@ -66,9 +66,12 @@ PLATFORM_SCHEMA_TEMPLATE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-async def async_setup_entity_template(hass, config, async_add_entities,
-                                      discovery_hash):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up a MQTT Template light."""
+    if discovery_info is not None:
+        config = PLATFORM_SCHEMA(discovery_info)
+
     async_add_entities([MqttTemplate(
         hass,
         config.get(CONF_NAME),

@@ -45,12 +45,6 @@ async def handle_battery_level(hass, hass_config, msg):
     _handle_node_update(hass, msg)
 
 
-@HANDLERS.register('I_HEARTBEAT_RESPONSE')
-async def handle_heartbeat(hass, hass_config, msg):
-    """Handle an heartbeat."""
-    _handle_node_update(hass, msg)
-
-
 @HANDLERS.register('I_SKETCH_NAME')
 async def handle_sketch_name(hass, hass_config, msg):
     """Handle an internal sketch name message."""

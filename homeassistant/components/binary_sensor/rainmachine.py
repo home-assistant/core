@@ -8,29 +8,28 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.rainmachine import (
-    BINARY_SENSORS, DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN,
-    SENSOR_UPDATE_TOPIC, TYPE_FREEZE, TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS,
-    TYPE_HOURLY, TYPE_MONTH, TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY,
-    RainMachineEntity)
+    BINARY_SENSORS, DATA_RAINMACHINE, SENSOR_UPDATE_TOPIC, TYPE_FREEZE,
+    TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS, TYPE_HOURLY, TYPE_MONTH,
+    TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY, RainMachineEntity)
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['rainmachine']
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Set up  RainMachine binary sensors based on the old way."""
-    pass
+    """Set up the RainMachine Switch platform."""
+    if discovery_info is None:
+        return
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up RainMachine binary sensors based on a config entry."""
-    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
+    rainmachine = hass.data[DATA_RAINMACHINE]
 
     binary_sensors = []
-    for sensor_type in rainmachine.binary_sensor_conditions:
+    for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
         name, icon = BINARY_SENSORS[sensor_type]
         binary_sensors.append(
             RainMachineBinarySensor(rainmachine, sensor_type, name, icon))
@@ -71,15 +70,15 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
         return '{0}_{1}'.format(
             self.rainmachine.device_mac.replace(':', ''), self._sensor_type)
 
+    @callback
+    def _update_data(self):
+        """Update the state."""
+        self.async_schedule_update_ha_state(True)
+
     async def async_added_to_hass(self):
         """Register callbacks."""
-        @callback
-        def update(self):
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._dispatcher_handlers.append(async_dispatcher_connect(
-            self.hass, SENSOR_UPDATE_TOPIC, update))
+        async_dispatcher_connect(
+            self.hass, SENSOR_UPDATE_TOPIC, self._update_data)
 
     async def async_update(self):
         """Update the state."""
