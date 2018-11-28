@@ -129,11 +129,17 @@ class StatisticsSensor(Entity):
             EVENT_HOMEASSISTANT_START, async_stats_sensor_startup)
 
     def _add_state_to_queue(self, new_state):
-        try:
-            self.states.append(float(new_state.state))
-            self.ages.append(new_state.last_updated)
-        except ValueError:
-            pass
+        if new_state.state != STATE_UNKNOWN:
+            try:
+                if self.is_binary:
+                    self.states.append(new_state.state)
+                else:
+                    self.states.append(float(new_state.state))
+
+                self.ages.append(new_state.last_updated)
+            except ValueError:
+                _LOGGER.debug("%s: adding state change '%s'", self.entity_id,
+                              new_state.state)
 
     @property
     def name(self):
