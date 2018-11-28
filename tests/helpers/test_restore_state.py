@@ -1,10 +1,13 @@
 """The tests for the Restore component."""
+from datetime import datetime
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import (
     RestoreStateData, RestoreEntity, DATA_RESTORE_STATE_TASK)
+from homeassistant.util import dt as dt_util
 
 from asynctest import patch
 
@@ -106,6 +109,15 @@ async def test_dump_data(hass):
     await entity.async_added_to_hass()
 
     data = await RestoreStateData.async_get_instance(hass)
+    data.last_states = {
+        'input_boolean.b0': State('input_boolean.b0', 'off'),
+        'input_boolean.b1': State('input_boolean.b1', 'off'),
+        'input_boolean.b2': State('input_boolean.b2', 'off'),
+        'input_boolean.b3': State('input_boolean.b3', 'off'),
+        'input_boolean.b4': State(
+            'input_boolean.b4', 'off', last_updated=datetime(
+                1985, 10, 26, 1, 22, tzinfo=dt_util.UTC)),
+    }
 
     with patch('homeassistant.helpers.restore_state.Store.async_save'
                ) as mock_write_data, patch.object(
@@ -116,11 +128,16 @@ async def test_dump_data(hass):
     args = mock_write_data.mock_calls[0][1]
     written_states = args[0]
 
-    # Assert that only input_boolean.b1 was written, since it was the only
-    # state linked to a RestoreEntity
-    assert len(written_states) == 1
+    # b0 should not be written, since it didn't extend RestoreEntity
+    # b1 should be written, since it is present in the current run
+    # b2 should not be written, since it is not registered with the helper
+    # b3 should be written, since it is still not expired
+    # b4 should not be written, since it is now expired
+    assert len(written_states) == 2
     assert written_states[0]['entity_id'] == 'input_boolean.b1'
     assert written_states[0]['state'] == 'on'
+    assert written_states[1]['entity_id'] == 'input_boolean.b3'
+    assert written_states[1]['state'] == 'off'
 
     # Test that removed entities are not persisted
     await entity.async_will_remove_from_hass()
@@ -133,7 +150,9 @@ async def test_dump_data(hass):
     assert mock_write_data.called
     args = mock_write_data.mock_calls[0][1]
     written_states = args[0]
-    assert not written_states
+    assert len(written_states) == 1
+    assert written_states[0]['entity_id'] == 'input_boolean.b3'
+    assert written_states[0]['state'] == 'off'
 
 
 async def test_dump_error(hass):

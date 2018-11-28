@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Set, Optional  # noqa  pylint_disable=unused
 from homeassistant.core import HomeAssistant, callback, State, CoreState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.exceptions import HomeAssistantError
@@ -22,6 +23,9 @@ STORAGE_VERSION = 1
 
 # How long between periodically saving the current states to disk
 STATE_DUMP_INTERVAL = timedelta(minutes=15)
+
+# How long should a saved state be preserved if the entity no longer exists
+STATE_EXPIRATION = timedelta(days=7)
 
 
 class RestoreStateData():
@@ -75,13 +79,42 @@ class RestoreStateData():
         self.last_states = {}  # type: Dict[str, State]
         self.entity_ids = set()  # type: Set[str]
 
+    def async_get_states(self) -> List[State]:
+        """Get the set of states which should be stored.
+
+        This includes the states of all registered entities, as well as the
+        stored states from the previous run, which have not been created as
+        entities on this run, and have not expired.
+        """
+        all_states = self.hass.states.async_all()
+        current_entity_ids = set(state.entity_id for state in all_states)
+
+        # Start with the currently registered states
+        states = [state for state in all_states
+                  if state.entity_id in self.entity_ids]
+
+        expiration_time = dt_util.utcnow() - STATE_EXPIRATION
+
+        for entity_id, state in self.last_states.items():
+            # Don't save old states that have entities in the current run
+            _LOGGER.warning(entity_id)
+            if entity_id in current_entity_ids:
+                continue
+
+            # Don't save old states that have expired
+            if state.last_updated < expiration_time:
+                continue
+
+            states.append(state)
+
+        return states
+
     async def async_dump_states(self) -> None:
         """Save the current state machine to storage."""
         _LOGGER.debug("Dumping states")
         try:
             await self.store.async_save([
-                state.as_dict() for state in self.hass.states.async_all()
-                if state.entity_id in self.entity_ids])
+                state.as_dict() for state in self.async_get_states()])
         except HomeAssistantError as exc:
             _LOGGER.error("Error saving current states", exc_info=exc)
 
