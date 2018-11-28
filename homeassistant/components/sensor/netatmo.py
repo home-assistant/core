@@ -119,6 +119,9 @@ class NetAtmoSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._module_type = self.netatmo_data. \
             station_data.moduleByName(module=module_name)['type']
+        module_id = self.netatmo_data. \
+            station_data.moduleByName(module=module_name)['_id']
+        self._unique_id = '{}-{}'.format(module_id, self.type)
 
     @property
     def name(self):
@@ -144,6 +147,11 @@ class NetAtmoSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    @property
+    def unique_id(self):
+        """Return the unique ID for this sensor."""
+        return self._unique_id
 
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
