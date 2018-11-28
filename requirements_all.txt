@@ -1662,3 +1662,6 @@ zigpy==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.1.0
+
+# homeassistant.components.sensor.vrtnws
+requests_xml==0.2.3
