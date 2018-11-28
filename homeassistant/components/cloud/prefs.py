@@ -28,6 +28,7 @@ class CloudPreferences:
                 PREF_GOOGLE_ALLOW_UNLOCK: False,
                 PREF_CLOUDHOOKS: {}
             }
+            await self._store.async_save(prefs)
 
         self._prefs = prefs
 
