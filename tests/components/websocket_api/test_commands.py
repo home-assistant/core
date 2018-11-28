@@ -300,3 +300,19 @@ async def test_states_filters_visible(hass, hass_admin_user, websocket_client):
 
     assert len(msg['result']) == 1
     assert msg['result'][0]['entity_id'] == 'test.entity'
+
+
+async def test_get_states_not_allows_nan(hass, websocket_client):
+    """Test get_states command not allows NaN floats."""
+    hass.states.async_set('greeting.hello', 'world', {
+        'hello': float("NaN")
+    })
+
+    await websocket_client.send_json({
+        'id': 5,
+        'type': commands.TYPE_GET_STATES,
+    })
+
+    msg = await websocket_client.receive_json()
+    assert not msg['success']
+    assert msg['error']['code'] == const.ERR_UNKNOWN_ERROR
