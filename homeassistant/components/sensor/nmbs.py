@@ -18,14 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'NMBS'
 DEFAULT_NAME_LIVE = "NMBS Live"
 
-DEFAULT_ICON = 'mdi:train'
-DEFAULT_ICON_ALERT = 'mdi:alert-octagon'
+DEFAULT_ICON = "mdi:train"
+DEFAULT_ICON_ALERT = "mdi:alert-octagon"
 
 CONF_STATION_FROM = 'station_from'
 CONF_STATION_TO = 'station_to'
 CONF_STATION_LIVE = 'station_live'
 
-REQUIREMENTS = ['pyrail==0.0.3']
+REQUIREMENTS = ["pyrail==0.0.3"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_FROM): cv.string,
@@ -92,7 +92,7 @@ class NMBSLiveBoard(Entity):
     @property
     def icon(self):
         """Return the default icon or an alert icon if delays."""
-        if self._attrs is not None and int(self._attrs["delay"]) > 0:
+        if self._attrs is not None and int(self._attrs['delay']) > 0:
             return DEFAULT_ICON_ALERT
 
         return DEFAULT_ICON
@@ -112,22 +112,22 @@ class NMBSLiveBoard(Entity):
         departure = get_time_until(self._attrs['time'])
 
         return {
-            "Delay": "{} minutes".format(delay) if delay > 0 else None,
+            'Delay': "{} minutes".format(delay) if delay > 0 else None,
             "Vehicle ID": self._attrs['vehicle'],
-            "Occupancy": self._attrs['occupancy']['name'],
+            'Occupancy': self._attrs['occupancy']['name'],
             "Extra train": True if int(self._attrs['isExtra']) > 0 else False,
-            "Departure": "In {} minutes".format(departure),
+            'Departure': "In {} minutes".format(departure),
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
     def update(self):
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
-        next_departure = liveboard["departures"]["departure"][0]
+        next_departure = liveboard['departures']['departure'][0]
 
         self._attrs = next_departure
         self._state = "Track {} - {}".format(
-            next_departure["platform"], next_departure["station"])
+            next_departure['platform'], next_departure['station'])
 
 
 class NMBSSensor(Entity):
@@ -148,12 +148,12 @@ class NMBSSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "min"
+        return 'min'
 
     @property
     def icon(self):
         """Return the sensor default icon or an alert icon if any delay."""
-        delay = convert_ms_to_sec(self._attrs["departure"]["delay"])
+        delay = convert_ms_to_sec(self._attrs['departure']['delay'])
         if self._attrs is not None and delay > 0:
             return "mdi:alert-octagon"
 
@@ -165,17 +165,17 @@ class NMBSSensor(Entity):
         if self._state is None or self._attrs is None:
             return None
 
-        delay = convert_ms_to_sec(self._attrs["departure"]["delay"])
-        departure = get_time_until(self._attrs["departure"]['time'])
+        delay = convert_ms_to_sec(self._attrs['departure']['delay'])
+        departure = get_time_until(self._attrs['departure']['time'])
 
         return {
-            "Delay": "{} minutes".format(delay) if delay > 0 else "None",
-            "Departure": "In {} minutes".format(departure),
-            "Direction": self._attrs["departure"]["direction"]["name"],
-            "Occupancy": self._attrs["departure"]['occupancy']['name'],
-            "Platform (arriving)": self._attrs["arrival"]["platform"],
-            "Platform (departing)": self._attrs["departure"]["platform"],
-            "Vehicle ID": self._attrs["departure"]['vehicle'],
+            'Delay': "{} minutes".format(delay) if delay > 0 else None,
+            'Departure': "In {} minutes".format(departure),
+            'Direction': self._attrs['departure']['direction']['name'],
+            'Occupancy': self._attrs['departure']['occupancy']['name'],
+            "Platform (arriving)": self._attrs['arrival']['platform'],
+            "Platform (departing)": self._attrs['departure']['platform'],
+            "Vehicle ID": self._attrs['departure']['vehicle'],
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
@@ -191,10 +191,10 @@ class NMBSSensor(Entity):
 
         next_connection = None
 
-        if int(connections["connection"][0]["departure"]["left"]) > 0:
-            next_connection = connections["connection"][1]
+        if int(connections['connection'][0]['departure']['left']) > 0:
+            next_connection = connections['connection'][1]
         else:
-            next_connection = connections["connection"][0]
+            next_connection = connections['connection'][0]
 
         self._attrs = next_connection
 
