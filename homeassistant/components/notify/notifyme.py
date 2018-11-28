@@ -4,10 +4,10 @@ NotifyMe platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.notifyme/
 """
-import aiohttp
 import asyncio
-import async_timeout
 import logging
+import aiohttp
+import async_timeout
 
 import voluptuous as vol
 
@@ -55,8 +55,7 @@ class NotifymeNotificationService(BaseNotificationService):
                 await session.post(NOTIFYME_API_ENDPOINT, json=data)
         except aiohttp.ClientError as err:
             _LOGGER.warning(
-                "Error when sending notification: ",
-                err.msg)
+                'Error when sending notification: %s', err)
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timeout after %d secs" % (NOTIFYME_TIMEOUT))
+                'Timeout after %d secs', NOTIFYME_TIMEOUT)
