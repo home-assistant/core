@@ -1,15 +1,14 @@
-"""The tests for the Owntracks device tracker."""
+"""The tests for the Owntracks device tracker message."""
 import json
 from asynctest import patch
 import pytest
 
 from tests.common import (
-    assert_setup_component, async_fire_mqtt_message, mock_coro, mock_component,
-    async_mock_mqtt_component)
-import homeassistant.components.device_tracker.owntracks as owntracks
+    async_fire_mqtt_message, mock_coro, mock_component,
+    async_mock_mqtt_component, MockConfigEntry)
+from homeassistant.components import owntracks
 from homeassistant.setup import async_setup_component
-from homeassistant.components import device_tracker
-from homeassistant.const import CONF_PLATFORM, STATE_NOT_HOME
+from homeassistant.const import STATE_NOT_HOME
 
 USER = 'greg'
 DEVICE = 'phone'
@@ -290,6 +289,25 @@ def setup_comp(hass):
         'zone.outer', 'zoning', OUTER_ZONE)
 
 
+async def setup_owntracks(hass, config,
+                          ctx_cls=owntracks.OwnTracksContext):
+    """Helper to setup OwnTracks."""
+    await async_mock_mqtt_component(hass)
+
+    MockConfigEntry(domain='owntracks', data={
+        'webhook_id': 'owntracks_test',
+        'secret': 'abcd',
+    }).add_to_hass(hass)
+
+    with patch('homeassistant.components.device_tracker.async_load_config',
+               return_value=mock_coro([])), \
+            patch('homeassistant.components.device_tracker.'
+                  'load_yaml_config_file', return_value=mock_coro({})), \
+            patch.object(owntracks, 'OwnTracksContext', ctx_cls):
+        assert await async_setup_component(
+            hass, 'owntracks', {'owntracks': config})
+
+
 @pytest.fixture
 def context(hass, setup_comp):
     """Set up the mocked context."""
@@ -306,20 +324,11 @@ def context(hass, setup_comp):
         context = orig_context(*args)
         return context
 
-    with patch('homeassistant.components.device_tracker.async_load_config',
-               return_value=mock_coro([])), \
-            patch('homeassistant.components.device_tracker.'
-                  'load_yaml_config_file', return_value=mock_coro({})), \
-            patch.object(owntracks, 'OwnTracksContext', store_context), \
-            assert_setup_component(1, device_tracker.DOMAIN):
-        assert hass.loop.run_until_complete(async_setup_component(
-            hass, device_tracker.DOMAIN, {
-                device_tracker.DOMAIN: {
-                    CONF_PLATFORM: 'owntracks',
-                    CONF_MAX_GPS_ACCURACY: 200,
-                    CONF_WAYPOINT_IMPORT: True,
-                    CONF_WAYPOINT_WHITELIST: ['jon', 'greg']
-                }}))
+    hass.loop.run_until_complete(setup_owntracks(hass, {
+            CONF_MAX_GPS_ACCURACY: 200,
+            CONF_WAYPOINT_IMPORT: True,
+            CONF_WAYPOINT_WHITELIST: ['jon', 'greg']
+        }, store_context))
 
     def get_context():
         """Get the current context."""
@@ -1211,19 +1220,14 @@ async def test_waypoint_import_blacklist(hass, context):
     assert wayp is None
 
 
-async def test_waypoint_import_no_whitelist(hass, context):
+async def test_waypoint_import_no_whitelist(hass, config_context):
     """Test import of list of waypoints with no whitelist set."""
-    async def mock_see(**kwargs):
-        """Fake see method for owntracks."""
-        return
-
-    test_config = {
-        CONF_PLATFORM: 'owntracks',
+    await setup_owntracks(hass, {
         CONF_MAX_GPS_ACCURACY: 200,
         CONF_WAYPOINT_IMPORT: True,
         CONF_MQTT_TOPIC: 'owntracks/#',
-    }
-    await owntracks.async_setup_scanner(hass, test_config, mock_see)
+    })
+
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
     # Check if it made it into states
@@ -1364,12 +1368,9 @@ def config_context(hass, setup_comp):
        mock_cipher)
 async def test_encrypted_payload(hass, config_context):
     """Test encrypted payload."""
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: TEST_SECRET_KEY,
-            }})
+    await setup_owntracks(hass, {
+        CONF_SECRET: TEST_SECRET_KEY,
+    })
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
 
@@ -1378,13 +1379,11 @@ async def test_encrypted_payload(hass, config_context):
        mock_cipher)
 async def test_encrypted_payload_topic_key(hass, config_context):
     """Test encrypted payload with a topic key."""
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: {
-                    LOCATION_TOPIC: TEST_SECRET_KEY,
-                }}})
+    await setup_owntracks(hass, {
+        CONF_SECRET: {
+            LOCATION_TOPIC: TEST_SECRET_KEY,
+        }
+    })
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
 
@@ -1394,12 +1393,10 @@ async def test_encrypted_payload_topic_key(hass, config_context):
 async def test_encrypted_payload_no_key(hass, config_context):
     """Test encrypted payload with no key, ."""
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                # key missing
-            }})
+    await setup_owntracks(hass, {
+        CONF_SECRET: {
+        }
+    })
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
@@ -1408,12 +1405,9 @@ async def test_encrypted_payload_no_key(hass, config_context):
        mock_cipher)
 async def test_encrypted_payload_wrong_key(hass, config_context):
     """Test encrypted payload with wrong key."""
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: 'wrong key',
-            }})
+    await setup_owntracks(hass, {
+        CONF_SECRET: 'wrong key',
+    })
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
@@ -1422,13 +1416,11 @@ async def test_encrypted_payload_wrong_key(hass, config_context):
        mock_cipher)
 async def test_encrypted_payload_wrong_topic_key(hass, config_context):
     """Test encrypted payload with wrong  topic key."""
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: {
-                    LOCATION_TOPIC: 'wrong key'
-                }}})
+    await setup_owntracks(hass, {
+        CONF_SECRET: {
+            LOCATION_TOPIC: 'wrong key'
+        },
+    })
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
@@ -1437,13 +1429,10 @@ async def test_encrypted_payload_wrong_topic_key(hass, config_context):
        mock_cipher)
 async def test_encrypted_payload_no_topic_key(hass, config_context):
     """Test encrypted payload with no topic key."""
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: {
-                    'owntracks/{}/{}'.format(USER, 'otherdevice'): 'foobar'
-                }}})
+    await setup_owntracks(hass, {
+        CONF_SECRET: {
+            'owntracks/{}/{}'.format(USER, 'otherdevice'): 'foobar'
+        }})
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
@@ -1456,12 +1445,9 @@ async def test_encrypted_payload_libsodium(hass, config_context):
         pytest.skip("libnacl/libsodium is not installed")
         return
 
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: TEST_SECRET_KEY,
-                }})
+    await setup_owntracks(hass, {
+        CONF_SECRET: TEST_SECRET_KEY,
+    })
 
     await send_message(hass, LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)
     assert_location_latitude(hass, LOCATION_MESSAGE['lat'])
@@ -1469,12 +1455,9 @@ async def test_encrypted_payload_libsodium(hass, config_context):
 
 async def test_customized_mqtt_topic(hass, config_context):
     """Test subscribing to a custom mqtt topic."""
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_MQTT_TOPIC: 'mytracks/#',
-                }})
+    await setup_owntracks(hass, {
+        CONF_MQTT_TOPIC: 'mytracks/#',
+    })
 
     topic = 'mytracks/{}/{}'.format(USER, DEVICE)
 
@@ -1484,14 +1467,11 @@ async def test_customized_mqtt_topic(hass, config_context):
 
 async def test_region_mapping(hass, config_context):
     """Test region to zone mapping."""
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_REGION_MAPPING: {
-                    'foo': 'inner'
-                },
-                }})
+    await setup_owntracks(hass, {
+        CONF_REGION_MAPPING: {
+            'foo': 'inner'
+        },
+    })
 
     hass.states.async_set(
         'zone.inner', 'zoning', INNER_ZONE)

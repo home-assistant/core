@@ -1,6 +1,6 @@
 """Test the owntracks_http platform."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock
 
 import os
 import pytest
@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components import device_tracker
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component, mock_coro
+from tests.common import mock_component, mock_coro, MockConfigEntry
 
 MINIMAL_LOCATION_MESSAGE = {
     '_type': 'location',
@@ -50,15 +50,17 @@ def mock_client(hass, aiohttp_client):
     """Start the Hass HTTP component."""
     mock_component(hass, 'group')
     mock_component(hass, 'zone')
-    with patch('homeassistant.components.device_tracker.async_load_config',
-               return_value=mock_coro([])):
-        hass.loop.run_until_complete(
-            async_setup_component(hass, 'device_tracker', {
-                'device_tracker': {
-                    'platform': 'owntracks_http',
-                    'webhook_id': 'owntracks_test'
-                }
-            }))
+    mock_component(hass, 'device_tracker')
+    hass.data['device_tracker'] = Mock(
+        async_see=Mock(return_value=mock_coro())
+    )
+
+    MockConfigEntry(domain='owntracks', data={
+        'webhook_id': 'owntracks_test',
+        'secret': 'abcd',
+    }).add_to_hass(hass)
+    hass.loop.run_until_complete(async_setup_component(hass, 'owntracks', {}))
+
     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 

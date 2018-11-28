@@ -248,3 +248,32 @@ async def async_process_deps_reqs(
             raise HomeAssistantError("Could not install all requirements.")
 
     processed.add(name)
+
+
+@core.callback
+def async_when_setup(hass, component: str, when_setup_cb):
+    """Call a method when a component is setup."""
+    async def when_setup():
+        """Call the callback."""
+        try:
+            await when_setup_cb(hass, component)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error handling when_setup callback for %s',
+                              component)
+
+    # Running it in a new task so that it always runs after
+    if component in hass.config.components:
+        hass.async_create_task(when_setup())
+        return
+
+    unsub = None
+
+    async def loaded_event(event: core.Event):
+        """Call the callback."""
+        if event.data[ATTR_COMPONENT] != component:
+            return
+
+        unsub()
+        await when_setup()
+
+    unsub = hass.bus.async_listen(EVENT_COMPONENT_LOADED, loaded_event)
