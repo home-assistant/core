@@ -1,4 +1,4 @@
-"""The tests for the Owntracks device tracker message."""
+"""The tests for the Owntracks device tracker."""
 import json
 from asynctest import patch
 import pytest

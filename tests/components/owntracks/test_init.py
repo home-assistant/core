@@ -51,9 +51,6 @@ def mock_client(hass, aiohttp_client):
     mock_component(hass, 'group')
     mock_component(hass, 'zone')
     mock_component(hass, 'device_tracker')
-    hass.data['device_tracker'] = Mock(
-        async_see=Mock(return_value=mock_coro())
-    )
 
     MockConfigEntry(domain='owntracks', data={
         'webhook_id': 'owntracks_test',

@@ -117,6 +117,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
 
         try:
             url_parts = urlparse(self.hass.config.api.base_url)
+
             if is_local(ip_address(url_parts.hostname)):
                 return self.async_abort(reason='not_internet_accessible')
         except ValueError:
