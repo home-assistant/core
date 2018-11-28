@@ -305,6 +305,7 @@ class TestStatisticsSensor(unittest.TestCase):
                     'max_age': {'hours': max_age}
                 }
             })
+            self.hass.block_till_done()
 
             self.hass.start()
             self.hass.block_till_done()
