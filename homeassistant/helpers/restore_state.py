@@ -97,7 +97,6 @@ class RestoreStateData():
 
         for entity_id, state in self.last_states.items():
             # Don't save old states that have entities in the current run
-            _LOGGER.warning(entity_id)
             if entity_id in current_entity_ids:
                 continue
 
