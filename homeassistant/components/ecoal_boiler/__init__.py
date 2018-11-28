@@ -6,8 +6,9 @@ and set very basic switches.
 """
 import logging
 
-# import voluptuous as vol
-# import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,18 +20,15 @@ CONF_USERNAME = "username"
 DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "admin"
 
-# CONFIG_SCHEMA = vol.Schema({
-#    DOMAIN: vol.Schema({
-#        vol.Required(CONF_HOST): cv.string,
-#        vol.Optional(CONF_USERNAME,
-#                        default=DEFAULT_USERNAME): cv.string,
-#        vol.Optional(CONF_PASSWORD,
-#                        default=DEFAULT_PASSWORD): cv.string,
-#    })
-# })
-# Fails with:
-# Invalid config for [ecoal_boiler]:
-#   [homeassistant] is an invalid option for [ecoal_boiler].
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_USERNAME,
+                     default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD,
+                     default=DEFAULT_PASSWORD): cv.string,
+    })
+ }, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
