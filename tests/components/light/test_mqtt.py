@@ -585,7 +585,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
                                                'effect': 'random',
                                                'color_temp': 100,
                                                'white_value': 50})
-    with patch('homeassistant.components.light.mqtt.schema_basic'
+    with patch('homeassistant.helpers.restore_state.RestoreEntity'
                '.async_get_last_state',
                return_value=mock_coro(fake_state)):
         with assert_setup_component(1, light.DOMAIN):
