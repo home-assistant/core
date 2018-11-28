@@ -29,6 +29,7 @@ async def async_setup_entry(hass, entry, async_see):
     hass.data[OT_DOMAIN]['context'].async_see = async_see
     hass.helpers.dispatcher.async_dispatcher_connect(
         OT_DOMAIN, async_handle_message)
+    return True
 
 
 def get_cipher():
@@ -347,6 +348,8 @@ async def async_handle_unsupported_msg(hass, context, message):
 async def async_handle_message(hass, context, message):
     """Handle an OwnTracks message."""
     msgtype = message.get('_type')
+
+    _LOGGER.debug("Received %s", message)
 
     handler = HANDLERS.get(msgtype, async_handle_unsupported_msg)
 

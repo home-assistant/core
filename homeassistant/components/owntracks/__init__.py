@@ -4,7 +4,7 @@ import json
 import logging
 import re
 
-from aiohttp.web import Response
+from aiohttp.web import json_response
 import voluptuous as vol
 
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -111,42 +111,25 @@ async def handle_webhook(hass, webhook_id, request):
     """Handle webhook callback."""
     context = hass.data[DOMAIN]['context']
     headers = request.headers
-    data = dict()
 
-    if 'X-Limit-U' in headers:
-        data['user'] = headers['X-Limit-U']
-    elif 'u' in request.query:
-        data['user'] = request.query['u']
-    else:
-        return Response(
-            body=json.dumps({'error': 'You need to supply username.'}),
-            content_type="application/json"
-        )
+    user = headers.get('X-Limit-U')
+    device = headers.get('X-Limit-D', user)
 
-    if 'X-Limit-D' in headers:
-        data['device'] = headers['X-Limit-D']
-    elif 'd' in request.query:
-        data['device'] = request.query['d']
-    else:
-        return Response(
-            body=json.dumps({'error': 'You need to supply device name.'}),
-            content_type="application/json"
+    if user is None:
+        _LOGGER.warning('Set a username in Connection -> Identification')
+        return json_response(
+            {'error': 'You need to supply username.'},
+            status=400
         )
 
     message = await request.json()
 
     topic_base = re.sub('/#$', '', context.mqtt_topic)
-    message['topic'] = '{}/{}/{}'.format(topic_base, data['user'],
-                                         data['device'])
+    message['topic'] = '{}/{}/{}'.format(topic_base, user, device)
 
-    try:
-        hass.helpers.dispatcher.async_dispatcher_send(
-            DOMAIN, hass, context, message)
-        return Response(body=json.dumps([]), status=200,
-                        content_type="application/json")
-    except ValueError:
-        _LOGGER.error("Received invalid JSON")
-        return None
+    hass.helpers.dispatcher.async_dispatcher_send(
+        DOMAIN, hass, context, message)
+    return json_response([])
 
 
 class OwnTracksContext:

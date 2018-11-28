@@ -6,6 +6,16 @@ from homeassistant.auth.util import generate_secret
 CONF_SECRET = 'secret'
 
 
+def supports_encryption():
+    """Test if we support encryption."""
+    try:
+        # pylint: disable=unused-variable
+        import libnacl   # noqa
+        return True
+    except OSError:
+        return False
+
+
 @config_entries.HANDLERS.register('owntracks')
 class OwnTracksFlow(config_entries.ConfigFlow):
     """Set up OwnTracks."""
@@ -25,7 +35,17 @@ class OwnTracksFlow(config_entries.ConfigFlow):
         webhook_id = self.hass.components.webhook.async_generate_id()
         webhook_url = \
             self.hass.components.webhook.async_generate_url(webhook_id)
+
         secret = generate_secret(16)
+
+        if supports_encryption():
+            secret_desc = (
+                "Go to preferences -> advanced and change encryption key to "
+                "`{secret}`.")
+        else:
+            secret_desc = (
+                "Encryption is not supported because libsodium is not "
+                "installed.")
 
         return self.async_create_entry(
             title="OwnTracks",
@@ -34,7 +54,7 @@ class OwnTracksFlow(config_entries.ConfigFlow):
                 CONF_SECRET: secret
             },
             description_placeholders={
-                'secret': secret,
+                'secret': secret_desc,
                 'webhook_url': webhook_url,
                 'docs_url':
                 'https://www.home-assistant.io/components/owntracks/'
