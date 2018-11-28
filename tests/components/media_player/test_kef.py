@@ -3,21 +3,23 @@ import unittest
 from unittest import mock
 import json
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.setup import setup_component
-from homeassistant.components.media_player import kef, DOMAIN, SERVICE_TURN_ON
+from homeassistant.components.media_player import kef, DOMAIN
 from homeassistant.components.media_player.kef import (
     CONF_TURN_ON_SERVICE, CONF_TURN_ON_DATA
 )
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_NAME, CONF_PLATFORM, STATE_OFF, STATE_ON
+    CONF_HOST, CONF_NAME, CONF_PLATFORM, STATE_OFF
 )
 
 from tests.common import get_test_home_assistant
 
 
 class KefSpeakerMock:
+    """Mock class for pykef lib."""
+
     def __init__(self, host, port):
+        """Mock for KefSpeaker initializer."""
         self.__volume = 0.0
         self.__muted = False
         self.__source = None
@@ -26,17 +28,19 @@ class KefSpeakerMock:
         self.port = port
 
     def send_command(self, cmd):
+        """Mock for send command to hardware."""
         pass
 
     @property
     def volume(self):
-        """Volume level of the media player (0..1). None if muted"""
+        """Mock for getting volume level. None if muted."""
         if not self.online:
             raise ConnectionRefusedError("Offline")
         return self.__volume if not self.__muted else None
 
     @volume.setter
     def volume(self, value):
+        """Mock for setting volume level. None to mute."""
         if not self.online:
             raise ConnectionRefusedError("Offline")
         if value:
@@ -48,46 +52,56 @@ class KefSpeakerMock:
 
     @property
     def source(self):
-        """Get the input source of the speaker."""
+        """Mock for getting the input source of the speaker."""
         if not self.online:
             raise ConnectionRefusedError("Offline")
         return self.__source
 
     @source.setter
     def source(self, value):
+        """Mock for setting the input source."""
         if not self.online:
             raise ConnectionRefusedError("Offline")
         self.__source = value
 
     @property
     def muted(self):
+        """Mock for muted. True if muted, else False."""
         if not self.online:
             raise ConnectionRefusedError("Offline")
         return self.__muted
 
     @muted.setter
     def muted(self, value):
+        """Mock for set muted."""
         if not self.online:
             raise ConnectionRefusedError("Offline")
         self.__muted = value
 
     @property
     def online(self):
+        """Mock for get if speaker is online or not."""
         return self.is_online
 
+    # pylint: disable=invalid-name
     def turnOff(self):
+        """Mock for turn off the speaker."""
         if not self.online:
             raise ConnectionRefusedError("Offline")
         self.is_online = False
         return True
 
+    # pylint: disable=invalid-name
     def increaseVolume(self, step=None):
+        """Mock for increase volume."""
         if not self.online:
             raise ConnectionRefusedError("Offline")
         if not self.__muted:
             self.__volume = self.__volume + (step if step else 0.05)
 
+    # pylint: disable=invalid-name
     def decreaseVolume(self, step=None):
+        """Mock for decrease volume."""
         self.increaseVolume(-(step or 0.05))
 
 
@@ -101,6 +115,7 @@ def add_entities_factory(self):
 
 
 class TestKefMediaPlayer(unittest.TestCase):
+    """Unit tests for kef component."""
 
     # pylint: disable=invalid-name
     def setUp(self):
