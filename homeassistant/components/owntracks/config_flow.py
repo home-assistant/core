@@ -40,8 +40,8 @@ class OwnTracksFlow(config_entries.ConfigFlow):
 
         if supports_encryption():
             secret_desc = (
-                "Go to preferences -> advanced and change encryption key to "
-                "`{secret}`.")
+                "The encryption key is {secret} "
+                "(on Android under preferences -> advanced)")
         else:
             secret_desc = (
                 "Encryption is not supported because libsodium is not "
