@@ -10,11 +10,10 @@ import asyncio
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF)
 from homeassistant.core import callback, State, CoreState
-from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component, mock_restore_cache
+from tests.common import mock_restore_cache
 from ..test_rflink import mock_rflink
 
 DOMAIN = 'light'
@@ -565,42 +564,54 @@ def test_disable_automatic_add(hass, monkeypatch):
 
 
 @asyncio.coroutine
-def test_restore_state(hass):
+def test_restore_state(hass, monkeypatch):
     """Ensure states are restored on startup."""
-    mock_restore_cache(hass, (
-        State('light.l1', 'on'),
-        State('light.l2', 'off'),
-        State('light.l3', 'on'),
-    ))
-
-    hass.state = CoreState.starting
-    mock_component(hass, 'recorder')
-
-    yield from async_setup_component(hass, DOMAIN, {
+    config = {
         'rflink': {
             'port': '/dev/ttyABC0',
         },
         DOMAIN: {
             'platform': 'rflink',
             'devices': {
-                'l1': {
-                    'name': 'test',
-                    'aliases': ['test_alias_0_0'],
+                'NewKaku_12345678_0': {
+                    'name': 'l1',
+                    'type': 'hybrid',
                 },
-                'l2': {
-                    'name': 'dim_test',
-                    'type': 'dimmable',
+                'test_restore_2': {
+                    'name': 'l2',
                 },
-                'l3': {
-                    'name': 'switch_test',
-                    'type': 'switchable',
-                }
-            }}})
+                'test_restore_3': {
+                    'name': 'l3',
+                },
+            },
+        },
+    }
 
-    state = hass.states.get('light.l1')
-    assert state
-    assert state.state == 'on'
+    mock_restore_cache(hass, (
+        State(DOMAIN + '.l1', STATE_ON, {ATTR_BRIGHTNESS: "123", }),
+        State(DOMAIN + '.l2', STATE_ON, {ATTR_BRIGHTNESS: "321", }),
+        State(DOMAIN + '.l3', STATE_OFF, ),
+    ))
 
-    state = hass.states.get('light.l2')
+    hass.state = CoreState.starting
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    # dimmable light must restore brightness
+    state = hass.states.get(DOMAIN + '.l1')
     assert state
-    assert state.state == 'off'
+    assert(state.state == STATE_ON)
+    assert(state.attributes[ATTR_BRIGHTNESS] == 123)
+
+    # normal light do NOT must restore brightness
+    state = hass.states.get(DOMAIN + '.l2')
+    assert state
+    assert(state.state == STATE_ON)
+    assert not (state.attributes.get(ATTR_BRIGHTNESS))
+
+    # OFF state also restores (or not)
+    state = hass.states.get(DOMAIN + '.l3')
+    assert state
+    assert(state.state == STATE_OFF)
