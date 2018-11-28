@@ -40,7 +40,7 @@ SENSOR_TYPES = {
     'packets_in': ['Packets in', ' ', 'mdi:server-network'],
     'packets_out': ['Packets out', ' ', 'mdi:server-network'],
     'process': ['Process', ' ', 'mdi:memory'],
-    'processor_use': ['Processor use', '%', 'mdi:memory'],
+    'processor_use_percent': ['Processor use (percent)', '%', 'mdi:memory'],
     'swap_free': ['Swap free', 'MiB', 'mdi:harddisk'],
     'swap_use': ['Swap use', 'MiB', 'mdi:harddisk'],
     'swap_use_percent': ['Swap use (percent)', '%', 'mdi:harddisk'],
@@ -136,7 +136,7 @@ class SystemMonitorSensor(Entity):
             self._state = round(psutil.swap_memory().used / 1024**2, 1)
         elif self.type == 'swap_free':
             self._state = round(psutil.swap_memory().free / 1024**2, 1)
-        elif self.type == 'processor_use':
+        elif self.type == 'processor_use_percent':
             self._state = round(psutil.cpu_percent(interval=None))
         elif self.type == 'process':
             for proc in psutil.process_iter():
