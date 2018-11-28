@@ -1,14 +1,11 @@
 """Test the owntracks_http platform."""
 import asyncio
-from unittest.mock import Mock
 
-import os
 import pytest
 
-from homeassistant.components import device_tracker
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component, mock_coro, MockConfigEntry
+from tests.common import mock_component, MockConfigEntry
 
 MINIMAL_LOCATION_MESSAGE = {
     '_type': 'location',
