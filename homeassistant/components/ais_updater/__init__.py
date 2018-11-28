@@ -112,12 +112,17 @@ async def async_setup(hass, config):
                     "apt": apt
                 }
             )
+            # add all entities to keep the order
             hass.async_add_job(
                 hass.services.async_call(
                     'group',
                     'set', {
                         "object_id": "dom_system_version",
-                        "add_entities": ["script.ais_update_system"]}))
+                        "entities": [
+                            "sensor.version_info",
+                            "script.ais_update_system",
+                            "script.ais_restart_system",
+                            "script.ais_stop_system"]}))
         else:
             info = 'Twój system jest aktualny, wersja ' + newest + '. '
             info += releasenotes
