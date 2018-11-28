@@ -1,12 +1,13 @@
 """The tests for the Script component."""
 # pylint: disable=protected-access
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from homeassistant.components import script
 from homeassistant.components.script import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_RELOAD, SERVICE_TOGGLE, SERVICE_TURN_OFF)
+    ATTR_ENTITY_ID, SERVICE_RELOAD, SERVICE_TOGGLE, SERVICE_TURN_OFF,
+    EVENT_SCRIPT_RUN)
 from homeassistant.core import Context, callback, split_entity_id
 from homeassistant.loader import bind_hass
 from homeassistant.setup import setup_component
@@ -254,3 +255,37 @@ class TestScriptComponent(unittest.TestCase):
 
         assert self.hass.states.get("script.test2") is not None
         assert self.hass.services.has_service(script.DOMAIN, 'test2')
+
+    def test_shared_context(self):
+        """Test that the shared context is passed down the chain."""
+        event = 'test_event'
+        context = Context()
+
+        event_mock = Mock()
+        run_mock = Mock()
+
+        self.hass.bus.listen(event, event_mock)
+        self.hass.bus.listen(EVENT_SCRIPT_RUN, run_mock)
+
+        assert setup_component(self.hass, 'script', {
+            'script': {
+                'test': {
+                    'sequence': [{'event': event}]
+                }
+            }
+        })
+
+        turn_on(self.hass, ENTITY_ID, context=context)
+        self.hass.block_till_done()
+
+        # Ensure context carries through the event
+        args, kwargs = event_mock.call_args
+        assert args[0].context == context
+
+        args, kwargs = run_mock.call_args
+        assert args[0].context == context
+
+        # Ensure the script state shares the same context
+        state = self.hass.states.get('script.test')
+        assert state is not None
+        assert state.context == context

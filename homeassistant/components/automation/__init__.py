@@ -12,11 +12,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, EventOrigin
 from homeassistant.loader import bind_hass
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID)
+    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID,
+    EVENT_AUTOMATION_TRIGGER, ATTR_DOMAIN, ATTR_NAME)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
 from homeassistant.helpers.entity import ToggleEntity
@@ -286,6 +287,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         """
         if skip_condition or self._cond_func(variables):
             self.async_set_context(context)
+            self.hass.bus.async_fire(EVENT_AUTOMATION_TRIGGER, {
+                ATTR_NAME: self._name,
+                ATTR_DOMAIN: DOMAIN,
+                ATTR_ENTITY_ID: self.entity_id,
+            }, EventOrigin.local, context)
             await self._async_action(self.entity_id, variables, context)
             self._last_triggered = utcnow()
             await self.async_update_ha_state()
