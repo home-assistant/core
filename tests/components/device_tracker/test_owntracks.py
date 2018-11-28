@@ -291,7 +291,7 @@ def setup_comp(hass):
 
 async def setup_owntracks(hass, config,
                           ctx_cls=owntracks.OwnTracksContext):
-    """Helper to setup OwnTracks."""
+    """Set up OwnTracks."""
     await async_mock_mqtt_component(hass)
 
     MockConfigEntry(domain='owntracks', data={
