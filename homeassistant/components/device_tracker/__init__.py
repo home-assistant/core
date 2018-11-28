@@ -181,6 +181,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
                 setup = await hass.async_add_job(
                     platform.setup_scanner, hass, p_config, tracker.see,
                     disc_info)
+            elif hasattr(platform, 'async_setup_entry'):
+                setup = await platform.async_setup_entry(
+                    hass, p_config, tracker.async_see)
             else:
                 raise HomeAssistantError("Invalid device_tracker platform.")
 
@@ -195,6 +198,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error setting up platform %s", p_type)
+
+    hass.data[DOMAIN] = async_setup_platform
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
@@ -226,6 +231,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     # restore
     await tracker.async_setup_tracked_device()
+    return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up an entry."""
+    await hass.data[DOMAIN](entry.domain, entry)
     return True
 
 
