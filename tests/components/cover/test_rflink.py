@@ -43,6 +43,7 @@ CONFIG = {
 
 _LOGGER = logging.getLogger(__name__)
 
+
 @asyncio.coroutine
 def test_default_setup(hass, monkeypatch):
     """Test all basic functionality of the rflink cover component."""
