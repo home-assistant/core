@@ -684,34 +684,3 @@ async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     state = hass.states.get('climate.beer')
     assert state is None
-
-
-async def test_discovery_update_climate(hass, mqtt_mock, caplog):
-    """Test removal of discovered climate."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, 'homeassistant', {}, entry)
-    data1 = (
-        '{ "name": "Beer" }'
-    )
-    data2 = (
-        '{ "name": "Milk" }'
-    )
-    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
-                            data1)
-    await hass.async_block_till_done()
-
-    state = hass.states.get('climate.beer')
-    assert state is not None
-    assert state.name == 'Beer'
-
-    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
-                            data2)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    state = hass.states.get('climate.beer')
-    assert state is not None
-    assert state.name == 'Milk'
-
-    state = hass.states.get('climate.milk')
-    assert state is None

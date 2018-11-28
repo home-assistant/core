@@ -14,8 +14,10 @@ async def _handle_async_response(func, hass, connection, msg):
     """Create a response and handle exception."""
     try:
         await func(hass, connection, msg)
-    except Exception as err:  # pylint: disable=broad-except
-        connection.async_handle_exception(msg, err)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception")
+        connection.send_message(messages.error_message(
+            msg['id'], 'unknown', 'Unexpected error occurred'))
 
 
 def async_response(func):

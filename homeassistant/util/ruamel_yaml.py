@@ -1,7 +1,7 @@
 """ruamel.yaml utility functions."""
 import logging
 import os
-from os import O_CREAT, O_TRUNC, O_WRONLY, stat_result
+from os import O_CREAT, O_TRUNC, O_WRONLY
 from collections import OrderedDict
 from typing import Union, List, Dict
 
@@ -80,8 +80,7 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
         yaml = YAML(typ='rt')
         yaml.preserve_quotes = True
     else:
-        if not hasattr(ExtSafeConstructor, 'name'):
-            ExtSafeConstructor.name = fname
+        ExtSafeConstructor.name = fname
         yaml = YAML(typ='safe')
         yaml.Constructor = ExtSafeConstructor
 
@@ -104,17 +103,13 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
     yaml.indent(sequence=4, offset=2)
     tmp_fname = fname + "__TEMP__"
     try:
-        try:
-            file_stat = os.stat(fname)
-        except OSError:
-            file_stat = stat_result(
-                (0o644, -1, -1, -1, -1, -1, -1, -1, -1, -1))
+        file_stat = os.stat(fname)
         with open(os.open(tmp_fname, O_WRONLY | O_CREAT | O_TRUNC,
                           file_stat.st_mode), 'w', encoding='utf-8') \
                 as temp_file:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
-        if hasattr(os, 'chown') and file_stat.st_ctime > -1:
+        if hasattr(os, 'chown'):
             try:
                 os.chown(fname, file_stat.st_uid, file_stat.st_gid)
             except OSError:

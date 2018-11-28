@@ -2,7 +2,6 @@
 from unittest.mock import patch
 from homeassistant.setup import async_setup_component
 from homeassistant.components import cloud
-from homeassistant.components.cloud import const
 
 from jose import jwt
 
@@ -25,10 +24,9 @@ def mock_cloud(hass, config={}):
 def mock_cloud_prefs(hass, prefs={}):
     """Fixture for cloud component."""
     prefs_to_set = {
-        const.PREF_ENABLE_ALEXA: True,
-        const.PREF_ENABLE_GOOGLE: True,
-        const.PREF_GOOGLE_ALLOW_UNLOCK: True,
+        cloud.STORAGE_ENABLE_ALEXA: True,
+        cloud.STORAGE_ENABLE_GOOGLE: True,
     }
     prefs_to_set.update(prefs)
-    hass.data[cloud.DOMAIN].prefs._prefs = prefs_to_set
+    hass.data[cloud.DOMAIN]._prefs = prefs_to_set
     return prefs_to_set

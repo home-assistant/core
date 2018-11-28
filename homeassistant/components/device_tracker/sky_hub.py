@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string
+    vol.Required(CONF_HOST): cv.string
 })
 
 

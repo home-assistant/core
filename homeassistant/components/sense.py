@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_EMAIL): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_TIMEOUT, DEFAULT_TIMEOUT): cv.positive_int,
     })
 }, extra=vol.ALLOW_EXTRA)
 

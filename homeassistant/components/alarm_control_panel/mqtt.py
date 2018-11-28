@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
     CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
-    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate, subscription)
+    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -71,7 +71,18 @@ async def _async_setup_entity(hass, config, async_add_entities,
                               discovery_hash=None):
     """Set up the MQTT Alarm Control Panel platform."""
     async_add_entities([MqttAlarm(
-        config,
+        config.get(CONF_NAME),
+        config.get(CONF_STATE_TOPIC),
+        config.get(CONF_COMMAND_TOPIC),
+        config.get(CONF_QOS),
+        config.get(CONF_RETAIN),
+        config.get(CONF_PAYLOAD_DISARM),
+        config.get(CONF_PAYLOAD_ARM_HOME),
+        config.get(CONF_PAYLOAD_ARM_AWAY),
+        config.get(CONF_CODE),
+        config.get(CONF_AVAILABILITY_TOPIC),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         discovery_hash,)])
 
 
@@ -79,61 +90,31 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
                 alarm.AlarmControlPanel):
     """Representation of a MQTT alarm status."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, name, state_topic, command_topic, qos, retain,
+                 payload_disarm, payload_arm_home, payload_arm_away, code,
+                 availability_topic, payload_available, payload_not_available,
+                 discovery_hash):
         """Init the MQTT Alarm Control Panel."""
-        self._state = STATE_UNKNOWN
-        self._config = config
-        self._sub_state = None
-
-        self._name = None
-        self._state_topic = None
-        self._command_topic = None
-        self._qos = None
-        self._retain = None
-        self._payload_disarm = None
-        self._payload_arm_home = None
-        self._payload_arm_away = None
-        self._code = None
-
-        # Load config
-        self._setup_from_config(config)
-
-        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
-        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
-        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
-        MqttAvailability.__init__(self, availability_topic, self._qos,
+        MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash,
-                                     self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash)
+        self._state = STATE_UNKNOWN
+        self._name = name
+        self._state_topic = state_topic
+        self._command_topic = command_topic
+        self._qos = qos
+        self._retain = retain
+        self._payload_disarm = payload_disarm
+        self._payload_arm_home = payload_arm_home
+        self._payload_arm_away = payload_arm_away
+        self._code = code
+        self._discovery_hash = discovery_hash
 
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
         await MqttAvailability.async_added_to_hass(self)
         await MqttDiscoveryUpdate.async_added_to_hass(self)
-        await self._subscribe_topics()
 
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        self._setup_from_config(config)
-        await self.availability_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
-
-    def _setup_from_config(self, config):
-        """(Re)Setup the entity."""
-        self._name = config.get(CONF_NAME)
-        self._state_topic = config.get(CONF_STATE_TOPIC)
-        self._command_topic = config.get(CONF_COMMAND_TOPIC)
-        self._qos = config.get(CONF_QOS)
-        self._retain = config.get(CONF_RETAIN)
-        self._payload_disarm = config.get(CONF_PAYLOAD_DISARM)
-        self._payload_arm_home = config.get(CONF_PAYLOAD_ARM_HOME)
-        self._payload_arm_away = config.get(CONF_PAYLOAD_ARM_AWAY)
-        self._code = config.get(CONF_CODE)
-
-    async def _subscribe_topics(self):
-        """(Re)Subscribe to topics."""
         @callback
         def message_received(topic, payload, qos):
             """Run when new MQTT message has been received."""
@@ -145,16 +126,8 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
             self._state = payload
             self.async_schedule_update_ha_state()
 
-        self._sub_state = await subscription.async_subscribe_topics(
-            self.hass, self._sub_state,
-            {'state_topic': {'topic': self._state_topic,
-                             'msg_callback': message_received,
-                             'qos': self._qos}})
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
-        await MqttAvailability.async_will_remove_from_hass(self)
+        await mqtt.async_subscribe(
+            self.hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):

@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if station is None:
         _LOGGER.error("Could not get BOM weather station from lat/lon")
         return False
-    bom_data = BOMCurrentData(station)
+    bom_data = BOMCurrentData(hass, station)
     try:
         bom_data.update()
     except ValueError as err:

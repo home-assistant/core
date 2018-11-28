@@ -24,6 +24,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devs.append(dev)
 
     add_entities(devs, True)
+    return True
 
 
 def to_lutron_level(level):
@@ -42,7 +43,7 @@ class LutronLight(LutronDevice, Light):
     def __init__(self, area_name, lutron_device, controller):
         """Initialize the light."""
         self._prev_brightness = None
-        super().__init__(self, area_name, lutron_device, controller)
+        LutronDevice.__init__(self, area_name, lutron_device, controller)
 
     @property
     def supported_features(self):
@@ -76,7 +77,7 @@ class LutronLight(LutronDevice, Light):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
-        attr['lutron_integration_id'] = self._lutron_device.id
+        attr['Lutron Integration ID'] = self._lutron_device.id
         return attr
 
     @property

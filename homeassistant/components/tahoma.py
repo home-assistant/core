@@ -36,27 +36,26 @@ TAHOMA_COMPONENTS = [
 ]
 
 TAHOMA_TYPES = {
-    'io:ExteriorVenetianBlindIOComponent': 'cover',
-    'io:HorizontalAwningIOComponent': 'cover',
-    'io:LightIOSystemSensor': 'sensor',
-    'io:OnOffLightIOComponent': 'switch',
-    'io:RollerShutterGenericIOComponent': 'cover',
-    'io:RollerShutterUnoIOComponent': 'cover',
-    'io:RollerShutterVeluxIOComponent': 'cover',
-    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
-    'io:SomfyContactIOSystemSensor': 'sensor',
-    'io:VerticalExteriorAwningIOComponent': 'cover',
-    'io:WindowOpenerVeluxIOComponent': 'cover',
-    'rtds:RTDSContactSensor': 'sensor',
-    'rtds:RTDSMotionSensor': 'sensor',
-    'rtds:RTDSSmokeSensor': 'smoke',
-    'rts:BlindRTSComponent': 'cover',
+    'rts:RollerShutterRTSComponent': 'cover',
     'rts:CurtainRTSComponent': 'cover',
+    'rts:BlindRTSComponent': 'cover',
+    'rts:VenetianBlindRTSComponent': 'cover',
     'rts:DualCurtainRTSComponent': 'cover',
     'rts:ExteriorVenetianBlindRTSComponent': 'cover',
+    'io:ExteriorVenetianBlindIOComponent': 'cover',
+    'io:RollerShutterUnoIOComponent': 'cover',
+    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
+    'io:RollerShutterVeluxIOComponent': 'cover',
+    'io:RollerShutterGenericIOComponent': 'cover',
+    'io:WindowOpenerVeluxIOComponent': 'cover',
+    'io:LightIOSystemSensor': 'sensor',
     'rts:GarageDoor4TRTSComponent': 'switch',
-    'rts:RollerShutterRTSComponent': 'cover',
-    'rts:VenetianBlindRTSComponent': 'cover'
+    'io:VerticalExteriorAwningIOComponent': 'cover',
+    'io:HorizontalAwningIOComponent': 'cover',
+    'io:OnOffLightIOComponent': 'switch',
+    'rtds:RTDSSmokeSensor': 'smoke',
+    'rtds:RTDSContactSensor': 'sensor',
+    'rtds:RTDSMotionSensor': 'sensor'
 }
 
 

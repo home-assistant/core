@@ -120,9 +120,6 @@ omit =
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
 
-    homeassistant/components/fibaro.py
-    homeassistant/components/*/fibaro.py
-
     homeassistant/components/gc100.py
     homeassistant/components/*/gc100.py
 
@@ -262,10 +259,6 @@ omit =
     homeassistant/components/pilight.py
     homeassistant/components/*/pilight.py
 
-    homeassistant/components/point/__init__.py
-    homeassistant/components/point/const.py
-    homeassistant/components/*/point.py
-
     homeassistant/components/switch/qwikswitch.py
     homeassistant/components/light/qwikswitch.py
 
@@ -275,7 +268,7 @@ omit =
     homeassistant/components/raincloud.py
     homeassistant/components/*/raincloud.py
 
-    homeassistant/components/rainmachine/__init__.py
+    homeassistant/components/rainmachine/*
     homeassistant/components/*/rainmachine.py
 
     homeassistant/components/raspihats.py
@@ -400,8 +393,6 @@ omit =
 
     homeassistant/components/zha/__init__.py
     homeassistant/components/zha/const.py
-    homeassistant/components/zha/entities/*
-    homeassistant/components/zha/helpers.py
     homeassistant/components/*/zha.py
 
     homeassistant/components/zigbee.py
@@ -550,7 +541,6 @@ omit =
     homeassistant/components/light/lw12wifi.py
     homeassistant/components/light/mystrom.py
     homeassistant/components/light/nanoleaf_aurora.py
-    homeassistant/components/light/niko_home_control.py
     homeassistant/components/light/opple.py
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/piglow.py
@@ -602,7 +592,6 @@ omit =
     homeassistant/components/media_player/nadtcp.py
     homeassistant/components/media_player/onkyo.py
     homeassistant/components/media_player/openhome.py
-    homeassistant/components/media_player/panasonic_bluray.py
     homeassistant/components/media_player/panasonic_viera.py
     homeassistant/components/media_player/pandora.py
     homeassistant/components/media_player/philips_js.py

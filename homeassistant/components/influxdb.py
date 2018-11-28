@@ -23,7 +23,7 @@ from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
 
-REQUIREMENTS = ['influxdb==5.2.0']
+REQUIREMENTS = ['influxdb==5.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

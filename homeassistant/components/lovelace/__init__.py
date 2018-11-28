@@ -31,7 +31,6 @@ FORMAT_JSON = 'json'
 OLD_WS_TYPE_GET_LOVELACE_UI = 'frontend/lovelace_config'
 WS_TYPE_GET_LOVELACE_UI = 'lovelace/config'
 WS_TYPE_MIGRATE_CONFIG = 'lovelace/config/migrate'
-WS_TYPE_SAVE_CONFIG = 'lovelace/config/save'
 
 WS_TYPE_GET_CARD = 'lovelace/config/card/get'
 WS_TYPE_UPDATE_CARD = 'lovelace/config/card/update'
@@ -54,13 +53,6 @@ SCHEMA_MIGRATE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_MIGRATE_CONFIG,
 })
 
-SCHEMA_SAVE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): WS_TYPE_SAVE_CONFIG,
-    vol.Required('config'): vol.Any(str, dict),
-    vol.Optional('format', default=FORMAT_JSON):
-        vol.Any(FORMAT_JSON, FORMAT_YAML),
-})
-
 SCHEMA_GET_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_GET_CARD,
     vol.Required('card_id'): str,
@@ -71,7 +63,7 @@ SCHEMA_GET_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_UPDATE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_UPDATE_CARD,
     vol.Required('card_id'): str,
-    vol.Required('card_config'): vol.Any(str, dict),
+    vol.Required('card_config'): vol.Any(str, Dict),
     vol.Optional('format', default=FORMAT_YAML):
         vol.Any(FORMAT_JSON, FORMAT_YAML),
 })
@@ -79,7 +71,7 @@ SCHEMA_UPDATE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_ADD_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_ADD_CARD,
     vol.Required('view_id'): str,
-    vol.Required('card_config'): vol.Any(str, dict),
+    vol.Required('card_config'): vol.Any(str, Dict),
     vol.Optional('position'): int,
     vol.Optional('format', default=FORMAT_YAML):
         vol.Any(FORMAT_JSON, FORMAT_YAML),
@@ -107,14 +99,14 @@ SCHEMA_GET_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_UPDATE_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_UPDATE_VIEW,
     vol.Required('view_id'): str,
-    vol.Required('view_config'): vol.Any(str, dict),
+    vol.Required('view_config'): vol.Any(str, Dict),
     vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
                                                          FORMAT_YAML),
 })
 
 SCHEMA_ADD_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_ADD_VIEW,
-    vol.Required('view_config'): vol.Any(str, dict),
+    vol.Required('view_config'): vol.Any(str, Dict),
     vol.Optional('position'): int,
     vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
                                                          FORMAT_YAML),
@@ -210,13 +202,6 @@ def migrate_config(fname: str) -> None:
         index += 1
     if updated:
         yaml.save_yaml(fname, config)
-
-
-def save_config(fname: str, config, data_format: str = FORMAT_JSON) -> None:
-    """Save config to file."""
-    if data_format == FORMAT_YAML:
-        config = yaml.yaml_to_object(config)
-    yaml.save_yaml(fname, config)
 
 
 def get_card(fname: str, card_id: str, data_format: str = FORMAT_YAML)\
@@ -438,16 +423,12 @@ async def async_setup(hass, config):
         SCHEMA_GET_LOVELACE_UI)
 
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
-        SCHEMA_GET_LOVELACE_UI)
-
-    hass.components.websocket_api.async_register_command(
         WS_TYPE_MIGRATE_CONFIG, websocket_lovelace_migrate_config,
         SCHEMA_MIGRATE_CONFIG)
 
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SAVE_CONFIG, websocket_lovelace_save_config,
-        SCHEMA_SAVE_CONFIG)
+        WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
+        SCHEMA_GET_LOVELACE_UI)
 
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_CARD, websocket_lovelace_get_card, SCHEMA_GET_CARD)
@@ -533,15 +514,6 @@ async def websocket_lovelace_migrate_config(hass, connection, msg):
     """Migrate Lovelace UI configuration."""
     return await hass.async_add_executor_job(
         migrate_config, hass.config.path(LOVELACE_CONFIG_FILE))
-
-
-@websocket_api.async_response
-@handle_yaml_errors
-async def websocket_lovelace_save_config(hass, connection, msg):
-    """Save Lovelace UI configuration."""
-    return await hass.async_add_executor_job(
-        save_config, hass.config.path(LOVELACE_CONFIG_FILE), msg['config'],
-        msg.get('format', FORMAT_JSON))
 
 
 @websocket_api.async_response

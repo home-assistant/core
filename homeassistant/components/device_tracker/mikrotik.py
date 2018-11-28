@@ -6,30 +6,26 @@ https://home-assistant.io/components/device_tracker.mikrotik/
 """
 import logging
 
-import ssl
-
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_SSL, CONF_METHOD)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_METHOD)
 
-REQUIREMENTS = ['librouteros==2.2.0']
+REQUIREMENTS = ['librouteros==2.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 MTK_DEFAULT_API_PORT = '8728'
-MTK_DEFAULT_API_SSL_PORT = '8729'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_METHOD): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=False): cv.boolean
+    vol.Optional(CONF_PORT, default=MTK_DEFAULT_API_PORT): cv.port,
 })
 
 
@@ -47,17 +43,10 @@ class MikrotikScanner(DeviceScanner):
         self.last_results = {}
 
         self.host = config[CONF_HOST]
-        self.ssl = config[CONF_SSL]
-        try:
-            self.port = config[CONF_PORT]
-        except KeyError:
-            if self.ssl:
-                self.port = MTK_DEFAULT_API_SSL_PORT
-            else:
-                self.port = MTK_DEFAULT_API_PORT
+        self.port = config[CONF_PORT]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        self.method = config.get(CONF_METHOD)
+        self.method = config[CONF_METHOD]
 
         self.connected = False
         self.success_init = False
@@ -75,21 +64,9 @@ class MikrotikScanner(DeviceScanner):
         """Connect to Mikrotik method."""
         import librouteros
         try:
-            kwargs = {
-                'port': self.port,
-                'encoding': 'utf-8'
-            }
-            if self.ssl:
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
-                kwargs['ssl_wrapper'] = ssl_context.wrap_socket
             self.client = librouteros.connect(
-                self.host,
-                self.username,
-                self.password,
-                **kwargs
-            )
+                self.host, self.username, self.password, port=int(self.port),
+                encoding='utf-8')
 
             try:
                 routerboard_info = self.client(
@@ -128,8 +105,7 @@ class MikrotikScanner(DeviceScanner):
                         librouteros.exceptions.ConnectionError):
                     self.wireless_exist = False
 
-                if not self.wireless_exist and not self.capsman_exist \
-                   or self.method == 'ip':
+                if not self.wireless_exist or self.method == 'ip':
                     _LOGGER.info(
                         "Mikrotik %s: Wireless adapters not found. Try to "
                         "use DHCP lease table as presence tracker source. "
@@ -144,18 +120,12 @@ class MikrotikScanner(DeviceScanner):
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error("Connection error: %s", api_error)
+
         return self.connected
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device MACs."""
-        import librouteros
-        try:
-            self._update_info()
-        except (librouteros.exceptions.TrapError,
-                librouteros.exceptions.MultiTrapError,
-                librouteros.exceptions.ConnectionError) as api_error:
-            _LOGGER.error("Connection error: %s", api_error)
-            self.connect_to_device()
+        self._update_info()
         return [device for device in self.last_results]
 
     def get_device_name(self, device):
