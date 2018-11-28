@@ -87,19 +87,19 @@ class LGNetcastRemote(RemoteDevice):
         self.send_command(1)
         self.schedule_update_ha_state()
 
-    def send_command(self, command, **kwargs):
+    def send_command(self, commands, **kwargs):
         """Send a command to a device."""
         from pylgnetcast import LgNetCastError, LG_COMMAND
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)
 
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
         for _ in range(num_repeats):
-            for com in command:
+            for command in commands:
                 try:
                     with self._client as client:
-                        if isinstance(com, str):
-                            com = getattr(LG_COMMAND, com.upper())
-                        client.send_command(com)
+                        if isinstance(command, str):
+                            command = getattr(LG_COMMAND, command.upper())
+                        client.send_command(command)
                 except (LgNetCastError, RequestException):
                     self._state = STATE_OFF
             time.sleep(delay)
