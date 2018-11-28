@@ -110,22 +110,23 @@ async def async_connect_mqtt(hass, component):
 async def handle_webhook(hass, webhook_id, request):
     """Handle webhook callback."""
     context = hass.data[DOMAIN]['context']
-    headers = request.headers
-
-    user = headers.get('X-Limit-U')
-    device = headers.get('X-Limit-D', user)
-
-    if user is None:
-        _LOGGER.warning('Set a username in Connection -> Identification')
-        return json_response(
-            {'error': 'You need to supply username.'},
-            status=400
-        )
-
     message = await request.json()
 
-    topic_base = re.sub('/#$', '', context.mqtt_topic)
-    message['topic'] = '{}/{}/{}'.format(topic_base, user, device)
+    # Android doesn't populate topic
+    if 'topic' not in message:
+        headers = request.headers
+        user = headers.get('X-Limit-U')
+        device = headers.get('X-Limit-D', user)
+
+        if user is None:
+            _LOGGER.warning('Set a username in Connection -> Identification')
+            return json_response(
+                {'error': 'You need to supply username.'},
+                status=400
+            )
+
+        topic_base = re.sub('/#$', '', context.mqtt_topic)
+        message['topic'] = '{}/{}/{}'.format(topic_base, user, device)
 
     hass.helpers.dispatcher.async_dispatcher_send(
         DOMAIN, hass, context, message)
