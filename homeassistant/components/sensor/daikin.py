@@ -71,6 +71,11 @@ class DaikinClimateSensor(Entity):
         if self._sensor[CONF_TYPE] == SENSOR_TYPE_TEMPERATURE:
             self._unit_of_measurement = units.temperature_unit
 
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return "{}-{}".format(self._api.mac, self._device_attribute)
+
     def get(self, key):
         """Retrieve device settings from API library cache."""
         value = None

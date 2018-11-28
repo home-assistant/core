@@ -373,6 +373,7 @@ class DeviceTracker:
         for device in self.devices.values():
             if (device.track and device.last_update_home) and \
                device.stale(now):
+                device.mark_stale()
                 self.hass.async_create_task(device.async_update_ha_state(True))
 
     async def async_setup_tracked_device(self):
@@ -528,8 +529,14 @@ class Device(Entity):
 
         Async friendly.
         """
-        return self.last_seen and \
+        return self.last_seen is None or \
             (now or dt_util.utcnow()) - self.last_seen > self.consider_home
+
+    def mark_stale(self):
+        """Mark the device state as stale."""
+        self._state = STATE_NOT_HOME
+        self.gps = None
+        self.last_update_home = False
 
     async def async_update(self):
         """Update state of entity.
@@ -550,9 +557,7 @@ class Device(Entity):
             else:
                 self._state = zone_state.name
         elif self.stale():
-            self._state = STATE_NOT_HOME
-            self.gps = None
-            self.last_update_home = False
+            self.mark_stale()
         else:
             self._state = STATE_HOME
             self.last_update_home = True
@@ -563,6 +568,7 @@ class Device(Entity):
         if not state:
             return
         self._state = state.state
+        self.last_update_home = (state.state == STATE_HOME)
 
         for attr, var in (
                 (ATTR_SOURCE_TYPE, 'source_type'),

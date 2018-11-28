@@ -1,7 +1,6 @@
 """Implement the Smart Home traits."""
 import logging
 
-from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components import (
     climate,
     cover,
@@ -26,8 +25,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     ATTR_SUPPORTED_FEATURES,
 )
+from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
-
 from .const import ERR_VALUE_OUT_OF_RANGE
 from .helpers import SmartHomeError
 
@@ -43,6 +42,7 @@ TRAIT_COLOR_TEMP = PREFIX_TRAITS + 'ColorTemperature'
 TRAIT_SCENE = PREFIX_TRAITS + 'Scene'
 TRAIT_TEMPERATURE_SETTING = PREFIX_TRAITS + 'TemperatureSetting'
 TRAIT_LOCKUNLOCK = PREFIX_TRAITS + 'LockUnlock'
+TRAIT_FANSPEED = PREFIX_TRAITS + 'FanSpeed'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
@@ -58,6 +58,7 @@ COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
     PREFIX_COMMANDS + 'ThermostatTemperatureSetRange')
 COMMAND_THERMOSTAT_SET_MODE = PREFIX_COMMANDS + 'ThermostatSetMode'
 COMMAND_LOCKUNLOCK = PREFIX_COMMANDS + 'LockUnlock'
+COMMAND_FANSPEED = PREFIX_COMMANDS + 'SetFanSpeed'
 
 
 TRAITS = []
@@ -196,6 +197,8 @@ class OnOffTrait(_Trait):
     @staticmethod
     def supported(domain, features):
         """Test if state is supported."""
+        if domain == climate.DOMAIN:
+            return features & climate.SUPPORT_ON_OFF != 0
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
@@ -675,3 +678,77 @@ class LockUnlockTrait(_Trait):
         await self.hass.services.async_call(lock.DOMAIN, service, {
             ATTR_ENTITY_ID: self.state.entity_id
         }, blocking=True)
+
+
+@register_trait
+class FanSpeedTrait(_Trait):
+    """Trait to control speed of Fan.
+
+    https://developers.google.com/actions/smarthome/traits/fanspeed
+    """
+
+    name = TRAIT_FANSPEED
+    commands = [
+        COMMAND_FANSPEED
+    ]
+
+    speed_synonyms = {
+        fan.SPEED_OFF: ['stop', 'off'],
+        fan.SPEED_LOW: ['slow', 'low', 'slowest', 'lowest'],
+        fan.SPEED_MEDIUM: ['medium', 'mid', 'middle'],
+        fan.SPEED_HIGH: [
+            'high', 'max', 'fast', 'highest', 'fastest', 'maximum'
+        ]
+    }
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        if domain != fan.DOMAIN:
+            return False
+
+        return features & fan.SUPPORT_SET_SPEED
+
+    def sync_attributes(self):
+        """Return speed point and modes attributes for a sync request."""
+        modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
+        speeds = []
+        for mode in modes:
+            speed = {
+                "speed_name": mode,
+                "speed_values": [{
+                    "speed_synonym": self.speed_synonyms.get(mode),
+                    "lang": 'en'
+                }]
+            }
+            speeds.append(speed)
+
+        return {
+            'availableFanSpeeds': {
+                'speeds': speeds,
+                'ordered': True
+            },
+            "reversible": bool(self.state.attributes.get(
+                ATTR_SUPPORTED_FEATURES, 0) & fan.SUPPORT_DIRECTION)
+        }
+
+    def query_attributes(self):
+        """Return speed point and modes query attributes."""
+        attrs = self.state.attributes
+        response = {}
+
+        speed = attrs.get(fan.ATTR_SPEED)
+        if speed is not None:
+            response['on'] = speed != fan.SPEED_OFF
+            response['online'] = True
+            response['currentFanSpeedSetting'] = speed
+
+        return response
+
+    async def execute(self, command, params):
+        """Execute an SetFanSpeed command."""
+        await self.hass.services.async_call(
+            fan.DOMAIN, fan.SERVICE_SET_SPEED, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                fan.ATTR_SPEED: params['fanSpeed']
+            }, blocking=True)

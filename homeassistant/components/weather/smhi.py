@@ -1,33 +1,28 @@
-"""Support for the Swedish weather institute weather service.
+"""
+Support for the Swedish weather institute weather service.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/weather.smhi/
 """
-
-
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 from typing import Dict, List
 
 import aiohttp
 import async_timeout
 
+from homeassistant.components.smhi.const import (
+    ATTR_SMHI_CLOUDINESS, ENTITY_ID_SENSOR_FORMAT)
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, WeatherEntity)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_NAME, TEMP_CELSIUS)
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.util import dt, slugify, Throttle
-
-from homeassistant.components.weather import (
-    WeatherEntity, ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME,
-    ATTR_FORECAST_PRECIPITATION)
-
-from homeassistant.components.smhi.const import (
-    ENTITY_ID_SENSOR_FORMAT, ATTR_SMHI_CLOUDINESS)
+from homeassistant.util import Throttle, dt, slugify
 
 DEPENDENCIES = ['smhi']
 
@@ -51,15 +46,14 @@ CONDITION_CLASSES = {
     'exceptional': [],
 }
 
-
 # 5 minutes between retrying connect to API again
 RETRY_TIMEOUT = 5*60
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=31)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up components.
 
     Can only be called when a user accidentally mentions smhi in the
@@ -68,18 +62,18 @@ async def async_setup_platform(hass, config, async_add_entities,
     pass
 
 
-async def async_setup_entry(hass: HomeAssistant,
-                            config_entry: ConfigEntry,
-                            config_entries) -> bool:
+async def async_setup_entry(
+        hass: HomeAssistant, config_entry: ConfigEntry,
+        config_entries) -> bool:
     """Add a weather entity from map location."""
     location = config_entry.data
     name = slugify(location[CONF_NAME])
 
     session = aiohttp_client.async_get_clientsession(hass)
 
-    entity = SmhiWeather(location[CONF_NAME], location[CONF_LATITUDE],
-                         location[CONF_LONGITUDE],
-                         session=session)
+    entity = SmhiWeather(
+        location[CONF_NAME], location[CONF_LATITUDE], location[CONF_LONGITUDE],
+        session=session)
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
 
     config_entries([entity], True)
@@ -100,8 +94,7 @@ class SmhiWeather(WeatherEntity):
         self._longitude = longitude
         self._forecasts = None
         self._fail_count = 0
-        self._smhi_api = Smhi(self._longitude, self._latitude,
-                              session=session)
+        self._smhi_api = Smhi(self._longitude, self._latitude, session=session)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
@@ -109,6 +102,7 @@ class SmhiWeather(WeatherEntity):
         from smhi.smhi_lib import SmhiForecastException
 
         def fail():
+            """Postpone updates."""
             self._fail_count += 1
             if self._fail_count < 3:
                 self.hass.helpers.event.async_call_later(
@@ -120,8 +114,8 @@ class SmhiWeather(WeatherEntity):
                 self._fail_count = 0
 
         except (asyncio.TimeoutError, SmhiForecastException):
-            _LOGGER.error("Failed to connect to SMHI API, "
-                          "retry in 5 minutes")
+            _LOGGER.error(
+                "Failed to connect to SMHI API, retry in 5 minutes")
             fail()
 
     async def retry_update(self):
@@ -161,7 +155,7 @@ class SmhiWeather(WeatherEntity):
         """Return the wind speed."""
         if self._forecasts is not None:
             # Convert from m/s to km/h
-            return round(self._forecasts[0].wind_speed*18/5)
+            return round(self._forecasts[0].wind_speed * 18 / 5)
         return None
 
     @property
@@ -221,17 +215,13 @@ class SmhiWeather(WeatherEntity):
             #  Only get mid day forecasts
             if forecast.valid_time.hour == 12:
                 data.append({
-                    ATTR_FORECAST_TIME:
-                        dt.as_local(forecast.valid_time),
-                    ATTR_FORECAST_TEMP:
-                        forecast.temperature_max,
-                    ATTR_FORECAST_TEMP_LOW:
-                        forecast.temperature_min,
+                    ATTR_FORECAST_TIME: dt.as_local(forecast.valid_time),
+                    ATTR_FORECAST_TEMP: forecast.temperature_max,
+                    ATTR_FORECAST_TEMP_LOW: forecast.temperature_min,
                     ATTR_FORECAST_PRECIPITATION:
                         round(forecast.mean_precipitation*24),
-                    ATTR_FORECAST_CONDITION:
-                        condition
-                    })
+                    ATTR_FORECAST_CONDITION: condition,
+                })
 
         return data
 

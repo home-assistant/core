@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyipma==1.1.4']
+REQUIREMENTS = ['pyipma==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
