@@ -28,7 +28,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
-from homeassistant.loader import bind_hass
 
 from . import migration, purge
 from .const import DATA_INSTANCE
@@ -81,12 +80,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
-
-
-@bind_hass
-async def wait_connection_ready(hass):
-    """Wait till the connection is ready."""
-    return await hass.data[DATA_INSTANCE].async_db_ready
 
 
 def run_information(hass, point_in_time: Optional[datetime] = None):

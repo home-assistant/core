@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
 
@@ -182,7 +182,7 @@ async def async_setup(hass, config):
     return True
 
 
-class AutomationEntity(ToggleEntity):
+class AutomationEntity(ToggleEntity, RestoreEntity):
     """Entity to show status of entity."""
 
     def __init__(self, automation_id, name, async_attach_triggers, cond_func,
@@ -227,12 +227,13 @@ class AutomationEntity(ToggleEntity):
 
     async def async_added_to_hass(self) -> None:
         """Startup with initial state or previous state."""
+        await super().async_added_to_hass()
         if self._initial_state is not None:
             enable_automation = self._initial_state
             _LOGGER.debug("Automation %s initial state %s from config "
                           "initial_state", self.entity_id, enable_automation)
         else:
-            state = await async_get_last_state(self.hass, self.entity_id)
+            state = await self.async_get_last_state()
             if state:
                 enable_automation = state.state == STATE_ON
                 self._last_triggered = state.attributes.get('last_triggered')
@@ -291,6 +292,7 @@ class AutomationEntity(ToggleEntity):
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from HASS."""
+        await super().async_will_remove_from_hass()
         await self.async_turn_off()
 
     async def async_enable(self):
