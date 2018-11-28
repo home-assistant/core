@@ -591,7 +591,6 @@ omit =
     homeassistant/components/media_player/gstreamer.py
     homeassistant/components/media_player/horizon.py
     homeassistant/components/media_player/itunes.py
-    homeassistant/components/media_player/kef.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/lg_netcast.py
     homeassistant/components/media_player/lg_soundbar.py

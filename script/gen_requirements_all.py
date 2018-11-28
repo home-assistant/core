@@ -95,6 +95,7 @@ TEST_REQUIREMENTS = (
     'pytradfri\\[async\\]',
     'pyunifi',
     'pyupnp-async',
+    'pykef',
     'pywebpush',
     'regenmaschine',
     'restrictedpython',
