@@ -4,7 +4,7 @@ import logging.handlers
 from timeit import default_timer as timer
 
 from types import ModuleType
-from typing import Optional, Dict, List
+from typing import Awaitable, Callable, Optional, Dict, List
 
 from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
@@ -251,9 +251,12 @@ async def async_process_deps_reqs(
 
 
 @core.callback
-def async_when_setup(hass, component: str, when_setup_cb):
+def async_when_setup(
+        hass: core.HomeAssistant, component: str,
+        when_setup_cb: Callable[
+            [core.HomeAssistant, str], Awaitable[None]]) -> None:
     """Call a method when a component is setup."""
-    async def when_setup():
+    async def when_setup() -> None:
         """Call the callback."""
         try:
             await when_setup_cb(hass, component)
@@ -268,12 +271,12 @@ def async_when_setup(hass, component: str, when_setup_cb):
 
     unsub = None
 
-    async def loaded_event(event: core.Event):
+    async def loaded_event(event: core.Event) -> None:
         """Call the callback."""
         if event.data[ATTR_COMPONENT] != component:
             return
 
-        unsub()
+        unsub()  # type: ignore
         await when_setup()
 
     unsub = hass.bus.async_listen(EVENT_COMPONENT_LOADED, loaded_event)
