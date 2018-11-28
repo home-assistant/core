@@ -253,7 +253,7 @@ class Cloud:
 
         info = await self.hass.async_add_job(load_config)
 
-        await self.prefs.async_initialize(not info)
+        await self.prefs.async_initialize(bool(info))
 
         if info is None:
             return
