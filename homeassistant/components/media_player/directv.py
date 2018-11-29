@@ -22,6 +22,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
+from DirectPy import DIRECTV
+
 REQUIREMENTS = ['directpy==0.5']
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                           " configured", host)
             return
 
-        from DirectPy import DIRECTV
+#        from DirectPy import DIRECTV
         dtv = await hass.async_add_executor_job(
             DIRECTV, host, DEFAULT_PORT, DEFAULT_DEVICE)
         if dtv:
@@ -253,7 +255,6 @@ class DirecTvDevice(MediaPlayerDevice):
         if self.dtv:
             return self.dtv
 
-        from DirectPy import DIRECTV
         try:
             self.dtv = await self.hass.async_add_executor_job(
                 DIRECTV, self._host, self._port, self._device)
