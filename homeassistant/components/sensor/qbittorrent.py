@@ -36,19 +36,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, add_entities,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the qbittorrent sensors."""
     from qbittorrent.client import Client, LoginRequired
 
     try:
-        client = Client(config.get(CONF_URL))
-        client.login(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
+        client = Client(config[CONF_URL])
+        client.login(config[CONF_USERNAME], config[CONF_PASSWORD])
     except LoginRequired:
-        _LOGGER.info("Invalid authentication for qBittorrent. Check config.")
+        _LOGGER.error("Invalid authentication for qBittorrent. Check config")
         return
     except RequestException:
-        _LOGGER.error("Connection to qBittorrent failed. Check config.")
+        _LOGGER.error("Connection to qBittorrent failed. Check config")
         raise PlatformNotReady
 
     name = config.get(CONF_NAME)
@@ -57,9 +57,8 @@ async def async_setup_platform(hass, config, add_entities,
     for sensor_type in SENSOR_TYPES:
         sensor = QBittorrentSensor(sensor_type, client, name, LoginRequired)
         dev.append(sensor)
-        await sensor.async_update()
 
-    add_entities(dev)
+    async_add_entities(dev, True)
 
 
 def format_speed(speed):
@@ -109,32 +108,31 @@ class QBittorrentSensor(Entity):
             data = self.client.sync()
             self._available = True
         except RequestException:
-            _LOGGER.error("Connection to qBittorrent lost.")
+            _LOGGER.error("Connection to qBittorrent lost")
             self._available = False
             return
         except self._exception:
             _LOGGER.info("Invalid authentication for qBittorrent."
-                         " Check config.")
+                         " Check config")
+            return
+
+        if data is None:
             return
 
         download = data['server_state']['dl_info_speed']
         upload = data['server_state']['up_info_speed']
 
         if self.type == SENSOR_TYPE_CURRENT_STATUS:
-            if data:
-                if upload > 0 and download > 0:
-                    self._state = 'Up/Down'
-                elif upload > 0 and download == 0:
-                    self._state = 'Seeding'
-                elif upload == 0 and download > 0:
-                    self._state = 'Downloading'
-                else:
-                    self._state = STATE_IDLE
+            if upload > 0 and download > 0:
+                self._state = 'up_down'
+            elif upload > 0 and download == 0:
+                self._state = 'seeding'
+            elif upload == 0 and download > 0:
+                self._state = 'downloading'
             else:
-                self._state = None
+                self._state = STATE_IDLE
 
-        if data:
-            if self.type == SENSOR_TYPE_DOWNLOAD_SPEED:
-                self._state = format_speed(download)
-            elif self.type == SENSOR_TYPE_UPLOAD_SPEED:
-                self._state = format_speed(upload)
+        if self.type == SENSOR_TYPE_DOWNLOAD_SPEED:
+            self._state = format_speed(download)
+        elif self.type == SENSOR_TYPE_UPLOAD_SPEED:
+            self._state = format_speed(upload)
