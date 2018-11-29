@@ -191,7 +191,7 @@ class OwnTracksContext:
 
     async def async_see(self, **data):
         """Send a see message to the device tracker."""
-        await self.hass.components.device_tracker.async_see(**data)
+        raise NotImplementedError
 
     async def async_see_beacons(self, hass, dev_id, kwargs_param):
         """Set active beacons to the current location."""
