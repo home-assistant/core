@@ -360,7 +360,9 @@ async def test_setup_platform_discover_client(hass, mock_now):
 
     next_update = mock_now + DEFAULT_CLIENT_DISCOVER_INTERVAL + \
         timedelta(seconds=1)
-    with patch('homeassistant.util.dt.utcnow', return_value=next_update):
+    with MockDependency('DirectPy'), \
+            patch('DirectPy.DIRECTV', new=MockDirectvClass), \
+            patch('homeassistant.util.dt.utcnow', return_value=next_update):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
