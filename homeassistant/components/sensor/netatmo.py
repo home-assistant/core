@@ -181,7 +181,8 @@ class NetAtmoSensor(Entity):
             self._state = round(data['Pressure'], 1)
         elif self.type == 'battery_lvl':
             self._state = data['battery_vp']
-        elif self.type == 'battery_vp' and self._module_type == MODULE_TYPE_WIND:
+        elif (self.type == 'battery_vp' and
+              self._module_type == MODULE_TYPE_WIND):
             if data['battery_vp'] >= 5590:
                 self._state = "Full"
             elif data['battery_vp'] >= 5180:
@@ -192,7 +193,8 @@ class NetAtmoSensor(Entity):
                 self._state = "Low"
             elif data['battery_vp'] < 4360:
                 self._state = "Very Low"
-        elif self.type == 'battery_vp' and self._module_type == MODULE_TYPE_RAIN:
+        elif (self.type == 'battery_vp' and
+              self._module_type == MODULE_TYPE_RAIN):
             if data['battery_vp'] >= 5500:
                 self._state = "Full"
             elif data['battery_vp'] >= 5000:
@@ -203,7 +205,8 @@ class NetAtmoSensor(Entity):
                 self._state = "Low"
             elif data['battery_vp'] < 4000:
                 self._state = "Very Low"
-        elif self.type == 'battery_vp' and self._module_type == MODULE_TYPE_INDOOR:
+        elif (self.type == 'battery_vp' and
+              self._module_type == MODULE_TYPE_INDOOR):
             if data['battery_vp'] >= 5640:
                 self._state = "Full"
             elif data['battery_vp'] >= 5280:
@@ -214,7 +217,8 @@ class NetAtmoSensor(Entity):
                 self._state = "Low"
             elif data['battery_vp'] < 4560:
                 self._state = "Very Low"
-        elif self.type == 'battery_vp' and self._module_type == MODULE_TYPE_OUTDOOR:
+        elif (self.type == 'battery_vp' and
+              self._module_type == MODULE_TYPE_OUTDOOR):
             if data['battery_vp'] >= 5500:
                 self._state = "Full"
             elif data['battery_vp'] >= 5000:
