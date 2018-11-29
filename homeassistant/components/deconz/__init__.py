@@ -11,11 +11,10 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.util.json import load_json
 
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
-from .const import CONFIG_FILE, DOMAIN, _LOGGER
+from .const import DEFAULT_PORT, DOMAIN, _LOGGER
 from .gateway import DeconzGateway
 
 REQUIREMENTS = ['pydeconz==47']
@@ -27,7 +26,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_API_KEY): cv.string,
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -53,11 +52,7 @@ async def async_setup(hass, config):
     """
     if DOMAIN in config:
         deconz_config = None
-        config_file = await hass.async_add_job(
-            load_json, hass.config.path(CONFIG_FILE))
-        if config_file:
-            deconz_config = config_file
-        elif CONF_HOST in config[DOMAIN]:
+        if CONF_HOST in config[DOMAIN]:
             deconz_config = config[DOMAIN]
         if deconz_config and not configured_hosts(hass):
             hass.async_add_job(hass.config_entries.flow.async_init(

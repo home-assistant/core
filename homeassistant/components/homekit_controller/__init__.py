@@ -24,6 +24,7 @@ HOMEKIT_DIR = '.homekit'
 HOMEKIT_ACCESSORY_DISPATCH = {
     'lightbulb': 'light',
     'outlet': 'switch',
+    'switch': 'switch',
     'thermostat': 'climate',
 }
 

@@ -11,6 +11,7 @@ from aiohttp.web import Request, Response
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 
 from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
@@ -38,11 +39,14 @@ def async_register_http(hass, cfg):
             # Ignore entities that are views
             return False
 
+        if entity.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+            return False
+
         explicit_expose = \
             entity_config.get(entity.entity_id, {}).get(CONF_EXPOSE)
 
         domain_exposed_by_default = \
-            expose_by_default and entity.domain in exposed_domains
+            expose_by_default or entity.domain in exposed_domains
 
         # Expose an entity if the entity's domain is exposed by default and
         # the configuration doesn't explicitly exclude it from being

@@ -41,6 +41,8 @@ class DiscordNotificationService(BaseNotificationService):
     async def async_send_message(self, message, **kwargs):
         """Login to Discord, send message to channel(s) and log out."""
         import discord
+
+        discord.VoiceClient.warn_nacl = False
         discord_bot = discord.Client(loop=self.hass.loop)
 
         if ATTR_TARGET not in kwargs:
@@ -53,6 +55,7 @@ class DiscordNotificationService(BaseNotificationService):
             """Send the messages when the bot is ready."""
             try:
                 data = kwargs.get(ATTR_DATA)
+                images = None
                 if data:
                     images = data.get(ATTR_IMAGES)
                 for channelid in kwargs[ATTR_TARGET]:

@@ -400,6 +400,9 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
     This method is a coroutine.
     """
     removes = []
+    info = {
+        'name': name
+    }
 
     for conf in trigger_configs:
         platform = await async_prepare_setup_platform(
@@ -408,7 +411,7 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
         if platform is None:
             return None
 
-        remove = await platform.async_trigger(hass, conf, action)
+        remove = await platform.async_trigger(hass, conf, action, info)
 
         if not remove:
             _LOGGER.error("Error setting up trigger %s", name)
