@@ -1,16 +1,17 @@
 """
-Support for interfacing HA with the KEF Wireless Speakers .
+Support for interfacing HA with the KEF Wireless Speakers.
 
 For more details about this platform, please refer to the documentation at
-https://github.com/Gronis/pykef
+https://www.home-assistant.io/components/media_player.kef/
 """
 
 
+from enum import Enum
 import collections
 import logging
 import time
 import json
-from enum import Enum
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -25,26 +26,22 @@ from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ['pykef==1.2.0']
 
-_CONFIGURING = {}
-
 _LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_NAME = 'KEFWirelessSpeaker'
+DEFAULT_NAME = 'KEF Wireless Speaker'
 DEFAULT_PORT = 50001
 DATA_KEF = 'kef'
 # If a new source is selected, do not override source in update for this amount
-#  of seconds
+# of seconds.
 UPDATE_TIMEOUT = 1.0
 # When turning off/on the speaker, do not query it for CHANGE_STATE_TIMEOUT,
-# since it takes
-# some time for it to go offline/onlne
+# since it takes some time for it to go offline/online.
 CHANGE_STATE_TIMEOUT = 30.0
 # If we try to control the speaker while offline, wait for the speaker to come
-# online (in secs)
+# online (in secs),
 WAIT_FOR_ONLINE_STATE = 10.0
 
-# supported features
 SUPPORT_KEF_CLIENT_DEVICE = (
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE |
     SUPPORT_SELECT_SOURCE | SUPPORT_TURN_OFF
@@ -53,9 +50,8 @@ SUPPORT_KEF_CLIENT_DEVICE = (
 CONF_TURN_ON_SERVICE = 'turn_on_service'
 CONF_TURN_ON_DATA = 'turn_on_data'
 
-# yaml configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
+    CONF_HOST: cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TURN_ON_SERVICE): cv.service,
@@ -63,8 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# setup of component
-def setup_platform(hass, config, add_devices,
+def setup_platform(hass, config, add_entities,
                    discovery_info=None):
     """Set up Kef platform."""
     import pykef
@@ -86,13 +81,12 @@ def setup_platform(hass, config, add_devices,
 
     _LOGGER.debug(
         "Setting up %s, using host: %s, port: %s, name: %s",
-        DATA_KEF, str(host), str(port), str(name))
-    _LOGGER.debug("Setting up source_dict %s", str(sources))
+        DATA_KEF, host, port, name)
+    _LOGGER.debug("Setting up source_dict %s", sources)
 
-    # Add devices
-    add_devices([KefClientDevice(
+    add_entities([KefClientDevice(
         name, speaker, turn_on_service, turn_on_data, sources, hass
-    )])
+    )], True)
 
 
 class States(Enum):
@@ -134,15 +128,6 @@ class KefClientDevice(MediaPlayerDevice):
             if self._state is States.TurningOn:
                 time_to_wait = 10
 
-    def __internal_state(self):
-        """Return text with the internal states, just for debugging."""
-        ret = []
-        ret.append("self._state=" + str(self._state))
-        ret.append("self._mute=" + str(self._mute))
-        ret.append("self._source=" + str(self._source))
-        ret.append("self._volume=" + str(self._volume))
-        return ', '.join([str(x) for x in ret])
-
     def __is_turning_on_supported(self):
         """Turn on is supported if a turn on service is configured."""
         return True if self._turn_on_service and self._turn_on_data else False
@@ -183,7 +168,6 @@ class KefClientDevice(MediaPlayerDevice):
                 self._source = None
                 self._volume = None
                 self._state = States.Offline
-            _LOGGER.debug("updated: %s", self.__internal_state())
         except ConnectionRefusedError as err:
             _LOGGER.debug("update failed: %s", err)
 
