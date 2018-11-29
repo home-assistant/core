@@ -253,10 +253,17 @@ class LoginFlow(data_entry_flow.FlowHandler):
             'mfa_module_id': auth_module.id,
         }  # type: Dict[str, Optional[str]]
 
+        data = None
+        if (user_input is None or errors) and \
+                hasattr(auth_module, 'async_get_login_mfa_additional_data'):
+            data = await \
+                auth_module.async_get_login_mfa_additional_data(self.user.id)
+
         return self.async_show_form(
             step_id='mfa',
             data_schema=auth_module.input_schema,
             description_placeholders=description_placeholders,
+            data=data,
             errors=errors,
         )
 

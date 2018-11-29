@@ -30,6 +30,23 @@
                 }
             },
             "title": "TOTP"
+        },
+        "webauthn": {
+            "abort": {
+                "register_error": "Token is not registered. Please, try again or use another token.",
+                "too_many_retry": "Token is not registered. Too many failed attempts.",
+                "cancelled": "Registration canceled. Token is not registered."
+            },
+            "error": {
+                "credentials": "Invalid token. Please, try again or use another token."
+            },
+            "step": {
+                "init": {
+                    "description": "To activate two factor authentication, follow the instructions of your browser.",
+                    "title": "Set up two-factor authentication using hardware token"
+                }
+            },
+            "title": "Web Authentication"
         }
     }
 }

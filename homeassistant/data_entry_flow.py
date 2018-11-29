@@ -139,7 +139,8 @@ class FlowHandler:
     @callback
     def async_show_form(self, *, step_id: str, data_schema: vol.Schema = None,
                         errors: Optional[Dict] = None,
-                        description_placeholders: Optional[Dict] = None) \
+                        description_placeholders: Optional[Dict] = None,
+                        data: Optional[Dict] = None) \
             -> Dict:
         """Return the definition of a form to gather user input."""
         return {
@@ -150,6 +151,7 @@ class FlowHandler:
             'data_schema': data_schema,
             'errors': errors,
             'description_placeholders': description_placeholders,
+            'data': data,
         }
 
     @callback

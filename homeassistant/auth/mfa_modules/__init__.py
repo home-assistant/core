@@ -32,6 +32,7 @@ class MultiFactorAuthModule:
 
     DEFAULT_TITLE = 'Unnamed auth module'
     MAX_RETRY_TIME = 3
+    MULTIPLE = False
 
     def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
         """Initialize an auth module."""
@@ -56,12 +57,23 @@ class MultiFactorAuthModule:
         """Return the name of the auth module."""
         return self.config.get(CONF_NAME, self.DEFAULT_TITLE)
 
+    @property
+    def multiple(self) -> bool:
+        """Return the if auth module supports multiple keys."""
+        return self.MULTIPLE
+
     # Implement by extending class
 
     @property
     def input_schema(self) -> vol.Schema:
         """Return a voluptuous schema to define mfa auth module's input."""
         raise NotImplementedError
+
+    async def async_get_count(self, user_id: str) -> int:
+        """Return count of added keys for multiple auth module."""
+        if self.MULTIPLE:
+            raise NotImplementedError
+        return 0
 
     async def async_setup_flow(self, user_id: str) -> 'SetupFlow':
         """Return a data entry flow handler for setup module.

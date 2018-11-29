@@ -373,6 +373,9 @@ fedexdeliverymanager==1.0.6
 # homeassistant.components.feedreader
 feedparser==5.2.1
 
+# homeassistant.auth.mfa_modules.u2f
+fido2==0.4.0
+
 # homeassistant.components.sensor.fints
 fints==1.0.1
 
