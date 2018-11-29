@@ -445,6 +445,12 @@ def _exclude_events(events, entities_filter):
             domain = event.data.get(ATTR_DOMAIN)
             entity_id = event.data.get(ATTR_ENTITY_ID)
 
+        elif event.event_type == EVENT_ALEXA_SMART_HOME:
+            domain = 'alexa'
+
+        elif event.event_type == EVENT_HOMEKIT_CHANGED:
+            domain = DOMAIN_HOMEKIT
+
         if not entity_id and domain:
             entity_id = "%s." % (domain, )
 
