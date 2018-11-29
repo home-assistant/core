@@ -141,7 +141,10 @@ DEMO_DEVICES = [{
         'name': 'Bedroom'
     },
     'traits':
-    ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
+        [
+            'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
+            'action.devices.traits.Modes'
+        ],
     'type':
     'action.devices.types.SWITCH',
     'willReportState':
@@ -153,7 +156,10 @@ DEMO_DEVICES = [{
         'name': 'Living Room'
     },
     'traits':
-    ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
+        [
+            'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
+            'action.devices.traits.Modes'
+        ],
     'type':
     'action.devices.types.SWITCH',
     'willReportState':
@@ -163,7 +169,7 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'Lounge room'
     },
-    'traits': ['action.devices.traits.OnOff'],
+    'traits': ['action.devices.traits.OnOff', 'action.devices.traits.Modes'],
     'type': 'action.devices.types.SWITCH',
     'willReportState': False
 }, {
