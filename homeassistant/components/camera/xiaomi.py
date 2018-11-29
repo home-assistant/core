@@ -13,8 +13,9 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PATH, CONF_PROTOCOL,
-                                 CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
+from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PATH,
+                                 CONF_PROTOCOL, CONF_PASSWORD, CONF_PORT,
+                                 CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
@@ -155,10 +156,8 @@ class XiaomiCamera(Camera):
 
                 # Get second last MP4
                 try:
-                    res = requests.get('http://{0}:{1}{2}/{3}'.format(self.host,
-                                                                      self.port,
-                                                                      self.path,
-                                                                      last_dir))
+                    res = requests.get('http://{0}:{1}{2}/{3}'.format(
+                        self.host, self.port, self.path, last_dir))
                 except Exception as e:
                     _LOGGER.error("Error when making request: %r" % e)
                     return None
@@ -209,7 +208,8 @@ class XiaomiCamera(Camera):
             if self._model == MODEL_XIAOFANG:
                 dirs = [d for d in ftp.nlst() if '.' not in d]
                 if not dirs:
-                    _LOGGER.warning("There don't appear to be any uploaded videos")
+                    _LOGGER.warning("There don't appear to be any uploaded "
+                                    "videos")
                     return False
 
                 latest_dir = dirs[-1]
@@ -217,7 +217,8 @@ class XiaomiCamera(Camera):
 
             videos = [v for v in ftp.nlst() if '.tmp' not in v]
             if not videos:
-                _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
+                _LOGGER.info('Video folder "%s" is empty; delaying',
+                             latest_dir)
                 return False
 
             if self._model == MODEL_XIAOFANG:
