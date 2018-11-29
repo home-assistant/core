@@ -14,11 +14,12 @@ from homeassistant.const import (
     CONF_HOST, CONF_TOKEN, EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.util.json import load_json, save_json
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_UPDATE_ENTITY
 
 APPLICATION_NAME = 'Home Assistant'
 
@@ -45,7 +46,6 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)))
     }),
 }, extra=vol.ALLOW_EXTRA)
-
 
 CONFIG_INSTRUCTIONS = """
 To link your TelldusLive account:
@@ -206,7 +206,7 @@ class TelldusLiveClient:
 
     def __init__(self, hass, config, session):
         """Initialize the Tellus data object."""
-        self.entities = []
+        self._known_devices = set()
 
         self._hass = hass
         self._config = config
@@ -250,9 +250,8 @@ class TelldusLiveClient:
             discovery.load_platform(
                 self._hass, component, DOMAIN, [device_id], self._config)
 
-        known_ids = {entity.device_id for entity in self.entities}
         for device in self._client.devices:
-            if device.device_id in known_ids:
+            if device.device_id in self._known_devices:
                 continue
             if device.is_sensor:
                 for item in device.items:
@@ -261,9 +260,9 @@ class TelldusLiveClient:
             else:
                 discover(device.device_id,
                          identify_device(device))
+            self._known_devices.add(device.device_id)
 
-        for entity in self.entities:
-            entity.changed()
+        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
 
     def device(self, device_id):
         """Return device representation."""

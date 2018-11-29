@@ -9,8 +9,8 @@ https://home-assistant.io/components/binary_sensor.tellduslive/
 """
 import logging
 
-from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 

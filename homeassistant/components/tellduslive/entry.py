@@ -2,10 +2,12 @@
 from datetime import datetime
 import logging
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME)
+from homeassistant.const import ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from .const import DOMAIN
+
+from .const import DOMAIN, SIGNAL_UPDATE_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,11 +21,24 @@ class TelldusLiveEntity(Entity):
         """Initialize the entity."""
         self._id = device_id
         self._client = hass.data[DOMAIN]
-        self._client.entities.append(self)
         self._name = self.device.name
+        self._async_unsub_dispatcher_connect = None
         _LOGGER.debug('Created device %s', self)
 
-    def changed(self):
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        _LOGGER.debug('Created device %s', self)
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
+        self._update_callback()
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
+
+    @callback
+    def _update_callback(self):
         """Return the property of the device might have changed."""
         if self.device.name:
             self._name = self.device.name
