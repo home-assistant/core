@@ -141,8 +141,10 @@ class FibaroController():
         # Use our lookup table to identify device type
         if 'type' in device:
             device_type = FIBARO_TYPEMAP.get(device.type)
-        if device_type is None and 'baseType' in device:
+        elif 'baseType' in device:
             device_type = FIBARO_TYPEMAP.get(device.baseType)
+        else:
+            device_type = None
 
         # We can also identify device type by its capabilities
         if device_type is None:
