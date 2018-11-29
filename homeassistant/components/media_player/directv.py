@@ -285,7 +285,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
     async def async_update(self):
         """Retrieve latest state."""
-        _LOGGER.debug("%s: Updating status for %s", self.entity_id, self._name)
+        _LOGGER.debug("%s: Updating status", self.entity_id)
         try:
             self._available = True
             self._is_standby = await self._async_get_standby()
