@@ -715,6 +715,8 @@ class FanSpeedTrait(_Trait):
         modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
         speeds = []
         for mode in modes:
+            if mode not in self.speed_synonyms:
+                continue
             speed = {
                 "speed_name": mode,
                 "speed_values": [{
