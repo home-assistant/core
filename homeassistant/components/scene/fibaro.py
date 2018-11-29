@@ -38,7 +38,6 @@ class FibaroScene(FibaroDevice, Scene):
 
     def update(self):
         """Update the scene status."""
-#        self.fibaro_device.refresh()
         pass
 
     async def async_activate(self):
@@ -53,5 +52,4 @@ class FibaroScene(FibaroDevice, Scene):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the scene."""
-#        return {'fibaro_scene_id': self.fibaro_device..vera_scene_id}
         return self.fibaro_device.properties
