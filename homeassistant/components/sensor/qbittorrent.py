@@ -132,7 +132,7 @@ class QBittorrentSensor(Entity):
             else:
                 self._state = STATE_IDLE
 
-        if self.type == SENSOR_TYPE_DOWNLOAD_SPEED:
+        elif self.type == SENSOR_TYPE_DOWNLOAD_SPEED:
             self._state = format_speed(download)
         elif self.type == SENSOR_TYPE_UPLOAD_SPEED:
             self._state = format_speed(upload)
