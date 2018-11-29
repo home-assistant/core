@@ -6,7 +6,9 @@ at https://www.home-assistant.io/lovelace/
 """
 from functools import wraps
 import logging
+import os
 from typing import Dict, List, Union
+import time
 import uuid
 
 import voluptuous as vol
@@ -18,6 +20,7 @@ import homeassistant.util.ruamel_yaml as yaml
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'lovelace'
+LOVELACE_DATA = 'lovelace'
 
 LOVELACE_CONFIG_FILE = 'ui-lovelace.yaml'
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
@@ -60,7 +63,7 @@ SCHEMA_GET_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_UPDATE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_UPDATE_CARD,
     vol.Required('card_id'): str,
-    vol.Required('card_config'): vol.Any(str, Dict),
+    vol.Required('card_config'): vol.Any(str, dict),
     vol.Optional('format', default=FORMAT_YAML):
         vol.Any(FORMAT_JSON, FORMAT_YAML),
 })
@@ -68,7 +71,7 @@ SCHEMA_UPDATE_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_ADD_CARD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_ADD_CARD,
     vol.Required('view_id'): str,
-    vol.Required('card_config'): vol.Any(str, Dict),
+    vol.Required('card_config'): vol.Any(str, dict),
     vol.Optional('position'): int,
     vol.Optional('format', default=FORMAT_YAML):
         vol.Any(FORMAT_JSON, FORMAT_YAML),
@@ -96,14 +99,14 @@ SCHEMA_GET_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 SCHEMA_UPDATE_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_UPDATE_VIEW,
     vol.Required('view_id'): str,
-    vol.Required('view_config'): vol.Any(str, Dict),
+    vol.Required('view_config'): vol.Any(str, dict),
     vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
                                                          FORMAT_YAML),
 })
 
 SCHEMA_ADD_VIEW = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_ADD_VIEW,
-    vol.Required('view_config'): vol.Any(str, Dict),
+    vol.Required('view_config'): vol.Any(str, dict),
     vol.Optional('position'): int,
     vol.Optional('format', default=FORMAT_YAML): vol.Any(FORMAT_JSON,
                                                          FORMAT_YAML),
@@ -133,9 +136,37 @@ class DuplicateIdError(HomeAssistantError):
     """Duplicate ID's."""
 
 
-def load_config(fname: str) -> JSON_TYPE:
+def load_config(hass) -> JSON_TYPE:
     """Load a YAML file."""
-    return yaml.load_yaml(fname, False)
+    fname = hass.config.path(LOVELACE_CONFIG_FILE)
+
+    # Check for a cached version of the config
+    if LOVELACE_DATA in hass.data:
+        config, last_update = hass.data[LOVELACE_DATA]
+        modtime = os.path.getmtime(fname)
+        if config and last_update > modtime:
+            return config
+
+    config = yaml.load_yaml(fname, False)
+    seen_card_ids = set()
+    seen_view_ids = set()
+    for view in config.get('views', []):
+        view_id = str(view.get('id', ''))
+        if view_id:
+            if view_id in seen_view_ids:
+                raise DuplicateIdError(
+                    'ID `{}` has multiple occurances in views'.format(view_id))
+            seen_view_ids.add(view_id)
+        for card in view.get('cards', []):
+            card_id = str(card.get('id', ''))
+            if card_id:
+                if card_id in seen_card_ids:
+                    raise DuplicateIdError(
+                        'ID `{}` has multiple occurances in cards'
+                        .format(card_id))
+                seen_card_ids.add(card_id)
+    hass.data[LOVELACE_DATA] = (config, time.time())
+    return config
 
 
 def migrate_config(fname: str) -> None:
@@ -301,35 +332,39 @@ def get_view(fname: str, view_id: str, data_format: str = FORMAT_YAML) -> None:
     """Get view without it's cards."""
     round_trip = data_format == FORMAT_YAML
     config = yaml.load_yaml(fname, round_trip)
+    found = None
     for view in config.get('views', []):
-        if str(view.get('id', '')) != view_id:
-            continue
-        del view['cards']
-        if data_format == FORMAT_YAML:
-            return yaml.object_to_yaml(view)
-        return view
+        if str(view.get('id', '')) == view_id:
+            found = view
+            break
+    if found is None:
+        raise ViewNotFoundError(
+            "View with ID: {} was not found in {}.".format(view_id, fname))
 
-    raise ViewNotFoundError(
-        "View with ID: {} was not found in {}.".format(view_id, fname))
+    del found['cards']
+    if data_format == FORMAT_YAML:
+        return yaml.object_to_yaml(found)
+    return found
 
 
 def update_view(fname: str, view_id: str, view_config, data_format:
                 str = FORMAT_YAML) -> None:
     """Update view."""
     config = yaml.load_yaml(fname, True)
+    found = None
     for view in config.get('views', []):
-        if str(view.get('id', '')) != view_id:
-            continue
-        if data_format == FORMAT_YAML:
-            view_config = yaml.yaml_to_object(view_config)
-        view_config['cards'] = view.get('cards', [])
-        view.clear()
-        view.update(view_config)
-        yaml.save_yaml(fname, config)
-        return
-
-    raise ViewNotFoundError(
-        "View with ID: {} was not found in {}.".format(view_id, fname))
+        if str(view.get('id', '')) == view_id:
+            found = view
+            break
+    if found is None:
+        raise ViewNotFoundError(
+            "View with ID: {} was not found in {}.".format(view_id, fname))
+    if data_format == FORMAT_YAML:
+        view_config = yaml.yaml_to_object(view_config)
+    view_config['cards'] = found.get('cards', [])
+    found.clear()
+    found.update(view_config)
+    yaml.save_yaml(fname, config)
 
 
 def add_view(fname: str, view_config: str,
@@ -350,30 +385,34 @@ def move_view(fname: str, view_id: str, position: int) -> None:
     """Move a view to a different position."""
     config = yaml.load_yaml(fname, True)
     views = config.get('views', [])
+    found = None
     for view in views:
-        if str(view.get('id', '')) != view_id:
-            continue
-        views.insert(position, views.pop(views.index(view)))
-        yaml.save_yaml(fname, config)
-        return
+        if str(view.get('id', '')) == view_id:
+            found = view
+            break
+    if found is None:
+        raise ViewNotFoundError(
+            "View with ID: {} was not found in {}.".format(view_id, fname))
 
-    raise ViewNotFoundError(
-        "View with ID: {} was not found in {}.".format(view_id, fname))
+    views.insert(position, views.pop(views.index(found)))
+    yaml.save_yaml(fname, config)
 
 
 def delete_view(fname: str, view_id: str) -> None:
     """Delete a view."""
     config = yaml.load_yaml(fname, True)
     views = config.get('views', [])
+    found = None
     for view in views:
-        if str(view.get('id', '')) != view_id:
-            continue
-        views.pop(views.index(view))
-        yaml.save_yaml(fname, config)
-        return
+        if str(view.get('id', '')) == view_id:
+            found = view
+            break
+    if found is None:
+        raise ViewNotFoundError(
+            "View with ID: {} was not found in {}.".format(view_id, fname))
 
-    raise ViewNotFoundError(
-        "View with ID: {} was not found in {}.".format(view_id, fname))
+    views.pop(views.index(found))
+    yaml.save_yaml(fname, config)
 
 
 async def async_setup(hass, config):
@@ -445,6 +484,8 @@ def handle_yaml_errors(func):
             error = 'unsupported_error', str(err)
         except yaml.WriteError as err:
             error = 'write_error', str(err)
+        except DuplicateIdError as err:
+            error = 'duplicate_id', str(err)
         except CardNotFoundError as err:
             error = 'card_not_found', str(err)
         except ViewNotFoundError as err:
@@ -464,8 +505,7 @@ def handle_yaml_errors(func):
 @handle_yaml_errors
 async def websocket_lovelace_config(hass, connection, msg):
     """Send Lovelace UI config over WebSocket configuration."""
-    return await hass.async_add_executor_job(
-        load_config, hass.config.path(LOVELACE_CONFIG_FILE))
+    return await hass.async_add_executor_job(load_config, hass)
 
 
 @websocket_api.async_response

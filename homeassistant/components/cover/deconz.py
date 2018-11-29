@@ -5,7 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.deconz/
 """
 from homeassistant.components.deconz.const import (
-    COVER_TYPES, DAMPERS, DOMAIN as DATA_DECONZ, DECONZ_DOMAIN, WINDOW_COVERS)
+    COVER_TYPES, DAMPERS, DECONZ_REACHABLE, DOMAIN as DECONZ_DOMAIN,
+    WINDOW_COVERS)
 from homeassistant.components.cover import (
     ATTR_POSITION, CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP,
     SUPPORT_SET_POSITION)
@@ -29,6 +30,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     Covers are based on same device class as lights in deCONZ.
     """
+    gateway = hass.data[DECONZ_DOMAIN]
+
     @callback
     def async_add_cover(lights):
         """Add cover from deCONZ."""
@@ -36,23 +39,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for light in lights:
             if light.type in COVER_TYPES:
                 if light.modelid in ZIGBEE_SPEC:
-                    entities.append(DeconzCoverZigbeeSpec(light))
+                    entities.append(DeconzCoverZigbeeSpec(light, gateway))
                 else:
-                    entities.append(DeconzCover(light))
+                    entities.append(DeconzCover(light, gateway))
         async_add_entities(entities, True)
 
-    hass.data[DATA_DECONZ].listeners.append(
+    gateway.listeners.append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_cover))
 
-    async_add_cover(hass.data[DATA_DECONZ].api.lights.values())
+    async_add_cover(gateway.api.lights.values())
 
 
 class DeconzCover(CoverDevice):
     """Representation of a deCONZ cover."""
 
-    def __init__(self, cover):
+    def __init__(self, cover, gateway):
         """Set up cover and add update callback to get data from websocket."""
         self._cover = cover
+        self.gateway = gateway
+        self.unsub_dispatcher = None
+
         self._features = SUPPORT_OPEN
         self._features |= SUPPORT_CLOSE
         self._features |= SUPPORT_STOP
@@ -61,11 +67,14 @@ class DeconzCover(CoverDevice):
     async def async_added_to_hass(self):
         """Subscribe to covers events."""
         self._cover.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ].deconz_ids[self.entity_id] = \
-            self._cover.deconz_id
+        self.gateway.deconz_ids[self.entity_id] = self._cover.deconz_id
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, DECONZ_REACHABLE, self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect cover object when removed."""
+        if self.unsub_dispatcher is not None:
+            self.unsub_dispatcher()
         self._cover.remove_callback(self.async_update_callback)
         self._cover = None
 
@@ -112,7 +121,7 @@ class DeconzCover(CoverDevice):
     @property
     def available(self):
         """Return True if light is available."""
-        return self._cover.reachable
+        return self.gateway.available and self._cover.reachable
 
     @property
     def should_poll(self):
@@ -150,7 +159,7 @@ class DeconzCover(CoverDevice):
                 self._cover.uniqueid.count(':') != 7):
             return None
         serial = self._cover.uniqueid.split('-', 1)[0]
-        bridgeid = self.hass.data[DATA_DECONZ].api.config.bridgeid
+        bridgeid = self.gateway.api.config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},

@@ -31,29 +31,22 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-STATES = {
-    1: 'Idle',
-    2: 'Busy',
-    3: 'Pause',
-    4: 'Error'
-}
-
 MODE = {
     1: 'Eco',
     2: 'Turbo'
 }
 
 ACTION = {
-    0: 'No action',
-    1: 'House cleaning',
-    2: 'Spot cleaning',
-    3: 'Manual cleaning',
+    0: 'Invalid',
+    1: 'House Cleaning',
+    2: 'Spot Cleaning',
+    3: 'Manual Cleaning',
     4: 'Docking',
-    5: 'User menu active',
-    6: 'Cleaning cancelled',
-    7: 'Updating...',
-    8: 'Copying logs...',
-    9: 'Calculating position...',
+    5: 'User Menu Active',
+    6: 'Suspended Cleaning',
+    7: 'Updating',
+    8: 'Copying logs',
+    9: 'Recovering Location',
     10: 'IEC test',
     11: 'Map cleaning',
     12: 'Exploring map (creating a persistent map)',
@@ -98,7 +91,8 @@ ALERTS = {
     'dustbin_full': 'Please empty dust bin',
     'maint_brush_change': 'Change the brush',
     'maint_filter_change': 'Change the filter',
-    'clean_completed_to_start': 'Cleaning completed'
+    'clean_completed_to_start': 'Cleaning completed',
+    'nav_floorplan_not_created': 'No floorplan found'
 }
 
 

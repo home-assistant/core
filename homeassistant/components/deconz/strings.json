@@ -6,7 +6,7 @@
                 "title": "Define deCONZ gateway",
                 "data": {
                     "host": "Host",
-                    "port": "Port (default value: '80')"
+                    "port": "Port"
                 }
             },
             "link": {

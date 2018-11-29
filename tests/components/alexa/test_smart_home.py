@@ -987,6 +987,32 @@ async def test_include_filters(hass):
     assert len(msg['payload']['endpoints']) == 3
 
 
+async def test_never_exposed_entities(hass):
+    """Test never exposed locks do not get discovered."""
+    request = get_new_request('Alexa.Discovery', 'Discover')
+
+    # setup test devices
+    hass.states.async_set(
+        'group.all_locks', 'on', {'friendly_name': "Blocked locks"})
+
+    hass.states.async_set(
+        'group.allow', 'off', {'friendly_name': "Allowed group"})
+
+    config = smart_home.Config(should_expose=entityfilter.generate_filter(
+        include_domains=['group'],
+        include_entities=[],
+        exclude_domains=[],
+        exclude_entities=[],
+    ))
+
+    msg = await smart_home.async_handle_message(hass, config, request)
+    await hass.async_block_till_done()
+
+    msg = msg['event']
+
+    assert len(msg['payload']['endpoints']) == 1
+
+
 async def test_api_entity_not_exists(hass):
     """Test api turn on process without entity."""
     request = get_new_request('Alexa.PowerController', 'TurnOn', 'switch#test')
@@ -1300,6 +1326,32 @@ async def test_report_dimmable_light_state(hass):
 
     properties = await reported_properties(hass, 'light.test_off')
     properties.assert_equal('Alexa.BrightnessController', 'brightness', 0)
+
+
+async def test_report_colored_light_state(hass):
+    """Test ColorController reports color correctly."""
+    hass.states.async_set(
+        'light.test_on', 'on', {'friendly_name': "Test light On",
+                                'hs_color': (180, 75),
+                                'brightness': 128,
+                                'supported_features': 17})
+    hass.states.async_set(
+        'light.test_off', 'off', {'friendly_name': "Test light Off",
+                                  'supported_features': 17})
+
+    properties = await reported_properties(hass, 'light.test_on')
+    properties.assert_equal('Alexa.ColorController', 'color', {
+        'hue': 180,
+        'saturation': 0.75,
+        'brightness': 128 / 255.0,
+    })
+
+    properties = await reported_properties(hass, 'light.test_off')
+    properties.assert_equal('Alexa.ColorController', 'color', {
+        'hue': 0,
+        'saturation': 0,
+        'brightness': 0,
+    })
 
 
 async def reported_properties(hass, endpoint):
