@@ -1090,11 +1090,12 @@ class ServiceRegistry:
         domain = domain.lower()
         service = service.lower()
         context = context or Context()
+        service_data = service_data or {}
 
         try:
             handler = self._services[domain][service]
         except KeyError:
-            raise ServiceNotFound from None
+            raise ServiceNotFound(domain, service) from None
 
         if handler.schema:
             service_data = handler.schema(service_data)
