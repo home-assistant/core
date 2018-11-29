@@ -112,8 +112,7 @@ class QBittorrentSensor(Entity):
             self._available = False
             return
         except self._exception:
-            _LOGGER.info("Invalid authentication for qBittorrent."
-                         " Check config")
+            _LOGGER.error("Invalid authentication for qBittorrent")
             return
 
         if data is None:
