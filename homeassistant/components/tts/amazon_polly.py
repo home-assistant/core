@@ -37,9 +37,9 @@ SUPPORTED_VOICES = [
     'Mads', 'Naja',  # Danish
     'Ruben', 'Lotte',  # Dutch
     'Russell', 'Nicole',  # English Austrailian
-    'Brian', 'Amy',  'Emma',  # English
+    'Brian', 'Amy', 'Emma',  # English
     'Aditi', 'Raveena',  # English, Indian
-    'Joey', 'Justin', 'Matthew', 'Ivy', 'Joanna',  'Kendra', 'Kimberly',
+    'Joey', 'Justin', 'Matthew', 'Ivy', 'Joanna', 'Kendra', 'Kimberly',
     'Salli',  # English
     'Geraint',  # English Welsh
     'Mathieu', 'Celine', 'Léa',  # French
