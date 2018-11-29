@@ -94,6 +94,11 @@ class MultiFactorAuthModule:
         """Return whether user is setup."""
         raise NotImplementedError
 
+    async def async_is_supported(
+            self, user_id: str, user_input: Dict[str, Any]) -> bool:
+        """Return True if auth method is supported."""
+        return True
+
     async def async_validate(
             self, user_id: str, user_input: Dict[str, Any]) -> bool:
         """Return True if validation passed."""

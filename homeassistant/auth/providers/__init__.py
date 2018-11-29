@@ -235,6 +235,13 @@ class LoginFlow(data_entry_flow.FlowHandler):
                     reason='login_expired'
                 )
 
+            supported = await auth_module.async_is_supported(
+                self.user.id, user_input)
+            if not supported:
+                return self.async_abort(
+                    reason='not_supported'
+                )
+
             result = await auth_module.async_validate(
                 self.user.id, user_input)
             if not result:
