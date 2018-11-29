@@ -210,7 +210,7 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light, RestoreEntity):
         """Restore RFLink light brightness attribute."""
         await super().async_added_to_hass()
 
-        old_state = await async_get_last_state(self.hass, self.entity_id)
+        old_state = await self.async_get_last_state()
         if old_state is not None and \
                 old_state.attributes.get(ATTR_BRIGHTNESS) is not None:
             self._brightness = int(old_state.attributes.get(ATTR_BRIGHTNESS))
