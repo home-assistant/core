@@ -855,10 +855,7 @@ class ModesTrait(_Trait):
         if domain != media_player.DOMAIN:
             return False
 
-        if features & media_player.SUPPORT_SELECT_SOURCE:
-            return True
-        else:
-            return False
+        return features & media_player.SUPPORT_SELECT_SOURCE
 
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
