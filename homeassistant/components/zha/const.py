@@ -1,4 +1,51 @@
 """All constants related to the ZHA component."""
+import enum
+
+DOMAIN = 'zha'
+
+BAUD_RATES = [
+    2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 256000
+]
+
+DATA_ZHA = 'zha'
+DATA_ZHA_CONFIG = 'config'
+DATA_ZHA_BRIDGE_ID = 'zha_bridge_id'
+DATA_ZHA_RADIO = 'zha_radio'
+DATA_ZHA_DISPATCHERS = 'zha_dispatchers'
+DATA_ZHA_CORE_COMPONENT = 'zha_core_component'
+ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
+
+COMPONENTS = [
+    'binary_sensor',
+    'fan',
+    'light',
+    'sensor',
+    'switch',
+]
+
+CONF_BAUDRATE = 'baudrate'
+CONF_DATABASE = 'database_path'
+CONF_DEVICE_CONFIG = 'device_config'
+CONF_RADIO_TYPE = 'radio_type'
+CONF_USB_PATH = 'usb_path'
+DATA_DEVICE_CONFIG = 'zha_device_config'
+
+DEFAULT_RADIO_TYPE = 'ezsp'
+DEFAULT_BAUDRATE = 57600
+DEFAULT_DATABASE_NAME = 'zigbee.db'
+
+
+class RadioType(enum.Enum):
+    """Possible options for radio type."""
+
+    ezsp = 'ezsp'
+    xbee = 'xbee'
+
+    @classmethod
+    def list(cls):
+        """Return list of enum's values."""
+        return [e.value for e in RadioType]
+
 
 DISCOVERY_KEY = 'zha_discovery_info'
 DEVICE_CLASS = {}

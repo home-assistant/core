@@ -9,6 +9,10 @@ import logging
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.components.zha import helpers
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.zha.const import (
+    ZHA_DISCOVERY_NEW, DATA_ZHA, DATA_ZHA_DISPATCHERS
+)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -19,13 +23,35 @@ DEPENDENCIES = ['zha']
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up Zigbee Home Automation sensors."""
-    discovery_info = helpers.get_discovery_info(hass, discovery_info)
-    if discovery_info is None:
-        return
+    """Old way of setting up Zigbee Home Automation sensors."""
+    pass
 
-    sensor = await make_sensor(discovery_info)
-    async_add_entities([sensor], update_before_add=True)
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Zigbee Home Automation sensor from config entry."""
+    async def async_discover(discovery_info):
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    [discovery_info])
+
+    unsub = async_dispatcher_connect(
+        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+
+    sensors = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
+    if sensors is not None:
+        await _async_setup_entities(hass, config_entry, async_add_entities,
+                                    sensors.values())
+        del hass.data[DATA_ZHA][DOMAIN]
+
+
+async def _async_setup_entities(hass, config_entry, async_add_entities,
+                                discovery_infos):
+    """Set up the ZHA sensors."""
+    entities = []
+    for discovery_info in discovery_infos:
+        entities.append(await make_sensor(discovery_info))
+
+    async_add_entities(entities, update_before_add=True)
 
 
 async def make_sensor(discovery_info):

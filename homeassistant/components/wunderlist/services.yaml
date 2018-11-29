@@ -1,0 +1,15 @@
+# Describes the format for available Wunderlist
+
+create_task:
+  description: >
+    Create a new task in Wunderlist.
+  fields:
+    list_name:
+      description: name of the new list where the task will be created
+      example: 'Shopping list'
+    name:
+      description: name of the new task
+      example: 'Buy 5 bottles of beer'
+    starred:
+      description: Create the task as starred [Optional]
+      example: true

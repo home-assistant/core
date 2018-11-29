@@ -391,9 +391,9 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
             .filter(Events.event_type.in_(ALL_EVENT_TYPES)) \
             .filter((Events.time_fired > start_day)
                     & (Events.time_fired < end_day)) \
-            .filter((States.last_updated == States.last_changed)
-                    | (States.state_id.is_(None))) \
-            .filter(States.entity_id.in_(entity_ids))
+            .filter(((States.last_updated == States.last_changed) &
+                     States.entity_id.in_(entity_ids))
+                    | (States.state_id.is_(None)))
 
         events = execute(query)
 
@@ -444,6 +444,12 @@ def _exclude_events(events, entities_filter):
         elif event.event_type == EVENT_LOGBOOK_ENTRY:
             domain = event.data.get(ATTR_DOMAIN)
             entity_id = event.data.get(ATTR_ENTITY_ID)
+
+        elif event.event_type == EVENT_ALEXA_SMART_HOME:
+            domain = 'alexa'
+
+        elif event.event_type == EVENT_HOMEKIT_CHANGED:
+            domain = DOMAIN_HOMEKIT
 
         if not entity_id and domain:
             entity_id = "%s." % (domain, )

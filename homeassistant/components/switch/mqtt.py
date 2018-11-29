@@ -24,7 +24,7 @@ from homeassistant.components import mqtt, switch
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,8 +102,9 @@ async def _async_setup_entity(hass, config, async_add_entities,
     async_add_entities([newswitch])
 
 
+# pylint: disable=too-many-ancestors
 class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
-                 SwitchDevice):
+                 SwitchDevice, RestoreEntity):
     """Representation of a switch that can be toggled using MQTT."""
 
     def __init__(self, name, icon,
@@ -136,8 +137,7 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        await MqttAvailability.async_added_to_hass(self)
-        await MqttDiscoveryUpdate.async_added_to_hass(self)
+        await super().async_added_to_hass()
 
         @callback
         def state_message_received(topic, payload, qos):
@@ -161,8 +161,7 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                 self._qos)
 
         if self._optimistic:
-            last_state = await async_get_last_state(self.hass,
-                                                    self.entity_id)
+            last_state = await self.async_get_last_state()
             if last_state:
                 self._state = last_state.state == STATE_ON
 

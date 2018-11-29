@@ -261,3 +261,58 @@ async def test_call_service_context_no_user(hass, aiohttp_client):
         assert call.service == 'test_service'
         assert call.data == {'hello': 'world'}
         assert call.context.user_id is None
+
+
+async def test_subscribe_requires_admin(websocket_client, hass_admin_user):
+    """Test subscribing events without being admin."""
+    hass_admin_user.groups = []
+    await websocket_client.send_json({
+        'id': 5,
+        'type': commands.TYPE_SUBSCRIBE_EVENTS,
+        'event_type': 'test_event'
+    })
+
+    msg = await websocket_client.receive_json()
+    assert not msg['success']
+    assert msg['error']['code'] == const.ERR_UNAUTHORIZED
+
+
+async def test_states_filters_visible(hass, hass_admin_user, websocket_client):
+    """Test we only get entities that we're allowed to see."""
+    hass_admin_user.mock_policy({
+        'entities': {
+            'entity_ids': {
+                'test.entity': True
+            }
+        }
+    })
+    hass.states.async_set('test.entity', 'hello')
+    hass.states.async_set('test.not_visible_entity', 'invisible')
+    await websocket_client.send_json({
+        'id': 5,
+        'type': commands.TYPE_GET_STATES,
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == const.TYPE_RESULT
+    assert msg['success']
+
+    assert len(msg['result']) == 1
+    assert msg['result'][0]['entity_id'] == 'test.entity'
+
+
+async def test_get_states_not_allows_nan(hass, websocket_client):
+    """Test get_states command not allows NaN floats."""
+    hass.states.async_set('greeting.hello', 'world', {
+        'hello': float("NaN")
+    })
+
+    await websocket_client.send_json({
+        'id': 5,
+        'type': commands.TYPE_GET_STATES,
+    })
+
+    msg = await websocket_client.receive_json()
+    assert not msg['success']
+    assert msg['error']['code'] == const.ERR_UNKNOWN_ERROR
