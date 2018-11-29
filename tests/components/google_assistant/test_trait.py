@@ -909,7 +909,7 @@ async def test_modes(hass):
                         'setting_name': 'media',
                         'setting_values': [
                             {
-                                'setting_synonym': ['media,', 'media', 'mode'],
+                                'setting_synonym': ['media', 'media mode'],
                                 'lang': 'en'
                             }
                         ]
@@ -918,7 +918,7 @@ async def test_modes(hass):
                         'setting_name': 'game',
                         'setting_values': [
                             {
-                                'setting_synonym': ['game,', 'game', 'mode'],
+                                'setting_synonym': ['game', 'game mode'],
                                 'lang': 'en'
                             }
                         ]
