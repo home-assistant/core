@@ -168,7 +168,7 @@ async def test_service_configure(hass):
     # field does not start with /
     with pytest.raises(vol.Invalid):
         with patch('pydeconz.DeconzSession.async_put_state',
-                return_value=mock_coro(True)):
+                   return_value=mock_coro(True)):
             await hass.services.async_call(
                 'deconz', 'configure', service_data={
                     'entity': 'light.test', 'field': 'state', 'data': data})
