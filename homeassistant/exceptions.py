@@ -63,7 +63,7 @@ class UnknownUser(Unauthorized):
 class ServiceNotFound(HomeAssistantError):
     """Raised when a service is not found."""
 
-    def __init__(self, domain, service):
+    def __init__(self, domain: str, service: str) -> None:
         """Initialize error."""
         super().__init__(
             self, "Service {}.{} not found".format(domain, service))
