@@ -11,7 +11,8 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA)
 from homeassistant.components.media_player.directv import (
     ATTR_MEDIA_CURRENTLY_RECORDING, ATTR_MEDIA_RATING, ATTR_MEDIA_RECORDED,
-    ATTR_MEDIA_START_TIME, DEFAULT_DEVICE, DEFAULT_PORT)
+    ATTR_MEDIA_START_TIME, DEFAULT_CLIENT_DISCOVER_INTERVAL, DEFAULT_DEVICE,
+    DEFAULT_PORT)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
@@ -323,15 +324,15 @@ async def test_setup_platform_discover_duplicate(hass):
     assert len(hass.states.async_entity_ids('media_player')) == 1
 
 
-async def test_setup_platform_discover_client(hass):
-    """Test setting up the platform from discovery."""
+async def test_setup_platform_discover_client(hass, mock_now):
+    """Test setting up the platform from discovery.
+
+    First client should be added upon initialization of the platform.
+    Second client should be added by the scheduled discovery task.
+    """
     LOCATIONS.append({
         'locationName': 'Client 1',
         'clientAddr': '1'
-    })
-    LOCATIONS.append({
-        'locationName': 'Client 2',
-        'clientAddr': '2'
     })
 
     with MockDependency('DirectPy'), \
@@ -346,12 +347,26 @@ async def test_setup_platform_discover_client(hass):
         )
         await hass.async_block_till_done()
 
-    del LOCATIONS[-1]
-    del LOCATIONS[-1]
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
     state = hass.states.get('media_player.client_1')
     assert state
+    assert len(hass.states.async_entity_ids('media_player')) == 2
+
+    LOCATIONS.append({
+        'locationName': 'Client 2',
+        'clientAddr': '2'
+    })
+
+    next_update = mock_now + DEFAULT_CLIENT_DISCOVER_INTERVAL + \
+        timedelta(seconds=1)
+    with patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    del LOCATIONS[-1]
+    del LOCATIONS[-1]
+
     state = hass.states.get('media_player.client_2')
     assert state
 

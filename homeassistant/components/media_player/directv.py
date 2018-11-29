@@ -4,6 +4,7 @@ Support for the DirecTV receivers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.directv/
 """
+import asyncio
 import logging
 from datetime import timedelta
 import requests
@@ -18,6 +19,7 @@ from homeassistant.const import (
     CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['directpy==0.5']
@@ -46,10 +48,6 @@ SUPPORT_DTV_CLIENT = SUPPORT_PAUSE | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
 
-SUPPORT_DTV_CLIENT = SUPPORT_PAUSE | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_SELECT_SOURCE | SUPPORT_STOP | \
-    SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
-
 DATA_DIRECTV = 'data_directv'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -65,7 +63,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the DirecTV platform."""
     known_devices = hass.data.get(DATA_DIRECTV, set())
     directv_entity = None
@@ -81,33 +80,66 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_DISCOVER_CLIENTS: config.get(CONF_DISCOVER_CLIENTS),
             CONF_CLIENT_DISCOVER_INTERVAL: config.get(
                 CONF_CLIENT_DISCOVER_INTERVAL),
-            'entities': add_entities
+            'entities': async_add_entities
         }
 
     elif discovery_info:
         host = discovery_info.get('host')
+        name = 'DirecTV_{}'.format(discovery_info.get('serial', ''))
+
         if (host, DEFAULT_DEVICE) in known_devices:
-            name = 'DirecTV_{}'.format(discovery_info.get('serial', ''))
-            _LOGGER.debug("Discovered device %s on host %s is already"
-                          " configured", name, host)
+            _LOGGER.debug("Discovered device on host %s is already"
+                          " configured", host)
+            return
+
+        from DirectPy import DIRECTV
+        dtv = await hass.async_add_executor_job(
+            DIRECTV, host, DEFAULT_PORT, DEFAULT_DEVICE)
+        if dtv:
+            try:
+                resp = await hass.async_add_executor_job(
+                    dtv.get_locations)
+            except requests.exceptions.RequestException as ex:
+                # Use uPnP data only
+                _LOGGER.debug("Request exception %s trying to get "
+                              "locations", ex)
+                resp = {
+                    'locations': [{
+                        'locationName': name,
+                        'clientAddr': DEFAULT_DEVICE
+                    }]
+                }
         else:
-            _LOGGER.debug("Adding discovered device %s on host %s",
-                          name, host)
-            directv_entity = {
-                CONF_NAME: name,
-                CONF_HOST: host,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_DEVICE: '0',
-                CONF_DISCOVER_CLIENTS: DEFAULT_DISCOVER_CLIENTS,
-                CONF_CLIENT_DISCOVER_INTERVAL:
-                    DEFAULT_CLIENT_DISCOVER_INTERVAL,
-                'entities': add_entities
+            resp = {
+                'locations': [{
+                    'locationName': name,
+                    'clientAddr': DEFAULT_DEVICE
+                }]
             }
+
+        for loc in resp.get("locations") or []:
+            if loc.get("clientAddr") == DEFAULT_DEVICE and \
+               "locationName" in loc:
+                name = str.title(loc["locationName"])
+                break
+
+        _LOGGER.debug("Adding discovered device %s on host %s",
+                      name, host)
+        directv_entity = {
+            CONF_NAME: name,
+            CONF_HOST: host,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_DEVICE: DEFAULT_DEVICE,
+            CONF_DISCOVER_CLIENTS: DEFAULT_DISCOVER_CLIENTS,
+            CONF_CLIENT_DISCOVER_INTERVAL:
+                DEFAULT_CLIENT_DISCOVER_INTERVAL,
+            'entities': async_add_entities
+        }
 
     if directv_entity is not None:
         hass.data.setdefault(DATA_DIRECTV, set()).add((
             directv_entity[CONF_HOST], directv_entity[CONF_DEVICE]))
-        add_entities([DirecTvDevice(**directv_entity)])
+        async_add_entities([DirecTvDevice(**directv_entity)])
 
 
 class DirecTvDevice(MediaPlayerDevice):
@@ -129,11 +161,9 @@ class DirecTvDevice(MediaPlayerDevice):
             if not self._is_client else False
         self._client_discover_interval = kwargs.get(
             CONF_CLIENT_DISCOVER_INTERVAL, DEFAULT_CLIENT_DISCOVER_INTERVAL)
-        self._add_entities = kwargs.get('entities')
+        self._async_add_entities = kwargs.get('entities')
 
-        from DirectPy import DIRECTV
-        self.dtv = DIRECTV(self._host, self._port, self._device)
-
+        self.dtv = None
         self._is_standby = True
         self._current = None
         self._last_update = None
@@ -148,22 +178,35 @@ class DirecTvDevice(MediaPlayerDevice):
             _LOGGER.debug("Created entity %s for DirecTV client %s",
                           self._name, self._device)
         else:
-            _LOGGER.debug("Created entity %s for DirecTV device", self._name)
-            if self._discover_clients:
-                _LOGGER.debug("Will perform client discovery every %s",
-                              self._client_discover_interval)
+            _LOGGER.debug("Created entity %s for DirecTV device",
+                          self._name)
 
-    def _discover_directv_client_devices(self):
-        """Discover any client devices on the main DVR."""
+    async def async_added_to_hass(self):
+        """Connect to DVR instance."""
+        await self._async_get_dtv_instance()
+
+    async def _async_discover_directv_client_devices(self, now=None):
+        """Discover new client devices connected to the main DVR."""
         known_devices = self.hass.data.get(DATA_DIRECTV, set())
         discovered_devices = []
+        dtvs = []
 
         # Attempt to discover additional RVU units
-        _LOGGER.debug("Doing discovery of DirecTV devices on %s", self._host)
+        if now:
+            _LOGGER.debug("Scheduled discovery of DirecTV devices on %s",
+                          self._host)
+        else:
+            _LOGGER.debug("Initial discovery of DirecTV devices on %s",
+                          self._host)
 
-        resp = self.dtv.get_locations()
+        _LOGGER.debug("Current known devices: %s", known_devices)
 
-        _LOGGER.debug("Known devices: %s", known_devices)
+        try:
+            resp = await self._async_get_locations()
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.debug("Request exception %s trying to discover "
+                          "new clients", ex)
+
         for loc in resp.get('locations') or []:
             if 'locationName' not in loc or 'clientAddr' not in loc or\
                loc.get('clientAddr') == 0:
@@ -188,32 +231,61 @@ class DirecTvDevice(MediaPlayerDevice):
                     CONF_PORT: self._port,
                     CONF_DEVICE: loc['clientAddr'],
                     CONF_DISCOVER_CLIENTS: False,
-                    'entities': self._add_entities
+                    'entities': self._async_add_entities
                 })
 
-        return discovered_devices
-
-    def _add_directv_entities(self, new_entities):
-        """Add DirecTV client devices as entities in HASS."""
-        dtvs = []
-
-        if not new_entities:
+        if discovered_devices:
             _LOGGER.debug("Adding %s new DirecTV entities to HASS",
-                          len(new_entities))
+                          len(discovered_devices))
 
-            for new_entity in new_entities:
-                dtvs.append(DirecTvDevice(**new_entity))
+            for new_device in discovered_devices:
+                dtvs.append(DirecTvDevice(**new_device))
                 self.hass.data.setdefault(DATA_DIRECTV, set()).add(
-                    (new_entity[CONF_HOST], new_entity[CONF_DEVICE]))
+                    (new_device[CONF_HOST], new_device[CONF_DEVICE]))
 
-            self._add_entities(dtvs)
+            self._async_add_entities(dtvs)
 
-    def update(self):
+    async def _async_get_dtv_instance(self):
+        """Get the DTV instance to work with."""
+        if self.dtv:
+            return self.dtv
+
+        from DirectPy import DIRECTV
+        try:
+            self.dtv = await self.hass.async_add_executor_job(
+                DIRECTV, self._host, self._port, self._device)
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.warning("Exception trying to connect to DVR, will try "
+                            "again later: %s", ex)
+            self.dtv = None
+
+        if self.dtv:
+            _LOGGER.debug("Successfull connection to DVR on %s",
+                          self._host)
+
+            if self._discover_clients:
+                # We are connected to DVR and will discover any potential
+                # clients. Schedule discovery
+                # Create a task to already do first discovery.
+                self.hass.async_create_task(
+                    self._async_discover_directv_client_devices()
+                )
+
+                # Schedule discovery to run based on interval.
+                async_track_time_interval(
+                    self.hass, self._async_discover_directv_client_devices,
+                    self._client_discover_interval)
+                _LOGGER.debug("Client discovery scheduled for every %s",
+                              self._client_discover_interval)
+
+        return self.dtv
+
+    async def async_update(self):
         """Retrieve latest state."""
         _LOGGER.debug("Updating status for %s", self._name)
         try:
             self._available = True
-            self._is_standby = self.dtv.get_standby()
+            self._is_standby = await self._async_get_standby()
             if self._is_standby:
                 self._current = None
                 self._is_recorded = None
@@ -222,50 +294,41 @@ class DirecTvDevice(MediaPlayerDevice):
                 self._last_position = None
                 self._last_update = None
             else:
-                self._current = self.dtv.get_tuned()
+                self._current = await self._async_get_tuned()
+                # If status is not 200 then try a second time.
+                if self._current['status']['code'] != 200:
+                    _LOGGER.debug("Invalid status %s received, retrying.",
+                                  self._current['status']['code'])
+                    # Wait for 1 second as most likely this is due to
+                    # DVR just doing a change (i.e. channel, playing, ...)
+                    await asyncio.sleep(1)
+                    self._current = await self._async_get_tuned()
+
                 if self._current['status']['code'] == 200:
                     self._is_recorded = self._current.get('uniqueId')\
                         is not None
                     self._paused = self._last_position == \
                         self._current['offset']
-                    self._assumed_state = self._is_recorded
+                    # Assumed state of playing if offset is changing and
+                    # it is greater then duration.
+                    self._assumed_state = self._current['offset'] > \
+                        self._current['duration'] and not self._paused
                     self._last_position = self._current['offset']
                     self._last_update = dt_util.utcnow() if not self._paused \
                         or self._last_update is None else self._last_update
                 else:
+                    _LOGGER.error("Invalid status %s received.",
+                                  self._current['status']['code'])
                     self._available = False
         except requests.RequestException as ex:
             _LOGGER.error("Request error trying to update current status for"
                           " %s. %s", self._name, ex)
             self._available = False
-        except Exception:
+        except Exception as ex:
+            _LOGGER.error("Exception trying to update current status for"
+                          " %s. %s", self._name, ex)
             self._available = False
             raise
-
-        # Perform discovery to determine if any new client devices have
-        # shown up if client discovery is enabled (default) and defined time
-        # has been elapsed since last discovery (default 5 minutes)
-        if self._discover_clients and \
-           dt_util.utcnow() >= self._next_client_discover:
-            self._next_client_discover = dt_util.utcnow() +\
-                self._client_discover_interval
-
-            new_clients = []
-            try:
-                new_clients = self._discover_directv_client_devices()
-            except requests.exceptions.RequestException as ex:
-                _LOGGER.debug("Request exception %s trying to discover "
-                              "new clients", ex)
-
-            # If _add_entities is not defined but clients were found then
-            # raise NotImplementedError.
-            if self._add_entities is None and new_clients:
-                raise NotImplementedError()
-            else:
-                self._add_directv_entities(new_clients)
-
-            _LOGGER.debug("Next client discovery will occur on %s",
-                          dt_util.as_local(self._next_client_discover))
 
     @property
     def device_state_attributes(self):
@@ -292,13 +355,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return STATE_OFF
 
-        # For recorded media we can determine if it is paused or not.
-        # For live media we're unable to determine and will always return
-        # playing instead.
-        if self._paused:
-            return STATE_PAUSED
-
-        return STATE_PLAYING
+        return STATE_PAUSED if self._paused else STATE_PLAYING
 
     @property
     def available(self):
@@ -427,52 +484,53 @@ class DirecTvDevice(MediaPlayerDevice):
         return dt_util.as_local(
             dt_util.utc_from_timestamp(self._current['startTime']))
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn on the receiver."""
         if self._is_client:
             raise NotImplementedError()
 
         _LOGGER.debug("Turn on %s", self._name)
-        self.dtv.key_press('poweron')
+        await self._async_key_press('poweron')
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off the receiver."""
         if self._is_client:
             raise NotImplementedError()
 
         _LOGGER.debug("Turn off %s", self._name)
-        self.dtv.key_press('poweroff')
+        await self._async_key_press('poweroff')
 
-    def media_play(self):
+    async def async_media_play(self):
         """Send play command."""
         _LOGGER.debug("Play on %s", self._name)
-        self.dtv.key_press('play')
+        await self._async_key_press('play')
 
-    def media_pause(self):
+    async def async_media_pause(self):
         """Send pause command."""
         _LOGGER.debug("Pause on %s", self._name)
-        self.dtv.key_press('pause')
+        await self._async_key_press('pause')
 
-    def media_stop(self):
+    async def async_media_stop(self):
         """Send stop command."""
         _LOGGER.debug("Stop on %s", self._name)
-        self.dtv.key_press('stop')
+        await self._async_key_press('stop')
 
-    def media_previous_track(self):
+    async def async_media_previous_track(self):
         """Send rewind command."""
         _LOGGER.debug("Rewind on %s", self._name)
-        self.dtv.key_press('rew')
+        await self._async_key_press('rew')
 
-    def media_next_track(self):
+    async def async_media_next_track(self):
         """Send fast forward command."""
         _LOGGER.debug("Fast forward on %s", self._name)
-        self.dtv.key_press('ffwd')
+        await self._async_key_press('ffwd')
 
     def play_media(self, media_type, media_id, **kwargs):
         """Select input source."""
         if media_type != MEDIA_TYPE_CHANNEL:
             _LOGGER.error("Invalid media type %s. Only %s is supported",
                           media_type, MEDIA_TYPE_CHANNEL)
+
             return
 
         _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
