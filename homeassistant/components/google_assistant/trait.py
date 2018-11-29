@@ -717,7 +717,7 @@ class FanSpeedTrait(_Trait):
             speed = {
                 "speed_name": mode,
                 "speed_values": [{
-                    "speed_synonym": self.speed_synonyms.get(mode),
+                    "speed_synonym": self.speed_synonyms.get(mode, [mode]),
                     "lang": 'en'
                 }]
             }
