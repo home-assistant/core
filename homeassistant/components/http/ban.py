@@ -9,12 +9,13 @@ from aiohttp.web import middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.yaml import dump
-from .const import KEY_REAL_IP
+from homeassistant.util.yaml import dump, load_yaml
+from .const import DOMAIN, KEY_REAL_IP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +29,10 @@ NOTIFICATION_ID_LOGIN = 'http-login'
 IP_BANS_FILE = 'ip_bans.yaml'
 ATTR_BANNED_AT = "banned_at"
 
+SERVICE_UNBAN_IP_SCHEMA = vol.Schema({
+    vol.Required(CONF_IP_ADDRESS): cv.string
+})
+
 SCHEMA_IP_BAN_ENTRY = vol.Schema({
     vol.Optional('banned_at'): vol.Any(None, cv.datetime)
 })
@@ -39,6 +44,15 @@ def setup_bans(hass, app, login_threshold):
     app.middlewares.append(ban_middleware)
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
+
+    async def unban(service):
+        """Remove an IP ban."""
+        await hass.async_add_executor_job(
+            unban_ip, hass.config.path(IP_BANS_FILE),
+            service.data[CONF_IP_ADDRESS])
+
+    hass.services.async_register(
+        DOMAIN, 'unban_ip', unban, SERVICE_UNBAN_IP_SCHEMA)
 
     async def ban_startup(app):
         """Initialize bans when app starts up."""
@@ -182,3 +196,16 @@ def update_ip_bans_config(path: str, ip_ban: IpBan):
         }}
         out.write('\n')
         out.write(dump(ip_))
+
+
+def unban_ip(path: str, banned_ip: str):
+    """Unban an IP address."""
+    bans = load_yaml(path)
+
+    if banned_ip not in bans:
+        return
+
+    del bans[banned_ip]
+
+    with open(path, 'w') as out:
+        out.write(dump(bans))
