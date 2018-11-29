@@ -6,13 +6,15 @@ https://home-assistant.io/components/mythicbeastsdns/
 """
 from datetime import timedelta
 import logging
-
 import voluptuous as vol
+import mbddns
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_DOMAIN, CONF_PASSWORD
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+REQUIREMENTS = ['mbddns==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,11 +22,7 @@ DOMAIN = 'mythicbeastsdns'
 
 DEFAULT_INTERVAL = timedelta(minutes=10)
 
-UPDATE_URL = 'https://dnsapi4.mythic-beasts.com/'
-
 CONF_UPDATE_INTERVAL = 'update_interval'
-
-TIMEOUT = 20
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -46,48 +44,15 @@ async def async_setup(hass, config):
 
     session = async_get_clientsession(hass)
 
-    result = await _update_mythicbeastsdns(session, domain, password, host)
+    result = await mbddns.update(domain, password, host, session=session)
 
     if not result:
         return False
 
     async def update_domain_interval(now):
         """Update the DNS entry."""
-        await _update_mythicbeastsdns(session, domain, password, host)
+        await mbddns.update(domain, password, host, session=session)
 
     async_track_time_interval(hass, update_domain_interval, update_interval)
 
     return True
-
-
-async def _update_mythicbeastsdns(session, domain, password, host):
-    """Update Mythic Beasts."""
-    data = {
-        'domain': domain,
-        'password': password,
-        'command': "REPLACE {} 5 A DYNAMIC_IP".format(host)
-    }
-
-    try:
-        resp = await session.post(UPDATE_URL, data=data, timeout=TIMEOUT)
-        body = await resp.text()
-
-        if body.startswith("REPLACE"):
-            _LOGGER.debug("Updating Mythic Beasts successful: %s", body)
-            return True
-
-        if body.startswith("ERR"):
-            _LOGGER.error("Updating Mythic Beasts failed: %s",
-                          body.partition(' ')[2])
-
-        if body.startswith("NREPLACE"):
-            _LOGGER.warning("Updating Mythic Beasts failed: %s",
-                            body.partition(';')[2])
-
-    except session.ServerTimeoutError:
-        _LOGGER.error("Updating Mythic Beasts failed due to timeout")
-
-    except session.ClientError:
-        _LOGGER.error("Updating Mythic Beasts failed.")
-
-    return False

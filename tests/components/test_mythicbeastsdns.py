@@ -12,7 +12,7 @@ DOMAIN = 'example.org'
 PASSWORD = 'test_password'
 HOST = 'test'
 UPDATE_INTERVAL = mythicbeastsdns.DEFAULT_INTERVAL
-UPDATE_URL = mythicbeastsdns.UPDATE_URL
+UPDATE_URL = 'https://dnsapi4.mythic-beasts.com/'
 
 
 @pytest.fixture
@@ -40,8 +40,8 @@ def test_setup(hass, aioclient_mock):
     aioclient_mock.post(UPDATE_URL, data={
         'domain': DOMAIN,
         'password': PASSWORD,
-        'command': "REPLACE {} 5 A DYNAMIC_IP".format(HOST)
-    }, text='REPLACE {} 5 A DYNAMIC_IP'.format(HOST))
+        'command': "REPLACE {} 60 A DYNAMIC_IP".format(HOST)
+    }, text='REPLACE {} 60 A DYNAMIC_IP'.format(HOST))
 
     result = yield from async_setup_component(hass, mythicbeastsdns.DOMAIN, {
         mythicbeastsdns.DOMAIN: {
@@ -64,7 +64,7 @@ def test_setup_fails_if_wrong_token(hass, aioclient_mock):
     aioclient_mock.post(UPDATE_URL, data={
         'domain': DOMAIN,
         'password': PASSWORD,
-        'command': "REPLACE {} 5 A DYNAMIC_IP".format(HOST)
+        'command': "REPLACE {} 60 A DYNAMIC_IP".format(HOST)
     }, text='ERR Not authenticated')
 
     result = yield from async_setup_component(hass, mythicbeastsdns.DOMAIN, {
@@ -80,12 +80,12 @@ def test_setup_fails_if_wrong_token(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_setup_fails_if_invalid_host(hass, aioclient_mock):
-    """Test setup fails if first update fails through wrong token."""
+    """Test setup fails if first update fails through invalid host."""
     aioclient_mock.post(UPDATE_URL, data={
         'domain': DOMAIN,
         'password': PASSWORD,
-        'command': "REPLACE {} 5 A DYNAMIC_IP".format(HOST)
-    }, text='NREPLACE test 5 A DYNAMIC_IP;Invalid host (must be "@", "*" or\
+        'command': "REPLACE {} 60 A DYNAMIC_IP".format(HOST)
+    }, text='NREPLACE test 60 A DYNAMIC_IP;Invalid host (must be "@", "*" or\
      only contain a-z, 0-9, - and .)')
 
     result = yield from async_setup_component(hass, mythicbeastsdns.DOMAIN, {
