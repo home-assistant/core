@@ -34,18 +34,18 @@ DEFAULT_NAME = 'Entur'
 DEFAULT_ICON_KEY = 'bus'
 
 ICONS = {
-    'bus': 'mdi:bus',
     'air': 'mdi:airplane',
+    'bus': 'mdi:bus',
+    'rail': 'mdi:train',
     'water': 'mdi:ferry',
-    'rail': 'mdi:train'
 }
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
 })
 
@@ -68,19 +68,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Entur public transport sensor."""
     from enturclient import EnturPublicTransportData
     from enturclient.consts import CONF_NAME as API_NAME
-    stop_ids = config.get(CONF_STOP_IDS)
+
     expand = config.get(CONF_EXPAND_PLATFORMS)
-    show_on_map = config.get(CONF_SHOW_ON_MAP)
     name = config.get(CONF_NAME)
+    show_on_map = config.get(CONF_SHOW_ON_MAP)
+    stop_ids = config.get(CONF_STOP_IDS)
 
     stops = [s for s in stop_ids if "StopPlace" in s]
     quays = [s for s in stop_ids if "Quay" in s]
 
-    data = EnturPublicTransportData(
-        API_CLIENT_NAME,
-        stops,
-        quays,
-        expand)
+    data = EnturPublicTransportData(API_CLIENT_NAME, stops, quays, expand)
     data.update()
 
     proxy = EnturProxy(data)
@@ -102,7 +99,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class EnturProxy:
     """Proxy for the Entur client.
 
-    Ensure throttle to not hit rate limiting on api.
+    Ensure throttle to not hit rate limiting on the API.
     """
 
     def __init__(self, api):
@@ -122,13 +119,11 @@ class EnturProxy:
 class EnturPublicTransportSensor(Entity):
     """Implementation of a Entur public transport sensor."""
 
-    def __init__(self,
-                 api: EnturProxy,
-                 name: str,
-                 stop: str,
-                 show_on_map: bool):
+    def __init__(
+            self, api: EnturProxy, name: str, stop: str, show_on_map: bool):
         """Initialize the sensor."""
         from enturclient.consts import ATTR_STOP_ID
+
         self.api = api
         self._stop = stop
         self._show_on_map = show_on_map
@@ -138,7 +133,7 @@ class EnturPublicTransportSensor(Entity):
         self._icon = ICONS[DEFAULT_ICON_KEY]
         self._attributes = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_STOP_ID: self._stop
+            ATTR_STOP_ID: self._stop,
         }
 
     @property
@@ -171,6 +166,7 @@ class EnturPublicTransportSensor(Entity):
         from enturclient.consts import (
             ATTR, ATTR_EXPECTED_AT, ATTR_NEXT_UP_AT, CONF_LOCATION,
             CONF_LATITUDE as LAT, CONF_LONGITUDE as LONG, CONF_TRANSPORT_MODE)
+
         self.api.update()
 
         self._data = self.api.get_stop_info(self._stop)
