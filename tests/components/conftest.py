@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.setup import async_setup_component
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.components.websocket_api.auth import (
@@ -71,9 +72,24 @@ def hass_ws_client(aiohttp_client):
 
 
 @pytest.fixture
-def hass_access_token(hass):
+def hass_access_token(hass, hass_admin_user):
     """Return an access token to access Home Assistant."""
-    user = MockUser().add_to_hass(hass)
     refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(user, CLIENT_ID))
+        hass.auth.async_create_refresh_token(hass_admin_user, CLIENT_ID))
     yield hass.auth.async_create_access_token(refresh_token)
+
+
+@pytest.fixture
+def hass_admin_user(hass):
+    """Return a Home Assistant admin user."""
+    admin_group = hass.loop.run_until_complete(hass.auth.async_get_group(
+        GROUP_ID_ADMIN))
+    return MockUser(groups=[admin_group]).add_to_hass(hass)
+
+
+@pytest.fixture
+def hass_read_only_user(hass):
+    """Return a Home Assistant read only user."""
+    read_only_group = hass.loop.run_until_complete(hass.auth.async_get_group(
+        GROUP_ID_READ_ONLY))
+    return MockUser(groups=[read_only_group]).add_to_hass(hass)

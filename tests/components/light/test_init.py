@@ -476,7 +476,7 @@ async def test_intent_set_color_and_brightness(hass):
     assert call.data.get(light.ATTR_BRIGHTNESS_PCT) == 20
 
 
-async def test_light_context(hass):
+async def test_light_context(hass, hass_admin_user):
     """Test that light context works."""
     assert await async_setup_component(hass, 'light', {
         'light': {
@@ -489,9 +489,9 @@ async def test_light_context(hass):
 
     await hass.services.async_call('light', 'toggle', {
         'entity_id': state.entity_id,
-    }, True, core.Context(user_id='abcd'))
+    }, True, core.Context(user_id=hass_admin_user.id))
 
     state2 = hass.states.get('light.ceiling')
     assert state2 is not None
     assert state.state != state2.state
-    assert state2.context.user_id == 'abcd'
+    assert state2.context.user_id == hass_admin_user.id
