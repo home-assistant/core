@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components import mqtt, light
+from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
     ATTR_WHITE_VALUE, Light, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
@@ -19,13 +19,10 @@ from homeassistant.const import (
     CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, STATE_ON,
     CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate)
-from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
-from homeassistant.helpers.restore_state import async_get_last_state
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+    CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
+    MqttAvailability, MqttDiscoveryUpdate)
+from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -72,7 +69,7 @@ DEFAULT_ON_COMMAND_TYPE = 'last'
 
 VALUES_ON_COMMAND_TYPE = ['first', 'last', 'brightness']
 
-PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA_BASIC = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -111,27 +108,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_entities, discovery_info=None):
-    """Set up MQTT light through configuration.yaml."""
-    await _async_setup_entity(hass, config, async_add_entities)
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MQTT light dynamically through MQTT discovery."""
-    async def async_discover(discovery_payload):
-        """Discover and add a MQTT light."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(hass, config, async_add_entities,
-                                  discovery_payload[ATTR_DISCOVERY_HASH])
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(light.DOMAIN, 'mqtt'),
-        async_discover)
-
-
-async def _async_setup_entity(hass, config, async_add_entities,
-                              discovery_hash=None):
+async def async_setup_entity_basic(hass, config, async_add_entities,
+                                   discovery_hash=None):
     """Set up a MQTT Light."""
     config.setdefault(
         CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
@@ -188,7 +166,7 @@ async def _async_setup_entity(hass, config, async_add_entities,
     )])
 
 
-class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
+class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light, RestoreEntity):
     """Representation of a MQTT light."""
 
     def __init__(self, name, unique_id, effect_list, topic, templates,
@@ -259,8 +237,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        await MqttAvailability.async_added_to_hass(self)
-        await MqttDiscoveryUpdate.async_added_to_hass(self)
+        await super().async_added_to_hass()
 
         templates = {}
         for key, tpl in list(self._templates.items()):
@@ -270,7 +247,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
                 tpl.hass = self.hass
                 templates[key] = tpl.async_render_with_possible_json_value
 
-        last_state = await async_get_last_state(self.hass, self.entity_id)
+        last_state = await self.async_get_last_state()
 
         @callback
         def state_received(topic, payload, qos):
@@ -688,7 +665,7 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
             should_update = True
 
         if self._optimistic:
-            # Optimistically assume that switch has changed state.
+            # Optimistically assume that the light has changed state.
             self._state = True
             should_update = True
 
@@ -705,6 +682,6 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
             self._qos, self._retain)
 
         if self._optimistic:
-            # Optimistically assume that switch has changed state.
+            # Optimistically assume that the light has changed state.
             self._state = False
             self.async_schedule_update_ha_state()

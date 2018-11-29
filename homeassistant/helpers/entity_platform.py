@@ -350,8 +350,7 @@ class EntityPlatform:
         component_entities.add(entity_id)
         entity.async_on_remove(lambda: self.entities.pop(entity_id))
 
-        if hasattr(entity, 'async_added_to_hass'):
-            await entity.async_added_to_hass()
+        await entity.async_added_to_hass()
 
         await entity.async_update_ha_state()
 

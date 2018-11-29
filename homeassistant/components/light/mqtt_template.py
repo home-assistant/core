@@ -21,7 +21,7 @@ from homeassistant.components.mqtt import (
     MqttAvailability)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     )])
 
 
-class MqttTemplate(MqttAvailability, Light):
+class MqttTemplate(MqttAvailability, Light, RestoreEntity):
     """Representation of a MQTT Template light."""
 
     def __init__(self, hass, name, effect_list, topics, templates, optimistic,
@@ -156,7 +156,7 @@ class MqttTemplate(MqttAvailability, Light):
         """Subscribe to MQTT events."""
         await super().async_added_to_hass()
 
-        last_state = await async_get_last_state(self.hass, self.entity_id)
+        last_state = await self.async_get_last_state()
 
         @callback
         def state_received(topic, payload, qos):
