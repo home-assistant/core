@@ -18,7 +18,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up cover(s) for Velux platform."""
     entities = []
     for node in hass.data[DATA_VELUX].pyvlx.nodes:
-        from pyvlx.opening_device import OpeningDevice
+        from pyvlx import OpeningDevice
         if isinstance(node, OpeningDevice):
             entities.append(VeluxCover(node))
     async_add_entities(entities)
@@ -50,12 +50,14 @@ class VeluxCover(CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return 0
+        if not self.node.position.known:
+            return None
+        return self.node.position.position_percent
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return None
+        return self.node.position.position_percent == 100
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
@@ -63,10 +65,11 @@ class VeluxCover(CoverDevice):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self.node.close()
+        await self.node.open()
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
-            await self.node.set_position_percent(position)
+            from pyvlx import Position
+            await self.node.set_position(Position(position_percent=position))
