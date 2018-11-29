@@ -1,4 +1,9 @@
-"""Support for monitoring the qBittorrent API."""
+"""
+Support for monitoring the qBittorrent API.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.qbittorrent/
+"""
 import logging
 
 import voluptuous as vol
@@ -36,19 +41,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
-    """Set up the qbittorrent sensors."""
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the qBittorrent sensors."""
     from qbittorrent.client import Client, LoginRequired
 
     try:
         client = Client(config[CONF_URL])
         client.login(config[CONF_USERNAME], config[CONF_PASSWORD])
     except LoginRequired:
-        _LOGGER.error("Invalid authentication for qBittorrent. Check config")
+        _LOGGER.error("Invalid authentication")
         return
     except RequestException:
-        _LOGGER.error("Connection to qBittorrent failed. Check config")
+        _LOGGER.error("Connection failed")
         raise PlatformNotReady
 
     name = config.get(CONF_NAME)
@@ -68,11 +73,11 @@ def format_speed(speed):
 
 
 class QBittorrentSensor(Entity):
-    """Representation of an qbittorrent sensor."""
+    """Representation of an qBittorrent sensor."""
 
     def __init__(self, sensor_type, qbittorrent_client,
                  client_name, exception):
-        """Initialize the sensor."""
+        """Initialize the qBittorrent sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self.client = qbittorrent_client
         self.type = sensor_type
@@ -103,16 +108,16 @@ class QBittorrentSensor(Entity):
         return self._unit_of_measurement
 
     async def async_update(self):
-        """Get the latest data from qbittorrent and updates the state."""
+        """Get the latest data from qBittorrent and updates the state."""
         try:
             data = self.client.sync()
             self._available = True
         except RequestException:
-            _LOGGER.error("Connection to qBittorrent lost")
+            _LOGGER.error("Connection lost")
             self._available = False
             return
         except self._exception:
-            _LOGGER.error("Invalid authentication for qBittorrent")
+            _LOGGER.error("Invalid authentication")
             return
 
         if data is None:
