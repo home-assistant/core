@@ -103,5 +103,5 @@ class LGNetcastRemote(RemoteDevice):
                 except (LgNetCastError, RequestException):
                     self._state = STATE_OFF
             time.sleep(delay)
-            self._last_command_sent = com
+            self._last_command_sent = command
         self.schedule_update_ha_state()
