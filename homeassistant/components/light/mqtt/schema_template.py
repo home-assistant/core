@@ -18,7 +18,7 @@ from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF
 from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
-    MqttAvailability)
+    MqttAvailability, MqttDiscoveryUpdate, subscription)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -69,17 +69,69 @@ PLATFORM_SCHEMA_TEMPLATE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 async def async_setup_entity_template(hass, config, async_add_entities,
                                       discovery_hash):
     """Set up a MQTT Template light."""
-    async_add_entities([MqttTemplate(
-        hass,
-        config.get(CONF_NAME),
-        config.get(CONF_EFFECT_LIST),
-        {
+    async_add_entities([MqttTemplate(config, discovery_hash)])
+
+
+class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
+                   RestoreEntity):
+    """Representation of a MQTT Template light."""
+
+    def __init__(self, config, discovery_hash):
+        """Initialize a MQTT Template light."""
+        self._state = False
+        self._sub_state = None
+
+        self._name = None
+        self._effect_list = None
+        self._topics = None
+        self._templates = None
+        self._optimistic = False
+        self._qos = None
+        self._retain = None
+
+        # features
+        self._brightness = None
+        self._color_temp = None
+        self._white_value = None
+        self._hs = None
+        self._effect = None
+
+        # Load config
+        self._setup_from_config(config)
+
+        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
+        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
+        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+
+        MqttAvailability.__init__(self, availability_topic, self._qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash,
+                                     self.discovery_update)
+
+    async def async_added_to_hass(self):
+        """Subscribe to MQTT events."""
+        await super().async_added_to_hass()
+        await self._subscribe_topics()
+
+    async def discovery_update(self, discovery_payload):
+        """Handle updated discovery message."""
+        config = PLATFORM_SCHEMA_TEMPLATE(discovery_payload)
+        self._setup_from_config(config)
+        await self.availability_discovery_update(config)
+        await self._subscribe_topics()
+        self.async_schedule_update_ha_state()
+
+    def _setup_from_config(self, config):
+        """(Re)Setup the entity."""
+        self._name = config.get(CONF_NAME)
+        self._effect_list = config.get(CONF_EFFECT_LIST)
+        self._topics = {
             key: config.get(key) for key in (
                 CONF_STATE_TOPIC,
                 CONF_COMMAND_TOPIC
             )
-        },
-        {
+        }
+        self._templates = {
             key: config.get(key) for key in (
                 CONF_BLUE_TEMPLATE,
                 CONF_BRIGHTNESS_TEMPLATE,
@@ -92,36 +144,15 @@ async def async_setup_entity_template(hass, config, async_add_entities,
                 CONF_STATE_TEMPLATE,
                 CONF_WHITE_VALUE_TEMPLATE,
             )
-        },
-        config.get(CONF_OPTIMISTIC),
-        config.get(CONF_QOS),
-        config.get(CONF_RETAIN),
-        config.get(CONF_AVAILABILITY_TOPIC),
-        config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-    )])
-
-
-class MqttTemplate(MqttAvailability, Light, RestoreEntity):
-    """Representation of a MQTT Template light."""
-
-    def __init__(self, hass, name, effect_list, topics, templates, optimistic,
-                 qos, retain, availability_topic, payload_available,
-                 payload_not_available):
-        """Initialize a MQTT Template light."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
-        self._name = name
-        self._effect_list = effect_list
-        self._topics = topics
-        self._templates = templates
-        self._optimistic = optimistic or topics[CONF_STATE_TOPIC] is None \
-            or templates[CONF_STATE_TEMPLATE] is None
-        self._qos = qos
-        self._retain = retain
+        }
+        optimistic = config.get(CONF_OPTIMISTIC)
+        self._optimistic = optimistic \
+            or self._topics[CONF_STATE_TOPIC] is None \
+            or self._templates[CONF_STATE_TEMPLATE] is None
+        self._qos = config.get(CONF_QOS)
+        self._retain = config.get(CONF_RETAIN)
 
         # features
-        self._state = False
         if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
             self._brightness = 255
         else:
@@ -145,13 +176,11 @@ class MqttTemplate(MqttAvailability, Light, RestoreEntity):
             self._hs = None
         self._effect = None
 
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
             if tpl is not None:
-                tpl.hass = hass
-
-    async def async_added_to_hass(self):
-        """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
+                tpl.hass = self.hass
 
         last_state = await self.async_get_last_state()
 
@@ -221,9 +250,11 @@ class MqttTemplate(MqttAvailability, Light, RestoreEntity):
             self.async_schedule_update_ha_state()
 
         if self._topics[CONF_STATE_TOPIC] is not None:
-            await mqtt.async_subscribe(
-                self.hass, self._topics[CONF_STATE_TOPIC], state_received,
-                self._qos)
+            self._sub_state = await subscription.async_subscribe_topics(
+                self.hass, self._sub_state,
+                {'state_topic': {'topic': self._topics[CONF_STATE_TOPIC],
+                                 'msg_callback': state_received,
+                                 'qos': self._qos}})
 
         if self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
@@ -237,6 +268,11 @@ class MqttTemplate(MqttAvailability, Light, RestoreEntity):
                 self._effect = last_state.attributes.get(ATTR_EFFECT)
             if last_state.attributes.get(ATTR_WHITE_VALUE):
                 self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
     def brightness(self):
