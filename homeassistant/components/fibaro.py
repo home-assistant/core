@@ -103,29 +103,31 @@ class FibaroController():
         """Handle change report received from the HomeCenter."""
         callback_set = set()
         for change in state.get('changes', []):
-            dev_id = change.pop('id')
-            for property_name, value in change.items():
-                if property_name == 'log':
-                    if value and value != "transfer OK":
-                        _LOGGER.debug("LOG %s: %s",
-                                      self._device_map[dev_id].friendly_name,
-                                      value)
+            try:
+                dev_id = change.pop('id')
+                if dev_id not in self._device_map.keys():
                     continue
-                if property_name == 'logTemp':
-                    continue
-                if property_name in self._device_map[dev_id].properties:
-                    self._device_map[dev_id].properties[property_name] = \
-                        value
-                    _LOGGER.debug("<- %s.%s = %s",
-                                  self._device_map[dev_id].ha_id,
-                                  property_name,
-                                  str(value))
-                else:
-                    _LOGGER.warning("Error updating %s data of %s, not found",
-                                    property_name,
-                                    self._device_map[dev_id].ha_id)
-                if dev_id in self._callbacks:
-                    callback_set.add(dev_id)
+                device = self._device_map[dev_id]
+                for property_name, value in change.items():
+                    if property_name == 'log':
+                        if value and value != "transfer OK":
+                            _LOGGER.debug("LOG %s: %s",
+                                          device.friendly_name, value)
+                        continue
+                    if property_name == 'logTemp':
+                        continue
+                    if property_name in device.properties:
+                        device.properties[property_name] = \
+                            value
+                        _LOGGER.debug("<- %s.%s = %s", device.ha_id,
+                                      property_name, str(value))
+                    else:
+                        _LOGGER.warning("%s.%s not found", device.ha_id,
+                                        property_name)
+                    if dev_id in self._callbacks:
+                        callback_set.add(dev_id)
+            except (ValueError, KeyError):
+                pass
         for item in callback_set:
             self._callbacks[item]()
 
@@ -137,8 +139,12 @@ class FibaroController():
     def _map_device_to_type(device):
         """Map device to HA device type."""
         # Use our lookup table to identify device type
-        device_type = FIBARO_TYPEMAP.get(
-            device.type, FIBARO_TYPEMAP.get(device.baseType))
+        if 'type' in device:
+            device_type = FIBARO_TYPEMAP.get(device.type)
+        elif 'baseType' in device:
+            device_type = FIBARO_TYPEMAP.get(device.baseType)
+        else:
+            device_type = None
 
         # We can also identify device type by its capabilities
         if device_type is None:
@@ -156,8 +162,7 @@ class FibaroController():
 
         # Switches that control lights should show up as lights
         if device_type == 'switch' and \
-                'isLight' in device.properties and \
-                device.properties.isLight == 'true':
+                device.properties.get('isLight', 'false') == 'true':
             device_type = 'light'
         return device_type
 
@@ -165,26 +170,31 @@ class FibaroController():
         """Read and process the device list."""
         devices = self._client.devices.list()
         self._device_map = {}
-        for device in devices:
-            if device.roomID == 0:
-                room_name = 'Unknown'
-            else:
-                room_name = self._room_map[device.roomID].name
-            device.friendly_name = room_name + ' ' + device.name
-            device.ha_id = '{}_{}_{}'.format(
-                slugify(room_name), slugify(device.name), device.id)
-            self._device_map[device.id] = device
         self.fibaro_devices = defaultdict(list)
-        for device in self._device_map.values():
-            if device.enabled and \
-                    (not device.isPlugin or self._import_plugins):
-                device.mapped_type = self._map_device_to_type(device)
+        for device in devices:
+            try:
+                if device.roomID == 0:
+                    room_name = 'Unknown'
+                else:
+                    room_name = self._room_map[device.roomID].name
+                device.friendly_name = room_name + ' ' + device.name
+                device.ha_id = '{}_{}_{}'.format(
+                    slugify(room_name), slugify(device.name), device.id)
+                if device.enabled and \
+                        ('isPlugin' not in device or
+                         (not device.isPlugin or self._import_plugins)):
+                    device.mapped_type = self._map_device_to_type(device)
+                else:
+                    device.mapped_type = None
                 if device.mapped_type:
+                    self._device_map[device.id] = device
                     self.fibaro_devices[device.mapped_type].append(device)
                 else:
-                    _LOGGER.debug("%s (%s, %s) not mapped",
+                    _LOGGER.debug("%s (%s, %s) not used",
                                   device.ha_id, device.type,
                                   device.baseType)
+            except (KeyError, ValueError):
+                pass
 
 
 def setup(hass, config):
