@@ -120,7 +120,7 @@ class StatisticsSensor(Entity):
                 self.hass, self._entity_id, async_stats_sensor_state_listener)
 
             if 'recorder' in self.hass.config.components:
-                # only use the database if it's configured
+                # Only use the database if it's configured
                 self.hass.async_create_task(
                     self._async_initialize_from_database()
                 )
@@ -129,6 +129,7 @@ class StatisticsSensor(Entity):
             EVENT_HOMEASSISTANT_START, async_stats_sensor_startup)
 
     def _add_state_to_queue(self, new_state):
+        """Add the state to the queue."""
         if new_state.state == STATE_UNKNOWN:
             return
 
