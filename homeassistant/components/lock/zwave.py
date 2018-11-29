@@ -8,8 +8,10 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,9 +30,22 @@ POLYCONTROL = 0x10E
 DANALOCK_V2_BTZE = 0x2
 POLYCONTROL_DANALOCK_V2_BTZE_LOCK = (POLYCONTROL, DANALOCK_V2_BTZE)
 WORKAROUND_V2BTZE = 'v2btze'
+WORKAROUND_DEVICE_STATE = 'state'
 
 DEVICE_MAPPINGS = {
-    POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE
+    POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE,
+    # Kwikset 914TRL ZW500
+    (0x0090, 0x440): WORKAROUND_DEVICE_STATE,
+    # Yale YRD210
+    (0x0129, 0x0209): WORKAROUND_DEVICE_STATE,
+    (0x0129, 0xAA00): WORKAROUND_DEVICE_STATE,
+    (0x0129, 0x0000): WORKAROUND_DEVICE_STATE,
+    # Yale YRD220 (as reported by adrum in PR #17386)
+    (0x0109, 0x0000): WORKAROUND_DEVICE_STATE,
+    # Schlage BE469
+    (0x003B, 0x5044): WORKAROUND_DEVICE_STATE,
+    # Schlage FE599NX
+    (0x003B, 0x504C): WORKAROUND_DEVICE_STATE,
 }
 
 LOCK_NOTIFICATION = {
@@ -120,9 +135,18 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the Z-Wave Lock platform."""
-    await zwave.async_setup_platform(
-        hass, config, async_add_entities, discovery_info)
+    """Old method of setting up Z-Wave locks."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Z-Wave Lock from Config Entry."""
+    @callback
+    def async_add_lock(lock):
+        """Add Z-Wave Lock."""
+        async_add_entities([lock])
+
+    async_dispatcher_connect(hass, 'zwave_new_lock', async_add_lock)
 
     network = hass.data[zwave.const.DATA_NETWORK]
 
@@ -204,6 +228,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         self._notification = None
         self._lock_status = None
         self._v2btze = None
+        self._state_workaround = False
 
         # Enable appropriate workaround flags for our device
         # Make sure that we have values for the key before converting to int
@@ -216,6 +241,11 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                     self._v2btze = 1
                     _LOGGER.debug("Polycontrol Danalock v2 BTZE "
                                   "workaround enabled")
+                if DEVICE_MAPPINGS[specific_sensor_key] == \
+                        WORKAROUND_DEVICE_STATE:
+                    self._state_workaround = True
+                    _LOGGER.debug(
+                        "Notification device state workaround enabled")
         self.update_properties()
 
     def update_properties(self):
@@ -225,7 +255,8 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         if self.values.access_control:
             notification_data = self.values.access_control.data
             self._notification = LOCK_NOTIFICATION.get(str(notification_data))
-
+            if self._state_workaround:
+                self._state = LOCK_STATUS.get(str(notification_data))
             if self._v2btze:
                 if self.values.v2btze_advanced and \
                         self.values.v2btze_advanced.data == CONFIG_ADVANCED:

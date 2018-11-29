@@ -15,10 +15,12 @@ CONF_ENTITY_CONFIG = 'entity_config'
 CONF_FEATURE = 'feature'
 CONF_FEATURE_LIST = 'feature_list'
 CONF_FILTER = 'filter'
+CONF_SAFE_MODE = 'safe_mode'
 
 # #### Config Defaults ####
 DEFAULT_AUTO_START = True
 DEFAULT_PORT = 51827
+DEFAULT_SAFE_MODE = False
 
 # #### Features ####
 FEATURE_ON_OFF = 'on_off'
@@ -127,6 +129,7 @@ CHAR_VALVE_TYPE = 'ValveType'
 # #### Properties ####
 PROP_MAX_VALUE = 'maxValue'
 PROP_MIN_VALUE = 'minValue'
+PROP_MIN_STEP = 'minStep'
 PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
 
 # #### Device Classes ####

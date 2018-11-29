@@ -56,7 +56,7 @@ async def handle_webhook(hass, webhook_id, request):
 async def async_setup_entry(hass, entry):
     """Configure based on config entry."""
     hass.components.webhook.async_register(
-        entry.data[CONF_WEBHOOK_ID], handle_webhook)
+        DOMAIN, 'Twilio', entry.data[CONF_WEBHOOK_ID], handle_webhook)
     return True
 
 

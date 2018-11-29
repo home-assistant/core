@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "UPnP / IGD is al geconfigureerd",
+            "incomplete_device": "Onvolledig UPnP-apparaat negeren",
             "no_devices_discovered": "Geen UPnP / IGD's ontdekt",
             "no_sensors_or_port_mapping": "Schakel ten minste sensoren of poorttoewijzing in"
         },

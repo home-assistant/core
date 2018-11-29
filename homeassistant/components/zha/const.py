@@ -22,7 +22,7 @@ def populate_data():
         zha.DeviceType.LEVEL_CONTROL_SWITCH: 'binary_sensor',
         zha.DeviceType.REMOTE_CONTROL: 'binary_sensor',
         zha.DeviceType.SMART_PLUG: 'switch',
-
+        zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: 'light',
         zha.DeviceType.ON_OFF_LIGHT: 'light',
         zha.DeviceType.DIMMABLE_LIGHT: 'light',
         zha.DeviceType.COLOR_DIMMABLE_LIGHT: 'light',
@@ -47,6 +47,7 @@ def populate_data():
 
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
+        zcl.clusters.general.LevelControl: 'light',
         zcl.clusters.measurement.RelativeHumidity: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.measurement.PressureMeasurement: 'sensor',
