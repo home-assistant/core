@@ -15,6 +15,7 @@ from . import (
 
 # TODO: Update version after release (and in requirements_all.txt and requirements_test_all.txt)
 # TODO: Tests
+# TODO: Проверить что работает при смене домена
 #REQUIREMENTS = ['fido2==0.4.0']
 REQUIREMENTS = ['https://github.com/Yubico/python-fido2.git#fido2==0.4.0']
 
@@ -28,7 +29,11 @@ STORAGE_USER_ID = 'user_id'
 
 INPUT_FIELD_TOKEN = 'token'
 INPUT_FIELD_ERROR = 'error'
-INPUT_ERROR_CANCEL = 'cancel'
+
+INPUT_ERROR_UNSUPPORTED = 'unsupported'
+INPUT_ERROR_PROTOCOL = 'protocol'
+INPUT_ERROR_CREDENTIALS = 'credentials'
+INPUT_ERROR_CANCELLED = 'cancelled'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -268,15 +273,15 @@ class WebAuthnSetupFlow(SetupFlow):
             except Exception:  # pylint: disable=broad-except
                 return self.async_abort(reason='register_error')
 
-        if user_error == INPUT_ERROR_CANCEL:
-            return self.async_abort(reason='cancelled')
-
         if user_error:
+            if user_error != INPUT_ERROR_CREDENTIALS:
+                return self.async_abort(reason=user_error)
+
             errors['base'] = user_error
             self._invalid_mfa_times += 1
 
-        if self._invalid_mfa_times >= self._auth_module.MAX_RETRY_TIME:
-            return self.async_abort(reason='too_many_retry')
+            if self._invalid_mfa_times >= self._auth_module.MAX_RETRY_TIME:
+                return self.async_abort(reason='too_many_retry')
 
         registration_data = self._server.register_begin({
             'id': self._user_id.encode('utf-8'),

@@ -42,7 +42,9 @@
       "abort": {
         "register_error": "Token is not registered. Please, try again or use another token.",
         "too_many_retry": "Token is not registered. Too many failed attempts.",
-        "cancelled": "Registration canceled. Token is not registered."
+        "cancelled": "Registration canceled. Token is not registered.",
+        "unsupported": "Your browser doesn't support Web Authentication. Please use [Google Chrome](https://www.google.com/chrome/), [Firefox](https://www.mozilla.org/firefox/new/) or [Microsoft Edge](https://www.microsoft.com/en-us/windows/microsoft-edge).",
+        "protocol": "This feature is available only in secure contexts (HTTPS)."
       },
       "error": {
         "credentials": "Invalid token. Please, try again or use another token."

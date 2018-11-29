@@ -239,6 +239,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
                 self.user.id, user_input)
             if not result:
                 errors['base'] = 'invalid_code'
+                # TODO: Error code?
                 self.invalid_mfa_times += 1
                 if self.invalid_mfa_times >= auth_module.MAX_RETRY_TIME > 0:
                     return self.async_abort(
