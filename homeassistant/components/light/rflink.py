@@ -18,6 +18,7 @@ from homeassistant.components.rflink import (
     EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice,
     remove_deprecated)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.const import (CONF_NAME, CONF_TYPE)
 
 DEPENDENCIES = ['rflink']
@@ -154,10 +155,19 @@ class RflinkLight(SwitchableRflinkDevice, Light):
     pass
 
 
-class DimmableRflinkLight(SwitchableRflinkDevice, Light):
+class DimmableRflinkLight(SwitchableRflinkDevice, Light, RestoreEntity):
     """Rflink light device that support dimming."""
 
     _brightness = 255
+
+    async def async_added_to_hass(self):
+        """Restore RFLink light brightness attribute."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is not None and \
+                old_state.attributes.get(ATTR_BRIGHTNESS) is not None:
+            self._brightness = int(old_state.attributes.get(ATTR_BRIGHTNESS))
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
@@ -179,7 +189,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
-class HybridRflinkLight(SwitchableRflinkDevice, Light):
+class HybridRflinkLight(SwitchableRflinkDevice, Light, RestoreEntity):
     """Rflink light device that sends out both dim and on/off commands.
 
     Used for protocols which support lights that are not exclusively on/off
@@ -195,6 +205,15 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
     """
 
     _brightness = 255
+
+    async def async_added_to_hass(self):
+        """Restore RFLink light brightness attribute."""
+        await super().async_added_to_hass()
+
+        old_state = await async_get_last_state(self.hass, self.entity_id)
+        if old_state is not None and \
+                old_state.attributes.get(ATTR_BRIGHTNESS) is not None:
+            self._brightness = int(old_state.attributes.get(ATTR_BRIGHTNESS))
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on and set dim level."""
