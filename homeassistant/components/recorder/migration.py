@@ -29,7 +29,7 @@ def migrate_schema(instance):
         with open(progress_path, 'w'):
             pass
 
-        _LOGGER.warning("Database requires upgrade. Schema version: %s",
+        _LOGGER.warning("Database is about to upgrade. Schema version: %s",
                         current_version)
 
         if current_version is None:

@@ -128,13 +128,15 @@ class AuthManager:
 
         return None
 
-    async def async_create_system_user(self, name: str) -> models.User:
+    async def async_create_system_user(
+            self, name: str,
+            group_ids: Optional[List[str]] = None) -> models.User:
         """Create a system user."""
         user = await self._store.async_create_user(
             name=name,
             system_generated=True,
             is_active=True,
-            group_ids=[],
+            group_ids=group_ids or [],
         )
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {
@@ -212,6 +214,17 @@ class AuthManager:
         self.hass.bus.async_fire(EVENT_USER_REMOVED, {
             'user_id': user.id
         })
+
+    async def async_update_user(self, user: models.User,
+                                name: Optional[str] = None,
+                                group_ids: Optional[List[str]] = None) -> None:
+        """Update a user."""
+        kwargs = {}  # type: Dict[str,Any]
+        if name is not None:
+            kwargs['name'] = name
+        if group_ids is not None:
+            kwargs['group_ids'] = group_ids
+        await self._store.async_update_user(user, **kwargs)
 
     async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""

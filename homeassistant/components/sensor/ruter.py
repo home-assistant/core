@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_ID): cv.positive_int,
     vol.Optional(CONF_DESTINATION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_OFFSET, default=1): cv.positive_int,
+    vol.Optional(CONF_OFFSET, default=0): cv.positive_int,
     })
 
 
