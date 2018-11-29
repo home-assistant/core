@@ -9,7 +9,7 @@ https://home-assistant.io/components/switch.tellduslive/
 """
 import logging
 
-from homeassistant.components.tellduslive import TelldusLiveEntity
+from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)

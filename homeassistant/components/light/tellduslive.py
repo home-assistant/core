@@ -10,7 +10,7 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.tellduslive import TelldusLiveEntity
+from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.tellduslive/
 """
 import logging
 
-from homeassistant.components.tellduslive import TelldusLiveEntity
+from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS)

@@ -9,7 +9,7 @@ https://home-assistant.io/components/cover.tellduslive/
 import logging
 
 from homeassistant.components.cover import CoverDevice
-from homeassistant.components.tellduslive import TelldusLiveEntity
+from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
