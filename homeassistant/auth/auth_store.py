@@ -462,10 +462,11 @@ class AuthStore:
         for group in self._groups.values():
             g_dict = {
                 'id': group.id,
+                # Name not read for sys groups. Kept here for backwards compat
+                'name': group.name
             }  # type: Dict[str, Any]
 
             if group.id not in (GROUP_ID_READ_ONLY, GROUP_ID_ADMIN):
-                g_dict['name'] = group.name
                 g_dict['policy'] = group.policy
 
             groups.append(g_dict)
