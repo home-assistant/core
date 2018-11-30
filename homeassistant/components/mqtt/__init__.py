@@ -71,7 +71,7 @@ CONF_COMMAND_TOPIC = 'command_topic'
 CONF_AVAILABILITY_TOPIC = 'availability_topic'
 CONF_PAYLOAD_AVAILABLE = 'payload_available'
 CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
-CONF_JSON_ATTRS = 'json_attributes'
+CONF_JSON_ATTRS_TOPIC = 'json_attributes_topic'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
 
@@ -225,6 +225,10 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_SW_VERSION): cv.string,
 }), validate_device_has_at_least_one_identifier)
+
+MQTT_JSON_ATTRS_SCHEMA = vol.Schema({
+    vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
+})
 
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
@@ -825,15 +829,11 @@ def _match_topic(subscription: str, topic: str) -> bool:
 class MqttAttributes(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
-    def __init__(self, attributes_topic: Optional[str], qos: Optional[int],
-                 json_attributes: Optional[str]) -> None:
+    def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
         self._attributes = None
         self._attributes_sub_state = None
-
-        self._attributes_topic = attributes_topic
-        self._attributes_qos = qos
-        self._attributes_json = json_attributes
+        self._attributes_config = config
 
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events.
@@ -844,14 +844,8 @@ class MqttAttributes(Entity):
 
     async def attributes_discovery_update(self, config: dict):
         """Handle updated discovery message."""
-        self._attributes_setup_from_config(config)
+        self._attributes_config = config
         await self._attributes_subscribe_topics()
-
-    def _attributes_setup_from_config(self, config):
-        """(Re)Setup."""
-        self._attributes_topic = config.get(CONF_AVAILABILITY_TOPIC)
-        self._attributes_qos = config.get(CONF_QOS)
-        self._attributes_json = config.get(CONF_JSON_ATTRS)
 
     async def _attributes_subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -861,27 +855,24 @@ class MqttAttributes(Entity):
         def attributes_message_received(topic: str,
                                         payload: SubscribePayloadType,
                                         qos: int) -> None:
-            if self._attributes_json:
-                self._attributes = {}
-                try:
-                    json_dict = json.loads(payload)
-                    if isinstance(json_dict, dict):
-                        attrs = {k: json_dict[k] for k in
-                                 self._attributes_json & json_dict.keys()}
-                        self._attributes = attrs
-                        self.async_schedule_update_ha_state()
-                    else:
-                        _LOGGER.warning("JSON result was not a dictionary")
-                except ValueError:
-                    _LOGGER.warning("MQTT payload could not be parsed as JSON")
-                    _LOGGER.debug("Erroneous JSON: %s", payload)
+            try:
+                json_dict = json.loads(payload)
+                if isinstance(json_dict, dict):
+                    self._attributes = json_dict
+                    self.async_schedule_update_ha_state()
+                else:
+                    _LOGGER.debug("JSON result was not a dictionary")
+                    self._attributes = None
+            except ValueError:
+                _LOGGER.debug("Erroneous JSON: %s", payload)
+                self._attributes = None
 
         self._attributes_sub_state = await async_subscribe_topics(
             self.hass, self._attributes_sub_state,
             {'attributes_topic': {
-                'topic': self._attributes_topic,
+                'topic': self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
                 'msg_callback': attributes_message_received,
-                'qos': self._attributes_qos}})
+                'qos': self._attributes_config.get(CONF_QOS)}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
