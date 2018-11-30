@@ -1,21 +1,11 @@
-"""Config flow to configure smhi component.
-
-First time the user creates the configuration and
-a valid location is set in the hass configuration yaml
-it will use that location and use it as default values.
-
-Additional locations can be added in config form.
-The input location will be checked by invoking
-the API. Exception will be thrown if the location
-is not supported by the API (Swedish locations only)
-"""
+"""Config flow to configure SMHI component."""
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
 from .const import DOMAIN, HOME_LOCATION_NAME
@@ -45,9 +35,7 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
 
         if user_input is not None:
             is_ok = await self._check_location(
-                user_input[CONF_LONGITUDE],
-                user_input[CONF_LATITUDE]
-            )
+                user_input[CONF_LONGITUDE], user_input[CONF_LATITUDE])
             if is_ok:
                 name = slugify(user_input[CONF_NAME])
                 if not self._name_in_configuration_exists(name):
@@ -60,9 +48,8 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
             else:
                 self._errors['base'] = 'wrong_location'
 
-        # If hass config has the location set and
-        # is a valid coordinate the default location
-        # is set as default values in the form
+        # If hass config has the location set and is a valid coordinate the
+        # default location is set as default values in the form
         if not smhi_locations(self.hass):
             if await self._homeassistant_location_exists():
                 return await self._show_config_form(
@@ -79,8 +66,7 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
            self.hass.config.longitude != 0.0:
             # Return true if valid location
             if await self._check_location(
-                    self.hass.config.longitude,
-                    self.hass.config.latitude):
+                    self.hass.config.longitude, self.hass.config.latitude):
                 return True
         return False
 
@@ -90,9 +76,7 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
             return True
         return False
 
-    async def _show_config_form(self,
-                                name: str = None,
-                                latitude: str = None,
+    async def _show_config_form(self, name: str = None, latitude: str = None,
                                 longitude: str = None):
         """Show the configuration form to edit location data."""
         return self.async_show_form(

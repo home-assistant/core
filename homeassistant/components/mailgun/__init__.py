@@ -81,7 +81,7 @@ async def verify_webhook(hass, token=None, timestamp=None, signature=None):
 async def async_setup_entry(hass, entry):
     """Configure based on config entry."""
     hass.components.webhook.async_register(
-        entry.data[CONF_WEBHOOK_ID], handle_webhook)
+        DOMAIN, 'Mailgun', entry.data[CONF_WEBHOOK_ID], handle_webhook)
     return True
 
 
