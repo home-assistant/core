@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 
 REQUIREMENTS = ['hkavr==0.0.5']
 
@@ -26,9 +26,6 @@ DEFAULT_PORT = 10025
 SUPPORT_HARMAN_KARDON_AVR = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
                             SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
                             SUPPORT_SELECT_SOURCE
-
-SOURCES = ["Disc", "STB", "Cable Sat", "Media Server", "DVR", "Radio", "TV",
-           "USB", "Game", "Home Network", "AUX", "AVR"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -62,10 +59,9 @@ class HkAvrDevice(MediaPlayerDevice):
         self._host = avr.host
         self._port = avr.port
 
-        self._source_list = SOURCES
+        self._source_list = avr.sources
 
         self._state = None
-        self._power = avr.power
         self._muted = avr.muted
         self._current_source = avr.current_source
 
@@ -76,9 +72,8 @@ class HkAvrDevice(MediaPlayerDevice):
         elif self._avr.is_off():
             self._state = STATE_OFF
         else:
-            self._state = STATE_UNKNOWN
+            self._state = None
 
-        self._power = self._avr.power
         self._muted = self._avr.muted
         self._current_source = self._avr.current_source
 
