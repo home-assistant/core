@@ -8,17 +8,9 @@ import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_NAME
+from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.lightwave import LIGHTWAVE_LINK
-
-DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string
-})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}
-})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     switches = []
     lwlink = hass.data[LIGHTWAVE_LINK]
 
-    for device_id, device_config in config.get(CONF_DEVICES, {}).items():
+    for device_id, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
         switches.append(LRFSwitch(name, device_id, lwlink))
 

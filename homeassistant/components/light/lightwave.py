@@ -8,22 +8,16 @@ import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA)
+    Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS)
 from homeassistant.components.lightwave import LIGHTWAVE_LINK
-
-DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string
-})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}
-})
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['lightwave']
+
+MAX_BRIGHTNESS = 255
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -32,7 +26,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     lights = []
     lwlink = hass.data[LIGHTWAVE_LINK]
 
-    for device_id, device_config in config.get(CONF_DEVICES, {}).items():
+    for device_id, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
         lights.append(LRFLight(name, device_id, lwlink))
 
@@ -47,7 +41,7 @@ class LRFLight(Light):
         self._name = name
         self._device_id = device_id
         self._state = None
-        self._brightness = 255
+        self._brightness = MAX_BRIGHTNESS
         self._lwlink = lwlink
 
     @property
@@ -67,7 +61,7 @@ class LRFLight(Light):
 
     @property
     def brightness(self):
-        """Brightness of this light between 0..255."""
+        """Brightness of this light between 0..MAX_BRIGHTNESS."""
         return self._brightness
 
     @property
@@ -82,7 +76,7 @@ class LRFLight(Light):
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
-        if self._brightness != 255:
+        if self._brightness != MAX_BRIGHTNESS:
             self._lwlink.turn_on_with_brightness(
                 self._device_id, self._name, self._brightness)
         else:
