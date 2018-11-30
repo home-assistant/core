@@ -148,12 +148,14 @@ async def async_setup_platform(hass, config, async_add_entities,
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
 
+# pylint: disable=too-many-ancestors
 class RflinkLight(SwitchableRflinkDevice, Light):
     """Representation of a Rflink light."""
 
     pass
 
 
+# pylint: disable=too-many-ancestors
 class DimmableRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device that support dimming."""
 
@@ -188,6 +190,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
+# pylint: disable=too-many-ancestors
 class HybridRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device that sends out both dim and on/off commands.
 
@@ -240,6 +243,7 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
+# pylint: disable=too-many-ancestors
 class ToggleRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device which sends out only 'on' commands.
 
