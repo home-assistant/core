@@ -6,25 +6,30 @@ https://home-assistant.io/components/device_tracker.mikrotik/
 """
 import logging
 
+import ssl
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_SSL, CONF_METHOD)
 
 REQUIREMENTS = ['librouteros==2.1.1']
 
-MTK_DEFAULT_API_PORT = '8728'
-
 _LOGGER = logging.getLogger(__name__)
+
+MTK_DEFAULT_API_PORT = '8728'
+MTK_DEFAULT_API_SSL_PORT = '8729'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=MTK_DEFAULT_API_PORT): cv.port
+    vol.Optional(CONF_METHOD): cv.string,
+    vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=False): cv.boolean
 })
 
 
@@ -42,9 +47,17 @@ class MikrotikScanner(DeviceScanner):
         self.last_results = {}
 
         self.host = config[CONF_HOST]
-        self.port = config[CONF_PORT]
+        self.ssl = config[CONF_SSL]
+        try:
+            self.port = config[CONF_PORT]
+        except KeyError:
+            if self.ssl:
+                self.port = MTK_DEFAULT_API_SSL_PORT
+            else:
+                self.port = MTK_DEFAULT_API_PORT
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.method = config.get(CONF_METHOD)
 
         self.connected = False
         self.success_init = False
@@ -53,27 +66,29 @@ class MikrotikScanner(DeviceScanner):
         self.success_init = self.connect_to_device()
 
         if self.success_init:
-            _LOGGER.info(
-                "Start polling Mikrotik (%s) router...",
-                self.host
-            )
+            _LOGGER.info("Start polling Mikrotik (%s) router...", self.host)
             self._update_info()
         else:
-            _LOGGER.error(
-                "Connection to Mikrotik (%s) failed",
-                self.host
-            )
+            _LOGGER.error("Connection to Mikrotik (%s) failed", self.host)
 
     def connect_to_device(self):
         """Connect to Mikrotik method."""
         import librouteros
         try:
+            kwargs = {
+                'port': self.port,
+                'encoding': 'utf-8'
+            }
+            if self.ssl:
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+                kwargs['ssl_wrapper'] = ssl_context.wrap_socket
             self.client = librouteros.connect(
                 self.host,
                 self.username,
                 self.password,
-                port=int(self.port),
-                encoding='utf-8'
+                **kwargs
             )
 
             try:
@@ -86,16 +101,15 @@ class MikrotikScanner(DeviceScanner):
                 raise
 
             if routerboard_info:
-                _LOGGER.info("Connected to Mikrotik %s with IP %s",
-                             routerboard_info[0].get('model', 'Router'),
-                             self.host)
+                _LOGGER.info(
+                    "Connected to Mikrotik %s with IP %s",
+                    routerboard_info[0].get('model', 'Router'), self.host)
 
                 self.connected = True
 
                 try:
                     self.capsman_exist = self.client(
-                        cmd='/caps-man/interface/getall'
-                    )
+                        cmd='/caps-man/interface/getall')
                 except (librouteros.exceptions.TrapError,
                         librouteros.exceptions.MultiTrapError,
                         librouteros.exceptions.ConnectionError):
@@ -103,27 +117,27 @@ class MikrotikScanner(DeviceScanner):
 
                 if not self.capsman_exist:
                     _LOGGER.info(
-                        'Mikrotik %s: Not a CAPSman controller. Trying '
-                        'local interfaces ',
-                        self.host
-                    )
+                        "Mikrotik %s: Not a CAPSman controller. Trying "
+                        "local interfaces", self.host)
 
                 try:
                     self.wireless_exist = self.client(
-                        cmd='/interface/wireless/getall'
-                    )
+                        cmd='/interface/wireless/getall')
                 except (librouteros.exceptions.TrapError,
                         librouteros.exceptions.MultiTrapError,
                         librouteros.exceptions.ConnectionError):
                     self.wireless_exist = False
 
-                if not self.wireless_exist:
+                if not self.wireless_exist or self.method == 'ip':
                     _LOGGER.info(
-                        'Mikrotik %s: Wireless adapters not found. Try to '
-                        'use DHCP lease table as presence tracker source. '
-                        'Please decrease lease time as much as possible.',
-                        self.host
-                    )
+                        "Mikrotik %s: Wireless adapters not found. Try to "
+                        "use DHCP lease table as presence tracker source. "
+                        "Please decrease lease time as much as possible",
+                        self.host)
+                if self.method:
+                    _LOGGER.info(
+                        "Mikrotik %s: Manually selected polling method %s",
+                        self.host, self.method)
 
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.MultiTrapError,
@@ -143,28 +157,27 @@ class MikrotikScanner(DeviceScanner):
 
     def _update_info(self):
         """Retrieve latest information from the Mikrotik box."""
-        if self.capsman_exist:
-            devices_tracker = 'capsman'
-        elif self.wireless_exist:
-            devices_tracker = 'wireless'
+        if self.method:
+            devices_tracker = self.method
         else:
-            devices_tracker = 'ip'
+            if self.capsman_exist:
+                devices_tracker = 'capsman'
+            elif self.wireless_exist:
+                devices_tracker = 'wireless'
+            else:
+                devices_tracker = 'ip'
 
         _LOGGER.info(
             "Loading %s devices from Mikrotik (%s) ...",
-            devices_tracker,
-            self.host
-        )
+            devices_tracker, self.host)
 
         device_names = self.client(cmd='/ip/dhcp-server/lease/getall')
         if devices_tracker == 'capsman':
             devices = self.client(
-                cmd='/caps-man/registration-table/getall'
-            )
+                cmd='/caps-man/registration-table/getall')
         elif devices_tracker == 'wireless':
             devices = self.client(
-                cmd='/interface/wireless/registration-table/getall'
-            )
+                cmd='/interface/wireless/registration-table/getall')
         else:
             devices = device_names
 
@@ -172,21 +185,17 @@ class MikrotikScanner(DeviceScanner):
             return False
 
         mac_names = {device.get('mac-address'): device.get('host-name')
-                     for device in device_names
-                     if device.get('mac-address')}
+                     for device in device_names if device.get('mac-address')}
 
-        if self.wireless_exist or self.capsman_exist:
+        if devices_tracker in ('wireless', 'capsman'):
             self.last_results = {
                 device.get('mac-address'):
                     mac_names.get(device.get('mac-address'))
-                for device in devices
-            }
+                for device in devices}
         else:
             self.last_results = {
                 device.get('mac-address'):
                     mac_names.get(device.get('mac-address'))
-                for device in device_names
-                if device.get('active-address')
-            }
+                for device in device_names if device.get('active-address')}
 
         return True

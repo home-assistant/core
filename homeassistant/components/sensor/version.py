@@ -16,15 +16,25 @@ from homeassistant.const import CONF_NAME, CONF_SOURCE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyhaversion==2.0.2']
+REQUIREMENTS = ['pyhaversion==2.0.3']
 
 _LOGGER = logging.getLogger(__name__)
+
+ALL_IMAGES = [
+    'default', 'intel-nuc', 'qemux86', 'qemux86-64', 'qemuarm',
+    'qemuarm-64', 'raspberrypi', 'raspberrypi2', 'raspberrypi3',
+    'raspberrypi3-64', 'tinker', 'odroid-c2', 'odroid-xu'
+]
+ALL_SOURCES = [
+    'local', 'pypi', 'hassio', 'docker'
+]
 
 CONF_BETA = 'beta'
 CONF_IMAGE = 'image'
 
 DEFAULT_IMAGE = 'default'
-DEFAULT_NAME = "Current Version"
+DEFAULT_NAME_LATEST = "Latest Version"
+DEFAULT_NAME_LOCAL = "Current Version"
 DEFAULT_SOURCE = 'local'
 
 ICON = 'mdi:package-up'
@@ -33,11 +43,9 @@ TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BETA, default=False): cv.boolean,
-    vol.Optional(CONF_IMAGE, default=DEFAULT_IMAGE): vol.All(cv.string,
-                                                             vol.Lower),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SOURCE, default=DEFAULT_SOURCE): vol.All(cv.string,
-                                                               vol.Lower),
+    vol.Optional(CONF_IMAGE, default=DEFAULT_IMAGE): vol.In(ALL_IMAGES),
+    vol.Optional(CONF_NAME, default=''): cv.string,
+    vol.Optional(CONF_SOURCE, default=DEFAULT_SOURCE): vol.In(ALL_SOURCES),
 })
 
 
@@ -63,7 +71,7 @@ async def async_setup_platform(
 class VersionSensor(Entity):
     """Representation of a Home Assistant version sensor."""
 
-    def __init__(self, haversion, name):
+    def __init__(self, haversion, name=''):
         """Initialize the Version sensor."""
         self.haversion = haversion
         self._name = name
@@ -76,7 +84,11 @@ class VersionSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        if self._name:
+            return self._name
+        if self.haversion.source == DEFAULT_SOURCE:
+            return DEFAULT_NAME_LOCAL
+        return DEFAULT_NAME_LATEST
 
     @property
     def state(self):
@@ -87,6 +99,11 @@ class VersionSensor(Entity):
     def device_state_attributes(self):
         """Return attributes for the sensor."""
         return self.haversion.api.version_data
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return ICON
 
 
 class VersionData:

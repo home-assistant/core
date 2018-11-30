@@ -229,7 +229,7 @@ def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
     result = yield from alexa.async_handle_message(
         hass, cloud.alexa_config, payload,
-        enabled=cloud.alexa_enabled)
+        enabled=cloud.prefs.alexa_enabled)
     return result
 
 
@@ -237,7 +237,7 @@ def async_handle_alexa(hass, cloud, payload):
 @asyncio.coroutine
 def async_handle_google_actions(hass, cloud, payload):
     """Handle an incoming IoT message for Google Actions."""
-    if not cloud.google_enabled:
+    if not cloud.prefs.google_enabled:
         return ga.turned_off_response(payload)
 
     result = yield from ga.async_handle_message(

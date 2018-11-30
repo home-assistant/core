@@ -234,7 +234,7 @@ def test_no_initial_state_and_no_restore_state(hass):
     assert int(state.state) == 0
 
 
-async def test_counter_context(hass):
+async def test_counter_context(hass, hass_admin_user):
     """Test that counter context works."""
     assert await async_setup_component(hass, 'counter', {
         'counter': {
@@ -247,9 +247,9 @@ async def test_counter_context(hass):
 
     await hass.services.async_call('counter', 'increment', {
         'entity_id': state.entity_id,
-    }, True, Context(user_id='abcd'))
+    }, True, Context(user_id=hass_admin_user.id))
 
     state2 = hass.states.get('counter.test')
     assert state2 is not None
     assert state.state != state2.state
-    assert state2.context.user_id == 'abcd'
+    assert state2.context.user_id == hass_admin_user.id

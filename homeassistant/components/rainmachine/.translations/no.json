@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Konto er allerede registrert",
+            "invalid_credentials": "Ugyldig legitimasjon"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Vertsnavn eller IP-adresse",
+                    "password": "Passord",
+                    "port": "Port"
+                },
+                "title": "Fyll ut informasjonen din"
+            }
+        },
+        "title": "RainMachine"
+    }
+}

@@ -6,7 +6,9 @@ import pytest
 from jose import jwt
 
 from homeassistant.components.cloud import (
-    DOMAIN, auth_api, iot, STORAGE_ENABLE_GOOGLE, STORAGE_ENABLE_ALEXA)
+    DOMAIN, auth_api, iot)
+from homeassistant.components.cloud.const import (
+    PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_ALLOW_UNLOCK)
 from homeassistant.util import dt as dt_util
 
 from tests.common import mock_coro
@@ -350,7 +352,7 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture):
         'logged_in': True,
         'email': 'hello@home-assistant.io',
         'cloud': 'connected',
-        'alexa_enabled': True,
+        'prefs': mock_cloud_fixture,
         'alexa_entities': {
             'include_domains': [],
             'include_entities': ['light.kitchen', 'switch.ac'],
@@ -358,7 +360,6 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture):
             'exclude_entities': [],
         },
         'alexa_domains': ['switch'],
-        'google_enabled': True,
         'google_entities': {
             'include_domains': ['light'],
             'include_entities': [],
@@ -505,8 +506,9 @@ async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
 async def test_websocket_update_preferences(hass, hass_ws_client,
                                             aioclient_mock, setup_api):
     """Test updating preference."""
-    assert setup_api[STORAGE_ENABLE_GOOGLE]
-    assert setup_api[STORAGE_ENABLE_ALEXA]
+    assert setup_api[PREF_ENABLE_GOOGLE]
+    assert setup_api[PREF_ENABLE_ALEXA]
+    assert setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
     hass.data[DOMAIN].id_token = jwt.encode({
         'email': 'hello@home-assistant.io',
         'custom:sub-exp': '2018-01-03'
@@ -517,9 +519,11 @@ async def test_websocket_update_preferences(hass, hass_ws_client,
         'type': 'cloud/update_prefs',
         'alexa_enabled': False,
         'google_enabled': False,
+        'google_allow_unlock': False,
     })
     response = await client.receive_json()
 
     assert response['success']
-    assert not setup_api[STORAGE_ENABLE_GOOGLE]
-    assert not setup_api[STORAGE_ENABLE_ALEXA]
+    assert not setup_api[PREF_ENABLE_GOOGLE]
+    assert not setup_api[PREF_ENABLE_ALEXA]
+    assert not setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
