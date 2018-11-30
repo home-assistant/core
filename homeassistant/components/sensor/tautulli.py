@@ -90,9 +90,20 @@ class TautulliSensor(Entity):
         await self.tautulli.async_update()
         self.home = self.tautulli.api.home_data
         self.sessions = self.tautulli.api.session_data
-        self._attributes['Top Movie'] = self.home[0]['rows'][0]['title']
-        self._attributes['Top TV Show'] = self.home[3]['rows'][0]['title']
-        self._attributes['Top User'] = self.home[7]['rows'][0]['user']
+
+        try:
+            self._attributes['Top Movie'] = self.home[0]['rows'][0]['title']
+        except (KeyError, TypeError):
+            self._attributes['Top Movie'] = ''
+        try:
+            self._attributes['Top TV Show'] = self.home[3]['rows'][0]['title']
+        except (KeyError, TypeError):
+            self._attributes['Top TV Show'] = ''
+        try:
+            self._attributes['Top User'] = self.home[7]['rows'][0]['user']
+        except (KeyError, TypeError):
+            self._attributes['Top User'] = ''
+
         for key in self.sessions:
             if 'sessions' not in key:
                 self._attributes[key] = self.sessions[key]
