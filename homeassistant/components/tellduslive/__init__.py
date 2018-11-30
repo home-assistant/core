@@ -10,14 +10,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_TELLDUSLIVE
-from homeassistant.const import (
-    CONF_HOST, CONF_TOKEN, EVENT_HOMEASSISTANT_START)
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.json import load_json, save_json
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from .const import DOMAIN, SIGNAL_UPDATE_ENTITY
 
@@ -142,7 +141,7 @@ def setup(hass, config, session=None):
         if not supports_local_api(device):
             _LOGGER.debug('Tellstick does not support local API')
             # Configure the cloud service
-            hass.async_add_job(request_configuration)
+            hass.add_job(request_configuration)
             return
 
         _LOGGER.debug('Tellstick does support local API')
@@ -185,18 +184,12 @@ def setup(hass, config, session=None):
         return True
 
     if not session.is_authorized:
-        _LOGGER.error(
-            'Authentication Error')
+        _LOGGER.error('Authentication Error')
         return False
 
     client = TelldusLiveClient(hass, config, session)
-
     hass.data[DOMAIN] = client
-
-    if session:
-        client.update()
-    else:
-        hass.bus.listen(EVENT_HOMEASSISTANT_START, client.update)
+    run_coroutine_threadsafe(client.update(), hass.loop)
 
     return True
 
@@ -210,23 +203,19 @@ class TelldusLiveClient:
 
         self._hass = hass
         self._config = config
-
-        self._interval = config.get(DOMAIN, {}).get(
-            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
-        _LOGGER.debug('Update interval %s', self._interval)
         self._client = session
 
-    def update(self, *args):
-        """Periodically poll the servers for current state."""
-        _LOGGER.debug('Updating')
-        try:
-            self._sync()
-        finally:
-            track_point_in_utc_time(
-                self._hass, self.update, utcnow() + self._interval)
+        interval = config.get(DOMAIN, {}).get(CONF_UPDATE_INTERVAL,
+                                              DEFAULT_UPDATE_INTERVAL)
+        _LOGGER.debug('Update interval %s', interval)
+        async_track_time_interval(self._hass, self.update, interval)
 
-    def _sync(self):
+    async def update(self, *args):
         """Update local list of devices."""
+        if DOMAIN not in self._hass.data:
+            return
+
+        _LOGGER.debug('Updating')
         if not self._client.update():
             _LOGGER.warning('Failed request')
 

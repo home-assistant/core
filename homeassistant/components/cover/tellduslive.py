@@ -8,6 +8,7 @@ https://home-assistant.io/components/cover.tellduslive/
 """
 import logging
 
+from homeassistant.components import tellduslive
 from homeassistant.components.cover import CoverDevice
 from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 
@@ -19,7 +20,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    add_entities(TelldusLiveCover(hass, cover) for cover in discovery_info)
+    client = hass.data[tellduslive.DOMAIN]
+    add_entities(TelldusLiveCover(client, cover) for cover in discovery_info)
 
 
 class TelldusLiveCover(TelldusLiveEntity, CoverDevice):

@@ -9,6 +9,7 @@ https://home-assistant.io/components/binary_sensor.tellduslive/
 """
 import logging
 
+from homeassistant.components import tellduslive
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 
@@ -19,8 +20,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tellstick sensors."""
     if discovery_info is None:
         return
+    client = hass.data[tellduslive.DOMAIN]
     add_entities(
-        TelldusLiveSensor(hass, binary_sensor)
+        TelldusLiveSensor(client, binary_sensor)
         for binary_sensor in discovery_info
     )
 

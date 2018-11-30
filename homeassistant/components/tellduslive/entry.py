@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, SIGNAL_UPDATE_ENTITY
+from .const import SIGNAL_UPDATE_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,13 +17,12 @@ ATTR_LAST_UPDATED = 'time_last_updated'
 class TelldusLiveEntity(Entity):
     """Base class for all Telldus Live entities."""
 
-    def __init__(self, hass, device_id):
+    def __init__(self, client, device_id):
         """Initialize the entity."""
         self._id = device_id
-        self._client = hass.data[DOMAIN]
+        self._client = client
         self._name = self.device.name
         self._async_unsub_dispatcher_connect = None
-        _LOGGER.debug('Created device %s', self)
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -42,7 +41,7 @@ class TelldusLiveEntity(Entity):
         """Return the property of the device might have changed."""
         if self.device.name:
             self._name = self.device.name
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @property
     def device_id(self):
