@@ -323,7 +323,8 @@ omit =
     homeassistant/components/tahoma.py
     homeassistant/components/*/tahoma.py
 
-    homeassistant/components/tellduslive.py
+    homeassistant/components/tellduslive/__init__.py
+    homeassistant/components/tellduslive/entry.py
     homeassistant/components/*/tellduslive.py
 
     homeassistant/components/tellstick.py
