@@ -45,6 +45,7 @@ def setup_auth(app, trusted_networks, use_auth,
                support_legacy=False, api_password=None):
     """Create auth middleware for the app."""
     old_auth_warning = set()
+    legacy_auth = (not use_auth or support_legacy) and api_password
 
     @middleware
     async def auth_middleware(request, handler):
@@ -60,7 +61,6 @@ def setup_auth(app, trusted_networks, use_auth,
                     request.path, request[KEY_REAL_IP])
                 old_auth_warning.add(request.path)
 
-        legacy_auth = (not use_auth or support_legacy) and api_password
         if (hdrs.AUTHORIZATION in request.headers and
                 await async_validate_auth_header(
                     request, api_password if legacy_auth else None)):
@@ -91,6 +91,11 @@ def setup_auth(app, trusted_networks, use_auth,
                 app['hass'])
 
         elif _is_trusted_ip(request, trusted_networks):
+            users = await app['hass'].auth.async_get_users()
+            for user in users:
+                if user.is_owner:
+                    request['hass_user'] = user
+                    break
             authenticated = True
 
         elif not use_auth and api_password is None:
@@ -136,8 +141,9 @@ async def async_validate_auth_header(request, api_password=None):
         # If no space in authorization header
         return False
 
+    hass = request.app['hass']
+
     if auth_type == 'Bearer':
-        hass = request.app['hass']
         refresh_token = await hass.auth.async_validate_access_token(auth_val)
         if refresh_token is None:
             return False
@@ -157,8 +163,12 @@ async def async_validate_auth_header(request, api_password=None):
         if username != 'homeassistant':
             return False
 
-        return hmac.compare_digest(api_password.encode('utf-8'),
-                                   password.encode('utf-8'))
+        if not hmac.compare_digest(api_password.encode('utf-8'),
+                                   password.encode('utf-8')):
+            return False
+
+        request['hass_user'] = await legacy_api_password.async_get_user(hass)
+        return True
 
     return False
 
