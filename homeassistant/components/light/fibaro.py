@@ -65,7 +65,8 @@ class FibaroLight(FibaroDevice, Light):
         self._update_lock = asyncio.Lock()
         if 'levelChange' in fibaro_device.interfaces:
             self._supported_flags |= SUPPORT_BRIGHTNESS
-        if 'color' in fibaro_device.properties:
+        if 'color' in fibaro_device.properties and \
+                'setColor' in fibaro_device.actions:
             self._supported_flags |= SUPPORT_COLOR
         if 'setW' in fibaro_device.actions:
             self._supported_flags |= SUPPORT_WHITE_VALUE
@@ -168,7 +169,9 @@ class FibaroLight(FibaroDevice, Light):
         if self._supported_flags & SUPPORT_BRIGHTNESS:
             self._brightness = float(self.fibaro_device.properties.value)
         # Color handling
-        if self._supported_flags & SUPPORT_COLOR:
+        if self._supported_flags & SUPPORT_COLOR and \
+                'color' in self.fibaro_device.properties and \
+                ',' in self.fibaro_device.properties.color:
             # Fibaro communicates the color as an 'R, G, B, W' string
             rgbw_s = self.fibaro_device.properties.color
             if rgbw_s == '0,0,0,0' and\
