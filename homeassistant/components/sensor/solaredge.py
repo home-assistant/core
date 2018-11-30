@@ -10,8 +10,6 @@ import json
 from datetime import timedelta
 import logging
 
-import requests
-
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
@@ -20,6 +18,8 @@ from homeassistant.components.light import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
+
+REQUIREMENTS = ['solaredge==0.0.2']
 
 DOMAIN = "solaredge"
 
@@ -49,10 +49,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 _LOGGER = logging.getLogger(__name__)
 
-# Request parameters will be set during platform setup.
-URL = 'https://monitoringapi.solaredge.com/site/{siteId}/overview'
-
-
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
@@ -60,12 +56,8 @@ def async_setup_platform(hass, config, async_add_entities,
     api_key = config.get(CONF_API_KEY, None)
     site_id = config.get(CONF_SITE_ID, None)
 
-    # Setup request url and parameters.
-    url = URL.format(siteId=site_id)
-    params = {'api_key': api_key}
-
     # Create solaredge data service which will retrieve and update the data.
-    data = SolarEdgeData(hass, url, params)
+    data = SolarEdgeData(hass, api_key, site_id)
 
     # Create a new sensor for each sensor type.
     entities = []
@@ -116,12 +108,12 @@ class SolarEdgeSensor(Entity):
 class SolarEdgeData:
     """Get and update the latest data."""
 
-    def __init__(self, hass, url, params):
+    def __init__(self, hass, api_key, site_id):
         """Initialize the data object."""
         self.hass = hass
         self.data = {}
-        self.url = url
-        self.params = params
+        self.api_key = api_key
+        self.site_id = site_id
 
     @asyncio.coroutine
     def schedule_update(self, minutes):
@@ -134,16 +126,19 @@ class SolarEdgeData:
     @asyncio.coroutine
     def async_update(self, *_):
         """Update the data from the SolarEdge Monitoring API."""
-        response = requests.get(self.url, params=self.params)
+        import solaredge
+        from requests.exceptions import HTTPError, ConnectTimeout
 
-        if response.status_code != requests.codes.ok:
-            _LOGGER.debug("failed to retrieve data from SolarEdge API, \
-                    delaying next update")
+        # Create new SolarEdge object to retrieve data
+        api = solaredge.Solaredge(self.api_key)
+        
+        try:
+            data = api.get_overview(self.site_id)
+        except (ConnectTimeout, HTTPError) as ex:
+            _LOGGER.debug("Could not retrieve data, delaying next update")
             yield from self.schedule_update(DELAY_NOT_OK)
             return
-
-        data = json.loads(response.text)
-
+        
         if 'overview' not in data:
             _LOGGER.debug("Missing overview data, delaying next update")
             yield from self.schedule_update(DELAY_NOT_OK)
