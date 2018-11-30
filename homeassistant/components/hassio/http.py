@@ -63,8 +63,6 @@ class HassIOView(HomeAssistantView):
         client = await self._command_proxy(path, request)
 
         data = await client.read()
-        if path.endswith('/logs'):
-            return _create_response_log(client, data)
         return _create_response(client, data)
 
     get = _handle
@@ -111,18 +109,6 @@ def _create_response(client, data):
         body=data,
         status=client.status,
         content_type=client.content_type,
-    )
-
-
-def _create_response_log(client, data):
-    """Convert a response from client request."""
-    # Remove color codes
-    log = re.sub(r"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))", "", data.decode())
-
-    return web.Response(
-        text=log,
-        status=client.status,
-        content_type=CONTENT_TYPE_TEXT_PLAIN,
     )
 
 
