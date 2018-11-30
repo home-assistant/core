@@ -200,7 +200,7 @@ python-forecastio==1.4.0
 python-nest==4.0.5
 
 # homeassistant.components.sensor.awair
-python_awair==0.0.2
+python_awair==0.0.3
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
