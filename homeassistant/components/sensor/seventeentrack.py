@@ -25,6 +25,7 @@ ATTR_INFO_TEXT = 'info_text'
 ATTR_ORIGIN_COUNTRY = 'origin_country'
 ATTR_PACKAGE_TYPE = 'package_type'
 ATTR_TRACKING_INFO_LANGUAGE = 'tracking_info_language'
+ATTR_TRACKING_NUMBER = 'tracking_number'
 
 CONF_SHOW_ARCHIVED = 'show_archived'
 CONF_SHOW_DELIVERED = 'show_delivered'
@@ -116,7 +117,7 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return 'Packages {0}'.format(self._status)
+        return '17track Packages {0}'.format(self._status)
 
     @property
     def state(self):
@@ -154,8 +155,10 @@ class SeventeenTrackPackageSensor(Entity):
             ATTR_ORIGIN_COUNTRY: package.origin_country,
             ATTR_PACKAGE_TYPE: package.package_type,
             ATTR_TRACKING_INFO_LANGUAGE: package.tracking_info_language,
+            ATTR_TRACKING_NUMBER: package.tracking_number,
         }
         self._data = data
+        self._friendly_name = package.friendly_name
         self._state = package.status
         self._tracking_number = package.tracking_number
 
@@ -180,7 +183,10 @@ class SeventeenTrackPackageSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return self._tracking_number
+        name = self._friendly_name
+        if not name:
+            name = self._tracking_number
+        return '17track Package: {0}'.format(name)
 
     @property
     def state(self):
