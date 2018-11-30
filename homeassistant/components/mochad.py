@@ -12,8 +12,10 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.const import (CONF_HOST, CONF_PORT)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME, 
+                                 CONF_PASSWORD)
 
+REQUIREMENTS = ["pymochad_mqtt>=0.8.4"]
 REQUIREMENTS = ['pymochad==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +25,8 @@ CONTROLLER = None
 CONF_COMM_TYPE = 'comm_type'
 
 DOMAIN = 'mochad'
+DOMAIN_MQTT = 'mqtt'
+CONF_BROKER = 'broker'
 
 REQ_LOCK = threading.Lock()
 
@@ -33,18 +37,33 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+CONFIG_SCHEMA_MQTT = vol.Schema({
+    DOMAIN_MQTT: vol.Schema({
+        vol.Required(CONF_BROKER, default='localhost'): cv.string,
+        vol.Required(CONF_PORT, default=1883): cv.port,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+    })
+}, extra=vol.ALLOW_EXTRA)
+
 
 def setup(hass, config):
     """Set up the mochad component."""
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
-
+    conf_mqtt = config[DOMAIN_MQTT]
+    broker = conf_mqtt.get(CONF_BROKER)
+    mqtt_port = conf_mqtt.get(CONF_PORT)
+    username = conf_mqtt.get(CONF_USERNAME)
+    password = conf_mqtt.get(CONF_PASSWORD)
+    
     from pymochad import exceptions
 
     global CONTROLLER
     try:
-        CONTROLLER = MochadCtrl(host, port)
+        CONTROLLER = MochadCtrl(host, port, broker, mqtt_port, username, 
+                                password, hass)
     except exceptions.ConfigurationError:
         _LOGGER.exception()
         return False
@@ -64,15 +83,26 @@ def setup(hass, config):
 class MochadCtrl:
     """Mochad controller."""
 
-    def __init__(self, host, port):
-        """Initialize a PyMochad controller."""
+    def __init__(self, host, port, broker, mqtt_port, username, password, 
+                 hass):
+        """Initialize a PyMochad send-receive controller."""
         super(MochadCtrl, self).__init__()
         self._host = host
         self._port = port
 
-        from pymochad import controller
+        from pymochad_mqtt import controller
 
-        self.ctrl = controller.PyMochad(server=self._host, port=self._port)
+        self.ctrl_recv = controller.\
+            PyMochadMqtt(mochad_server=self._host, mochad_port=self._port, 
+                         mqtt_broker=broker, mqtt_port=mqtt_port, 
+                         mqtt_auth={"username": username, "password": 
+                                    password})
+        self.ctrl_recv.start()
+        _LOGGER.debug("""PyMochadMqtt controller created for mochad {}:{} and 
+                       mqtt {}:{}""".format(
+            host, port, broker, mqtt_port))
+        if self.ctrl_recv.connect_event.wait():
+            self.ctrl_send = self.ctrl_recv.ctrl
 
     @property
     def host(self):
@@ -86,4 +116,4 @@ class MochadCtrl:
 
     def disconnect(self):
         """Close the connection to the mochad socket."""
-        self.ctrl.socket.close()
+        self.ctrl_recv.disconnect()
