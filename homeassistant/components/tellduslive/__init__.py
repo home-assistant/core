@@ -13,10 +13,9 @@ from homeassistant.components.discovery import SERVICE_TELLDUSLIVE
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.json import load_json, save_json
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from .const import DOMAIN, SIGNAL_UPDATE_ENTITY
 
@@ -189,7 +188,12 @@ def setup(hass, config, session=None):
 
     client = TelldusLiveClient(hass, config, session)
     hass.data[DOMAIN] = client
-    run_coroutine_threadsafe(client.update(), hass.loop)
+    client.update()
+
+    interval = config.get(DOMAIN, {}).get(CONF_UPDATE_INTERVAL,
+                                          DEFAULT_UPDATE_INTERVAL)
+    _LOGGER.debug('Update interval %s', interval)
+    track_time_interval(hass, client.update, interval)
 
     return True
 
@@ -205,16 +209,8 @@ class TelldusLiveClient:
         self._config = config
         self._client = session
 
-        interval = config.get(DOMAIN, {}).get(CONF_UPDATE_INTERVAL,
-                                              DEFAULT_UPDATE_INTERVAL)
-        _LOGGER.debug('Update interval %s', interval)
-        async_track_time_interval(self._hass, self.update, interval)
-
-    async def update(self, *args):
+    def update(self, *args):
         """Update local list of devices."""
-        if DOMAIN not in self._hass.data:
-            return
-
         _LOGGER.debug('Updating')
         if not self._client.update():
             _LOGGER.warning('Failed request')
@@ -251,7 +247,7 @@ class TelldusLiveClient:
                          identify_device(device))
             self._known_devices.add(device.device_id)
 
-        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
+        dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
 
     def device(self, device_id):
         """Return device representation."""
