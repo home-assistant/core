@@ -4,90 +4,51 @@ import io
 from datetime import timedelta
 
 from homeassistant import core as ha
+from homeassistant.components import webhook
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.components.http.auth import setup_auth
 
 
 async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
     """Test that posting to wrong api endpoint fails."""
+    await async_setup_component(hass, webhook.DOMAIN, {})
     await async_setup_component(hass, 'camera', {
         'camera': {
             'platform': 'push',
             'name': 'config_test',
-            'token': '12345678'
+            'webhook_id': 'camera.config_test'
         }})
+    await hass.async_block_till_done()
+    assert hass.states.get('camera.config_test') is not None
+
     client = await aiohttp_client(hass.http.app)
 
-    # missing file
-    resp = await client.post('/api/camera_push/camera.config_test')
-    assert resp.status == 400
-
-    # wrong entity
+    # wrong webhook
     files = {'image': io.BytesIO(b'fake')}
-    resp = await client.post('/api/camera_push/camera.wrong', data=files)
+    resp = await client.post('/api/webhood/camera.wrong', data=files)
     assert resp.status == 404
 
+    # missing file
+    camera_state = hass.states.get('camera.config_test')
+    assert camera_state.state == 'idle'
 
-async def test_cases_with_no_auth(aioclient_mock, hass, aiohttp_client):
-    """Test cases where aiohttp_client is not auth."""
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'platform': 'push',
-            'name': 'config_test',
-            'token': '12345678'
-        }})
+    resp = await client.post('/api/webhook/camera.config_test')
+    assert resp.status == 200  # webhooks always return 200
 
-    setup_auth(hass.http.app, [], True, api_password=None)
-    client = await aiohttp_client(hass.http.app)
-
-    # wrong token
-    files = {'image': io.BytesIO(b'fake')}
-    resp = await client.post('/api/camera_push/camera.config_test?token=1234',
-                             data=files)
-    assert resp.status == 401
-
-    # right token
-    files = {'image': io.BytesIO(b'fake')}
-    resp = await client.post(
-        '/api/camera_push/camera.config_test?token=12345678',
-        data=files)
-    assert resp.status == 200
-
-
-async def test_no_auth_no_token(aioclient_mock, hass, aiohttp_client):
-    """Test cases where aiohttp_client is not auth."""
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'platform': 'push',
-            'name': 'config_test',
-        }})
-
-    setup_auth(hass.http.app, [], True, api_password=None)
-    client = await aiohttp_client(hass.http.app)
-
-    # no token
-    files = {'image': io.BytesIO(b'fake')}
-    resp = await client.post('/api/camera_push/camera.config_test',
-                             data=files)
-    assert resp.status == 401
-
-    # fake token
-    files = {'image': io.BytesIO(b'fake')}
-    resp = await client.post(
-        '/api/camera_push/camera.config_test?token=12345678',
-        data=files)
-    assert resp.status == 401
+    camera_state = hass.states.get('camera.config_test')
+    assert camera_state.state == 'idle'  # no file supplied we are still idle
 
 
 async def test_posting_url(hass, aiohttp_client):
     """Test that posting to api endpoint works."""
+    await async_setup_component(hass, webhook.DOMAIN, {})
     await async_setup_component(hass, 'camera', {
         'camera': {
             'platform': 'push',
             'name': 'config_test',
-            'token': '12345678'
+            'webhook_id': 'camera.config_test'
         }})
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
     files = {'image': io.BytesIO(b'fake')}
@@ -98,7 +59,7 @@ async def test_posting_url(hass, aiohttp_client):
 
     # post image
     resp = await client.post(
-        '/api/camera_push/camera.config_test?token=12345678',
+        '/api/webhook/camera.config_test',
         data=files)
     assert resp.status == 200
 

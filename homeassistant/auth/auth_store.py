@@ -133,6 +133,33 @@ class AuthStore:
         self._users.pop(user.id)
         self._async_schedule_save()
 
+    async def async_update_user(
+            self, user: models.User, name: Optional[str] = None,
+            is_active: Optional[bool] = None,
+            group_ids: Optional[List[str]] = None) -> None:
+        """Update a user."""
+        assert self._groups is not None
+
+        if group_ids is not None:
+            groups = []
+            for grid in group_ids:
+                group = self._groups.get(grid)
+                if group is None:
+                    raise ValueError("Invalid group specified.")
+                groups.append(group)
+
+            user.groups = groups
+            user.invalidate_permission_cache()
+
+        for attr_name, value in (
+                ('name', name),
+                ('is_active', is_active),
+        ):
+            if value is not None:
+                setattr(user, attr_name, value)
+
+        self._async_schedule_save()
+
     async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""
         user.is_active = True
@@ -435,10 +462,11 @@ class AuthStore:
         for group in self._groups.values():
             g_dict = {
                 'id': group.id,
+                # Name not read for sys groups. Kept here for backwards compat
+                'name': group.name
             }  # type: Dict[str, Any]
 
             if group.id not in (GROUP_ID_READ_ONLY, GROUP_ID_ADMIN):
-                g_dict['name'] = group.name
                 g_dict['policy'] = group.policy
 
             groups.append(g_dict)

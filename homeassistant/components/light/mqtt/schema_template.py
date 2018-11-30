@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light, PLATFORM_SCHEMA,
+    ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
     SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF
@@ -21,7 +21,7 @@ from homeassistant.components.mqtt import (
     MqttAvailability)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ CONF_RED_TEMPLATE = 'red_template'
 CONF_STATE_TEMPLATE = 'state_template'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA_TEMPLATE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
     vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
     vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
@@ -66,12 +66,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_entity_template(hass, config, async_add_entities,
+                                      discovery_hash):
     """Set up a MQTT Template light."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
-
     async_add_entities([MqttTemplate(
         hass,
         config.get(CONF_NAME),
@@ -105,7 +102,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     )])
 
 
-class MqttTemplate(MqttAvailability, Light):
+class MqttTemplate(MqttAvailability, Light, RestoreEntity):
     """Representation of a MQTT Template light."""
 
     def __init__(self, hass, name, effect_list, topics, templates, optimistic,
@@ -156,7 +153,7 @@ class MqttTemplate(MqttAvailability, Light):
         """Subscribe to MQTT events."""
         await super().async_added_to_hass()
 
-        last_state = await async_get_last_state(self.hass, self.entity_id)
+        last_state = await self.async_get_last_state()
 
         @callback
         def state_received(topic, payload, qos):

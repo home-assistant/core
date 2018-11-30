@@ -10,6 +10,6 @@ async def test_invalid_json(caplog):
     view = HomeAssistantView()
 
     with pytest.raises(HTTPInternalServerError):
-        view.json(object)
+        view.json(float("NaN"))
 
-    assert str(object) in caplog.text
+    assert str(float("NaN")) in caplog.text
