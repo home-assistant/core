@@ -90,7 +90,7 @@ class TelldusLiveSensor(TelldusLiveEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(super().name, self.quantity_name or '')
+        return '{} {}'.format(super().name, self.quantity_name or '').strip()
 
     @property
     def state(self):

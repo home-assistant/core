@@ -29,7 +29,6 @@ class TelldusLiveEntity(Entity):
         _LOGGER.debug('Created device %s', self)
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
-        self._update_callback()
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
