@@ -715,9 +715,11 @@ def mock_restore_cache(hass, states):
     """Mock the DATA_RESTORE_CACHE."""
     key = restore_state.DATA_RESTORE_STATE_TASK
     data = restore_state.RestoreStateData(hass)
+    now = date_util.utcnow()
 
     data.last_states = {
-        state.entity_id: state for state in states}
+        state.entity_id: restore_state.StoredState(state, now)
+        for state in states}
     _LOGGER.debug('Restore cache: %s', data.last_states)
     assert len(data.last_states) == len(states), \
         "Duplicate entity_id? {}".format(states)
