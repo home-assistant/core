@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyatmo==1.3']
+REQUIREMENTS = ['pyatmo==1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
