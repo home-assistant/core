@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.solaredge/
 """
 
 import asyncio
-import json
 from datetime import timedelta
 import logging
 
@@ -48,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 _LOGGER = logging.getLogger(__name__)
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_entities,
@@ -131,14 +131,14 @@ class SolarEdgeData:
 
         # Create new SolarEdge object to retrieve data
         api = solaredge.Solaredge(self.api_key)
-        
+
         try:
             data = api.get_overview(self.site_id)
-        except (ConnectTimeout, HTTPError) as ex:
+        except (ConnectTimeout, HTTPError):
             _LOGGER.debug("Could not retrieve data, delaying next update")
             yield from self.schedule_update(DELAY_NOT_OK)
             return
-        
+
         if 'overview' not in data:
             _LOGGER.debug("Missing overview data, delaying next update")
             yield from self.schedule_update(DELAY_NOT_OK)
