@@ -9,7 +9,9 @@ import json
 import logging
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPUnauthorized, HTTPInternalServerError
+from aiohttp.web_exceptions import (
+    HTTPUnauthorized, HTTPInternalServerError, HTTPBadRequest)
+import voluptuous as vol
 
 from homeassistant.components.http.ban import process_success_login
 from homeassistant.core import Context, is_callback
@@ -114,6 +116,10 @@ def request_handler_factory(view, handler):
 
             if asyncio.iscoroutine(result):
                 result = await result
+        except vol.Invalid:
+            raise HTTPBadRequest()
+        except exceptions.ServiceNotFound:
+            raise HTTPInternalServerError()
         except exceptions.Unauthorized:
             raise HTTPUnauthorized()
 

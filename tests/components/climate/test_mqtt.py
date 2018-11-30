@@ -2,6 +2,9 @@
 import unittest
 import copy
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM
 )
@@ -91,7 +94,8 @@ class TestMQTTClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('operation_mode')
         assert "off" == state.state
-        common.set_operation_mode(self.hass, None, ENTITY_CLIMATE)
+        with pytest.raises(vol.Invalid):
+            common.set_operation_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('operation_mode')
@@ -177,7 +181,8 @@ class TestMQTTClimate(unittest.TestCase):
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "low" == state.attributes.get('fan_mode')
-        common.set_fan_mode(self.hass, None, ENTITY_CLIMATE)
+        with pytest.raises(vol.Invalid):
+            common.set_fan_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "low" == state.attributes.get('fan_mode')
@@ -225,7 +230,8 @@ class TestMQTTClimate(unittest.TestCase):
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('swing_mode')
-        common.set_swing_mode(self.hass, None, ENTITY_CLIMATE)
+        with pytest.raises(vol.Invalid):
+            common.set_swing_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('swing_mode')
