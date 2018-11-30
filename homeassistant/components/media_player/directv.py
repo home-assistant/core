@@ -4,7 +4,6 @@ Support for the DirecTV receivers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.directv/
 """
-import asyncio
 import logging
 from datetime import timedelta
 import requests
@@ -172,7 +171,7 @@ class DirecTvDevice(MediaPlayerDevice):
         self._is_recorded = None
         self._assumed_state = None
         self._available = False
-        self._next_client_discover = dt_util.utcnow()
+        self._previous_error = False
 
         if self._is_client:
             _LOGGER.debug("%s: Created entity DirecTV client %s",
@@ -298,17 +297,8 @@ class DirecTvDevice(MediaPlayerDevice):
                 self._last_update = None
             else:
                 self._current = await self._async_get_tuned()
-                # If status is not 200 then try a second time.
-                if self._current['status']['code'] != 200:
-                    _LOGGER.debug("%s: Invalid status %s received, retrying.",
-                                  self.entity_id,
-                                  self._current['status']['code'])
-                    # Wait for 1 second as most likely this is due to
-                    # DVR just doing a change (i.e. channel, playing, ...)
-                    await asyncio.sleep(1)
-                    self._current = await self._async_get_tuned()
-
                 if self._current['status']['code'] == 200:
+                    self._previous_error = False
                     self._is_recorded = self._current.get('uniqueId')\
                         is not None
                     self._paused = self._last_position == \
@@ -321,13 +311,25 @@ class DirecTvDevice(MediaPlayerDevice):
                     self._last_update = dt_util.utcnow() if not self._paused \
                         or self._last_update is None else self._last_update
                 else:
-                    _LOGGER.error("Invalid status %s received.",
-                                  self._current['status']['code'])
-                    self._available = False
+                    # If an error is received then only set to unavailable if
+                    # this is at least 2nd time in a row.
+                    if self._previous_error:
+                        _LOGGER.error("%s: Invalid status %s received",
+                                      self.entity_id,
+                                      self._current['status']['code'])
+                        self._available = False
+                    else:
+                        self._previous_error = True
+                        _LOGGER.debug("%s: Invalid status %s received",
+                                      self.entity_id,
+                                      self._current['status']['code'])
         except requests.RequestException as ex:
             _LOGGER.error("Request error trying to update current status for"
                           " %s. %s", self._name, ex)
-            self._available = False
+            if self._previous_error:
+                self._available = False
+
+            self._previous_error = True
         except Exception as ex:
             _LOGGER.error("Exception trying to update current status for"
                           " %s. %s", self._name, ex)
