@@ -794,6 +794,7 @@ omit =
     homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/rainbird.py
     homeassistant/components/sensor/ripple.py
+    homeassistant/components/sensor/rova.py
     homeassistant/components/sensor/rtorrent.py
     homeassistant/components/sensor/ruter.py
     homeassistant/components/sensor/scrape.py
