@@ -308,17 +308,80 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test').attributes['current_position']
         assert 50 == current_cover_position
 
-        fire_mqtt_message(self.hass, 'get-position-topic', '101')
-        self.hass.block_till_done()
-        current_cover_position = self.hass.states.get(
-            'cover.test').attributes['current_position']
-        assert 50 == current_cover_position
-
         fire_mqtt_message(self.hass, 'get-position-topic', 'non-numeric')
         self.hass.block_till_done()
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
         assert 50 == current_cover_position
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '101')
+        self.hass.block_till_done()
+        current_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 100 == current_cover_position
+
+    def test_current_cover_position_inverted(self):
+        """Test the current cover position."""
+        assert setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'position_topic': 'get-position-topic',
+                'command_topic': 'command-topic',
+                'position_open': 0,
+                'position_closed': 100,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP'
+            }
+        })
+
+        state_attributes_dict = self.hass.states.get(
+            'cover.test').attributes
+        assert not ('current_position' in state_attributes_dict)
+        assert not ('current_tilt_position' in state_attributes_dict)
+        assert not (4 & self.hass.states.get(
+            'cover.test').attributes['supported_features'] == 4)
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '100')
+        self.hass.block_till_done()
+        current_percentage_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 0 == current_percentage_cover_position
+        assert STATE_CLOSED == self.hass.states.get(
+            'cover.test').state
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '0')
+        self.hass.block_till_done()
+        current_percentage_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 100 == current_percentage_cover_position
+        assert STATE_OPEN == self.hass.states.get(
+            'cover.test').state
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '50')
+        self.hass.block_till_done()
+        current_percentage_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 50 == current_percentage_cover_position
+        assert STATE_OPEN == self.hass.states.get(
+            'cover.test').state
+
+        fire_mqtt_message(self.hass, 'get-position-topic', 'non-numeric')
+        self.hass.block_till_done()
+        current_percentage_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 50 == current_percentage_cover_position
+        assert STATE_OPEN == self.hass.states.get(
+            'cover.test').state
+
+        fire_mqtt_message(self.hass, 'get-position-topic', '101')
+        self.hass.block_till_done()
+        current_percentage_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_position']
+        assert 0 == current_percentage_cover_position
+        assert STATE_CLOSED == self.hass.states.get(
+            'cover.test').state
 
     def test_set_cover_position(self):
         """Test setting cover position."""

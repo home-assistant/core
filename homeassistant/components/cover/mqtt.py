@@ -87,7 +87,7 @@ def validate_options(value):
     if (CONF_SET_POSITION_TOPIC in value and
             CONF_GET_POSITION_TOPIC not in value):
         raise vol.Invalid(
-            "Set position topic must be set together with get position topic.")
+            "set_position_topic must be set together with position_topic.")
     return value
 
 
@@ -279,21 +279,19 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)
+
             if payload.isnumeric():
-                if 0 <= int(payload) <= 100:
-                    percentage_payload = int(payload)
-                else:
-                    percentage_payload = self.find_percentage_in_range(
-                        float(payload), COVER_PAYLOAD)
-                if 0 <= percentage_payload <= 100:
-                    self._position = percentage_payload
-                    self._state = self._position == 0
+                percentage_payload = self.find_percentage_in_range(
+                    float(payload), COVER_PAYLOAD)
+                self._position = percentage_payload
+                self._state = percentage_payload == DEFAULT_POSITION_CLOSED
             else:
                 _LOGGER.warning(
                     "Payload is not integer within range: %s",
                     payload)
                 return
             self.async_schedule_update_ha_state()
+
         if self._get_position_topic:
             await mqtt.async_subscribe(
                 self.hass, self._get_position_topic,
@@ -374,7 +372,8 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             # Optimistically assume that cover has changed state.
             self._state = False
             if self._get_position_topic:
-                self._position = self._position_open
+                self._position = self.find_percentage_in_range(
+                    self._position_open, COVER_PAYLOAD)
             self.async_schedule_update_ha_state()
 
     async def async_close_cover(self, **kwargs):
@@ -389,7 +388,8 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             # Optimistically assume that cover has changed state.
             self._state = True
             if self._get_position_topic:
-                self._position = self._position_closed
+                self._position = self.find_percentage_in_range(
+                    self._position_closed, COVER_PAYLOAD)
             self.async_schedule_update_ha_state()
 
     async def async_stop_cover(self, **kwargs):
@@ -451,7 +451,7 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             mqtt.async_publish(self.hass, self._set_position_topic,
                                position, self._qos, self._retain)
             if self._optimistic:
-                self._state = percentage_position == 0
+                self._state = percentage_position == self._position_closed
                 self._position = percentage_position
                 self.async_schedule_update_ha_state()
 
@@ -469,6 +469,11 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         offset_position = position - min_range
         position_percentage = round(
             float(offset_position) / current_range * 100.0)
+
+        max_percent = 100
+        min_percent = 0
+        position_percentage = min(max(position_percentage, min_percent),
+                                  max_percent)
         if range_type == TILT_PAYLOAD and self._tilt_invert:
             return 100 - position_percentage
         return position_percentage

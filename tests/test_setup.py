@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_COMPONENT_LOADED)
 import homeassistant.config as config_util
 from homeassistant import setup, loader
 import homeassistant.util.dt as dt_util
@@ -459,3 +460,35 @@ def test_platform_no_warn_slow(hass):
             hass, 'test_component1', {})
         assert result
         assert not mock_call.called
+
+
+async def test_when_setup_already_loaded(hass):
+    """Test when setup."""
+    calls = []
+
+    async def mock_callback(hass, component):
+        """Mock callback."""
+        calls.append(component)
+
+    setup.async_when_setup(hass, 'test', mock_callback)
+    await hass.async_block_till_done()
+    assert calls == []
+
+    hass.config.components.add('test')
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {
+        'component': 'test'
+    })
+    await hass.async_block_till_done()
+    assert calls == ['test']
+
+    # Event listener should be gone
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {
+        'component': 'test'
+    })
+    await hass.async_block_till_done()
+    assert calls == ['test']
+
+    # Should be called right away
+    setup.async_when_setup(hass, 'test', mock_callback)
+    await hass.async_block_till_done()
+    assert calls == ['test', 'test']

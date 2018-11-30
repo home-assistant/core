@@ -28,7 +28,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
 }), cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES, CONF_SECONDS, CONF_AT))
 
 
-async def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     if CONF_AT in config:
         at_time = config.get(CONF_AT)

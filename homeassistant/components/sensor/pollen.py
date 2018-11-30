@@ -4,21 +4,22 @@ Support for Pollen.com allergen and cold/flu sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.pollen/
 """
-import logging
 from datetime import timedelta
+import logging
 from statistics import mean
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_STATE, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers import aiohttp_client
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['numpy==1.15.3', 'pypollencom==2.2.2']
+REQUIREMENTS = ['numpy==1.15.4', 'pypollencom==2.2.2']
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ALLERGEN_AMOUNT = 'allergen_amount'
@@ -62,11 +63,11 @@ SENSORS = {
         'IndexSensor', 'Allergy Index: Tomorrow', 'mdi:flower'),
     TYPE_ALLERGY_YESTERDAY: (
         'IndexSensor', 'Allergy Index: Yesterday', 'mdi:flower'),
-    TYPE_ASTHMA_TODAY: ('IndexSensor', 'Ashma Index: Today', 'mdi:flower'),
+    TYPE_ASTHMA_TODAY: ('IndexSensor', 'Asthma Index: Today', 'mdi:flower'),
     TYPE_ASTHMA_TOMORROW: (
-        'IndexSensor', 'Ashma Index: Tomorrow', 'mdi:flower'),
+        'IndexSensor', 'Asthma Index: Tomorrow', 'mdi:flower'),
     TYPE_ASTHMA_YESTERDAY: (
-        'IndexSensor', 'Ashma Index: Yesterday', 'mdi:flower'),
+        'IndexSensor', 'Asthma Index: Yesterday', 'mdi:flower'),
     TYPE_ASTHMA_FORECAST: (
         'ForecastSensor', 'Asthma Index: Forecasted Average', 'mdi:flower'),
     TYPE_ASTHMA_HISTORIC: (
@@ -244,6 +245,7 @@ class ForecastSensor(BaseSensor):
         if self._kind == TYPE_ALLERGY_FORECAST:
             outlook = self.pollen.data[TYPE_ALLERGY_OUTLOOK]
             self._attrs[ATTR_OUTLOOK] = outlook['Outlook']
+            self._attrs[ATTR_SEASON] = outlook['Season']
 
         self._state = average
 
@@ -401,8 +403,8 @@ class PollenComData:
                 await self._get_data(
                     self._client.disease.extended, TYPE_DISEASE_FORECAST)
 
-            _LOGGER.debug('New data retrieved: %s', self.data)
+            _LOGGER.debug("New data retrieved: %s", self.data)
         except InvalidZipError:
             _LOGGER.error(
-                'Cannot retrieve data for ZIP code: %s', self._client.zip_code)
+                "Cannot retrieve data for ZIP code: %s", self._client.zip_code)
             self.data = {}

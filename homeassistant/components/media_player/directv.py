@@ -9,9 +9,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MOVIE, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MOVIE, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     MediaPlayerDevice)
 from homeassistant.const import (
     CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED,
@@ -33,8 +33,12 @@ DEFAULT_NAME = "DirecTV Receiver"
 DEFAULT_PORT = 8080
 
 SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_SELECT_SOURCE | SUPPORT_STOP | \
-    SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
+
+SUPPORT_DTV_CLIENT = SUPPORT_PAUSE | \
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
 
 DATA_DIRECTV = 'data_directv'
 
@@ -48,12 +52,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DirecTV platform."""
-    known_devices = hass.data.get(DATA_DIRECTV)
-    if not known_devices:
-        known_devices = []
+    known_devices = hass.data.get(DATA_DIRECTV, set())
     hosts = []
 
     if CONF_HOST in config:
+        _LOGGER.debug("Adding configured device %s with client address %s ",
+                      config.get(CONF_NAME), config.get(CONF_DEVICE))
         hosts.append([
             config.get(CONF_NAME), config.get(CONF_HOST),
             config.get(CONF_PORT), config.get(CONF_DEVICE)
@@ -64,29 +68,52 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         name = 'DirecTV_{}'.format(discovery_info.get('serial', ''))
 
         # Attempt to discover additional RVU units
-        try:
-            resp = requests.get(
-                'http://%s:%d/info/getLocations' % (host, DEFAULT_PORT)).json()
-            if "locations" in resp:
-                for loc in resp["locations"]:
-                    if("locationName" in loc and "clientAddr" in loc
-                       and loc["clientAddr"] not in known_devices):
-                        hosts.append([str.title(loc["locationName"]), host,
-                                      DEFAULT_PORT, loc["clientAddr"]])
+        _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
 
-        except requests.exceptions.RequestException:
+        from DirectPy import DIRECTV
+        dtv = DIRECTV(host, DEFAULT_PORT)
+        try:
+            resp = dtv.get_locations()
+        except requests.exceptions.RequestException as ex:
             # Bail out and just go forward with uPnP data
-            if DEFAULT_DEVICE not in known_devices:
-                hosts.append([name, host, DEFAULT_PORT, DEFAULT_DEVICE])
+            # Make sure that this device is not already configured
+            # Comparing based on host (IP) and clientAddr.
+            _LOGGER.debug("Request exception %s trying to get locations", ex)
+            resp = {
+                'locations': [{
+                    'locationName': name,
+                    'clientAddr': DEFAULT_DEVICE
+                }]
+            }
+
+        _LOGGER.debug("Known devices: %s", known_devices)
+        for loc in resp.get("locations") or []:
+            if "locationName" not in loc or "clientAddr" not in loc:
+                continue
+
+            # Make sure that this device is not already configured
+            # Comparing based on host (IP) and clientAddr.
+            if (host, loc["clientAddr"]) in known_devices:
+                _LOGGER.debug("Discovered device %s on host %s with "
+                              "client address %s is already "
+                              "configured",
+                              str.title(loc["locationName"]),
+                              host, loc["clientAddr"])
+            else:
+                _LOGGER.debug("Adding discovered device %s with"
+                              " client address %s",
+                              str.title(loc["locationName"]),
+                              loc["clientAddr"])
+                hosts.append([str.title(loc["locationName"]), host,
+                              DEFAULT_PORT, loc["clientAddr"]])
 
     dtvs = []
 
     for host in hosts:
         dtvs.append(DirecTvDevice(*host))
-        known_devices.append(host[-1])
+        hass.data.setdefault(DATA_DIRECTV, set()).add((host[1], host[3]))
 
     add_entities(dtvs)
-    hass.data[DATA_DIRECTV] = known_devices
 
 
 class DirecTvDevice(MediaPlayerDevice):
@@ -103,29 +130,49 @@ class DirecTvDevice(MediaPlayerDevice):
         self._paused = None
         self._last_position = None
         self._is_recorded = None
+        self._is_client = device != '0'
         self._assumed_state = None
+        self._available = False
 
-        _LOGGER.debug("Created DirecTV device for %s", self._name)
+        if self._is_client:
+            _LOGGER.debug("Created DirecTV client %s for device %s",
+                          self._name, device)
+        else:
+            _LOGGER.debug("Created DirecTV device for %s", self._name)
 
     def update(self):
         """Retrieve latest state."""
-        _LOGGER.debug("Updating state for %s", self._name)
-        self._is_standby = self.dtv.get_standby()
-        if self._is_standby:
-            self._current = None
-            self._is_recorded = None
-            self._paused = None
-            self._assumed_state = False
-            self._last_position = None
-            self._last_update = None
-        else:
-            self._current = self.dtv.get_tuned()
-            self._is_recorded = self._current.get('uniqueId') is not None
-            self._paused = self._last_position == self._current['offset']
-            self._assumed_state = self._is_recorded
-            self._last_position = self._current['offset']
-            self._last_update = dt_util.now() if not self._paused or\
-                self._last_update is None else self._last_update
+        _LOGGER.debug("Updating status for %s", self._name)
+        try:
+            self._available = True
+            self._is_standby = self.dtv.get_standby()
+            if self._is_standby:
+                self._current = None
+                self._is_recorded = None
+                self._paused = None
+                self._assumed_state = False
+                self._last_position = None
+                self._last_update = None
+            else:
+                self._current = self.dtv.get_tuned()
+                if self._current['status']['code'] == 200:
+                    self._is_recorded = self._current.get('uniqueId')\
+                        is not None
+                    self._paused = self._last_position == \
+                        self._current['offset']
+                    self._assumed_state = self._is_recorded
+                    self._last_position = self._current['offset']
+                    self._last_update = dt_util.now() if not self._paused or\
+                        self._last_update is None else self._last_update
+                else:
+                    self._available = False
+        except requests.RequestException as ex:
+            _LOGGER.error("Request error trying to update current status for"
+                          " %s. %s", self._name, ex)
+            self._available = False
+        except Exception:
+            self._available = False
+            raise
 
     @property
     def device_state_attributes(self):
@@ -159,6 +206,11 @@ class DirecTvDevice(MediaPlayerDevice):
             return STATE_PAUSED
 
         return STATE_PLAYING
+
+    @property
+    def available(self):
+        """Return if able to retrieve information from DVR or not."""
+        return self._available
 
     @property
     def assumed_state(self):
@@ -247,7 +299,7 @@ class DirecTvDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_DTV
+        return SUPPORT_DTV_CLIENT if self._is_client else SUPPORT_DTV
 
     @property
     def media_currently_recording(self):
@@ -284,11 +336,17 @@ class DirecTvDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on the receiver."""
+        if self._is_client:
+            raise NotImplementedError()
+
         _LOGGER.debug("Turn on %s", self._name)
         self.dtv.key_press('poweron')
 
     def turn_off(self):
         """Turn off the receiver."""
+        if self._is_client:
+            raise NotImplementedError()
+
         _LOGGER.debug("Turn off %s", self._name)
         self.dtv.key_press('poweroff')
 
@@ -317,7 +375,12 @@ class DirecTvDevice(MediaPlayerDevice):
         _LOGGER.debug("Fast forward on %s", self._name)
         self.dtv.key_press('ffwd')
 
-    def select_source(self, source):
+    def play_media(self, media_type, media_id, **kwargs):
         """Select input source."""
-        _LOGGER.debug("Changing channel on %s to %s", self._name, source)
-        self.dtv.tune_channel(source)
+        if media_type != MEDIA_TYPE_CHANNEL:
+            _LOGGER.error("Invalid media type %s. Only %s is supported",
+                          media_type, MEDIA_TYPE_CHANNEL)
+            return
+
+        _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
+        self.dtv.tune_channel(media_id)
