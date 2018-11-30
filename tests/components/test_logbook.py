@@ -4,6 +4,9 @@ import logging
 from datetime import (timedelta, datetime)
 import unittest
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.components import sun
 import homeassistant.core as ha
 from homeassistant.const import (
@@ -89,7 +92,9 @@ class TestComponentLogbook(unittest.TestCase):
             calls.append(event)
 
         self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
-        self.hass.services.call(logbook.DOMAIN, 'log', {}, True)
+
+        with pytest.raises(vol.Invalid):
+            self.hass.services.call(logbook.DOMAIN, 'log', {}, True)
 
         # Logbook entry service call results in firing an event.
         # Our service call will unblock when the event listeners have been

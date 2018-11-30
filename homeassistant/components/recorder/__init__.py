@@ -300,14 +300,24 @@ class Recorder(threading.Thread):
                     time.sleep(CONNECT_RETRY_WAIT)
                 try:
                     with session_scope(session=self.get_session()) as session:
-                        dbevent = Events.from_event(event)
-                        session.add(dbevent)
-                        session.flush()
+                        try:
+                            dbevent = Events.from_event(event)
+                            session.add(dbevent)
+                            session.flush()
+                        except (TypeError, ValueError):
+                            _LOGGER.warning(
+                                "Event is not JSON serializable: %s", event)
 
                         if event.event_type == EVENT_STATE_CHANGED:
-                            dbstate = States.from_event(event)
-                            dbstate.event_id = dbevent.event_id
-                            session.add(dbstate)
+                            try:
+                                dbstate = States.from_event(event)
+                                dbstate.event_id = dbevent.event_id
+                                session.add(dbstate)
+                            except (TypeError, ValueError):
+                                _LOGGER.warning(
+                                    "State is not JSON serializable: %s",
+                                    event.data.get('new_state'))
+
                     updated = True
 
                 except exc.OperationalError as err:

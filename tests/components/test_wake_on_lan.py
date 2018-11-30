@@ -3,6 +3,7 @@ import asyncio
 from unittest import mock
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components.wake_on_lan import (
@@ -34,10 +35,10 @@ def test_send_magic_packet(hass, caplog, mock_wakeonlan):
     assert mock_wakeonlan.mock_calls[-1][1][0] == mac
     assert mock_wakeonlan.mock_calls[-1][2]['ip_address'] == bc_ip
 
-    yield from hass.services.async_call(
-        DOMAIN, SERVICE_SEND_MAGIC_PACKET,
-        {"broadcast_address": bc_ip}, blocking=True)
-    assert 'ERROR' in caplog.text
+    with pytest.raises(vol.Invalid):
+        yield from hass.services.async_call(
+            DOMAIN, SERVICE_SEND_MAGIC_PACKET,
+            {"broadcast_address": bc_ip}, blocking=True)
     assert len(mock_wakeonlan.mock_calls) == 1
 
     yield from hass.services.async_call(
