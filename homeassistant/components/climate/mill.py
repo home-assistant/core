@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateDevice, DOMAIN, PLATFORM_SCHEMA, STATE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, STATE_IDLE,
     SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME,
@@ -99,6 +99,15 @@ class MillHeater(ClimateDevice):
     def available(self):
         """Return True if entity is available."""
         return self._heater.available
+
+    @property
+    def state(self):
+        """Return the current state."""
+        if not self.is_on:
+            return STATE_OFF
+        if self._heater.is_heating:
+            return STATE_HEAT
+        return STATE_IDLE
 
     @property
     def unique_id(self):
