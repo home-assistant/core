@@ -212,7 +212,7 @@ class DysonParticulateMatter25Sensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson pm25 sensor."""
         super().__init__(device, 'particulate_matter')
-        self._name = "{} particulate matter 2.5 μg/m3"\
+        self._name = "{} Particulate matter 2.5 μg/m3"\
             .format(self._device.name)
 
     @property
@@ -229,7 +229,7 @@ class DysonParticulateMatter10Sensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson pm10 sensor."""
         super().__init__(device, 'particulate_matter')
-        self._name = "{} particulate matter 10 μg/m3".format(self._device.name)
+        self._name = "{} Particulate matter 10 μg/m3".format(self._device.name)
 
     @property
     def state(self):
@@ -245,7 +245,7 @@ class DysonNitrogenDioxideSensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson no2 sensor."""
         super().__init__(device, 'nitrogen_dioxide')
-        self._name = "{} nitrogen dioxide".format(self._device.name)
+        self._name = "{} Nitrogen dioxide".format(self._device.name)
 
     @property
     def state(self):
@@ -261,7 +261,7 @@ class DysonVolatileOrganicCompoundsSensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson voc sensor."""
         super().__init__(device, 'volatile_organic_compounds')
-        self._name = "{} volatile organic compounds".format(self._device.name)
+        self._name = "{} Volatile organic compounds".format(self._device.name)
 
     @property
     def state(self):
@@ -278,7 +278,7 @@ class DysonCarbonFilterStateSensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson carbon filter state sensor."""
         DysonSensor.__init__(self, device, 'filter_state')
-        self._name = "{} carbon filter state".format(self._device.name)
+        self._name = "{} Carbon filter state".format(self._device.name)
 
     @property
     def state(self):
@@ -294,7 +294,7 @@ class DysonHepaFilterStateSensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson carbon filter state sensor."""
         DysonSensor.__init__(self, device, 'filter_state')
-        self._name = "{} hepa filter state".format(self._device.name)
+        self._name = "{} HEPA filter state".format(self._device.name)
 
     @property
     def state(self):
