@@ -163,7 +163,6 @@ EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
 EVENT_STATE_CHANGED = 'state_changed'
 EVENT_TIME_CHANGED = 'time_changed'
 EVENT_CALL_SERVICE = 'call_service'
-EVENT_SERVICE_EXECUTED = 'service_executed'
 EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
@@ -232,9 +231,6 @@ ATTR_ID = 'id'
 
 # Name
 ATTR_NAME = 'name'
-
-# Data for a SERVICE_EXECUTED event
-ATTR_SERVICE_CALL_ID = 'service_call_id'
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'

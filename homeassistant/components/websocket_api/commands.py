@@ -3,7 +3,7 @@ import voluptuous as vol
 
 from homeassistant.const import MATCH_ALL, EVENT_TIME_CHANGED
 from homeassistant.core import callback, DOMAIN as HASS_DOMAIN
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import Unauthorized, ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_get_all_descriptions
 
@@ -141,10 +141,15 @@ async def handle_call_service(hass, connection, msg):
     if (msg['domain'] == HASS_DOMAIN and
             msg['service'] in ['restart', 'stop']):
         blocking = False
-    await hass.services.async_call(
-        msg['domain'], msg['service'], msg.get('service_data'), blocking,
-        connection.context(msg))
-    connection.send_message(messages.result_message(msg['id']))
+
+    try:
+        await hass.services.async_call(
+            msg['domain'], msg['service'], msg.get('service_data'), blocking,
+            connection.context(msg))
+        connection.send_message(messages.result_message(msg['id']))
+    except ServiceNotFound:
+        connection.send_message(messages.error_message(
+            msg['id'], const.ERR_NOT_FOUND, 'Service not found.'))
 
 
 @callback

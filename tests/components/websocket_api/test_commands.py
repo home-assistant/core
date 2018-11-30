@@ -49,6 +49,25 @@ async def test_call_service(hass, websocket_client):
     assert call.data == {'hello': 'world'}
 
 
+async def test_call_service_not_found(hass, websocket_client):
+    """Test call service command."""
+    await websocket_client.send_json({
+        'id': 5,
+        'type': commands.TYPE_CALL_SERVICE,
+        'domain': 'domain_test',
+        'service': 'test_service',
+        'service_data': {
+            'hello': 'world'
+        }
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == const.TYPE_RESULT
+    assert not msg['success']
+    assert msg['error']['code'] == const.ERR_NOT_FOUND
+
+
 async def test_subscribe_unsubscribe_events(hass, websocket_client):
     """Test subscribe/unsubscribe events command."""
     init_count = sum(hass.bus.async_listeners().values())
