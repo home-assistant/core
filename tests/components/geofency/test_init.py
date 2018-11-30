@@ -113,6 +113,8 @@ def geofency_client(loop, hass, aiohttp_client):
                 CONF_MOBILE_BEACONS: ['Car 1']
             }}))
 
+    loop.run_until_complete(hass.async_block_till_done())
+
     with patch('homeassistant.components.device_tracker.update_config'):
         yield loop.run_until_complete(aiohttp_client(hass.http.app))
 
