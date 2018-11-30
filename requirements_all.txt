@@ -479,7 +479,7 @@ hikvision==0.4
 hipnotify==1.0.8
 
 # homeassistant.components.media_player.harman_kardon_avr
-hkavr==0.0.4
+hkavr==0.0.5
 
 # homeassistant.components.sensor.pi_hole
 hole==0.3.0

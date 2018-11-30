@@ -14,9 +14,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT)
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 
-REQUIREMENTS = ['hkavr==0.0.4']
+REQUIREMENTS = ['hkavr==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,16 +41,12 @@ def setup_platform(hass, config, add_devices, discover_info=None):
     """Set up the AVR platform."""
     import hkavr
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
 
     avr = hkavr.HkAVR(host, port, name)
-
     avr_device = HkAvrDevice(avr)
-    if avr_device is None:
-        _LOGGER.warning("Could not connect to AVR")
-        return
 
     add_devices([avr_device], True)
 
@@ -68,14 +64,20 @@ class HkAvrDevice(MediaPlayerDevice):
 
         self._source_list = SOURCES
 
-        self._state = avr.state
+        self._state = None
         self._power = avr.power
         self._muted = avr.muted
         self._current_source = avr.current_source
 
     def update(self):
         """Update the state of this media_player."""
-        self._state = self._avr.state
+        if self._avr.is_on():
+            self._state = STATE_ON
+        elif self._avr.is_off():
+            self._state = STATE_OFF
+        else:
+            self._state = STATE_UNKNOWN
+
         self._power = self._avr.power
         self._muted = self._avr.muted
         self._current_source = self._avr.current_source
