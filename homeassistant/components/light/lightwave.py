@@ -4,16 +4,10 @@ Implements LightwaveRF lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lightwave/
 """
-import logging
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.const import CONF_NAME
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS)
 from homeassistant.components.lightwave import LIGHTWAVE_LINK
-
-_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['lightwave']
 

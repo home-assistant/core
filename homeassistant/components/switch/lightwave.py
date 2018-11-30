@@ -4,15 +4,9 @@ Implements LightwaveRF switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.lightwave/
 """
-import logging
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.const import CONF_NAME
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.lightwave import LIGHTWAVE_LINK
-
-_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['lightwave']
 
