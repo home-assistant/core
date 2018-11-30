@@ -102,6 +102,7 @@ homeassistant/components/sensor/darksky.py @fabaff
 homeassistant/components/sensor/file.py @fabaff
 homeassistant/components/sensor/filter.py @dgomes
 homeassistant/components/sensor/fixer.py @fabaff
+homeassistant/components/sensor/flunearyou.py.py @bachya
 homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/gitter.py @fabaff
 homeassistant/components/sensor/glances.py @fabaff
@@ -159,6 +160,8 @@ homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/counter/* @fabaff
 
 # D
+homeassistant/components/daikin.py @fredrike @rofrantz
+homeassistant/components/*/daikin.py @fredrike @rofrantz
 homeassistant/components/*/deconz.py @kane610
 homeassistant/components/digital_ocean.py @fabaff
 homeassistant/components/*/digital_ocean.py @fabaff
@@ -202,6 +205,10 @@ homeassistant/components/*/mystrom.py @fabaff
 # O
 homeassistant/components/openuv/* @bachya
 homeassistant/components/*/openuv.py @bachya
+
+# P
+homeassistant/components/point/* @fredrike
+homeassistant/components/*/point.py @fredrike
 
 # Q
 homeassistant/components/qwikswitch.py @kellerza

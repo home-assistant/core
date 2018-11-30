@@ -14,22 +14,22 @@ from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, ATTR_WHITE_VALUE, FLASH_LONG, FLASH_SHORT,
-    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE,
-    Light)
-from homeassistant.components.light.mqtt import CONF_BRIGHTNESS_SCALE
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
+    SUPPORT_FLASH, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, Light)
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate)
+    CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
+    MqttAvailability, MqttDiscoveryUpdate)
 from homeassistant.const import (
     CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, CONF_NAME, CONF_OPTIMISTIC,
     CONF_RGB, CONF_WHITE_VALUE, CONF_XY, STATE_ON)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.color as color_util
+
+from .schema_basic import CONF_BRIGHTNESS_SCALE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ CONF_HS = 'hs'
 CONF_UNIQUE_ID = 'unique_id'
 
 # Stealing some of these from the base MQTT configs.
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA_JSON = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
     vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -84,17 +84,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_entities, discovery_info=None):
+async def async_setup_entity_json(hass: HomeAssistantType, config: ConfigType,
+                                  async_add_entities, discovery_hash):
     """Set up a MQTT JSON Light."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
-
-    discovery_hash = None
-    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
-        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
-
-    async_add_entities([MqttJson(
+    async_add_entities([MqttLightJson(
         config.get(CONF_NAME),
         config.get(CONF_UNIQUE_ID),
         config.get(CONF_EFFECT_LIST),
@@ -128,7 +121,8 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     )])
 
 
-class MqttJson(MqttAvailability, MqttDiscoveryUpdate, Light):
+class MqttLightJson(MqttAvailability, MqttDiscoveryUpdate, Light,
+                    RestoreEntity):
     """Representation of a MQTT JSON light."""
 
     def __init__(self, name, unique_id, effect_list, topic, qos, retain,
@@ -190,10 +184,9 @@ class MqttJson(MqttAvailability, MqttDiscoveryUpdate, Light):
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        await MqttAvailability.async_added_to_hass(self)
-        await MqttDiscoveryUpdate.async_added_to_hass(self)
+        await super().async_added_to_hass()
 
-        last_state = await async_get_last_state(self.hass, self.entity_id)
+        last_state = await self.async_get_last_state()
 
         @callback
         def state_received(topic, payload, qos):

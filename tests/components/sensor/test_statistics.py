@@ -3,6 +3,7 @@ import unittest
 import statistics
 
 from homeassistant.setup import setup_component
+from homeassistant.components.sensor.statistics import StatisticsSensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, STATE_UNKNOWN)
 from homeassistant.util import dt as dt_util
@@ -39,7 +40,7 @@ class TestStatisticsSensor(unittest.TestCase):
 
     def test_binary_sensor_source(self):
         """Test if source is a sensor."""
-        values = [1, 0, 1, 0, 1, 0, 1]
+        values = ['on', 'off', 'on', 'off', 'on', 'off', 'on']
         assert setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'statistics',
@@ -47,6 +48,9 @@ class TestStatisticsSensor(unittest.TestCase):
                 'entity_id': 'binary_sensor.test_monitored',
             }
         })
+
+        self.hass.start()
+        self.hass.block_till_done()
 
         for value in values:
             self.hass.states.set('binary_sensor.test_monitored', value)
@@ -65,6 +69,9 @@ class TestStatisticsSensor(unittest.TestCase):
                 'entity_id': 'sensor.test_monitored',
             }
         })
+
+        self.hass.start()
+        self.hass.block_till_done()
 
         for value in self.values:
             self.hass.states.set('sensor.test_monitored', value,
@@ -99,6 +106,9 @@ class TestStatisticsSensor(unittest.TestCase):
             }
         })
 
+        self.hass.start()
+        self.hass.block_till_done()
+
         for value in self.values:
             self.hass.states.set('sensor.test_monitored', value,
                                  {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
@@ -119,6 +129,9 @@ class TestStatisticsSensor(unittest.TestCase):
                 'sampling_size': 1,
             }
         })
+
+        self.hass.start()
+        self.hass.block_till_done()
 
         for value in self.values[-3:]:  # just the last 3 will do
             self.hass.states.set('sensor.test_monitored', value,
@@ -161,6 +174,9 @@ class TestStatisticsSensor(unittest.TestCase):
                 }
             })
 
+            self.hass.start()
+            self.hass.block_till_done()
+
             for value in self.values:
                 self.hass.states.set('sensor.test_monitored', value,
                                      {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
@@ -192,6 +208,9 @@ class TestStatisticsSensor(unittest.TestCase):
                     'entity_id': 'sensor.test_monitored'
                 }
             })
+
+            self.hass.start()
+            self.hass.block_till_done()
 
             for value in self.values:
                 self.hass.states.set('sensor.test_monitored', value,
@@ -230,6 +249,72 @@ class TestStatisticsSensor(unittest.TestCase):
                 'sampling_size': 100,
             }
         })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         # check if the result is as in test_sensor_source()
         state = self.hass.states.get('sensor.test_mean')
         assert str(self.mean) == state.state
+
+    def test_initialize_from_database_with_maxage(self):
+        """Test initializing the statistics from the database."""
+        mock_data = {
+            'return_time': datetime(2017, 8, 2, 12, 23, 42,
+                                    tzinfo=dt_util.UTC),
+        }
+
+        def mock_now():
+            return mock_data['return_time']
+
+        # Testing correct retrieval from recorder, thus we do not
+        # want purging to occur within the class itself.
+        def mock_purge(self):
+            return
+
+        # Set maximum age to 3 hours.
+        max_age = 3
+        # Determine what our minimum age should be based on test values.
+        expected_min_age = mock_data['return_time'] + \
+            timedelta(hours=len(self.values) - max_age)
+
+        # enable the recorder
+        init_recorder_component(self.hass)
+
+        with patch('homeassistant.components.sensor.statistics.dt_util.utcnow',
+                   new=mock_now), \
+                patch.object(StatisticsSensor, '_purge_old', mock_purge):
+            # store some values
+            for value in self.values:
+                self.hass.states.set('sensor.test_monitored', value,
+                                     {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                self.hass.block_till_done()
+                # insert the next value 1 hour later
+                mock_data['return_time'] += timedelta(hours=1)
+
+            # wait for the recorder to really store the data
+            self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+            # only now create the statistics component, so that it must read
+            # the data from the database
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'statistics',
+                    'name': 'test',
+                    'entity_id': 'sensor.test_monitored',
+                    'sampling_size': 100,
+                    'max_age': {'hours': max_age}
+                }
+            })
+            self.hass.block_till_done()
+
+            self.hass.start()
+            self.hass.block_till_done()
+
+            # check if the result is as in test_sensor_source()
+            state = self.hass.states.get('sensor.test_mean')
+
+        assert expected_min_age == state.attributes.get('min_age')
+        # The max_age timestamp should be 1 hour before what we have right
+        # now in mock_data['return_time'].
+        assert mock_data['return_time'] == state.attributes.get('max_age') +\
+            timedelta(hours=1)

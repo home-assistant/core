@@ -168,18 +168,14 @@ class NestThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._mode != NEST_MODE_HEAT_COOL and \
-                self._mode != STATE_ECO and \
-                not self.is_away_mode_on:
+        if self._mode not in (NEST_MODE_HEAT_COOL, STATE_ECO):
             return self._target_temperature
         return None
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if (self.is_away_mode_on or self._mode == STATE_ECO) and \
-                self._eco_temperature[0]:
-            # eco_temperature is always a low, high tuple
+        if self._mode == STATE_ECO:
             return self._eco_temperature[0]
         if self._mode == NEST_MODE_HEAT_COOL:
             return self._target_temperature[0]
@@ -188,9 +184,7 @@ class NestThermostat(ClimateDevice):
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if (self.is_away_mode_on or self._mode == STATE_ECO) and \
-                self._eco_temperature[1]:
-            # eco_temperature is always a low, high tuple
+        if self._mode == STATE_ECO:
             return self._eco_temperature[1]
         if self._mode == NEST_MODE_HEAT_COOL:
             return self._target_temperature[1]
