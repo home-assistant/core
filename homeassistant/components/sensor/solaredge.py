@@ -12,7 +12,11 @@ import logging
 
 import requests
 
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+
 from homeassistant.const import CONF_MONITORED_VARIABLES
+from homeassistant.components.light import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -20,8 +24,8 @@ from homeassistant.util import dt as dt_util
 DOMAIN = "solaredge"
 
 # Config for solaredge monitoring api requests.
-CONF_APIKEY = "api_key"
-CONF_SITEID = "site_id"
+CONF_API_KEY = "api_key"
+CONF_SITE_ID = "site_id"
 
 DELAY_OK = 10
 DELAY_NOT_OK = 20
@@ -36,6 +40,13 @@ SENSOR_TYPES = {
     'currentPower': ["Current Power", 'W', 'mdi:solar-power']
 }
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_SITE_ID): cv.string,
+    vol.Optional(CONF_MONITORED_VARIABLES, default=[]): 
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
+})
+
 _LOGGER = logging.getLogger(__name__)
 
 # Request parameters will be set during platform setup.
@@ -46,13 +57,9 @@ URL = 'https://monitoringapi.solaredge.com/site/{siteId}/overview'
 def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     """Create the SolarEdge Monitoring API sensor."""
-    api_key = config.get(CONF_APIKEY, None)
-    site_id = config.get(CONF_SITEID, None)
-
-    if None in (api_key, site_id):
-        _LOGGER.error("api_key or site_id not set in Home Assistant config")
-        return False
-
+    api_key = config.get(CONF_API_KEY, None)
+    site_id = config.get(CONF_SITE_ID, None)
+    
     # Setup request url and parameters.
     url = URL.format(siteId=site_id)
     params = {'api_key': api_key}
