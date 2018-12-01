@@ -1575,7 +1575,7 @@ upsmychoice==1.0.6
 uscisstatus==0.1.1
 
 # homeassistant.components.camera.uvc
-uvcclient==0.10.1
+uvcclient==0.11.0
 
 # homeassistant.components.climate.venstar
 venstarcolortouch==0.6
