@@ -304,6 +304,20 @@ class NetAtmoData:
         self.update()
         return self.data.keys()
 
+    def _detect_platform_type(self):
+        """Return the XXXData object corresponding to the specified platform.
+
+        The return can be a WeatherStationData or a HomeCoachData.
+        """
+        import pyatmo
+        for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
+            try:
+                station_data = data_class(self.auth)
+                _LOGGER.debug("%s detected!", str(data_class.__name__))
+                return station_data
+            except TypeError:
+                continue
+
     def update(self):
         """Call the Netatmo API to update the data.
 
@@ -316,12 +330,9 @@ class NetAtmoData:
             return
 
         try:
-            import pyatmo
-            try:
-                self.station_data = pyatmo.WeatherStationData(self.auth)
-            except TypeError:
-                _LOGGER.error("Failed to connect to NetAtmo")
-                return  # finally statement will be executed
+            self.station_data = self._detect_platform_type()
+            if not self.station_data:
+                raise Exception("No Weather nor HomeCoach devices found")
 
             if self.station is not None:
                 self.data = self.station_data.lastData(

@@ -1,0 +1,37 @@
+# Describes the format for available Nest services
+
+set_away_mode:
+  description: Set the away mode for a Nest structure.
+  fields:
+    away_mode:
+      description: New mode to set. Valid modes are "away" or "home".
+      example: "away"
+    structure:
+      description: Name(s) of structure(s) to change. Defaults to all structures if not specified.
+      example: "Apartment"
+
+set_eta:
+  description: Set or update the estimated time of arrival window for a Nest structure.
+  fields:
+    eta:
+      description: Estimated time of arrival from now.
+      example: "00:10:30"
+    eta_window:
+      description: Estimated time of arrival window. Default is 1 minute.
+      example: "00:05"
+    trip_id:
+      description: Unique ID for the trip. Default is auto-generated using a timestamp.
+      example: "Leave Work"
+    structure:
+      description: Name(s) of structure(s) to change. Defaults to all structures if not specified.
+      example: "Apartment"
+
+cancel_eta:
+  description: Cancel an existing estimated time of arrival window for a Nest structure.
+  fields:
+    trip_id:
+      description: Unique ID for the trip.
+      example: "Leave Work"
+    structure:
+      description: Name(s) of structure(s) to change. Defaults to all structures if not specified.
+      example: "Apartment"

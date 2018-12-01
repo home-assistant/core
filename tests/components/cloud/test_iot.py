@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import patch, MagicMock, PropertyMock
 
-from aiohttp import WSMsgType, client_exceptions
+from aiohttp import WSMsgType, client_exceptions, web
 import pytest
 
 from homeassistant.setup import async_setup_component
@@ -406,3 +406,48 @@ async def test_refresh_token_expired(hass):
 
     assert len(mock_check_token.mock_calls) == 1
     assert len(mock_create.mock_calls) == 1
+
+
+async def test_webhook_msg(hass):
+    """Test webhook msg."""
+    cloud = Cloud(hass, MODE_DEV, None, None)
+    await cloud.prefs.async_initialize(True)
+    await cloud.prefs.async_update(cloudhooks={
+        'hello': {
+            'webhook_id': 'mock-webhook-id',
+            'cloudhook_id': 'mock-cloud-id'
+        }
+    })
+
+    received = []
+
+    async def handler(hass, webhook_id, request):
+        """Handle a webhook."""
+        received.append(request)
+        return web.json_response({'from': 'handler'})
+
+    hass.components.webhook.async_register(
+        'test', 'Test', 'mock-webhook-id', handler)
+
+    response = await iot.async_handle_webhook(hass, cloud, {
+        'cloudhook_id': 'mock-cloud-id',
+        'body': '{"hello": "world"}',
+        'headers': {
+            'content-type': 'application/json'
+        },
+        'method': 'POST',
+        'query': None,
+    })
+
+    assert response == {
+        'status': 200,
+        'body': '{"from": "handler"}',
+        'headers': {
+            'Content-Type': 'application/json'
+        }
+    }
+
+    assert len(received) == 1
+    assert await received[0].json() == {
+        'hello': 'world'
+    }

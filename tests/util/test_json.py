@@ -1,13 +1,16 @@
 """Test Home Assistant json utility functions."""
+from json import JSONEncoder
 import os
 import unittest
 import sys
 from tempfile import mkdtemp
 
-from homeassistant.util.json import (SerializationError,
-                                     load_json, save_json)
+from homeassistant.util.json import (
+    SerializationError, load_json, save_json)
 from homeassistant.exceptions import HomeAssistantError
 import pytest
+
+from unittest.mock import Mock
 
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
@@ -74,3 +77,17 @@ class TestJSON(unittest.TestCase):
             fh.write(TEST_BAD_SERIALIED)
         with pytest.raises(HomeAssistantError):
             load_json(fname)
+
+    def test_custom_encoder(self):
+        """Test serializing with a custom encoder."""
+        class MockJSONEncoder(JSONEncoder):
+            """Mock JSON encoder."""
+
+            def default(self, o):
+                """Mock JSON encode method."""
+                return "9"
+
+        fname = self._path_for("test6")
+        save_json(fname, Mock(), encoder=MockJSONEncoder)
+        data = load_json(fname)
+        self.assertEqual(data, "9")

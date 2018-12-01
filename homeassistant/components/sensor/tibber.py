@@ -152,7 +152,7 @@ class TibberSensorElPrice(Entity):
                 sum_price += price_total
         self._state = state
         self._device_state_attributes['max_price'] = max_price
-        self._device_state_attributes['avg_price'] = sum_price / num
+        self._device_state_attributes['avg_price'] = round(sum_price / num, 3)
         self._device_state_attributes['min_price'] = min_price
         return state is not None
 

@@ -6,19 +6,18 @@ https://home-assistant.io/components/sensor.volvooncall/
 
 """
 import logging
-from math import floor
 
-from homeassistant.components.volvooncall import (
-    VolvoEntity, RESOURCES, CONF_SCANDINAVIAN_MILES)
+from homeassistant.components.volvooncall import VolvoEntity, DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Volvo sensors."""
     if discovery_info is None:
         return
-    add_entities([VolvoSensor(hass, *discovery_info)])
+    async_add_entities([VolvoSensor(hass.data[DATA_KEY], *discovery_info)])
 
 
 class VolvoSensor(VolvoEntity):
@@ -26,38 +25,10 @@ class VolvoSensor(VolvoEntity):
 
     @property
     def state(self):
-        """Return the state of the sensor."""
-        val = getattr(self.vehicle, self._attribute)
-
-        if val is None:
-            return val
-
-        if self._attribute == 'odometer':
-            val /= 1000  # m -> km
-
-        if 'mil' in self.unit_of_measurement:
-            val /= 10  # km -> mil
-
-        if self._attribute == 'average_fuel_consumption':
-            val /= 10  # L/1000km -> L/100km
-            if 'mil' in self.unit_of_measurement:
-                return round(val, 2)
-            return round(val, 1)
-        if self._attribute == 'distance_to_empty':
-            return int(floor(val))
-        return int(round(val))
+        """Return the state."""
+        return self.instrument.state
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        unit = RESOURCES[self._attribute][3]
-        if self._state.config[CONF_SCANDINAVIAN_MILES] and 'km' in unit:
-            if self._attribute == 'average_fuel_consumption':
-                return 'L/mil'
-            return unit.replace('km', 'mil')
-        return unit
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return RESOURCES[self._attribute][2]
+        return self.instrument.unit

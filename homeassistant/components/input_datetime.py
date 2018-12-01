@@ -11,9 +11,8 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 
@@ -97,7 +96,7 @@ async def async_setup(hass, config):
     return True
 
 
-class InputDatetime(Entity):
+class InputDatetime(RestoreEntity):
     """Representation of a datetime input."""
 
     def __init__(self, object_id, name, has_date, has_time, icon, initial):
@@ -112,6 +111,7 @@ class InputDatetime(Entity):
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
+        await super().async_added_to_hass()
         restore_val = None
 
         # Priority 1: Initial State
@@ -120,7 +120,7 @@ class InputDatetime(Entity):
 
         # Priority 2: Old state
         if restore_val is None:
-            old_state = await async_get_last_state(self.hass, self.entity_id)
+            old_state = await self.async_get_last_state()
             if old_state is not None:
                 restore_val = old_state.state
 
