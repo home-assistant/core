@@ -529,14 +529,66 @@ class DirecTvDevice(MediaPlayerDevice):
         _LOGGER.debug("%s: Fast forward", self.entity_id)
         await self._async_key_press('ffwd')
 
-    def play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """Select input source."""
         if media_type != MEDIA_TYPE_CHANNEL:
             _LOGGER.error("Invalid media type %s. Only %s is supported",
                           media_type, MEDIA_TYPE_CHANNEL)
             raise NotImplementedError()
 
+        _LOGGER.debug("%s: Changing channel to %s", self.entity_id, media_id)
+        await self._async_tune_channel(media_id)
+
+    async def _async_get_standby(self):
+        """Call sync function to retrieve DVR information."""
+        if not await self._async_get_dtv_instance():
             return
 
-        _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
-        self.dtv.tune_channel(media_id)
+        return await self.hass.async_add_executor_job(self.dtv.get_standby)
+
+    async def _async_get_tuned(self):
+        """Call sync function to retrieve DVR information."""
+        if not await self._async_get_dtv_instance():
+            return
+
+        return await self.hass.async_add_executor_job(self.dtv.get_tuned)
+
+    async def _async_get_locations(self):
+        """Call sync function to retrieve locations."""
+        if not await self._async_get_dtv_instance():
+            _LOGGER.error("Not yet connected to DVR")
+            return
+
+        return await self.hass.async_add_executor_job(self.dtv.get_locations)
+
+    async def _async_key_press(self, key):
+        """Call sync function for key_press."""
+        if not await self._async_get_dtv_instance():
+            _LOGGER.error("Not yet connected to DVR")
+            return
+
+        try:
+            result = await self.hass.async_add_executor_job(
+                self.dtv.key_press, key)
+        except requests.RequestException as ex:
+            _LOGGER.error("%s: Request error trying to send key press: %s",
+                          self.entity_id, ex)
+            return
+
+        return result
+
+    async def _async_tune_channel(self, channel):
+        """Call sync function for changing channel."""
+        if not await self._async_get_dtv_instance():
+            _LOGGER.error("Not yet connected to DVR")
+            return
+
+        try:
+            result = await self.hass.async_add_executor_job(
+                self.dtv.tune_channel, channel)
+        except requests.RequestException as ex:
+            _LOGGER.error("%s: Request error trying to change channel: %s",
+                          self.entity_id, ex)
+            return
+
+        return result
