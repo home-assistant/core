@@ -16,7 +16,6 @@ DEFAULT_LOCK_CODE_CONFIG = {
 
 async def test_verisure_no_default_code(hass):
     """Test configs without a default lock code."""
-
     with patch('homeassistant.components.lock.verisure.hub') as hub:
         hub.config = NO_DEFAULT_LOCK_CODE_CONFIG
 
@@ -40,7 +39,6 @@ async def test_verisure_no_default_code(hass):
 
 async def test_verisure_default_code(hass):
     """Test configs with a default lock code."""
-
     with patch('homeassistant.components.lock.verisure.hub') as hub:
         hub.config = DEFAULT_LOCK_CODE_CONFIG
 
