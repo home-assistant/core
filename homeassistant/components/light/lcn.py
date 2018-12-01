@@ -57,6 +57,7 @@ class LcnOutputLight(LcnDevice, Light):
 
         self._brightness = 255
         self._is_on = None
+        self._is_dimming_to_zero = False
 
         self.hass.async_create_task(
             self.address_connection.activate_status_request_handler(
@@ -83,6 +84,7 @@ class LcnOutputLight(LcnDevice, Light):
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         self._is_on = True
+        self._is_dimming_to_zero = False
         if ATTR_BRIGHTNESS in kwargs:
             percent = int(kwargs[ATTR_BRIGHTNESS] / 255. * 100)
         else:
@@ -106,6 +108,8 @@ class LcnOutputLight(LcnDevice, Light):
         else:
             transition = self._transition
 
+        self._is_dimming_to_zero = bool(transition)
+
         self.address_connection.dim_output(self.output.value, 0, transition)
         await self.async_update_ha_state()
 
@@ -114,4 +118,6 @@ class LcnOutputLight(LcnDevice, Light):
         if isinstance(input_obj, self.pypck.input.ModStatusOutput):
             if input_obj.get_output_id() == self.output.value:
                 self._brightness = int(input_obj.get_percent() / 100.*255)
+                if not self._is_dimming_to_zero:
+                    self._is_on = self.brightness > 0
                 self.async_schedule_update_ha_state()
