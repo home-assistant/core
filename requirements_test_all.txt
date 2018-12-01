@@ -41,7 +41,7 @@ aiohttp_cors==0.7.0
 aiohue==1.3.0
 
 # homeassistant.components.frontend
-ais-dom-frontend==20181120.0
+ais-dom-frontend==20181121.1
 
 # homeassistant.components.unifi
 aiounifi==3
