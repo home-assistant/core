@@ -168,6 +168,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
         old_state = await self.async_get_last_state()
         if old_state is not None and \
                 old_state.attributes.get(ATTR_BRIGHTNESS) is not None:
+            # restore also brightness in dimmables devices
             self._brightness = int(old_state.attributes.get(ATTR_BRIGHTNESS))
 
     async def async_turn_on(self, **kwargs):
@@ -215,6 +216,7 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
         old_state = await self.async_get_last_state()
         if old_state is not None and \
                 old_state.attributes.get(ATTR_BRIGHTNESS) is not None:
+            # restore also brightness in dimmables devices
             self._brightness = int(old_state.attributes.get(ATTR_BRIGHTNESS))
 
     async def async_turn_on(self, **kwargs):

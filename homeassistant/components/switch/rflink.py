@@ -67,7 +67,6 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities(devices_from_config(config))
 
 
-# pylint: disable=too-many-ancestors
 class RflinkSwitch(SwitchableRflinkDevice, SwitchDevice):
     """Representation of a Rflink switch."""
 

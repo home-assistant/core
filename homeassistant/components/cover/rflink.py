@@ -18,7 +18,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.const import CONF_NAME, STATE_OPEN
 
-
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)

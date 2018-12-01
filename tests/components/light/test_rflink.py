@@ -596,22 +596,21 @@ def test_restore_state(hass, monkeypatch):
     hass.state = CoreState.starting
 
     # setup mocking rflink module
-    event_callback, _, _, _ = yield from mock_rflink(
-        hass, config, DOMAIN, monkeypatch)
+    _, _, _, _ = yield from mock_rflink(hass, config, DOMAIN, monkeypatch)
 
     # dimmable light must restore brightness
     state = hass.states.get(DOMAIN + '.l1')
     assert state
-    assert(state.state == STATE_ON)
-    assert(state.attributes[ATTR_BRIGHTNESS] == 123)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 123
 
     # normal light do NOT must restore brightness
     state = hass.states.get(DOMAIN + '.l2')
     assert state
-    assert(state.state == STATE_ON)
-    assert not (state.attributes.get(ATTR_BRIGHTNESS))
+    assert state.state == STATE_ON
+    assert not state.attributes.get(ATTR_BRIGHTNESS)
 
     # OFF state also restores (or not)
     state = hass.states.get(DOMAIN + '.l3')
     assert state
-    assert(state.state == STATE_OFF)
+    assert state.state == STATE_OFF
