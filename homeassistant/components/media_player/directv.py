@@ -205,7 +205,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
         for loc in resp.get('locations') or []:
             if 'locationName' not in loc or 'clientAddr' not in loc or\
-               loc.get('clientAddr') == 0:
+               loc.get('clientAddr') == DEFAULT_DEVICE:
                 continue
 
             # Make sure that this device is not already configured
