@@ -506,7 +506,7 @@ class SwitchableRflinkDevice(RflinkCommand, RestoreEntity):
         """Restore RFLink device state (ON/OFF)."""
         await super().async_added_to_hass()
 
-        old_state = await self.async_added_to_hass()
+        old_state = await self.async_get_last_state()
         if old_state is not None:
             self._state = old_state.state == STATE_ON
 
