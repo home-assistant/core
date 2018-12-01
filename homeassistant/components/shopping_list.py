@@ -105,8 +105,8 @@ def async_setup(hass, config):
         except IndexError:
             _LOGGER.error("Removing of item failed: %s cannot be found", name)
         else:
-            data.async_update(list_id, item['id'],
-            {'name': name, 'complete': True})
+            data.async_update(
+                list_id, item['id'], {'name': name, 'complete': True})
 
     data = hass.data[DOMAIN] = ShoppingData(hass)
     yield from data.async_load()
