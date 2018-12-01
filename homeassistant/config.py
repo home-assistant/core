@@ -346,21 +346,21 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
     return await hass.async_add_executor_job(_load_hass_yaml_config)
 
 
-async def async_hass_config_merge(hass: HomeAssistant, config: Dict) -> Dict:
+async def async_hass_config_merge(hass: HomeAssistant, config: Dict) -> None:
     """Merge packages with Home Assistant config.
 
     This function should be run after 'async_hass_config_yaml' to include
-    packages with a reload.
+    packages with a reload. Merge does not work for 'homeassistant'.
+    To merge 'homeassistant' -> 'customize' from packages, run
+    'async_process_ha_core_config'.
 
     This method is a coroutine.
     """
     def _merge_hass_yaml_config() -> None:
         core_config = config.get(CONF_CORE, {})
         merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
-        core_config.pop(CONF_PACKAGES, None)
-        return config
 
-    return await hass.async_add_executor_job(_merge_hass_yaml_config)
+    await hass.async_add_executor_job(_merge_hass_yaml_config)
 
 
 def find_config_file(config_dir: Optional[str]) -> Optional[str]:

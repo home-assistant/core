@@ -550,6 +550,27 @@ class TestConfig(unittest.TestCase):
         ).result() == 'bad'
 
 
+async def test_async_hass_config_merge(merge_log_err, hass):
+    """Test async wrapper for merge_packages_config."""
+    packages = {
+        'pack_dict': {'input_boolean': {'ib1': None}},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'input_boolean': {'ib2': None},
+        'light': {'platform': 'test'}
+    }
+
+    await config_util.async_hass_config_merge(hass, config)
+
+    assert merge_log_err.call_count == 0
+    assert config[config_util.CONF_CORE].get(config_util.CONF_PACKAGES) \
+        is not None
+    assert len(config) == 3
+    assert len(config['input_boolean']) == 2
+    assert len(config['light']) == 1
+
+
 # pylint: disable=redefined-outer-name
 @pytest.fixture
 def merge_log_err(hass):

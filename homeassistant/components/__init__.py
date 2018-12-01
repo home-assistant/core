@@ -166,8 +166,6 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             _LOGGER.error(err)
             return
 
-        await conf_util.async_hass_config_merge(hass, conf)
-
         await conf_util.async_process_ha_core_config(
             hass, conf.get(ha.DOMAIN) or {})
 
