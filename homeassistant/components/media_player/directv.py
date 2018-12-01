@@ -85,6 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     elif discovery_info:
         host = discovery_info.get('host')
         name = 'DirecTV_{}'.format(discovery_info.get('serial', ''))
+        resp = []
 
         if (host, DEFAULT_DEVICE) in known_devices:
             _LOGGER.debug("Discovered device on host %s is already"
@@ -92,8 +93,15 @@ async def async_setup_platform(hass, config, async_add_entities,
             return
 
         from DirectPy import DIRECTV
-        dtv = await hass.async_add_executor_job(
-            DIRECTV, host, DEFAULT_PORT, DEFAULT_DEVICE)
+        try:
+            dtv = await hass.async_add_executor_job(
+                DIRECTV, host, DEFAULT_PORT, DEFAULT_DEVICE)
+        except requests.exceptions.RequestException as ex:
+            # Use uPnP data only
+            _LOGGER.debug("Request exception %s trying to get "
+                          "locations", ex)
+            resp = []
+
         if dtv:
             try:
                 resp = await hass.async_add_executor_job(
@@ -102,19 +110,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 # Use uPnP data only
                 _LOGGER.debug("Request exception %s trying to get "
                               "locations", ex)
-                resp = {
-                    'locations': [{
-                        'locationName': name,
-                        'clientAddr': DEFAULT_DEVICE
-                    }]
-                }
-        else:
-            resp = {
-                'locations': [{
-                    'locationName': name,
-                    'clientAddr': DEFAULT_DEVICE
-                }]
-            }
+                resp = []
 
         for loc in resp.get("locations") or []:
             if loc.get("clientAddr") == DEFAULT_DEVICE and \
@@ -261,24 +257,26 @@ class DirecTvDevice(MediaPlayerDevice):
                             "again later: %s", ex)
             self.dtv = None
 
-        if self.dtv:
-            _LOGGER.debug("%s: Successfull connection to DVR on %s",
-                          self.entity_id, self._host)
+        if not self.dtv:
+            return
 
-            if self._discover_clients:
-                # We are connected to DVR and will discover any potential
-                # clients. Schedule discovery
-                # Create a task to already do first discovery.
-                self.hass.async_create_task(
-                    self._async_discover_directv_client_devices()
-                )
+        _LOGGER.debug("%s: Successfull connection to DVR on %s",
+                      self.entity_id, self._host)
 
-                # Schedule discovery to run based on interval.
-                async_track_time_interval(
-                    self.hass, self._async_discover_directv_client_devices,
-                    self._client_discover_interval)
-                _LOGGER.debug("%s: Client discovery scheduled for every %s",
-                              self.entity_id, self._client_discover_interval)
+        if self._discover_clients:
+            # We are connected to DVR and will discover any potential
+            # clients. Schedule discovery
+            # Create a task to already do first discovery.
+            self.hass.async_create_task(
+                self._async_discover_directv_client_devices()
+            )
+
+            # Schedule discovery to run based on interval.
+            async_track_time_interval(
+                self.hass, self._async_discover_directv_client_devices,
+                self._client_discover_interval)
+            _LOGGER.debug("%s: Client discovery scheduled for every %s",
+                          self.entity_id, self._client_discover_interval)
 
         return self.dtv
 
