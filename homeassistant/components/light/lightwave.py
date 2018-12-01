@@ -18,7 +18,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Find and return LightWave lights."""
     if not discovery_info:
-        return True
+        return
 
     lights = []
     lwlink = hass.data[LIGHTWAVE_LINK]
