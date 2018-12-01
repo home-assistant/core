@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
-REQUIREMENTS = ['ghlocalapi==0.1.0']
+REQUIREMENTS = ['ghlocalapi==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,8 +77,8 @@ class GoogleHomeDeviceScanner(DeviceScanner):
     async def async_update_info(self):
         """Ensure the information from Google Home is up to date."""
         _LOGGER.debug('Checking Devices...')
-        await self.scanner.scan_for_devices()
         await self.scanner.get_scan_result()
+        await self.scanner.scan_for_devices()
         ghname = self.deviceinfo.device_info['name']
         devices = {}
         for device in self.scanner.devices:
