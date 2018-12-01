@@ -808,7 +808,7 @@ py-melissa-climate==2.0.0
 py-synology==0.2.0
 
 # homeassistant.components.sensor.seventeentrack
-py17track==2.1.0
+py17track==2.1.1
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
