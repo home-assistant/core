@@ -112,13 +112,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     config = OrderedDict(config)
 
     # Merge packages
-    conf_util.merge_packages_config(
-        hass, config, core_config.get(conf_util.CONF_PACKAGES, {}))
-
-    # Ensure we have no None values after merge
-    for key, value in config.items():
-        if not value:
-            config[key] = {}
+    await conf_util.async_hass_config_merge(hass, config)
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await hass.config_entries.async_load()
