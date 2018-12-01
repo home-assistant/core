@@ -1,15 +1,12 @@
 """Test shopping list component."""
 import asyncio
 from unittest.mock import patch
-import logging
 
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.helpers import intent
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
