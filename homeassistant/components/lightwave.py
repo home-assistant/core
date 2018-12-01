@@ -6,10 +6,10 @@ https://home-assistant.io/components/lightwave/
 """
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_SWITCHES
+from homeassistant.const import (
+    CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_SWITCHES)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-
 
 REQUIREMENTS = ['lightwave==0.15']
 LIGHTWAVE_LINK = 'lightwave_link'

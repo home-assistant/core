@@ -4,10 +4,10 @@ Implements LightwaveRF lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lightwave/
 """
-from homeassistant.const import CONF_NAME
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.lightwave import LIGHTWAVE_LINK
+from homeassistant.const import CONF_NAME
 
 DEPENDENCIES = ['lightwave']
 
