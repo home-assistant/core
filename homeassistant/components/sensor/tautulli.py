@@ -91,7 +91,7 @@ class TautulliSensor(Entity):
         self.home = self.tautulli.api.home_data
         self.sessions = self.tautulli.api.session_data
         self._attributes['Top Movie'] = self.home.get('movie')
-        self._attributes['Top TV Show'] = self.home,get('tv')
+        self._attributes['Top TV Show'] = self.home.get('tv')
         self._attributes['Top User'] = self.home.get('user')
         for key in self.sessions:
             if 'sessions' not in key:
