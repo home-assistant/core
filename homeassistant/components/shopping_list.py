@@ -15,6 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 from homeassistant.components import websocket_api
 
+ATTR_LIST_ID = 'list_id'
 ATTR_NAME = 'name'
 
 DOMAIN = 'shopping_list'
@@ -34,28 +35,38 @@ SERVICE_ADD_ITEM = 'add_item'
 SERVICE_COMPLETE_ITEM = 'complete_item'
 
 SERVICE_ITEM_SCHEMA = vol.Schema({
-    vol.Required(ATTR_NAME): vol.Any(None, cv.string)
+    vol.Required(ATTR_NAME): vol.Any(None, cv.string),
+    vol.Optional(ATTR_LIST_ID, '0'): cv.string
 })
 
+WS_TYPE_SHOPPING_LIST_LISTS = 'shopping_list/lists'
 WS_TYPE_SHOPPING_LIST_ITEMS = 'shopping_list/items'
 WS_TYPE_SHOPPING_LIST_ADD_ITEM = 'shopping_list/items/add'
 WS_TYPE_SHOPPING_LIST_UPDATE_ITEM = 'shopping_list/items/update'
 WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS = 'shopping_list/items/clear'
 
+SCHEMA_WEBSOCKET_LISTS = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_SHOPPING_LIST_LISTS
+    })
+
 SCHEMA_WEBSOCKET_ITEMS = \
     websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-        vol.Required('type'): WS_TYPE_SHOPPING_LIST_ITEMS
+        vol.Required('type'): WS_TYPE_SHOPPING_LIST_ITEMS,
+        vol.Required('list_id'): str
     })
 
 SCHEMA_WEBSOCKET_ADD_ITEM = \
     websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
         vol.Required('type'): WS_TYPE_SHOPPING_LIST_ADD_ITEM,
+        vol.Required('list_id'): str,
         vol.Required('name'): str
     })
 
 SCHEMA_WEBSOCKET_UPDATE_ITEM = \
     websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
         vol.Required('type'): WS_TYPE_SHOPPING_LIST_UPDATE_ITEM,
+        vol.Required('list_id'): str,
         vol.Required('item_id'): str,
         vol.Optional('name'): str,
         vol.Optional('complete'): bool
@@ -63,7 +74,8 @@ SCHEMA_WEBSOCKET_UPDATE_ITEM = \
 
 SCHEMA_WEBSOCKET_CLEAR_ITEMS = \
     websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-        vol.Required('type'): WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS
+        vol.Required('type'): WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS,
+        vol.Required('list_id'): str,
     })
 
 
@@ -74,23 +86,27 @@ def async_setup(hass, config):
     def add_item_service(call):
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
+        list_id = call.data.get(ATTR_LIST_ID)
         name = call.data.get(ATTR_NAME)
         if name is not None:
-            data.async_add(name)
+            data.async_add(list_id, name)
 
     @asyncio.coroutine
     def complete_item_service(call):
         """Mark the item provided via `name` as completed."""
         data = hass.data[DOMAIN]
+        list_id = call.data.get(ATTR_LIST_ID)
         name = call.data.get(ATTR_NAME)
         if name is None:
             return
         try:
-            item = [item for item in data.items if item['name'] == name][0]
+            lis = next((li for li in data.lists if li['id'] == list_id), None)
+            item = [item for item in lis['items'] if item['name'] == name][0]
         except IndexError:
             _LOGGER.error("Removing of item failed: %s cannot be found", name)
         else:
-            data.async_update(item['id'], {'name': name, 'complete': True})
+            data.async_update(list_id, item['id'],
+                {'name': name, 'complete': True})
 
     data = hass.data[DOMAIN] = ShoppingData(hass)
     yield from data.async_load()
@@ -122,6 +138,10 @@ def async_setup(hass, config):
         'shopping-list', 'shopping_list', 'mdi:cart')
 
     hass.components.websocket_api.async_register_command(
+        WS_TYPE_SHOPPING_LIST_LISTS,
+        websocket_handle_lists,
+        SCHEMA_WEBSOCKET_ITEMS)
+    hass.components.websocket_api.async_register_command(
         WS_TYPE_SHOPPING_LIST_ITEMS,
         websocket_handle_items,
         SCHEMA_WEBSOCKET_ITEMS)
@@ -147,24 +167,40 @@ class ShoppingData:
     def __init__(self, hass):
         """Initialize the shopping list."""
         self.hass = hass
-        self.items = []
+        self.lists = [{
+            'name': 'Inbox',
+            'id': '0',
+            'items': []
+        }]
 
     @callback
-    def async_add(self, name):
+    def async_add(self, list_id, name):
         """Add a shopping list item."""
         item = {
+            'list_id': list_id,
             'name': name,
             'id': uuid.uuid4().hex,
             'complete': False
         }
-        self.items.append(item)
+        lis = next((li for li in self.lists if li['id'] == list_id), None)
+
+        if lis is None:
+            raise KeyError
+
+        lis['items'].append(item)
         self.hass.async_add_job(self.save)
         return item
 
     @callback
-    def async_update(self, item_id, info):
+    def async_update(self, list_id, item_id, info):
         """Update a shopping list item."""
-        item = next((itm for itm in self.items if itm['id'] == item_id), None)
+        lis = next((li for li in self.lists if li['id'] == list_id), None)
+
+        if lis is None:
+            raise KeyError
+
+        item = next(
+            (itm for itm in lis['items'] if itm['id'] == item_id), None)
 
         if item is None:
             raise KeyError
@@ -175,9 +211,14 @@ class ShoppingData:
         return item
 
     @callback
-    def async_clear_completed(self):
+    def async_clear_completed(self, list_id):
         """Clear completed items."""
-        self.items = [itm for itm in self.items if not itm['complete']]
+        lis = next((li for li in self.lists if li['id'] == list_id), None)
+
+        if lis is None:
+            raise KeyError
+
+        lis['items'] = [itm for itm in lis['items'] if not itm['complete']]
         self.hass.async_add_job(self.save)
 
     @asyncio.coroutine
@@ -185,13 +226,17 @@ class ShoppingData:
         """Load items."""
         def load():
             """Load the items synchronously."""
-            return load_json(self.hass.config.path(PERSISTENCE), default=[])
+            return load_json(self.hass.config.path(PERSISTENCE), default=[{
+                'name': 'Inbox',
+                'id': '0',
+                'items': []
+            }])
 
-        self.items = yield from self.hass.async_add_job(load)
+        self.lists = yield from self.hass.async_add_job(load)
 
     def save(self):
         """Save the items."""
-        save_json(self.hass.config.path(PERSISTENCE), self.items)
+        save_json(self.hass.config.path(PERSISTENCE), self.lists)
 
 
 class AddItemIntent(intent.IntentHandler):
@@ -207,7 +252,7 @@ class AddItemIntent(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots['item']['value']
-        intent_obj.hass.data[DOMAIN].async_add(item)
+        intent_obj.hass.data[DOMAIN].async_add('0', item)
 
         response = intent_obj.create_response()
         response.async_set_speech(
@@ -227,7 +272,10 @@ class ListTopItemsIntent(intent.IntentHandler):
     @asyncio.coroutine
     def async_handle(self, intent_obj):
         """Handle the intent."""
-        items = intent_obj.hass.data[DOMAIN].items[-5:]
+        lis = next(
+            (li for li in intent_obj.hass.data[DOMAIN].lists if li['id']
+             == '0'), None)
+        items = lis['items'][-5:]
         response = intent_obj.create_response()
 
         if not items:
@@ -250,7 +298,10 @@ class ShoppingListView(http.HomeAssistantView):
     @callback
     def get(self, request):
         """Retrieve shopping list items."""
-        return self.json(request.app['hass'].data[DOMAIN].items)
+        lis = next(
+            (li for li in request.app['hass'].data[DOMAIN].lists if li['id']
+             == '0'), None)
+        return self.json(lis['items'])
 
 
 class UpdateShoppingListItemView(http.HomeAssistantView):
@@ -264,7 +315,8 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
         data = await request.json()
 
         try:
-            item = request.app['hass'].data[DOMAIN].async_update(item_id, data)
+            item = request.app['hass'].data[DOMAIN].async_update(
+                '0', item_id, data)
             request.app['hass'].bus.async_fire(EVENT)
             return self.json(item)
         except KeyError:
@@ -285,7 +337,8 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     @asyncio.coroutine
     def post(self, request, data):
         """Create a new shopping list item."""
-        item = request.app['hass'].data[DOMAIN].async_add(data['name'])
+        item = request.app['hass'].data[DOMAIN].async_add(
+            '0', data['name'])
         request.app['hass'].bus.async_fire(EVENT)
         return self.json(item)
 
@@ -300,22 +353,32 @@ class ClearCompletedItemsView(http.HomeAssistantView):
     def post(self, request):
         """Retrieve if API is running."""
         hass = request.app['hass']
-        hass.data[DOMAIN].async_clear_completed()
+        hass.data[DOMAIN].async_clear_completed('0')
         hass.bus.async_fire(EVENT)
         return self.json_message('Cleared completed items.')
 
 
 @callback
+def websocket_handle_lists(hass, connection, msg):
+    """Handle get shopping_list lists."""
+    connection.send_message(websocket_api.result_message(
+        msg['id'], hass.data[DOMAIN].lists))
+
+
+@callback
 def websocket_handle_items(hass, connection, msg):
     """Handle get shopping_list items."""
+    list_id = msg['list_id']
+    lis = next(
+        (li for li in hass.data[DOMAIN].lists if li['id'] == list_id), None)
     connection.send_message(websocket_api.result_message(
-        msg['id'], hass.data[DOMAIN].items))
+        msg['id'], lis['items']))
 
 
 @callback
 def websocket_handle_add(hass, connection, msg):
     """Handle add item to shopping_list."""
-    item = hass.data[DOMAIN].async_add(msg['name'])
+    item = hass.data[DOMAIN].async_add(msg['list_id'], msg['name'])
     hass.bus.async_fire(EVENT)
     connection.send_message(websocket_api.result_message(
         msg['id'], item))
@@ -325,12 +388,13 @@ def websocket_handle_add(hass, connection, msg):
 async def websocket_handle_update(hass, connection, msg):
     """Handle update shopping_list item."""
     msg_id = msg.pop('id')
+    list_id = msg.pop('list_id')
     item_id = msg.pop('item_id')
     msg.pop('type')
     data = msg
 
     try:
-        item = hass.data[DOMAIN].async_update(item_id, data)
+        item = hass.data[DOMAIN].async_update(list_id, item_id, data)
         hass.bus.async_fire(EVENT)
         connection.send_message(websocket_api.result_message(
             msg_id, item))
@@ -342,6 +406,6 @@ async def websocket_handle_update(hass, connection, msg):
 @callback
 def websocket_handle_clear(hass, connection, msg):
     """Handle clearing shopping_list items."""
-    hass.data[DOMAIN].async_clear_completed()
+    hass.data[DOMAIN].async_clear_completed(msg['list_id'])
     hass.bus.async_fire(EVENT)
     connection.send_message(websocket_api.result_message(msg['id']))
