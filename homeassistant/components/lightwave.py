@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
 
-REQUIREMENTS = ['lightwave==0.14']
+REQUIREMENTS = ['lightwave==0.15']
 LIGHTWAVE_LINK = 'lightwave_link'
 DOMAIN = 'lightwave'
 

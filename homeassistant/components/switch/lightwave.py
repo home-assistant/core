@@ -14,22 +14,24 @@ DEPENDENCIES = ['lightwave']
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Find and return LightWave switches."""
-    if discovery_info:
-        switches = []
-        lwlink = hass.data[LIGHTWAVE_LINK]
+    if not discovery_info:
+        return True
 
-        for device_id, device_config in discovery_info.items():
-            name = device_config[CONF_NAME]
-            switches.append(LRFSwitch(name, device_id, lwlink))
+    switches = []
+    lwlink = hass.data[LIGHTWAVE_LINK]
 
-        async_add_entities(switches)
+    for device_id, device_config in discovery_info.items():
+        name = device_config[CONF_NAME]
+        switches.append(LWRFSwitch(name, device_id, lwlink))
+
+    async_add_entities(switches)
 
 
-class LRFSwitch(SwitchDevice):
+class LWRFSwitch(SwitchDevice):
     """Representation of a LightWaveRF switch."""
 
     def __init__(self, name, device_id, lwlink):
-        """Initialize LRFSwitch entity."""
+        """Initialize LWRFSwitch entity."""
         self._name = name
         self._device_id = device_id
         self._state = None
