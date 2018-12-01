@@ -134,5 +134,6 @@ class Sense(Entity):
             else:
                 self._state = round(self._data.active_power)
         else:
-            state = self._data.get_trend(self._sensor_type, self._is_production)
+            state = self._data.get_trend(
+                self._sensor_type, self._is_production)
             self._state = round(state, 1)
