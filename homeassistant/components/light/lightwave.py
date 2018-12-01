@@ -17,14 +17,15 @@ MAX_BRIGHTNESS = 255
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Find and return LightWave lights."""
-    lights = []
-    lwlink = hass.data[LIGHTWAVE_LINK]
+    if discovery_info:
+        lights = []
+        lwlink = hass.data[LIGHTWAVE_LINK]
 
-    for device_id, device_config in discovery_info.items():
-        name = device_config[CONF_NAME]
-        lights.append(LRFLight(name, device_id, lwlink))
+        for device_id, device_config in discovery_info.items():
+            name = device_config[CONF_NAME]
+            lights.append(LRFLight(name, device_id, lwlink))
 
-    async_add_entities(lights)
+        async_add_entities(lights)
 
 
 class LRFLight(Light):
