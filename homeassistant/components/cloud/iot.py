@@ -249,6 +249,7 @@ class CloudIoT:
             _LOGGER.warning("Unable to connect: %s", err)
 
         finally:
+            self.state = STATE_DISCONNECTED
             if disconnect_warn is None:
                 _LOGGER.info("Connection closed")
             else:
