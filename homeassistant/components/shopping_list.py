@@ -140,7 +140,7 @@ def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_SHOPPING_LIST_LISTS,
         websocket_handle_lists,
-        SCHEMA_WEBSOCKET_ITEMS)
+        SCHEMA_WEBSOCKET_LISTS)
     hass.components.websocket_api.async_register_command(
         WS_TYPE_SHOPPING_LIST_ITEMS,
         websocket_handle_items,

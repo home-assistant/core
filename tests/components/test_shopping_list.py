@@ -78,6 +78,30 @@ def test_deprecated_api_get_all(hass, hass_client):
     assert not data[1]['complete']
 
 
+async def test_ws_get_lists(hass, hass_ws_client):
+    """Test get shopping_list lists websocket command."""
+    await async_setup_component(hass, 'shopping_list', {})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        'id': 5,
+        'type': 'shopping_list/lists'
+    })
+    msg = await client.receive_json()
+    assert msg['success'] is True
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+    data = msg['result']
+    assert data[0] == {
+        'name': 'Inbox',
+        'id': '0',
+        'items': []
+    }
+
+
 async def test_ws_get_items(hass, hass_ws_client):
     """Test get shopping_list items websocket command."""
     await async_setup_component(hass, 'shopping_list', {})
