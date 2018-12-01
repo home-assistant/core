@@ -44,7 +44,6 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
 def setup_auth(app, trusted_networks, api_password):
     """Create auth middleware for the app."""
     old_auth_warning = set()
-    legacy_auth = (not use_auth or support_legacy) and api_password
 
     @middleware
     async def auth_middleware(request, handler):
