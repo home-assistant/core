@@ -4,6 +4,7 @@ import json
 import logging
 import math
 import random
+import base64
 import re
 
 import jinja2
@@ -602,6 +603,23 @@ def bitwise_or(first_value, second_value):
     return first_value | second_value
 
 
+def base64_encode(value):
+    """Perform base64 encode."""
+    return base64.b64encode(value.encode('utf-8')).decode('utf-8')
+
+
+def base64_decode(value):
+    """Perform base64 denode."""
+    return base64.b64decode(value).decode('utf-8')
+
+
+def ordinal(value):
+    """Perform ordinal conversion."""
+    return str(value) + (list(['th', 'st', 'nd', 'rd'] + ['th'] * 6)
+                         [(int(str(value)[-1])) % 10] if not
+                         int(str(value)[-2:]) % 100 in range(11, 14) else 'th')
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -640,6 +658,9 @@ ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
+ENV.filters['base64_encode'] = base64_encode
+ENV.filters['base64_decode'] = base64_decode
+ENV.filters['ordinal'] = ordinal
 ENV.filters['regex_match'] = regex_match
 ENV.filters['regex_replace'] = regex_replace
 ENV.filters['regex_search'] = regex_search
