@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
-REQUIREMENTS = ['ghlocalapi==0.3.4']
+REQUIREMENTS = ['ghlocalapi==0.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,8 +77,8 @@ class GoogleHomeDeviceScanner(DeviceScanner):
     async def async_update_info(self):
         """Ensure the information from Google Home is up to date."""
         _LOGGER.debug('Checking Devices...')
-        await self.scanner.get_scan_result()
         await self.scanner.scan_for_devices()
+        await self.scanner.get_scan_result()
         ghname = self.deviceinfo.device_info['name']
         devices = {}
         for device in self.scanner.devices:
@@ -89,4 +89,5 @@ class GoogleHomeDeviceScanner(DeviceScanner):
                 devices[uuid]['btle_mac_address'] = device['mac_address']
                 devices[uuid]['ghname'] = ghname
                 devices[uuid]['source_type'] = 'bluetooth'
+        await self.scanner.clear_scan_result()
         self.last_results = devices
