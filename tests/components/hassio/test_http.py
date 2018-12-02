@@ -108,8 +108,8 @@ def test_forward_log_request(hassio_client):
 
     with patch('homeassistant.components.hassio.HassIOView._command_proxy',
                Mock(return_value=mock_coro(response))), \
-         patch('homeassistant.components.hassio.http'
-               '._create_response') as mresp:
+            patch('homeassistant.components.hassio.http.'
+                  '_create_response') as mresp:
         mresp.return_value = '\033[32mresponse\033[0m'
         resp = yield from hassio_client.get('/api/hassio/beer/logs', headers={
                 HTTP_HEADER_HA_AUTH: API_PASSWORD
