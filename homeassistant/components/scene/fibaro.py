@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class FibaroScene(FibaroDevice, Scene):
     """Representation of a Fibaro scene entity."""
-    
+
     async def async_activate(self):
         """Activate the scene."""
         self.fibaro_device.start()
