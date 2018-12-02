@@ -17,7 +17,7 @@ from homeassistant.components.notify import (
     BaseNotificationService)
 from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 
-REQUIREMENTS = ['slacker==0.9.65']
+REQUIREMENTS = ['slacker==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,14 +39,15 @@ ATTR_FILE_AUTH_DIGEST = 'digest'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_CHANNEL): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_ICON): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
 })
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the Slack notification service."""
     import slacker
+
     channel = config.get(CONF_CHANNEL)
     api_key = config.get(CONF_API_KEY)
     username = config.get(CONF_USERNAME)
@@ -115,15 +116,15 @@ class SlackNotificationService(BaseNotificationService):
                         'content': None,
                         'filetype': None,
                         'filename': filename,
-                        # if optional title is none use the filename
+                        # If optional title is none use the filename
                         'title': title if title else filename,
                         'initial_comment': message,
                         'channels': target
                     }
                     # Post to slack
-                    self.slack.files.post('files.upload',
-                                          data=data,
-                                          files={'file': file_as_bytes})
+                    self.slack.files.post(
+                        'files.upload', data=data,
+                        files={'file': file_as_bytes})
                 else:
                     self.slack.chat.post_message(
                         target, message, as_user=self._as_user,
@@ -154,13 +155,13 @@ class SlackNotificationService(BaseNotificationService):
             elif local_path:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
-                    return open(local_path, "rb")
-                _LOGGER.warning("'%s' is not secure to load data from!",
-                                local_path)
+                    return open(local_path, 'rb')
+                _LOGGER.warning(
+                    "'%s' is not secure to load data from!", local_path)
             else:
                 _LOGGER.warning("Neither URL nor local path found in params!")
 
         except OSError as error:
-            _LOGGER.error("Can't load from url or local path: %s", error)
+            _LOGGER.error("Can't load from URL or local path: %s", error)
 
         return None
