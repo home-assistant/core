@@ -591,18 +591,18 @@ class TestComponentLogbook(unittest.TestCase):
         }, time_fired=event_time_fired)
 
 
-async def test_logbook_view(hass, aiohttp_client):
+async def test_logbook_view(hass, hass_client):
     """Test the logbook view."""
     await hass.async_add_job(init_recorder_component, hass)
     await async_setup_component(hass, 'logbook', {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
     response = await client.get(
         '/api/logbook/{}'.format(dt_util.utcnow().isoformat()))
     assert response.status == 200
 
 
-async def test_logbook_view_period_entity(hass, aiohttp_client):
+async def test_logbook_view_period_entity(hass, hass_client):
     """Test the logbook view with period and entity."""
     await hass.async_add_job(init_recorder_component, hass)
     await async_setup_component(hass, 'logbook', {})
@@ -617,7 +617,7 @@ async def test_logbook_view_period_entity(hass, aiohttp_client):
     await hass.async_block_till_done()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()

@@ -89,8 +89,7 @@ def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
 async def test_setup_api_push_api_data_default(hass, aioclient_mock,
                                                hass_storage):
     """Test setup with API push default data."""
-    with patch.dict(os.environ, MOCK_ENVIRON), \
-            patch('homeassistant.auth.AuthManager.active', return_value=True):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, 'hassio', {
             'http': {},
             'hassio': {}
@@ -130,20 +129,6 @@ async def test_setup_adds_admin_group_to_user(hass, aioclient_mock,
         'version': 1
     }
 
-    with patch.dict(os.environ, MOCK_ENVIRON), \
-            patch('homeassistant.auth.AuthManager.active', return_value=True):
-        result = await async_setup_component(hass, 'hassio', {
-            'http': {},
-            'hassio': {}
-        })
-        assert result
-
-    assert user.is_admin
-
-
-async def test_setup_api_push_api_data_no_auth(hass, aioclient_mock,
-                                               hass_storage):
-    """Test setup with API push default data."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, 'hassio', {
             'http': {},
@@ -151,11 +136,7 @@ async def test_setup_api_push_api_data_no_auth(hass, aioclient_mock,
         })
         assert result
 
-    assert aioclient_mock.call_count == 3
-    assert not aioclient_mock.mock_calls[1][2]['ssl']
-    assert aioclient_mock.mock_calls[1][2]['password'] is None
-    assert aioclient_mock.mock_calls[1][2]['port'] == 8123
-    assert aioclient_mock.mock_calls[1][2]['refresh_token'] is None
+    assert user.is_admin
 
 
 async def test_setup_api_existing_hassio_user(hass, aioclient_mock,
@@ -169,8 +150,7 @@ async def test_setup_api_existing_hassio_user(hass, aioclient_mock,
             'hassio_user': user.id
         }
     }
-    with patch.dict(os.environ, MOCK_ENVIRON), \
-            patch('homeassistant.auth.AuthManager.active', return_value=True):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, 'hassio', {
             'http': {},
             'hassio': {}
