@@ -43,7 +43,8 @@ FIBARO_TYPEMAP = {
     'com.fibaro.smokeSensor': 'binary_sensor',
     'com.fibaro.remoteSwitch': 'switch',
     'com.fibaro.sensor': 'sensor',
-    'com.fibaro.colorController': 'light'
+    'com.fibaro.colorController': 'light',
+    'com.fibaro.securitySensor': 'binary_sensor'
 }
 
 CONFIG_SCHEMA = vol.Schema({
