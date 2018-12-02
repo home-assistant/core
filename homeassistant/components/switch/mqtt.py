@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.mqtt/
 """
 import logging
-from typing import Optional
 
 import voluptuous as vol
 
@@ -14,7 +13,7 @@ from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
     CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, MqttAvailability,
-    MqttDiscoveryUpdate, MqttEntityDeviceInfo)
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
@@ -54,7 +53,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
     """Set up MQTT switch through configuration.yaml."""
-    await _async_setup_entity(hass, config, async_add_entities,
+    await _async_setup_entity(config, async_add_entities,
                               discovery_info)
 
 
@@ -63,7 +62,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add a MQTT switch."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(hass, config, async_add_entities,
+        await _async_setup_entity(config, async_add_entities,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
@@ -71,35 +70,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(hass, config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities,
                               discovery_hash=None):
     """Set up the MQTT switch."""
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
-        value_template.hass = hass
-
-    newswitch = MqttSwitch(
-        config.get(CONF_NAME),
-        config.get(CONF_ICON),
-        config.get(CONF_STATE_TOPIC),
-        config.get(CONF_COMMAND_TOPIC),
-        config.get(CONF_AVAILABILITY_TOPIC),
-        config.get(CONF_QOS),
-        config.get(CONF_RETAIN),
-        config.get(CONF_PAYLOAD_ON),
-        config.get(CONF_PAYLOAD_OFF),
-        config.get(CONF_STATE_ON),
-        config.get(CONF_STATE_OFF),
-        config.get(CONF_OPTIMISTIC),
-        config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-        config.get(CONF_UNIQUE_ID),
-        value_template,
-        config.get(CONF_DEVICE),
-        discovery_hash,
-    )
-
-    async_add_entities([newswitch])
+    async_add_entities([MqttSwitch(config, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
@@ -107,37 +81,74 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
                  SwitchDevice, RestoreEntity):
     """Representation of a switch that can be toggled using MQTT."""
 
-    def __init__(self, name, icon,
-                 state_topic, command_topic, availability_topic,
-                 qos, retain, payload_on, payload_off, state_on,
-                 state_off, optimistic, payload_available,
-                 payload_not_available, unique_id: Optional[str],
-                 value_template, device_config: Optional[ConfigType],
-                 discovery_hash):
+    def __init__(self, config, discovery_hash):
         """Initialize the MQTT switch."""
-        MqttAvailability.__init__(self, availability_topic, qos,
-                                  payload_available, payload_not_available)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash)
-        MqttEntityDeviceInfo.__init__(self, device_config)
         self._state = False
-        self._name = name
-        self._icon = icon
-        self._state_topic = state_topic
-        self._command_topic = command_topic
-        self._qos = qos
-        self._retain = retain
-        self._payload_on = payload_on
-        self._payload_off = payload_off
-        self._state_on = state_on if state_on else self._payload_on
-        self._state_off = state_off if state_off else self._payload_off
-        self._optimistic = optimistic
-        self._template = value_template
-        self._unique_id = unique_id
-        self._discovery_hash = discovery_hash
+        self._sub_state = None
+
+        self._name = None
+        self._icon = None
+        self._state_topic = None
+        self._command_topic = None
+        self._qos = None
+        self._retain = None
+        self._payload_on = None
+        self._payload_off = None
+        self._state_on = None
+        self._state_off = None
+        self._optimistic = None
+        self._template = None
+        self._unique_id = config.get(CONF_UNIQUE_ID)
+
+        # Load config
+        self._setup_from_config(config)
+
+        availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
+        payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
+        payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+        device_config = config.get(CONF_DEVICE)
+
+        MqttAvailability.__init__(self, availability_topic, self._qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash,
+                                     self.discovery_update)
+        MqttEntityDeviceInfo.__init__(self, device_config)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
         await super().async_added_to_hass()
+        await self._subscribe_topics()
+
+    async def discovery_update(self, discovery_payload):
+        """Handle updated discovery message."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        self._setup_from_config(config)
+        await self.availability_discovery_update(config)
+        await self._subscribe_topics()
+        self.async_schedule_update_ha_state()
+
+    def _setup_from_config(self, config):
+        """(Re)Setup the entity."""
+        self._name = config.get(CONF_NAME)
+        self._icon = config.get(CONF_ICON)
+        self._state_topic = config.get(CONF_STATE_TOPIC)
+        self._command_topic = config.get(CONF_COMMAND_TOPIC)
+        self._qos = config.get(CONF_QOS)
+        self._retain = config.get(CONF_RETAIN)
+        self._payload_on = config.get(CONF_PAYLOAD_ON)
+        self._payload_off = config.get(CONF_PAYLOAD_OFF)
+        state_on = config.get(CONF_STATE_ON)
+        self._state_on = state_on if state_on else self._payload_on
+        state_off = config.get(CONF_STATE_OFF)
+        self._state_off = state_off if state_off else self._payload_off
+        self._optimistic = config.get(CONF_OPTIMISTIC)
+        config.get(CONF_UNIQUE_ID)
+        self._template = config.get(CONF_VALUE_TEMPLATE)
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        if self._template is not None:
+            self._template.hass = self.hass
 
         @callback
         def state_message_received(topic, payload, qos):
@@ -156,14 +167,21 @@ class MqttSwitch(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            await mqtt.async_subscribe(
-                self.hass, self._state_topic, state_message_received,
-                self._qos)
+            self._sub_state = await subscription.async_subscribe_topics(
+                self.hass, self._sub_state,
+                {'state_topic': {'topic': self._state_topic,
+                                 'msg_callback': state_message_received,
+                                 'qos': self._qos}})
 
         if self._optimistic:
             last_state = await self.async_get_last_state()
             if last_state:
                 self._state = last_state.state == STATE_ON
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        await MqttAvailability.async_will_remove_from_hass(self)
 
     @property
     def should_poll(self):
