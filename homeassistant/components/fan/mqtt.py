@@ -117,23 +117,19 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
     def __init__(self, config, discovery_hash):
         """Initialize the MQTT fan."""
+        self._unique_id = config.get(CONF_UNIQUE_ID)
         self._state = False
         self._speed = None
         self._oscillation = None
         self._supported_features = 0
         self._sub_state = None
 
-        self._name = None
         self._topic = None
-        self._qos = None
-        self._retain = None
         self._payload = None
         self._templates = None
-        self._speed_list = None
         self._optimistic = None
         self._optimistic_oscillation = None
         self._optimistic_speed = None
-        self._unique_id = None
 
         # Load config
         self._setup_from_config(config)
@@ -141,9 +137,10 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
         payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+        qos = config.get(CONF_QOS)
         device_config = config.get(CONF_DEVICE)
 
-        MqttAvailability.__init__(self, availability_topic, self._qos,
+        MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
@@ -164,7 +161,7 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._name = config.get(CONF_NAME)
+        self._config = config
         self._topic = {
             key: config.get(key) for key in (
                 CONF_STATE_TOPIC,
@@ -180,8 +177,6 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             ATTR_SPEED: config.get(CONF_SPEED_VALUE_TEMPLATE),
             OSCILLATION: config.get(CONF_OSCILLATION_VALUE_TEMPLATE)
         }
-        self._qos = config.get(CONF_QOS)
-        self._retain = config.get(CONF_RETAIN)
         self._payload = {
             STATE_ON: config.get(CONF_PAYLOAD_ON),
             STATE_OFF: config.get(CONF_PAYLOAD_OFF),
@@ -191,7 +186,6 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             SPEED_MEDIUM: config.get(CONF_PAYLOAD_MEDIUM_SPEED),
             SPEED_HIGH: config.get(CONF_PAYLOAD_HIGH_SPEED),
         }
-        self._speed_list = config.get(CONF_SPEED_LIST)
         optimistic = config.get(CONF_OPTIMISTIC)
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
         self._optimistic_oscillation = (
@@ -232,7 +226,7 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             topics[CONF_STATE_TOPIC] = {
                 'topic': self._topic[CONF_STATE_TOPIC],
                 'msg_callback': state_received,
-                'qos': self._qos}
+                'qos': self._config.get(CONF_QOS)}
 
         @callback
         def speed_received(topic, payload, qos):
@@ -250,7 +244,7 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             topics[CONF_SPEED_STATE_TOPIC] = {
                 'topic': self._topic[CONF_SPEED_STATE_TOPIC],
                 'msg_callback': speed_received,
-                'qos': self._qos}
+                'qos': self._config.get(CONF_QOS)}
             self._speed = SPEED_OFF
 
         @callback
@@ -267,7 +261,7 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
             topics[CONF_OSCILLATION_STATE_TOPIC] = {
                 'topic': self._topic[CONF_OSCILLATION_STATE_TOPIC],
                 'msg_callback': oscillation_received,
-                'qos': self._qos}
+                'qos': self._config.get(CONF_QOS)}
             self._oscillation = False
 
         self._sub_state = await subscription.async_subscribe_topics(
@@ -297,12 +291,12 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
     @property
     def name(self) -> str:
         """Get entity name."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return self._speed_list
+        return self._config.get(CONF_SPEED_LIST)
 
     @property
     def supported_features(self) -> int:
@@ -326,7 +320,8 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """
         mqtt.async_publish(
             self.hass, self._topic[CONF_COMMAND_TOPIC],
-            self._payload[STATE_ON], self._qos, self._retain)
+            self._payload[STATE_ON], self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
         if speed:
             await self.async_set_speed(speed)
 
@@ -337,7 +332,8 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
         """
         mqtt.async_publish(
             self.hass, self._topic[CONF_COMMAND_TOPIC],
-            self._payload[STATE_OFF], self._qos, self._retain)
+            self._payload[STATE_OFF], self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan.
@@ -358,7 +354,8 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
         mqtt.async_publish(
             self.hass, self._topic[CONF_SPEED_COMMAND_TOPIC],
-            mqtt_payload, self._qos, self._retain)
+            mqtt_payload, self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
 
         if self._optimistic_speed:
             self._speed = speed
@@ -379,7 +376,7 @@ class MqttFan(MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo,
 
         mqtt.async_publish(
             self.hass, self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
-            payload, self._qos, self._retain)
+            payload, self._config.get(CONF_QOS), self._config.get(CONF_RETAIN))
 
         if self._optimistic_oscillation:
             self._oscillation = oscillating
