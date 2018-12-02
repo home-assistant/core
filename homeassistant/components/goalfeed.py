@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-REQUIREMENTS = ['pysher==1.0.4']
+REQUIREMENTS = ['pysher==1.0.1']
 
 DOMAIN = 'goalfeed'
 
