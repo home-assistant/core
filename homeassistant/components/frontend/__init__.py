@@ -238,7 +238,7 @@ async def async_setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    index_view = IndexView(repo_path, js_version, hass.auth.active)
+    index_view = IndexView(repo_path, js_version)
     hass.http.register_view(index_view)
     hass.http.register_view(AuthorizeView(repo_path, js_version))
 
@@ -364,11 +364,10 @@ class IndexView(HomeAssistantView):
     requires_auth = False
     extra_urls = ['/states', '/states/{extra}']
 
-    def __init__(self, repo_path, js_option, auth_active):
+    def __init__(self, repo_path, js_option):
         """Initialize the frontend view."""
         self.repo_path = repo_path
         self.js_option = js_option
-        self.auth_active = auth_active
         self._template_cache = {}
 
     def get_template(self, latest):
@@ -415,8 +414,6 @@ class IndexView(HomeAssistantView):
             # do not try to auto connect on load
             no_auth = '0'
 
-        use_oauth = '1' if self.auth_active else '0'
-
         template = await hass.async_add_job(self.get_template, latest)
 
         extra_key = DATA_EXTRA_HTML_URL if latest else DATA_EXTRA_HTML_URL_ES5
@@ -425,7 +422,7 @@ class IndexView(HomeAssistantView):
             no_auth=no_auth,
             theme_color=MANIFEST_JSON['theme_color'],
             extra_urls=hass.data[extra_key],
-            use_oauth=use_oauth
+            use_oauth='1'
         )
 
         return web.Response(text=template.render(**template_params),

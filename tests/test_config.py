@@ -808,7 +808,6 @@ async def test_auth_provider_config(hass):
     assert len(hass.auth.auth_providers) == 2
     assert hass.auth.auth_providers[0].type == 'homeassistant'
     assert hass.auth.auth_providers[1].type == 'legacy_api_password'
-    assert hass.auth.active is True
     assert len(hass.auth.auth_mfa_modules) == 2
     assert hass.auth.auth_mfa_modules[0].id == 'totp'
     assert hass.auth.auth_mfa_modules[1].id == 'second'
@@ -830,7 +829,6 @@ async def test_auth_provider_config_default(hass):
 
     assert len(hass.auth.auth_providers) == 1
     assert hass.auth.auth_providers[0].type == 'homeassistant'
-    assert hass.auth.active is True
     assert len(hass.auth.auth_mfa_modules) == 1
     assert hass.auth.auth_mfa_modules[0].id == 'totp'
 
@@ -852,7 +850,6 @@ async def test_auth_provider_config_default_api_password(hass):
     assert len(hass.auth.auth_providers) == 2
     assert hass.auth.auth_providers[0].type == 'homeassistant'
     assert hass.auth.auth_providers[1].type == 'legacy_api_password'
-    assert hass.auth.active is True
 
 
 async def test_auth_provider_config_default_trusted_networks(hass):
@@ -873,7 +870,6 @@ async def test_auth_provider_config_default_trusted_networks(hass):
     assert len(hass.auth.auth_providers) == 2
     assert hass.auth.auth_providers[0].type == 'homeassistant'
     assert hass.auth.auth_providers[1].type == 'trusted_networks'
-    assert hass.auth.active is True
 
 
 async def test_disallowed_auth_provider_config(hass):
