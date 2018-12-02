@@ -170,8 +170,10 @@ class Template:
         try:
             return self._compiled.render(variables).strip()
         except jinja2.TemplateError as ex:
-            _LOGGER.error("Error parsing value: %s (value: %s, template: %s)",
-                          ex, value, self.template)
+            if error_value is _SENTINEL:
+                _LOGGER.error(
+                    "Error parsing value: %s (value: %s, template: %s)",
+                    ex, value, self.template)
             return value if error_value is _SENTINEL else error_value
 
     def _ensure_compiled(self):
