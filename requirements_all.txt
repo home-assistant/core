@@ -583,6 +583,9 @@ liffylights==0.9.4
 # homeassistant.components.light.osramlightify
 lightify==1.0.6.1
 
+# homeassistant.components.lightwave
+lightwave==0.15
+
 # homeassistant.components.light.limitlessled
 limitlessled==1.1.3
 
