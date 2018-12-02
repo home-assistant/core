@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME, 
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
                                  CONF_PASSWORD)
 
 REQUIREMENTS = ["pymochad_mqtt>=0.8.4"]
@@ -57,12 +57,12 @@ def setup(hass, config):
     mqtt_port = conf_mqtt.get(CONF_PORT)
     username = conf_mqtt.get(CONF_USERNAME)
     password = conf_mqtt.get(CONF_PASSWORD)
-    
+
     from pymochad import exceptions
 
     global CONTROLLER
     try:
-        CONTROLLER = MochadCtrl(host, port, broker, mqtt_port, username, 
+        CONTROLLER = MochadCtrl(host, port, broker, mqtt_port, username,
                                 password, hass)
     except exceptions.ConfigurationError:
         _LOGGER.exception()
@@ -83,7 +83,7 @@ def setup(hass, config):
 class MochadCtrl:
     """Mochad controller."""
 
-    def __init__(self, host, port, broker, mqtt_port, username, password, 
+    def __init__(self, host, port, broker, mqtt_port, username, password,
                  hass):
         """Initialize a PyMochad send-receive controller."""
         super(MochadCtrl, self).__init__()
@@ -93,12 +93,12 @@ class MochadCtrl:
         from pymochad_mqtt import controller
 
         self.ctrl_recv = controller.\
-            PyMochadMqtt(mochad_server=self._host, mochad_port=self._port, 
-                         mqtt_broker=broker, mqtt_port=mqtt_port, 
-                         mqtt_auth={"username": username, "password": 
+            PyMochadMqtt(mochad_server=self._host, mochad_port=self._port,
+                         mqtt_broker=broker, mqtt_port=mqtt_port,
+                         mqtt_auth={"username": username, "password":
                                     password})
         self.ctrl_recv.start()
-        _LOGGER.debug("""PyMochadMqtt controller created for mochad {}:{} and 
+        _LOGGER.debug("""PyMochadMqtt controller created for mochad {}:{} and
                        mqtt {}:{}""".format(
             host, port, broker, mqtt_port))
         if self.ctrl_recv.connect_event.wait():
