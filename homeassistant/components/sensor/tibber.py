@@ -12,7 +12,6 @@ from datetime import timedelta
 import aiohttp
 
 from homeassistant.components.tibber import DOMAIN as TIBBER_DOMAIN
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import Throttle
