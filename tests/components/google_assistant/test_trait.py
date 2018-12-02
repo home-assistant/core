@@ -25,6 +25,7 @@ from tests.common import async_mock_service
 
 BASIC_CONFIG = helpers.Config(
     should_expose=lambda state: True,
+    allow_unlock=False,
     agent_user_id='test-agent',
 )
 
