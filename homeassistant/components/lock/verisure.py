@@ -101,7 +101,7 @@ class VerisureDoorlock(LockDevice):
 
         code = kwargs.get(ATTR_CODE, self._default_lock_code)
         if code is None:
-            _LOGGER.error("Code required but none provided.")
+            _LOGGER.error("Code required but none provided")
             return
 
         self.set_lock_state(code, STATE_UNLOCKED)
@@ -113,7 +113,7 @@ class VerisureDoorlock(LockDevice):
 
         code = kwargs.get(ATTR_CODE, self._default_lock_code)
         if code is None:
-            _LOGGER.error("Code required but none provided.")
+            _LOGGER.error("Code required but none provided")
             return
 
         self.set_lock_state(code, STATE_LOCKED)

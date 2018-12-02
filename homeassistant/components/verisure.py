@@ -53,8 +53,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_GIID): cv.string,
         vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
         vol.Optional(CONF_LOCKS, default=True): cv.boolean,
-        vol.Optional(CONF_DEFAULT_LOCK_CODE, default=None):
-            vol.Any(None, cv.string),
+        vol.Optional(CONF_DEFAULT_LOCK_CODE): cv.string,
         vol.Optional(CONF_MOUSE, default=True): cv.boolean,
         vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
         vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
