@@ -305,7 +305,7 @@ class Recorder(threading.Thread):
                             session.add(dbevent)
                             session.flush()
                         except (TypeError, ValueError):
-                            _LOGGER.warning(
+                            _LOGGER.debug(
                                 "Event is not JSON serializable: %s", event)
 
                         if event.event_type == EVENT_STATE_CHANGED:
@@ -314,7 +314,7 @@ class Recorder(threading.Thread):
                                 dbstate.event_id = dbevent.event_id
                                 session.add(dbstate)
                             except (TypeError, ValueError):
-                                _LOGGER.warning(
+                                _LOGGER.debug(
                                     "State is not JSON serializable: %s",
                                     event.data.get('new_state'))
 
