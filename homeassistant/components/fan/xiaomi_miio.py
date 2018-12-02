@@ -755,7 +755,8 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         if self._model == MODEL_AIRHUMIDIFIER_CA:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA
-            self._speed_list = [mode.name for mode in OperationMode]
+            self._speed_list = [mode.name for mode in OperationMode if
+                                mode.name != 'Strong']
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
