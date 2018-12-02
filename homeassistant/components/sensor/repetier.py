@@ -11,7 +11,12 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_URL, CONF_API_KEY, CONF_PORT, CONF_SCAN_INTERVAL, STATE_IDLE, STATE_ON, STATE_OFF)
+from homeassistant.const import (CONF_URL,
+                                 CONF_API_KEY,
+                                 CONF_PORT,
+                                 STATE_IDLE,
+                                 STATE_ON,
+                                 STATE_OFF)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -32,11 +37,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 DEC_NUM = 0
 SHOW_PCT = True
 
+
 def parse_repetier_api_response(response):
     """Parse the Repetier Server API json response."""
-    data_dict = {} 
+    data_dict = {}
 
-    i=0
+    i = 0
     for printer in response['data']:
         _key = i
         i += 1
@@ -45,8 +51,8 @@ def parse_repetier_api_response(response):
         else:
             data_dict[_key].update(printer)
     return data_dict
-    
-    
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Repetier sensors."""
     try:
@@ -61,16 +67,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for key in data.data.keys():
             sensors.append(RepetierSensor(key, data))
         add_devices(sensors, True)
-    except:
+    except (RuntimeError, TypeError, NameError):
         _LOGGER.warning("Cannot setup Repetier sensors, check your config")
 
+
 def format_data(self):
+    """Format output data."""
+
     self._name = self._data.data[self._repetier_id]['name']
 
     if self._data.data[self._repetier_id]['online'] == 1:
         if self._data.data[self._repetier_id]['job'] != "none":
             if SHOW_PCT:
-                self._state = round(self._data.data[self._repetier_id]['done'],DEC_NUM)
+                self._state = round(self._data.data[self._repetier_id]['done'], DEC_NUM)
                 self._units = '%'
             else:
                 self._state = STATE_ON
@@ -115,7 +124,7 @@ def format_data(self):
         }
         self._units = None
 
-        
+
 class RepetierData(object):
     """Get the latest sensor data."""
 
@@ -125,11 +134,10 @@ class RepetierData(object):
         self.data = None
         self.parse_repetier_api_response = parse_repetier_api_response
 
-    # Update only once in scan interval.
+    """Update only once in scan interval."""
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data."""
-        
         response = requests.get(self.url)
         if response.status_code != 200:
             _LOGGER.warning("Invalid response from API")
@@ -149,17 +157,16 @@ class RepetierSensor(Entity):
 
     def __init__(self, repetier_id, data):
         """Initialize the sensor object."""
-
         self._repetier_id = repetier_id
         self._data = data    # data is in .data
         self._icon = 'mdi:printer-3d'
         format_data(self)
-        
+
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-    
+
     @property
     def state(self):
         """Return the state of the sensor."""
@@ -172,9 +179,9 @@ class RepetierSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Set units of measurement"""
+        """Set units of measurement."""
         return self._units
-        
+
     @property
     def device_state_attributes(self):
         """Attributes."""
@@ -184,7 +191,6 @@ class RepetierSensor(Entity):
         """Update the sensor."""
         try:
             self._data.update()
-
             format_data(self)
-        except:
+        except (RuntimeError, TypeError, NameError):
             _LOGGER.error("Error updating Repetier Server sensors")
