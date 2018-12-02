@@ -1427,7 +1427,7 @@ sisyphus-control==2.1
 skybellpy==0.1.2
 
 # homeassistant.components.notify.slack
-slacker==0.9.65
+slacker==0.11.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.6
