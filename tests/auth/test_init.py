@@ -882,7 +882,6 @@ async def test_new_users_admin(mock_hass):
             'name': 'Test Name'
         }]
     }], [])
-    # mock_hass.auth = manager
     ensure_auth_manager_loaded(manager)
 
     user = await manager.async_create_user('Hello')
