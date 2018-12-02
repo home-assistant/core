@@ -223,7 +223,6 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        # self._name = config.get(CONF_NAME)
         self._topic = {
             key: config.get(key) for key in (
                 CONF_POWER_COMMAND_TOPIC,
