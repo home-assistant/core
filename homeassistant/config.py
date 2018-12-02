@@ -332,7 +332,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
     """Load YAML from a Home Assistant configuration file.
 
     This function allow a component inside the asyncio loop to reload its
-    configuration by itself.
+    configuration by itself. Include package merge.
 
     This method is a coroutine.
     """
@@ -341,26 +341,12 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
         if path is None:
             raise HomeAssistantError(
                 "Config file not found in: {}".format(hass.config.config_dir))
-        return load_yaml_config_file(path)
-
-    config = await hass.async_add_executor_job(_load_hass_yaml_config)
-    await async_hass_config_merge(hass, config)
-    return config
-
-
-async def async_hass_config_merge(hass: HomeAssistant, config: Dict) -> None:
-    """Merge packages with Home Assistant config.
-
-    Merge does not work for 'homeassistant'. To merge 'homeassistant' ->
-    'customize' from packages, run 'async_process_ha_core_config'.
-
-    This method is a coroutine.
-    """
-    def _merge_hass_yaml_config() -> None:
+        config = load_yaml_config_file(path)
         core_config = config.get(CONF_CORE, {})
         merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
+        return config
 
-    await hass.async_add_executor_job(_merge_hass_yaml_config)
+    return await hass.async_add_executor_job(_load_hass_yaml_config)
 
 
 def find_config_file(config_dir: Optional[str]) -> Optional[str]:
