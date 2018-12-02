@@ -1,6 +1,6 @@
 """Tests for the Verisure platform."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, call
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 
@@ -27,14 +27,14 @@ async def test_verisure_no_default_code(hass):
         ]
 
         for test in tests:
-            lock.set_lock_state = Mock(name='set_lock_state',
-                                       return_value=None)
+            mock = Mock(name='set_lock_state', return_value=None)
+            lock.set_lock_state = mock
 
             test['method']()
-            lock.set_lock_state.assert_not_called()
+            assert mock.call_count == 0
 
             test['method'](code='12345')
-            lock.set_lock_state.assert_called_with('12345', test['state'])
+            assert mock.call_args == call('12345', test['state'])
 
 
 async def test_verisure_default_code(hass):
@@ -50,11 +50,11 @@ async def test_verisure_default_code(hass):
         ]
 
         for test in tests:
-            lock.set_lock_state = Mock(name='set_lock_state',
-                                       return_value=None)
+            mock = Mock(name='set_lock_state', return_value=None)
+            lock.set_lock_state = mock
 
             test['method']()
-            lock.set_lock_state.assert_called_with('9999', test['state'])
+            assert mock.call_args == call('9999', test['state'])
 
             test['method'](code='12345')
-            lock.set_lock_state.assert_called_with('12345', test['state'])
+            assert mock.call_args == call('12345', test['state'])
