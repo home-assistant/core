@@ -85,7 +85,8 @@ class SSLCertificate(Entity):
         """Fetch the certificate information."""
         try:
             ctx = ssl.create_default_context()
-            family = socket.getaddrinfo(self.server_name, self.server_port)[0][0]
+            host_info = socket.getaddrinfo(self.server_name, self.server_port)
+            family = host_info[0][0]
             sock = ctx.wrap_socket(
                 socket.socket(family=family), server_hostname=self.server_name)
             sock.settimeout(TIMEOUT)
