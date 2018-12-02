@@ -1064,7 +1064,7 @@ pyserial==3.1.1
 pysesame==0.1.0
 
 # homeassistant.components.goalfeed
-pysher==1.0.4
+pysher==1.0.1
 
 # homeassistant.components.sensor.sma
 pysma==0.2
