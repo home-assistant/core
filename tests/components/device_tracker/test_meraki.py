@@ -13,7 +13,7 @@ from homeassistant.components.device_tracker.meraki import URL
 
 
 @pytest.fixture
-def meraki_client(loop, hass, aiohttp_client):
+def meraki_client(loop, hass, hass_client):
     """Meraki mock client."""
     assert loop.run_until_complete(async_setup_component(
         hass, device_tracker.DOMAIN, {
@@ -25,7 +25,7 @@ def meraki_client(loop, hass, aiohttp_client):
             }
         }))
 
-    yield loop.run_until_complete(aiohttp_client(hass.http.app))
+    yield loop.run_until_complete(hass_client())
 
 
 @asyncio.coroutine
