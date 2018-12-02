@@ -1067,7 +1067,7 @@ async def test_discovery_removal_light(hass, mqtt_mock, caplog):
 
 
 async def test_discovery_deprecated(hass, mqtt_mock, caplog):
-    """Test removal of discovered mqtt_json lights."""
+    """Test discovery of mqtt light with deprecated platform option."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, 'homeassistant', {'mqtt': {}}, entry)
     data = (
@@ -1081,3 +1081,39 @@ async def test_discovery_deprecated(hass, mqtt_mock, caplog):
     state = hass.states.get('light.beer')
     assert state is not None
     assert state.name == 'Beer'
+
+
+async def test_discovery_update_light(hass, mqtt_mock, caplog):
+    """Test removal of discovered light."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+
+    data1 = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert state.name == 'Milk'
+    state = hass.states.get('light.milk')
+    assert state is None
