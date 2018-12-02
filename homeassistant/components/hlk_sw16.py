@@ -22,9 +22,6 @@ REQUIREMENTS = ['hlk-sw16==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_EVENT = 'event'
-ATTR_STATE = 'state'
-
 DATA_DEVICE_REGISTER = 'hlk_sw16_device_register'
 DEFAULT_RECONNECT_INTERVAL = 10
 CONNECTION_TIMEOUT = 10
