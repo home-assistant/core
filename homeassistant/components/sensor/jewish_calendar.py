@@ -4,17 +4,20 @@ Platform to retrieve Jewish calendar information for Home Assistant.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.jewish_calendar/
 """
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, SUN_EVENT_SUNSET)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['hdate==0.6.3']
+REQUIREMENTS = ['hdate==0.7.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,31 +109,29 @@ class JewishCalSensor(Entity):
         """Update the state of the sensor."""
         import hdate
 
-        today = dt_util.now().date()
+        now = dt_util.as_local(dt_util.now())
+        _LOGGER.debug("Now: %s Timezone = %s", now, now.tzinfo)
+
+        today = now.date()
+        sunset = dt_util.as_local(get_astral_event_date(
+            self.hass, SUN_EVENT_SUNSET, today))
+
+        _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
+
+        if now > sunset:
+            today += timedelta(1)
 
         date = hdate.HDate(
             today, diaspora=self.diaspora, hebrew=self._hebrew)
 
         if self.type == 'date':
-            self._state = hdate.date.get_hebrew_date(
-                date.h_day, date.h_month, date.h_year, hebrew=self._hebrew)
+            self._state = date.hebrew_date
         elif self.type == 'weekly_portion':
-            self._state = hdate.date.get_parashe(
-                date.get_reading(self.diaspora), hebrew=self._hebrew)
+            self._state = date.parasha
         elif self.type == 'holiday_name':
-            try:
-                description = next(
-                    x.description[self._hebrew]
-                    for x in hdate.htables.HOLIDAYS
-                    if x.index == date.get_holyday())
-                if not self._hebrew:
-                    self._state = description
-                else:
-                    self._state = description.long
-            except StopIteration:
-                self._state = None
+            self._state = date.holiday_description
         elif self.type == 'holyness':
-            self._state = hdate.date.get_holyday_type(date.get_holyday())
+            self._state = date.holiday_type
         else:
             times = hdate.Zmanim(
                 date=today, latitude=self.latitude, longitude=self.longitude,

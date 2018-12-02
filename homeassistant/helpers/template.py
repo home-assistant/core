@@ -4,11 +4,13 @@ import json
 import logging
 import math
 import random
+import base64
 import re
 
 import jinja2
 from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
+from jinja2.utils import Namespace
 
 from homeassistant.const import (
     ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
@@ -31,6 +33,7 @@ _RE_GET_ENTITIES = re.compile(
     r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
+_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
 
 
 @bind_hass
@@ -59,7 +62,10 @@ def render_complex(value, variables=None):
 
 def extract_entities(template, variables=None):
     """Extract all entities for state_changed listener from template string."""
-    if template is None or _RE_NONE_ENTITIES.search(template):
+    if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
+        return []
+
+    if _RE_NONE_ENTITIES.search(template):
         return MATCH_ALL
 
     extraction = _RE_GET_ENTITIES.findall(template)
@@ -597,6 +603,24 @@ def bitwise_or(first_value, second_value):
     return first_value | second_value
 
 
+def base64_encode(value):
+    """Perform base64 encode."""
+    return base64.b64encode(value.encode('utf-8')).decode('utf-8')
+
+
+def base64_decode(value):
+    """Perform base64 denode."""
+    return base64.b64decode(value).decode('utf-8')
+
+
+def ordinal(value):
+    """Perform ordinal conversion."""
+    return str(value) + (list(['th', 'st', 'nd', 'rd'] + ['th'] * 6)
+                         [(int(str(value)[-1])) % 10] if
+                         int(str(value)[-2:]) % 100 not in range(11, 14)
+                         else 'th')
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -614,6 +638,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         """Test if callback is safe."""
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
 
+    def is_safe_attribute(self, obj, attr, value):
+        """Test if attribute is safe."""
+        return isinstance(obj, Namespace) or \
+            super().is_safe_attribute(obj, attr, value)
+
 
 ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
@@ -630,6 +659,9 @@ ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
+ENV.filters['base64_encode'] = base64_encode
+ENV.filters['base64_decode'] = base64_decode
+ENV.filters['ordinal'] = ordinal
 ENV.filters['regex_match'] = regex_match
 ENV.filters['regex_replace'] = regex_replace
 ENV.filters['regex_search'] = regex_search

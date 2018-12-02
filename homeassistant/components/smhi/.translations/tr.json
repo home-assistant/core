@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Bu ad zaten var",
+            "wrong_location": "Konum sadece \u0130sve\u00e7"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Enlem",
+                    "longitude": "Boylam"
+                }
+            }
+        }
+    }
+}

@@ -1,33 +1,34 @@
 """
 Geo Location component.
 
-This component covers platforms that deal with external events that contain
-a geo location related to the installed HA instance.
-
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/geo_location/
 """
-import logging
 from datetime import timedelta
+import logging
 from typing import Optional
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DISTANCE = 'distance'
 ATTR_SOURCE = 'source'
+
 DOMAIN = 'geo_location'
+
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
 GROUP_NAME_ALL_EVENTS = 'All Geo Location Events'
+
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup(hass, config):
-    """Set up this component."""
+    """Set up the Geo Location component."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_EVENTS)
     await component.async_setup(config)

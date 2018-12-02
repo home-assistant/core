@@ -38,8 +38,7 @@ class TestFileSensor(unittest.TestCase):
                 'platform': 'filesize',
                 CONF_FILE_PATHS: ['invalid_path']}
         }
-        self.assertTrue(
-            setup_component(self.hass, 'sensor', config))
+        assert setup_component(self.hass, 'sensor', config)
         assert len(self.hass.states.entity_ids()) == 0
 
     def test_valid_path(self):
@@ -50,8 +49,7 @@ class TestFileSensor(unittest.TestCase):
                 'platform': 'filesize',
                 CONF_FILE_PATHS: [TEST_FILE]}
         }
-        self.assertTrue(
-            setup_component(self.hass, 'sensor', config))
+        assert setup_component(self.hass, 'sensor', config)
         assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get('sensor.mock_file_test_filesizetxt')
         assert state.state == '0.0'

@@ -91,18 +91,18 @@ class TestSun(unittest.TestCase):
                 break
             mod += 1
 
-        self.assertEqual(next_dawn, dt_util.parse_datetime(
-            state.attributes[sun.STATE_ATTR_NEXT_DAWN]))
-        self.assertEqual(next_dusk, dt_util.parse_datetime(
-            state.attributes[sun.STATE_ATTR_NEXT_DUSK]))
-        self.assertEqual(next_midnight, dt_util.parse_datetime(
-            state.attributes[sun.STATE_ATTR_NEXT_MIDNIGHT]))
-        self.assertEqual(next_noon, dt_util.parse_datetime(
-            state.attributes[sun.STATE_ATTR_NEXT_NOON]))
-        self.assertEqual(next_rising, dt_util.parse_datetime(
-            state.attributes[sun.STATE_ATTR_NEXT_RISING]))
-        self.assertEqual(next_setting, dt_util.parse_datetime(
-            state.attributes[sun.STATE_ATTR_NEXT_SETTING]))
+        assert next_dawn == dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_DAWN])
+        assert next_dusk == dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_DUSK])
+        assert next_midnight == dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_MIDNIGHT])
+        assert next_noon == dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_NOON])
+        assert next_rising == dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_RISING])
+        assert next_setting == dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_SETTING])
 
     def test_state_change(self):
         """Test if the state changes at next setting/rising."""
@@ -117,18 +117,18 @@ class TestSun(unittest.TestCase):
         test_time = dt_util.parse_datetime(
             self.hass.states.get(sun.ENTITY_ID)
             .attributes[sun.STATE_ATTR_NEXT_RISING])
-        self.assertIsNotNone(test_time)
+        assert test_time is not None
 
-        self.assertEqual(sun.STATE_BELOW_HORIZON,
-                         self.hass.states.get(sun.ENTITY_ID).state)
+        assert sun.STATE_BELOW_HORIZON == \
+            self.hass.states.get(sun.ENTITY_ID).state
 
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
                            {ha.ATTR_NOW: test_time + timedelta(seconds=5)})
 
         self.hass.block_till_done()
 
-        self.assertEqual(sun.STATE_ABOVE_HORIZON,
-                         self.hass.states.get(sun.ENTITY_ID).state)
+        assert sun.STATE_ABOVE_HORIZON == \
+            self.hass.states.get(sun.ENTITY_ID).state
 
     def test_norway_in_june(self):
         """Test location in Norway where the sun doesn't set in summer."""

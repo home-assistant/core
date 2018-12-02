@@ -11,6 +11,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 from homeassistant.components.camera import uvc
 from tests.common import get_test_home_assistant
+import pytest
 
 
 class TestUVCSetup(unittest.TestCase):
@@ -53,9 +54,12 @@ class TestUVCSetup(unittest.TestCase):
 
         assert setup_component(self.hass, 'camera', {'camera': config})
 
-        self.assertEqual(mock_remote.call_count, 1)
-        self.assertEqual(
-            mock_remote.call_args, mock.call('foo', 123, 'secret')
+        assert mock_remote.call_count == 1
+        assert mock_remote.call_args == mock.call(
+            'foo',
+            123,
+            'secret',
+            ssl=False
         )
         mock_uvc.assert_has_calls([
             mock.call(mock_remote.return_value, 'id1', 'Front', 'bar'),
@@ -81,9 +85,12 @@ class TestUVCSetup(unittest.TestCase):
 
         assert setup_component(self.hass, 'camera', {'camera': config})
 
-        self.assertEqual(mock_remote.call_count, 1)
-        self.assertEqual(
-            mock_remote.call_args, mock.call('foo', 7080, 'secret')
+        assert mock_remote.call_count == 1
+        assert mock_remote.call_args == mock.call(
+            'foo',
+            7080,
+            'secret',
+            ssl=False
         )
         mock_uvc.assert_has_calls([
             mock.call(mock_remote.return_value, 'id1', 'Front', 'ubnt'),
@@ -109,9 +116,12 @@ class TestUVCSetup(unittest.TestCase):
 
         assert setup_component(self.hass, 'camera', {'camera': config})
 
-        self.assertEqual(mock_remote.call_count, 1)
-        self.assertEqual(
-            mock_remote.call_args, mock.call('foo', 7080, 'secret')
+        assert mock_remote.call_count == 1
+        assert mock_remote.call_args == mock.call(
+            'foo',
+            7080,
+            'secret',
+            ssl=False
         )
         mock_uvc.assert_has_calls([
             mock.call(mock_remote.return_value, 'one', 'Front', 'ubnt'),
@@ -151,13 +161,13 @@ class TestUVCSetup(unittest.TestCase):
     def test_setup_nvr_error_during_indexing_nvrerror(self):
         """Test for error: nvr.NvrError."""
         self.setup_nvr_errors_during_indexing(nvr.NvrError)
-        self.assertRaises(PlatformNotReady)
+        pytest.raises(PlatformNotReady)
 
     def test_setup_nvr_error_during_indexing_connectionerror(self):
         """Test for error: requests.exceptions.ConnectionError."""
         self.setup_nvr_errors_during_indexing(
             requests.exceptions.ConnectionError)
-        self.assertRaises(PlatformNotReady)
+        pytest.raises(PlatformNotReady)
 
     @mock.patch.object(uvc, 'UnifiVideoCamera')
     @mock.patch('uvcclient.nvr.UVCRemote.__init__')
@@ -182,13 +192,13 @@ class TestUVCSetup(unittest.TestCase):
     def test_setup_nvr_error_during_initialization_nvrerror(self):
         """Test for error: nvr.NvrError."""
         self.setup_nvr_errors_during_initialization(nvr.NvrError)
-        self.assertRaises(PlatformNotReady)
+        pytest.raises(PlatformNotReady)
 
     def test_setup_nvr_error_during_initialization_connectionerror(self):
         """Test for error: requests.exceptions.ConnectionError."""
         self.setup_nvr_errors_during_initialization(
             requests.exceptions.ConnectionError)
-        self.assertRaises(PlatformNotReady)
+        pytest.raises(PlatformNotReady)
 
 
 class TestUVC(unittest.TestCase):
@@ -215,22 +225,20 @@ class TestUVC(unittest.TestCase):
 
     def test_properties(self):
         """Test the properties."""
-        self.assertEqual(self.name, self.uvc.name)
-        self.assertTrue(self.uvc.is_recording)
-        self.assertEqual('Ubiquiti', self.uvc.brand)
-        self.assertEqual('UVC Fake', self.uvc.model)
+        assert self.name == self.uvc.name
+        assert self.uvc.is_recording
+        assert 'Ubiquiti' == self.uvc.brand
+        assert 'UVC Fake' == self.uvc.model
 
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login(self, mock_camera, mock_store):
         """Test the login."""
         self.uvc._login()
-        self.assertEqual(mock_camera.call_count, 1)
-        self.assertEqual(
-            mock_camera.call_args, mock.call('host-a', 'admin', 'seekret')
-        )
-        self.assertEqual(mock_camera.return_value.login.call_count, 1)
-        self.assertEqual(mock_camera.return_value.login.call_args, mock.call())
+        assert mock_camera.call_count == 1
+        assert mock_camera.call_args == mock.call('host-a', 'admin', 'seekret')
+        assert mock_camera.return_value.login.call_count == 1
+        assert mock_camera.return_value.login.call_args == mock.call()
 
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClient')
@@ -238,12 +246,10 @@ class TestUVC(unittest.TestCase):
         """Test login with v3.1.x server."""
         self.nvr.server_version = (3, 1, 3)
         self.uvc._login()
-        self.assertEqual(mock_camera.call_count, 1)
-        self.assertEqual(
-            mock_camera.call_args, mock.call('host-a', 'admin', 'seekret')
-        )
-        self.assertEqual(mock_camera.return_value.login.call_count, 1)
-        self.assertEqual(mock_camera.return_value.login.call_args, mock.call())
+        assert mock_camera.call_count == 1
+        assert mock_camera.call_args == mock.call('host-a', 'admin', 'seekret')
+        assert mock_camera.return_value.login.call_count == 1
+        assert mock_camera.return_value.login.call_args == mock.call()
 
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
@@ -262,45 +268,43 @@ class TestUVC(unittest.TestCase):
         mock_store.return_value.get_camera_password.return_value = None
         mock_camera.return_value.login.side_effect = mock_login
         self.uvc._login()
-        self.assertEqual(2, mock_camera.call_count)
-        self.assertEqual('host-b', self.uvc._connect_addr)
+        assert 2 == mock_camera.call_count
+        assert 'host-b' == self.uvc._connect_addr
 
         mock_camera.reset_mock()
         self.uvc._login()
-        self.assertEqual(mock_camera.call_count, 1)
-        self.assertEqual(
-            mock_camera.call_args, mock.call('host-b', 'admin', 'seekret')
-        )
-        self.assertEqual(mock_camera.return_value.login.call_count, 1)
-        self.assertEqual(mock_camera.return_value.login.call_args, mock.call())
+        assert mock_camera.call_count == 1
+        assert mock_camera.call_args == mock.call('host-b', 'admin', 'seekret')
+        assert mock_camera.return_value.login.call_count == 1
+        assert mock_camera.return_value.login.call_args == mock.call()
 
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login_fails_both_properly(self, mock_camera, mock_store):
         """Test if login fails properly."""
         mock_camera.return_value.login.side_effect = socket.error
-        self.assertEqual(None, self.uvc._login())
-        self.assertEqual(None, self.uvc._connect_addr)
+        assert self.uvc._login() is None
+        assert self.uvc._connect_addr is None
 
     def test_camera_image_tries_login_bails_on_failure(self):
         """Test retrieving failure."""
         with mock.patch.object(self.uvc, '_login') as mock_login:
             mock_login.return_value = False
-            self.assertEqual(None, self.uvc.camera_image())
-            self.assertEqual(mock_login.call_count, 1)
-            self.assertEqual(mock_login.call_args, mock.call())
+            assert self.uvc.camera_image() is None
+            assert mock_login.call_count == 1
+            assert mock_login.call_args == mock.call()
 
     def test_camera_image_logged_in(self):
         """Test the login state."""
         self.uvc._camera = mock.MagicMock()
-        self.assertEqual(self.uvc._camera.get_snapshot.return_value,
-                         self.uvc.camera_image())
+        assert self.uvc._camera.get_snapshot.return_value == \
+            self.uvc.camera_image()
 
     def test_camera_image_error(self):
         """Test the camera image error."""
         self.uvc._camera = mock.MagicMock()
         self.uvc._camera.get_snapshot.side_effect = camera.CameraConnectError
-        self.assertEqual(None, self.uvc.camera_image())
+        assert self.uvc.camera_image() is None
 
     def test_camera_image_reauths(self):
         """Test the re-authentication."""
@@ -318,16 +322,17 @@ class TestUVC(unittest.TestCase):
         self.uvc._camera = mock.MagicMock()
         self.uvc._camera.get_snapshot.side_effect = mock_snapshot
         with mock.patch.object(self.uvc, '_login') as mock_login:
-            self.assertEqual('image', self.uvc.camera_image())
-            self.assertEqual(mock_login.call_count, 1)
-            self.assertEqual(mock_login.call_args, mock.call())
-            self.assertEqual([], responses)
+            assert 'image' == self.uvc.camera_image()
+            assert mock_login.call_count == 1
+            assert mock_login.call_args == mock.call()
+            assert [] == responses
 
     def test_camera_image_reauths_only_once(self):
         """Test if the re-authentication only happens once."""
         self.uvc._camera = mock.MagicMock()
         self.uvc._camera.get_snapshot.side_effect = camera.CameraAuthError
         with mock.patch.object(self.uvc, '_login') as mock_login:
-            self.assertRaises(camera.CameraAuthError, self.uvc.camera_image)
-            self.assertEqual(mock_login.call_count, 1)
-            self.assertEqual(mock_login.call_args, mock.call())
+            with pytest.raises(camera.CameraAuthError):
+                self.uvc.camera_image()
+            assert mock_login.call_count == 1
+            assert mock_login.call_args == mock.call()

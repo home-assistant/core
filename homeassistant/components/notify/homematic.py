@@ -52,23 +52,10 @@ class HomematicNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a notification to the device."""
-        attr_data = kwargs.get(ATTR_DATA)
-        if attr_data is not None:
-            if 'address' in attr_data:
-                self.data[ATTR_ADDRESS] = attr_data['address']
-            if 'channel' in attr_data:
-                self.data[ATTR_CHANNEL] = attr_data['channel']
-            if 'param' in attr_data:
-                self.data[ATTR_PARAM] = attr_data['param']
-            if 'value' in attr_data:
-                self.data[ATTR_VALUE] = attr_data['value']
-            if 'interface' in attr_data:
-                self.data[ATTR_INTERFACE] = attr_data['interface']
+        data = {**self.data, **kwargs.get(ATTR_DATA, {})}
 
-        if self.data[ATTR_VALUE] is not None:
+        if data.get(ATTR_VALUE) is not None:
             templ = template_helper.Template(self.data[ATTR_VALUE], self.hass)
-            self.data[ATTR_VALUE] = template_helper.render_complex(templ, None)
+            data[ATTR_VALUE] = template_helper.render_complex(templ, None)
 
-        _LOGGER.debug("Calling service: domain=%s;service=%s;data=%s",
-                      DOMAIN, SERVICE_SET_DEVICE_VALUE, str(self.data))
-        self.hass.services.call(DOMAIN, SERVICE_SET_DEVICE_VALUE, self.data)
+        self.hass.services.call(DOMAIN, SERVICE_SET_DEVICE_VALUE, data)

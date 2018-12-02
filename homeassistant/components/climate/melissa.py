@@ -34,10 +34,11 @@ FAN_MODES = [
 ]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Iterate through and add all Melissa devices."""
     api = hass.data[DATA_MELISSA]
-    devices = api.fetch_devices().values()
+    devices = (await api.async_fetch_devices()).values()
 
     all_devices = []
 
@@ -46,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             all_devices.append(MelissaClimate(
                 api, device['serial_number'], device))
 
-    add_entities(all_devices)
+    async_add_entities(all_devices)
 
 
 class MelissaClimate(ClimateDevice):
@@ -88,6 +89,12 @@ class MelissaClimate(ClimateDevice):
             return self._data[self._api.TEMP]
 
     @property
+    def current_humidity(self):
+        """Return the current humidity value."""
+        if self._data:
+            return self._data[self._api.HUMIDITY]
+
+    @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
         return PRECISION_WHOLE
@@ -112,8 +119,9 @@ class MelissaClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._cur_settings is not None:
-            return self._cur_settings[self._api.TEMP]
+        if self._cur_settings is None:
+            return None
+        return self._cur_settings[self._api.TEMP]
 
     @property
     def state(self):
@@ -142,48 +150,48 @@ class MelissaClimate(ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
-        self.send({self._api.TEMP: temp})
+        await self.async_send({self._api.TEMP: temp})
 
-    def set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
         melissa_fan_mode = self.hass_fan_to_melissa(fan_mode)
-        self.send({self._api.FAN: melissa_fan_mode})
+        await self.async_send({self._api.FAN: melissa_fan_mode})
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         mode = self.hass_mode_to_melissa(operation_mode)
-        self.send({self._api.MODE: mode})
+        await self.async_send({self._api.MODE: mode})
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn on device."""
-        self.send({self._api.STATE: self._api.STATE_ON})
+        await self.async_send({self._api.STATE: self._api.STATE_ON})
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off device."""
-        self.send({self._api.STATE: self._api.STATE_OFF})
+        await self.async_send({self._api.STATE: self._api.STATE_OFF})
 
-    def send(self, value):
+    async def async_send(self, value):
         """Send action to service."""
         try:
             old_value = self._cur_settings.copy()
             self._cur_settings.update(value)
         except AttributeError:
             old_value = None
-        if not self._api.send(self._serial_number, self._cur_settings):
+        if not await self._api.async_send(
+                self._serial_number, self._cur_settings):
             self._cur_settings = old_value
-            return False
-        return True
 
-    def update(self):
+    async def async_update(self):
         """Get latest data from Melissa."""
         try:
-            self._data = self._api.status(cached=True)[self._serial_number]
-            self._cur_settings = self._api.cur_settings(
+            self._data = (await self._api.async_status(cached=True))[
+                self._serial_number]
+            self._cur_settings = (await self._api.async_cur_settings(
                 self._serial_number
-            )['controller']['_relation']['command_log']
+            ))['controller']['_relation']['command_log']
         except KeyError:
             _LOGGER.warning(
                 'Unable to update entity %s', self.entity_id)

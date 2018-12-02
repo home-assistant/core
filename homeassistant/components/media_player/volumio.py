@@ -90,7 +90,6 @@ class Volumio(MediaPlayerDevice):
         self._url = '{}:{}'.format(host, str(port))
         self._name = name
         self._state = {}
-        self.async_update()
         self._lastvol = self._state.get('volume', 0)
         self._playlists = []
         self._currentplaylist = None
@@ -113,7 +112,9 @@ class Volumio(MediaPlayerDevice):
                 return False
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
-            _LOGGER.error("Failed communicating with Volumio: %s", type(error))
+            _LOGGER.error(
+                "Failed communicating with Volumio '%s': %s",
+                self._name, type(error))
             return False
 
         try:

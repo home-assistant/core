@@ -60,8 +60,7 @@ class TestCanary(unittest.TestCase):
             }
         }
 
-        self.assertTrue(
-            setup.setup_component(self.hass, canary.DOMAIN, config))
+        assert setup.setup_component(self.hass, canary.DOMAIN, config)
 
         mock_update.assert_called_once_with()
         mock_login.assert_called_once_with()
@@ -74,8 +73,7 @@ class TestCanary(unittest.TestCase):
             }
         }
 
-        self.assertFalse(
-            setup.setup_component(self.hass, canary.DOMAIN, config))
+        assert not setup.setup_component(self.hass, canary.DOMAIN, config)
 
     def test_setup_with_missing_username(self):
         """Test setup component."""
@@ -85,5 +83,4 @@ class TestCanary(unittest.TestCase):
             }
         }
 
-        self.assertFalse(
-            setup.setup_component(self.hass, canary.DOMAIN, config))
+        assert not setup.setup_component(self.hass, canary.DOMAIN, config)

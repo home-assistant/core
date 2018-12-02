@@ -26,17 +26,17 @@ class TestFacebook(unittest.TestCase):
         target = ["+15555551234"]
 
         self.facebook.send_message(message=message, target=target)
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 1)
+        assert mock.called
+        assert mock.call_count == 1
 
         expected_body = {
             "recipient": {"phone_number": target[0]},
             "message": {"text": message}
         }
-        self.assertEqual(mock.last_request.json(), expected_body)
+        assert mock.last_request.json() == expected_body
 
         expected_params = {"access_token": ["page-access-token"]}
-        self.assertEqual(mock.last_request.qs, expected_params)
+        assert mock.last_request.qs == expected_params
 
     @requests_mock.Mocker()
     def test_sending_multiple_messages(self, mock):
@@ -51,8 +51,8 @@ class TestFacebook(unittest.TestCase):
         targets = ["+15555551234", "+15555551235"]
 
         self.facebook.send_message(message=message, target=targets)
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 2)
+        assert mock.called
+        assert mock.call_count == 2
 
         for idx, target in enumerate(targets):
             request = mock.request_history[idx]
@@ -60,10 +60,10 @@ class TestFacebook(unittest.TestCase):
                 "recipient": {"phone_number": target},
                 "message": {"text": message}
             }
-            self.assertEqual(request.json(), expected_body)
+            assert request.json() == expected_body
 
             expected_params = {"access_token": ["page-access-token"]}
-            self.assertEqual(request.qs, expected_params)
+            assert request.qs == expected_params
 
     @requests_mock.Mocker()
     def test_send_message_attachment(self, mock):
@@ -84,17 +84,17 @@ class TestFacebook(unittest.TestCase):
         target = ["+15555551234"]
 
         self.facebook.send_message(message=message, data=data, target=target)
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 1)
+        assert mock.called
+        assert mock.call_count == 1
 
         expected_body = {
             "recipient": {"phone_number": target[0]},
             "message": data
         }
-        self.assertEqual(mock.last_request.json(), expected_body)
+        assert mock.last_request.json() == expected_body
 
         expected_params = {"access_token": ["page-access-token"]}
-        self.assertEqual(mock.last_request.qs, expected_params)
+        assert mock.last_request.qs == expected_params
 
     @requests_mock.Mocker()
     def test_send_targetless_message(self, mock):
@@ -106,7 +106,7 @@ class TestFacebook(unittest.TestCase):
         )
 
         self.facebook.send_message(message="goin nowhere")
-        self.assertFalse(mock.called)
+        assert not mock.called
 
     @requests_mock.Mocker()
     def test_send_message_with_400(self, mock):
@@ -125,5 +125,5 @@ class TestFacebook(unittest.TestCase):
             }
         )
         self.facebook.send_message(message="nope!", target=["+15555551234"])
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 1)
+        assert mock.called
+        assert mock.call_count == 1

@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 81
+MINOR_VERSION = 84
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -129,6 +129,7 @@ CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
 CONF_SHOW_ON_MAP = 'show_on_map'
 CONF_SLAVE = 'slave'
+CONF_SOURCE = 'source'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
 CONF_STATE_TEMPLATE = 'state_template'
@@ -139,6 +140,7 @@ CONF_TIME_ZONE = 'time_zone'
 CONF_TIMEOUT = 'timeout'
 CONF_TOKEN = 'token'
 CONF_TRIGGER_TIME = 'trigger_time'
+CONF_TTL = 'ttl'
 CONF_TYPE = 'type'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 CONF_UNIT_SYSTEM = 'unit_system'
@@ -146,6 +148,7 @@ CONF_URL = 'url'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
+CONF_WEBHOOK_ID = 'webhook_id'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
 CONF_WHITELIST_EXTERNAL_DIRS = 'whitelist_external_dirs'
@@ -160,19 +163,20 @@ EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
 EVENT_STATE_CHANGED = 'state_changed'
 EVENT_TIME_CHANGED = 'time_changed'
 EVENT_CALL_SERVICE = 'call_service'
-EVENT_SERVICE_EXECUTED = 'service_executed'
 EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
+EVENT_TIMER_OUT_OF_SYNC = 'timer_out_of_sync'
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = 'battery'
 DEVICE_CLASS_HUMIDITY = 'humidity'
 DEVICE_CLASS_ILLUMINANCE = 'illuminance'
 DEVICE_CLASS_TEMPERATURE = 'temperature'
+DEVICE_CLASS_TIMESTAMP = 'timestamp'
 DEVICE_CLASS_PRESSURE = 'pressure'
 
 # #### STATES ####
@@ -215,6 +219,7 @@ ATTR_CREDENTIALS = 'credentials'
 ATTR_NOW = 'now'
 ATTR_DATE = 'date'
 ATTR_TIME = 'time'
+ATTR_SECONDS = 'seconds'
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = 'domain'
@@ -226,9 +231,6 @@ ATTR_ID = 'id'
 
 # Name
 ATTR_NAME = 'name'
-
-# Data for a SERVICE_EXECUTED event
-ATTR_SERVICE_CALL_ID = 'service_call_id'
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'
@@ -444,3 +446,7 @@ WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 PRECISION_WHOLE = 1
 PRECISION_HALVES = 0.5
 PRECISION_TENTHS = 0.1
+
+# Static list of entities that will never be exposed to
+# cloud, alexa, or google_home components
+CLOUD_NEVER_EXPOSED_ENTITIES = ['group.all_locks']

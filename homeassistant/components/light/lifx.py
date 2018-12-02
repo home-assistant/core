@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lifx/
 """
 import asyncio
-import socket
 from datetime import timedelta
 from functools import partial
 import logging
@@ -23,10 +22,11 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
     preprocess_turn_on_alternatives)
 from homeassistant.components.lifx import (
-    DOMAIN as LIFX_DOMAIN, CONF_SERVER, CONF_BROADCAST)
+    DOMAIN as LIFX_DOMAIN, DATA_LIFX_MANAGER, CONF_SERVER, CONF_BROADCAST)
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.util.color as color_util
@@ -144,30 +144,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.warning("The lifx platform is known to not work on Windows. "
                         "Consider using the lifx_legacy platform instead")
 
-    config = hass.data[LIFX_DOMAIN].get(DOMAIN, {})
+    # Priority 1: manual config
+    interfaces = hass.data[LIFX_DOMAIN].get(DOMAIN)
+    if not interfaces:
+        # Priority 2: scanned interfaces
+        lifx_ip_addresses = await aiolifx().LifxScan(hass.loop).scan()
+        interfaces = [{CONF_SERVER: ip} for ip in lifx_ip_addresses]
+        if not interfaces:
+            # Priority 3: default interface
+            interfaces = [{}]
 
     lifx_manager = LIFXManager(hass, async_add_entities)
+    hass.data[DATA_LIFX_MANAGER] = lifx_manager
 
-    broadcast_ip = config.get(CONF_BROADCAST)
-    kwargs = {'discovery_interval': DISCOVERY_INTERVAL}
-    if broadcast_ip:
-        kwargs['broadcast_ip'] = broadcast_ip
-    lifx_discovery = aiolifx().LifxDiscovery(hass.loop, lifx_manager, **kwargs)
-
-    kwargs = {'family': socket.AF_INET}
-    local_addr = config.get(CONF_SERVER)
-    if local_addr is not None:
-        kwargs['local_addr'] = (local_addr, 0)
-    coro = hass.loop.create_datagram_endpoint(lambda: lifx_discovery, **kwargs)
-
-    hass.async_create_task(coro)
-
-    @callback
-    def cleanup(event):
-        """Clean up resources."""
-        lifx_discovery.cleanup()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+    for interface in interfaces:
+        lifx_manager.start_discovery(interface)
 
     return True
 
@@ -218,9 +209,42 @@ class LIFXManager:
         self.hass = hass
         self.async_add_entities = async_add_entities
         self.effects_conductor = aiolifx_effects().Conductor(loop=hass.loop)
+        self.discoveries = []
+        self.cleanup_unsub = self.hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STOP,
+            self.cleanup)
 
         self.register_set_state()
         self.register_effects()
+
+    def start_discovery(self, interface):
+        """Start discovery on a network interface."""
+        kwargs = {'discovery_interval': DISCOVERY_INTERVAL}
+        broadcast_ip = interface.get(CONF_BROADCAST)
+        if broadcast_ip:
+            kwargs['broadcast_ip'] = broadcast_ip
+        lifx_discovery = aiolifx().LifxDiscovery(
+            self.hass.loop, self, **kwargs)
+
+        kwargs = {}
+        listen_ip = interface.get(CONF_SERVER)
+        if listen_ip:
+            kwargs['listen_ip'] = listen_ip
+        lifx_discovery.start(**kwargs)
+
+        self.discoveries.append(lifx_discovery)
+
+    @callback
+    def cleanup(self, event=None):
+        """Release resources."""
+        self.cleanup_unsub()
+
+        for discovery in self.discoveries:
+            discovery.cleanup()
+
+        for service in [SERVICE_LIFX_SET_STATE, SERVICE_EFFECT_STOP,
+                        SERVICE_EFFECT_PULSE, SERVICE_EFFECT_COLORLOOP]:
+            self.hass.services.async_remove(DOMAIN, service)
 
     def register_set_state(self):
         """Register the LIFX set_state service call."""
@@ -396,6 +420,26 @@ class LIFXLight(Light):
         self.registered = True
         self.postponed_update = None
         self.lock = asyncio.Lock()
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        info = {
+            'identifiers': {
+                (LIFX_DOMAIN, self.unique_id)
+            },
+            'name': self.name,
+            'connections': {
+                (dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)
+            },
+            'manufacturer': 'LIFX',
+        }
+
+        model = aiolifx().products.product_map.get(self.bulb.product)
+        if model is not None:
+            info['model'] = model
+
+        return info
 
     @property
     def available(self):

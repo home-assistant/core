@@ -18,21 +18,23 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               async_dispatcher_send)
 
+REQUIREMENTS = ['zhong_hong_hvac==1.0.9']
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_GATEWAY_ADDRRESS = 'gateway_address'
 
-REQUIREMENTS = ['zhong_hong_hvac==1.0.9']
+DEFAULT_PORT = 9999
+DEFAULT_GATEWAY_ADDRRESS = 1
+
 SIGNAL_DEVICE_ADDED = 'zhong_hong_device_added'
 SIGNAL_ZHONG_HONG_HUB_START = 'zhong_hong_hub_start'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=9999):
-    vol.Coerce(int),
-    vol.Optional(CONF_GATEWAY_ADDRRESS, default=1):
-    vol.Coerce(int),
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS):
+        cv.positive_int,
 })
 
 

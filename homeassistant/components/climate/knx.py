@@ -75,7 +75,7 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXClimate(hass, device))
+        entities.append(KNXClimate(device))
     async_add_entities(entities)
 
 
@@ -110,17 +110,15 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_operation_mode_comfort=config.get(
             CONF_OPERATION_MODE_COMFORT_ADDRESS))
     hass.data[DATA_KNX].xknx.devices.add(climate)
-    async_add_entities([KNXClimate(hass, climate)])
+    async_add_entities([KNXClimate(climate)])
 
 
 class KNXClimate(ClimateDevice):
     """Representation of a KNX climate device."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize of a KNX climate device."""
         self.device = device
-        self.hass = hass
-        self.async_register_callbacks()
 
     @property
     def supported_features(self):
@@ -136,6 +134,10 @@ class KNXClimate(ClimateDevice):
             """Call after device was updated."""
             await self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
+
+    async def async_added_to_hass(self):
+        """Store register state change callback."""
+        self.async_register_callbacks()
 
     @property
     def name(self):

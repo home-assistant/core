@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "all_configured": "Toate pun\u021bile Philips Hue sunt deja configurate",
+            "already_configured": "Gateway-ul este deja configurat",
+            "cannot_connect": "Nu se poate conecta la gateway.",
             "discover_timeout": "Imposibil de descoperit podurile Hue"
         },
         "error": {

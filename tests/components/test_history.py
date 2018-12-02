@@ -47,7 +47,7 @@ class TestComponentHistory(unittest.TestCase):
                     history.CONF_DOMAINS: ['thermostat'],
                     history.CONF_ENTITIES: ['media_player.test']}}})
         self.init_recorder()
-        self.assertTrue(setup_component(self.hass, history.DOMAIN, config))
+        assert setup_component(self.hass, history.DOMAIN, config)
 
     def test_get_states(self):
         """Test getting states at a specific point in time."""
@@ -89,9 +89,8 @@ class TestComponentHistory(unittest.TestCase):
             assert state1 == state2
 
         # Test get_state here because we have a DB setup
-        self.assertEqual(
-            states[0], history.get_state(self.hass, future,
-                                         states[0].entity_id))
+        assert states[0] == \
+            history.get_state(self.hass, future, states[0].entity_id)
 
     def test_state_changes_during_period(self):
         """Test state change during period."""
@@ -130,7 +129,7 @@ class TestComponentHistory(unittest.TestCase):
         hist = history.state_changes_during_period(
             self.hass, start, end, entity_id)
 
-        self.assertEqual(states, hist[entity_id])
+        assert states == hist[entity_id]
 
     def test_get_last_state_changes(self):
         """Test number of state changes."""
@@ -163,7 +162,7 @@ class TestComponentHistory(unittest.TestCase):
         hist = history.get_last_state_changes(
             self.hass, 2, entity_id)
 
-        self.assertEqual(states, hist[entity_id])
+        assert states == hist[entity_id]
 
     def test_get_significant_states(self):
         """Test that only significant states are returned.
@@ -516,13 +515,12 @@ class TestComponentHistory(unittest.TestCase):
         return zero, four, states
 
 
-async def test_fetch_period_api(hass, aiohttp_client):
+async def test_fetch_period_api(hass, hass_client):
     """Test the fetch period view for history."""
     await hass.async_add_job(init_recorder_component, hass)
     await async_setup_component(hass, 'history', {})
-    await hass.components.recorder.wait_connection_ready()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client()
     response = await client.get(
         '/api/history/period/{}'.format(dt_util.utcnow().isoformat()))
     assert response.status == 200

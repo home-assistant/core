@@ -20,4 +20,4 @@ class TestIntroduction(unittest.TestCase):
 
     def test_setup(self):
         """Test introduction setup."""
-        self.assertTrue(setup_component(self.hass, introduction.DOMAIN, {}))
+        assert setup_component(self.hass, introduction.DOMAIN, {})

@@ -48,11 +48,6 @@ STATE_MANUAL = 'manual'
 STATE_DRY = 'dry'
 STATE_FAN_ONLY = 'fan_only'
 STATE_ECO = 'eco'
-STATE_ELECTRIC = 'electric'
-STATE_PERFORMANCE = 'performance'
-STATE_HIGH_DEMAND = 'high_demand'
-STATE_HEAT_PUMP = 'heat_pump'
-STATE_GAS = 'gas'
 
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_TARGET_TEMPERATURE_HIGH = 2
@@ -254,9 +249,11 @@ class ClimateDevice(Entity):
                 self.hass, self.target_temperature_low, self.temperature_unit,
                 self.precision)
 
+        if self.current_humidity is not None:
+            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+
         if supported_features & SUPPORT_TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
-            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
 
             if supported_features & SUPPORT_TARGET_HUMIDITY_LOW:
                 data[ATTR_MIN_HUMIDITY] = self.min_humidity

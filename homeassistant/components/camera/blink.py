@@ -38,6 +38,7 @@ class BlinkCamera(Camera):
         self.data = data
         self._name = "{} {}".format(BLINK_DATA, name)
         self._camera = camera
+        self._unique_id = "{}-camera".format(camera.serial)
         self.response = None
         self.current_image = None
         self.last_image = None
@@ -47,6 +48,11 @@ class BlinkCamera(Camera):
     def name(self):
         """Return the camera name."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique camera id."""
+        return self._unique_id
 
     @property
     def device_state_attributes(self):
@@ -64,7 +70,7 @@ class BlinkCamera(Camera):
     @property
     def motion_detection_enabled(self):
         """Return the state of the camera."""
-        return self._camera.armed
+        return self._camera.motion_enabled
 
     @property
     def brand(self):

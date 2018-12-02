@@ -1,12 +1,16 @@
 """Class to hold all switch accessories."""
 import logging
 
-from pyhap.const import CATEGORY_OUTLET, CATEGORY_SWITCH
+from pyhap.const import (
+    CATEGORY_FAUCET, CATEGORY_OUTLET, CATEGORY_SHOWER_HEAD,
+    CATEGORY_SPRINKLER, CATEGORY_SWITCH)
 
+from homeassistant.components.script import ATTR_CAN_CANCEL
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_TYPE, SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON)
 from homeassistant.core import split_entity_id
+from homeassistant.helpers.event import call_later
 
 from . import TYPES
 from .accessories import HomeAccessory
@@ -16,10 +20,6 @@ from .const import (
     TYPE_SPRINKLER, TYPE_VALVE)
 
 _LOGGER = logging.getLogger(__name__)
-
-CATEGORY_SPRINKLER = 28
-CATEGORY_FAUCET = 29
-CATEGORY_SHOWER_HEAD = 30
 
 VALVE_TYPE = {
     TYPE_FAUCET: (CATEGORY_FAUCET, 3),
@@ -36,7 +36,7 @@ class Outlet(HomeAccessory):
     def __init__(self, *args):
         """Initialize an Outlet accessory object."""
         super().__init__(*args, category=CATEGORY_OUTLET)
-        self.flag_target_state = False
+        self._flag_state = False
 
         serv_outlet = self.add_preload_service(SERV_OUTLET)
         self.char_on = serv_outlet.configure_char(
@@ -48,19 +48,19 @@ class Outlet(HomeAccessory):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state to %s',
                       self.entity_id, value)
-        self.flag_target_state = True
+        self._flag_state = True
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = (new_state.state == STATE_ON)
-        if not self.flag_target_state:
+        if not self._flag_state:
             _LOGGER.debug('%s: Set current state to %s',
                           self.entity_id, current_state)
             self.char_on.set_value(current_state)
-        self.flag_target_state = False
+        self._flag_state = False
 
 
 @TYPES.register('Switch')
@@ -71,29 +71,58 @@ class Switch(HomeAccessory):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH)
         self._domain = split_entity_id(self.entity_id)[0]
-        self.flag_target_state = False
+        self._flag_state = False
+
+        self.activate_only = self.is_activate(
+            self.hass.states.get(self.entity_id))
 
         serv_switch = self.add_preload_service(SERV_SWITCH)
         self.char_on = serv_switch.configure_char(
             CHAR_ON, value=False, setter_callback=self.set_state)
 
+    def is_activate(self, state):
+        """Check if entity is activate only."""
+        can_cancel = state.attributes.get(ATTR_CAN_CANCEL)
+        if self._domain == 'scene':
+            return True
+        if self._domain == 'script' and not can_cancel:
+            return True
+        return False
+
+    def reset_switch(self, *args):
+        """Reset switch to emulate activate click."""
+        _LOGGER.debug('%s: Reset switch to off', self.entity_id)
+        self.char_on.set_value(0)
+
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state to %s',
                       self.entity_id, value)
-        self.flag_target_state = True
+        if self.activate_only and value == 0:
+            _LOGGER.debug('%s: Ignoring turn_off call', self.entity_id)
+            return
+        self._flag_state = True
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(self._domain, service, params)
+        self.call_service(self._domain, service, params)
+
+        if self.activate_only:
+            call_later(self.hass, 1, self.reset_switch)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
+        self.activate_only = self.is_activate(new_state)
+        if self.activate_only:
+            _LOGGER.debug('%s: Ignore state change, entity is activate only',
+                          self.entity_id)
+            return
+
         current_state = (new_state.state == STATE_ON)
-        if not self.flag_target_state:
+        if not self._flag_state:
             _LOGGER.debug('%s: Set current state to %s',
                           self.entity_id, current_state)
             self.char_on.set_value(current_state)
-        self.flag_target_state = False
+        self._flag_state = False
 
 
 @TYPES.register('Valve')
@@ -103,7 +132,7 @@ class Valve(HomeAccessory):
     def __init__(self, *args):
         """Initialize a Valve accessory object."""
         super().__init__(*args)
-        self.flag_target_state = False
+        self._flag_state = False
         valve_type = self.config[CONF_TYPE]
         self.category = VALVE_TYPE[valve_type][0]
 
@@ -119,18 +148,18 @@ class Valve(HomeAccessory):
         """Move value state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state to %s',
                       self.entity_id, value)
-        self.flag_target_state = True
+        self._flag_state = True
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(DOMAIN, service, params)
+        self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = (new_state.state == STATE_ON)
-        if not self.flag_target_state:
+        if not self._flag_state:
             _LOGGER.debug('%s: Set current state to %s',
                           self.entity_id, current_state)
             self.char_active.set_value(current_state)
             self.char_in_use.set_value(current_state)
-        self.flag_target_state = False
+        self._flag_state = False

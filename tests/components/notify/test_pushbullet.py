@@ -68,13 +68,13 @@ class TestPushBullet(unittest.TestCase):
                 'message': 'Test Message'}
         self.hass.services.call(notify.DOMAIN, 'test', data)
         self.hass.block_till_done()
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 1)
+        assert mock.called
+        assert mock.call_count == 1
 
         expected_body = {'body': 'Test Message',
                          'title': 'Test Title',
                          'type': 'note'}
-        self.assertEqual(mock.last_request.json(), expected_body)
+        assert mock.last_request.json() == expected_body
 
     @requests_mock.Mocker()
     @patch.object(PushBullet, '_get_data',
@@ -99,14 +99,14 @@ class TestPushBullet(unittest.TestCase):
                 'target': ['device/DESKTOP']}
         self.hass.services.call(notify.DOMAIN, 'test', data)
         self.hass.block_till_done()
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 1)
+        assert mock.called
+        assert mock.call_count == 1
 
         expected_body = {'body': 'Test Message',
                          'device_iden': 'identity1',
                          'title': 'Test Title',
                          'type': 'note'}
-        self.assertEqual(mock.last_request.json(), expected_body)
+        assert mock.last_request.json() == expected_body
 
     @requests_mock.Mocker()
     @patch.object(PushBullet, '_get_data',
@@ -131,20 +131,20 @@ class TestPushBullet(unittest.TestCase):
                 'target': ['device/DESKTOP', 'device/My iPhone']}
         self.hass.services.call(notify.DOMAIN, 'test', data)
         self.hass.block_till_done()
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 2)
-        self.assertEqual(len(mock.request_history), 2)
+        assert mock.called
+        assert mock.call_count == 2
+        assert len(mock.request_history) == 2
 
         expected_body = {'body': 'Test Message',
                          'device_iden': 'identity1',
                          'title': 'Test Title',
                          'type': 'note'}
-        self.assertEqual(mock.request_history[0].json(), expected_body)
+        assert mock.request_history[0].json() == expected_body
         expected_body = {'body': 'Test Message',
                          'device_iden': 'identity2',
                          'title': 'Test Title',
                          'type': 'note'}
-        self.assertEqual(mock.request_history[1].json(), expected_body)
+        assert mock.request_history[1].json() == expected_body
 
     @requests_mock.Mocker()
     @patch.object(PushBullet, '_get_data',
@@ -169,15 +169,15 @@ class TestPushBullet(unittest.TestCase):
                 'target': ['email/user@host.net']}
         self.hass.services.call(notify.DOMAIN, 'test', data)
         self.hass.block_till_done()
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 1)
-        self.assertEqual(len(mock.request_history), 1)
+        assert mock.called
+        assert mock.call_count == 1
+        assert len(mock.request_history) == 1
 
         expected_body = {'body': 'Test Message',
                          'email': 'user@host.net',
                          'title': 'Test Title',
                          'type': 'note'}
-        self.assertEqual(mock.request_history[0].json(), expected_body)
+        assert mock.request_history[0].json() == expected_body
 
     @requests_mock.Mocker()
     @patch.object(PushBullet, '_get_data',
@@ -202,20 +202,20 @@ class TestPushBullet(unittest.TestCase):
                 'target': ['device/DESKTOP', 'email/user@host.net']}
         self.hass.services.call(notify.DOMAIN, 'test', data)
         self.hass.block_till_done()
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 2)
-        self.assertEqual(len(mock.request_history), 2)
+        assert mock.called
+        assert mock.call_count == 2
+        assert len(mock.request_history) == 2
 
         expected_body = {'body': 'Test Message',
                          'device_iden': 'identity1',
                          'title': 'Test Title',
                          'type': 'note'}
-        self.assertEqual(mock.request_history[0].json(), expected_body)
+        assert mock.request_history[0].json() == expected_body
         expected_body = {'body': 'Test Message',
                          'email': 'user@host.net',
                          'title': 'Test Title',
                          'type': 'note'}
-        self.assertEqual(mock.request_history[1].json(), expected_body)
+        assert mock.request_history[1].json() == expected_body
 
     @requests_mock.Mocker()
     @patch.object(PushBullet, '_get_data',

@@ -44,6 +44,11 @@ class BlinkSyncModule(AlarmControlPanel):
         self._state = None
 
     @property
+    def unique_id(self):
+        """Return the unique id for the sync module."""
+        return self.sync.serial
+
+    @property
     def icon(self):
         """Return icon."""
         return ICON
@@ -61,9 +66,10 @@ class BlinkSyncModule(AlarmControlPanel):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-        }
+        attr = self.sync.attributes
+        attr['network_info'] = self.data.networks
+        attr[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
+        return attr
 
     def update(self):
         """Update the state of the device."""

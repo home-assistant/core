@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['gstreamer-player==1.1.0']
+REQUIREMENTS = ['gstreamer-player==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 

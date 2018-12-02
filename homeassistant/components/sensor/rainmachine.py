@@ -7,26 +7,27 @@ https://home-assistant.io/components/sensor.rainmachine/
 import logging
 
 from homeassistant.components.rainmachine import (
-    DATA_RAINMACHINE, SENSOR_UPDATE_TOPIC, SENSORS, RainMachineEntity)
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, SENSOR_UPDATE_TOPIC, SENSORS,
+    RainMachineEntity)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['rainmachine']
-
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Set up the RainMachine Switch platform."""
-    if discovery_info is None:
-        return
+    """Set up RainMachine sensors based on the old way."""
+    pass
 
-    rainmachine = hass.data[DATA_RAINMACHINE]
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up RainMachine sensors based on a config entry."""
+    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensors = []
-    for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
+    for sensor_type in rainmachine.sensor_conditions:
         name, icon, unit = SENSORS[sensor_type]
         sensors.append(
             RainMachineSensor(rainmachine, sensor_type, name, icon, unit))
@@ -73,15 +74,15 @@ class RainMachineSensor(RainMachineEntity):
         """Return the unit the value is expressed in."""
         return self._unit
 
-    @callback
-    def _update_data(self):
-        """Update the state."""
-        self.async_schedule_update_ha_state(True)
-
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SENSOR_UPDATE_TOPIC, self._update_data)
+        @callback
+        def update():
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
+
+        self._dispatcher_handlers.append(async_dispatcher_connect(
+            self.hass, SENSOR_UPDATE_TOPIC, update))
 
     async def async_update(self):
         """Update the sensor's state."""

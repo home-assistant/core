@@ -90,7 +90,7 @@ class TestScriptComponent(unittest.TestCase):
                 'script': value
             }), 'Script loaded with wrong config {}'.format(value)
 
-            self.assertEqual(0, len(self.hass.states.entity_ids('script')))
+            assert 0 == len(self.hass.states.entity_ids('script'))
 
     def test_turn_on_service(self):
         """Verify that the turn_on service."""
@@ -120,18 +120,18 @@ class TestScriptComponent(unittest.TestCase):
 
         turn_on(self.hass, ENTITY_ID)
         self.hass.block_till_done()
-        self.assertTrue(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(0, len(events))
+        assert script.is_on(self.hass, ENTITY_ID)
+        assert 0 == len(events)
 
         # Calling turn_on a second time should not advance the script
         turn_on(self.hass, ENTITY_ID)
         self.hass.block_till_done()
-        self.assertEqual(0, len(events))
+        assert 0 == len(events)
 
         turn_off(self.hass, ENTITY_ID)
         self.hass.block_till_done()
-        self.assertFalse(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(0, len(events))
+        assert not script.is_on(self.hass, ENTITY_ID)
+        assert 0 == len(events)
 
         state = self.hass.states.get('group.all_scripts')
         assert state is not None
@@ -165,13 +165,13 @@ class TestScriptComponent(unittest.TestCase):
 
         toggle(self.hass, ENTITY_ID)
         self.hass.block_till_done()
-        self.assertTrue(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(0, len(events))
+        assert script.is_on(self.hass, ENTITY_ID)
+        assert 0 == len(events)
 
         toggle(self.hass, ENTITY_ID)
         self.hass.block_till_done()
-        self.assertFalse(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(0, len(events))
+        assert not script.is_on(self.hass, ENTITY_ID)
+        assert 0 == len(events)
 
     def test_passing_variables(self):
         """Test different ways of passing in variables."""

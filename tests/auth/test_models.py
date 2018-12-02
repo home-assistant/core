@@ -29,6 +29,6 @@ def test_permissions_merged():
     # Make sure we cache instance
     assert user.permissions is user.permissions
 
-    assert user.permissions.check_entity('switch.bla') is True
-    assert user.permissions.check_entity('light.kitchen') is True
-    assert user.permissions.check_entity('light.not_kitchen') is False
+    assert user.permissions.check_entity('switch.bla', 'read') is True
+    assert user.permissions.check_entity('light.kitchen', 'read') is True
+    assert user.permissions.check_entity('light.not_kitchen', 'read') is False
