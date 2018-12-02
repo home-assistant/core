@@ -14,6 +14,8 @@ from homeassistant.util.yaml import load_yaml, dump
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
 SECTIONS = (
+    'auth',
+    'auth_provider_homeassistant',
     'automation',
     'config_entries',
     'core',
@@ -57,10 +59,6 @@ async def async_setup(hass, config):
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
 
     tasks = [setup_panel(panel_name) for panel_name in SECTIONS]
-
-    if hass.auth.active:
-        tasks.append(setup_panel('auth'))
-        tasks.append(setup_panel('auth_provider_homeassistant'))
 
     for panel_name in ON_DEMAND:
         if panel_name in hass.config.components:
