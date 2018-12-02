@@ -11,8 +11,6 @@ from homeassistant.components.scene import (
 from homeassistant.components.fibaro import (
     FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
 DEPENDENCIES = ['fibaro']
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +32,6 @@ class FibaroScene(FibaroDevice, Scene):
     def __init__(self, fibaro_device, controller):
         """Initialize the scene."""
         super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     def update(self):
         """Update the scene status."""
@@ -42,7 +39,7 @@ class FibaroScene(FibaroDevice, Scene):
 
     async def async_activate(self):
         """Activate the scene."""
-        await self.fibaro_device.start()
+        self.fibaro_device.start()
 
     @property
     def name(self):
@@ -52,4 +49,4 @@ class FibaroScene(FibaroDevice, Scene):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the scene."""
-        return self.fibaro_device.properties
+        return None
