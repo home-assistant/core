@@ -168,3 +168,25 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         user_input = {CONF_ALLOW_CLIP_SENSOR: True,
                       CONF_ALLOW_DECONZ_GROUPS: True}
         return await self.async_step_options(user_input=user_input)
+
+    @staticmethod
+    def async_get_options_flow(self):
+        """"""
+        return DeconzOptionsFlowHandler
+
+
+from homeassistant import data_entry_flow
+
+
+class DeconzOptionsFlowHandler(data_entry_flow.FlowHandler):
+    """Handle a deCONZ options flow."""
+
+    VERSION = 1
+
+    def __init__(self):
+        """"""
+        pass
+
+    def async_step_user(self, user_input=None):
+        """"""
+        pass
