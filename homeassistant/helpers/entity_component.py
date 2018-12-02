@@ -263,8 +263,6 @@ class EntityComponent:
             self.logger.error(err)
             return None
 
-        await conf_util.async_hass_config_merge(self.hass, conf)
-
         conf = conf_util.async_process_component_config(
             self.hass, conf, self.domain)
 
