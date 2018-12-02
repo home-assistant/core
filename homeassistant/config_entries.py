@@ -221,12 +221,12 @@ CONN_CLASS_UNKNOWN = 'unknown'
 class ConfigEntry:
     """Hold a configuration entry."""
 
-    __slots__ = ('entry_id', 'version', 'domain', 'title', 'data', 'source',
-                 'connection_class', 'state', '_setup_lock',
+    __slots__ = ('entry_id', 'version', 'domain', 'title', 'data', 'options',
+                 'source', 'connection_class', 'state', '_setup_lock',
                  '_async_cancel_retry_setup')
 
     def __init__(self, version: str, domain: str, title: str, data: dict,
-                 source: str, connection_class: str,
+                 source: str, connection_class: str, options: dict = {},
                  entry_id: Optional[str] = None,
                  state: str = ENTRY_STATE_NOT_LOADED) -> None:
         """Initialize a config entry."""
@@ -244,6 +244,9 @@ class ConfigEntry:
 
         # Config data
         self.data = data
+
+        # Entry options
+        self.options = options
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
@@ -392,6 +395,7 @@ class ConfigEntry:
             'domain': self.domain,
             'title': self.title,
             'data': self.data,
+            'options': self.options,
             'source': self.source,
             'connection_class': self.connection_class,
         }
@@ -416,6 +420,7 @@ class ConfigEntries:
         self.hass = hass
         self.flow = data_entry_flow.FlowManager(
             hass, self._async_create_flow, self._async_finish_flow)
+        self.options = Options(hass)
         self._hass_config = hass_config
         self._entries = []  # type: List[ConfigEntry]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
@@ -475,6 +480,7 @@ class ConfigEntries:
             self.hass.config.path(PATH_CONFIG), self._store,
             old_conf_migrate_func=_old_conf_migrator
         )
+        print('async load config entries', config)
 
         if config is None:
             self._entries = []
@@ -490,14 +496,29 @@ class ConfigEntries:
                 title=entry['title'],
                 # New in 0.79
                 connection_class=entry.get('connection_class',
-                                           CONN_CLASS_UNKNOWN))
+                                           CONN_CLASS_UNKNOWN),
+                # New in 0.8x
+                options=entry.get('options'))
             for entry in config['entries']]
 
     @callback
-    def async_update_entry(self, entry, *, data=_UNDEF):
+    def async_update_entry(self, entry, *, data=_UNDEF, options=None):
         """Update a config entry."""
+        if not data and not options:
+            return
+
         if data is not _UNDEF:
             entry.data = data
+
+        if options:
+            entry.options = options
+
+            component = getattr(self.hass.components, entry.domain)
+            dynamic_options = hasattr(component, 'async_options_updated')
+            if dynamic_options:
+                self.hass.async_create_task(
+                    component.async_options_updated(self.hass, entry))
+
         self._async_schedule_save()
 
     async def async_forward_entry_setup(self, entry, component):
@@ -629,3 +650,64 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return [flw for flw in self.hass.config_entries.flow.async_progress()
                 if flw['handler'] == self.handler and
                 flw['flow_id'] != self.flow_id]
+
+    @staticmethod
+    def async_get_options_flow():
+        """"""
+        return None
+
+
+class Options:
+    """"""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """"""
+        self.hass = hass
+        self.flow = data_entry_flow.FlowManager(
+            hass, self._async_create_flow, self._async_finish_flow)
+        self.active_options = {}
+
+    @callback
+    def async_domains(self) -> List[str]:
+        """Return domains for which we have options."""
+        result = []
+
+        for domain in FLOWS:
+            if HANDLERS[domain].async_get_options_flow():
+                result.append(domain)
+
+        return result
+
+    @callback
+    def async_active_flow(self, entry: ConfigEntry):
+        """"""
+        if entry in self.active_options.values():
+            return True
+        return False
+
+
+    @callback
+    def _async_create_flow(self, handler, context, data: ConfigEntry):
+        """"""
+        handler = HANDLERS[handler].async_get_options_flow()
+        flow = handler(data['data'])
+        flow.init_step = context['source']
+        self.active_options[flow.flow_id] = data
+        return flow
+
+    @callback
+    def _async_finish_flow(self, flow, result):
+        """"""
+        entry = self.active_options.pop(flow.flow_id)
+        self.hass.config_entries.async_update_entry(
+            entry, options=result['data'])
+        return result
+
+
+class OptionsFlow(data_entry_flow.FlowHandler):
+    """"""
+
+    @property
+    def data(self):
+        """"""
+        return self._config_entry['data']
