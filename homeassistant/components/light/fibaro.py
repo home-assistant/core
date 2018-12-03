@@ -9,12 +9,15 @@ import logging
 import asyncio
 from functools import partial
 
+from homeassistant.const import (
+    CONF_WHITE_VALUE)
+from homeassistant.components.fibaro import (
+    FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice,
+    CONF_DIMMING, CONF_COLOR, CONF_RESET_COLOR)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
 import homeassistant.util.color as color_util
-from homeassistant.components.fibaro import (
-    FIBARO_CONTROLLER, FIBARO_DEVICES, FibaroDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,15 +64,27 @@ class FibaroLight(FibaroDevice, Light):
         self._color = (0, 0)
         self._brightness = None
         self._white = 0
+        devconf = fibaro_device.device_config
+        force_color = devconf.get(CONF_COLOR, None)
+        force_dim = devconf.get(CONF_DIMMING, None)
+        force_white_value = devconf.get(CONF_WHITE_VALUE, None)
+        self._reset_color = devconf.get(CONF_RESET_COLOR, False)
 
         self._update_lock = asyncio.Lock()
-        if 'levelChange' in fibaro_device.interfaces:
+        if ('levelChange' in fibaro_device.interfaces or
+                force_dim is True) and \
+                force_dim is not False:
             self._supported_flags |= SUPPORT_BRIGHTNESS
-        if 'color' in fibaro_device.properties and \
-                'setColor' in fibaro_device.actions:
+        if (('color' in fibaro_device.properties and
+             'setColor' in fibaro_device.actions) or
+                force_color is True) and \
+                force_color is not False:
             self._supported_flags |= SUPPORT_COLOR
-        if 'setW' in fibaro_device.actions:
+        if ('setW' in fibaro_device.actions or
+                force_white_value is True) and \
+                force_white_value is not False:
             self._supported_flags |= SUPPORT_WHITE_VALUE
+
         super().__init__(fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
@@ -117,6 +132,12 @@ class FibaroLight(FibaroDevice, Light):
                 self._brightness = scaleto100(target_brightness)
 
         if self._supported_flags & SUPPORT_COLOR:
+            if self._reset_color and \
+                    kwargs.get(ATTR_WHITE_VALUE) is None and \
+                    kwargs.get(ATTR_HS_COLOR) is None and \
+                    kwargs.get(ATTR_BRIGHTNESS) is None:
+                self._color = (100, 0)
+
             # Update based on parameters
             self._white = kwargs.get(ATTR_WHITE_VALUE, self._white)
             self._color = kwargs.get(ATTR_HS_COLOR, self._color)
@@ -130,6 +151,10 @@ class FibaroLight(FibaroDevice, Light):
             if self.state == 'off':
                 self.set_level(int(self._brightness))
             return
+
+        if self._reset_color:
+            bri255 = scaleto255(self._brightness)
+            self.call_set_color(bri255, bri255, bri255, bri255)
 
         if self._supported_flags & SUPPORT_BRIGHTNESS:
             self.set_level(int(self._brightness))
