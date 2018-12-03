@@ -28,6 +28,7 @@ class EntitySubscription:
     encoding = attr.ib(type=str, default='utf-8')
 
     async def resubscribe_if_necessary(self, hass, other):
+        """Re-subscribe to the new topic if necessary."""
         if not self._should_resubscribe(other):
             return
 
