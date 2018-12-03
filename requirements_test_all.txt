@@ -110,6 +110,9 @@ homematicip==0.9.8
 # homeassistant.components.sensor.influxdb
 influxdb==5.2.0
 
+# homeassistant.components.verisure
+jsonpath==0.75
+
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
 
@@ -256,6 +259,9 @@ statsd==3.2.1
 
 # homeassistant.components.camera.uvc
 uvcclient==0.11.0
+
+# homeassistant.components.verisure
+vsure==1.5.2
 
 # homeassistant.components.vultr
 vultr==0.1.2
