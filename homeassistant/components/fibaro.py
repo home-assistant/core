@@ -26,6 +26,7 @@ FIBARO_CONTROLLER = 'fibaro_controller'
 ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 CONF_PLUGINS = "plugins"
+CONF_SECTIONS = "sections"
 
 FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light',
                      'scene', 'sensor', 'switch']
@@ -54,6 +55,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_URL): cv.url,
         vol.Optional(CONF_PLUGINS, default=False): cv.boolean,
+        vol.Optional(CONF_SECTIONS, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -69,11 +71,13 @@ class FibaroController():
     _state_handler = None        # Fiblary's StateHandler object
     _import_plugins = None      # Whether to import devices from plugins
 
-    def __init__(self, username, password, url, import_plugins):
+    def __init__(self, username, password, url, import_plugins, use_sections):
         """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
         self._client = FibaroClient(url, username, password)
+        self._section_map = None
         self._scene_map = None
+        self._config_sections = use_sections
 
     def connect(self):
         """Start the communication with the Fibaro controller."""
@@ -89,6 +93,8 @@ class FibaroController():
             return False
 
         self._room_map = {room.id: room for room in self._client.rooms.list()}
+        self._section_map = {section.id: section for section in
+                             self._client.sections.list()}
         self._read_devices()
         self._read_scenes()
         return True
@@ -194,12 +200,21 @@ class FibaroController():
         for device in devices:
             try:
                 if device.roomID == 0:
-                    room_name = 'Unknown'
+                    room_name = ""
+                    section_name = ""
                 else:
-                    room_name = self._room_map[device.roomID].name
-                device.friendly_name = room_name + ' ' + device.name
-                device.ha_id = '{}_{}_{}'.format(
-                    slugify(room_name), slugify(device.name), device.id)
+                    room_name = "{} ".format(
+                        self._room_map[device.roomID].name)
+                    section = self._section_map.get(
+                        self._room_map[device.roomID].sectionID, None)
+                    if section and self._config_sections:
+                        section_name = "{} ".format(section.name)
+                    else:
+                        section_name = ""
+                device.friendly_name = '{}{}{}'.format(
+                    section_name, room_name, device.name)
+                device.ha_id = slugify('{}{}{}_{}'.format(
+                    section_name, room_name, device.name, device.id))
                 if device.enabled and \
                         ('isPlugin' not in device or
                          (not device.isPlugin or self._import_plugins)):
@@ -223,7 +238,9 @@ def setup(hass, config):
         FibaroController(config[DOMAIN][CONF_USERNAME],
                          config[DOMAIN][CONF_PASSWORD],
                          config[DOMAIN][CONF_URL],
-                         config[DOMAIN][CONF_PLUGINS])
+                         config[DOMAIN][CONF_PLUGINS],
+                         config[DOMAIN][CONF_SECTIONS],
+                         )
 
     def stop_fibaro(event):
         """Stop Fibaro Thread."""
