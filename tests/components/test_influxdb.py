@@ -3,8 +3,6 @@ import datetime
 import unittest
 from unittest import mock
 
-import influxdb as influx_client
-
 from homeassistant.setup import setup_component
 import homeassistant.components.influxdb as influxdb
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON, \
