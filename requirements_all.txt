@@ -230,7 +230,7 @@ bt_proximity==0.1.2
 bthomehub5-devicelist==0.1.1
 
 # homeassistant.components.device_tracker.bt_smarthub
-btsmarthub_devicelist==0.1.1
+btsmarthub_devicelist==0.1.2
 
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
