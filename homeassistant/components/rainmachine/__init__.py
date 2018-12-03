@@ -33,6 +33,7 @@ PROGRAM_UPDATE_TOPIC = '{0}_program_update'.format(DOMAIN)
 SENSOR_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
 ZONE_UPDATE_TOPIC = '{0}_zone_update'.format(DOMAIN)
 
+CONF_CONTROLLERS = 'controllers'
 CONF_PROGRAM_ID = 'program_id'
 CONF_ZONE_ID = 'zone_id'
 CONF_ZONE_RUN_TIME = 'zone_run_time'
@@ -97,23 +98,29 @@ SERVICE_STOP_ZONE_SCHEMA = vol.Schema({
 
 SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int})
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_IP_ADDRESS): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-                cv.time_period,
-            vol.Optional(CONF_BINARY_SENSORS, default={}):
-                BINARY_SENSOR_SCHEMA,
-            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-            vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
-        })
-    },
-    extra=vol.ALLOW_EXTRA)
+
+CONTROLLER_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+            cv.time_period,
+        vol.Optional(CONF_BINARY_SENSORS, default={}):
+            BINARY_SENSOR_SCHEMA,
+        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+        vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
+    })
+}, extra=vol.ALLOW_EXTRA)
+
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_CONTROLLERS):
+            vol.All(cv.ensure_list, [CONTROLLER_SCHEMA]),
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
@@ -127,14 +134,20 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    if conf[CONF_IP_ADDRESS] in configured_instances(hass):
-        return True
+    for controller in conf[CONF_CONTROLLERS]:
+        if controller[CONF_IP_ADDRESS] in configured_instances(hass):
+            continue
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={'source': SOURCE_IMPORT},
-            data=conf))
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={'source': SOURCE_IMPORT},
+                data={
+                    CONF_IP_ADDRESS: controller[CONF_IP_ADDRESS],
+                    CONF_PASSWORD: controller[CONF_PASSWORD],
+                    CONF_PORT: controller.get(CONF_PORT, DEFAULT_PORT),
+                    CONF_SSL: controller.get(CONF_SSL, DEFAULT_SSL),
+                }))
 
     return True
 
