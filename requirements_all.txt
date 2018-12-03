@@ -1045,6 +1045,7 @@ pymitv==1.4.0
 
 # homeassistant.components.mochad
 pymochad==0.2.0
+pymochad_mqtt=0.8.5
 
 # homeassistant.components.modbus
 pymodbus==1.3.1
