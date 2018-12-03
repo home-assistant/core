@@ -2,6 +2,7 @@
 from collections import OrderedDict
 # pylint: disable=no-name-in-module
 from distutils.version import LooseVersion  # pylint: disable=import-error
+import json
 import logging
 import os
 import re
@@ -426,19 +427,60 @@ def async_log_exception(ex: vol.Invalid, domain: str, config: Dict,
     _LOGGER.error(_format_config_error(ex, domain, config))
 
 
+def _vol_invalid_nested_getitem(data: Any, ex: vol.Invalid) -> Any:
+    """Try to find the configuration of the voluptuous configuration error."""
+    for item_index in ex.path:
+        try:
+            data = data[item_index]
+        except (KeyError, IndexError, TypeError):
+            return None
+    return data
+
+
+def _vol_invalid_humanize_error(config: Any, ex: vol.Invalid) -> str:
+    """Generate a human-readable representation of the voluptuous exception."""
+    offending_item = _vol_invalid_nested_getitem(config, ex)
+    if isinstance(offending_item, dict):
+        try:
+            # Try to use JSON for dictionaries - otherwise
+            # the user will be greeted by a nice "OrderedDict([("key", ...)])
+            # message
+            offending_item = json.dumps(offending_item)
+        except (ValueError, TypeError):
+            # Was not JSON-serializable, fallback to __str__
+            pass
+    return '{}. Got {}'.format(ex, offending_item)
+
+
 @callback
-def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
+def _format_config_error(ex: vol.Invalid, domain: str, config: Dict,
+                         in_multiple_invalid: bool = False) -> str:
     """Generate log exception for configuration validation.
 
     This method must be run in the event loop.
     """
-    message = "Invalid config for [{}]: ".format(domain)
+    message = "" if in_multiple_invalid else \
+        "Invalid config for [{}]: ".format(domain)
+
+    if isinstance(ex, vol.MultipleInvalid):
+        # Multiple validation errors. Let's print all of them
+        return message + '\n'.join(sorted(
+            _format_config_error(sub_error, domain, config,
+                                 in_multiple_invalid=True)
+            for sub_error in ex.errors
+        ))
+
     if 'extra keys not allowed' in ex.error_message:
-        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
-                   .format(ex.path[-1], domain, domain,
-                           '->'.join(str(m) for m in ex.path))
+        message += '[{}] is an invalid option for [{}].'\
+                   .format(ex.path[-1], domain)
+    elif u'required key not provided' in ex.error_message:
+        message += '[{}] is a required option for [{}].'\
+                   .format(ex.path[-1], domain)
     else:
-        message += '{}.'.format(humanize_error(config, ex))
+        message += '{}.'.format(_vol_invalid_humanize_error(config, ex))
+
+    message += ' Check {}->{}. '.format(domain,
+                                        '->'.join(str(m) for m in ex.path))
 
     domain_config = config.get(domain, config)
     message += " (See {}, line {}). ".format(
