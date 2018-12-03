@@ -292,18 +292,29 @@ async def test_setup_platform_config(hass):
 
 async def test_setup_platform_discover(hass):
     """Test setting up the platform from discovery."""
+    LOCATIONS.append({
+        'locationName': 'Client 1',
+        'clientAddr': '1'
+    })
+
     with MockDependency('DirectPy'), \
             patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
+        await hass.async_start()
+        await hass.async_block_till_done()
         hass.async_create_task(
             async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
                                 {'media_player': {}})
         )
         await hass.async_block_till_done()
 
+    del LOCATIONS[-1]
+
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
-    assert len(hass.states.async_entity_ids('media_player')) == 1
+    state = hass.states.get('media_player.client_1')
+    assert state
+    assert len(hass.states.async_entity_ids('media_player')) == 2
 
 
 async def test_setup_platform_discover_duplicate(hass):
@@ -340,15 +351,21 @@ async def test_setup_platform_discover_client(hass, mock_now):
 
         await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
-
-        hass.async_create_task(
-            async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
-                                {'media_player': {}})
-        )
+        await hass.async_start()
         await hass.async_block_till_done()
 
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
+    assert len(hass.states.async_entity_ids('media_player')) == 1
+
+    next_update = mock_now + DEFAULT_CLIENT_DISCOVER_INTERVAL + \
+        timedelta(seconds=1)
+    with MockDependency('DirectPy'), \
+            patch('DirectPy.DIRECTV', new=MockDirectvClass), \
+            patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
     state = hass.states.get('media_player.client_1')
     assert state
     assert len(hass.states.async_entity_ids('media_player')) == 2
@@ -358,7 +375,7 @@ async def test_setup_platform_discover_client(hass, mock_now):
         'clientAddr': '2'
     })
 
-    next_update = mock_now + DEFAULT_CLIENT_DISCOVER_INTERVAL + \
+    next_update = next_update + DEFAULT_CLIENT_DISCOVER_INTERVAL + \
         timedelta(seconds=1)
     with MockDependency('DirectPy'), \
             patch('DirectPy.DIRECTV', new=MockDirectvClass), \
