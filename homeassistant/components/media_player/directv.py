@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.directv/
 """
 import logging
 from datetime import timedelta
+from functools import partial
 import requests
 import voluptuous as vol
 
@@ -167,7 +168,7 @@ class DirecTvDevice(MediaPlayerDevice):
         self._is_recorded = None
         self._assumed_state = None
         self._available = False
-        self._previous_error = False
+        self._first_error_timestamp = None
 
         if self._is_client:
             _LOGGER.debug("%s: Created entity DirecTV client %s",
@@ -180,123 +181,25 @@ class DirecTvDevice(MediaPlayerDevice):
         """Connect to DVR instance."""
         await self._async_get_dtv_instance()
 
-    async def _async_discover_directv_client_devices(self, now=None):
-        """Discover new client devices connected to the main DVR."""
-        known_devices = self.hass.data.get(DATA_DIRECTV, set())
-        discovered_devices = []
-        dtvs = []
-
-        # Attempt to discover additional RVU units
-        if now:
-            _LOGGER.debug("%s: Scheduled discovery of DirecTV devices on %s",
-                          self.entity_id, self._host)
-        else:
-            _LOGGER.debug("%s: Initial discovery of DirecTV devices on %s",
-                          self.entity_id, self._host)
-
-        _LOGGER.debug("%s: Current known devices: %s",
-                      self.entity_id, known_devices)
-
-        try:
-            resp = await self._async_get_locations()
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.debug("%s: Request exception %s trying to discover "
-                          "new clients", self.entity_id, ex)
-
-        for loc in resp.get('locations') or []:
-            if 'locationName' not in loc or 'clientAddr' not in loc or\
-               loc.get('clientAddr') == DEFAULT_DEVICE:
-                continue
-
-            # Make sure that this device is not already configured
-            # Comparing based on host (IP) and clientAddr.
-            if (self._host, loc['clientAddr']) in known_devices:
-                _LOGGER.debug("%s: Discovered device %s on host %s with "
-                              "client address %s is already "
-                              "configured",
-                              self.entity_id,
-                              str.title(loc['locationName']),
-                              self._host, loc['clientAddr'])
-            else:
-                _LOGGER.debug("%s: Adding discovered device %s with"
-                              " client address %s",
-                              self.entity_id,
-                              str.title(loc['locationName']),
-                              loc['clientAddr'])
-                discovered_devices.append({
-                    CONF_NAME: str.title(loc['locationName']),
-                    CONF_HOST: self._host,
-                    CONF_PORT: self._port,
-                    CONF_DEVICE: loc['clientAddr'],
-                    CONF_DISCOVER_CLIENTS: False,
-                    'entities': self._async_add_entities
-                })
-
-        if discovered_devices:
-            _LOGGER.debug("%s: Adding %s new DirecTV entities to HASS",
-                          self.entity_id, len(discovered_devices))
-
-            for new_device in discovered_devices:
-                dtvs.append(DirecTvDevice(**new_device))
-                self.hass.data.setdefault(DATA_DIRECTV, set()).add(
-                    (new_device[CONF_HOST], new_device[CONF_DEVICE]))
-
-            self._async_add_entities(dtvs)
-
-    async def _async_get_dtv_instance(self):
-        """Get the DTV instance to work with."""
-        if self.dtv:
-            return self.dtv
-
-        from DirectPy import DIRECTV
-        try:
-            self.dtv = await self.hass.async_add_executor_job(
-                DIRECTV, self._host, self._port, self._device)
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning("Exception trying to connect to DVR, will try "
-                            "again later: %s", ex)
-            self.dtv = None
-
-        if not self.dtv:
-            return
-
-        _LOGGER.debug("%s: Successfull connection to DVR on %s",
-                      self.entity_id, self._host)
-
-        if self._discover_clients:
-            # We are connected to DVR and will discover any potential
-            # clients. Schedule discovery
-            # Create a task to already do first discovery.
-            self.hass.async_create_task(
-                self._async_discover_directv_client_devices()
-            )
-
-            # Schedule discovery to run based on interval.
-            async_track_time_interval(
-                self.hass, self._async_discover_directv_client_devices,
-                self._client_discover_interval)
-            _LOGGER.debug("%s: Client discovery scheduled for every %s",
-                          self.entity_id, self._client_discover_interval)
-
-        return self.dtv
-
     async def async_update(self):
         """Retrieve latest state."""
         _LOGGER.debug("%s: Updating status", self.entity_id)
         try:
             self._available = True
-            self._is_standby = await self._async_get_standby()
-            if self._is_standby:
+            self._is_standby = await self._async_call_api(None, 'get_standby')
+            if self._is_standby or self._is_standby is None:
                 self._current = None
                 self._is_recorded = None
                 self._paused = None
                 self._assumed_state = False
                 self._last_position = None
                 self._last_update = None
+                if self._is_standby is None:
+                    self._available = False
             else:
-                self._current = await self._async_get_tuned()
+                self._current = await self._async_call_api(None, 'get_tuned')
                 if self._current['status']['code'] == 200:
-                    self._previous_error = False
+                    self._first_error_timestamp = None
                     self._is_recorded = self._current.get('uniqueId')\
                         is not None
                     self._paused = self._last_position == \
@@ -310,28 +213,37 @@ class DirecTvDevice(MediaPlayerDevice):
                         or self._last_update is None else self._last_update
                 else:
                     # If an error is received then only set to unavailable if
-                    # this is at least 2nd time in a row.
-                    if self._previous_error:
-                        _LOGGER.error("%s: Invalid status %s received",
-                                      self.entity_id,
-                                      self._current['status']['code'])
-                        self._available = False
+                    # this started at least 1 minute ago.
+                    if not self._first_error_timestamp:
+                        self._first_error_timestamp = dt_util.utcnow()
                     else:
-                        self._previous_error = True
-                        _LOGGER.debug("%s: Invalid status %s received",
-                                      self.entity_id,
-                                      self._current['status']['code'])
+                        tdelta = dt_util.utcnow() - self._first_error_timestamp
+                        if tdelta.total_seconds() >= 60:
+                            _LOGGER.error("%s: Invalid status %s received",
+                                          self.entity_id,
+                                          self._current['status']['code'])
+                            self._available = False
+                        else:
+                            _LOGGER.debug("%s: Invalid status %s received",
+                                          self.entity_id,
+                                          self._current['status']['code'])
+
         except requests.RequestException as ex:
             _LOGGER.error("Request error trying to update current status for"
                           " %s. %s", self._name, ex)
-            if self._previous_error:
-                self._available = False
+            if not self._first_error_timestamp:
+                self._first_error_timestamp = dt_util.utcnow()
+            else:
+                tdelta = dt_util.utcnow() - self._first_error_timestamp
+                if tdelta.total_seconds() >= 60:
+                    self._available = False
 
-            self._previous_error = True
         except Exception as ex:
             _LOGGER.error("Exception trying to update current status for"
                           " %s. %s", self._name, ex)
             self._available = False
+            if not self._first_error_timestamp:
+                self._first_error_timestamp = dt_util.utcnow()
             raise
 
     @property
@@ -537,58 +449,138 @@ class DirecTvDevice(MediaPlayerDevice):
             raise NotImplementedError()
 
         _LOGGER.debug("%s: Changing channel to %s", self.entity_id, media_id)
-        await self._async_tune_channel(media_id)
+        try:
+            await self._async_call_api("Not yet connected to DVR",
+                                       'tune_channel', media_id)
+        except requests.RequestException as ex:
+            _LOGGER.error("%s: Request error trying to change channel: %s",
+                          self.entity_id, ex)
 
-    async def _async_get_standby(self):
-        """Call sync function to retrieve DVR information."""
-        if not await self._async_get_dtv_instance():
+    async def _async_discover_directv_client_devices(self, now=None):
+        """Discover new client devices connected to the main DVR."""
+        known_devices = self.hass.data.get(DATA_DIRECTV, set())
+        discovered_devices = []
+        dtvs = []
+
+        # Attempt to discover additional RVU units
+        if now:
+            _LOGGER.debug("%s: Scheduled discovery of DirecTV devices on %s",
+                          self.entity_id, self._host)
+        else:
+            _LOGGER.debug("%s: Initial discovery of DirecTV devices on %s",
+                          self.entity_id, self._host)
+
+        _LOGGER.debug("%s: Current known devices: %s",
+                      self.entity_id, known_devices)
+
+        try:
+            resp = await self._async_call_api(
+                "Not yet connected to DVR", 'get_locations')
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.debug("%s: Request exception %s trying to discover "
+                          "new clients", self.entity_id, ex)
+            resp = None
+
+        if not resp:
             return
 
-        return await self.hass.async_add_executor_job(self.dtv.get_standby)
+        for loc in resp.get('locations') or []:
+            if 'locationName' not in loc or 'clientAddr' not in loc or\
+               loc.get('clientAddr') == DEFAULT_DEVICE:
+                continue
 
-    async def _async_get_tuned(self):
-        """Call sync function to retrieve DVR information."""
-        if not await self._async_get_dtv_instance():
+            # Make sure that this device is not already configured
+            # Comparing based on host (IP) and clientAddr.
+            if (self._host, loc['clientAddr']) in known_devices:
+                _LOGGER.debug("%s: Discovered device %s on host %s with "
+                              "client address %s is already "
+                              "configured",
+                              self.entity_id,
+                              str.title(loc['locationName']),
+                              self._host, loc['clientAddr'])
+            else:
+                _LOGGER.debug("%s: Adding discovered device %s with"
+                              " client address %s",
+                              self.entity_id,
+                              str.title(loc['locationName']),
+                              loc['clientAddr'])
+                discovered_devices.append({
+                    CONF_NAME: str.title(loc['locationName']),
+                    CONF_HOST: self._host,
+                    CONF_PORT: self._port,
+                    CONF_DEVICE: loc['clientAddr'],
+                    CONF_DISCOVER_CLIENTS: False,
+                    'entities': self._async_add_entities
+                })
+
+        if discovered_devices:
+            _LOGGER.debug("%s: Adding %s new DirecTV entities to HASS",
+                          self.entity_id, len(discovered_devices))
+
+            for new_device in discovered_devices:
+                dtvs.append(DirecTvDevice(**new_device))
+                self.hass.data.setdefault(DATA_DIRECTV, set()).add(
+                    (new_device[CONF_HOST], new_device[CONF_DEVICE]))
+
+            self._async_add_entities(dtvs)
+
+    async def _async_get_dtv_instance(self):
+        """Get the DTV instance to work with."""
+        if self.dtv:
+            return self.dtv
+
+        from DirectPy import DIRECTV
+        try:
+            self.dtv = await self.hass.async_add_executor_job(
+                DIRECTV, self._host, self._port, self._device)
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.warning("Exception trying to connect to DVR, will try "
+                            "again later: %s", ex)
+            self.dtv = None
+
+        if not self.dtv:
             return
 
-        return await self.hass.async_add_executor_job(self.dtv.get_tuned)
+        _LOGGER.debug("%s: Successfull connection to DVR on %s",
+                      self.entity_id, self._host)
 
-    async def _async_get_locations(self):
-        """Call sync function to retrieve locations."""
+        if self._discover_clients:
+            # We are connected to DVR and will discover any potential
+            # clients. Schedule discovery
+            # Create a task to already do first discovery.
+            self.hass.async_create_task(
+                self._async_discover_directv_client_devices()
+            )
+
+            # Schedule discovery to run based on interval.
+            async_track_time_interval(
+                self.hass, self._async_discover_directv_client_devices,
+                self._client_discover_interval)
+            _LOGGER.debug("%s: Client discovery scheduled for every %s",
+                          self.entity_id, self._client_discover_interval)
+        return self.dtv
+
+    async def _async_call_api(self, not_connected_error, api_call, *args,
+                              **kwargs):
+        """Call API method of DirecTV class."""
         if not await self._async_get_dtv_instance():
-            _LOGGER.error("Not yet connected to DVR")
+            if not_connected_error:
+                _LOGGER.error("Not yet connected to DVR")
+            else:
+                _LOGGER.debug("No connection to DVR")
             return
 
-        return await self.hass.async_add_executor_job(self.dtv.get_locations)
+        _LOGGER.debug("Executing API call: %s", api_call)
+        return await self.hass.async_add_executor_job(
+            partial(getattr(self.dtv, api_call), *args, **kwargs))
 
     async def _async_key_press(self, key):
         """Call sync function for key_press."""
-        if not await self._async_get_dtv_instance():
-            _LOGGER.error("Not yet connected to DVR")
-            return
-
         try:
-            result = await self.hass.async_add_executor_job(
-                self.dtv.key_press, key)
+            return await self._async_call_api("Not yet connected to DVR",
+                                              'key_press', key)
+
         except requests.RequestException as ex:
             _LOGGER.error("%s: Request error trying to send key press: %s",
                           self.entity_id, ex)
             return
-
-        return result
-
-    async def _async_tune_channel(self, channel):
-        """Call sync function for changing channel."""
-        if not await self._async_get_dtv_instance():
-            _LOGGER.error("Not yet connected to DVR")
-            return
-
-        try:
-            result = await self.hass.async_add_executor_job(
-                self.dtv.tune_channel, channel)
-        except requests.RequestException as ex:
-            _LOGGER.error("%s: Request error trying to change channel: %s",
-                          self.entity_id, ex)
-            return
-
-        return result
