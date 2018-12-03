@@ -5,18 +5,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rova/
 """
 
-import asyncio
 from datetime import datetime, timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.light import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_VARIABLES
+from homeassistant.const import CONF_MONITORED_VARIABLES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util import dt as dt_util
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['rova==0.0.1']
 
@@ -25,6 +23,8 @@ DOMAIN = 'rova'
 # Config for rova requests.
 CONF_ZIP_CODE = 'zip_code'
 CONF_HOUSE_NUMBER = 'house_number'
+
+UPDATE_DELAY = timedelta(days=1)
 
 # Supported sensor types:
 SENSOR_TYPES = {
@@ -36,47 +36,55 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ZIP_CODE): cv.string,
     vol.Required(CONF_HOUSE_NUMBER): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=[]):
+    vol.Optional(CONF_NAME, default='Rova'): cv.string,
+    vol.Optional(CONF_MONITORED_VARIABLES, default=['gft']):
     vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Create the Rova data service and sensors."""
-    zip_code = config.get(CONF_ZIP_CODE, None)
-    house_number = config.get(CONF_HOUSE_NUMBER, None)
+    import rova.rova as r
+
+    zip_code = config[CONF_ZIP_CODE]
+    house_number = config[CONF_HOUSE_NUMBER]
+    name = config[CONF_NAME]
+
+    _LOGGER.debug("Setting up Rova API")
+
+    # Create new Rova object to  retrieve data
+    api = r.Rova(zip_code, house_number)
 
     # Create rova data service which will retrieve and update the data.
-    data = RovaData(hass, zip_code, house_number)
-
+    data = RovaData(hass, api)
+    
     # Create a new sensor for each garbage type.
     entities = []
     for sensor_type in config[CONF_MONITORED_VARIABLES]:
-        sensor = RovaSensor(sensor_type, data)
+        sensor = RovaSensor(name, sensor_type, data)
         entities.append(sensor)
 
     async_add_entities(entities, True)
-
-    # Schedule first data service update straight away.
-    async_track_point_in_utc_time(hass, data.async_update, dt_util.utcnow())
 
 
 class RovaSensor(Entity):
     """Representation of a Rova sensor."""
 
-    def __init__(self, sensor_type, data):
+    def __init__(self, sensor_name, sensor_type, data):
         """Initialize the sensor."""
         self.code = sensor_type
+        self.sensor_name = sensor_name
         self.data = data
+
+        self._state = None
 
     @property
     def name(self):
         """Return the name."""
-        return 'rova_garbage_' + SENSOR_TYPES[self.code][0]
+        return "{}_{}".format(self.sensor_name, SENSOR_TYPES[self.code][0])
 
     @property
     def icon(self):
@@ -86,42 +94,33 @@ class RovaSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.code in self.data.data:
-            return self.data.data.get(self.code).isoformat()
-        return 0
+        return self._state
 
-
+    async def async_update(self):
+        """Get the latest data from the sensor and update the state."""
+        await self.hass.async_add_job(self.data.update)
+        pickup_date = self.data.data.get(self.code)
+        if isinstance(pickup_date, datetime):
+            self._state = pickup_date.isoformat()
+        
 class RovaData:
     """Get and update the latest data from the Rova API."""
 
-    def __init__(self, hass, zip_code, house_number):
+    def __init__(self, hass, api):
         """Initialize the data object."""
         self.hass = hass
-        self.zip_code = zip_code
-        self.house_number = house_number
+        self.api = api
         self.data = {}
 
-    @asyncio.coroutine
-    def schedule_update(self):
-        """Schedule an update for the next day."""
-        nxt = dt_util.utcnow() + timedelta(days=1)
-        _LOGGER.debug("Scheduling next Rova update in 1 day")
-        async_track_point_in_utc_time(self.hass, self.async_update, nxt)
-
-    @asyncio.coroutine
-    def async_update(self, *_):
+    @Throttle(UPDATE_DELAY)
+    def update(self):
         """Update the data from the Rova API."""
-        import rova.rova as r
         from requests.exceptions import HTTPError, ConnectTimeout
 
-        # Create new Rova object to  retrieve data
-        api = r.Rova(self.zip_code, self.house_number)
-
         try:
-            items = api.get_calendar_items()
+            items = self.api.get_calendar_items()
         except (ConnectTimeout, HTTPError):
             _LOGGER.debug("Could not retrieve data, retry again tomorrow")
-            yield from self.schedule_update()
             return
 
         _LOGGER.debug(items)
@@ -136,6 +135,3 @@ class RovaData:
                 self.data[code] = date
 
         _LOGGER.debug("Updated Rova calendar: %s", self.data)
-
-        yield from self.schedule_update()
-        return
