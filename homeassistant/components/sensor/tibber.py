@@ -12,6 +12,7 @@ from datetime import timedelta
 import aiohttp
 
 from homeassistant.components.tibber import DOMAIN as TIBBER_DOMAIN
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import Throttle
@@ -38,13 +39,17 @@ async def async_setup_platform(hass, config, async_add_entities,
     for home in tibber_connection.get_homes():
         try:
             await home.update_info()
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            pass
+        except asyncio.TimeoutError as err:
+            _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
+            raise PlatformNotReady()
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error connecting to Tibber home: %s ", err)
+            raise PlatformNotReady()
         dev.append(TibberSensorElPrice(home))
         if home.has_real_time_consumption:
             dev.append(TibberSensorRT(home))
 
-    async_add_entities(dev, True)
+    async_add_entities(dev, False)
 
 
 class TibberSensorElPrice(Entity):
