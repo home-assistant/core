@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discover_info=None):
+def setup_platform(hass, config, add_entities, discover_info=None):
     """Set up the AVR platform."""
     import hkavr
 
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discover_info=None):
     avr = hkavr.HkAVR(host, port, name)
     avr_device = HkAvrDevice(avr)
 
-    add_devices([avr_device], True)
+    add_entities([avr_device], True)
 
 
 class HkAvrDevice(MediaPlayerDevice):
