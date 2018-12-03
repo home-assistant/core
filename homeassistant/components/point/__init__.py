@@ -4,6 +4,7 @@ Support for Minut Point.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/point/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -22,8 +23,8 @@ from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import (
-    CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, NEW_DEVICE, SCAN_INTERVAL,
-    SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
+    CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, POINT_DISCOVERY_NEW,
+    SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
 
 REQUIREMENTS = ['pypoint==1.0.6']
 DEPENDENCIES = ['webhook']
@@ -32,6 +33,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
+
+DATA_CONFIG_ENTRY_LOCK = 'point_config_entry_lock'
+CONFIG_ENTRY_IS_SETUP = 'point_config_entry_is_setup'
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -87,6 +91,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         _LOGGER.error('Authentication Error')
         return False
 
+    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
+    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
+
     await async_setup_webhook(hass, entry, session)
     client = MinutPointClient(hass, entry, session)
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: client})
@@ -111,7 +118,7 @@ async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry,
                 **entry.data,
             })
     session.update_webhook(entry.data[CONF_WEBHOOK_URL],
-                           entry.data[CONF_WEBHOOK_ID])
+                           entry.data[CONF_WEBHOOK_ID], events=['*'])
 
     hass.components.webhook.async_register(
         DOMAIN, 'Point', entry.data[CONF_WEBHOOK_ID], handle_webhook)
@@ -153,7 +160,7 @@ class MinutPointClient():
     def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry,
                  session):
         """Initialize the Minut data object."""
-        self._known_devices = []
+        self._known_devices = set()
         self._hass = hass
         self._config_entry = config_entry
         self._is_available = True
@@ -172,18 +179,27 @@ class MinutPointClient():
             _LOGGER.warning("Device is unavailable")
             return
 
+        async def new_device(device_id, component):
+            """Load new device."""
+            config_entries_key = '{}.{}'.format(component, DOMAIN)
+            async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
+                if config_entries_key not in self._hass.data[
+                        CONFIG_ENTRY_IS_SETUP]:
+                    await self._hass.config_entries.async_forward_entry_setup(
+                        self._config_entry, component)
+                    self._hass.data[CONFIG_ENTRY_IS_SETUP].add(
+                        config_entries_key)
+
+            async_dispatcher_send(
+                self._hass, POINT_DISCOVERY_NEW.format(component, DOMAIN),
+                device_id)
+
         self._is_available = True
         for device in self._client.devices:
             if device.device_id not in self._known_devices:
-                # A way to communicate the device_id to entry_setup,
-                # can this be done nicer?
-                self._config_entry.data[NEW_DEVICE] = device.device_id
-                await self._hass.config_entries.async_forward_entry_setup(
-                    self._config_entry, 'sensor')
-                await self._hass.config_entries.async_forward_entry_setup(
-                    self._config_entry, 'binary_sensor')
-                self._known_devices.append(device.device_id)
-                del self._config_entry.data[NEW_DEVICE]
+                for component in ('sensor', 'binary_sensor'):
+                    await new_device(device.device_id, component)
+                self._known_devices.add(device.device_id)
         async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
 
     def device(self, device_id):
