@@ -11,7 +11,6 @@ from typing import (  # noqa: F401 pylint: disable=unused-import
     Any, Tuple, Optional, Dict, List, Union, Callable, Sequence, Set)
 from types import ModuleType
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
 
 from homeassistant import auth
 from homeassistant.auth import providers as auth_providers,\
