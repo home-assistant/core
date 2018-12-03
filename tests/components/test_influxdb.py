@@ -82,7 +82,7 @@ class TestInfluxDB(unittest.TestCase):
 
         assert not setup_component(self.hass, influxdb.DOMAIN, config)
 
-    def _setup(self, **kwargs):
+    def _setup(self, mock_client, **kwargs):
         """Set up the client."""
         config = {
             'influxdb': {
@@ -98,10 +98,11 @@ class TestInfluxDB(unittest.TestCase):
         config['influxdb'].update(kwargs)
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+        mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener(self, mock_client):
         """Test the event listener."""
-        self._setup()
+        self._setup(mock_client)
 
         # map of HA State to valid influxdb [state, value] fields
         valid = {
@@ -163,7 +164,7 @@ class TestInfluxDB(unittest.TestCase):
 
     def test_event_listener_no_units(self, mock_client):
         """Test the event listener for missing units."""
-        self._setup()
+        self._setup(mock_client)
 
         for unit in (None, ''):
             if unit:
@@ -194,7 +195,7 @@ class TestInfluxDB(unittest.TestCase):
 
     def test_event_listener_inf(self, mock_client):
         """Test the event listener for missing units."""
-        self._setup()
+        self._setup(mock_client)
 
         attrs = {'bignumstring':  '9' * 999, 'nonumstring': 'nan'}
         state = mock.MagicMock(
@@ -221,7 +222,7 @@ class TestInfluxDB(unittest.TestCase):
 
     def test_event_listener_states(self, mock_client):
         """Test the event listener against ignored states."""
-        self._setup()
+        self._setup(mock_client)
 
         for state_state in (1, 'unknown', '', 'unavailable'):
             state = mock.MagicMock(
@@ -251,7 +252,7 @@ class TestInfluxDB(unittest.TestCase):
 
     def test_event_listener_blacklist(self, mock_client):
         """Test the event listener against a blacklist."""
-        self._setup()
+        self._setup(mock_client)
 
         for entity_id in ('ok', 'blacklisted'):
             state = mock.MagicMock(
@@ -281,7 +282,7 @@ class TestInfluxDB(unittest.TestCase):
 
     def test_event_listener_blacklist_domain(self, mock_client):
         """Test the event listener against a blacklist."""
-        self._setup()
+        self._setup(mock_client)
 
         for domain in ('ok', 'another_fake'):
             state = mock.MagicMock(
@@ -395,7 +396,7 @@ class TestInfluxDB(unittest.TestCase):
 
     def test_event_listener_invalid_type(self, mock_client):
         """Test the event listener when an attribute has an invalid type."""
-        self._setup()
+        self._setup(mock_client)
 
         # map of HA State to valid influxdb [state, value] fields
         valid = {
@@ -661,7 +662,7 @@ class TestInfluxDB(unittest.TestCase):
 
     def test_queue_backlog_full(self, mock_client):
         """Test the event listener to drop old events."""
-        self._setup()
+        self._setup(mock_client)
 
         state = mock.MagicMock(
             state=1, domain='fake', entity_id='entity.id', object_id='entity',
