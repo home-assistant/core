@@ -60,7 +60,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     # Create rova data service which will retrieve and update the data.
     data = RovaData(hass, api)
-    
+
     # Create a new sensor for each garbage type.
     entities = []
     for sensor_type in config[CONF_MONITORED_VARIABLES]:
@@ -102,7 +102,8 @@ class RovaSensor(Entity):
         pickup_date = self.data.data.get(self.code)
         if isinstance(pickup_date, datetime):
             self._state = pickup_date.isoformat()
-        
+
+
 class RovaData:
     """Get and update the latest data from the Rova API."""
 
