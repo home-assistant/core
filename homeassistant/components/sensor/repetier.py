@@ -57,12 +57,12 @@ def parse_repetier_api_response(response):
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Repetier sensors."""
     try:
-        global DEC_NUM
+	global DEC_NUM
         global SHOW_PCT
         DEC_NUM = config.get("decimals")
         SHOW_PCT = config.get("state_percent")
 
-        data = RepetierData(parse_repetier_api_response, config)
+        data = RepetierData(config)
         data.update()
         sensors = []
         for key in data.data.keys():
@@ -153,9 +153,11 @@ def format_data(self):
 
 class RepetierData():
     """Get the latest sensor data."""
+    global parse_repetier_api_response
 
-    def __init__(self, parse_repetier_api_response, config):
+    def __init__(self, config):
         """Initialize the data object."""
+        #global parse_repetier_api_response
         url = config.get(CONF_URL)
         port = config.get(CONF_PORT)
         api_key = config.get(CONF_API_KEY)
