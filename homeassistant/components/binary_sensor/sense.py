@@ -113,7 +113,8 @@ class SenseDevice(BinarySensorDevice):
         return round(self._current_power)
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
         return {'current_power_w': self.current_power_w}
 
     def update(self):
