@@ -34,6 +34,11 @@ class EntitySubscription:
 
         if other is not None and other.unsubscribe_callback is not None:
             other.unsubscribe_callback()
+
+        if self.topic is None:
+            # We were asked to remove the subscription or not to create it
+            return
+
         self.unsubscribe_callback = await mqtt.async_subscribe(
             hass, self.topic, self.message_callback,
             self.qos, self.encoding
