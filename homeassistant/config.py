@@ -2,7 +2,6 @@
 from collections import OrderedDict
 # pylint: disable=no-name-in-module
 from distutils.version import LooseVersion  # pylint: disable=import-error
-import json
 import logging
 import os
 import re
@@ -30,6 +29,7 @@ from homeassistant.util.yaml import load_yaml, SECRET_YAML
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.voluptuous import humanize_error
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers import config_per_platform, extract_domain_configs
 
@@ -426,31 +426,6 @@ def async_log_exception(ex: vol.Invalid, domain: str, config: Dict,
     _LOGGER.error(_format_config_error(ex, domain, config))
 
 
-def _vol_invalid_nested_getitem(data: Any, ex: vol.Invalid) -> Any:
-    """Try to find the configuration of the voluptuous configuration error."""
-    for item_index in ex.path:
-        try:
-            data = data[item_index]
-        except (KeyError, IndexError, TypeError):
-            return None
-    return data
-
-
-def _vol_invalid_humanize_error(config: Any, ex: vol.Invalid) -> str:
-    """Generate a human-readable representation of the voluptuous exception."""
-    offending_item = _vol_invalid_nested_getitem(config, ex)
-    if isinstance(offending_item, dict):
-        try:
-            # Try to use JSON for dictionaries - otherwise
-            # the user will be greeted by a nice "OrderedDict([("key", ...)])
-            # message
-            offending_item = json.dumps(offending_item)
-        except (ValueError, TypeError):
-            # Was not JSON-serializable, fallback to __str__
-            pass
-    return '{}. Got {}'.format(ex, offending_item)
-
-
 @callback
 def _format_config_error(ex: vol.Invalid, domain: str, config: Dict,
                          in_multiple_invalid: bool = False) -> str:
@@ -476,7 +451,7 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict,
         message += '[{}] is a required option for [{}].'\
                    .format(ex.path[-1], domain)
     else:
-        message += '{}.'.format(_vol_invalid_humanize_error(config, ex))
+        message += '{}.'.format(humanize_error(config, ex))
 
     message += ' Check {}->{}. '.format(domain,
                                         '->'.join(str(m) for m in ex.path))
