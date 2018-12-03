@@ -15,7 +15,6 @@ from homeassistant.const import (CONF_URL,
                                  CONF_API_KEY,
                                  CONF_PORT,
                                  STATE_IDLE,
-                                 STATE_ON,
                                  STATE_OFF,
                                  STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
