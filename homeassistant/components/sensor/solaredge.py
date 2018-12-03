@@ -5,29 +5,26 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.solaredge/
 """
 
-import asyncio
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import CONF_MONITORED_VARIABLES
 from homeassistant.components.light import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util import dt as dt_util
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['solaredge==0.0.2']
 
 DOMAIN = "solaredge"
 
 # Config for solaredge monitoring api requests.
-CONF_API_KEY = "api_key"
 CONF_SITE_ID = "site_id"
 
-DELAY_OK = 10
-DELAY_NOT_OK = 20
+UPDATE_DELAY = timedelta(minutes=10)
 
 # Supported sensor types:
 # Key: ['name', unit, icon]
@@ -42,42 +39,66 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_SITE_ID): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=[]):
+    vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
+    vol.Optional(CONF_MONITORED_VARIABLES, default=['currentPower']):
     vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Create the SolarEdge Monitoring API sensor."""
-    api_key = config.get(CONF_API_KEY, None)
-    site_id = config.get(CONF_SITE_ID, None)
+    import solaredge
+    from requests.exceptions import HTTPError, ConnectTimeout
+
+    api_key = config[CONF_API_KEY]
+    site_id = config[CONF_SITE_ID]
+    name = config[CONF_NAME]
+
+    _LOGGER.debug("Setting up SolarEdge Monitoring API")
+
+    # Create new SolarEdge object to retrieve data
+    api = solaredge.Solaredge(api_key)
+
+    # Check if api can be reached and site is active
+    try:
+        response = api.get_details(site_id)
+
+        if response['details']['status'].lower() != 'active':
+            _LOGGER.debug("SolarEdge site is not active")
+            return False
+        _LOGGER.debug("Credentials correct and site is active")
+    except KeyError:
+        _LOGGER.debug("Missing details data in solaredge response")
+        return False
+    except (ConnectTimeout, HTTPError):
+        _LOGGER.debug("Could not retrieve details from SolarEdge \
+         Monitoring API")
+        return False
 
     # Create solaredge data service which will retrieve and update the data.
-    data = SolarEdgeData(hass, api_key, site_id)
+    data = SolarEdgeData(hass, api, site_id)
 
     # Create a new sensor for each sensor type.
     entities = []
     for sensor_type in config[CONF_MONITORED_VARIABLES]:
-        sensor = SolarEdgeSensor(sensor_type, data)
+        sensor = SolarEdgeSensor(name, sensor_type, data)
         entities.append(sensor)
 
     async_add_entities(entities, True)
-
-    # Schedule first data service update straight away.
-    async_track_point_in_utc_time(hass, data.async_update, dt_util.utcnow())
 
 
 class SolarEdgeSensor(Entity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
-    def __init__(self, sensorType, data):
+    def __init__(self, sensor_name, sensor_type, data):
         """Initialize the sensor."""
-        self.type = sensorType
+        self.sensor_name = sensor_name
+        self.type = sensor_type
         self.data = data
+        self._state = None
 
         self._name = SENSOR_TYPES[self.type][0]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
@@ -85,7 +106,7 @@ class SolarEdgeSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return 'solaredge_' + self.type
+        return "{}_{}".format(self.sensor_name, self.type)
 
     @property
     def unit_of_measurement(self):
@@ -100,51 +121,41 @@ class SolarEdgeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.type in self.data.data:
-            return self.data.data.get(self.type)
-        return 0
+        return self._state
+
+    async def async_update(self):
+        """Get the latest data from the sensor and update the state."""
+        _LOGGER.debug("Requesting update skipping update")
+        await self.hass.async_add_job(self.data.update)
+        self._state = self.data.data[self.type]
 
 
 class SolarEdgeData:
     """Get and update the latest data."""
 
-    def __init__(self, hass, api_key, site_id):
+    def __init__(self, hass, api, site_id):
         """Initialize the data object."""
         self.hass = hass
+        self.api = api
         self.data = {}
-        self.api_key = api_key
         self.site_id = site_id
 
-    @asyncio.coroutine
-    def schedule_update(self, minutes):
-        """Schedule an update after minute minutes."""
-        nxt = dt_util.utcnow() + timedelta(minutes=minutes)
-        _LOGGER.debug("Scheduling next SolarEdge update in %s minutes",
-                      minutes)
-        async_track_point_in_utc_time(self.hass, self.async_update, nxt)
+        self.update()
 
-    @asyncio.coroutine
-    def async_update(self, *_):
+    @Throttle(UPDATE_DELAY)
+    def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-        import solaredge
         from requests.exceptions import HTTPError, ConnectTimeout
 
-        # Create new SolarEdge object to retrieve data
-        api = solaredge.Solaredge(self.api_key)
-
         try:
-            data = api.get_overview(self.site_id)
+            data = self.api.get_overview(self.site_id)
+            overview = data['overview']
+        except KeyError:
+            _LOGGER.debug("Missing overview data, skipping update")
+            return
         except (ConnectTimeout, HTTPError):
-            _LOGGER.debug("Could not retrieve data, delaying next update")
-            yield from self.schedule_update(DELAY_NOT_OK)
+            _LOGGER.debug("Could not retrieve data, skipping update")
             return
-
-        if 'overview' not in data:
-            _LOGGER.debug("Missing overview data, delaying next update")
-            yield from self.schedule_update(DELAY_NOT_OK)
-            return
-
-        overview = data['overview']
 
         self.data = {}
 
@@ -156,6 +167,4 @@ class SolarEdgeData:
                 self.data[item] = value['power']
 
         _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
-
-        yield from self.schedule_update(DELAY_OK)
         return
