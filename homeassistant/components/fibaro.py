@@ -27,7 +27,8 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 CONF_PLUGINS = "plugins"
 
-FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light', 'sensor', 'switch']
+FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light',
+                     'scene', 'sensor', 'switch']
 
 FIBARO_TYPEMAP = {
     'com.fibaro.multilevelSensor': "sensor",
@@ -72,6 +73,7 @@ class FibaroController():
         """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
         self._client = FibaroClient(url, username, password)
+        self._scene_map = None
 
     def connect(self):
         """Start the communication with the Fibaro controller."""
@@ -88,6 +90,7 @@ class FibaroController():
 
         self._room_map = {room.id: room for room in self._client.rooms.list()}
         self._read_devices()
+        self._read_scenes()
         return True
 
     def enable_state_handler(self):
@@ -166,6 +169,22 @@ class FibaroController():
                 device.properties.get('isLight', 'false') == 'true':
             device_type = 'light'
         return device_type
+
+    def _read_scenes(self):
+        scenes = self._client.scenes.list()
+        self._scene_map = {}
+        for device in scenes:
+            if not device.visible:
+                continue
+            if device.roomID == 0:
+                room_name = 'Unknown'
+            else:
+                room_name = self._room_map[device.roomID].name
+            device.friendly_name = '{} {}'.format(room_name, device.name)
+            device.ha_id = '{}_{}_{}'.format(
+                slugify(room_name), slugify(device.name), device.id)
+            self._scene_map[device.id] = device
+            self.fibaro_devices['scene'].append(device)
 
     def _read_devices(self):
         """Read and process the device list."""
