@@ -800,7 +800,6 @@ async def test_propagate_error_service_not_found(hass):
     assert len(events) == 0
 
 
-
 async def test_propagate_error_invalid_service_data(hass):
     """Test that a script aborts when we send invalid service data."""
     events = []
