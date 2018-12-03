@@ -153,6 +153,7 @@ def format_data(self):
 
 class RepetierData():
     """Get the latest sensor data."""
+
     global parse_repetier_api_response
 
     def __init__(self, config):
