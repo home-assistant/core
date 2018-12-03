@@ -118,7 +118,7 @@ async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry,
                 **entry.data,
             })
     session.update_webhook(entry.data[CONF_WEBHOOK_URL],
-                           entry.data[CONF_WEBHOOK_ID])
+                           entry.data[CONF_WEBHOOK_ID], events=['*'])
 
     hass.components.webhook.async_register(
         DOMAIN, 'Point', entry.data[CONF_WEBHOOK_ID], handle_webhook)
