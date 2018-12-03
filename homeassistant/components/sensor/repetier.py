@@ -79,8 +79,8 @@ def format_data(self):
         if self._data.data[self._repetier_id]['job'] != "none":
             if SHOW_PCT:
                 self._state = round(
-                        self._data.data[self._repetier_id]['done'],
-                        DEC_NUM)
+                    self._data.data[self._repetier_id]['done'],
+                    DEC_NUM)
                 self._units = '%'
             else:
                 self._state = STATE_ON
