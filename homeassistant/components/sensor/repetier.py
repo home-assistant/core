@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DEC_NUM = config.get("decimals")
         SHOW_PCT = config.get("state_percent")
 
-        data = RepetierData(config)
+        data = RepetierData(parse_repetier_api_response, config)
         data.update()
         sensors = []
         for key in data.data.keys():
@@ -154,16 +154,14 @@ def format_data(self):
 class RepetierData():
     """Get the latest sensor data."""
 
-    global parse_repetier_api_response
-
-    def __init__(self, config):
+    def __init__(self, parser, config):
         """Initialize the data object."""
         url = config.get(CONF_URL)
         port = config.get(CONF_PORT)
         api_key = config.get(CONF_API_KEY)
         self.url = url + ":" + port + "/printer/list/?apikey=" + api_key
         self.data = None
-        self.repetier_api_response = parse_repetier_api_response
+        self.repetier_api_response = parser
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
