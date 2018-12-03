@@ -6,7 +6,6 @@ https://www.home-assistant.io/components/media_player.kef/
 """
 
 
-from enum import Enum
 import collections
 import logging
 import time
@@ -24,23 +23,18 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pykef==1.2.0']
+REQUIREMENTS = ['pykef==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+# When turing on the speaker, disable turn on for this amout of seconds
+# If the speaker has not come online in that time, turn_on can be called again.
+_TURNING_ON_TIMER_WAIT = 30.0
 
 DEFAULT_NAME = 'KEF Wireless Speaker'
 DEFAULT_PORT = 50001
 DATA_KEF = 'kef'
-# If a new source is selected, do not override source in update for this amount
-# of seconds.
-UPDATE_TIMEOUT = 1.0
-# When turning off/on the speaker, do not query it for CHANGE_STATE_TIMEOUT,
-# since it takes some time for it to go offline/online.
-CHANGE_STATE_TIMEOUT = 30.0
-# If we try to control the speaker while offline, wait for the speaker to come
-# online (in secs),
-WAIT_FOR_ONLINE_STATE = 10.0
+
 
 SUPPORT_KEF_CLIENT_DEVICE = (
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE |
@@ -89,15 +83,6 @@ def setup_platform(hass, config, add_entities,
     )], True)
 
 
-class States(Enum):
-    """States for the a KefClientDevice."""
-
-    Online = 1
-    Offline = 2
-    TurningOn = 3
-    TurningOff = 4
-
-
 class KefClientDevice(MediaPlayerDevice):
     """Kef Player Object."""
 
@@ -112,21 +97,10 @@ class KefClientDevice(MediaPlayerDevice):
         self._turn_on_data = turn_on_data
 
         # set internal state to None
-        self._state = None
         self._mute = None
         self._source = None
         self._volume = None
-        self._update_timeout = time.time() - CHANGE_STATE_TIMEOUT
-
-    def __wait_for_online_state(self):
-        """Use this function to wait for online state."""
-        time_to_wait = WAIT_FOR_ONLINE_STATE
-        while time_to_wait > 0 and self._state is not States.Online:
-            time_to_sleep = 0.1
-            time_to_wait -= time_to_sleep
-            time.sleep(time_to_sleep)
-            if self._state is States.TurningOn:
-                time_to_wait = 10
+        self._turning_on_timer = time.time()
 
     def __is_turning_on_supported(self):
         """Turn on is supported if a turn on service is configured."""
@@ -140,41 +114,28 @@ class KefClientDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._state is States.Online:
-            return STATE_ON
-        if (self._state in
-                [States.Offline, States.TurningOn, States.TurningOff]):
-            return STATE_OFF
-        return None
+        return STATE_ON if self._speaker.online else STATE_OFF
 
     def update(self):
         """Update latest state."""
-        updated_needed = time.time() >= self._update_timeout
-        if self._state in [States.TurningOn, States.TurningOff]:
-            if updated_needed:
-                self._state = States.Offline
-            updated_needed = True
         try:
             is_online = self._speaker.online
-            if (is_online and self._state in
-                    [States.Online, States.Offline, States.TurningOn, None]):
-                if updated_needed:
-                    self._mute = self._speaker.muted
-                    self._source = str(self._speaker.source)
-                    self._volume = self._speaker.volume
-                self._state = States.Online
-            elif self._state in [States.Online, States.Offline, None]:
+            if is_online:
+                self._mute = self._speaker.muted
+                self._source = str(self._speaker.source)
+                self._volume = self._speaker.volume
+            else:
                 self._mute = None
                 self._source = None
                 self._volume = None
-                self._state = States.Offline
         except ConnectionRefusedError as err:
             _LOGGER.debug("update failed: %s", err)
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._volume
+        volume = self._volume
+        return volume if isinstance(volume, float) else None
 
     @property
     def is_volume_muted(self):
@@ -190,10 +151,7 @@ class KefClientDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn the media player off."""
         try:
-            response = self._speaker.turnOff()
-            if response:
-                self._state = States.TurningOff
-                self._update_timeout = time.time() + CHANGE_STATE_TIMEOUT
+            self._speaker.turnOff()
         except ConnectionRefusedError as err:
             _LOGGER.warning("turn_off, failed: %s", err)
 
@@ -201,8 +159,9 @@ class KefClientDevice(MediaPlayerDevice):
         """Turn the media player on via service call."""
         # even if the SUPPORT_TURN_ON is not set as supported feature, HA still
         # offers to call turn_on, thus we have to exit here to prevent errors
-        if (not self.__is_turning_on_supported() or
-                self._state in [States.Online, States.TurningOn, None]):
+        turning_on = self._turning_on_timer > time.time()
+        if (not self.__is_turning_on_supported() or turning_on or
+                self.state is STATE_ON):
             return
 
         # note that turn_on_service has the correct syntax as we validated the
@@ -216,49 +175,41 @@ class KefClientDevice(MediaPlayerDevice):
         service_data = json.loads(self._turn_on_data)
         self._hass.services.call(
             service_domain, service_name, service_data, False)
-        self._state = States.TurningOn
-        self._update_timeout = time.time() + CHANGE_STATE_TIMEOUT
+        # Disable turn on service for a few seconds
+        self._turning_on_timer = time.time() + _TURNING_ON_TIMER_WAIT
 
     def volume_up(self):
         """Volume up the media player."""
-        self.__wait_for_online_state()
         try:
             self._speaker.increaseVolume()
             self._volume = self._speaker.volume
-            self._update_timeout = time.time() + UPDATE_TIMEOUT
         except ConnectionRefusedError as err:
             _LOGGER.warning("increaseVolume, failed: %s", err)
 
     def volume_down(self):
         """Volume down the media player."""
-        self.__wait_for_online_state()
         try:
             self._speaker.decreaseVolume()
             self._volume = self._speaker.volume
-            self._update_timeout = time.time() + UPDATE_TIMEOUT
         except ConnectionRefusedError as err:
             _LOGGER.warning("volume_down, failed: %s", err)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self.__wait_for_online_state()
         try:
-            self._speaker.volume = volume
             self._volume = volume
-            self._update_timeout = time.time() + UPDATE_TIMEOUT
+            self._speaker.volume = volume
         except ConnectionRefusedError as err:
             _LOGGER.warning("set_volume_level, failed: %s", err)
 
     def select_source(self, source):
         """Select input source."""
         from pykef import InputSource
-        self.__wait_for_online_state()
         try:
             input_source = InputSource.from_str(source)
             if input_source:
                 self._source = str(source)
                 self._speaker.source = input_source
-                self._update_timeout = time.time() + UPDATE_TIMEOUT
             else:
                 _LOGGER.warning("select_source: unknown input %s", str(source))
         except ConnectionRefusedError as err:
@@ -279,8 +230,7 @@ class KefClientDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         try:
-            self._speaker.muted = mute
             self._mute = mute
-            self._update_timeout = time.time() + UPDATE_TIMEOUT
+            self._speaker.muted = mute
         except ConnectionRefusedError as err:
             _LOGGER.warning("mute_volume, failed: %s", err)
