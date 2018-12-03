@@ -1,60 +1,74 @@
 """Tests for the Verisure platform."""
 
 from contextlib import contextmanager
-from unittest.mock import Mock, patch, call
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
-from homeassistant.helpers import discovery
+from unittest.mock import patch, call
+from homeassistant.const import STATE_UNLOCKED
+from homeassistant.setup import async_setup_component
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN, SERVICE_LOCK, SERVICE_UNLOCK)
 from homeassistant.components.verisure import DOMAIN as VERISURE_DOMAIN
 
 
 NO_DEFAULT_LOCK_CODE_CONFIG = {
-    'username': 'test',
-    'password': 'test',
-    'locks': True,
+    'verisure': {
+        'username': 'test',
+        'password': 'test',
+        'locks': True,
+        'alarm': False,
+        'door_window': False,
+        'hygrometers': False,
+        'mouse': False,
+        'smartplugs': False,
+        'thermometers': False,
+        'smartcam': False,
+    }
 }
 
 DEFAULT_LOCK_CODE_CONFIG = {
-    'username': 'test',
-    'password': 'test',
-    'locks': True,
-    'default_lock_code': '9999',
+    'verisure': {
+        'username': 'test',
+        'password': 'test',
+        'locks': True,
+        'default_lock_code': '9999',
+        'alarm': False,
+        'door_window': False,
+        'hygrometers': False,
+        'mouse': False,
+        'smartplugs': False,
+        'thermometers': False,
+        'smartcam': False,
+    }
 }
 
 LOCKS = ['door_lock']
-LOCK_CODE_TESTS = [
-    {
-        'service': SERVICE_LOCK,
-        'start': STATE_UNLOCKED,
-        'end': STATE_LOCKED,
-    },
-    {
-        'service': SERVICE_UNLOCK,
-        'start': STATE_LOCKED,
-        'end': STATE_UNLOCKED,
-    },
-]
 
 
 @contextmanager
 def mock_hub(config, get_response=LOCKS[0]):
     """Extensively mock out a verisure hub."""
     hub_prefix = 'homeassistant.components.lock.verisure.hub'
-    with patch(hub_prefix) as hub:
-        hub.config = config
-        hub.update_overview.return_value = None
+    verisure_prefix = 'verisure.Session'
+    with patch(verisure_prefix) as session, \
+            patch(hub_prefix) as hub:
+        session.login.return_value = True
+
+        hub.config = config['verisure']
         hub.get.return_value = LOCKS
         hub.get_first.return_value = get_response.upper()
+        hub.session.set_lock_state.return_value = {
+            'doorLockStateChangeTransactionId': 'test',
+        }
+        hub.session.get_lock_state_transaction.return_value = {
+            'result': 'OK',
+        }
 
-        yield
+        yield hub
 
 
 async def setup_verisure_locks(hass, config):
     """Set up mock verisure locks."""
     with mock_hub(config):
-        discovery.load_platform(hass, LOCK_DOMAIN, VERISURE_DOMAIN, {},
-                                config)
+        await async_setup_component(hass, VERISURE_DOMAIN, config)
         await hass.async_block_till_done()
         # lock.door_lock, group.all_locks
         assert len(hass.states.async_all()) == 2
@@ -63,50 +77,65 @@ async def setup_verisure_locks(hass, config):
 async def test_verisure_no_default_code(hass):
     """Test configs without a default lock code."""
     await setup_verisure_locks(hass, NO_DEFAULT_LOCK_CODE_CONFIG)
-    lock = hass.data[LOCK_DOMAIN].get_entity('lock.door_lock')
-    # Don't actually update state machine
-    lock.update = Mock('update', return_value=None)
+    with mock_hub(NO_DEFAULT_LOCK_CODE_CONFIG,
+                  STATE_UNLOCKED) as hub:
 
-    for test in LOCK_CODE_TESTS:
-        with mock_hub(NO_DEFAULT_LOCK_CODE_CONFIG, test['start']):
-            mock = Mock(name='set_lock_state', return_value=None)
-            lock.set_lock_state = mock
+        mock = hub.session.set_lock_state
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, {
+            'entity_id': 'lock.door_lock',
+        })
+        await hass.async_block_till_done()
+        assert mock.call_count == 0
 
-            await hass.services.async_call(LOCK_DOMAIN, test['service'], {
-                'entity_id': 'lock.door_lock',
-            })
-            await hass.async_block_till_done()
-            assert mock.call_count == 0
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, {
+            'entity_id': 'lock.door_lock',
+            'code': '12345',
+        })
+        await hass.async_block_till_done()
+        assert mock.call_args == call('12345', LOCKS[0], 'lock')
 
-            await hass.services.async_call(LOCK_DOMAIN, test['service'], {
-                'entity_id': 'lock.door_lock',
-                'code': '12345',
-            })
-            await hass.async_block_till_done()
-            assert mock.call_args == call('12345', test['end'])
+        mock.reset_mock()
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, {
+            'entity_id': 'lock.door_lock',
+        })
+        await hass.async_block_till_done()
+        assert mock.call_count == 0
+
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, {
+            'entity_id': 'lock.door_lock',
+            'code': '12345',
+        })
+        await hass.async_block_till_done()
+        assert mock.call_args == call('12345', LOCKS[0], 'unlock')
 
 
 async def test_verisure_default_code(hass):
     """Test configs with a default lock code."""
     await setup_verisure_locks(hass, DEFAULT_LOCK_CODE_CONFIG)
-    lock = hass.data[LOCK_DOMAIN].get_entity('lock.door_lock')
-    # Don't actually update state machine
-    lock.update = Mock('update', return_value=None)
+    with mock_hub(DEFAULT_LOCK_CODE_CONFIG, STATE_UNLOCKED) as hub:
+        mock = hub.session.set_lock_state
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, {
+            'entity_id': 'lock.door_lock',
+        })
+        await hass.async_block_till_done()
+        assert mock.call_args == call('9999', LOCKS[0], 'lock')
 
-    for test in LOCK_CODE_TESTS:
-        with mock_hub(DEFAULT_LOCK_CODE_CONFIG, test['start']):
-            mock = Mock(name='set_lock_state', return_value=None)
-            lock.set_lock_state = mock
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, {
+            'entity_id': 'lock.door_lock',
+        })
+        await hass.async_block_till_done()
+        assert mock.call_args == call('9999', LOCKS[0], 'unlock')
 
-            await hass.services.async_call(LOCK_DOMAIN, test['service'], {
-                'entity_id': 'lock.door_lock',
-            })
-            await hass.async_block_till_done()
-            assert mock.call_args == call('9999', test['end'])
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, {
+            'entity_id': 'lock.door_lock',
+            'code': '12345',
+        })
+        await hass.async_block_till_done()
+        assert mock.call_args == call('12345', LOCKS[0], 'lock')
 
-            await hass.services.async_call(LOCK_DOMAIN, test['service'], {
-                'entity_id': 'lock.door_lock',
-                'code': '12345',
-            })
-            await hass.async_block_till_done()
-            assert mock.call_args == call('12345', test['end'])
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, {
+            'entity_id': 'lock.door_lock',
+            'code': '12345',
+        })
+        await hass.async_block_till_done()
+        assert mock.call_args == call('12345', LOCKS[0], 'unlock')
