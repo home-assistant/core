@@ -37,8 +37,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 DEC_NUM = 0
 SHOW_PCT = True
-
 STATE_PRINTING = "printing"
+
 
 def parse_repetier_api_response(response):
     """Parse the Repetier Server API json response."""
