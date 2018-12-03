@@ -134,6 +134,8 @@ homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/sensor/worldclock.py @fabaff
 homeassistant/components/shiftr.py @fabaff
 homeassistant/components/spaceapi.py @fabaff
+homeassistant/components/switch/switchbot.py @danielhiversen
+homeassistant/components/switch/switchmate.py @danielhiversen
 homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/vacuum/roomba.py @pschmitt
 homeassistant/components/weather/__init__.py @fabaff
