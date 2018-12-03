@@ -271,7 +271,6 @@ def add_card(fname: str, view_id: str, card_config: str,
             card_config = yaml.yaml_to_object(card_config)
         if 'id' not in card_config:
             card_config['id'] = uuid.uuid4().hex
-            card_config.move_to_end('id', last=False)
         if position is None:
             cards.append(card_config)
         else:
@@ -396,7 +395,6 @@ def add_view(fname: str, view_config: str,
         view_config = yaml.yaml_to_object(view_config)
     if 'id' not in view_config:
         view_config['id'] = uuid.uuid4().hex
-        view_config.move_to_end('id', last=False)
     if position is None:
         views.append(view_config)
     else:
