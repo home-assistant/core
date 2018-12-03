@@ -138,6 +138,7 @@ FLOWS = [
     'cast',
     'deconz',
     'dialogflow',
+    'geofency',
     'hangouts',
     'homematicip_cloud',
     'hue',
