@@ -21,7 +21,7 @@ from homeassistant.const import (CONF_URL,
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-__version__ = '0.3'
+__version__ = '0.4'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 DEC_NUM = 0
 SHOW_PCT = True
 
+STATE_PRINTING = "printing"
 
 def parse_repetier_api_response(response):
     """Parse the Repetier Server API json response."""
@@ -84,7 +85,7 @@ def format_data(self):
                     DEC_NUM)
                 self._units = '%'
             else:
-                self._state = STATE_ON
+                self._state = STATE_PRINTING
                 self._units = None
             self._attributes = {
                 'active':
@@ -151,16 +152,18 @@ def format_data(self):
         self._units = None
 
 
-class RepetierData(object):
+class RepetierData():
     """Get the latest sensor data."""
 
     def __init__(self, parse_repetier_api_response, config):
         """Initialize the data object."""
-        self.url = self._build_url(config)
+        url = config.get(CONF_URL)
+        port = config.get(CONF_PORT)
+        api_key = config.get(CONF_API_KEY)
+        self.url = url + ":" + port + "/printer/list/?apikey=" + api_key
         self.data = None
-        self.parse_repetier_api_response = parse_repetier_api_response
+        self.repetier_api_response = parse_repetier_api_response
 
-    """Update only once in scan interval."""
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data."""
@@ -168,14 +171,7 @@ class RepetierData(object):
         if response.status_code != 200:
             _LOGGER.warning("Invalid response from API")
         else:
-            self.data = self.parse_repetier_api_response(response.json())
-
-    def _build_url(self, config):
-        url = config.get(CONF_URL)
-        port = config.get(CONF_PORT)
-        api_key = config.get(CONF_API_KEY)
-
-        return url + ":" + port + "/printer/list/?apikey=" + api_key
+            self.data = self.repetier_api_response(response.json())
 
 
 class RepetierSensor(Entity):
@@ -184,7 +180,7 @@ class RepetierSensor(Entity):
     def __init__(self, repetier_id, data):
         """Initialize the sensor object."""
         self._repetier_id = repetier_id
-        self._data = data    # data is in .data
+        self._data = data
         self._icon = 'mdi:printer-3d'
         self._name = None
         self._state = STATE_UNKNOWN
