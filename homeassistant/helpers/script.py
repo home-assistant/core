@@ -138,6 +138,7 @@ class Script():
                 break
             except Exception as err:
                 # Store the step that had an exception
+                # pylint: disable=protected-access
                 err._script_step = cur
                 # Set script to not running
                 self._cur = -1
