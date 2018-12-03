@@ -773,6 +773,9 @@ pocketcasts==0.1
 # homeassistant.components.sensor.postnl
 postnl_api==1.0.2
 
+# homeassistant.components.sensor.islamic_prayer_times
+prayer_times_calculator==0.0.3
+
 # homeassistant.components.climate.proliphix
 proliphix==0.4.1
 
