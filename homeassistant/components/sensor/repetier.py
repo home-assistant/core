@@ -20,7 +20,7 @@ from homeassistant.const import (CONF_URL,
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,54 +73,79 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def format_data(self):
     """Format output data."""
-
     self._name = self._data.data[self._repetier_id]['name']
 
     if self._data.data[self._repetier_id]['online'] == 1:
         if self._data.data[self._repetier_id]['job'] != "none":
             if SHOW_PCT:
-                self._state = round(self._data.data[self._repetier_id]['done'], DEC_NUM)
+                self._state = round(
+                        self._data.data[self._repetier_id]['done'],
+                        DEC_NUM)
                 self._units = '%'
             else:
                 self._state = STATE_ON
                 self._units = None
             self._attributes = {
-                'active': self._data.data[self._repetier_id]['active'],
-                'analysed': self._data.data[self._repetier_id]['analysed'],
-                'done': self._data.data[self._repetier_id]['done'],
-                'job': self._data.data[self._repetier_id]['job'],
-                'jobid': self._data.data[self._repetier_id]['jobid'],
-                'linesSend': self._data.data[self._repetier_id]['linesSend'],
-                'ofLayer': self._data.data[self._repetier_id]['ofLayer'],
-                'pauseState': self._data.data[self._repetier_id]['pauseState'],
-                'paused': self._data.data[self._repetier_id]['paused'],
-                'printTime': self._data.data[self._repetier_id]['printTime'],
-                'printedTimeComp': self._data.data[self._repetier_id]['printedTimeComp'],
-                'start': self._data.data[self._repetier_id]['start'],
-                'totalLines': self._data.data[self._repetier_id]['totalLines'],
-                'online': self._data.data[self._repetier_id]['online'],
+                'active':
+                    self._data.data[self._repetier_id]['active'],
+                'analysed':
+                    self._data.data[self._repetier_id]['analysed'],
+                'done':
+                    self._data.data[self._repetier_id]['done'],
+                'job':
+                    self._data.data[self._repetier_id]['job'],
+                'jobid':
+                    self._data.data[self._repetier_id]['jobid'],
+                'linesSend':
+                    self._data.data[self._repetier_id]['linesSend'],
+                'ofLayer':
+                    self._data.data[self._repetier_id]['ofLayer'],
+                'pauseState':
+                    self._data.data[self._repetier_id]['pauseState'],
+                'paused':
+                    self._data.data[self._repetier_id]['paused'],
+                'printTime':
+                    self._data.data[self._repetier_id]['printTime'],
+                'printedTimeComp':
+                    self._data.data[self._repetier_id]['printedTimeComp'],
+                'start':
+                    self._data.data[self._repetier_id]['start'],
+                'totalLines':
+                    self._data.data[self._repetier_id]['totalLines'],
+                'online':
+                    self._data.data[self._repetier_id]['online'],
             }
         else:
             if SHOW_PCT:
                 self._state = STATE_IDLE
             else:
-                self._state = STATE_ON
+                self._state = STATE_IDLE
             self._attributes = {
-                'active': self._data.data[self._repetier_id]['active'],
-                'job': self._data.data[self._repetier_id]['job'],
-                'pauseState': self._data.data[self._repetier_id]['pauseState'],
-                'paused': self._data.data[self._repetier_id]['paused'],
-                'online': self._data.data[self._repetier_id]['online'],
+                'active':
+                    self._data.data[self._repetier_id]['active'],
+                'job':
+                    self._data.data[self._repetier_id]['job'],
+                'pauseState':
+                    self._data.data[self._repetier_id]['pauseState'],
+                'paused':
+                    self._data.data[self._repetier_id]['paused'],
+                'online':
+                    self._data.data[self._repetier_id]['online'],
             }
             self._units = None
     else:
         self._state = STATE_OFF
         self._attributes = {
-            'active': self._data.data[self._repetier_id]['active'],
-            'job': self._data.data[self._repetier_id]['job'],
-            'pauseState': self._data.data[self._repetier_id]['pauseState'],
-            'paused': self._data.data[self._repetier_id]['paused'],
-            'online': self._data.data[self._repetier_id]['online'],
+            'active':
+                self._data.data[self._repetier_id]['active'],
+            'job':
+                self._data.data[self._repetier_id]['job'],
+            'pauseState':
+                self._data.data[self._repetier_id]['pauseState'],
+            'paused':
+                self._data.data[self._repetier_id]['paused'],
+            'online':
+                self._data.data[self._repetier_id]['online'],
         }
         self._units = None
 
