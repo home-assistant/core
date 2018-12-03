@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
     """Set up MQTT alarm control panel through configuration.yaml."""
-    await _async_setup_entity(hass, config, async_add_entities)
+    await _async_setup_entity(config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -59,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(discovery_payload):
         """Discover and add an MQTT alarm control panel."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(hass, config, async_add_entities,
+        await _async_setup_entity(config, async_add_entities,
                                   discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
@@ -67,12 +67,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_discover)
 
 
-async def _async_setup_entity(hass, config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities,
                               discovery_hash=None):
     """Set up the MQTT Alarm Control Panel platform."""
-    async_add_entities([MqttAlarm(
-        config,
-        discovery_hash,)])
+    async_add_entities([MqttAlarm(config, discovery_hash)])
 
 
 class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
@@ -85,23 +83,12 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         self._config = config
         self._sub_state = None
 
-        self._name = None
-        self._state_topic = None
-        self._command_topic = None
-        self._qos = None
-        self._retain = None
-        self._payload_disarm = None
-        self._payload_arm_home = None
-        self._payload_arm_away = None
-        self._code = None
-
-        # Load config
-        self._setup_from_config(config)
-
         availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
         payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
-        MqttAvailability.__init__(self, availability_topic, self._qos,
+        qos = config.get(CONF_QOS)
+
+        MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
@@ -114,22 +101,10 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        self._setup_from_config(config)
+        self._config = config
         await self.availability_discovery_update(config)
         await self._subscribe_topics()
         self.async_schedule_update_ha_state()
-
-    def _setup_from_config(self, config):
-        """(Re)Setup the entity."""
-        self._name = config.get(CONF_NAME)
-        self._state_topic = config.get(CONF_STATE_TOPIC)
-        self._command_topic = config.get(CONF_COMMAND_TOPIC)
-        self._qos = config.get(CONF_QOS)
-        self._retain = config.get(CONF_RETAIN)
-        self._payload_disarm = config.get(CONF_PAYLOAD_DISARM)
-        self._payload_arm_home = config.get(CONF_PAYLOAD_ARM_HOME)
-        self._payload_arm_away = config.get(CONF_PAYLOAD_ARM_AWAY)
-        self._code = config.get(CONF_CODE)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -146,9 +121,9 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
-            {'state_topic': {'topic': self._state_topic,
+            {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
                              'msg_callback': message_received,
-                             'qos': self._qos}})
+                             'qos': self._config.get(CONF_QOS)}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
@@ -163,7 +138,7 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def state(self):
@@ -173,9 +148,10 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        if self._code is None:
+        code = self._config.get(CONF_CODE)
+        if code is None:
             return None
-        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
+        if isinstance(code, str) and re.search('^\\d+$', code):
             return 'Number'
         return 'Any'
 
@@ -187,8 +163,10 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         if not self._validate_code(code, 'disarming'):
             return
         mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_disarm, self._qos,
-            self._retain)
+            self.hass, self._config.get(CONF_COMMAND_TOPIC),
+            self._config.get(CONF_PAYLOAD_DISARM),
+            self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command.
@@ -198,8 +176,10 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         if not self._validate_code(code, 'arming home'):
             return
         mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_arm_home, self._qos,
-            self._retain)
+            self.hass, self._config.get(CONF_COMMAND_TOPIC),
+            self._config.get(CONF_PAYLOAD_ARM_HOME),
+            self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command.
@@ -209,12 +189,15 @@ class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
         if not self._validate_code(code, 'arming away'):
             return
         mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_arm_away, self._qos,
-            self._retain)
+            self.hass, self._config.get(CONF_COMMAND_TOPIC),
+            self._config.get(CONF_PAYLOAD_ARM_AWAY),
+            self._config.get(CONF_QOS),
+            self._config.get(CONF_RETAIN))
 
     def _validate_code(self, code, state):
         """Validate given code."""
-        check = self._code is None or code == self._code
+        conf_code = self._config.get(CONF_CODE)
+        check = conf_code is None or code == conf_code
         if not check:
             _LOGGER.warning('Wrong code entered for %s', state)
         return check

@@ -18,7 +18,7 @@ from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.components.camera import async_get_still_stream
 
-REQUIREMENTS = ['pillow==5.2.0']
+REQUIREMENTS = ['pillow==5.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 

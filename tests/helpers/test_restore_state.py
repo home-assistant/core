@@ -6,7 +6,7 @@ from homeassistant.core import CoreState, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import (
-    RestoreStateData, RestoreEntity, DATA_RESTORE_STATE_TASK)
+    RestoreStateData, RestoreEntity, StoredState, DATA_RESTORE_STATE_TASK)
 from homeassistant.util import dt as dt_util
 
 from asynctest import patch
@@ -16,14 +16,15 @@ from tests.common import mock_coro
 
 async def test_caching_data(hass):
     """Test that we cache data."""
-    states = [
-        State('input_boolean.b0', 'on'),
-        State('input_boolean.b1', 'on'),
-        State('input_boolean.b2', 'on'),
+    now = dt_util.utcnow()
+    stored_states = [
+        StoredState(State('input_boolean.b0', 'on'), now),
+        StoredState(State('input_boolean.b1', 'on'), now),
+        StoredState(State('input_boolean.b2', 'on'), now),
     ]
 
     data = await RestoreStateData.async_get_instance(hass)
-    await data.store.async_save([state.as_dict() for state in states])
+    await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
     hass.data[DATA_RESTORE_STATE_TASK] = None
@@ -48,14 +49,15 @@ async def test_hass_starting(hass):
     """Test that we cache data."""
     hass.state = CoreState.starting
 
-    states = [
-        State('input_boolean.b0', 'on'),
-        State('input_boolean.b1', 'on'),
-        State('input_boolean.b2', 'on'),
+    now = dt_util.utcnow()
+    stored_states = [
+        StoredState(State('input_boolean.b0', 'on'), now),
+        StoredState(State('input_boolean.b1', 'on'), now),
+        StoredState(State('input_boolean.b2', 'on'), now),
     ]
 
     data = await RestoreStateData.async_get_instance(hass)
-    await data.store.async_save([state.as_dict() for state in states])
+    await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
     hass.data[DATA_RESTORE_STATE_TASK] = None
@@ -109,14 +111,15 @@ async def test_dump_data(hass):
     await entity.async_added_to_hass()
 
     data = await RestoreStateData.async_get_instance(hass)
+    now = dt_util.utcnow()
     data.last_states = {
-        'input_boolean.b0': State('input_boolean.b0', 'off'),
-        'input_boolean.b1': State('input_boolean.b1', 'off'),
-        'input_boolean.b2': State('input_boolean.b2', 'off'),
-        'input_boolean.b3': State('input_boolean.b3', 'off'),
-        'input_boolean.b4': State(
-            'input_boolean.b4', 'off', last_updated=datetime(
-                1985, 10, 26, 1, 22, tzinfo=dt_util.UTC)),
+        'input_boolean.b0': StoredState(State('input_boolean.b0', 'off'), now),
+        'input_boolean.b1': StoredState(State('input_boolean.b1', 'off'), now),
+        'input_boolean.b2': StoredState(State('input_boolean.b2', 'off'), now),
+        'input_boolean.b3': StoredState(State('input_boolean.b3', 'off'), now),
+        'input_boolean.b4': StoredState(
+            State('input_boolean.b4', 'off'),
+            datetime(1985, 10, 26, 1, 22, tzinfo=dt_util.UTC)),
     }
 
     with patch('homeassistant.helpers.restore_state.Store.async_save'
@@ -134,10 +137,10 @@ async def test_dump_data(hass):
     # b3 should be written, since it is still not expired
     # b4 should not be written, since it is now expired
     assert len(written_states) == 2
-    assert written_states[0]['entity_id'] == 'input_boolean.b1'
-    assert written_states[0]['state'] == 'on'
-    assert written_states[1]['entity_id'] == 'input_boolean.b3'
-    assert written_states[1]['state'] == 'off'
+    assert written_states[0]['state']['entity_id'] == 'input_boolean.b1'
+    assert written_states[0]['state']['state'] == 'on'
+    assert written_states[1]['state']['entity_id'] == 'input_boolean.b3'
+    assert written_states[1]['state']['state'] == 'off'
 
     # Test that removed entities are not persisted
     await entity.async_will_remove_from_hass()
@@ -151,8 +154,8 @@ async def test_dump_data(hass):
     args = mock_write_data.mock_calls[0][1]
     written_states = args[0]
     assert len(written_states) == 1
-    assert written_states[0]['entity_id'] == 'input_boolean.b3'
-    assert written_states[0]['state'] == 'off'
+    assert written_states[0]['state']['entity_id'] == 'input_boolean.b3'
+    assert written_states[0]['state']['state'] == 'off'
 
 
 async def test_dump_error(hass):
@@ -195,3 +198,23 @@ async def test_load_error(hass):
         state = await entity.async_get_last_state()
 
     assert state is None
+
+
+async def test_state_saved_on_remove(hass):
+    """Test that we save entity state on removal."""
+    entity = RestoreEntity()
+    entity.hass = hass
+    entity.entity_id = 'input_boolean.b0'
+    await entity.async_added_to_hass()
+
+    hass.states.async_set('input_boolean.b0', 'on')
+
+    data = await RestoreStateData.async_get_instance(hass)
+
+    # No last states should currently be saved
+    assert not data.last_states
+
+    await entity.async_will_remove_from_hass()
+
+    # We should store the input boolean state when it is removed
+    assert data.last_states['input_boolean.b0'].state.state == 'on'

@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pytautulli==0.4.0']
+REQUIREMENTS = ['pytautulli==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,9 +90,9 @@ class TautulliSensor(Entity):
         await self.tautulli.async_update()
         self.home = self.tautulli.api.home_data
         self.sessions = self.tautulli.api.session_data
-        self._attributes['Top Movie'] = self.home[0]['rows'][0]['title']
-        self._attributes['Top TV Show'] = self.home[3]['rows'][0]['title']
-        self._attributes['Top User'] = self.home[7]['rows'][0]['user']
+        self._attributes['Top Movie'] = self.home.get('movie')
+        self._attributes['Top TV Show'] = self.home.get('tv')
+        self._attributes['Top User'] = self.home.get('user')
         for key in self.sessions:
             if 'sessions' not in key:
                 self._attributes[key] = self.sessions[key]

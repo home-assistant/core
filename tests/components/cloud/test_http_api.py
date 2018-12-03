@@ -52,10 +52,10 @@ def setup_api(hass):
 
 
 @pytest.fixture
-def cloud_client(hass, aiohttp_client):
+def cloud_client(hass, hass_client):
     """Fixture that can fetch from the cloud client."""
     with patch('homeassistant.components.cloud.Cloud.write_user_info'):
-        yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+        yield hass.loop.run_until_complete(hass_client())
 
 
 @pytest.fixture

@@ -7,6 +7,10 @@ https://home-assistant.io/components/zha/
 from homeassistant.helpers import entity
 from homeassistant.util import slugify
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant.components.zha.const import (
+    DOMAIN, DATA_ZHA, DATA_ZHA_BRIDGE_ID
+)
 
 
 class ZhaEntity(entity.Entity):
@@ -87,3 +91,16 @@ class ZhaEntity(entity.Entity):
     def zdo_command(self, tsn, command_id, args):
         """Handle a ZDO command received on this cluster."""
         pass
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        ieee = str(self._endpoint.device.ieee)
+        return {
+            'connections': {(CONNECTION_ZIGBEE, ieee)},
+            'identifiers': {(DOMAIN, ieee)},
+            'manufacturer': self._endpoint.manufacturer,
+            'model': self._endpoint.model,
+            'name': self._device_state_attributes['friendly_name'],
+            'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+        }

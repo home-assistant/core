@@ -46,6 +46,7 @@ TEST_REQUIREMENTS = (
     'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
+    'enturclient',
     'ephem',
     'evohomeclient',
     'feedparser',
