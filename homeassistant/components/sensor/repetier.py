@@ -185,6 +185,10 @@ class RepetierSensor(Entity):
         self._repetier_id = repetier_id
         self._data = data    # data is in .data
         self._icon = 'mdi:printer-3d'
+        self._name = None
+        self._state = STATE_UNKNOWN
+        self._units = None
+        self._attributes = None
         format_data(self)
 
     @property
