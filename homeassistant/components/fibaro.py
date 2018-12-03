@@ -28,7 +28,7 @@ ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 CONF_PLUGINS = "plugins"
 
 FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light',
-                     'sensor', 'switch', 'scene']
+                     'scene', 'sensor', 'switch']
 
 FIBARO_TYPEMAP = {
     'com.fibaro.multilevelSensor': "sensor",
@@ -179,7 +179,7 @@ class FibaroController():
                 room_name = 'Unknown'
             else:
                 room_name = self._room_map[device.roomID].name
-            device.friendly_name = room_name + ' ' + device.name
+            device.friendly_name = '{} {}'.format(room_name, device.name)
             device.ha_id = '{}_{}_{}'.format(
                 slugify(room_name), slugify(device.name), device.id)
             self._scene_map[device.id] = device

@@ -16,12 +16,13 @@ DEPENDENCIES = ['fibaro']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Perform the setup for Fibaro scenes."""
     if discovery_info is None:
         return
 
-    add_entities(
+    async_add_entities(
         [FibaroScene(scene, hass.data[FIBARO_CONTROLLER])
          for scene in hass.data[FIBARO_DEVICES]['scene']], True)
 
@@ -32,8 +33,3 @@ class FibaroScene(FibaroDevice, Scene):
     async def async_activate(self):
         """Activate the scene."""
         self.fibaro_device.start()
-
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._name
