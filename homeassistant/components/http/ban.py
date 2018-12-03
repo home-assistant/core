@@ -9,9 +9,10 @@ from aiohttp.web import middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback, HomeAssistant
-from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.yaml import dump, load_yaml
@@ -29,13 +30,30 @@ NOTIFICATION_ID_LOGIN = 'http-login'
 IP_BANS_FILE = 'ip_bans.yaml'
 ATTR_BANNED_AT = "banned_at"
 
-SERVICE_UNBAN_IP_SCHEMA = vol.Schema({
-    vol.Required(CONF_IP_ADDRESS): cv.string
-})
-
 SCHEMA_IP_BAN_ENTRY = vol.Schema({
     vol.Optional('banned_at'): vol.Any(None, cv.datetime)
 })
+
+WS_TYPE_IP_BAN_ITEMS = 'ip_ban/items'
+WS_TYPE_IP_BAN_ADD_IP = 'ip_ban/items/add'
+WS_TYPE_IP_BAN_DELETE_IP = 'ip_ban/items/delete'
+
+SCHEMA_WEBSOCKET_ITEMS = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_IP_BAN_ITEMS
+    })
+
+SCHEMA_WEBSOCKET_ADD_IP = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_IP_BAN_ADD_IP,
+        vol.Required('ip'): str
+    })
+
+SCHEMA_WEBSOCKET_DELETE_IP = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_IP_BAN_DELETE_IP,
+        vol.Required('ip'): str
+    })
 
 
 @callback
@@ -45,14 +63,18 @@ def setup_bans(hass, app, login_threshold):
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
 
-    async def unban(service):
-        """Remove an IP ban."""
-        await hass.async_add_executor_job(
-            unban_ip, hass.config.path(IP_BANS_FILE),
-            service.data[CONF_IP_ADDRESS])
-
-    hass.services.async_register(
-        DOMAIN, 'unban_ip', unban, SERVICE_UNBAN_IP_SCHEMA)
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_IP_BAN_ITEMS,
+        websocket_handle_items,
+        SCHEMA_WEBSOCKET_ITEMS)
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_IP_BAN_ADD_IP,
+        websocket_handle_add,
+        SCHEMA_WEBSOCKET_ADD_IP)
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_IP_BAN_DELETE_IP,
+        websocket_handle_delete,
+        SCHEMA_WEBSOCKET_DELETE_IP)
 
     async def ban_startup(app):
         """Initialize bans when app starts up."""
@@ -60,6 +82,27 @@ def setup_bans(hass, app, login_threshold):
             hass, hass.config.path(IP_BANS_FILE))
 
     app.on_startup.append(ban_startup)
+
+
+@callback
+def websocket_handle_items(hass, connection, msg):
+    """Handle ip_ban/items."""
+    connection.send_message(websocket_api.result_message(
+        msg['id'], {}))
+
+
+@callback
+def websocket_handle_add(hass, connection, msg):
+    """Handle ip_ban/items."""
+    connection.send_message(websocket_api.result_message(
+        msg['id'], {}))
+
+
+@callback
+def websocket_handle_delete(hass, connection, msg):
+    """Handle ip_ban/items."""
+    connection.send_message(websocket_api.result_message(
+        msg['id'], {}))
 
 
 @middleware
