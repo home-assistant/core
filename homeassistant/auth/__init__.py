@@ -185,6 +185,7 @@ class AuthManager:
             credentials=credentials,
             name=info.name,
             is_active=info.is_active,
+            group_ids=[GROUP_ID_ADMIN],
         )
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {
