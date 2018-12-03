@@ -27,13 +27,24 @@ class EntitySubscription:
     qos = attr.ib(type=int, default=0)
     encoding = attr.ib(type=str, default='utf-8')
 
-    def should_resubscribe(self, other):
+    async def resubscribe_if_necessary(self, hass, other):
+        if not self._should_resubscribe(other):
+            return
+
+        if other is not None and other.unsubscribe_callback is not None:
+            other.unsubscribe_callback()
+        self.unsubscribe_callback = await mqtt.async_subscribe(
+            hass, self.topic, self.message_callback,
+            self.qos, self.encoding
+        )
+
+    def _should_resubscribe(self, other):
         """Check if we should re-subscribe to the topic using the old state."""
         if other is None:
             return True
 
-        return self.topic != other.topic or self.qos != other.qos or \
-            self.encoding != other.encoding
+        return (self.topic, self.qos, self.encoding) != \
+            (other.topic, other.qos, other.encoding)
 
 
 @bind_hass
@@ -44,7 +55,11 @@ async def async_subscribe_topics(hass: HomeAssistantType,
     """(Re)Subscribe to a set of MQTT topics.
 
     State is kept in sub_state and a dictionary mapping from the subscription
-    key to the subscription state
+    key to the subscription state.
+
+    Please note that the sub state must not be shared between multiple
+    sets of topics. Every call to async_subscribe_topics must always
+    contain _all_ the topics the subscription state should manage.
     """
     current_subscriptions = new_state if new_state is not None else {}
     new_state = {}
@@ -59,16 +74,10 @@ async def async_subscribe_topics(hass: HomeAssistantType,
         )
         # Get the current subscription state
         current = current_subscriptions.pop(key, None)
-
-        # Re-subscribe if we need to
-        if requested.should_resubscribe(current):
-            if requested.unsubscribe_callback is not None:
-                requested.unsubscribe_callback()
-            requested.unsubscribe_callback = await mqtt.async_subscribe(
-                hass, requested.topic, requested.message_callback,
-                requested.qos, requested.encoding)
+        await requested.resubscribe_if_necessary(hass, current)
         new_state[key] = requested
 
+    # Go through all remaining subscriptions and unsubscribe them
     for remaining in current_subscriptions.values():
         if remaining.unsubscribe_callback is not None:
             remaining.unsubscribe_callback()
