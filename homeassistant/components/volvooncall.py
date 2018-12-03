@@ -24,7 +24,7 @@ DOMAIN = 'volvooncall'
 
 DATA_KEY = DOMAIN
 
-REQUIREMENTS = ['volvooncall==0.7.4']
+REQUIREMENTS = ['volvooncall==0.7.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,6 +117,10 @@ async def async_setup(hass, config):
 
     data = hass.data[DATA_KEY] = VolvoData(config)
 
+    def is_enabled(attr):
+        """Return true if the user has enabled the resource."""
+        return attr in config[DOMAIN].get(CONF_RESOURCES, [attr])
+
     def discover_vehicle(vehicle):
         """Load relevant platforms."""
         data.vehicles.add(vehicle.vin)
@@ -125,17 +129,13 @@ async def async_setup(hass, config):
             mutable=config[DOMAIN][CONF_MUTABLE],
             scandinavian_miles=config[DOMAIN][CONF_SCANDINAVIAN_MILES])
 
-        def is_enabled(attr):
-            """Return true if the user has enabled the resource."""
-            return attr in config[DOMAIN].get(CONF_RESOURCES, [attr])
-
         for instrument in (
                 instrument
                 for instrument in dashboard.instruments
                 if instrument.component in COMPONENTS and
                 is_enabled(instrument.slug_attr)):
 
-            data.instruments.append(instrument)
+            data.instruments.add(instrument)
 
             hass.async_create_task(
                 discovery.async_load_platform(
@@ -174,7 +174,7 @@ class VolvoData:
     def __init__(self, config):
         """Initialize the component state."""
         self.vehicles = set()
-        self.instruments = []
+        self.instruments = set()
         self.config = config[DOMAIN]
         self.names = self.config.get(CONF_NAME)
 
