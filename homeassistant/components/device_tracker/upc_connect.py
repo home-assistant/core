@@ -31,12 +31,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_get_scanner(hass, config):
+def get_scanner(hass, config):
     """Return the UPC device scanner."""
-    scanner = UPCDeviceScanner(hass, config[DOMAIN])
-    success_init = await scanner.async_initialize_token()
-
-    return scanner if success_init else None
+    return UPCDeviceScanner(hass, config[DOMAIN])
 
 
 class UPCDeviceScanner(DeviceScanner):
@@ -47,8 +44,8 @@ class UPCDeviceScanner(DeviceScanner):
         self.hass = hass
         self.host = config[CONF_HOST]
 
-        self.data = {}
         self.token = None
+        self.data = None
 
         self.headers = {
             HTTP_HEADER_X_REQUESTED_WITH: 'XMLHttpRequest',
@@ -60,12 +57,14 @@ class UPCDeviceScanner(DeviceScanner):
 
         self.websession = async_get_clientsession(hass)
 
+        _LOGGER.info("Scanner initialized")
+
     async def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         import defusedxml.ElementTree as ET
 
         if self.token is None:
-            token_initialized = await self.async_initialize_token()
+            token_initialized = await self._async_initialize_token()
             if not token_initialized:
                 _LOGGER.error("Not connected to %s", self.host)
                 return []
@@ -73,18 +72,27 @@ class UPCDeviceScanner(DeviceScanner):
         raw = await self._async_ws_function(CMD_DEVICES)
 
         try:
-            xml_root = ET.fromstring(raw)
-            return [mac.text for mac in xml_root.iter('MACAddr')]
+            self.data = ET.fromstring(raw)
+            return [mac.text for mac in self.data.iter('MACAddr')]
         except (ET.ParseError, TypeError):
             _LOGGER.warning("Can't read device from %s", self.host)
             self.token = None
             return []
 
-    async def async_get_device_name(self, device):
+    def get_device_name(self, device):
         """Get the device name (the name of the wireless device not used)."""
-        return None
+        if self.data is None:
+            return None
+        return next((name.text for mac, name in zip(self.data.iter('MACAddr'), self.data.iter('hostname')) if mac.text == device), None)
 
-    async def async_initialize_token(self):
+    def get_extra_attributes(self, device):
+        """Return extra informations of the given device."""
+        if self.data is None:
+            return None
+        return next(({'ipv4': ipv4.text, 'interface': interface.text, 'speed': speed.text} for mac, ipv4, interface, speed
+            in zip(self.data.iter('MACAddr'), self.data.iter('IPv4Addr'), self.data.iter('interface'), self.data.iter('speed')) if mac.text == device), None)
+
+    async def _async_initialize_token(self):
         """Get first token."""
         try:
             # get first token
