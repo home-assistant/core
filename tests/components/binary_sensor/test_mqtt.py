@@ -333,39 +333,6 @@ async def test_discovery_update_binary_sensor(hass, mqtt_mock, caplog):
     assert state is None
 
 
-async def test_discovery_unique_id(hass, mqtt_mock, caplog):
-    """Test unique id option only creates one sensor per unique_id."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, 'homeassistant', {}, entry)
-    data1 = (
-        '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
-        '  "unique_id": "TOTALLY_UNIQUE" }'
-    )
-    data2 = (
-        '{ "name": "Milk",'
-        '  "state_topic": "test_topic",'
-        '  "unique_id": "TOTALLY_DIFFERENT" }'
-    )
-    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
-                            data1)
-    await hass.async_block_till_done()
-    state = hass.states.get('binary_sensor.beer')
-    assert state is not None
-    assert state.name == 'Beer'
-    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
-                            data2)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    state = hass.states.get('binary_sensor.beer')
-    assert state is not None
-    assert state.name == 'Beer'
-
-    state = hass.states.get('binary_sensor.milk')
-    assert state is not None
-    assert state.name == 'Milk'
-
-
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT binary sensor device registry integration."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)

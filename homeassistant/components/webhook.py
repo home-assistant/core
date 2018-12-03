@@ -62,6 +62,28 @@ def async_generate_url(hass, webhook_id):
     return "{}/api/webhook/{}".format(hass.config.api.base_url, webhook_id)
 
 
+@bind_hass
+async def async_handle_webhook(hass, webhook_id, request):
+    """Handle a webhook."""
+    handlers = hass.data.setdefault(DOMAIN, {})
+    webhook = handlers.get(webhook_id)
+
+    # Always respond successfully to not give away if a hook exists or not.
+    if webhook is None:
+        _LOGGER.warning(
+            'Received message for unregistered webhook %s', webhook_id)
+        return Response(status=200)
+
+    try:
+        response = await webhook['handler'](hass, webhook_id, request)
+        if response is None:
+            response = Response(status=200)
+        return response
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error processing webhook %s", webhook_id)
+        return Response(status=200)
+
+
 async def async_setup(hass, config):
     """Initialize the webhook component."""
     hass.http.register_view(WebhookView)
@@ -82,23 +104,7 @@ class WebhookView(HomeAssistantView):
     async def post(self, request, webhook_id):
         """Handle webhook call."""
         hass = request.app['hass']
-        handlers = hass.data.setdefault(DOMAIN, {})
-        webhook = handlers.get(webhook_id)
-
-        # Always respond successfully to not give away if a hook exists or not.
-        if webhook is None:
-            _LOGGER.warning(
-                'Received message for unregistered webhook %s', webhook_id)
-            return Response(status=200)
-
-        try:
-            response = await webhook['handler'](hass, webhook_id, request)
-            if response is None:
-                response = Response(status=200)
-            return response
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error processing webhook %s", webhook_id)
-            return Response(status=200)
+        return await async_handle_webhook(hass, webhook_id, request)
 
 
 @callback

@@ -213,13 +213,7 @@ async def async_setup(hass, config):
             embed_iframe=True,
         )
 
-    # Temporary. No refresh token tells supervisor to use API password.
-    if hass.auth.active:
-        token = refresh_token.token
-    else:
-        token = None
-
-    await hassio.update_hass_api(config.get('http', {}), token)
+    await hassio.update_hass_api(config.get('http', {}), refresh_token.token)
 
     if 'homeassistant' in config:
         await hassio.update_hass_timezone(config['homeassistant'])

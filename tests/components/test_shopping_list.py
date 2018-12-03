@@ -55,7 +55,7 @@ def test_recent_items_intent(hass):
 
 
 @asyncio.coroutine
-def test_deprecated_api_get_all(hass, aiohttp_client):
+def test_deprecated_api_get_all(hass, hass_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -66,7 +66,7 @@ def test_deprecated_api_get_all(hass, aiohttp_client):
         hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'wine'}}
     )
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
     resp = yield from client.get('/api/shopping_list')
 
     assert resp.status == 200
@@ -110,7 +110,7 @@ async def test_ws_get_items(hass, hass_ws_client):
 
 
 @asyncio.coroutine
-def test_deprecated_api_update(hass, aiohttp_client):
+def test_deprecated_api_update(hass, hass_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -124,7 +124,7 @@ def test_deprecated_api_update(hass, aiohttp_client):
     beer_id = hass.data['shopping_list'].items[0]['id']
     wine_id = hass.data['shopping_list'].items[1]['id']
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
     resp = yield from client.post(
         '/api/shopping_list/item/{}'.format(beer_id), json={
             'name': 'soda'
@@ -220,7 +220,7 @@ async def test_ws_update_item(hass, hass_ws_client):
 
 
 @asyncio.coroutine
-def test_api_update_fails(hass, aiohttp_client):
+def test_api_update_fails(hass, hass_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -228,7 +228,7 @@ def test_api_update_fails(hass, aiohttp_client):
         hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'beer'}}
     )
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
     resp = yield from client.post(
         '/api/shopping_list/non_existing', json={
             'name': 'soda'
@@ -275,7 +275,7 @@ async def test_ws_update_item_fail(hass, hass_ws_client):
 
 
 @asyncio.coroutine
-def test_api_clear_completed(hass, aiohttp_client):
+def test_deprecated_api_clear_completed(hass, hass_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -289,7 +289,7 @@ def test_api_clear_completed(hass, aiohttp_client):
     beer_id = hass.data['shopping_list'].items[0]['id']
     wine_id = hass.data['shopping_list'].items[1]['id']
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     # Mark beer as completed
     resp = yield from client.post(
@@ -311,12 +311,47 @@ def test_api_clear_completed(hass, aiohttp_client):
     }
 
 
+async def test_ws_clear_items(hass, hass_ws_client):
+    """Test clearing shopping_list items websocket command."""
+    await async_setup_component(hass, 'shopping_list', {})
+    await intent.async_handle(
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'beer'}}
+    )
+    await intent.async_handle(
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'wine'}}
+    )
+    beer_id = hass.data['shopping_list'].items[0]['id']
+    wine_id = hass.data['shopping_list'].items[1]['id']
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'shopping_list/items/update',
+        'item_id': beer_id,
+        'complete': True
+    })
+    msg = await client.receive_json()
+    assert msg['success'] is True
+    await client.send_json({
+        'id': 6,
+        'type': 'shopping_list/items/clear'
+    })
+    msg = await client.receive_json()
+    assert msg['success'] is True
+    items = hass.data['shopping_list'].items
+    assert len(items) == 1
+    assert items[0] == {
+        'id': wine_id,
+        'name': 'wine',
+        'complete': False
+     }
+
+
 @asyncio.coroutine
-def test_deprecated_api_create(hass, aiohttp_client):
+def test_deprecated_api_create(hass, hass_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
     resp = yield from client.post('/api/shopping_list/item', json={
         'name': 'soda'
     })
@@ -333,11 +368,11 @@ def test_deprecated_api_create(hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_deprecated_api_create_fail(hass, aiohttp_client):
+def test_deprecated_api_create_fail(hass, hass_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
     resp = yield from client.post('/api/shopping_list/item', json={
         'name': 1234
     })
