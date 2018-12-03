@@ -125,7 +125,6 @@ class SolarEdgeSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the sensor and update the state."""
-        _LOGGER.debug("Requesting update skipping update")
         await self.hass.async_add_job(self.data.update)
         self._state = self.data.data[self.type]
 
