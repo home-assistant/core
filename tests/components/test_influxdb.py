@@ -323,6 +323,7 @@ class TestInfluxDB(unittest.TestCase):
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+        mock_client.return_value.write_points.reset_mock()
 
         for entity_id in ('included', 'default'):
             state = mock.MagicMock(
@@ -364,6 +365,7 @@ class TestInfluxDB(unittest.TestCase):
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+        mock_client.return_value.write_points.reset_mock()
 
         for domain in ('fake', 'another_fake'):
             state = mock.MagicMock(
@@ -456,6 +458,7 @@ class TestInfluxDB(unittest.TestCase):
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+        mock_client.return_value.write_points.reset_mock()
 
         for entity_id in ('ok', 'blacklisted'):
             state = mock.MagicMock(
@@ -495,6 +498,7 @@ class TestInfluxDB(unittest.TestCase):
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+        mock_client.return_value.write_points.reset_mock()
 
         attrs = {
             'unit_of_measurement': 'foobars',
@@ -534,6 +538,7 @@ class TestInfluxDB(unittest.TestCase):
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+        mock_client.return_value.write_points.reset_mock()
 
         attrs = {
             'friendly_fake': 'tag_str',
@@ -590,6 +595,7 @@ class TestInfluxDB(unittest.TestCase):
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+        mock_client.return_value.write_points.reset_mock()
 
         test_components = [
             {'domain': 'sensor', 'id': 'fake_humidity', 'res': 'humidity'},
@@ -633,6 +639,7 @@ class TestInfluxDB(unittest.TestCase):
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+        mock_client.return_value.write_points.reset_mock()
 
         state = mock.MagicMock(
             state=1, domain='fake', entity_id='entity.id', object_id='entity',
