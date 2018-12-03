@@ -36,7 +36,7 @@ SERVICE_COMPLETE_ITEM = 'complete_item'
 
 SERVICE_ITEM_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): vol.Any(None, cv.string),
-    vol.Optional(ATTR_LIST_ID, '0'): cv.string
+    vol.Optional(ATTR_LIST_ID, 'system-inbox'): cv.string
 })
 
 WS_TYPE_SHOPPING_LIST_LISTS = 'shopping_list/lists'
@@ -169,7 +169,7 @@ class ShoppingData:
         self.hass = hass
         self.lists = [{
             'name': 'Inbox',
-            'id': '0',
+            'id': 'system-inbox',
             'items': []
         }]
 
@@ -252,7 +252,7 @@ class AddItemIntent(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots['item']['value']
-        intent_obj.hass.data[DOMAIN].async_add('0', item)
+        intent_obj.hass.data[DOMAIN].async_add('system-inbox', item)
 
         response = intent_obj.create_response()
         response.async_set_speech(
@@ -274,7 +274,7 @@ class ListTopItemsIntent(intent.IntentHandler):
         """Handle the intent."""
         lis = next(
             (li for li in intent_obj.hass.data[DOMAIN].lists if li['id']
-             == '0'), None)
+             == 'system-inbox'), None)
         items = lis['items'][-5:]
         response = intent_obj.create_response()
 
@@ -300,7 +300,7 @@ class ShoppingListView(http.HomeAssistantView):
         """Retrieve shopping list items."""
         lis = next(
             (li for li in request.app['hass'].data[DOMAIN].lists if li['id']
-             == '0'), None)
+             == 'system-inbox'), None)
         return self.json(lis['items'])
 
 
@@ -316,7 +316,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
 
         try:
             item = request.app['hass'].data[DOMAIN].async_update(
-                '0', item_id, data)
+                'system-inbox', item_id, data)
             request.app['hass'].bus.async_fire(EVENT)
             return self.json(item)
         except KeyError:
@@ -338,7 +338,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     def post(self, request, data):
         """Create a new shopping list item."""
         item = request.app['hass'].data[DOMAIN].async_add(
-            '0', data['name'])
+            'system-inbox', data['name'])
         request.app['hass'].bus.async_fire(EVENT)
         return self.json(item)
 
@@ -353,7 +353,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
     def post(self, request):
         """Retrieve if API is running."""
         hass = request.app['hass']
-        hass.data[DOMAIN].async_clear_completed('0')
+        hass.data[DOMAIN].async_clear_completed('system-inbox')
         hass.bus.async_fire(EVENT)
         return self.json_message('Cleared completed items.')
 
