@@ -48,7 +48,7 @@ class TestInfluxDB(unittest.TestCase):
         assert self.hass.bus.listen.called
         assert \
             EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
-        assert mock_client.return_value.query.called
+        assert mock_client.return_value.write_points.call_count == 1
 
     def test_setup_config_defaults(self, mock_client):
         """Test the setup with default configuration."""
