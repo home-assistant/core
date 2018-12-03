@@ -30,6 +30,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 class FibaroScene(FibaroDevice, Scene):
     """Representation of a Fibaro scene entity."""
 
-    async def async_activate(self):
+    def activate(self):
         """Activate the scene."""
         self.fibaro_device.start()
