@@ -19,6 +19,7 @@ ATTR_LIST_ID = 'list_id'
 ATTR_NAME = 'name'
 
 DOMAIN = 'shopping_list'
+DEFAULT_LIST = 'system-inbox'
 DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
@@ -36,7 +37,7 @@ SERVICE_COMPLETE_ITEM = 'complete_item'
 
 SERVICE_ITEM_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): vol.Any(None, cv.string),
-    vol.Optional(ATTR_LIST_ID, 'system-inbox'): cv.string
+    vol.Optional(ATTR_LIST_ID, DEFAULT_LIST): cv.string
 })
 
 WS_TYPE_SHOPPING_LIST_LISTS = 'shopping_list/lists'
@@ -169,7 +170,7 @@ class ShoppingData:
         self.hass = hass
         self.lists = [{
             'name': 'Inbox',
-            'id': 'system-inbox',
+            'id': DEFAULT_LIST,
             'items': []
         }]
 
@@ -252,7 +253,7 @@ class AddItemIntent(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots['item']['value']
-        intent_obj.hass.data[DOMAIN].async_add('system-inbox', item)
+        intent_obj.hass.data[DOMAIN].async_add(DEFAULT_LIST, item)
 
         response = intent_obj.create_response()
         response.async_set_speech(
@@ -274,7 +275,7 @@ class ListTopItemsIntent(intent.IntentHandler):
         """Handle the intent."""
         lis = next(
             (li for li in intent_obj.hass.data[DOMAIN].lists if li['id']
-             == 'system-inbox'), None)
+             == DEFAULT_LIST), None)
         items = lis['items'][-5:]
         response = intent_obj.create_response()
 
@@ -300,7 +301,7 @@ class ShoppingListView(http.HomeAssistantView):
         """Retrieve shopping list items."""
         lis = next(
             (li for li in request.app['hass'].data[DOMAIN].lists if li['id']
-             == 'system-inbox'), None)
+             == DEFAULT_LIST), None)
         return self.json(lis['items'])
 
 
@@ -316,7 +317,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
 
         try:
             item = request.app['hass'].data[DOMAIN].async_update(
-                'system-inbox', item_id, data)
+                DEFAULT_LIST, item_id, data)
             request.app['hass'].bus.async_fire(EVENT)
             return self.json(item)
         except KeyError:
@@ -338,7 +339,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     def post(self, request, data):
         """Create a new shopping list item."""
         item = request.app['hass'].data[DOMAIN].async_add(
-            'system-inbox', data['name'])
+            DEFAULT_LIST, data['name'])
         request.app['hass'].bus.async_fire(EVENT)
         return self.json(item)
 
@@ -353,7 +354,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
     def post(self, request):
         """Retrieve if API is running."""
         hass = request.app['hass']
-        hass.data[DOMAIN].async_clear_completed('system-inbox')
+        hass.data[DOMAIN].async_clear_completed(DEFAULT_LIST)
         hass.bus.async_fire(EVENT)
         return self.json_message('Cleared completed items.')
 

@@ -8,6 +8,8 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.helpers import intent
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 
+DEFAULT_LIST = 'system-inbox'
+
 
 @pytest.fixture(autouse=True)
 def mock_shopping_list_io():
@@ -97,7 +99,7 @@ async def test_ws_get_lists(hass, hass_ws_client):
     data = msg['result']
     assert data[0] == {
         'name': 'Inbox',
-        'id': 'system-info',
+        'id': DEFAULT_LIST,
         'items': []
     }
 
@@ -118,7 +120,7 @@ async def test_ws_get_items(hass, hass_ws_client):
     await client.send_json({
         'id': 5,
         'type': 'shopping_list/items',
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
     })
     msg = await client.receive_json()
     assert msg['success'] is True
@@ -158,7 +160,7 @@ def test_deprecated_api_update(hass, hass_client):
     assert resp.status == 200
     data = yield from resp.json()
     assert data == {
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'id': beer_id,
         'name': 'soda',
         'complete': False
@@ -172,7 +174,7 @@ def test_deprecated_api_update(hass, hass_client):
     assert resp.status == 200
     data = yield from resp.json()
     assert data == {
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'id': wine_id,
         'name': 'wine',
         'complete': True
@@ -180,13 +182,13 @@ def test_deprecated_api_update(hass, hass_client):
 
     beer, wine = hass.data['shopping_list'].lists[0]['items']
     assert beer == {
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'id': beer_id,
         'name': 'soda',
         'complete': False
     }
     assert wine == {
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'id': wine_id,
         'name': 'wine',
         'complete': True
@@ -209,7 +211,7 @@ async def test_ws_update_item(hass, hass_ws_client):
     await client.send_json({
         'id': 5,
         'type': 'shopping_list/items/update',
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'item_id': beer_id,
         'name': 'soda'
     })
@@ -217,7 +219,7 @@ async def test_ws_update_item(hass, hass_ws_client):
     assert msg['success'] is True
     data = msg['result']
     assert data == {
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'id': beer_id,
         'name': 'soda',
         'complete': False
@@ -225,7 +227,7 @@ async def test_ws_update_item(hass, hass_ws_client):
     await client.send_json({
         'id': 6,
         'type': 'shopping_list/items/update',
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'item_id': wine_id,
         'complete': True
     })
@@ -233,7 +235,7 @@ async def test_ws_update_item(hass, hass_ws_client):
     assert msg['success'] is True
     data = msg['result']
     assert data == {
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'id': wine_id,
         'name': 'wine',
         'complete': True
@@ -241,13 +243,13 @@ async def test_ws_update_item(hass, hass_ws_client):
 
     beer, wine = hass.data['shopping_list'].lists[0]['items']
     assert beer == {
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'id': beer_id,
         'name': 'soda',
         'complete': False
     }
     assert wine == {
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'id': wine_id,
         'name': 'wine',
         'complete': True
@@ -290,7 +292,7 @@ async def test_ws_update_item_fail(hass, hass_ws_client):
     await client.send_json({
         'id': 5,
         'type': 'shopping_list/items/update',
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'item_id': 'non_existing',
         'name': 'soda'
     })
@@ -305,7 +307,7 @@ async def test_ws_update_item_fail(hass, hass_ws_client):
         'id': 6,
         'type': 'shopping_list/items/update',
         'name': 123,
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
     })
     msg = await client.receive_json()
     assert msg['success'] is False
@@ -342,7 +344,7 @@ def test_deprecated_api_clear_completed(hass, hass_client):
     assert len(items) == 1
 
     assert items[0] == {
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'id': wine_id,
         'name': 'wine',
         'complete': False
@@ -364,7 +366,7 @@ async def test_ws_clear_items(hass, hass_ws_client):
     await client.send_json({
         'id': 5,
         'type': 'shopping_list/items/update',
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'item_id': beer_id,
         'complete': True
     })
@@ -373,14 +375,14 @@ async def test_ws_clear_items(hass, hass_ws_client):
     await client.send_json({
         'id': 6,
         'type': 'shopping_list/items/clear',
-        'list_id': 'system-info'
+        'list_id': DEFAULT_LIST
     })
     msg = await client.receive_json()
     assert msg['success'] is True
     items = hass.data['shopping_list'].lists[0]['items']
     assert len(items) == 1
     assert items[0] == {
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'id': wine_id,
         'name': 'wine',
         'complete': False
@@ -429,18 +431,18 @@ async def test_ws_add_item(hass, hass_ws_client):
     await client.send_json({
         'id': 5,
         'type': 'shopping_list/items/add',
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'name': 'soda',
     })
     msg = await client.receive_json()
     assert msg['success'] is True
     data = msg['result']
-    assert data['list_id'] == 'system-info'
+    assert data['list_id'] == DEFAULT_LIST
     assert data['name'] == 'soda'
     assert data['complete'] is False
     items = hass.data['shopping_list'].lists[0]['items']
     assert len(items) == 1
-    assert data['list_id'] == 'system-info'
+    assert data['list_id'] == DEFAULT_LIST
     assert items[0]['name'] == 'soda'
     assert items[0]['complete'] is False
 
@@ -452,7 +454,7 @@ async def test_ws_fail_add_item(hass, hass_ws_client):
     await client.send_json({
         'id': 5,
         'type': 'shopping_list/items/add',
-        'list_id': 'system-info',
+        'list_id': DEFAULT_LIST,
         'name': 123,
     })
     msg = await client.receive_json()
