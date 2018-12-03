@@ -9,8 +9,8 @@ from homeassistant.core import State, CoreState, Context
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, EVENT_HOMEASSISTANT_START,
-    EVENT_AUTOMATION_TRIGGER)
+    ATTR_NAME, ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
+    EVENT_HOMEASSISTANT_START, EVENT_AUTOMATION_TRIGGERED)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
@@ -373,7 +373,7 @@ async def test_shared_context(hass, calls):
     event_mock = Mock()
 
     hass.bus.async_listen('test_event2', automation_mock)
-    hass.bus.async_listen(EVENT_AUTOMATION_TRIGGER, event_mock)
+    hass.bus.async_listen(EVENT_AUTOMATION_TRIGGERED, event_mock)
     hass.bus.async_fire('test_event', context=context)
     await hass.async_block_till_done()
 
@@ -388,6 +388,9 @@ async def test_shared_context(hass, calls):
     for call in event_mock.call_args_list:
         args, kwargs = call
         assert args[0].context == context
+        # Ensure event data has all attributes set
+        assert args[0].data.get(ATTR_NAME) is not None
+        assert args[0].data.get(ATTR_ENTITY_ID) is not None
 
     # Ensure the automation state shares the same context
     state = hass.states.get('automation.hello')
