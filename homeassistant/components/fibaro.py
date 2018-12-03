@@ -349,6 +349,11 @@ class FibaroDevice(Entity):
         return self._name
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self.ha_id
+
+    @property
     def should_poll(self):
         """Get polling requirement from fibaro device."""
         return False
