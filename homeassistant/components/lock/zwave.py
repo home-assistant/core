@@ -29,8 +29,9 @@ SERVICE_CLEAR_USERCODE = 'clear_usercode'
 POLYCONTROL = 0x10E
 DANALOCK_V2_BTZE = 0x2
 POLYCONTROL_DANALOCK_V2_BTZE_LOCK = (POLYCONTROL, DANALOCK_V2_BTZE)
-WORKAROUND_V2BTZE = 'v2btze'
-WORKAROUND_DEVICE_STATE = 'state'
+WORKAROUND_V2BTZE = 1
+WORKAROUND_DEVICE_STATE = 2
+WORKAROUND_ALARM_TYPE = 4
 
 DEVICE_MAPPINGS = {
     POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE,
@@ -41,7 +42,7 @@ DEVICE_MAPPINGS = {
     (0x0129, 0xAA00): WORKAROUND_DEVICE_STATE,
     (0x0129, 0x0000): WORKAROUND_DEVICE_STATE,
     # Yale YRD220 (as reported by adrum in PR #17386)
-    (0x0109, 0x0000): WORKAROUND_DEVICE_STATE,
+    (0x0109, 0x0000): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
     # Schlage BE469
     (0x003B, 0x5044): WORKAROUND_DEVICE_STATE,
     # Schlage FE599NX
@@ -229,6 +230,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         self._lock_status = None
         self._v2btze = None
         self._state_workaround = False
+        self._alarm_type_workaround = False
 
         # Enable appropriate workaround flags for our device
         # Make sure that we have values for the key before converting to int
@@ -237,19 +239,24 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
             specific_sensor_key = (int(self.node.manufacturer_id, 16),
                                    int(self.node.product_id, 16))
             if specific_sensor_key in DEVICE_MAPPINGS:
-                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_V2BTZE:
+                workaround = DEVICE_MAPPINGS[specific_sensor_key]
+                if workaround & WORKAROUND_V2BTZE:
                     self._v2btze = 1
                     _LOGGER.debug("Polycontrol Danalock v2 BTZE "
                                   "workaround enabled")
-                if DEVICE_MAPPINGS[specific_sensor_key] == \
-                        WORKAROUND_DEVICE_STATE:
+                if workaround & WORKAROUND_DEVICE_STATE:
                     self._state_workaround = True
                     _LOGGER.debug(
                         "Notification device state workaround enabled")
+                if workaround & WORKAROUND_ALARM_TYPE:
+                    self._alarm_type_workaround = True
+                    _LOGGER.debug(
+                        "Alarm Type device state workaround enabled")
         self.update_properties()
 
     def update_properties(self):
         """Handle data changes for node values."""
+        did_use_state_workaround = False
         self._state = self.values.primary.data
         _LOGGER.debug("Lock state set from Bool value and is %s", self._state)
         if self.values.access_control:
@@ -257,6 +264,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
             self._notification = LOCK_NOTIFICATION.get(str(notification_data))
             if self._state_workaround:
                 self._state = LOCK_STATUS.get(str(notification_data))
+                did_use_state_workaround = True
             if self._v2btze:
                 if self.values.v2btze_advanced and \
                         self.values.v2btze_advanced.data == CONFIG_ADVANCED:
@@ -278,6 +286,17 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
         if not alarm_type:
             return
+
+        # If has only alarm_type_workaround, then allow
+        # If has both state_workaround and alarm_type_workaround,
+        #   only allow if state_workaround failed
+        if self._alarm_type_workaround and \
+                (self._state_workaround == False or \
+                did_use_state_workaround == False):
+            self._state = LOCK_STATUS.get(str(alarm_type))
+            _LOGGER.debug("workaround: lock state set to %s from alarm type: %s", \
+                self._state, str(alarm_type))
+
         if alarm_type == 21:
             self._lock_status = '{}{}'.format(
                 LOCK_ALARM_TYPE.get(str(alarm_type)),
