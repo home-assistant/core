@@ -170,6 +170,8 @@ EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
 EVENT_TIMER_OUT_OF_SYNC = 'timer_out_of_sync'
+EVENT_AUTOMATION_TRIGGERED = 'automation_triggered'
+EVENT_SCRIPT_STARTED = 'script_started'
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = 'battery'
