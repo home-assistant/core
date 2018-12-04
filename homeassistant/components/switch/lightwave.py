@@ -2,7 +2,7 @@
 Implements LightwaveRF switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.lightwave/
+https://home-assistant.io/components/lightwave/
 """
 from homeassistant.components.lightwave import LIGHTWAVE_LINK
 from homeassistant.components.switch import SwitchDevice
