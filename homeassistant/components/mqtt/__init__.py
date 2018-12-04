@@ -852,7 +852,8 @@ class MqttAvailability(Entity):
         """(Re)Setup."""
         self._availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
         self._availability_qos = config.get(CONF_QOS)
-        self._available = self._availability_topic is None  # type: bool
+        if self._availability_topic is None:
+            self._available = True
         self._payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
         self._payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
 
