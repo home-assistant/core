@@ -1751,6 +1751,9 @@ xknx==0.9.3
 # homeassistant.components.sensor.zestimate
 xmltodict==0.11.0
 
+# homeassistant.components.xs1
+xs1-api-client==2.3.4
+
 # homeassistant.components.sensor.yweather
 # homeassistant.components.weather.yweather
 yahooweather==0.10
