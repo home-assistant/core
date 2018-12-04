@@ -58,7 +58,7 @@ class InsteonBinarySensor(InsteonEntity, BinarySensorDevice):
         on_val = bool(self._insteon_device_state.value)
 
         if self._insteon_device_state.name in ['lightSensor',
-                                               'openClosedSensor']:
+                                               'ioLincSensor']:
             return not on_val
 
         return on_val
