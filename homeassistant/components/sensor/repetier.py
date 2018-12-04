@@ -1,26 +1,29 @@
 """
-Sensor for retrieving Repetier Server status.
+Sensor for retrieving Repetier-Server device status.
+Creates one sensor for each device attached to Repetier-Server
 
 by Morten Trab - 2018
 """
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_URL,
-                                 CONF_API_KEY,
-                                 CONF_PORT,
-                                 STATE_IDLE,
-                                 STATE_OFF,
-                                 STATE_UNKNOWN)
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_PORT,
+    CONF_URL,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-__version__ = '0.4'
+__version__ = '0.5'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 DEC_NUM = 0
 SHOW_PCT = True
-STATE_PRINTING = "printing"
 
 
 def parse_repetier_api_response(response):
@@ -59,8 +61,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         global DEC_NUM
         global SHOW_PCT
-        DEC_NUM = config.get("decimals")
-        SHOW_PCT = config.get("state_percent")
+        DEC_NUM = config.get('decimals')
+        SHOW_PCT = config.get('state_percent')
 
         data = RepetierData(parse_repetier_api_response, config)
         data.update()
@@ -77,14 +79,14 @@ def format_data(self):
     self._name = self._data.data[self._repetier_id]['name']
 
     if self._data.data[self._repetier_id]['online'] == 1:
-        if self._data.data[self._repetier_id]['job'] != "none":
+        if self._data.data[self._repetier_id]['job'] != 'none':
             if SHOW_PCT:
                 self._state = round(
                     self._data.data[self._repetier_id]['done'],
                     DEC_NUM)
                 self._units = '%'
             else:
-                self._state = STATE_PRINTING
+                self._state = STATE_ON
                 self._units = None
             self._attributes = {
                 'active':
@@ -159,7 +161,7 @@ class RepetierData():
         url = config.get(CONF_URL)
         port = config.get(CONF_PORT)
         api_key = config.get(CONF_API_KEY)
-        self.url = url + ":" + port + "/printer/list/?apikey=" + api_key
+        self.url = url + ':' + port + '/printer/list/?apikey=' + api_key
         self.data = None
         self.repetier_api_response = parser
 
