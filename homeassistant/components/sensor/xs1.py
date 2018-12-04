@@ -1,30 +1,38 @@
+"""
+Support for XS1 sensors.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/xs1/
+"""
+
+import asyncio
 import logging
 
-from homeassistant.const import CONF_HOST, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-from ..xs1 import XS1Device, DOMAIN, SENSORS
+from ..xs1 import DOMAIN, SENSORS, XS1DeviceEntity
 
-
-#DEPENDENCIES = ['xs1']
+DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = ['temperature']
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    
-    _LOGGER.info("initializing XS1 Sensor")
-    
+
+    _LOGGER.debug("initializing XS1 Sensor")
+
     sensors = hass.data[DOMAIN][SENSORS]
-    
-    _LOGGER.info("Adding Sensor devices...")
-    
+
+    _LOGGER.debug("Adding Sensor devices...")
+
     for sensor in sensors:
-        add_devices([XS1Sensor(sensor, hass)])
+        async_add_devices([XS1Sensor(sensor, hass)])
 
 
-class XS1Sensor(XS1Device, Entity):
+class XS1Sensor(XS1DeviceEntity, Entity):
     """Representation of a Sensor."""
 
     def __init__(self, device, hass):
@@ -45,5 +53,3 @@ class XS1Sensor(XS1Device, Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.device.unit()
-        #return TEMP_CELSIUS
-
