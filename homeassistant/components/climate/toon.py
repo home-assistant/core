@@ -23,6 +23,7 @@ HA_TOON = {
 }
 TOON_HA = {value: key for key, value in HA_TOON.items()}
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Toon climate device."""
     add_entities([ThermostatDevice(hass)], True)
