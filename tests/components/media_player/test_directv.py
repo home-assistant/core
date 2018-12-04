@@ -11,7 +11,8 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA)
 from homeassistant.components.media_player.directv import (
     ATTR_MEDIA_CURRENTLY_RECORDING, ATTR_MEDIA_RATING, ATTR_MEDIA_RECORDED,
-    ATTR_MEDIA_START_TIME, DEFAULT_DEVICE, DEFAULT_PORT)
+    ATTR_MEDIA_START_TIME, DEFAULT_CLIENT_DISCOVER_INTERVAL, DEFAULT_DEVICE,
+    DEFAULT_PORT)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
@@ -25,11 +26,12 @@ from tests.common import MockDependency, async_fire_time_changed
 
 CLIENT_ENTITY_ID = 'media_player.client_dvr'
 MAIN_ENTITY_ID = 'media_player.main_dvr'
+HOST_NAME = 'localhost'
 IP_ADDRESS = '127.0.0.1'
 
 DISCOVERY_INFO = {
     'host': IP_ADDRESS,
-    'serial': 1234
+    'serial': 'RID-123456789012'
 }
 
 LIVE = {
@@ -82,7 +84,7 @@ RECORDING = {
 WORKING_CONFIG = {
     'media_player': {
         'platform': 'directv',
-        CONF_HOST: IP_ADDRESS,
+        CONF_HOST: HOST_NAME,
         CONF_NAME: 'Main DVR',
         CONF_PORT: DEFAULT_PORT,
         CONF_DEVICE: DEFAULT_DEVICE
@@ -275,6 +277,24 @@ class MockDirectvClass:
         """Mock for tune_channel method."""
         self.attributes['major'] = int(source)
 
+    def get_version(self):
+        """Mock for get_version method."""
+        test_version = {
+            'accessCardId': '0011-1265-7890',
+            'receiverId': '1234 5678 9012',
+            'status': {
+                'code': 200,
+                'commandResult': 0,
+                'msg': 'OK.',
+                'query': '/info/getVersion'
+            },
+            'stbSoftwareVersion': '0x1234',
+            'systemTime': 1543947120,
+            'version': '2.1'
+        }
+
+        return test_version
+
 
 async def test_setup_platform_config(hass):
     """Test setting up the platform from configuration."""
@@ -291,18 +311,29 @@ async def test_setup_platform_config(hass):
 
 async def test_setup_platform_discover(hass):
     """Test setting up the platform from discovery."""
+    LOCATIONS.append({
+        'locationName': 'Client 1',
+        'clientAddr': '1'
+    })
+
     with MockDependency('DirectPy'), \
             patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
+        await hass.async_start()
+        await hass.async_block_till_done()
         hass.async_create_task(
             async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
                                 {'media_player': {}})
         )
         await hass.async_block_till_done()
 
+    del LOCATIONS[-1]
+
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
-    assert len(hass.states.async_entity_ids('media_player')) == 1
+    state = hass.states.get('media_player.client_1')
+    assert state
+    assert len(hass.states.async_entity_ids('media_player')) == 2
 
 
 async def test_setup_platform_discover_duplicate(hass):
@@ -323,15 +354,15 @@ async def test_setup_platform_discover_duplicate(hass):
     assert len(hass.states.async_entity_ids('media_player')) == 1
 
 
-async def test_setup_platform_discover_client(hass):
-    """Test setting up the platform from discovery."""
+async def test_setup_platform_discover_client(hass, mock_now):
+    """Test setting up the platform from discovery.
+
+    First client should be added upon initialization of the platform.
+    Second client should be added by the scheduled discovery task.
+    """
     LOCATIONS.append({
         'locationName': 'Client 1',
         'clientAddr': '1'
-    })
-    LOCATIONS.append({
-        'locationName': 'Client 2',
-        'clientAddr': '2'
     })
 
     with MockDependency('DirectPy'), \
@@ -339,19 +370,41 @@ async def test_setup_platform_discover_client(hass):
 
         await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
+        await hass.async_start()
+        await hass.async_block_till_done()
 
-        hass.async_create_task(
-            async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
-                                {'media_player': {}})
-        )
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state
+    assert len(hass.states.async_entity_ids('media_player')) == 1
+
+    next_update = mock_now + DEFAULT_CLIENT_DISCOVER_INTERVAL + \
+        timedelta(seconds=1)
+    with MockDependency('DirectPy'), \
+            patch('DirectPy.DIRECTV', new=MockDirectvClass), \
+            patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get('media_player.client_1')
+    assert state
+    assert len(hass.states.async_entity_ids('media_player')) == 2
+
+    LOCATIONS.append({
+        'locationName': 'Client 2',
+        'clientAddr': '2'
+    })
+
+    next_update = next_update + DEFAULT_CLIENT_DISCOVER_INTERVAL + \
+        timedelta(seconds=1)
+    with MockDependency('DirectPy'), \
+            patch('DirectPy.DIRECTV', new=MockDirectvClass), \
+            patch('homeassistant.util.dt.utcnow', return_value=next_update):
+        async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
     del LOCATIONS[-1]
     del LOCATIONS[-1]
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    state = hass.states.get('media_player.client_1')
-    assert state
+
     state = hass.states.get('media_player.client_2')
     assert state
 
