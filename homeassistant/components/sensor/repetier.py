@@ -1,8 +1,8 @@
 """
 Sensor for retrieving Repetier-Server device status.
-Creates one sensor for each device attached to Repetier-Server
 
-by Morten Trab - 2018
+Creates one sensor for each device attached to Repetier-Server
+Created by Morten Trab (morten@trab.dk) - 2018
 """
 from datetime import timedelta
 import logging
