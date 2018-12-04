@@ -813,6 +813,7 @@ omit =
     homeassistant/components/sensor/syncthru.py
     homeassistant/components/sensor/synologydsm.py
     homeassistant/components/sensor/srp_energy.py
+    homeassistant/components/sensor/strava  .py
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/sytadin.py
     homeassistant/components/sensor/tank_utility.py

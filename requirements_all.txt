@@ -1477,6 +1477,9 @@ statsd==3.2.1
 # homeassistant.components.sensor.steam_online
 steamodd==4.21
 
+# homeassistant.components.sensor.strava
+stravalib==0.10.2
+
 # homeassistant.components.sensor.thermoworks_smoke
 stringcase==1.2.0
 
