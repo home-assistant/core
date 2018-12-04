@@ -1,15 +1,16 @@
 """The tests for the automation component."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import pytest
 
-from homeassistant.core import State, CoreState
+from homeassistant.core import State, CoreState, Context
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, EVENT_HOMEASSISTANT_START)
+    ATTR_NAME, ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
+    EVENT_HOMEASSISTANT_START, EVENT_AUTOMATION_TRIGGERED)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
@@ -340,6 +341,66 @@ async def test_automation_calling_two_actions(hass, calls):
     assert len(calls) == 2
     assert calls[0].data['position'] == 0
     assert calls[1].data['position'] == 1
+
+
+async def test_shared_context(hass, calls):
+    """Test that the shared context is passed down the chain."""
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: [
+            {
+                'alias': 'hello',
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {'event': 'test_event2'}
+            },
+            {
+                'alias': 'bye',
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event2',
+                },
+                'action': {
+                    'service': 'test.automation',
+                }
+            }
+        ]
+    })
+
+    context = Context()
+    automation_mock = Mock()
+    event_mock = Mock()
+
+    hass.bus.async_listen('test_event2', automation_mock)
+    hass.bus.async_listen(EVENT_AUTOMATION_TRIGGERED, event_mock)
+    hass.bus.async_fire('test_event', context=context)
+    await hass.async_block_till_done()
+
+    # Ensure events was fired
+    assert automation_mock.call_count == 1
+    assert event_mock.call_count == 2
+
+    # Ensure context carries through the event
+    args, kwargs = automation_mock.call_args
+    assert args[0].context == context
+
+    for call in event_mock.call_args_list:
+        args, kwargs = call
+        assert args[0].context == context
+        # Ensure event data has all attributes set
+        assert args[0].data.get(ATTR_NAME) is not None
+        assert args[0].data.get(ATTR_ENTITY_ID) is not None
+
+    # Ensure the automation state shares the same context
+    state = hass.states.get('automation.hello')
+    assert state is not None
+    assert state.context == context
+
+    # Ensure the service call from the second automation
+    # shares the same context
+    assert len(calls) == 1
+    assert calls[0].context == context
 
 
 async def test_services(hass, calls):
