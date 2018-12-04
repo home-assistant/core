@@ -840,6 +840,7 @@ class MqttAttributes(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
+        await super().async_added_to_hass()
         await self._attributes_subscribe_topics()
 
     async def attributes_discovery_update(self, config: dict):
@@ -861,15 +862,15 @@ class MqttAttributes(Entity):
                     self._attributes = json_dict
                     self.async_schedule_update_ha_state()
                 else:
-                    _LOGGER.debug("JSON result was not a dictionary")
+                    _LOGGER.warning("JSON result was not a dictionary")
                     self._attributes = None
             except ValueError:
-                _LOGGER.debug("Erroneous JSON: %s", payload)
+                _LOGGER.warning("Erroneous JSON: %s", payload)
                 self._attributes = None
 
         self._attributes_sub_state = await async_subscribe_topics(
             self.hass, self._attributes_sub_state,
-            {'attributes_topic': {
+            {CONF_JSON_ATTRS_TOPIC: {
                 'topic': self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
                 'msg_callback': attributes_message_received,
                 'qos': self._attributes_config.get(CONF_QOS)}})

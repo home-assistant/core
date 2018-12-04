@@ -293,7 +293,7 @@ class TestSensorMQTT(unittest.TestCase):
         state = self.hass.states.get('binary_sensor.test')
 
         assert state.attributes.get('val') is None
-        mock_logger.debug.assert_called_with(
+        mock_logger.warning.assert_called_with(
             'JSON result was not a dictionary')
 
     @patch('homeassistant.components.mqtt._LOGGER')
@@ -314,7 +314,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.test')
         assert state.attributes.get('val') is None
-        mock_logger.debug.assert_called_with(
+        mock_logger.warning.assert_called_with(
             'Erroneous JSON: %s', 'This is not JSON')
 
 
