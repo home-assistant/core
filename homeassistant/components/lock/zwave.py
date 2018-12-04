@@ -256,7 +256,6 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     def update_properties(self):
         """Handle data changes for node values."""
-        did_use_state_workaround = False
         self._state = self.values.primary.data
         _LOGGER.debug("Lock state set from Bool value and is %s", self._state)
         if self.values.access_control:
@@ -264,7 +263,6 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
             self._notification = LOCK_NOTIFICATION.get(str(notification_data))
             if self._state_workaround:
                 self._state = LOCK_STATUS.get(str(notification_data))
-                did_use_state_workaround = True
             if self._v2btze:
                 if self.values.v2btze_advanced and \
                         self.values.v2btze_advanced.data == CONFIG_ADVANCED:
@@ -287,12 +285,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         if not alarm_type:
             return
 
-        # If has only alarm_type_workaround, then allow
-        # If has both state_workaround and alarm_type_workaround,
-        #   only allow if state_workaround failed
-        if self._alarm_type_workaround and \
-                (self._state_workaround is False or
-                 did_use_state_workaround is False):
+        if self._alarm_type_workaround:
             self._state = LOCK_STATUS.get(str(alarm_type))
             _LOGGER.debug("workaround: lock state set to %s -- alarm type: %s",
                           self._state, str(alarm_type))
