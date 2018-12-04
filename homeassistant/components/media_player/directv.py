@@ -641,7 +641,7 @@ class DirecTvDevice(MediaPlayerDevice):
             return
 
         _LOGGER.debug("%s: Executing API call: %s", self.entity_id, api_call)
-        return partial(getattr(self.dtv, api_call), *args, **kwargs)
+        return partial(getattr(self.dtv, api_call), *args, **kwargs)()
 
     def key_press(self, key):
         """Call sync function for key_press."""
