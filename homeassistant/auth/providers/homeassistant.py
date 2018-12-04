@@ -13,7 +13,6 @@ from homeassistant.exceptions import HomeAssistantError
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 
 from ..models import Credentials, UserMeta
-from ..util import generate_secret
 
 
 STORAGE_VERSION = 1
@@ -59,7 +58,6 @@ class Data:
 
         if data is None:
             data = {
-                'salt': generate_secret(),
                 'users': []
             }
 
