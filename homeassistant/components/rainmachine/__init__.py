@@ -117,7 +117,7 @@ CONTROLLER_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_CONTROLLERS):
+        vol.Required(CONF_CONTROLLERS):
             vol.All(cv.ensure_list, [CONTROLLER_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
