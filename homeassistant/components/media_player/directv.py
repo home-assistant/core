@@ -355,7 +355,10 @@ class DirecTvDevice(MediaPlayerDevice):
                         is not None
                     self._paused = self._last_position == \
                         self._current['offset']
-                    self._assumed_state = self._is_recorded
+                    # Assumed state of playing if offset is changing and
+                    # it is greater then duration.
+                    self._assumed_state = self._current['offset'] > \
+                        self._current['duration'] and not self._paused
                     self._last_position = self._current['offset']
                     self._last_update = dt_util.utcnow() if not self._paused \
                         or self._last_update is None else self._last_update
@@ -420,13 +423,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return STATE_OFF
 
-        # For recorded media we can determine if it is paused or not.
-        # For live media we're unable to determine and will always return
-        # playing instead.
-        if self._paused:
-            return STATE_PAUSED
-
-        return STATE_PLAYING
+        return STATE_PAUSED if self._paused else STATE_PLAYING
 
     @property
     def available(self):
