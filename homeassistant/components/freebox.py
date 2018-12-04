@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['aiofreepybox==0.0.5']
+REQUIREMENTS = ['aiofreepybox==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
