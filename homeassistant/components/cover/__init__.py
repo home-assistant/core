@@ -60,7 +60,7 @@ INTENT_OPEN_COVER = 'HassOpenCover'
 INTENT_CLOSE_COVER = 'HassCloseCover'
 
 COVER_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 COVER_SET_COVER_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
