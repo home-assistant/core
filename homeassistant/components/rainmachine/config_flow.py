@@ -7,10 +7,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL)
+    CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_SCAN_INTERVAL)
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN
 
 
 @callback
@@ -76,10 +76,16 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
 
         scan_interval = user_input.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
 
         # Unfortunately, RainMachine doesn't provide a way to refresh the
         # access token without using the IP address and password, so we have to
         # store it:
         return self.async_create_entry(
-            title=user_input[CONF_IP_ADDRESS], data=user_input)
+            title=user_input[CONF_IP_ADDRESS],
+            data={
+                CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
+                CONF_SCAN_INTERVAL: scan_interval.seconds,
+                CONF_SSL: user_input.get(CONF_SSL, DEFAULT_SSL),
+            })

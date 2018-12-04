@@ -21,7 +21,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
-from .const import DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
 
 REQUIREMENTS = ['regenmaschine==1.0.7']
 
@@ -40,7 +41,6 @@ CONF_ZONE_RUN_TIME = 'zone_run_time'
 
 DEFAULT_ATTRIBUTION = 'Data provided by Green Electronics LLC'
 DEFAULT_ICON = 'mdi:water'
-DEFAULT_SSL = True
 DEFAULT_ZONE_RUN = 60 * 10
 
 TYPE_FREEZE = 'freeze'
@@ -142,12 +142,7 @@ async def async_setup(hass, config):
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={'source': SOURCE_IMPORT},
-                data={
-                    CONF_IP_ADDRESS: controller[CONF_IP_ADDRESS],
-                    CONF_PASSWORD: controller[CONF_PASSWORD],
-                    CONF_PORT: controller.get(CONF_PORT, DEFAULT_PORT),
-                    CONF_SSL: controller.get(CONF_SSL, DEFAULT_SSL),
-                }))
+                data=controller))
 
     return True
 
@@ -157,16 +152,15 @@ async def async_setup_entry(hass, config_entry):
     from regenmaschine import login
     from regenmaschine.errors import RainMachineError
 
-    ip_address = config_entry.data[CONF_IP_ADDRESS]
-    password = config_entry.data[CONF_PASSWORD]
-    port = config_entry.data[CONF_PORT]
-    ssl = config_entry.data.get(CONF_SSL, DEFAULT_SSL)
-
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
         client = await login(
-            ip_address, password, websession, port=port, ssl=ssl)
+            config_entry.data[CONF_IP_ADDRESS],
+            config_entry.data[CONF_PASSWORD],
+            websession,
+            port=config_entry.data[CONF_PORT],
+            ssl=config_entry.data[CONF_SSL])
         rainmachine = RainMachine(
             client,
             config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
