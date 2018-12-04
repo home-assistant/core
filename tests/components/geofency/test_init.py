@@ -104,6 +104,12 @@ BEACON_EXIT_CAR = {
 }
 
 
+@pytest.fixture(autouse=True)
+def mock_dev_track(mock_device_tracker_conf):
+    """Mock device tracker config loading."""
+    pass
+
+
 @pytest.fixture
 def geofency_client(loop, hass, hass_client):
     """Geofency mock client."""
