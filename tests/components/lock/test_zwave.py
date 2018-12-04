@@ -98,6 +98,7 @@ def test_v2btze_value_changed(mock_openzwave):
 
     assert device.is_locked
 
+
 def test_alarm_type_workaround(mock_openzwave):
     """Test value changed for Z-Wave lock using alarm type."""
     node = MockNode(manufacturer_id='0109', product_id='0000')
