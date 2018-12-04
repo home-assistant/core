@@ -303,11 +303,14 @@ class FibaroDevice(Entity):
 
     def call_set_color(self, red, green, blue, white):
         """Set the color of Fibaro device."""
-        color_str = "{},{},{},{}".format(int(red), int(green),
-                                         int(blue), int(white))
+        red = int(max(0, min(255, red)))
+        green = int(max(0, min(255, green)))
+        blue = int(max(0, min(255, blue)))
+        white = int(max(0, min(255, white)))
+        color_str = "{},{},{},{}".format(red, green, blue, white)
         self.fibaro_device.properties.color = color_str
-        self.action("setColor", str(int(red)), str(int(green)),
-                    str(int(blue)), str(int(white)))
+        self.action("setColor", str(red), str(green),
+                    str(blue), str(white))
 
     def action(self, cmd, *args):
         """Perform an action on the Fibaro HC."""
