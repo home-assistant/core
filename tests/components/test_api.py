@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aiohttp import web
 import pytest
+import voluptuous as vol
 
 from homeassistant import const
 from homeassistant.bootstrap import DATA_LOGGING
@@ -578,3 +579,29 @@ async def test_rendering_template_legacy_user(
         json={"template": '{{ states.sensor.temperature.state }}'}
     )
     assert resp.status == 401
+
+
+async def test_api_call_service_not_found(hass, mock_api_client):
+    """Test if the API failes 400 if unknown service."""
+    resp = await mock_api_client.post(
+        const.URL_API_SERVICES_SERVICE.format(
+            "test_domain", "test_service"))
+    assert resp.status == 400
+
+
+async def test_api_call_service_bad_data(hass, mock_api_client):
+    """Test if the API failes 400 if unknown service."""
+    test_value = []
+
+    @ha.callback
+    def listener(service_call):
+        """Record that our service got called."""
+        test_value.append(1)
+
+    hass.services.async_register("test_domain", "test_service", listener,
+                                 schema=vol.Schema({'hello': str}))
+
+    resp = await mock_api_client.post(
+        const.URL_API_SERVICES_SERVICE.format(
+            "test_domain", "test_service"), json={'hello': 5})
+    assert resp.status == 400

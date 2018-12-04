@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.components.zha.entities import ZhaDeviceEntity
 from homeassistant import config_entries, const as ha_const
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from . import const as zha_const
 
 # Loading the config flow file will register the flow
@@ -116,10 +117,12 @@ async def async_setup_entry(hass, config_entry):
         import bellows.ezsp
         from bellows.zigbee.application import ControllerApplication
         radio = bellows.ezsp.EZSP()
+        radio_description = "EZSP"
     elif radio_type == RadioType.xbee.name:
         import zigpy_xbee.api
         from zigpy_xbee.zigbee.application import ControllerApplication
         radio = zigpy_xbee.api.XBee()
+        radio_description = "XBee"
 
     await radio.connect(usb_path, baudrate)
     hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
@@ -136,6 +139,17 @@ async def async_setup_entry(hass, config_entry):
     for device in APPLICATION_CONTROLLER.devices.values():
         hass.async_create_task(
             listener.async_device_initialized(device, False))
+
+    device_registry = await \
+        hass.helpers.device_registry.async_get_registry()
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(CONNECTION_ZIGBEE, str(APPLICATION_CONTROLLER.ieee))},
+        identifiers={(DOMAIN, str(APPLICATION_CONTROLLER.ieee))},
+        name="Zigbee Coordinator",
+        manufacturer="ZHA",
+        model=radio_description,
+    )
 
     hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(APPLICATION_CONTROLLER.ieee)
 

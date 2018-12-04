@@ -25,6 +25,7 @@ from tests.common import async_mock_service
 
 BASIC_CONFIG = helpers.Config(
     should_expose=lambda state: True,
+    allow_unlock=False,
     agent_user_id='test-agent',
 )
 
@@ -915,4 +916,92 @@ async def test_fan_speed(hass):
     assert calls[0].data == {
         'entity_id': 'fan.living_room_fan',
         'speed': 'medium'
+    }
+
+
+async def test_modes(hass):
+    """Test Mode trait."""
+    assert trait.ModesTrait.supported(
+        media_player.DOMAIN, media_player.SUPPORT_SELECT_SOURCE)
+
+    trt = trait.ModesTrait(
+        hass, State(
+            'media_player.living_room', media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_INPUT_SOURCE_LIST: [
+                    'media', 'game', 'chromecast', 'plex'
+                ],
+                media_player.ATTR_INPUT_SOURCE: 'game'
+            }),
+        BASIC_CONFIG)
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        'availableModes': [
+            {
+                'name': 'input source',
+                'name_values': [
+                    {
+                        'name_synonym': ['input source'],
+                        'lang': 'en'
+                    }
+                ],
+                'settings': [
+                    {
+                        'setting_name': 'media',
+                        'setting_values': [
+                            {
+                                'setting_synonym': ['media', 'media mode'],
+                                'lang': 'en'
+                            }
+                        ]
+                    },
+                    {
+                        'setting_name': 'game',
+                        'setting_values': [
+                            {
+                                'setting_synonym': ['game', 'game mode'],
+                                'lang': 'en'
+                            }
+                        ]
+                    },
+                    {
+                        'setting_name': 'chromecast',
+                        'setting_values': [
+                            {
+                                'setting_synonym': ['chromecast'],
+                                'lang': 'en'
+                            }
+                        ]
+                    }
+                ],
+                'ordered': False
+            }
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        'currentModeSettings': {'source': 'game'},
+        'on': True,
+        'online': True
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES, params={
+            'updateModeSettings': {
+                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): 'media'
+            }})
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE)
+    await trt.execute(
+        trait.COMMAND_MODES, params={
+            'updateModeSettings': {
+                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): 'media'
+            }})
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        'entity_id': 'media_player.living_room',
+        'source': 'media'
     }

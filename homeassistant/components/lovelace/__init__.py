@@ -159,15 +159,17 @@ def load_config(hass) -> JSON_TYPE:
     seen_card_ids = set()
     seen_view_ids = set()
     for view in config.get('views', []):
-        view_id = str(view.get('id', ''))
+        view_id = view.get('id')
         if view_id:
+            view_id = str(view_id)
             if view_id in seen_view_ids:
                 raise DuplicateIdError(
                     'ID `{}` has multiple occurances in views'.format(view_id))
             seen_view_ids.add(view_id)
         for card in view.get('cards', []):
-            card_id = str(card.get('id', ''))
+            card_id = card.get('id')
             if card_id:
+                card_id = str(card_id)
                 if card_id in seen_card_ids:
                     raise DuplicateIdError(
                         'ID `{}` has multiple occurances in cards'
@@ -267,6 +269,8 @@ def add_card(fname: str, view_id: str, card_config: str,
         cards = view.get('cards', [])
         if data_format == FORMAT_YAML:
             card_config = yaml.yaml_to_object(card_config)
+        if 'id' not in card_config:
+            card_config['id'] = uuid.uuid4().hex
         if position is None:
             cards.append(card_config)
         else:
@@ -376,7 +380,10 @@ def update_view(fname: str, view_id: str, view_config, data_format:
             "View with ID: {} was not found in {}.".format(view_id, fname))
     if data_format == FORMAT_YAML:
         view_config = yaml.yaml_to_object(view_config)
-    view_config['cards'] = found.get('cards', [])
+    if not view_config.get('cards') and found.get('cards'):
+        view_config['cards'] = found.get('cards', [])
+    if not view_config.get('badges') and found.get('badges'):
+        view_config['badges'] = found.get('badges', [])
     found.clear()
     found.update(view_config)
     yaml.save_yaml(fname, config)
@@ -389,6 +396,8 @@ def add_view(fname: str, view_config: str,
     views = config.get('views', [])
     if data_format == FORMAT_YAML:
         view_config = yaml.yaml_to_object(view_config)
+    if 'id' not in view_config:
+        view_config['id'] = uuid.uuid4().hex
     if position is None:
         views.append(view_config)
     else:
