@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.directv/
 """
 import logging
 from datetime import timedelta
+from functools import partial
 import requests
 import voluptuous as vol
 
@@ -302,41 +303,52 @@ class DirecTvDevice(MediaPlayerDevice):
 
     def __init__(self, name, host, port, device):
         """Initialize the device."""
-        from DirectPy import DIRECTV
-        self.dtv = DIRECTV(host, port, device)
         self._name = name
+        self._host = host
+        self._port = port
+        self._device = device
+
+        # This is a client device is client address is not 0
+        self._is_client = self._device != DEFAULT_DEVICE
+        self.dtv = None
         self._is_standby = True
         self._current = None
         self._last_update = None
         self._paused = None
         self._last_position = None
         self._is_recorded = None
-        self._is_client = device != '0'
         self._assumed_state = None
         self._available = False
         self._first_error_timestamp = None
 
+    async def async_added_to_hass(self):
+        """Connect to DVR instance."""
         if self._is_client:
-            _LOGGER.debug("Created DirecTV client %s for device %s",
-                          self._name, device)
+            _LOGGER.debug("%s: Created entity DirecTV client %s",
+                          self.entity_id, self._device)
         else:
-            _LOGGER.debug("Created DirecTV device for %s", self._name)
+            _LOGGER.debug("%s: Created entity DirecTV device",
+                          self.entity_id)
+
+        await self.hass.async_add_executor_job(self.get_dtv_instance)
 
     def update(self):
         """Retrieve latest state."""
         _LOGGER.debug("%s: Updating status", self.entity_id)
         try:
             self._available = True
-            self._is_standby = self.dtv.get_standby()
-            if self._is_standby:
+            self._is_standby = self.call_api(None, 'get_standby')
+            if self._is_standby or self._is_standby is None:
                 self._current = None
                 self._is_recorded = None
                 self._paused = None
                 self._assumed_state = False
                 self._last_position = None
                 self._last_update = None
+                if self._is_standby is None:
+                    self._available = False
             else:
-                self._current = self.dtv.get_tuned()
+                self._current = self.call_api(None, 'get_tuned')
                 if self._current['status']['code'] == 200:
                     self._first_error_timestamp = None
                     self._is_recorded = self._current.get('uniqueId')\
@@ -548,48 +560,95 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_client:
             raise NotImplementedError()
 
-        _LOGGER.debug("Turn on %s", self._name)
-        self.dtv.key_press('poweron')
+        _LOGGER.debug("%s: Turn on", self.entity_id)
+        self.key_press('poweron')
 
     def turn_off(self):
         """Turn off the receiver."""
         if self._is_client:
             raise NotImplementedError()
 
-        _LOGGER.debug("Turn off %s", self._name)
-        self.dtv.key_press('poweroff')
+        _LOGGER.debug("%s: Turn off", self.entity_id)
+        self.key_press('poweroff')
 
     def media_play(self):
         """Send play command."""
-        _LOGGER.debug("Play on %s", self._name)
-        self.dtv.key_press('play')
+        _LOGGER.debug("%s: Play", self.entity_id)
+        self.key_press('play')
 
     def media_pause(self):
         """Send pause command."""
-        _LOGGER.debug("Pause on %s", self._name)
-        self.dtv.key_press('pause')
+        _LOGGER.debug("%s: Pause", self.entity_id)
+        self.key_press('pause')
 
     def media_stop(self):
         """Send stop command."""
-        _LOGGER.debug("Stop on %s", self._name)
-        self.dtv.key_press('stop')
+        _LOGGER.debug("%s: Stop", self.entity_id)
+        self.key_press('stop')
 
     def media_previous_track(self):
         """Send rewind command."""
-        _LOGGER.debug("Rewind on %s", self._name)
-        self.dtv.key_press('rew')
+        _LOGGER.debug("%s: Rewind", self.entity_id)
+        self.key_press('rew')
 
     def media_next_track(self):
         """Send fast forward command."""
-        _LOGGER.debug("Fast forward on %s", self._name)
-        self.dtv.key_press('ffwd')
+        _LOGGER.debug("%s: Fast forward", self.entity_id)
+        self.key_press('ffwd')
 
     def play_media(self, media_type, media_id, **kwargs):
         """Select input source."""
         if media_type != MEDIA_TYPE_CHANNEL:
-            _LOGGER.error("Invalid media type %s. Only %s is supported",
-                          media_type, MEDIA_TYPE_CHANNEL)
+            _LOGGER.error("%s: Invalid media type %s. Only %s is supported",
+                          self.entity_id, media_type, MEDIA_TYPE_CHANNEL)
+            raise NotImplementedError()
+
+        _LOGGER.debug("%s: Changing channel to %s", self.entity_id, media_id)
+        try:
+            self.call_api("Not yet connected to DVR",
+                          'tune_channel', media_id)
+        except requests.RequestException as ex:
+            _LOGGER.error("%s: Request error trying to change channel: %s",
+                          self.entity_id, ex)
+
+    def get_dtv_instance(self):
+        """Get the DTV instance to work with."""
+        if self.dtv:
+            return self.dtv
+
+        from DirectPy import DIRECTV
+        try:
+            self.dtv = DIRECTV(self._host, self._port, self._device)
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.warning("%s: Exception trying to connect to DVR, will try "
+                            "again later: %s", self.entity_id, ex)
+            self.dtv = None
+
+        if not self.dtv:
             return
 
-        _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
-        self.dtv.tune_channel(media_id)
+        _LOGGER.debug("%s: Successfully connected to %s",
+                      self.entity_id, self._host)
+        return self.dtv
+
+    def call_api(self, not_connected_error, api_call, *args, **kwargs):
+        """Call API method of DirecTV class."""
+        if not self.get_dtv_instance():
+            if not_connected_error:
+                _LOGGER.error("%s: Not yet connected to DVR", self.entity_id)
+            else:
+                _LOGGER.debug("%s: No connection to DVR", self.entity_id)
+            return
+
+        _LOGGER.debug("%s: Executing API call: %s", self.entity_id, api_call)
+        return partial(getattr(self.dtv, api_call), *args, **kwargs)
+
+    def key_press(self, key):
+        """Call sync function for key_press."""
+        try:
+            return self.call_api("Not yet connected to DVR", 'key_press', key)
+
+        except requests.RequestException as ex:
+            _LOGGER.error("%s: Request error trying to send key press: %s",
+                          self.entity_id, ex)
+            return
