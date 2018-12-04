@@ -26,11 +26,12 @@ from tests.common import MockDependency, async_fire_time_changed
 
 CLIENT_ENTITY_ID = 'media_player.client_dvr'
 MAIN_ENTITY_ID = 'media_player.main_dvr'
+HOST_NAME = 'localhost'
 IP_ADDRESS = '127.0.0.1'
 
 DISCOVERY_INFO = {
     'host': IP_ADDRESS,
-    'serial': 1234
+    'serial': 'RID-123456789012'
 }
 
 LIVE = {
@@ -83,7 +84,7 @@ RECORDING = {
 WORKING_CONFIG = {
     'media_player': {
         'platform': 'directv',
-        CONF_HOST: IP_ADDRESS,
+        CONF_HOST: HOST_NAME,
         CONF_NAME: 'Main DVR',
         CONF_PORT: DEFAULT_PORT,
         CONF_DEVICE: DEFAULT_DEVICE
@@ -275,6 +276,24 @@ class MockDirectvClass:
     def tune_channel(self, source):
         """Mock for tune_channel method."""
         self.attributes['major'] = int(source)
+
+    def get_version(self):
+        """Mock for get_version method."""
+        test_version = {
+            'accessCardId': '0011-1265-7890',
+            'receiverId': '1234 5678 9012',
+            'status': {
+                'code': 200,
+                'commandResult': 0,
+                'msg': 'OK.',
+                'query': '/info/getVersion'
+            },
+            'stbSoftwareVersion': '0x1234',
+            'systemTime': 1543947120,
+            'version': '2.1'
+        }
+
+        return test_version
 
 
 async def test_setup_platform_config(hass):
