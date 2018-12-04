@@ -5,15 +5,15 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/fan.zha/
 """
 import logging
-from homeassistant.components.zha.entities import ZhaEntity
-from homeassistant.components.zha import helpers
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.components.zha.const import (
-    ZHA_DISCOVERY_NEW, DATA_ZHA, DATA_ZHA_DISPATCHERS
-)
+
 from homeassistant.components.fan import (
-    DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-    SUPPORT_SET_SPEED)
+    DOMAIN, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
+    FanEntity)
+from homeassistant.components.zha import helpers
+from homeassistant.components.zha.const import (
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['zha']
 

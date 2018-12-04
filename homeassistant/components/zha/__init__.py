@@ -10,23 +10,22 @@ import os
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components.zha.entities import ZhaDeviceEntity
 from homeassistant import config_entries, const as ha_const
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.components.zha.entities import ZhaDeviceEntity
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
-from . import const as zha_const
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_component import EntityComponent
 
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa  # pylint: disable=unused-import
+from . import const as zha_const
 from .const import (
-    DOMAIN, COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_RADIO_TYPE,
-    CONF_USB_PATH, CONF_DEVICE_CONFIG, ZHA_DISCOVERY_NEW, DATA_ZHA,
-    DATA_ZHA_CONFIG, DATA_ZHA_BRIDGE_ID, DATA_ZHA_RADIO, DATA_ZHA_DISPATCHERS,
-    DATA_ZHA_CORE_COMPONENT, DEFAULT_RADIO_TYPE, DEFAULT_DATABASE_NAME,
-    DEFAULT_BAUDRATE, RadioType
-)
+    COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
+    CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
+    DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
+    DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
+    DEFAULT_RADIO_TYPE, DOMAIN, ZHA_DISCOVERY_NEW, RadioType)
 
 REQUIREMENTS = [
     'bellows==0.7.0',

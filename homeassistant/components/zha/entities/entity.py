@@ -4,13 +4,12 @@ Entity for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
-from homeassistant.helpers import entity
-from homeassistant.util import slugify
-from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.components.zha.const import (
-    DOMAIN, DATA_ZHA, DATA_ZHA_BRIDGE_ID
-)
+    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN)
+from homeassistant.core import callback
+from homeassistant.helpers import entity
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant.util import slugify
 
 
 class ZhaEntity(entity.Entity):
