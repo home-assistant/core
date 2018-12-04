@@ -55,7 +55,8 @@ def setup(hass, config):
     import xs1_api_client
     xs1 = xs1_api_client.XS1(host, user, password)
 
-    _LOGGER.debug("establishing connection to xs1 gateway and retrieving data...")
+    _LOGGER.debug(
+        "establishing connection to xs1 gateway and retrieving data...")
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ACTUATORS] = xs1.get_all_actuators()

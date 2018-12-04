@@ -25,7 +25,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     actuators = hass.data[DOMAIN][ACTUATORS]
 
     for actuator in actuators:
-        if (actuator.type() == ActuatorType.SWITCH) or (actuator.type() == ActuatorType.DIMMER):
+        if (actuator.type() == ActuatorType.SWITCH) or \
+                (actuator.type() == ActuatorType.DIMMER):
             async_add_devices([XS1SwitchEntity(actuator, hass)])
 
     _LOGGER.info("Added Switches!")
@@ -33,10 +34,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 class XS1SwitchEntity(XS1DeviceEntity, ToggleEntity):
     """Representation of a XS1 switch actuator."""
-
-    def __init__(self, device, hass):
-        """Initialize the actuator."""
-        super().__init__(device, hass)
 
     @property
     def name(self):

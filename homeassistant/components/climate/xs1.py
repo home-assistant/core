@@ -8,15 +8,13 @@ import asyncio
 import logging
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, ATTR_TEMPERATURE, STATE_AUTO,
-    STATE_COOL, STATE_HEAT, ClimateDevice)
+    ATTR_TEMPERATURE, ClimateDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_UNKNOWN, TEMP_CELSIUS)
+    TEMP_CELSIUS)
 from homeassistant.util.temperature import convert as convert_temperature
-
 from ..xs1 import ACTUATORS, DOMAIN, SENSORS, XS1DeviceEntity
 
-# DEPENDENCIES = ['xs1']
+DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -32,7 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for actuator in actuators:
         if actuator.type() == ActuatorType.TEMPERATURE:
-            """Search for a matching sensor (by name)"""
+            # Search for a matching sensor (by name)
             actuator_name = actuator.name()
 
             matching_sensor = None
@@ -42,7 +40,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
                     break
 
-            async_add_devices([XS1ThermostatEntity(actuator, matching_sensor, hass, 8, 25)])
+            async_add_devices(
+                [XS1ThermostatEntity(actuator, matching_sensor, hass, 8, 25)]
+            )
 
     _LOGGER.info("Added Thermostats!")
 
@@ -68,8 +68,8 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
         """Return the current temperature."""
         if self.sensor is None:
             return None
-        else:
-            return self.sensor.value()
+
+        return self.sensor.value()
 
     @property
     def temperature_unit(self):
@@ -84,12 +84,20 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(self._min_temp, TEMP_CELSIUS, self.unit_of_measurement)
+        return convert_temperature(
+            self._min_temp,
+            TEMP_CELSIUS,
+            self.unit_of_measurement
+        )
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(self._max_temp, TEMP_CELSIUS, self.unit_of_measurement)
+        return convert_temperature(
+            self._max_temp,
+            TEMP_CELSIUS,
+            self.unit_of_measurement
+        )
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):

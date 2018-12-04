@@ -35,10 +35,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class XS1Sensor(XS1DeviceEntity, Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, device, hass):
-        """Initialize the sensor."""
-        super().__init__(device, hass)
-
     @property
     def name(self):
         """Return the name of the sensor."""
