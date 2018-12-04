@@ -6,11 +6,12 @@ https://home-assistant.io/components/sensor.tellduslive/
 """
 import logging
 
-from homeassistant.components import tellduslive
+from homeassistant.components import sensor, tellduslive
 from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +53,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     client = hass.data[tellduslive.DOMAIN]
     add_entities(
         TelldusLiveSensor(client, sensor) for sensor in discovery_info)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up tellduslive sensors dynamically."""
+    async def async_discover_sensor(device_id):
+        """Discover and add a discovered sensor."""
+        client = hass.data[tellduslive.DOMAIN]
+        async_add_entities([TelldusLiveSensor(client, device_id)])
+
+    async_dispatcher_connect(
+        hass,
+        tellduslive.TELLDUS_DISCOVERY_NEW.format(
+            sensor.DOMAIN, tellduslive.DOMAIN), async_discover_sensor)
+    _LOGGER.warning(
+        "SENSOR %s",
+        tellduslive.TELLDUS_DISCOVERY_NEW.format(sensor.DOMAIN,
+                                                 tellduslive.DOMAIN))
 
 
 class TelldusLiveSensor(TelldusLiveEntity):
