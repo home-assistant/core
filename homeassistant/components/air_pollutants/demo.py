@@ -11,22 +11,20 @@ from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Air Pollutants."""
     add_entities([
-        DemoAirPollutants('Home', 14, 23, 100, 12, TEMP_CELSIUS),
-        DemoAirPollutants('Office', 4, 16, None, 4.8, TEMP_FAHRENHEIT)
+        DemoAirPollutants('Home', 14, 23, 100),
+        DemoAirPollutants('Office', 4, 16, None)
     ])
 
 
 class DemoAirPollutants(AirPollutantsEntity):
     """Representation of Air Pollutants data."""
 
-    def __init__(self, name, pm_2_5, pm_10, n2o, temp, temperature_unit):
+    def __init__(self, name, pm_2_5, pm_10, n2o):
         """Initialize the Demo Air Pollutants."""
         self._name = name
         self._pm_2_5 = pm_2_5
         self._pm_10 = pm_10
         self._n2o = n2o
-        self._temperature_unit = temperature_unit
-        self._temperature = temp
 
     @property
     def name(self):
@@ -37,16 +35,6 @@ class DemoAirPollutants(AirPollutantsEntity):
     def should_poll(self):
         """No polling needed for Demo Air Pollutants."""
         return False
-
-    @property
-    def temperature(self):
-        """Return the temperature."""
-        return self._temperature
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self._temperature_unit
 
     @property
     def particulate_matter_2_5(self):

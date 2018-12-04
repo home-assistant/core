@@ -4,8 +4,7 @@ import unittest
 from homeassistant.components import air_pollutants
 from homeassistant.components.air_pollutants import (
     ATTR_AIR_POLLUTANTS_ATTRIBUTION, ATTR_AIR_POLLUTANTS_N2O,
-    ATTR_AIR_POLLUTANTS_OZONE, ATTR_AIR_POLLUTANTS_PM_10,
-    ATTR_AIR_POLLUTANTS_TEMPERATURE)
+    ATTR_AIR_POLLUTANTS_OZONE, ATTR_AIR_POLLUTANTS_PM_10)
 from homeassistant.setup import setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -39,18 +38,6 @@ class TestAirPollutants(unittest.TestCase):
         data = state.attributes
         assert data.get(ATTR_AIR_POLLUTANTS_PM_10) == 23
         assert data.get(ATTR_AIR_POLLUTANTS_N2O) == 100
-        assert data.get(ATTR_AIR_POLLUTANTS_TEMPERATURE) == 12
         assert data.get(ATTR_AIR_POLLUTANTS_OZONE) is None
         assert data.get(ATTR_AIR_POLLUTANTS_ATTRIBUTION) == \
             'Powered by Home Assistant'
-
-    def test_temperature_convert(self):
-        """Test temperature conversion."""
-        state = self.hass.states.get(
-            'air_pollutants.demo_air_pollutants_office')
-        assert state is not None
-
-        assert state.state == '4'
-
-        data = state.attributes
-        assert data.get(ATTR_AIR_POLLUTANTS_TEMPERATURE) == -15

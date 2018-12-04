@@ -7,8 +7,6 @@ https://home-assistant.io/components/air_pollutants/
 import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.const import PRECISION_WHOLE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 
@@ -23,18 +21,14 @@ ATTR_AIR_POLLUTANTS_AQI = 'air_quality_index'
 ATTR_AIR_POLLUTANTS_ATTRIBUTION = 'attribution'
 ATTR_AIR_POLLUTANTS_C02 = 'carbon_dioxide'
 ATTR_AIR_POLLUTANTS_CO = 'carbon_monoxide'
-ATTR_AIR_POLLUTANTS_HUMIDITY = 'humidity'
 ATTR_AIR_POLLUTANTS_N2O = 'nitrogen_oxide'
 ATTR_AIR_POLLUTANTS_NO = 'nitrogen_monoxide'
 ATTR_AIR_POLLUTANTS_NO2 = 'nitrogen_dioxide'
-ATTR_AIR_POLLUTANTS_ORGANIC = 'volatile_organic_compounds'
 ATTR_AIR_POLLUTANTS_OZONE = 'ozone'
-ATTR_AIR_POLLUTANTS_PM = 'particulate_matter'
 ATTR_AIR_POLLUTANTS_PM_0_1 = 'particulate_matter_0_1'
 ATTR_AIR_POLLUTANTS_PM_10 = 'particulate_matter_10'
 ATTR_AIR_POLLUTANTS_PM_2_5 = 'particulate_matter_2_5'
 ATTR_AIR_POLLUTANTS_SO2 = 'sulphur_dioxide'
-ATTR_AIR_POLLUTANTS_TEMPERATURE = 'temperature'
 
 
 async def async_setup(hass, config):
@@ -68,19 +62,8 @@ class AirPollutantsEntity(Entity):
         raise NotImplementedError()
 
     @property
-    def precision(self):
-        """Return the forecast."""
-        return PRECISION_TENTHS if self.temperature_unit == TEMP_CELSIUS \
-            else PRECISION_WHOLE
-
-    @property
-    def humidity(self):
-        """Return the humidity."""
-        return None
-
-    @property
-    def temperature(self):
-        """Return the platform temperature."""
+    def particulate_matter_0_1(self):
+        """Return the particulate matter 0.1 level."""
         return None
 
     @property
@@ -114,16 +97,6 @@ class AirPollutantsEntity(Entity):
         return None
 
     @property
-    def particulate_matter(self):
-        """Return the general particulate matter level."""
-        return None
-
-    @property
-    def particulate_matter_0_1(self):
-        """Return the particulate matter 0.1 level."""
-        return None
-
-    @property
     def sulphur_dioxide(self):
         """Return the SO2 (sulphur dioxide) level."""
         return None
@@ -144,34 +117,17 @@ class AirPollutantsEntity(Entity):
         return None
 
     @property
-    def volatile_organic_compounds(self):
-        """Return the volatile organic compounds (VOC) level."""
-        return None
-
-    @property
     def state_attributes(self):
         """Return the state attributes."""
-        data = {
-            ATTR_AIR_POLLUTANTS_TEMPERATURE: show_temp(
-                self.hass, self.temperature, self.temperature_unit,
-                self.precision),
-        }
+        data = {}
 
         air_quality_index = self.air_quality_index
         if air_quality_index is not None:
             data[ATTR_AIR_POLLUTANTS_AQI] = air_quality_index
 
-        humidity = self.humidity
-        if humidity is not None:
-            data[ATTR_AIR_POLLUTANTS_HUMIDITY] = round(humidity)
-
         ozone = self.ozone
         if ozone is not None:
             data[ATTR_AIR_POLLUTANTS_OZONE] = ozone
-
-        particulate_matter = self.particulate_matter
-        if particulate_matter is not None:
-            data[ATTR_AIR_POLLUTANTS_PM] = particulate_matter
 
         particulate_matter_0_1 = self.particulate_matter_0_1
         if particulate_matter_0_1 is not None:
@@ -204,10 +160,6 @@ class AirPollutantsEntity(Entity):
         carbon_monoxide = self.carbon_monoxide
         if carbon_monoxide is not None:
             data[ATTR_AIR_POLLUTANTS_CO] = carbon_monoxide
-
-        volatile_organic_compounds = self.volatile_organic_compounds
-        if volatile_organic_compounds is not None:
-            data[ATTR_AIR_POLLUTANTS_ORGANIC] = volatile_organic_compounds
 
         attribution = self.attribution
         if attribution is not None:
