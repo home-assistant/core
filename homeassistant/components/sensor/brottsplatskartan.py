@@ -39,46 +39,39 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Brottsplatskartan platform."""
+    import brottsplatskartan
+    import uuid
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     name = config.get(CONF_NAME)
     area = config.get(CONF_AREA)
 
-    if area:
-        pass
-    elif latitude and longitude:
-        pass
-    else:
-        _LOGGER.error("Missing or erroneous configuration")
-        return False
+    # Every Home Assistant instance should have their own unique
+    # app parameter: https://brottsplatskartan.se/sida/api
+    app = 'ha-' + str(uuid.getnode())
+
+    b = brottsplatskartan.BrottsplatsKartan(
+        app=app, area=area,
+        latitude=latitude, longitude=longitude
+    )
 
     add_entities(
-        [BrottsplatskartanSensor(name, latitude, longitude, area)], True
+        [BrottsplatskartanSensor(b, name)], True
     )
 
 
 class BrottsplatskartanSensor(Entity):
     """Representation of a Brottsplatskartan Sensor."""
 
-    def __init__(self, name, latitude=None, longitude=None, area=None):
+    def __init__(self, b, name):
         """Initialize the Brottsplatskartan sensor."""
         import brottsplatskartan
-        import uuid
-
-        # Every Home Assistant instance should have their own unique
-        # app parameter: https://brottsplatskartan.se/sida/api
-        app = 'ha-' + str(uuid.getnode())
-
+        self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
+        self._brottsplatskartan = b
         self._name = name
-        self._attributes = None
+        self._previous_incidents = set()
         self._starting_up = True
         self._state = None
-        self._previous_incidents = set()
-
-        self._brottsplatskartan = brottsplatskartan.BrottsplatsKartan(
-            app=app, area=area,
-            latitude=latitude, longitude=longitude
-        )
 
     @property
     def name(self):
@@ -116,14 +109,13 @@ class BrottsplatskartanSensor(Entity):
 
     def update(self):
         """Update device state."""
-        import brottsplatskartan
 
         incident_counts = defaultdict(int)
         incidents = self._brottsplatskartan.get_incidents()
 
         if incidents is False:
             _LOGGER.debug("Problems fetching incidents.")
-            return False
+            return
 
         if len(incidents) < len(self._previous_incidents):
             self._previous_incidents = set()
@@ -139,8 +131,6 @@ class BrottsplatskartanSensor(Entity):
             ):
                 self._incident_event(incident)
             self._previous_incidents.add(current_incident_id)
-
-        self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
 
         self._attributes.update(incident_counts)
         self._starting_up = False
