@@ -26,8 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
-ATTR_CLIENT_ID = 'client_id'
-ATTR_CLIENT_SECRET = 'client_secret'
+ATTR_CLI_ID = 'client_id'
+ATTR_CLI_SEC = 'client_secret'
 ATTR_EXPIRES_AT = 'expires_at'
 
 CONF_MONITORED_RESOURCES = 'monitored_resources'
@@ -66,56 +66,106 @@ STRAVA_MEASUREMENTS = {
 
 STRAVA_RESOURCES_LIST = {
 
-    'follower_count': ['Follower Count', '', 'account-arrow-left', 'athlete'],
-    'friend_count': ['Friend Count', '', 'account-arrow-right', 'athlete'],
-    'weight': ['Weight', 'kg', 'weight', 'athlete'],
-    'max_heartrate': ['Maximum Heart Rate', 'BPM', 'heart-pulse', 'athlete'],
-    'ftp': ['FTP', 'Watts', 'chart-line-variant', 'athlete'],
-    'ytd_ride_totals.distance': ['Year To Date Ride Distance', '', 'chart-line-variant', 'stat'],
-    'ytd_ride_totals.count': ['Year To Date Ride Number', '', 'chart-line-variant', 'stat'],
-    'ytd_ride_totals.elapsed_time': ['Year To Date Ride Elapsed Time', 's', 'chart-line-variant', 'stat'],
-    'ytd_ride_totals.elevation_gain': ['Year To Date Ride Elevation Game', '', 'chart-line-variant', 'stat'],
-    'ytd_ride_totals.moving_time': ['Year To Date Ride Moving Time', 's', 'chart-line-variant', 'stat'],
-    'recent_ride_totals.distance': ['Recent Ride Distance', '', 'chart-line-variant', 'stat'],
-    'recent_ride_totals.count': ['Recent Ride Number', '', 'chart-line-variant', 'stat'],
-    'recent_ride_totals.elapsed_time': ['Recent Ride Elapsed Time', 's', 'chart-line-variant', 'stat'],
-    'recent_ride_totals.elevation_gain': ['Recent Ride Elevation Game', '', 'chart-line-variant', 'stat'],
-    'recent_ride_totals.moving_time': ['Recent Ride Moving Time', 's', 'chart-line-variant', 'stat'],
-    'all_ride_totals.distance': ['All Ride Distance', '', 'chart-line-variant', 'stat'],
-    'all_ride_totals.count': ['All Ride Number', '', 'chart-line-variant', 'stat'],
-    'all_ride_totals.elapsed_time': ['All Ride Elapsed Time', 's', 'chart-line-variant', 'stat'],
-    'all_ride_totals.elevation_gain': ['All Ride Elevation Game', '', 'chart-line-variant', 'stat'],
-    'all_ride_totals.moving_time': ['All Ride Moving Time', 's', 'chart-line-variant', 'stat'],
-    'ytd_run_totals.distance': ['Year To Date Run Distance', '', 'chart-line-variant', 'stat'],
-    'ytd_run_totals.count': ['Year To Date Run Number', '', 'chart-line-variant', 'stat'],
-    'ytd_run_totals.elapsed_time': ['Year To Date Run Elapsed Time', 's', 'chart-line-variant', 'stat'],
-    'ytd_run_totals.elevation_gain': ['Year To Date Run Elevation Game', '', 'chart-line-variant', 'stat'],
-    'ytd_run_totals.moving_time': ['Year To Date Run Moving Time', 's', 'chart-line-variant', 'stat'],
-    'recent_run_totals.distance': ['Recent Run Distance', '', 'chart-line-variant', 'stat'],
-    'recent_run_totals.count': ['Recent Run Number', '', 'chart-line-variant', 'stat'],
-    'recent_run_totals.elapsed_time': ['Recent Run Elapsed Time', 's', 'chart-line-variant', 'stat'],
-    'recent_run_totals.elevation_gain': ['Recent Run Elevation Game', '', 'chart-line-variant', 'stat'],
-    'recent_run_totals.moving_time': ['Recent Run Moving Time', 's', 'chart-line-variant', 'stat'],
-    'all_run_totals.distance': ['All Run Distance', '', 'chart-line-variant', 'stat'],
-    'all_run_totals.count': ['All Run Number', '', 'chart-line-variant', 'stat'],
-    'all_run_totals.elapsed_time': ['All Run Elapsed Time', 's', 'chart-line-variant', 'stat'],
-    'all_run_totals.elevation_gain': ['All Run Elevation Game', '', 'chart-line-variant', 'stat'],
-    'all_run_totals.moving_time': ['All Run Moving Time', 's', 'chart-line-variant', 'stat'],
-    'ytd_swim_totals.distance': ['Year To Date Swim Distance', '', 'chart-line-variant', 'stat'],
-    'ytd_swim_totals.count': ['Year To Date Swim Number', '', 'chart-line-variant', 'stat'],
-    'ytd_swim_totals.elapsed_time': ['Year To Date Swim Elapsed Time', 's', 'chart-line-variant', 'stat'],
-    'ytd_swim_totals.elevation_gain': ['Year To Date Swim Elevation Game', '', 'chart-line-variant', 'stat'],
-    'ytd_swim_totals.moving_time': ['Year To Date Swim Moving Time', 's', 'chart-line-variant', 'stat'],
-    'recent_swim_totals.distance': ['Recent Swim Distance', '', 'chart-line-variant', 'stat'],
-    'recent_swim_totals.count': ['Recent Swim Number', '', 'chart-line-variant', 'stat'],
-    'recent_swim_totals.elapsed_time': ['Recent Swim Elapsed Time', 's', 'chart-line-variant', 'stat'],
-    'recent_swim_totals.elevation_gain': ['Recent Swim Elevation Game', '', 'chart-line-variant', 'stat'],
-    'recent_swim_totals.moving_time': ['Recent Swim Moving Time', 's', 'chart-line-variant', 'stat'],
-    'all_swim_totals.distance': ['All Swim Distance', '', 'chart-line-variant', 'stat'],
-    'all_swim_totals.count': ['All Swim Number', '', 'chart-line-variant', 'stat'],
-    'all_swim_totals.elapsed_time': ['All Swim Elapsed Time', 's', 'chart-line-variant', 'stat'],
-    'all_swim_totals.elevation_gain': ['All Swim Elevation Game', '', 'chart-line-variant', 'stat'],
-    'all_swim_totals.moving_time': ['All Swim Moving Time', 's', 'chart-line-variant', 'stat'],
+    'follower_count':
+        ['Follower Count', '', 'account-arrow-left', 'athlete'],
+    'friend_count':
+        ['Friend Count', '', 'account-arrow-right', 'athlete'],
+    'weight': 
+        ['Weight', 'kg', 'weight', 'athlete'],
+    'max_heartrate': 
+        ['Maximum Heart Rate', 'BPM', 'heart-pulse', 'athlete'],
+    'ftp': 
+        ['FTP', 'Watts', 'chart-line', 'athlete'],
+    'ytd_ride_totals.distance':
+        ['Year To Date Ride Distance', '', 'chart-line', 'stat'],
+    'ytd_ride_totals.count':
+        ['Year To Date Ride Number', '', 'chart-line', 'stat'],
+    'ytd_ride_totals.elapsed_time':
+        ['Year To Date Ride Elapsed Time', 's', 'chart-line', 'stat'],
+    'ytd_ride_totals.elevation_gain':
+        ['Year To Date Ride Elevation GAIN', '', 'chart-line', 'stat'],
+    'ytd_ride_totals.moving_time':
+        ['Year To Date Ride Moving Time', 's', 'chart-line', 'stat'],
+    'recent_ride_totals.distance':
+        ['Recent Ride Distance', '', 'chart-line', 'stat'],
+    'recent_ride_totals.count':
+        ['Recent Ride Number', '', 'chart-line', 'stat'],
+    'recent_ride_totals.elapsed_time':
+        ['Recent Ride Elapsed Time', 's', 'chart-line', 'stat'],
+    'recent_ride_totals.elevation_gain':
+        ['Recent Ride Elevation GAIN', '', 'chart-line', 'stat'],
+    'recent_ride_totals.moving_time':
+        ['Recent Ride Moving Time', 's', 'chart-line', 'stat'],
+    'all_ride_totals.distance':
+        ['All Ride Distance', '', 'chart-line', 'stat'],
+    'all_ride_totals.count':
+        ['All Ride Number', '', 'chart-line', 'stat'],
+    'all_ride_totals.elapsed_time':
+        ['All Ride Elapsed Time', 's', 'chart-line', 'stat'],
+    'all_ride_totals.elevation_gain':
+        ['All Ride Elevation GAIN', '', 'chart-line', 'stat'],
+    'all_ride_totals.moving_time':
+        ['All Ride Moving Time', 's', 'chart-line', 'stat'],
+    'ytd_run_totals.distance':
+        ['Year To Date Run Distance', '', 'chart-line', 'stat'],
+    'ytd_run_totals.count':
+        ['Year To Date Run Number', '', 'chart-line', 'stat'],
+    'ytd_run_totals.elapsed_time':
+        ['Year To Date Run Elapsed Time', 's', 'chart-line', 'stat'],
+    'ytd_run_totals.elevation_gain':
+        ['Year To Date Run Elevation GAIN', '', 'chart-line', 'stat'],
+    'ytd_run_totals.moving_time':
+        ['Year To Date Run Moving Time', 's', 'chart-line', 'stat'],
+    'recent_run_totals.distance':
+        ['Recent Run Distance', '', 'chart-line', 'stat'],
+    'recent_run_totals.count':
+        ['Recent Run Number', '', 'chart-line', 'stat'],
+    'recent_run_totals.elapsed_time':
+        ['Recent Run Elapsed Time', 's', 'chart-line', 'stat'],
+    'recent_run_totals.elevation_gain':
+        ['Recent Run Elevation GAIN', '', 'chart-line', 'stat'],
+    'recent_run_totals.moving_time':
+        ['Recent Run Moving Time', 's', 'chart-line', 'stat'],
+    'all_run_totals.distance':
+        ['All Run Distance', '', 'chart-line', 'stat'],
+    'all_run_totals.count':
+        ['All Run Number', '', 'chart-line', 'stat'],
+    'all_run_totals.elapsed_time':
+        ['All Run Elapsed Time', 's', 'chart-line', 'stat'],
+    'all_run_totals.elevation_gain':
+        ['All Run Elevation GAIN', '', 'chart-line', 'stat'],
+    'all_run_totals.moving_time':
+        ['All Run Moving Time', 's', 'chart-line', 'stat'],
+    'ytd_swim_totals.distance':
+        ['Year To Date Swim Distance', '', 'chart-line', 'stat'],
+    'ytd_swim_totals.count':
+        ['Year To Date Swim Number', '', 'chart-line', 'stat'],
+    'ytd_swim_totals.elapsed_time':
+        ['Year To Date Swim Elapsed Time', 's', 'chart-line', 'stat'],
+    'ytd_swim_totals.elevation_gain':
+        ['Year To Date Swim Elevation GAIN', '', 'chart-line', 'stat'],
+    'ytd_swim_totals.moving_time':
+        ['Year To Date Swim Moving Time', 's', 'chart-line', 'stat'],
+    'recent_swim_totals.distance':
+        ['Recent Swim Distance', '', 'chart-line', 'stat'],
+    'recent_swim_totals.count':
+        ['Recent Swim Number', '', 'chart-line', 'stat'],
+    'recent_swim_totals.elapsed_time':
+        ['Recent Swim Elapsed Time', 's', 'chart-line', 'stat'],
+    'recent_swim_totals.elevation_gain':
+        ['Recent Swim Elevation GAIN', '', 'chart-line', 'stat'],
+    'recent_swim_totals.moving_time':
+        ['Recent Swim Moving Time', 's', 'chart-line', 'stat'],
+    'all_swim_totals.distance':
+        ['All Swim Distance', '', 'chart-line', 'stat'],
+    'all_swim_totals.count':
+        ['All Swim Number', '', 'chart-line', 'stat'],
+    'all_swim_totals.elapsed_time':
+        ['All Swim Elapsed Time', 's', 'chart-line', 'stat'],
+    'all_swim_totals.elevation_gain':
+        ['All Swim Elevation GAIN', '', 'chart-line', 'stat'],
+    'all_swim_totals.moving_time':
+        ['All Swim Moving Time', 's', 'chart-line', 'stat'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -221,8 +271,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         # tokens last 6 hours
         if int(time.time()) > expires_at:
-            strava_client.refresh_access_token(config_file.get(ATTR_CLIENT_ID),
-                                               config_file.get(ATTR_CLIENT_SECRET), refresh_token)
+            strava_client.refresh_access_token(config_file.get(ATTR_CLI_ID),
+                                               config_file.get(ATTR_CLI_SEC), 
+                                               refresh_token)
         dev = []
         for resource in config.get(CONF_MONITORED_RESOURCES):
 
@@ -234,7 +285,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         strava_client = Client()
         strava_auth_start_url = strava_client.authorization_url(
-            client_id=config_file.get(ATTR_CLIENT_ID),
+            client_id=config_file.get(ATTR_CLI_ID),
             redirect_uri='{}{}'.format(
                 hass.config.api.base_url,
                 STRAVA_AUTH_CALLBACK_PATH
@@ -276,8 +327,8 @@ class StravaAuthCallbackView(HomeAssistantView):
         result = None
         if data.get('code') is not None:
             result = self.strava_client.exchange_code_for_token(
-                self.config_file.get(ATTR_CLIENT_ID),
-                self.config_file.get(ATTR_CLIENT_SECRET),
+                self.config_file.get(ATTR_CLI_ID),
+                self.config_file.get(ATTR_CLI_SEC),
                 data.get('code')
             )
         else:
@@ -302,8 +353,8 @@ class StravaAuthCallbackView(HomeAssistantView):
                 ATTR_ACCESS_TOKEN: result.get('access_token'),
                 ATTR_REFRESH_TOKEN: result.get('refresh_token'),
                 ATTR_EXPIRES_AT: result.get('expires_at'),
-                ATTR_CLIENT_ID: self.config_file.get(ATTR_CLIENT_ID),
-                ATTR_CLIENT_SECRET: self.config_file.get(ATTR_CLIENT_SECRET)
+                ATTR_CLI_ID: self.config_file.get(ATTR_CLI_ID),
+                ATTR_CLI_SEC: self.config_file.get(ATTR_CLI_SEC)
             }
         save_json(hass.config.path(STRAVA_CONFIG_FILE), config_contents)
 
