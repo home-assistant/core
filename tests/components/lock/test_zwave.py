@@ -139,6 +139,7 @@ def test_alarm_type_workaround(mock_openzwave):
     value_changed(values.alarm_type)
     assert device.is_locked
 
+
 def test_lock_access_control(mock_openzwave):
     """Test access control for Z-Wave lock."""
     node = MockNode()
