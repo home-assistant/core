@@ -294,7 +294,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                 (self._state_workaround is False or
                  did_use_state_workaround is False):
             self._state = LOCK_STATUS.get(str(alarm_type))
-            _LOGGER.debug("workaround: lock state set to %s from alarm type: %s",
+            _LOGGER.debug("workaround: lock state set to %s -- alarm type: %s",
                           self._state, str(alarm_type))
 
         if alarm_type == 21:
