@@ -993,7 +993,7 @@ pyiss==1.0.1
 pyitachip2ir==0.0.7
 
 # homeassistant.components.media_player.kef
-pykef==1.2.0
+pykef==1.3.0
 
 # homeassistant.components.kira
 pykira==0.1.1
