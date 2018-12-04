@@ -86,7 +86,7 @@ abodepy==0.14.0
 afsapi==0.0.4
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.1.11
+aioasuswrt==1.1.13
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
@@ -406,7 +406,7 @@ freesms==0.1.2
 fritzhome==1.0.4
 
 # homeassistant.components.tts.google
-gTTS-token==1.1.2
+gTTS-token==1.1.3
 
 # homeassistant.components.sensor.gearbest
 gearbest_parser==1.0.7
@@ -422,7 +422,7 @@ geojson_client==0.3
 georss_client==0.4
 
 # homeassistant.components.device_tracker.googlehome
-ghlocalapi==0.1.0
+ghlocalapi==0.3.5
 
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.7
@@ -1154,7 +1154,7 @@ pystride==0.1.7
 pysyncthru==0.3.1
 
 # homeassistant.components.sensor.tautulli
-pytautulli==0.4.0
+pytautulli==0.4.1
 
 # homeassistant.components.media_player.liveboxplaytv
 pyteleloisirs==3.4

@@ -89,6 +89,12 @@ def hass_access_token(hass, hass_admin_user):
 
 
 @pytest.fixture
+def hass_owner_user(hass, local_auth):
+    """Return a Home Assistant admin user."""
+    return MockUser(is_owner=True).add_to_hass(hass)
+
+
+@pytest.fixture
 def hass_admin_user(hass, local_auth):
     """Return a Home Assistant admin user."""
     admin_group = hass.loop.run_until_complete(hass.auth.async_get_group(
