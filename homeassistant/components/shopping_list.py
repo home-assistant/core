@@ -12,8 +12,10 @@ from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.json import load_json, save_json
 from homeassistant.components import websocket_api
+
+STORAGE_KEY = 'shopping_list.json'
+STORAGE_VERSION = 2
 
 ATTR_LIST_ID = 'list_id'
 ATTR_NAME = 'name'
@@ -168,11 +170,8 @@ class ShoppingData:
     def __init__(self, hass):
         """Initialize the shopping list."""
         self.hass = hass
-        self.lists = [{
-            'name': 'Inbox',
-            'id': LIST_SYSTEM_INBOX,
-            'items': []
-        }]
+        self.lists = []
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
     def async_add(self, list_id, name):
@@ -222,22 +221,25 @@ class ShoppingData:
         lis['items'] = [itm for itm in lis['items'] if not itm['complete']]
         self.hass.async_add_job(self.save)
 
-    @asyncio.coroutine
-    def async_load(self):
-        """Load items."""
-        def load():
-            """Load the items synchronously."""
-            return load_json(self.hass.config.path(PERSISTENCE), default=[{
-                'name': 'Inbox',
-                'id': '0',
-                'items': []
-            }])
+    async def async_load(self):
+        """Load lists."""
+        data = await self.hass.helpers.storage.async_migrator(
+            self.hass.config.path(PERSISTENCE), self._store,
+            old_conf_migrate_func=_async_migrate
+        )
 
-        self.lists = yield from self.hass.async_add_job(load)
+        if data is None:
+            data = [{
+                'name': 'Inbox',
+                'id': LIST_SYSTEM_INBOX,
+                'items': []
+            }]
+
+        self.lists = data
 
     def save(self):
         """Save the items."""
-        save_json(self.hass.config.path(PERSISTENCE), self.lists)
+        self._store.async_save(self.lists)
 
 
 class AddItemIntent(intent.IntentHandler):
@@ -370,6 +372,7 @@ def websocket_handle_lists(hass, connection, msg):
 def websocket_handle_items(hass, connection, msg):
     """Handle get shopping_list items."""
     list_id = msg['list_id']
+    _LOGGER.info(hass.data[DOMAIN].lists)
     lis = next(
         (li for li in hass.data[DOMAIN].lists if li['id'] == list_id), None)
     connection.send_message(websocket_api.result_message(
@@ -410,3 +413,15 @@ def websocket_handle_clear(hass, connection, msg):
     hass.data[DOMAIN].async_clear_completed(msg['list_id'])
     hass.bus.async_fire(EVENT)
     connection.send_message(websocket_api.result_message(msg['id']))
+
+
+async def _async_migrate(items):
+    """Migrate the shopping-list file to storage helper format."""
+    for item in items:
+        item.update({'list_id': LIST_SYSTEM_INBOX})
+
+    return [{
+        'name': 'Inbox',
+        'id': LIST_SYSTEM_INBOX,
+        'items':  items
+    }]
