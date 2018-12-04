@@ -70,11 +70,11 @@ STRAVA_RESOURCES_LIST = {
         ['Follower Count', '', 'account-arrow-left', 'athlete'],
     'friend_count':
         ['Friend Count', '', 'account-arrow-right', 'athlete'],
-    'weight': 
+    'weight':
         ['Weight', 'kg', 'weight', 'athlete'],
-    'max_heartrate': 
+    'max_heartrate':
         ['Maximum Heart Rate', 'BPM', 'heart-pulse', 'athlete'],
-    'ftp': 
+    'ftp':
         ['FTP', 'Watts', 'chart-line', 'athlete'],
     'ytd_ride_totals.distance':
         ['Year To Date Ride Distance', '', 'chart-line', 'stat'],
@@ -272,7 +272,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # tokens last 6 hours
         if int(time.time()) > expires_at:
             strava_client.refresh_access_token(config_file.get(ATTR_CLI_ID),
-                                               config_file.get(ATTR_CLI_SEC), 
+                                               config_file.get(ATTR_CLI_SEC),
                                                refresh_token)
         dev = []
         for resource in config.get(CONF_MONITORED_RESOURCES):
