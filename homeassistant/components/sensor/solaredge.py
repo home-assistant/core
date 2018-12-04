@@ -27,20 +27,25 @@ CONF_SITE_ID = "site_id"
 UPDATE_DELAY = timedelta(minutes=10)
 
 # Supported sensor types:
-# Key: ['name', unit, icon]
+# Key: ['json_key', 'name', unit, icon]
 SENSOR_TYPES = {
-    'lifeTimeData': ["Lifetime energy", 'Wh', 'mdi:solar-power'],
-    'lastYearData': ["Energy this year", 'Wh', 'mdi:solar-power'],
-    'lastMonthData': ["Energy this month", 'Wh', 'mdi:solar-power'],
-    'lastDayData': ["Energy today", 'Wh', 'mdi:solar-power'],
-    'currentPower': ["Current Power", 'W', 'mdi:solar-power']
+    'life_time_data': ['lifeTimeData', "Lifetime energy", 'Wh',
+                       'mdi:solar-power'],
+    'last_year_data': ['lastYearData', "Energy this year", 'Wh',
+                       'mdi:solar-power'],
+    'last_month_data': ['lastMonthData', "Energy this month", 'Wh',
+                        'mdi:solar-power'],
+    'last_day_data': ['lastDayData', "Energy today", 'Wh',
+                      'mdi:solar-power'],
+    'current_power': ['currentPower', "Current Power", 'W',
+                      'mdi:solar-power']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_SITE_ID): cv.string,
     vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=['currentPower']):
+    vol.Optional(CONF_MONITORED_VARIABLES, default=['current_power']):
     vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
@@ -55,7 +60,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     api_key = config[CONF_API_KEY]
     site_id = config[CONF_SITE_ID]
-    name = config[CONF_NAME]
+    platform_name = config[CONF_NAME]
 
     _LOGGER.debug("Setting up SolarEdge Monitoring API")
 
@@ -83,8 +88,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     # Create a new sensor for each sensor type.
     entities = []
-    for sensor_type in config[CONF_MONITORED_VARIABLES]:
-        sensor = SolarEdgeSensor(name, sensor_type, data)
+    for sensor_key in config[CONF_MONITORED_VARIABLES]:
+        sensor = SolarEdgeSensor(platform_name, sensor_key, data)
         entities.append(sensor)
 
     async_add_entities(entities, True)
@@ -93,20 +98,21 @@ async def async_setup_platform(hass, config, async_add_entities,
 class SolarEdgeSensor(Entity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
-    def __init__(self, sensor_name, sensor_type, data):
+    def __init__(self, platform_name, sensor_key, data):
         """Initialize the sensor."""
-        self.sensor_name = sensor_name
-        self.type = sensor_type
+        self.platform_name = platform_name
+        self.sensor_key = sensor_key
         self.data = data
         self._state = None
 
-        self._name = SENSOR_TYPES[self.type][0]
-        self._unit_of_measurement = SENSOR_TYPES[self.type][1]
+        self._json_key = SENSOR_TYPES[self.sensor_key][0]
+        self._name = SENSOR_TYPES[self.sensor_key][1]
+        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
 
     @property
     def name(self):
         """Return the name."""
-        return "{}_{}".format(self.sensor_name, self.type)
+        return "{}_{}".format(self.platform_name, self.sensor_key)
 
     @property
     def unit_of_measurement(self):
@@ -116,7 +122,7 @@ class SolarEdgeSensor(Entity):
     @property
     def icon(self):
         """Return the sensor icon."""
-        return SENSOR_TYPES[self.type][2]
+        return SENSOR_TYPES[self.sensor_key][3]
 
     @property
     def state(self):
@@ -126,7 +132,7 @@ class SolarEdgeSensor(Entity):
     async def async_update(self):
         """Get the latest data from the sensor and update the state."""
         await self.hass.async_add_job(self.data.update)
-        self._state = self.data.data[self.type]
+        self._state = self.data.data[self._json_key]
 
 
 class SolarEdgeData:
