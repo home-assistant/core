@@ -76,7 +76,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
 
         # Since the config entry doesn't allow for configuration of SSL, make
         # sure it's set:
-        if not user_input.get(CONF_SSL):
+        if user_input.get(CONF_SSL) is None:
             user_input[CONF_SSL] = DEFAULT_SSL
 
         # Timedeltas are easily serializable, so store the seconds instead:
