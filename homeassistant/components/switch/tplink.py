@@ -9,7 +9,8 @@ import time
 
 from homeassistant.components.switch import (
     SwitchDevice, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
-from homeassistant.components.tplink import DOMAIN as TPLINK_DOMAIN
+from homeassistant.components.tplink import (DOMAIN as TPLINK_DOMAIN,
+                                             CONF_SWITCH)
 from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
 
@@ -35,7 +36,7 @@ def async_setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up discovered switches."""
     devs = []
-    for dev in hass.data[TPLINK_DOMAIN]['switch']:
+    for dev in hass.data[TPLINK_DOMAIN][CONF_SWITCH]:
         devs.append(SmartPlugSwitch(dev))
 
     async_add_entities(devs, True)

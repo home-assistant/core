@@ -132,7 +132,6 @@ async def async_unload_entry(hass, entry):
     return remove_lights and remove_switches
 
 
-
 config_entry_flow.register_discovery_flow(DOMAIN,
                                           'TP-Link Smart Home',
                                           _async_has_devices,
