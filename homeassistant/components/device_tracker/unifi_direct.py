@@ -6,6 +6,7 @@ https://home-assistant.io/components/device_tracker.unifi_direct/
 """
 import logging
 import json
+import re
 
 import voluptuous as vol
 
@@ -120,7 +121,28 @@ class UnifiDeviceScanner(DeviceScanner):
 
 def _response_to_json(response):
     try:
-        json_response = json.loads(str(response)[31:-1].replace("\\", ""))
+        data = str(response)[31:-1].replace("\\", "")
+        # the deserialization is temporarly changed to account for problems with the JSON provided by the AP
+        # if ESSIDs contain quotes ("), these are not correctly escaped by the AP and the resulting JSON is wrong
+        # the idea is to remove them and hope for the best.
+        # Worst case the whole block is swallowed, whihc is better than a systematic crash
+        # I will remove this once the bug is fixed by Unifi, a bug report has been raised (by me)
+        while True:
+            # since there may be that the JSON is so weird that the whole block is swallowed, an empty response is
+            # provided just in case
+            if not data:
+                json_response = ''
+                _LOGGER.warning("the JSON is so weird that the deserialization failed despite trying -> empty response")
+                break
+            else:
+                try:
+                    json_response = json.loads(data)
+                except json.decoder.JSONDecodeError as e:
+                    s = int(re.search(r"\.*char (\d+)", str(e)).group(1)) - 2
+                    _LOGGER.warning("incorrect character at position {s}, removing".format(s=s))
+                    data = data[:s] + data[(s + 1):]
+                else:
+                    break
         _LOGGER.debug(str(json_response))
         ssid_table = json_response.get(UNIFI_SSID_TABLE)
         active_clients = {}
