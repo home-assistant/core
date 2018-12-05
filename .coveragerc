@@ -646,7 +646,6 @@ omit =
     homeassistant/components/notify/group.py
     homeassistant/components/notify/hipchat.py
     homeassistant/components/notify/homematic.py
-    homeassistant/components/notify/instapush.py
     homeassistant/components/notify/kodi.py
     homeassistant/components/notify/lannouncer.py
     homeassistant/components/notify/llamalab_automate.py
