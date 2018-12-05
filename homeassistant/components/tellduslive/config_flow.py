@@ -10,8 +10,8 @@ from homeassistant import config_entries
 from homeassistant.util.json import load_json
 
 from .const import (
-    APPLICATION_NAME, CLOUD_NAME, DOMAIN, KEY_HOST, NOT_SO_PRIVATE_KEY,
-    PUBLIC_KEY, TELLDUS_CONFIG_FILE)
+    APPLICATION_NAME, CLOUD_NAME, DOMAIN, KEY_HOST, KEY_SESSION,
+    NOT_SO_PRIVATE_KEY, PUBLIC_KEY, TELLDUS_CONFIG_FILE)
 
 KEY_TOKEN = 'token'
 KEY_TOKEN_SECRET = 'token_secret'
@@ -24,7 +24,7 @@ class FlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNETION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Init config flow."""
@@ -50,24 +50,28 @@ class FlowHandler(config_entries.ConfigFlow):
             step_id='user',
             data_schema=vol.Schema({
                 vol.Required(KEY_HOST):
-                vol.In(list(self._hosts)),
+                vol.In(list(self._hosts))
             }))
 
     async def async_step_auth(self, user_input=None):
         """Handle the submitted configuration."""
-        if user_input is not None:
-            if self._session.authorize():
-                host = self._host or CLOUD_NAME
-                return self.async_create_entry(
-                    title=host,
-                    data={
-                        KEY_HOST: host,
-                        KEY_TOKEN: self._session.access_token
-                    } if self._host else {
-                        KEY_TOKEN: self._session.access_token,
-                        KEY_TOKEN_SECRET: self._session.access_token_secret
-                    },
-                )
+        if user_input is not None and self._session.authorize():
+            host = self._host or CLOUD_NAME
+            if self._host:
+                session = {
+                    KEY_HOST: host,
+                    KEY_TOKEN: self._session.access_token
+                }
+            else:
+                session = {
+                    KEY_TOKEN: self._session.access_token,
+                    KEY_TOKEN_SECRET: self._session.access_token_secret
+                }
+            return self.async_create_entry(
+                title=host, data={
+                    KEY_SESSION: session,
+                    KEY_HOST: host
+                })
 
         async def get_auth_url(session):
             return session.authorize_url
@@ -110,24 +114,28 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_import(self, user_input):
         """Import a config entry."""
         for entry in self._async_current_entries():
-            if (entry.title == user_input[KEY_HOST]
-                    or entry.title == CLOUD_NAME):
+            host = entry.data[KEY_HOST]
+            if host in (user_input[KEY_HOST], CLOUD_NAME):
                 return self.async_abort(reason='already_configured')
 
         if user_input[KEY_HOST] != DOMAIN:
             self._hosts.append(user_input[KEY_HOST])
 
-        if not await self.hass.async_add_job(
+        if not await self.hass.async_add_executor_job(
                 os.path.isfile, self.hass.config.path(TELLDUS_CONFIG_FILE)):
             return await self.async_step_user()
 
-        conf = await self.hass.async_add_job(
+        conf = await self.hass.async_add_executor_job(
             load_json, self.hass.config.path(TELLDUS_CONFIG_FILE))
         host = next(iter(conf))
 
         if user_input[KEY_HOST] != host:
             return await self.async_step_user()
 
+        host = CLOUD_NAME if host == 'tellduslive' else host
         return self.async_create_entry(
-            title=CLOUD_NAME if host == 'tellduslive' else host,
-            data=next(iter(conf.values())))
+            title=host,
+            data={
+                KEY_SESSION: next(iter(conf.values())),
+                KEY_HOST: host
+            })

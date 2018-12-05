@@ -1,8 +1,6 @@
 """Consts used by TelldusLive."""
 from datetime import timedelta
 
-from homeassistant.components.discovery import (  # noqa pylint: disable=unused-import
-    SERVICE_TELLDUSLIVE)
 from homeassistant.const import (  # noqa pylint: disable=unused-import
     ATTR_BATTERY_LEVEL, CONF_HOST, CONF_TOKEN, DEVICE_DEFAULT_NAME)
 
@@ -16,6 +14,7 @@ KEY_CONFIG = 'tellduslive_config'
 SIGNAL_UPDATE_ENTITY = 'tellduslive_update'
 
 KEY_HOST = 'host'
+KEY_SESSION = 'session'
 
 CONF_TOKEN_SECRET = 'token_secret'
 CONF_UPDATE_INTERVAL = 'update_interval'

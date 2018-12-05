@@ -47,12 +47,12 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Tellstick sensors."""
-    if discovery_info is None:
-        return
-    client = hass.data[tellduslive.DOMAIN]
-    add_entities(
-        TelldusLiveSensor(client, sensor) for sensor in discovery_info)
+    """Old way of setting up TelldusLive.
+
+    Can only be called when a user accidentally mentions the platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -66,10 +66,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass,
         tellduslive.TELLDUS_DISCOVERY_NEW.format(
             sensor.DOMAIN, tellduslive.DOMAIN), async_discover_sensor)
-    _LOGGER.warning(
-        "SENSOR %s",
-        tellduslive.TELLDUS_DISCOVERY_NEW.format(sensor.DOMAIN,
-                                                 tellduslive.DOMAIN))
 
 
 class TelldusLiveSensor(TelldusLiveEntity):

@@ -18,11 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Tellstick Net lights."""
-    if discovery_info is None:
-        return
-    client = hass.data[tellduslive.DOMAIN]
-    add_entities(TelldusLiveLight(client, light) for light in discovery_info)
+    """Old way of setting up TelldusLive.
+
+    Can only be called when a user accidentally mentions the platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

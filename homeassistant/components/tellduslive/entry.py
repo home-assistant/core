@@ -2,7 +2,6 @@
 from datetime import datetime
 import logging
 
-from homeassistant.components.tellduslive.const import DOMAIN
 from homeassistant.const import ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -56,6 +55,7 @@ class TelldusLiveEntity(Entity):
     @property
     def _state(self):
         """Return the state of the device."""
+        _LOGGER.info(self.device.state)
         return self.device.state
 
     @property
@@ -91,9 +91,7 @@ class TelldusLiveEntity(Entity):
     @property
     def _battery_level(self):
         """Return the battery level of a device."""
-        from tellduslive import (BATTERY_LOW,
-                                 BATTERY_UNKNOWN,
-                                 BATTERY_OK)
+        from tellduslive import (BATTERY_LOW, BATTERY_UNKNOWN, BATTERY_OK)
         if self.device.battery == BATTERY_LOW:
             return 1
         if self.device.battery == BATTERY_UNKNOWN:
@@ -112,16 +110,3 @@ class TelldusLiveEntity(Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._id
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        device = self._client.entities_info.get(self.device.device_id,
-                                                self.device.device)
-        return {
-            'identifiers': {(DOMAIN, self.device.device_id)},
-            'name': self.device.name,
-            'model': device['model'].title(),
-            'manufacturer': device['protocol'].title(),
-            'via_hub': (DOMAIN, device['client']),
-        }
