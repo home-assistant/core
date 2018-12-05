@@ -53,7 +53,7 @@ async def async_setup_entry(hass, entry):
     """Set up TPLink from a config entry."""
     from pyHS100 import SmartBulb, SmartPlug, SmartDeviceException
 
-    devices = dict()
+    devices = {}
 
     if hass.data[DOMAIN]["discovery"]:
         devs = await _async_has_devices(hass)
@@ -64,7 +64,7 @@ async def async_setup_entry(hass, entry):
         for entry in hass.data[DOMAIN][type_]:
             try:
                 host = entry["host"]
-                if type == 'light':
+                if type_ == 'light':
                     dev = SmartBulb(host)
                 elif type_ == 'switch':
                     dev = SmartPlug(host)

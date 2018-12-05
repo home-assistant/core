@@ -37,13 +37,13 @@ def async_setup_platform(hass, config, add_entities, discovery_info=None):
                     'convert to use the tplink component.')
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up discovered switches."""
     devs = []
     for dev in hass.data[TPLINK_DOMAIN]['light']:
         devs.append(TPLinkSmartBulb(dev))
 
-    async_add_devices(devs, True)
+    async_add_entities(devs, True)
 
 
 def brightness_to_percentage(byt):
