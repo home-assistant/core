@@ -756,12 +756,12 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA
             self._speed_list = [mode.name for mode in OperationMode if
-                                mode.name != 'Strong']
+                                mode is not OperationMode.Strong]
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
             self._speed_list = [mode.name for mode in OperationMode if
-                                mode.name != 'Auto']
+                                mode is not OperationMode.Auto]
 
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes})
