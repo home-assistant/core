@@ -363,7 +363,6 @@ class IndexView(HomeAssistantView):
     url = '/'
     name = 'frontend:index'
     requires_auth = False
-    extra_urls = ['/states', '/states/{extra}']
 
     def __init__(self, repo_path, js_option):
         """Initialize the frontend view."""
@@ -422,7 +421,6 @@ class IndexView(HomeAssistantView):
         template_params = dict(
             no_auth=no_auth,
             theme_color=MANIFEST_JSON['theme_color'],
-            extra_urls=hass.data[extra_key],
             use_oauth='1'
         )
 
