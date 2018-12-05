@@ -70,8 +70,7 @@ async def async_setup_entry(hass, config_entry):
     switches = hass.data[DOMAIN][CONF_SWITCH] = []
 
     # If discovery is defined and not disabled, discover devices
-    if (CONF_DISCOVERY in config_data and config_data[CONF_DISCOVERY]) \
-            or CONF_DISCOVERY not in config_data:
+    if config_data[CONF_DISCOVERY]:
         devs = await _async_has_devices(hass)
         _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devs))
         devices.update(devs)
@@ -86,8 +85,6 @@ async def async_setup_entry(hass, config_entry):
         return dev
 
     for type_ in [CONF_LIGHT, CONF_SWITCH]:
-        if type_ not in config_data:
-            continue
         for entry in config_data[type_]:
             try:
                 host = entry['host']
@@ -121,6 +118,19 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(forward_setup(config_entry, 'switch'))
 
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    forward_unload = hass.config_entries.async_forward_entry_unload
+    remove_lights = await forward_unload(entry, 'light')
+    remove_switches = await forward_unload(entry, 'switch')
+
+    hass.data[DOMAIN][CONF_LIGHT] = None
+    hass.data[DOMAIN][CONF_SWITCH] = None
+
+    return remove_lights and remove_switches
+
 
 
 config_entry_flow.register_discovery_flow(DOMAIN,
