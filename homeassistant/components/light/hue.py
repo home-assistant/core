@@ -23,6 +23,7 @@ from homeassistant.util import color
 
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
