@@ -50,24 +50,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # app parameter: https://brottsplatskartan.se/sida/api
     app = 'ha-' + str(uuid.getnode())
 
-    b = brottsplatskartan.BrottsplatsKartan(
+    bpk = brottsplatskartan.BrottsplatsKartan(
         app=app, area=area,
         latitude=latitude, longitude=longitude
     )
 
     add_entities(
-        [BrottsplatskartanSensor(b, name)], True
+        [BrottsplatskartanSensor(bpk, name)], True
     )
 
 
 class BrottsplatskartanSensor(Entity):
     """Representation of a Brottsplatskartan Sensor."""
 
-    def __init__(self, b, name):
+    def __init__(self, bpk, name):
         """Initialize the Brottsplatskartan sensor."""
         import brottsplatskartan
         self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
-        self._brottsplatskartan = b
+        self._brottsplatskartan = bpk
         self._name = name
         self._previous_incidents = set()
         self._starting_up = True
@@ -109,7 +109,6 @@ class BrottsplatskartanSensor(Entity):
 
     def update(self):
         """Update device state."""
-
         incident_counts = defaultdict(int)
         incidents = self._brottsplatskartan.get_incidents()
 
