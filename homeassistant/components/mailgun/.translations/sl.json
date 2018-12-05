@@ -5,7 +5,7 @@
             "one_instance_allowed": "Potrebna je samo ena instanca."
         },
         "create_entry": {
-            "default": "Za po\u0161iljanje dogodkov Home Assistentu boste morali nastaviti [Webhooks z Mailgun]({mailgun_url}).\n\nIzpolnite naslednje informacije:\n\n- URL: `{webhook_url}`\n- Metoda: POST\n- Vrsta vsebine: application/x-www-form-urlencoded\n\nGlej [dokumentacijo]({docs_url}) o tem, kako nastavite automations za obravnavo dohodnih podatkov."
+            "default": "Za po\u0161iljanje dogodkov Home Assistentu boste morali nastaviti [Webhooks z Mailgun]({mailgun_url}).\n\nIzpolnite naslednje informacije:\n\n- URL: `{webhook_url}`\n- Metoda: POST\n- Vrsta vsebine: application/json\n\nGlej [dokumentacijo]({docs_url}) o tem, kako nastavite automations za obravnavo dohodnih podatkov."
         },
         "step": {
             "user": {
