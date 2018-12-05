@@ -4,12 +4,19 @@ Entity for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
+from asyncio import sleep
+from random import uniform
+import logging
+
 from homeassistant.components.zha.const import (
     DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN)
+from homeassistant.components.zha.helpers import configure_reporting
 from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.util import slugify
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ZhaEntity(entity.Entity):
@@ -44,6 +51,7 @@ class ZhaEntity(entity.Entity):
                 kwargs.get('entity_suffix', ''),
             )
 
+        self._attributes_to_report = {}
         self._endpoint = endpoint
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
@@ -70,6 +78,65 @@ class ZhaEntity(entity.Entity):
             cluster.add_listener(self._out_listeners.get(cluster_id, self))
 
         self._initialized = True
+
+    async def async_configure(self):
+        """Set cluster binding and attribute reporting."""
+        from zigpy.zcl import Cluster as Zcl_Cluster
+
+        for key, attrs in self.attributes_to_report.items():
+            cluster = None
+            if isinstance(key, str):
+                cluster = getattr(self._endpoint, key, None)
+            elif isinstance(key, int):
+                if key in self._in_clusters:
+                    cluster = self._in_clusters[key]
+                elif key in self._out_clusters:
+                    cluster = self._out_clusters[key]
+            elif isinstance(key, Zcl_Cluster):
+                cluster = key
+            elif issubclass(key, Zcl_Cluster):
+                key = key.cluster_id
+                if key in self._in_clusters:
+                    cluster = self._in_clusters[key]
+                elif key in self._out_clusters:
+                    cluster = self._out_clusters[key]
+            if cluster is None:
+                continue
+
+            skip_bind = False  # bind cluster only for the 1st configured attr
+            for attr, details in attrs.items():
+                min_report_interval, max_report_interval, change = details
+                await configure_reporting(
+                    self.entity_id, cluster, attr,
+                    min_report=min_report_interval,
+                    max_report=max_report_interval,
+                    reportable_change=change,
+                    skip_bind=skip_bind
+                )
+                skip_bind = True
+                await sleep(uniform(0.1, 0.8))
+        _LOGGER.debug("%s: finished configuration", self.entity_id)
+
+    @property
+    def attributes_to_report(self):
+        """Return a dict of attributes to report.
+
+        {
+            cluster_id: {
+                attr_id: (min_report_interval, max_report_interval, change),
+                attr_name: (min_rep_interval, max_rep_interval, change)
+            }
+            'cluster_name': {
+                attr_id: (min_report_interval, max_report_interval, change),
+                attr_name: (min_rep_interval, max_rep_interval, change)
+            }
+            Cluster_Class: {
+                attr_id: (min_report_interval, max_report_interval, change),
+                attr_name: (min_rep_interval, max_rep_interval, change)
+            }
+        }
+        """
+        return self._attributes_to_report
 
     @property
     def unique_id(self) -> str:
