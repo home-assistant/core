@@ -23,9 +23,11 @@ ATTR_CONFIG = 'config'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional('light'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
-        vol.Optional('switch'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
-        vol.Optional('discovery', default=True): bool,
+        vol.Optional('light', default=[]): vol.All(cv.ensure_list,
+                                                   [TPLINK_HOST_SCHEMA]),
+        vol.Optional('switch', default=[]): vol.All(cv.ensure_list,
+                                                    [TPLINK_HOST_SCHEMA]),
+        vol.Optional('discovery', default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -112,12 +114,11 @@ async def async_setup_entry(hass, config_entry):
     # Avoid blocking on is_dimmable
     await hass.async_add_executor_job(_fill_device_lists)
 
+    forward_setup = hass.config_entries.async_forward_entry_setup
     if lights:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, 'light'))
+        hass.async_create_task(forward_setup(config_entry, 'light'))
     if switches:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, 'switch'))
+        hass.async_create_task(forward_setup(config_entry, 'switch'))
 
     return True
 
