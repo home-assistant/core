@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Dovoljena je samo ena konfiguracija ZHA."
+        },
+        "error": {
+            "cannot_connect": "Ne morem se povezati napravo ZHA."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radio_type": "Vrsta radia",
+                    "usb_path": "USB Pot"
+                },
+                "description": "Prazno",
+                "title": "ZHA"
+            }
+        },
+        "title": "ZHA"
+    }
+}

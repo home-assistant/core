@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Apenas uma configura\u00e7\u00e3o do ZHA \u00e9 permitida."
+        },
+        "error": {
+            "cannot_connect": "N\u00e3o \u00e9 poss\u00edvel conectar-se ao dispositivo ZHA."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radio_type": "Tipo de r\u00e1dio",
+                    "usb_path": "Caminho do Dispositivo USB"
+                },
+                "description": "Vazio"
+            }
+        }
+    }
+}
