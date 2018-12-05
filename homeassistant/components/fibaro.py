@@ -8,6 +8,7 @@ https://home-assistant.io/components/fibaro/
 import logging
 from collections import defaultdict
 import voluptuous as vol
+from typing import Optional
 
 from homeassistant.const import (ATTR_ARMED, ATTR_BATTERY_LEVEL,
                                  CONF_PASSWORD, CONF_URL, CONF_USERNAME,
@@ -65,9 +66,10 @@ class FibaroController():
     _device_map = None          # Dict for mapping deviceId to device object
     fibaro_devices = None       # List of devices by type
     _callbacks = {}             # Dict of update value callbacks by deviceId
-    _client = None               # Fiblary's Client object for communication
-    _state_handler = None        # Fiblary's StateHandler object
+    _client = None              # Fiblary's Client object for communication
+    _state_handler = None       # Fiblary's StateHandler object
     _import_plugins = None      # Whether to import devices from plugins
+    _hub_serial = None          # Unique serial number of the Fibaro HC hub
 
     def __init__(self, username, password, url, import_plugins):
         """Initialize the Fibaro controller."""
@@ -79,6 +81,8 @@ class FibaroController():
         """Start the communication with the Fibaro controller."""
         try:
             login = self._client.login.get()
+            info = self._client.info.get()
+            self._hub_serial = slugify(info.serialNumber)
         except AssertionError:
             _LOGGER.error("Can't connect to Fibaro HC. "
                           "Please check URL.")
@@ -207,6 +211,8 @@ class FibaroController():
                 else:
                     device.mapped_type = None
                 if device.mapped_type:
+                    device.unique_id = "{}.{}".format(
+                        self._hub_serial, device.id)
                     self._device_map[device.id] = device
                     self.fibaro_devices[device.mapped_type].append(device)
                 else:
@@ -344,7 +350,12 @@ class FibaroDevice(Entity):
         return False
 
     @property
-    def name(self):
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self.fibaro_device.unique_id
+
+    @property
+    def name(self) -> Optional[str]:
         """Return the name of the device."""
         return self._name
 
