@@ -19,6 +19,8 @@ CONF_LIGHT = 'light'
 CONF_SWITCH = 'switch'
 CONF_DISCOVERY = 'discovery'
 
+ATTR_CONFIG = 'config'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional('light'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
@@ -44,19 +46,8 @@ async def async_setup(hass, config):
     """Set up the TP-Link component."""
     conf = config.get(DOMAIN)
 
-    # Some parts of the config are optional, so we need to initialize the
-    # missing ones now for async_setup_entry
-    if conf is not None:
-        if CONF_LIGHT not in conf:
-            conf[CONF_LIGHT] = []
-        if CONF_SWITCH not in conf:
-            conf[CONF_SWITCH] = []
-        if CONF_DISCOVERY not in conf:
-            conf[CONF_DISCOVERY] = True
-    else:
-        conf = {'light': [], 'switch': [], 'discovery': True}
-
-    hass.data[DOMAIN] = conf
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][ATTR_CONFIG] = conf
 
     hass.async_create_task(hass.config_entries.flow.async_init(
         DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
@@ -64,25 +55,41 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, config_entry):
     """Set up TPLink from a config entry."""
     from pyHS100 import SmartBulb, SmartPlug, SmartDeviceException
 
     devices = {}
 
-    if hass.data[DOMAIN]["discovery"]:
+    config_data = hass.data[DOMAIN][ATTR_CONFIG]
+
+    # These will contain the initialized devices
+    lights = hass.data[DOMAIN][CONF_LIGHT] = []
+    switches = hass.data[DOMAIN][CONF_SWITCH] = []
+
+    # If discovery is defined and not disabled, discover devices
+    if (CONF_DISCOVERY in config_data and config_data[CONF_DISCOVERY]) \
+            or CONF_DISCOVERY not in config_data:
         devs = await _async_has_devices(hass)
         _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devs))
         devices.update(devs)
 
-    for type_ in ['light', 'switch']:
-        for entry in hass.data[DOMAIN][type_]:
+    def _device_for_type(host, type_):
+        dev = None
+        if type_ == CONF_LIGHT:
+            dev = SmartBulb(host)
+        elif type_ == CONF_SWITCH:
+            dev = SmartPlug(host)
+
+        return dev
+
+    for type_ in [CONF_LIGHT, CONF_SWITCH]:
+        if type_ not in config_data:
+            continue
+        for entry in config_data[type_]:
             try:
-                host = entry["host"]
-                if type_ == 'light':
-                    dev = SmartBulb(host)
-                elif type_ == 'switch':
-                    dev = SmartPlug(host)
+                host = entry['host']
+                dev = _device_for_type(host, type_)
                 devices[host] = dev
                 _LOGGER.debug("Succesfully added %s %s: %s",
                               type_, host, dev)
@@ -94,23 +101,23 @@ async def async_setup_entry(hass, entry):
         for dev in devices.values():
             if isinstance(dev, SmartPlug):
                 if dev.is_dimmable:  # Dimmers act as lights
-                    hass.data[DOMAIN]['light'].append(dev)
+                    lights.append(dev)
                 else:
-                    hass.data[DOMAIN]['switch'].append(dev)
+                    switches.append(dev)
             elif isinstance(dev, SmartBulb):
-                hass.data[DOMAIN]['light'].append(dev)
+                lights.append(dev)
             else:
                 _LOGGER.error("Unknown smart device type: %s", type(dev))
 
     # Avoid blocking on is_dimmable
     await hass.async_add_executor_job(_fill_device_lists)
 
-    if hass.data[DOMAIN]['light']:
+    if lights:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, 'light'))
-    if hass.data[DOMAIN]['switch']:
+            hass.config_entries.async_forward_entry_setup(config_entry, 'light'))
+    if switches:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, 'switch'))
+            hass.config_entries.async_forward_entry_setup(config_entry, 'switch'))
 
     return True
 
