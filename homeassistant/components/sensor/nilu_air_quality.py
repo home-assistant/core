@@ -13,8 +13,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
-    CONF_NAME, CONF_SHOW_ON_MAP, CONF_UNIT_OF_MEASUREMENT)
+    ATTR_ATTRIBUTION, ATTR_UNIT_OF_MEASUREMENT, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_SHOW_ON_MAP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -25,13 +25,17 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
+ICON = 'mdi:cloud-outline'
+
 CONF_AREA = 'area'
 CONF_STATION = 'station'
 DEFAULT_NAME = 'NILU'
 
 CONF_ATTRIBUTION = "Data provided by luftkvalitet.info and nilu.no"
+
 ATTR_POLLUTION_INDEX = "pollution_index"
 ATTR_MAX_POLLUTION_INDEX = 'max_pollution_index'
+ATTR_AREA = "area"
 
 CONF_ALLOWED_AREAS = [
     'Ålesund',
@@ -106,14 +110,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, add_entities,
-                               discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NILU air quality sensors."""
     import niluclient as nilu
     name = config.get(CONF_NAME)
     area = config.get(CONF_AREA)
     station = config.get(CONF_STATION)
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     show_on_map = config.get(CONF_SHOW_ON_MAP)
 
     sensors = []
@@ -164,8 +167,6 @@ class NiluData:
 class NiluSensor(Entity):
     """Single nilu station air sensor."""
 
-    ICON = 'mdi:cloud-outline'
-
     def __init__(self,
                  api_data: NiluData,
                  name: str,
@@ -198,7 +199,7 @@ class NiluSensor(Entity):
     @property
     def icon(self) -> str:
         """Icon to use in the frontend."""
-        return self.ICON
+        return ICON
 
     @property
     def unit_of_measurement(self) -> str:
@@ -221,15 +222,15 @@ class NiluSensor(Entity):
             self._state = nilu.POLLUTION_INDEX[max_index]
 
             self._attrs[ATTR_MAX_POLLUTION_INDEX] = max_index
-            self._attrs[CONF_AREA] = self._api.data.area
+            self._attrs[ATTR_AREA] = self._api.data.area
 
             for sensor in sensors:
                 attr_name = sensor.component
+                attr_unit = "{}_{}".format(attr_name, ATTR_UNIT_OF_MEASUREMENT)
+                attr_index = "{}_{}".format(attr_name, ATTR_POLLUTION_INDEX)
                 self._attrs[attr_name] = "{0:.2f}".format(sensor.value)
-                self._attrs[attr_name + "_" + CONF_UNIT_OF_MEASUREMENT] = \
-                    sensor.unit_of_measurement
-                self._attrs[attr_name + "_" + ATTR_POLLUTION_INDEX] = \
-                    sensor.pollution_index
+                self._attrs[attr_unit] = sensor.unit_of_measurement
+                self._attrs[attr_index] = sensor.pollution_index
         else:
             sensor = self._api.data.sensors[self._condition]
             self._state = "{0:.2f}".format(sensor.value)
