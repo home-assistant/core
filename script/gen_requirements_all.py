@@ -149,9 +149,6 @@ pycrypto==1000000000.0.0
 
 # Contains code to modify Home Assistant to work around our rules
 python-systemair-savecair==1000000000.0.0
-
-# Dec 5, 2018: Request caps idna at <2.8, causing CI to fail
-idna==2.7
 """
 
 
