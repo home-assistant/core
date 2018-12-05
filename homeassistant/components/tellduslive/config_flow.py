@@ -73,12 +73,13 @@ class FlowHandler(config_entries.ConfigFlow):
                     KEY_HOST: host
                 })
 
-        async def get_auth_url(session):
+        def get_auth_url(session):
             return session.authorize_url
 
         try:
             with async_timeout.timeout(10):
-                auth_url = await get_auth_url(self._session)
+                auth_url = await self.hass.async_add_exeutor_job(
+                    get_auth_url, self._session)
         except asyncio.TimeoutError:
             return self.async_abort(reason='authorize_url_timeout')
         except Exception:  # pylint: disable=broad-except
