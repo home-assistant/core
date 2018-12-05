@@ -20,8 +20,6 @@ REQUIREMENTS = ['pymochad==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONTROLLER = None
-
 CONF_COMM_TYPE = 'comm_type'
 
 DOMAIN = 'mochad'
@@ -34,15 +32,6 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST, default='localhost'): cv.string,
         vol.Optional(CONF_PORT, default=1099): cv.port,
-    })
-}, extra=vol.ALLOW_EXTRA)
-
-CONFIG_SCHEMA_MQTT = vol.Schema({
-    DOMAIN_MQTT: vol.Schema({
-        vol.Required(CONF_BROKER, default='localhost'): cv.string,
-        vol.Required(CONF_PORT, default=1883): cv.port,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -60,16 +49,17 @@ def setup(hass, config):
 
     from pymochad import exceptions
 
-    global CONTROLLER
     try:
-        CONTROLLER = MochadCtrl(host, port, broker, mqtt_port, username,
-                                password, hass)
+        CONTROLLER = MochadCtrl(hass, host, port, broker, mqtt_port,
+                                username, password)
+        hass.data[DOMAIN] = CONTROLLER
     except exceptions.ConfigurationError:
         _LOGGER.exception()
         return False
 
     def stop_mochad(event):
         """Stop the Mochad service."""
+        CONTROLLER = hass.data.get(DOMAIN)
         CONTROLLER.disconnect()
 
     def start_mochad(event):
@@ -83,10 +73,9 @@ def setup(hass, config):
 class MochadCtrl:
     """Mochad controller."""
 
-    def __init__(self, host, port, broker, mqtt_port, username, password,
-                 hass):
+    def __init__(self, hass, host, port, broker, mqtt_port,
+                 username, password):
         """Initialize a PyMochad send-receive controller."""
-        super(MochadCtrl, self).__init__()
         self._host = host
         self._port = port
 
