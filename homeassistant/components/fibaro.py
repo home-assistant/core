@@ -7,8 +7,8 @@ https://home-assistant.io/components/fibaro/
 
 import logging
 from collections import defaultdict
-import voluptuous as vol
 from typing import Optional
+import voluptuous as vol
 
 from homeassistant.const import (ATTR_ARMED, ATTR_BATTERY_LEVEL,
                                  CONF_PASSWORD, CONF_URL, CONF_USERNAME,
@@ -69,20 +69,20 @@ class FibaroController():
     _client = None              # Fiblary's Client object for communication
     _state_handler = None       # Fiblary's StateHandler object
     _import_plugins = None      # Whether to import devices from plugins
-    _hub_serial = None          # Unique serial number of the Fibaro HC hub
 
     def __init__(self, username, password, url, import_plugins):
         """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
         self._client = FibaroClient(url, username, password)
         self._scene_map = None
+        self.hub_serial = None          # Unique serial number of the hub
 
     def connect(self):
         """Start the communication with the Fibaro controller."""
         try:
             login = self._client.login.get()
             info = self._client.info.get()
-            self._hub_serial = slugify(info.serialNumber)
+            self.hub_serial = slugify(info.serialNumber)
         except AssertionError:
             _LOGGER.error("Can't connect to Fibaro HC. "
                           "Please check URL.")
@@ -184,9 +184,12 @@ class FibaroController():
                 room_name = 'Unknown'
             else:
                 room_name = self._room_map[device.roomID].name
+            device.room_name = room_name
             device.friendly_name = '{} {}'.format(room_name, device.name)
             device.ha_id = '{}_{}_{}'.format(
                 slugify(room_name), slugify(device.name), device.id)
+            device.unique_id_str = "{}.{}".format(
+                self.hub_serial, device.id)
             self._scene_map[device.id] = device
             self.fibaro_devices['scene'].append(device)
 
@@ -201,6 +204,7 @@ class FibaroController():
                     room_name = 'Unknown'
                 else:
                     room_name = self._room_map[device.roomID].name
+                device.room_name = room_name
                 device.friendly_name = room_name + ' ' + device.name
                 device.ha_id = '{}_{}_{}'.format(
                     slugify(room_name), slugify(device.name), device.id)
@@ -211,8 +215,8 @@ class FibaroController():
                 else:
                     device.mapped_type = None
                 if device.mapped_type:
-                    device.unique_id = "{}.{}".format(
-                        self._hub_serial, device.id)
+                    device.unique_id_str = "{}.{}".format(
+                        self.hub_serial, device.id)
                     self._device_map[device.id] = device
                     self.fibaro_devices[device.mapped_type].append(device)
                 else:
@@ -352,7 +356,7 @@ class FibaroDevice(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self.fibaro_device.unique_id
+        return self.fibaro_device.unique_id_str
 
     @property
     def name(self) -> Optional[str]:
@@ -388,5 +392,7 @@ class FibaroDevice(Entity):
         except (ValueError, KeyError):
             pass
 
-        attr['id'] = self.ha_id
+        attr['room'] = self.fibaro_device.room_name
+        attr['fibaro_id'] = self.fibaro_device.id
+        attr['fibaro_hub'] = self.controller.hub_serial
         return attr
