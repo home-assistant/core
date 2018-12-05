@@ -267,6 +267,8 @@ def add_card(fname: str, view_id: str, card_config: str,
         if str(view.get('id', '')) != view_id:
             continue
         cards = view.get('cards', [])
+        if len(cards) == 0 and 'cards' in view:
+            del view['cards']
         if data_format == FORMAT_YAML:
             card_config = yaml.yaml_to_object(card_config)
         if 'id' not in card_config:
@@ -275,6 +277,8 @@ def add_card(fname: str, view_id: str, card_config: str,
             cards.append(card_config)
         else:
             cards.insert(position, card_config)
+        if 'cards' not in view:
+            view['cards'] = cards
         yaml.save_yaml(fname, config)
         return
 
@@ -402,6 +406,8 @@ def add_view(fname: str, view_config: str,
         views.append(view_config)
     else:
         views.insert(position, view_config)
+    if 'views' not in config:
+        config['views'] = views
     yaml.save_yaml(fname, config)
 
 
