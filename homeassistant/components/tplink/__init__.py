@@ -9,17 +9,24 @@ import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'tplink'
+
 TPLINK_HOST_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string
 })
 
-TPLINK_SCHEMA = vol.Schema({
-    vol.Optional('light'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
-    vol.Optional('switch'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
-    vol.Optional('discovery', default=True): bool,
-})
+CONF_LIGHT = 'light'
+CONF_SWITCH = 'switch'
+CONF_DISCOVERY = 'discovery'
 
-DOMAIN = 'tplink'
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional('light'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
+        vol.Optional('switch'): vol.All(cv.ensure_list, [TPLINK_HOST_SCHEMA]),
+        vol.Optional('discovery', default=True): bool,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
 REQUIREMENTS = ['pyHS100==0.3.3']
 
 
@@ -37,14 +44,22 @@ async def async_setup(hass, config):
     """Set up the TP-Link component."""
     conf = config.get(DOMAIN)
 
+    # Some parts of the config are optional, so we need to initialize the
+    # missing ones now for async_setup_entry
     if conf is not None:
-        hass.data[DOMAIN] = TPLINK_SCHEMA(conf)
+        if CONF_LIGHT not in conf:
+            conf[CONF_LIGHT] = []
+        if CONF_SWITCH not in conf:
+            conf[CONF_SWITCH] = []
+        if CONF_DISCOVERY not in conf:
+            conf[CONF_DISCOVERY] = True
     else:
-        hass.data[DOMAIN] = {'light': [], 'switch': [], 'discovery': True}
+        conf = {'light': [], 'switch': [], 'discovery': True}
 
-    if conf is not None:
-        hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
+    hass.data[DOMAIN] = conf
+
+    hass.async_create_task(hass.config_entries.flow.async_init(
+        DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
 
     return True
 
@@ -91,10 +106,10 @@ async def async_setup_entry(hass, entry):
     await hass.async_add_executor_job(_fill_device_lists)
 
     if hass.data[DOMAIN]['light']:
-        hass.async_add_job(
+        hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, 'light'))
     if hass.data[DOMAIN]['switch']:
-        hass.async_add_job(
+        hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, 'switch'))
 
     return True
