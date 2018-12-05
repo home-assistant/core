@@ -100,19 +100,15 @@ SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int})
 
 
 CONTROLLER_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-            cv.time_period,
-        vol.Optional(CONF_BINARY_SENSORS, default={}):
-            BINARY_SENSOR_SCHEMA,
-        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-        vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
-    })
-}, extra=vol.ALLOW_EXTRA)
+    vol.Required(CONF_IP_ADDRESS): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
+    vol.Optional(CONF_BINARY_SENSORS, default={}): BINARY_SENSOR_SCHEMA,
+    vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+    vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
+})
 
 
 CONFIG_SCHEMA = vol.Schema({
