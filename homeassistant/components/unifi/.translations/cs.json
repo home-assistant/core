@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\u0158adi\u010d je ji\u017e nakonfigurov\u00e1n",
             "user_privilege": "U\u017eivatel mus\u00ed b\u00fdt spr\u00e1vcem"
         },
         "error": {

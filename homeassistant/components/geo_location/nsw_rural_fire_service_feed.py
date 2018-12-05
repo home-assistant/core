@@ -14,7 +14,7 @@ from homeassistant.components.geo_location import (
     PLATFORM_SCHEMA, GeoLocationEvent)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_LOCATION, CONF_RADIUS, CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_START)
+    EVENT_HOMEASSISTANT_START, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -57,18 +57,23 @@ VALID_CATEGORIES = [
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CATEGORIES, default=[]):
         vol.All(cv.ensure_list, [vol.In(VALID_CATEGORIES)]),
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the GeoJSON Events platform."""
+    """Set up the NSW Rural Fire Service Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    coordinates = (config.get(CONF_LATITUDE, hass.config.latitude),
+                   config.get(CONF_LONGITUDE, hass.config.longitude))
     radius_in_km = config[CONF_RADIUS]
     categories = config.get(CONF_CATEGORIES)
     # Initialize the entity manager.
-    feed = NswRuralFireServiceFeedManager(
-        hass, add_entities, scan_interval, radius_in_km, categories)
+    feed = NswRuralFireServiceFeedEntityManager(
+        hass, add_entities, scan_interval, coordinates, radius_in_km,
+        categories)
 
     def start_feed_manager(event):
         """Start feed manager."""
@@ -77,93 +82,55 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
 
 
-class NswRuralFireServiceFeedManager:
-    """Feed Manager for NSW Rural Fire Service GeoJSON feed."""
+class NswRuralFireServiceFeedEntityManager:
+    """Feed Entity Manager for NSW Rural Fire Service GeoJSON feed."""
 
-    def __init__(self, hass, add_entities, scan_interval, radius_in_km,
-                 categories):
-        """Initialize the GeoJSON Feed Manager."""
+    def __init__(self, hass, add_entities, scan_interval, coordinates,
+                 radius_in_km, categories):
+        """Initialize the Feed Entity Manager."""
         from geojson_client.nsw_rural_fire_service_feed \
-            import NswRuralFireServiceFeed
+            import NswRuralFireServiceFeedManager
 
         self._hass = hass
-        self._feed = NswRuralFireServiceFeed(
-            (hass.config.latitude, hass.config.longitude),
-            filter_radius=radius_in_km, filter_categories=categories)
+        self._feed_manager = NswRuralFireServiceFeedManager(
+            self._generate_entity, self._update_entity, self._remove_entity,
+            coordinates, filter_radius=radius_in_km,
+            filter_categories=categories)
         self._add_entities = add_entities
         self._scan_interval = scan_interval
-        self.feed_entries = {}
-        self._managed_external_ids = set()
 
     def startup(self):
         """Start up this manager."""
-        self._update()
+        self._feed_manager.update()
         self._init_regular_updates()
 
     def _init_regular_updates(self):
         """Schedule regular updates at the specified interval."""
         track_time_interval(
-            self._hass, lambda now: self._update(), self._scan_interval)
+            self._hass, lambda now: self._feed_manager.update(),
+            self._scan_interval)
 
-    def _update(self):
-        """Update the feed and then update connected entities."""
-        import geojson_client
+    def get_entry(self, external_id):
+        """Get feed entry by external id."""
+        return self._feed_manager.feed_entries.get(external_id)
 
-        status, feed_entries = self._feed.update()
-        if status == geojson_client.UPDATE_OK:
-            _LOGGER.debug("Data retrieved %s", feed_entries)
-            # Keep a copy of all feed entries for future lookups by entities.
-            self.feed_entries = {entry.external_id: entry
-                                 for entry in feed_entries}
-            # For entity management the external ids from the feed are used.
-            feed_external_ids = set(self.feed_entries)
-            remove_external_ids = self._managed_external_ids.difference(
-                feed_external_ids)
-            self._remove_entities(remove_external_ids)
-            update_external_ids = self._managed_external_ids.intersection(
-                feed_external_ids)
-            self._update_entities(update_external_ids)
-            create_external_ids = feed_external_ids.difference(
-                self._managed_external_ids)
-            self._generate_new_entities(create_external_ids)
-        elif status == geojson_client.UPDATE_OK_NO_DATA:
-            _LOGGER.debug(
-                "Update successful, but no data received from %s", self._feed)
-        else:
-            _LOGGER.warning(
-                "Update not successful, no data received from %s", self._feed)
-            # Remove all entities.
-            self._remove_entities(self._managed_external_ids.copy())
-
-    def _generate_new_entities(self, external_ids):
-        """Generate new entities for events."""
-        new_entities = []
-        for external_id in external_ids:
-            new_entity = NswRuralFireServiceLocationEvent(self, external_id)
-            _LOGGER.debug("New entity added %s", external_id)
-            new_entities.append(new_entity)
-            self._managed_external_ids.add(external_id)
+    def _generate_entity(self, external_id):
+        """Generate new entity."""
+        new_entity = NswRuralFireServiceLocationEvent(self, external_id)
         # Add new entities to HA.
-        self._add_entities(new_entities, True)
+        self._add_entities([new_entity], True)
 
-    def _update_entities(self, external_ids):
-        """Update entities."""
-        for external_id in external_ids:
-            _LOGGER.debug("Existing entity found %s", external_id)
-            dispatcher_send(
-                self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+    def _update_entity(self, external_id):
+        """Update entity."""
+        dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
 
-    def _remove_entities(self, external_ids):
-        """Remove entities."""
-        for external_id in external_ids:
-            _LOGGER.debug("Entity not current anymore %s", external_id)
-            self._managed_external_ids.remove(external_id)
-            dispatcher_send(
-                self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+    def _remove_entity(self, external_id):
+        """Remove entity."""
+        dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
 class NswRuralFireServiceLocationEvent(GeoLocationEvent):
-    """This represents an external event with GeoJSON data."""
+    """This represents an external event with NSW Rural Fire Service data."""
 
     def __init__(self, feed_manager, external_id):
         """Initialize entity with data from feed entry."""
@@ -209,13 +176,13 @@ class NswRuralFireServiceLocationEvent(GeoLocationEvent):
 
     @property
     def should_poll(self):
-        """No polling needed for GeoJSON location events."""
+        """No polling needed for NSW Rural Fire Service location events."""
         return False
 
     async def async_update(self):
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._external_id)
-        feed_entry = self._feed_manager.feed_entries.get(self._external_id)
+        feed_entry = self._feed_manager.get_entry(self._external_id)
         if feed_entry:
             self._update_from_feed(feed_entry)
 

@@ -1,18 +1,49 @@
 """Test service helpers."""
 import asyncio
+from collections import OrderedDict
 from copy import deepcopy
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+import pytest
 
 # To prevent circular import when running just this file
 import homeassistant.components  # noqa
-from homeassistant import core as ha, loader
+from homeassistant import core as ha, loader, exceptions
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
 from homeassistant.helpers import service, template
 from homeassistant.setup import async_setup_component
 import homeassistant.helpers.config_validation as cv
+from homeassistant.auth.permissions import PolicyPermissions
 
-from tests.common import get_test_home_assistant, mock_service
+from tests.common import get_test_home_assistant, mock_service, mock_coro
+
+
+@pytest.fixture
+def mock_service_platform_call():
+    """Mock service platform call."""
+    with patch('homeassistant.helpers.service._handle_service_platform_call',
+               side_effect=lambda *args: mock_coro()) as mock_call:
+        yield mock_call
+
+
+@pytest.fixture
+def mock_entities():
+    """Return mock entities in an ordered dict."""
+    kitchen = Mock(
+        entity_id='light.kitchen',
+        available=True,
+        should_poll=False,
+    )
+    living_room = Mock(
+        entity_id='light.living_room',
+        available=True,
+        should_poll=False,
+    )
+    entities = OrderedDict()
+    entities[kitchen.entity_id] = kitchen
+    entities[living_room.entity_id] = living_room
+    return entities
 
 
 class TestServiceHelpers(unittest.TestCase):
@@ -179,3 +210,99 @@ def test_async_get_all_descriptions(hass):
 
     assert 'description' in descriptions[logger.DOMAIN]['set_level']
     assert 'fields' in descriptions[logger.DOMAIN]['set_level']
+
+
+async def test_call_context_user_not_exist(hass):
+    """Check we don't allow deleted users to do things."""
+    with pytest.raises(exceptions.UnknownUser) as err:
+        await service.entity_service_call(hass, [], Mock(), ha.ServiceCall(
+            'test_domain', 'test_service', context=ha.Context(
+                user_id='non-existing')))
+
+    assert err.value.context.user_id == 'non-existing'
+
+
+async def test_call_context_target_all(hass, mock_service_platform_call,
+                                       mock_entities):
+    """Check we only target allowed entities if targetting all."""
+    with patch('homeassistant.auth.AuthManager.async_get_user',
+               return_value=mock_coro(Mock(permissions=PolicyPermissions({
+                   'entities': {
+                       'entity_ids': {
+                           'light.kitchen': True
+                       }
+                   }
+               }, None)))):
+        await service.entity_service_call(hass, [
+            Mock(entities=mock_entities)
+        ], Mock(), ha.ServiceCall('test_domain', 'test_service',
+                                  context=ha.Context(user_id='mock-id')))
+
+    assert len(mock_service_platform_call.mock_calls) == 1
+    entities = mock_service_platform_call.mock_calls[0][1][2]
+    assert entities == [mock_entities['light.kitchen']]
+
+
+async def test_call_context_target_specific(hass, mock_service_platform_call,
+                                            mock_entities):
+    """Check targeting specific entities."""
+    with patch('homeassistant.auth.AuthManager.async_get_user',
+               return_value=mock_coro(Mock(permissions=PolicyPermissions({
+                   'entities': {
+                       'entity_ids': {
+                           'light.kitchen': True
+                       }
+                   }
+               }, None)))):
+        await service.entity_service_call(hass, [
+            Mock(entities=mock_entities)
+        ], Mock(), ha.ServiceCall('test_domain', 'test_service', {
+            'entity_id': 'light.kitchen'
+        }, context=ha.Context(user_id='mock-id')))
+
+    assert len(mock_service_platform_call.mock_calls) == 1
+    entities = mock_service_platform_call.mock_calls[0][1][2]
+    assert entities == [mock_entities['light.kitchen']]
+
+
+async def test_call_context_target_specific_no_auth(
+        hass, mock_service_platform_call, mock_entities):
+    """Check targeting specific entities without auth."""
+    with pytest.raises(exceptions.Unauthorized) as err:
+        with patch('homeassistant.auth.AuthManager.async_get_user',
+                   return_value=mock_coro(Mock(
+                       permissions=PolicyPermissions({}, None)))):
+            await service.entity_service_call(hass, [
+                Mock(entities=mock_entities)
+            ], Mock(), ha.ServiceCall('test_domain', 'test_service', {
+                'entity_id': 'light.kitchen'
+            }, context=ha.Context(user_id='mock-id')))
+
+    assert err.value.context.user_id == 'mock-id'
+    assert err.value.entity_id == 'light.kitchen'
+
+
+async def test_call_no_context_target_all(hass, mock_service_platform_call,
+                                          mock_entities):
+    """Check we target all if no user context given."""
+    await service.entity_service_call(hass, [
+        Mock(entities=mock_entities)
+    ], Mock(), ha.ServiceCall('test_domain', 'test_service'))
+
+    assert len(mock_service_platform_call.mock_calls) == 1
+    entities = mock_service_platform_call.mock_calls[0][1][2]
+    assert entities == list(mock_entities.values())
+
+
+async def test_call_no_context_target_specific(
+        hass, mock_service_platform_call, mock_entities):
+    """Check we can target specified entities."""
+    await service.entity_service_call(hass, [
+        Mock(entities=mock_entities)
+    ], Mock(), ha.ServiceCall('test_domain', 'test_service', {
+        'entity_id': ['light.kitchen', 'light.non-existing']
+    }))
+
+    assert len(mock_service_platform_call.mock_calls) == 1
+    entities = mock_service_platform_call.mock_calls[0][1][2]
+    assert entities == [mock_entities['light.kitchen']]

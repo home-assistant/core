@@ -148,6 +148,9 @@ omit =
     homeassistant/components/hive.py
     homeassistant/components/*/hive.py
 
+    homeassistant/components/hlk_sw16.py
+    homeassistant/components/*/hlk_sw16.py
+
     homeassistant/components/homekit_controller/__init__.py
     homeassistant/components/*/homekit_controller.py
 
@@ -202,6 +205,9 @@ omit =
 
     homeassistant/components/linode.py
     homeassistant/components/*/linode.py
+
+    homeassistant/components/lightwave.py
+    homeassistant/components/*/lightwave.py
 
     homeassistant/components/logi_circle.py
     homeassistant/components/*/logi_circle.py
@@ -262,6 +268,10 @@ omit =
     homeassistant/components/pilight.py
     homeassistant/components/*/pilight.py
 
+    homeassistant/components/point/__init__.py
+    homeassistant/components/point/const.py
+    homeassistant/components/*/point.py
+
     homeassistant/components/switch/qwikswitch.py
     homeassistant/components/light/qwikswitch.py
 
@@ -319,7 +329,8 @@ omit =
     homeassistant/components/tahoma.py
     homeassistant/components/*/tahoma.py
 
-    homeassistant/components/tellduslive.py
+    homeassistant/components/tellduslive/__init__.py
+    homeassistant/components/tellduslive/entry.py
     homeassistant/components/*/tellduslive.py
 
     homeassistant/components/tellstick.py
@@ -396,6 +407,8 @@ omit =
 
     homeassistant/components/zha/__init__.py
     homeassistant/components/zha/const.py
+    homeassistant/components/zha/entities/*
+    homeassistant/components/zha/helpers.py
     homeassistant/components/*/zha.py
 
     homeassistant/components/zigbee.py
@@ -596,6 +609,7 @@ omit =
     homeassistant/components/media_player/nadtcp.py
     homeassistant/components/media_player/onkyo.py
     homeassistant/components/media_player/openhome.py
+    homeassistant/components/media_player/panasonic_bluray.py
     homeassistant/components/media_player/panasonic_viera.py
     homeassistant/components/media_player/pandora.py
     homeassistant/components/media_player/philips_js.py
@@ -775,6 +789,7 @@ omit =
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/pyload.py
+    homeassistant/components/sensor/qbittorrent.py
     homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/rainbird.py

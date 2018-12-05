@@ -23,14 +23,12 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'fibaro'
 FIBARO_DEVICES = 'fibaro_devices'
 FIBARO_CONTROLLER = 'fibaro_controller'
-FIBARO_ID_FORMAT = '{}_{}_{}'
 ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 CONF_PLUGINS = "plugins"
 
-FIBARO_COMPONENTS = [
-    'binary_sensor',
-]
+FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light',
+                     'scene', 'sensor', 'switch']
 
 FIBARO_TYPEMAP = {
     'com.fibaro.multilevelSensor': "sensor",
@@ -46,7 +44,8 @@ FIBARO_TYPEMAP = {
     'com.fibaro.smokeSensor': 'binary_sensor',
     'com.fibaro.remoteSwitch': 'switch',
     'com.fibaro.sensor': 'sensor',
-    'com.fibaro.colorController': 'light'
+    'com.fibaro.colorController': 'light',
+    'com.fibaro.securitySensor': 'binary_sensor'
 }
 
 CONFIG_SCHEMA = vol.Schema({
@@ -74,6 +73,7 @@ class FibaroController():
         """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
         self._client = FibaroClient(url, username, password)
+        self._scene_map = None
 
     def connect(self):
         """Start the communication with the Fibaro controller."""
@@ -90,6 +90,7 @@ class FibaroController():
 
         self._room_map = {room.id: room for room in self._client.rooms.list()}
         self._read_devices()
+        self._read_scenes()
         return True
 
     def enable_state_handler(self):
@@ -106,29 +107,31 @@ class FibaroController():
         """Handle change report received from the HomeCenter."""
         callback_set = set()
         for change in state.get('changes', []):
-            dev_id = change.pop('id')
-            for property_name, value in change.items():
-                if property_name == 'log':
-                    if value and value != "transfer OK":
-                        _LOGGER.debug("LOG %s: %s",
-                                      self._device_map[dev_id].friendly_name,
-                                      value)
+            try:
+                dev_id = change.pop('id')
+                if dev_id not in self._device_map.keys():
                     continue
-                if property_name == 'logTemp':
-                    continue
-                if property_name in self._device_map[dev_id].properties:
-                    self._device_map[dev_id].properties[property_name] = \
-                        value
-                    _LOGGER.debug("<- %s.%s = %s",
-                                  self._device_map[dev_id].ha_id,
-                                  property_name,
-                                  str(value))
-                else:
-                    _LOGGER.warning("Error updating %s data of %s, not found",
-                                    property_name,
-                                    self._device_map[dev_id].ha_id)
-                if dev_id in self._callbacks:
-                    callback_set.add(dev_id)
+                device = self._device_map[dev_id]
+                for property_name, value in change.items():
+                    if property_name == 'log':
+                        if value and value != "transfer OK":
+                            _LOGGER.debug("LOG %s: %s",
+                                          device.friendly_name, value)
+                        continue
+                    if property_name == 'logTemp':
+                        continue
+                    if property_name in device.properties:
+                        device.properties[property_name] = \
+                            value
+                        _LOGGER.debug("<- %s.%s = %s", device.ha_id,
+                                      property_name, str(value))
+                    else:
+                        _LOGGER.warning("%s.%s not found", device.ha_id,
+                                        property_name)
+                    if dev_id in self._callbacks:
+                        callback_set.add(dev_id)
+            except (ValueError, KeyError):
+                pass
         for item in callback_set:
             self._callbacks[item]()
 
@@ -140,8 +143,12 @@ class FibaroController():
     def _map_device_to_type(device):
         """Map device to HA device type."""
         # Use our lookup table to identify device type
-        device_type = FIBARO_TYPEMAP.get(
-            device.type, FIBARO_TYPEMAP.get(device.baseType))
+        if 'type' in device:
+            device_type = FIBARO_TYPEMAP.get(device.type)
+        elif 'baseType' in device:
+            device_type = FIBARO_TYPEMAP.get(device.baseType)
+        else:
+            device_type = None
 
         # We can also identify device type by its capabilities
         if device_type is None:
@@ -159,35 +166,55 @@ class FibaroController():
 
         # Switches that control lights should show up as lights
         if device_type == 'switch' and \
-                'isLight' in device.properties and \
-                device.properties.isLight == 'true':
+                device.properties.get('isLight', 'false') == 'true':
             device_type = 'light'
         return device_type
+
+    def _read_scenes(self):
+        scenes = self._client.scenes.list()
+        self._scene_map = {}
+        for device in scenes:
+            if not device.visible:
+                continue
+            if device.roomID == 0:
+                room_name = 'Unknown'
+            else:
+                room_name = self._room_map[device.roomID].name
+            device.friendly_name = '{} {}'.format(room_name, device.name)
+            device.ha_id = '{}_{}_{}'.format(
+                slugify(room_name), slugify(device.name), device.id)
+            self._scene_map[device.id] = device
+            self.fibaro_devices['scene'].append(device)
 
     def _read_devices(self):
         """Read and process the device list."""
         devices = self._client.devices.list()
         self._device_map = {}
-        for device in devices:
-            if device.roomID == 0:
-                room_name = 'Unknown'
-            else:
-                room_name = self._room_map[device.roomID].name
-            device.friendly_name = room_name + ' ' + device.name
-            device.ha_id = FIBARO_ID_FORMAT.format(
-                slugify(room_name), slugify(device.name), device.id)
-            self._device_map[device.id] = device
         self.fibaro_devices = defaultdict(list)
-        for device in self._device_map.values():
-            if device.enabled and \
-                    (not device.isPlugin or self._import_plugins):
-                device.mapped_type = self._map_device_to_type(device)
+        for device in devices:
+            try:
+                if device.roomID == 0:
+                    room_name = 'Unknown'
+                else:
+                    room_name = self._room_map[device.roomID].name
+                device.friendly_name = room_name + ' ' + device.name
+                device.ha_id = '{}_{}_{}'.format(
+                    slugify(room_name), slugify(device.name), device.id)
+                if device.enabled and \
+                        ('isPlugin' not in device or
+                         (not device.isPlugin or self._import_plugins)):
+                    device.mapped_type = self._map_device_to_type(device)
+                else:
+                    device.mapped_type = None
                 if device.mapped_type:
+                    self._device_map[device.id] = device
                     self.fibaro_devices[device.mapped_type].append(device)
                 else:
-                    _LOGGER.debug("%s (%s, %s) not mapped",
+                    _LOGGER.debug("%s (%s, %s) not used",
                                   device.ha_id, device.type,
                                   device.baseType)
+            except (KeyError, ValueError):
+                pass
 
 
 def setup(hass, config):
@@ -232,13 +259,15 @@ class FibaroDevice(Entity):
         """Update the state."""
         self.schedule_update_ha_state(True)
 
-    def get_level(self):
+    @property
+    def level(self):
         """Get the level of Fibaro device."""
         if 'value' in self.fibaro_device.properties:
             return self.fibaro_device.properties.value
         return None
 
-    def get_level2(self):
+    @property
+    def level2(self):
         """Get the tilt level of Fibaro device."""
         if 'value2' in self.fibaro_device.properties:
             return self.fibaro_device.properties.value2
@@ -258,13 +287,30 @@ class FibaroDevice(Entity):
         if 'brightness' in self.fibaro_device.properties:
             self.fibaro_device.properties.brightness = level
 
-    def set_color(self, red, green, blue, white):
+    def set_level2(self, level):
+        """Set the level2 of Fibaro device."""
+        self.action("setValue2", level)
+        if 'value2' in self.fibaro_device.properties:
+            self.fibaro_device.properties.value2 = level
+
+    def call_turn_on(self):
+        """Turn on the Fibaro device."""
+        self.action("turnOn")
+
+    def call_turn_off(self):
+        """Turn off the Fibaro device."""
+        self.action("turnOff")
+
+    def call_set_color(self, red, green, blue, white):
         """Set the color of Fibaro device."""
-        color_str = "{},{},{},{}".format(int(red), int(green),
-                                         int(blue), int(white))
+        red = int(max(0, min(255, red)))
+        green = int(max(0, min(255, green)))
+        blue = int(max(0, min(255, blue)))
+        white = int(max(0, min(255, white)))
+        color_str = "{},{},{},{}".format(red, green, blue, white)
         self.fibaro_device.properties.color = color_str
-        self.action("setColor", str(int(red)), str(int(green)),
-                    str(int(blue)), str(int(white)))
+        self.action("setColor", str(red), str(green),
+                    str(blue), str(white))
 
     def action(self, cmd, *args):
         """Perform an action on the Fibaro HC."""

@@ -19,7 +19,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pydaikin==0.7']
+REQUIREMENTS = ['pydaikin==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,3 +132,8 @@ class DaikinApi:
             _LOGGER.warning(
                 "Connection failed for %s", self.ip_address
             )
+
+    @property
+    def mac(self):
+        """Return mac-address of device."""
+        return self.device.values.get('mac')

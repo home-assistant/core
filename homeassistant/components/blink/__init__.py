@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_BINARY_SENSORS, CONF_SENSORS, CONF_FILENAME,
     CONF_MONITORED_CONDITIONS, TEMP_FAHRENHEIT)
 
-REQUIREMENTS = ['blinkpy==0.10.1']
+REQUIREMENTS = ['blinkpy==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ def setup(hass, config):
 
     def trigger_camera(call):
         """Trigger a camera."""
-        cameras = hass.data[BLINK_DATA].sync.cameras
+        cameras = hass.data[BLINK_DATA].cameras
         name = call.data[CONF_NAME]
         if name in cameras:
             cameras[name].snap_picture()
@@ -148,7 +148,7 @@ async def async_handle_save_video_service(hass, call):
 
     def _write_video(camera_name, video_path):
         """Call video write."""
-        all_cameras = hass.data[BLINK_DATA].sync.cameras
+        all_cameras = hass.data[BLINK_DATA].cameras
         if camera_name in all_cameras:
             all_cameras[camera_name].video_to_file(video_path)
 
