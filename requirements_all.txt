@@ -1590,7 +1590,7 @@ venstarcolortouch==0.6
 volkszaehler==0.1.2
 
 # homeassistant.components.volvooncall
-volvooncall==0.7.9
+volvooncall==0.7.11
 
 # homeassistant.components.verisure
 vsure==1.5.2
