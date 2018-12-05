@@ -421,6 +421,7 @@ class IndexView(HomeAssistantView):
         template_params = dict(
             no_auth=no_auth,
             theme_color=MANIFEST_JSON['theme_color'],
+            extra_urls=hass.data[extra_key],
             use_oauth='1'
         )
 
