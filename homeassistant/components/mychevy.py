@@ -16,7 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["mychevy==0.4.0"]
+REQUIREMENTS = ["mychevy==1.0.1"]
 
 DOMAIN = 'mychevy'
 UPDATE_TOPIC = DOMAIN

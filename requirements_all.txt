@@ -5,6 +5,7 @@ async_timeout==3.0.1
 attrs==18.2.0
 bcrypt==3.1.4
 certifi>=2018.04.16
+idna==2.7
 jinja2>=2.10
 PyJWT==1.6.4
 cryptography==2.3.1
@@ -333,7 +334,7 @@ einder==0.3.1
 eliqonline==1.0.14
 
 # homeassistant.components.elkm1
-elkm1-lib==0.7.12
+elkm1-lib==0.7.13
 
 # homeassistant.components.enocean
 enocean==0.40
@@ -655,7 +656,7 @@ motorparts==1.0.2
 mutagen==1.41.1
 
 # homeassistant.components.mychevy
-mychevy==0.4.0
+mychevy==1.0.1
 
 # homeassistant.components.mycroft
 mycroftapi==2.0
@@ -1617,7 +1618,7 @@ warrant==0.6.1
 watchdog==0.8.3
 
 # homeassistant.components.waterfurnace
-waterfurnace==0.7.0
+waterfurnace==1.0.0
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
