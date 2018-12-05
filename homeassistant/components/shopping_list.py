@@ -170,7 +170,11 @@ class ShoppingData:
     def __init__(self, hass):
         """Initialize the shopping list."""
         self.hass = hass
-        self.lists = []
+        self.lists = [{
+            'name': 'Inbox',
+            'id': LIST_SYSTEM_INBOX,
+            'items': []
+        }]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
@@ -223,23 +227,22 @@ class ShoppingData:
 
     async def async_load(self):
         """Load lists."""
-        data = await self.hass.helpers.storage.async_migrator(
+        self.lists = await self.hass.helpers.storage.async_migrator(
             self.hass.config.path(PERSISTENCE), self._store,
             old_conf_migrate_func=_async_migrate
         )
 
-        if data is None:
-            data = [{
+        if self.lists is None:
+            self.lists = [{
                 'name': 'Inbox',
                 'id': LIST_SYSTEM_INBOX,
                 'items': []
             }]
+            self.hass.async_add_job(self.save)
 
-        self.lists = data
-
-    def save(self):
+    async def save(self):
         """Save the items."""
-        self._store.async_save(self.lists)
+        await self._store.async_save(self.lists)
 
 
 class AddItemIntent(intent.IntentHandler):
@@ -372,7 +375,6 @@ def websocket_handle_lists(hass, connection, msg):
 def websocket_handle_items(hass, connection, msg):
     """Handle get shopping_list items."""
     list_id = msg['list_id']
-    _LOGGER.info(hass.data[DOMAIN].lists)
     lis = next(
         (li for li in hass.data[DOMAIN].lists if li['id'] == list_id), None)
     connection.send_message(websocket_api.result_message(
