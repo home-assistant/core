@@ -250,7 +250,8 @@ async def async_setup(hass, config):
     await asyncio.wait(
         [async_register_built_in_panel(hass, panel) for panel in (
             'dev-event', 'dev-info', 'dev-service', 'dev-state',
-            'dev-template', 'dev-mqtt', 'kiosk', 'lovelace', 'profile')],
+            'dev-template', 'dev-mqtt', 'kiosk', 'lovelace',
+            'states', 'profile')],
         loop=hass.loop)
 
     hass.data[DATA_FINALIZE_PANEL] = async_finalize_panel
@@ -362,7 +363,6 @@ class IndexView(HomeAssistantView):
     url = '/'
     name = 'frontend:index'
     requires_auth = False
-    extra_urls = ['/states', '/states/{extra}']
 
     def __init__(self, repo_path, js_option):
         """Initialize the frontend view."""
