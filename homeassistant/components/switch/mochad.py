@@ -33,8 +33,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up X10 switches over a mochad controller."""
     devs = config.get(CONF_DEVICES)
     controller = hass.data.get(mochad.DOMAIN)
-    add_entities([MochadLight(
-        hass, mochad.CONTROLLER.ctrl_send, dev) for dev in devs])
+    add_entities([MochadSwitch(
+        hass, controller.ctrl_send, dev) for dev in devs])
     return True
 
 
