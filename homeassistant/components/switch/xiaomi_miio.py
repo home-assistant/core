@@ -39,6 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'chuangmi.plug.m1',
          'chuangmi.plug.v2',
          'chuangmi.plug.v3',
+         'chuangmi.plug.hmi205',
          ]),
 })
 
@@ -146,7 +147,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         device = XiaomiPowerStripSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
-    elif model in ['chuangmi.plug.m1', 'chuangmi.plug.v2']:
+    elif model in ['chuangmi.plug.m1', 'chuangmi.plug.v2', 'chuangmi.plug.hmi205']:
         from miio import ChuangmiPlug
         plug = ChuangmiPlug(host, token, model=model)
         device = XiaomiPlugGenericSwitch(name, plug, model, unique_id)
