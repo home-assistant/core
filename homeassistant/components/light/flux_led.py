@@ -23,6 +23,10 @@ REQUIREMENTS = ['flux_led==0.22']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AUTOMATIC_ADD = 'automatic_add'
+CONF_CUSTOM_EFFECT = 'custom_effect'
+CONF_COLORS = 'colors'
+CONF_SPEED_PCT = 'speed_pct'
+CONF_TRANSITION = 'transition'
 ATTR_MODE = 'mode'
 
 DOMAIN = 'flux_led'
@@ -57,6 +61,7 @@ EFFECT_CYAN_STROBE = 'cyan_strobe'
 EFFECT_PURPLE_STROBE = 'purple_strobe'
 EFFECT_WHITE_STROBE = 'white_strobe'
 EFFECT_COLORJUMP = 'colorjump'
+EFFECT_CUSTOM = 'custom'
 
 EFFECT_MAP = {
     EFFECT_COLORLOOP:             0x25,
@@ -73,17 +78,32 @@ EFFECT_MAP = {
     EFFECT_COLORSTROBE:           0x30,
     EFFECT_RED_STROBE:            0x31,
     EFFECT_GREEN_STROBE:          0x32,
-    EFFECT_BLUE_STROBE:            0x33,
+    EFFECT_BLUE_STROBE:           0x33,
     EFFECT_YELLOW_STROBE:         0x34,
     EFFECT_CYAN_STROBE:           0x35,
     EFFECT_PURPLE_STROBE:         0x36,
     EFFECT_WHITE_STROBE:          0x37,
     EFFECT_COLORJUMP:             0x38
 }
+EFFECT_CUSTOM_CODE = 0x60
 
-FLUX_EFFECT_LIST = [
-    EFFECT_RANDOM,
-    ] + list(EFFECT_MAP)
+TRANSITION_GRADUAL = 'gradual'
+TRANSITION_JUMP = 'jump'
+TRANSITION_STROBE = 'strobe'
+
+FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
+
+CUSTOM_EFFECT_SCHEMA = vol.Schema({
+    vol.Required(CONF_COLORS):
+        vol.All(cv.ensure_list, vol.Length(min=1, max=16),
+                [vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
+                         vol.Coerce(tuple))]),
+    vol.Optional(CONF_SPEED_PCT, default=50):
+        vol.All(vol.Range(min=0, max=100), vol.Coerce(int)),
+    vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL):
+        vol.All(cv.string, vol.In(
+            [TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])),
+})
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
@@ -91,6 +111,7 @@ DEVICE_SCHEMA = vol.Schema({
         vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB, MODE_WHITE])),
     vol.Optional(CONF_PROTOCOL):
         vol.All(cv.string, vol.In(['ledenet'])),
+    vol.Optional(CONF_CUSTOM_EFFECT): CUSTOM_EFFECT_SCHEMA,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -111,6 +132,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device['ipaddr'] = ipaddr
         device[CONF_PROTOCOL] = device_config.get(CONF_PROTOCOL)
         device[ATTR_MODE] = device_config[ATTR_MODE]
+        device[CONF_CUSTOM_EFFECT] = device_config[CONF_CUSTOM_EFFECT]
         light = FluxLight(device)
         lights.append(light)
         light_ips.append(ipaddr)
@@ -144,6 +166,7 @@ class FluxLight(Light):
         self._ipaddr = device['ipaddr']
         self._protocol = device[CONF_PROTOCOL]
         self._mode = device[ATTR_MODE]
+        self._custom_effect = device[CONF_CUSTOM_EFFECT]
         self._bulb = None
         self._error_reported = False
 
@@ -214,7 +237,24 @@ class FluxLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
+        if self._custom_effect:
+            return FLUX_EFFECT_LIST + [EFFECT_CUSTOM]
+
         return FLUX_EFFECT_LIST
+
+    @property
+    def effect(self):
+        """Return the current effect."""
+        current_mode = self._bulb.raw_state[3]
+
+        if current_mode == EFFECT_CUSTOM_CODE:
+            return EFFECT_CUSTOM
+
+        for effect, code in EFFECT_MAP.items():
+            if current_mode == code:
+                return effect
+
+        return None
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
@@ -242,6 +282,14 @@ class FluxLight(Light):
             self._bulb.setRgb(random.randint(0, 255),
                               random.randint(0, 255),
                               random.randint(0, 255))
+            return
+
+        if effect == EFFECT_CUSTOM:
+            if self._custom_effect:
+                self._bulb.setCustomPattern(
+                    self._custom_effect[CONF_COLORS],
+                    self._custom_effect[CONF_SPEED_PCT],
+                    self._custom_effect[CONF_TRANSITION])
             return
 
         # Effect selection
