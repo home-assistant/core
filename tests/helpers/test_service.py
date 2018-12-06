@@ -314,7 +314,7 @@ async def test_call_with_match_all(hass, mock_service_platform_call,
     await service.entity_service_call(hass, [
         Mock(entities=mock_entities)
     ], Mock(), ha.ServiceCall('test_domain', 'test_service', {
-        'entity_id': '*'
+        'entity_id': 'all'
     }))
 
     assert len(mock_service_platform_call.mock_calls) == 1

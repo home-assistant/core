@@ -6,7 +6,7 @@ from os import path
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_CONTROL
-from homeassistant.const import ATTR_ENTITY_ID, MATCH_ALL
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.exceptions import TemplateError, Unauthorized, UnknownUser
 from homeassistant.helpers import template
@@ -198,7 +198,7 @@ async def entity_service_call(hass, platforms, func, call):
 
     # Are we trying to target all entities
     if ATTR_ENTITY_ID in call.data:
-        target_all_entities = call.data[ATTR_ENTITY_ID] == MATCH_ALL
+        target_all_entities = call.data[ATTR_ENTITY_ID] == ENTITY_MATCH_ALL
     else:
         _LOGGER.warning('Not passing an entity ID to a service to target all '
                         'entities is deprecated. Use instead: entity_id: "*"')
