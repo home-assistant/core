@@ -89,21 +89,7 @@ async def _async_setup_remote(discovery_info):
     remote = Remote(**discovery_info)
 
     if discovery_info['new_join']:
-        from zigpy.zcl.clusters.general import OnOff, LevelControl
-        out_clusters = discovery_info['out_clusters']
-        if OnOff.cluster_id in out_clusters:
-            cluster = out_clusters[OnOff.cluster_id]
-            await helpers.configure_reporting(
-                remote.entity_id, cluster, 0, min_report=0, max_report=600,
-                reportable_change=1
-            )
-        if LevelControl.cluster_id in out_clusters:
-            cluster = out_clusters[LevelControl.cluster_id]
-            await helpers.configure_reporting(
-                remote.entity_id, cluster, 0, min_report=1, max_report=600,
-                reportable_change=1
-            )
-
+        await remote.async_configure()
     return remote
 
 
@@ -238,6 +224,15 @@ class Remote(ZhaEntity, BinarySensorDevice):
             general.OnOff.cluster_id: self.OnOffListener(self),
             general.LevelControl.cluster_id: self.LevelListener(self),
         }
+        out_clusters = kwargs.get('out_clusters')
+        min_rpt = 0
+        for cluster_id in [general.OnOff.cluster_id,
+                           general.LevelControl.cluster_id]:
+            if cluster_id not in out_clusters:
+                continue
+            cluster = out_clusters[cluster_id]
+            self._attributes_to_report[cluster] = {0: (min_rpt, 600, 1)}
+            min_rpt += 1
 
     @property
     def should_poll(self) -> bool:
