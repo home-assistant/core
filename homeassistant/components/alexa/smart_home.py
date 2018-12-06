@@ -504,6 +504,20 @@ class _AlexaColorTemperatureController(_AlexaInterface):
     def name(self):
         return 'Alexa.ColorTemperatureController'
 
+    def properties_supported(self):
+        return [{'name': 'colorTemperatureInKelvin'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'colorTemperatureInKelvin':
+            raise _UnsupportedProperty(name)
+        if 'color_temp' in self.entity.attributes:
+            return color_util.color_temperature_mired_to_kelvin(
+                    self.entity.attributes['color_temp'])
+        return 0
+
 
 class _AlexaPercentageController(_AlexaInterface):
     """Implements Alexa.PercentageController.
