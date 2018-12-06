@@ -267,7 +267,7 @@ def add_card(fname: str, view_id: str, card_config: str,
         if str(view.get('id', '')) != view_id:
             continue
         cards = view.get('cards', [])
-        if len(cards) == 0 and 'cards' in view:
+        if not cards and 'cards' in view:
             del view['cards']
         if data_format == FORMAT_YAML:
             card_config = yaml.yaml_to_object(card_config)
