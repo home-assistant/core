@@ -14,6 +14,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
                                  CONF_PASSWORD)
+from homeassistant.setup import setup_component
 
 REQUIREMENTS = ["pymochad_mqtt>=0.8.4"]
 REQUIREMENTS = ['pymochad==0.2.0']
@@ -21,7 +22,7 @@ REQUIREMENTS = ['pymochad==0.2.0']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_COMM_TYPE = 'comm_type'
-
+MQTT_COMPONENT = 'mqtt'
 DOMAIN = 'mochad'
 DOMAIN_MQTT = 'mqtt'
 CONF_BROKER = 'broker'
@@ -41,11 +42,18 @@ def setup(hass, config):
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
-    conf_mqtt = config[DOMAIN_MQTT]
-    broker = conf_mqtt.get(CONF_BROKER)
-    mqtt_port = conf_mqtt.get(CONF_PORT)
-    username = conf_mqtt.get(CONF_USERNAME)
-    password = conf_mqtt.get(CONF_PASSWORD)
+    if setup_component(hass, MQTT_COMPONENT, DOMAIN_MQTT):
+        conf_mqtt = config[DOMAIN_MQTT]
+        broker = conf_mqtt.get(CONF_BROKER)
+        mqtt_port = conf_mqtt.get(CONF_PORT)
+        username = conf_mqtt.get(CONF_USERNAME)
+        password = conf_mqtt.get(CONF_PASSWORD)
+    else:
+        # No mqtt is configured. Won't use mochad sensors. 
+        broker = None
+        mqtt_port = None
+        username = None
+        password = None
 
     from pymochad import exceptions
 
