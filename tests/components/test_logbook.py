@@ -10,9 +10,10 @@ import voluptuous as vol
 from homeassistant.components import sun
 import homeassistant.core as ha
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SERVICE,
+    ATTR_ENTITY_ID, ATTR_SERVICE, ATTR_NAME,
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    ATTR_HIDDEN, STATE_NOT_HOME, STATE_ON, STATE_OFF)
+    EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED, ATTR_HIDDEN,
+    STATE_NOT_HOME, STATE_ON, STATE_OFF)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook, recorder
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
@@ -751,7 +752,55 @@ async def test_humanify_homekit_changed_event(hass):
     assert event1['entity_id'] == 'lock.front_door'
 
     assert event2['name'] == 'HomeKit'
-    assert event1['domain'] == DOMAIN_HOMEKIT
+    assert event2['domain'] == DOMAIN_HOMEKIT
     assert event2['message'] == \
         'send command set_cover_position to 75 for Window'
     assert event2['entity_id'] == 'cover.window'
+
+
+async def test_humanify_automation_triggered_event(hass):
+    """Test humanifying Automation Trigger event."""
+    event1, event2 = list(logbook.humanify(hass, [
+        ha.Event(EVENT_AUTOMATION_TRIGGERED, {
+            ATTR_ENTITY_ID: 'automation.hello',
+            ATTR_NAME: 'Hello Automation',
+        }),
+        ha.Event(EVENT_AUTOMATION_TRIGGERED, {
+            ATTR_ENTITY_ID: 'automation.bye',
+            ATTR_NAME: 'Bye Automation',
+        }),
+    ]))
+
+    assert event1['name'] == 'Hello Automation'
+    assert event1['domain'] == 'automation'
+    assert event1['message'] == 'has been triggered'
+    assert event1['entity_id'] == 'automation.hello'
+
+    assert event2['name'] == 'Bye Automation'
+    assert event2['domain'] == 'automation'
+    assert event2['message'] == 'has been triggered'
+    assert event2['entity_id'] == 'automation.bye'
+
+
+async def test_humanify_script_started_event(hass):
+    """Test humanifying Script Run event."""
+    event1, event2 = list(logbook.humanify(hass, [
+        ha.Event(EVENT_SCRIPT_STARTED, {
+            ATTR_ENTITY_ID: 'script.hello',
+            ATTR_NAME: 'Hello Script'
+        }),
+        ha.Event(EVENT_SCRIPT_STARTED, {
+            ATTR_ENTITY_ID: 'script.bye',
+            ATTR_NAME: 'Bye Script'
+        }),
+    ]))
+
+    assert event1['name'] == 'Hello Script'
+    assert event1['domain'] == 'script'
+    assert event1['message'] == 'started'
+    assert event1['entity_id'] == 'script.hello'
+
+    assert event2['name'] == 'Bye Script'
+    assert event2['domain'] == 'script'
+    assert event2['message'] == 'started'
+    assert event2['entity_id'] == 'script.bye'

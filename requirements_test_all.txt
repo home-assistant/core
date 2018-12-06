@@ -101,7 +101,7 @@ hdate==0.7.5
 holidays==0.9.8
 
 # homeassistant.components.frontend
-home-assistant-frontend==20181126.0
+home-assistant-frontend==20181205.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -169,7 +169,7 @@ pydeconz==47
 pydispatcher==2.0.5
 
 # homeassistant.components.homematic
-pyhomematic==0.1.52
+pyhomematic==0.1.53
 
 # homeassistant.components.litejet
 pylitejet==0.1

@@ -7,12 +7,11 @@ at https://home-assistant.io/components/binary_sensor.zha/
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
-from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.components.zha import helpers
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.zha.const import (
-    ZHA_DISCOVERY_NEW, DATA_ZHA, DATA_ZHA_DISPATCHERS
-)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+from homeassistant.components.zha.entities import ZhaEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 

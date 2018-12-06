@@ -267,15 +267,18 @@ def add_card(fname: str, view_id: str, card_config: str,
         if str(view.get('id', '')) != view_id:
             continue
         cards = view.get('cards', [])
+        if not cards and 'cards' in view:
+            del view['cards']
         if data_format == FORMAT_YAML:
             card_config = yaml.yaml_to_object(card_config)
         if 'id' not in card_config:
             card_config['id'] = uuid.uuid4().hex
-            card_config.move_to_end('id', last=False)
         if position is None:
             cards.append(card_config)
         else:
             cards.insert(position, card_config)
+        if 'cards' not in view:
+            view['cards'] = cards
         yaml.save_yaml(fname, config)
         return
 
@@ -381,7 +384,10 @@ def update_view(fname: str, view_id: str, view_config, data_format:
             "View with ID: {} was not found in {}.".format(view_id, fname))
     if data_format == FORMAT_YAML:
         view_config = yaml.yaml_to_object(view_config)
-    view_config['cards'] = found.get('cards', [])
+    if not view_config.get('cards') and found.get('cards'):
+        view_config['cards'] = found.get('cards', [])
+    if not view_config.get('badges') and found.get('badges'):
+        view_config['badges'] = found.get('badges', [])
     found.clear()
     found.update(view_config)
     yaml.save_yaml(fname, config)
@@ -396,11 +402,12 @@ def add_view(fname: str, view_config: str,
         view_config = yaml.yaml_to_object(view_config)
     if 'id' not in view_config:
         view_config['id'] = uuid.uuid4().hex
-        view_config.move_to_end('id', last=False)
     if position is None:
         views.append(view_config)
     else:
         views.insert(position, view_config)
+    if 'views' not in config:
+        config['views'] = views
     yaml.save_yaml(fname, config)
 
 
