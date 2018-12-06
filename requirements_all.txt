@@ -1641,6 +1641,9 @@ xboxapi==0.1.1
 # homeassistant.components.knx
 xknx==0.9.1
 
+# homeassistant.components.light.twinkly
+xled==0.5.0
+
 # homeassistant.components.media_player.bluesound
 # homeassistant.components.sensor.startca
 # homeassistant.components.sensor.ted5000

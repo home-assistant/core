@@ -566,6 +566,7 @@ omit =
     homeassistant/components/light/tikteck.py
     homeassistant/components/light/tplink.py
     homeassistant/components/light/tradfri.py
+    homeassistant/components/light/twinkly.py
     homeassistant/components/light/x10.py
     homeassistant/components/light/yeelight.py
     homeassistant/components/light/yeelightsunflower.py
