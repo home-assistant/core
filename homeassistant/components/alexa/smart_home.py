@@ -515,7 +515,7 @@ class _AlexaColorTemperatureController(_AlexaInterface):
             raise _UnsupportedProperty(name)
         if 'color_temp' in self.entity.attributes:
             return color_util.color_temperature_mired_to_kelvin(
-                    self.entity.attributes['color_temp'])
+                self.entity.attributes['color_temp'])
         return 0
 
 
