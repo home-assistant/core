@@ -44,17 +44,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def _async_setup_entities(hass, config_entry, async_add_entities,
                                 discovery_infos):
     """Set up the ZHA switches."""
-    from zigpy.zcl.clusters.general import OnOff
     entities = []
     for discovery_info in discovery_infos:
         switch = Switch(**discovery_info)
         if discovery_info['new_join']:
-            in_clusters = discovery_info['in_clusters']
-            cluster = in_clusters[OnOff.cluster_id]
-            await helpers.configure_reporting(
-                switch.entity_id, cluster, switch.value_attribute,
-                min_report=0, max_report=600, reportable_change=1
-            )
+            await switch.async_configure()
         entities.append(switch)
 
     async_add_entities(entities, update_before_add=True)
@@ -75,6 +69,18 @@ class Switch(ZhaEntity, SwitchDevice):
         if attribute == self.value_attribute:
             self._state = value
             self.async_schedule_update_ha_state()
+
+    @property
+    def attributes_to_report(self) -> dict:
+        """Retrun a dict of attribute reporting configuration."""
+        return {
+            self.cluster: {'on_off': (0, 600, 1)}
+        }
+
+    @property
+    def cluster(self):
+        """Entity's cluster."""
+        return self._endpoint.on_off
 
     @property
     def should_poll(self) -> bool:

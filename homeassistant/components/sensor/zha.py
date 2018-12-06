@@ -81,11 +81,7 @@ async def make_sensor(discovery_info):
         sensor = Sensor(**discovery_info)
 
     if discovery_info['new_join']:
-        cluster = list(in_clusters.values())[0]
-        await helpers.configure_reporting(
-            sensor.entity_id, cluster, sensor.value_attribute,
-            reportable_change=sensor.min_reportable_change
-        )
+        await sensor.async_configure()
 
     return sensor
 
@@ -95,7 +91,29 @@ class Sensor(ZhaEntity):
 
     _domain = DOMAIN
     value_attribute = 0
+    min_report_interval = 30
+    max_report_interval = 600
     min_reportable_change = 1
+
+    def __init__(self, **kwargs):
+        """Init ZHA Sensor instance."""
+        super().__init__(**kwargs)
+        self._cluster = list(kwargs['in_clusters'].values())[0]
+
+    @property
+    def attributes_to_report(self) -> dict:
+        """Return a dict of attribute reporting configuration."""
+        report = {
+            self.cluster: {self.value_attribute: (self.min_report_interval,
+                                                  self.max_report_interval,
+                                                  self.min_reportable_change)}
+        }
+        return report
+
+    @property
+    def cluster(self):
+        """Return Sensor's cluster."""
+        return self._cluster
 
     @property
     def should_poll(self) -> bool:
@@ -119,7 +137,7 @@ class Sensor(ZhaEntity):
     async def async_update(self):
         """Retrieve latest state."""
         result = await helpers.safe_read(
-            list(self._in_clusters.values())[0],
+            self.cluster,
             [self.value_attribute],
             allow_cache=False,
             only_cache=(not self._initialized)
@@ -251,6 +269,6 @@ class ElectricalMeasurementSensor(Sensor):
         _LOGGER.debug("%s async_update", self.entity_id)
 
         result = await helpers.safe_read(
-            self._endpoint.electrical_measurement, ['active_power'],
+            self.cluster, ['active_power'],
             allow_cache=False, only_cache=(not self._initialized))
         self._state = result.get('active_power', self._state)

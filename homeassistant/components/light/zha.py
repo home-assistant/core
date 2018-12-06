@@ -73,7 +73,10 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
                         UNSUPPORTED_ATTRIBUTE):
                     discovery_info['color_capabilities'] |= \
                         CAPABILITIES_COLOR_TEMP
-        entities.append(Light(**discovery_info))
+        zha_light = Light(**discovery_info)
+        if discovery_info['new_join']:
+            await zha_light.async_configure()
+        entities.append(zha_light)
 
     async_add_entities(entities, update_before_add=True)
 
@@ -104,6 +107,19 @@ class Light(ZhaEntity, light.Light):
             if color_capabilities & CAPABILITIES_COLOR_XY:
                 self._supported_features |= light.SUPPORT_COLOR
                 self._hs_color = (0, 0)
+
+    @property
+    def attributes_to_report(self) -> dict:
+        """Return attribute reporting configuration."""
+        return {
+            'on_off': {'on_off': (0, 600, 1)},
+            'level': {'current_level': (2, 600, 1)},
+            'light_color': {
+                'current_x': (2, 600, 10),
+                'current_y': (2, 600, 10),
+                'color_temperature': (2, 600, 10),
+            }
+        }
 
     @property
     def is_on(self) -> bool:

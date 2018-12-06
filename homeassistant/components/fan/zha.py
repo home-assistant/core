@@ -70,7 +70,10 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
     """Set up the ZHA fans."""
     entities = []
     for discovery_info in discovery_infos:
-        entities.append(ZhaFan(**discovery_info))
+        fan = ZhaFan(**discovery_info)
+        if discovery_info['new_join']:
+            await fan.async_configure()
+        entities.append(fan)
 
     async_add_entities(entities, update_before_add=True)
 
@@ -79,6 +82,19 @@ class ZhaFan(ZhaEntity, FanEntity):
     """Representation of a ZHA fan."""
 
     _domain = DOMAIN
+    value_attribute = 0  # fan_mode
+
+    @property
+    def attributes_to_report(self) -> dict:
+        """Return a dict of attribute reporting configuration."""
+        return {
+            self.cluster: {self.value_attribute: (5, 600, 1)}
+        }
+
+    @property
+    def cluster(self):
+        """Fan ZCL Cluster."""
+        return self._endpoint.fan
 
     @property
     def supported_features(self) -> int:
@@ -129,7 +145,7 @@ class ZhaFan(ZhaEntity, FanEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await helpers.safe_read(self._endpoint.fan, ['fan_mode'],
+        result = await helpers.safe_read(self.cluster, ['fan_mode'],
                                          allow_cache=False,
                                          only_cache=(not self._initialized))
         new_value = result.get('fan_mode', None)
@@ -142,3 +158,12 @@ class ZhaFan(ZhaEntity, FanEntity):
         False if entity pushes its state to HA.
         """
         return False
+
+    def attribute_updated(self, attribute, value):
+        """Handle attribute update from device."""
+        attr_name = self.cluster.attributes.get(attribute, [attribute])[0]
+        _LOGGER.debug("%s: Attribute report '%s'[%s] = %s",
+                      self.entity_id, self.cluster.name, attr_name, value)
+        if attribute == self.value_attribute:
+            self._state = VALUE_TO_SPEED.get(value, self._state)
+            self.async_schedule_update_ha_state()
