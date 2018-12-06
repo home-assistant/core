@@ -159,23 +159,31 @@ def load_config(hass, force: bool) -> JSON_TYPE:
     config = yaml.load_yaml(fname, False)
     seen_card_ids = set()
     seen_view_ids = set()
+    if 'views' in config and not isinstance(config['views'], list):
+        raise HomeAssistantError("Views should be a list.")
     for view in config.get('views', []):
-        view_id = view.get('id')
-        if view_id:
-            view_id = str(view_id)
-            if view_id in seen_view_ids:
-                raise DuplicateIdError(
-                    'ID `{}` has multiple occurances in views'.format(view_id))
-            seen_view_ids.add(view_id)
+        if 'id' in view and not (isinstance(view['id'], str) or
+                                 isinstance(view['id'], int)):
+            raise HomeAssistantError(
+                "Your config contains view(s) with invalid ID(s).")
+        view_id = str(view.get('id', ''))
+        if view_id in seen_view_ids:
+            raise DuplicateIdError(
+                'ID `{}` has multiple occurances in views'.format(view_id))
+        seen_view_ids.add(view_id)
+        if 'cards' in view and not isinstance(view['cards'], list):
+            raise HomeAssistantError("Cards should be a list.")
         for card in view.get('cards', []):
-            card_id = card.get('id')
-            if card_id:
-                card_id = str(card_id)
-                if card_id in seen_card_ids:
-                    raise DuplicateIdError(
-                        'ID `{}` has multiple occurances in cards'
-                        .format(card_id))
-                seen_card_ids.add(card_id)
+            if 'id' in card and not (isinstance(card['id'], str) or
+                                     isinstance(card['id'], int)):
+                raise HomeAssistantError(
+                    "Your config contains card(s) with invalid ID(s).")
+            card_id = str(card.get('id', ''))
+            if card_id in seen_card_ids:
+                raise DuplicateIdError(
+                    'ID `{}` has multiple occurances in cards'
+                    .format(card_id))
+            seen_card_ids.add(card_id)
     hass.data[LOVELACE_DATA] = (config, time.time())
     return config
 
