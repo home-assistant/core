@@ -55,7 +55,6 @@ class TelldusLiveEntity(Entity):
     @property
     def _state(self):
         """Return the state of the device."""
-        _LOGGER.info(self.device.state)
         return self.device.state
 
     @property
@@ -91,7 +90,9 @@ class TelldusLiveEntity(Entity):
     @property
     def _battery_level(self):
         """Return the battery level of a device."""
-        from tellduslive import (BATTERY_LOW, BATTERY_UNKNOWN, BATTERY_OK)
+        from tellduslive import (BATTERY_LOW,
+                                 BATTERY_UNKNOWN,
+                                 BATTERY_OK)
         if self.device.battery == BATTERY_LOW:
             return 1
         if self.device.battery == BATTERY_UNKNOWN:
