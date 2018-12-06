@@ -169,29 +169,19 @@ class DirecTvDevice(MediaPlayerDevice):
                 else:
                     # If an error is received then only set to unavailable if
                     # this started at least 1 minute ago.
-                    if not self._first_error_timestamp:
-                        self._first_error_timestamp = dt_util.utcnow()
+                    log_message = "{}: Invalid status {} received".format(
+                        self.entity_id,
+                        self._current['status']['code']
+                    )
+                    if self._check_state_available():
+                        _LOGGER.debug(log_message)
                     else:
-                        tdelta = dt_util.utcnow() - self._first_error_timestamp
-                        if tdelta.total_seconds() >= 60:
-                            _LOGGER.error("%s: Invalid status %s received",
-                                          self.entity_id,
-                                          self._current['status']['code'])
-                            self._available = False
-                        else:
-                            _LOGGER.debug("%s: Invalid status %s received",
-                                          self.entity_id,
-                                          self._current['status']['code'])
+                        _LOGGER.error(log_message)
 
         except requests.RequestException as ex:
             _LOGGER.error("%s: Request error trying to update current status: "
                           "%s", self.entity_id, ex)
-            if not self._first_error_timestamp:
-                self._first_error_timestamp = dt_util.utcnow()
-            else:
-                tdelta = dt_util.utcnow() - self._first_error_timestamp
-                if tdelta.total_seconds() >= 60:
-                    self._available = False
+            self._check_state_available()
 
         except Exception as ex:
             _LOGGER.error("%s: Exception trying to update current status: %s",
@@ -200,6 +190,17 @@ class DirecTvDevice(MediaPlayerDevice):
             if not self._first_error_timestamp:
                 self._first_error_timestamp = dt_util.utcnow()
             raise
+
+    def _check_state_available(self):
+        """Set to unavailable if issue been occurring over 1 minute."""
+        if not self._first_error_timestamp:
+            self._first_error_timestamp = dt_util.utcnow()
+        else:
+            tdelta = dt_util.utcnow() - self._first_error_timestamp
+            if tdelta.total_seconds() >= 60:
+                self._available = False
+
+        return self._available
 
     @property
     def device_state_attributes(self):
