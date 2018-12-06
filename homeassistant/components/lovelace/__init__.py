@@ -48,6 +48,7 @@ WS_TYPE_DELETE_VIEW = 'lovelace/config/view/delete'
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'):
         vol.Any(WS_TYPE_GET_LOVELACE_UI, OLD_WS_TYPE_GET_LOVELACE_UI),
+    vol.Optional('force', default=False): bool,
 })
 
 SCHEMA_MIGRATE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -144,12 +145,12 @@ class DuplicateIdError(HomeAssistantError):
     """Duplicate ID's."""
 
 
-def load_config(hass) -> JSON_TYPE:
+def load_config(hass, force: bool) -> JSON_TYPE:
     """Load a YAML file."""
     fname = hass.config.path(LOVELACE_CONFIG_FILE)
 
     # Check for a cached version of the config
-    if LOVELACE_DATA in hass.data:
+    if not force and LOVELACE_DATA in hass.data:
         config, last_update = hass.data[LOVELACE_DATA]
         modtime = os.path.getmtime(fname)
         if config and last_update > modtime:
@@ -539,7 +540,8 @@ def handle_yaml_errors(func):
 @handle_yaml_errors
 async def websocket_lovelace_config(hass, connection, msg):
     """Send Lovelace UI config over WebSocket configuration."""
-    return await hass.async_add_executor_job(load_config, hass)
+    return await hass.async_add_executor_job(load_config, hass,
+                                             msg.get('force', False))
 
 
 @websocket_api.async_response
