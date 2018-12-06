@@ -13,7 +13,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
 from homeassistant.const import (
     ATTR_ID, CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_CHARGING,
-    ATTR_BATTERY_LEVEL)
+    ATTR_BATTERY_LEVEL, CONF_DEVICES)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -38,6 +38,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
+    vol.Optional(CONF_DEVICES, default={}): vol.Any(None, vol.Schema({
+        cv.string: cv.string,
+    })),
 })
 
 
@@ -59,6 +62,7 @@ class GoogleMapsScanner:
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
+        self.devices = config[CONF_DEVICES]
 
         try:
             self.service = Service(self.username, self.password,
@@ -77,7 +81,9 @@ class GoogleMapsScanner:
     def _update_info(self, now=None):
         for person in self.service.get_all_people():
             try:
-                dev_id = 'google_maps_{0}'.format(slugify(person.id))
+                dev_id = self.devices[person.id] \
+                    if person.id in self.devices \
+                    else 'google_maps_{0}'.format(slugify(person.id))
             except TypeError:
                 _LOGGER.warning("No location(s) shared with this account")
                 return
