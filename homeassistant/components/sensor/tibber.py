@@ -191,7 +191,11 @@ class TibberSensorRT(Entity):
         if live_measurement is None:
             return
         self._state = live_measurement.pop('power', None)
-        self._device_state_attributes = live_measurement
+        for key, value in live_measurement.items():
+            if value is None:
+                continue
+            self._device_state_attributes[key] = value
+
         self.async_schedule_update_ha_state()
 
     @property
