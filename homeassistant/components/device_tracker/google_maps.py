@@ -108,6 +108,7 @@ class GoogleMapsScanner:
             self.see(
                 dev_id=dev_id,
                 gps=(person.latitude, person.longitude),
+                host_name=person.nickname,
                 picture=person.picture_url,
                 source_type=SOURCE_TYPE_GPS,
                 gps_accuracy=person.accuracy,
