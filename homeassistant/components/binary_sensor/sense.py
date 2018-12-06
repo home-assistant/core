@@ -14,66 +14,69 @@ DEPENDENCIES = ['sense']
 _LOGGER = logging.getLogger(__name__)
 
 BIN_SENSOR_CLASS = 'power'
-MDI_ICONS = {'ac': 'air-conditioner',
-             'aquarium': 'fish',
-             'car': 'car-electric',
-             'computer': 'desktop-classic',
-             'cup': 'coffee',
-             'dehumidifier': 'water-off',
-             'dishes': 'dishwasher',
-             'drill': 'toolbox',
-             'fan': 'fan',
-             'freezer': 'fridge-top',
-             'fridge': 'fridge-bottom',
-             'game': 'gamepad-variant',
-             'garage': 'garage',
-             'grill': 'stove',
-             'heat': 'fire',
-             'heater': 'radiatior',
-             'humidifier': 'water',
-             'kettle': 'kettle',
-             'leafblower': 'leaf',
-             'lightbulb': 'lightbulb',
-             'media_console': 'set-top-box',
-             'modem': 'router-wireless',
-             'outlet': 'power-socket-us',
-             'papershredder': 'shredder',
-             'printer': 'printer',
-             'pump': 'water-pump',
-             'settings': 'settings',
-             'skillet': 'pot',
-             'smartcamera': 'webcam',
-             'socket': 'power-plug',
-             'sound': 'speaker',
-             'stove': 'stove',
-             'trash': 'trash-can',
-             'tv': 'television',
-             'vacuum': 'robot-vacuum',
-             'washer': 'washing-machine'}
+MDI_ICONS = {
+    'ac': 'air-conditioner',
+    'aquarium': 'fish',
+    'car': 'car-electric',
+    'computer': 'desktop-classic',
+    'cup': 'coffee',
+    'dehumidifier': 'water-off',
+    'dishes': 'dishwasher',
+    'drill': 'toolbox',
+    'fan': 'fan',
+    'freezer': 'fridge-top',
+    'fridge': 'fridge-bottom',
+    'game': 'gamepad-variant',
+    'garage': 'garage',
+    'grill': 'stove',
+    'heat': 'fire',
+    'heater': 'radiatior',
+    'humidifier': 'water',
+    'kettle': 'kettle',
+    'leafblower': 'leaf',
+    'lightbulb': 'lightbulb',
+    'media_console': 'set-top-box',
+    'modem': 'router-wireless',
+    'outlet': 'power-socket-us',
+    'papershredder': 'shredder',
+    'printer': 'printer',
+    'pump': 'water-pump',
+    'settings': 'settings',
+    'skillet': 'pot',
+    'smartcamera': 'webcam',
+    'socket': 'power-plug',
+    'sound': 'speaker',
+    'stove': 'stove',
+    'trash': 'trash-can',
+    'tv': 'television',
+    'vacuum': 'robot-vacuum',
+    'washer': 'washing-machine',
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Sense sensor."""
+    """Set up the Sense binary sensor."""
     if discovery_info is None:
         return
 
     data = hass.data[SENSE_DATA]
 
     sense_devices = data.get_discovered_device_data()
-    devices = [SenseDevice(data, device) for device in sense_devices]
+    devices = [SenseDevice(data, device) for device in sense_devices
+               if device['tags']['DeviceListAllowed'] == 'true']
     add_entities(devices)
 
 
 def sense_to_mdi(sense_icon):
     """Convert sense icon to mdi icon."""
-    return 'mdi:' + MDI_ICONS.get(sense_icon, 'power-plug')
+    return 'mdi:{}'.format(MDI_ICONS.get(sense_icon, 'power-plug'))
 
 
 class SenseDevice(BinarySensorDevice):
     """Implementation of a Sense energy device binary sensor."""
 
     def __init__(self, data, device):
-        """Initialize the sensor."""
+        """Initialize the Sense binary sensor."""
         self._name = device['name']
         self._id = device['id']
         self._icon = sense_to_mdi(device['icon'])

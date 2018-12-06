@@ -10,6 +10,7 @@ timer.
 from collections import OrderedDict
 from itertools import chain
 import logging
+from typing import Optional
 import weakref
 
 import attr
@@ -86,6 +87,11 @@ class EntityRegistry:
         return entity_id in self.entities
 
     @callback
+    def async_get(self, entity_id: str) -> Optional[RegistryEntry]:
+        """Get EntityEntry for an entity_id."""
+        return self.entities.get(entity_id)
+
+    @callback
     def async_get_entity_id(self, domain: str, platform: str, unique_id: str):
         """Check if an entity_id is currently registered."""
         for entity in self.entities.values():
@@ -95,7 +101,8 @@ class EntityRegistry:
         return None
 
     @callback
-    def async_generate_entity_id(self, domain, suggested_object_id):
+    def async_generate_entity_id(self, domain, suggested_object_id,
+                                 known_object_ids=None):
         """Generate an entity ID that does not conflict.
 
         Conflicts checked against registered and currently existing entities.
@@ -103,7 +110,8 @@ class EntityRegistry:
         return ensure_unique_string(
             '{}.{}'.format(domain, slugify(suggested_object_id)),
             chain(self.entities.keys(),
-                  self.hass.states.async_entity_ids(domain))
+                  self.hass.states.async_entity_ids(domain),
+                  known_object_ids if known_object_ids else [])
         )
 
     @callback

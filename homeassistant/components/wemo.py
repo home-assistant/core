@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.29']
+REQUIREMENTS = ['pywemo==0.4.33']
 
 DOMAIN = 'wemo'
 
@@ -58,17 +58,17 @@ def coerce_host_port(value):
 
 
 CONF_STATIC = 'static'
-CONF_DISABLE_DISCOVERY = 'disable_discovery'
+CONF_DISCOVERY = 'discovery'
 
-DEFAULT_DISABLE_DISCOVERY = False
+DEFAULT_DISCOVERY = True
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_STATIC, default=[]): vol.Schema([
             vol.All(cv.string, coerce_host_port)
         ]),
-        vol.Optional(CONF_DISABLE_DISCOVERY,
-                     default=DEFAULT_DISABLE_DISCOVERY): cv.boolean
+        vol.Optional(CONF_DISCOVERY,
+                     default=DEFAULT_DISCOVERY): cv.boolean
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -141,9 +141,7 @@ def setup(hass, config):
 
         devices.append((url, device))
 
-    disable_discovery = config.get(DOMAIN, {}).get(CONF_DISABLE_DISCOVERY)
-
-    if not disable_discovery:
+    if config.get(DOMAIN, {}).get(CONF_DISCOVERY):
         _LOGGER.debug("Scanning for WeMo devices.")
         devices.extend(
             (setup_url_for_device(device), device)

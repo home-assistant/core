@@ -284,7 +284,8 @@ async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
     await async_start(hass, 'homeassistant', {}, entry)
     data = (
         '{ "name": "Beer",'
-        '  "status_topic": "test_topic" }'
+        '  "state_topic": "test_topic",'
+        '  "availability_topic": "availability_topic" }'
     )
     async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
                             data)
@@ -297,6 +298,38 @@ async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('binary_sensor.beer')
+    assert state is None
+
+
+async def test_discovery_update_binary_sensor(hass, mqtt_mock, caplog):
+    """Test removal of discovered binary_sensor."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
+    data1 = (
+        '{ "name": "Beer",'
+        '  "state_topic": "test_topic",'
+        '  "availability_topic": "availability_topic1" }'
+    )
+    data2 = (
+        '{ "name": "Milk",'
+        '  "state_topic": "test_topic2",'
+        '  "availability_topic": "availability_topic2" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
+                            data1)
+    await hass.async_block_till_done()
+    state = hass.states.get('binary_sensor.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
+                            data2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('binary_sensor.beer')
+    assert state is not None
+    assert state.name == 'Milk'
+
+    state = hass.states.get('binary_sensor.milk')
     assert state is None
 
 

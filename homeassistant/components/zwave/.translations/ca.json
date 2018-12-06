@@ -5,7 +5,7 @@
             "one_instance_only": "El component nom\u00e9s admet una inst\u00e0ncia de Z-Wave"
         },
         "error": {
-            "option_error": "Ha fallat la validaci\u00f3 de Z-Wave. \u00c9s correcta la ruta al port on hi ha la mem\u00f2ria USB?"
+            "option_error": "Ha fallat la validaci\u00f3 de Z-Wave. \u00c9s correcta la ruta al port USB on hi ha la mem\u00f2ria?"
         },
         "step": {
             "user": {

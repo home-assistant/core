@@ -1,5 +1,5 @@
 """
-Component that performs TensorFlow classification on images.
+Support for performing TensorFlow classification on images.
 
 For a quick start, pick a pre-trained COCO model from:
 https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md
@@ -8,8 +8,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.tensorflow/
 """
 import logging
-import sys
 import os
+import sys
 
 import voluptuous as vol
 
@@ -20,7 +20,7 @@ from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.15.3', 'pillow==5.2.0', 'protobuf==3.6.1']
+REQUIREMENTS = ['numpy==1.15.4', 'pillow==5.3.0', 'protobuf==3.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,29 +28,29 @@ ATTR_MATCHES = 'matches'
 ATTR_SUMMARY = 'summary'
 ATTR_TOTAL_MATCHES = 'total_matches'
 
-CONF_FILE_OUT = 'file_out'
-CONF_MODEL = 'model'
-CONF_GRAPH = 'graph'
-CONF_LABELS = 'labels'
-CONF_MODEL_DIR = 'model_dir'
+CONF_AREA = 'area'
+CONF_BOTTOM = 'bottom'
 CONF_CATEGORIES = 'categories'
 CONF_CATEGORY = 'category'
-CONF_AREA = 'area'
-CONF_TOP = 'top'
+CONF_FILE_OUT = 'file_out'
+CONF_GRAPH = 'graph'
+CONF_LABELS = 'labels'
 CONF_LEFT = 'left'
-CONF_BOTTOM = 'bottom'
+CONF_MODEL = 'model'
+CONF_MODEL_DIR = 'model_dir'
 CONF_RIGHT = 'right'
+CONF_TOP = 'top'
 
 AREA_SCHEMA = vol.Schema({
-    vol.Optional(CONF_TOP, default=0): cv.small_float,
-    vol.Optional(CONF_LEFT, default=0): cv.small_float,
     vol.Optional(CONF_BOTTOM, default=1): cv.small_float,
-    vol.Optional(CONF_RIGHT, default=1): cv.small_float
+    vol.Optional(CONF_LEFT, default=0): cv.small_float,
+    vol.Optional(CONF_RIGHT, default=1): cv.small_float,
+    vol.Optional(CONF_TOP, default=0): cv.small_float,
 })
 
 CATEGORY_SCHEMA = vol.Schema({
     vol.Required(CONF_CATEGORY): cv.string,
-    vol.Optional(CONF_AREA): AREA_SCHEMA
+    vol.Optional(CONF_AREA): AREA_SCHEMA,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -58,14 +58,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.template]),
     vol.Required(CONF_MODEL): vol.Schema({
         vol.Required(CONF_GRAPH): cv.isfile,
-        vol.Optional(CONF_LABELS): cv.isfile,
-        vol.Optional(CONF_MODEL_DIR): cv.isdir,
         vol.Optional(CONF_AREA): AREA_SCHEMA,
         vol.Optional(CONF_CATEGORIES, default=[]):
-            vol.All(cv.ensure_list, [vol.Any(
-                cv.string,
-                CATEGORY_SCHEMA
-            )])
+            vol.All(cv.ensure_list, [vol.Any(cv.string, CATEGORY_SCHEMA)]),
+        vol.Optional(CONF_LABELS): cv.isfile,
+        vol.Optional(CONF_MODEL_DIR): cv.isdir,
     })
 })
 
@@ -93,7 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Make sure locations exist
     if not os.path.isdir(model_dir) or not os.path.exists(labels):
-        _LOGGER.error("Unable to locate tensorflow models or label map.")
+        _LOGGER.error("Unable to locate tensorflow models or label map")
         return
 
     # append custom model path to sys.path
@@ -118,9 +115,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # pylint: disable=unused-import,unused-variable
         import cv2 # noqa
     except ImportError:
-        _LOGGER.warning("No OpenCV library found. "
-                        "TensorFlow will process image with "
-                        "PIL at reduced resolution.")
+        _LOGGER.warning(
+            "No OpenCV library found. TensorFlow will process image with "
+            "PIL at reduced resolution")
 
     # setup tensorflow graph, session, and label map to pass to processor
     # pylint: disable=no-member
@@ -241,22 +238,23 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         # Draw custom global region/area
         if self._area != [0, 0, 1, 1]:
             draw_box(draw, self._area,
-                     img_width, img_height,
-                     "Detection Area", (0, 255, 255))
+                     img_width, img_height, "Detection Area", (0, 255, 255))
 
         for category, values in matches.items():
             # Draw custom category regions/areas
-            if self._category_areas[category] != [0, 0, 1, 1]:
+            if (category in self._category_areas
+                    and self._category_areas[category] != [0, 0, 1, 1]):
                 label = "{} Detection Area".format(category.capitalize())
-                draw_box(draw, self._category_areas[category], img_width,
-                         img_height, label, (0, 255, 0))
+                draw_box(
+                    draw, self._category_areas[category], img_width,
+                    img_height, label, (0, 255, 0))
 
             # Draw detected objects
             for instance in values:
                 label = "{0} {1:.1f}%".format(category, instance['score'])
-                draw_box(draw, instance['box'],
-                         img_width, img_height,
-                         label, (255, 255, 0))
+                draw_box(
+                    draw, instance['box'], img_width, img_height, label,
+                    (255, 255, 0))
 
         for path in paths:
             _LOGGER.info("Saving results image to %s", path)

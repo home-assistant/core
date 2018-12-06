@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['youtube_dl==2018.10.29']
+REQUIREMENTS = ['youtube_dl==2018.11.23']
 
 _LOGGER = logging.getLogger(__name__)
 

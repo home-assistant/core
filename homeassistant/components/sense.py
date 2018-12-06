@@ -8,26 +8,26 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT)
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
 
 REQUIREMENTS = ['sense_energy==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSE_DATA = 'sense_data'
+ACTIVE_UPDATE_RATE = 60
 
+DEFAULT_TIMEOUT = 5
 DOMAIN = 'sense'
 
-ACTIVE_UPDATE_RATE = 60
-DEFAULT_TIMEOUT = 5
+SENSE_DATA = 'sense_data'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_EMAIL): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT, DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -41,8 +41,8 @@ def setup(hass, config):
 
     timeout = config[DOMAIN][CONF_TIMEOUT]
     try:
-        hass.data[SENSE_DATA] = Senseable(api_timeout=timeout,
-                                          wss_timeout=timeout)
+        hass.data[SENSE_DATA] = Senseable(
+            api_timeout=timeout, wss_timeout=timeout)
         hass.data[SENSE_DATA].authenticate(username, password)
         hass.data[SENSE_DATA].rate_limit = ACTIVE_UPDATE_RATE
     except SenseAuthenticationException:

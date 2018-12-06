@@ -1,7 +1,6 @@
 """Test the Home Assistant local auth provider."""
 from unittest.mock import Mock
 
-import base64
 import pytest
 import voluptuous as vol
 
@@ -134,91 +133,3 @@ async def test_new_users_populate_values(hass, data):
     user = await manager.async_get_or_create_user(credentials)
     assert user.name == 'hello'
     assert user.is_active
-
-
-async def test_new_hashes_are_bcrypt(data, hass):
-    """Test that newly created hashes are using bcrypt."""
-    data.add_auth('newuser', 'newpass')
-    found = None
-    for user in data.users:
-        if user['username'] == 'newuser':
-            found = user
-    assert found is not None
-    user_hash = base64.b64decode(found['password'])
-    assert (user_hash.startswith(b'$2a$')
-            or user_hash.startswith(b'$2b$')
-            or user_hash.startswith(b'$2x$')
-            or user_hash.startswith(b'$2y$'))
-
-
-async def test_pbkdf2_to_bcrypt_hash_upgrade(hass_storage, hass):
-    """Test migrating user from pbkdf2 hash to bcrypt hash."""
-    hass_storage[hass_auth.STORAGE_KEY] = {
-        'version': hass_auth.STORAGE_VERSION,
-        'key': hass_auth.STORAGE_KEY,
-        'data': {
-            'salt': '09c52f0b120eaa7dea5f73f9a9b985f3d493b30a08f3f2945ef613'
-                    '0b08e6a3ea',
-            'users': [
-                {
-                    'password': 'L5PAbehB8LAQI2Ixu+d+PDNJKmljqLnBcYWYw35onC/8D'
-                                'BM1SpvT6A8ZFael5+deCt+s+43J08IcztnguouHSw==',
-                    'username': 'legacyuser'
-                }
-            ]
-        },
-    }
-    data = hass_auth.Data(hass)
-    await data.async_load()
-
-    # verify the correct (pbkdf2) password successfuly authenticates the user
-    await hass.async_add_executor_job(
-        data.validate_login, 'legacyuser', 'beer')
-
-    # ...and that the hashes are now bcrypt hashes
-    user_hash = base64.b64decode(
-        hass_storage[hass_auth.STORAGE_KEY]['data']['users'][0]['password'])
-    assert (user_hash.startswith(b'$2a$')
-            or user_hash.startswith(b'$2b$')
-            or user_hash.startswith(b'$2x$')
-            or user_hash.startswith(b'$2y$'))
-
-
-async def test_pbkdf2_to_bcrypt_hash_upgrade_with_incorrect_pass(hass_storage,
-                                                                 hass):
-    """Test migrating user from pbkdf2 hash to bcrypt hash."""
-    hass_storage[hass_auth.STORAGE_KEY] = {
-        'version': hass_auth.STORAGE_VERSION,
-        'key': hass_auth.STORAGE_KEY,
-        'data': {
-            'salt': '09c52f0b120eaa7dea5f73f9a9b985f3d493b30a08f3f2945ef613'
-                    '0b08e6a3ea',
-            'users': [
-                {
-                    'password': 'L5PAbehB8LAQI2Ixu+d+PDNJKmljqLnBcYWYw35onC/8D'
-                                'BM1SpvT6A8ZFael5+deCt+s+43J08IcztnguouHSw==',
-                    'username': 'legacyuser'
-                }
-            ]
-        },
-    }
-    data = hass_auth.Data(hass)
-    await data.async_load()
-
-    orig_user_hash = base64.b64decode(
-        hass_storage[hass_auth.STORAGE_KEY]['data']['users'][0]['password'])
-
-    # Make sure invalid legacy passwords fail
-    with pytest.raises(hass_auth.InvalidAuth):
-        await hass.async_add_executor_job(
-            data.validate_login, 'legacyuser', 'wine')
-
-    # Make sure we don't change the password/hash when password is incorrect
-    with pytest.raises(hass_auth.InvalidAuth):
-        await hass.async_add_executor_job(
-            data.validate_login, 'legacyuser', 'wine')
-
-    same_user_hash = base64.b64decode(
-        hass_storage[hass_auth.STORAGE_KEY]['data']['users'][0]['password'])
-
-    assert orig_user_hash == same_user_hash

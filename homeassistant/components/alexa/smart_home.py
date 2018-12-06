@@ -498,6 +498,26 @@ class _AlexaColorController(_AlexaInterface):
     def name(self):
         return 'Alexa.ColorController'
 
+    def properties_supported(self):
+        return [{'name': 'color'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'color':
+            raise _UnsupportedProperty(name)
+
+        hue, saturation = self.entity.attributes.get(
+            light.ATTR_HS_COLOR, (0, 0))
+
+        return {
+            'hue': hue,
+            'saturation': saturation / 100.0,
+            'brightness': self.entity.attributes.get(
+                light.ATTR_BRIGHTNESS, 0) / 255.0,
+        }
+
 
 class _AlexaColorTemperatureController(_AlexaInterface):
     """Implements Alexa.ColorTemperatureController.
@@ -507,6 +527,20 @@ class _AlexaColorTemperatureController(_AlexaInterface):
 
     def name(self):
         return 'Alexa.ColorTemperatureController'
+
+    def properties_supported(self):
+        return [{'name': 'colorTemperatureInKelvin'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'colorTemperatureInKelvin':
+            raise _UnsupportedProperty(name)
+        if 'color_temp' in self.entity.attributes:
+            return color_util.color_temperature_mired_to_kelvin(
+                self.entity.attributes['color_temp'])
+        return 0
 
 
 class _AlexaPercentageController(_AlexaInterface):
@@ -1374,7 +1408,7 @@ async def async_api_discovery(hass, config, directive, context):
 
         endpoint = {
             'displayCategories': alexa_entity.display_categories(),
-            'additionalApplianceDetails': {},
+            'cookie': {},
             'endpointId': alexa_entity.entity_id(),
             'friendlyName': alexa_entity.friendly_name(),
             'description': alexa_entity.description(),

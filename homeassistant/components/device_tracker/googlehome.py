@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
-REQUIREMENTS = ['ghlocalapi==0.0.1']
+REQUIREMENTS = ['ghlocalapi==0.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class GoogleHomeDeviceScanner(DeviceScanner):
     def __init__(self, hass, config):
         """Initialize the scanner."""
         from ghlocalapi.device_info import DeviceInfo
-        from ghlocalapi.bluetooth import BluetoothScan
+        from ghlocalapi.bluetooth import Bluetooth
 
         self.last_results = {}
 
@@ -50,7 +50,7 @@ class GoogleHomeDeviceScanner(DeviceScanner):
 
         session = async_get_clientsession(hass)
         self.deviceinfo = DeviceInfo(hass.loop, session, self._host)
-        self.scanner = BluetoothScan(hass.loop, session, self._host)
+        self.scanner = Bluetooth(hass.loop, session, self._host)
 
     async def async_connect(self):
         """Initialize connection to Google Home."""
@@ -89,4 +89,5 @@ class GoogleHomeDeviceScanner(DeviceScanner):
                 devices[uuid]['btle_mac_address'] = device['mac_address']
                 devices[uuid]['ghname'] = ghname
                 devices[uuid]['source_type'] = 'bluetooth'
+        await self.scanner.clear_scan_result()
         self.last_results = devices
