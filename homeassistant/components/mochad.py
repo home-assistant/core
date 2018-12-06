@@ -50,17 +50,17 @@ def setup(hass, config):
     from pymochad import exceptions
 
     try:
-        CONTROLLER = MochadCtrl(hass, host, port, broker, mqtt_port,
+        controller = MochadCtrl(hass, host, port, broker, mqtt_port,
                                 username, password)
-        hass.data[DOMAIN] = CONTROLLER
+        hass.data[DOMAIN] = controller
     except exceptions.ConfigurationError:
         _LOGGER.exception()
         return False
 
     def stop_mochad(event):
         """Stop the Mochad service."""
-        CONTROLLER = hass.data.get(DOMAIN)
-        CONTROLLER.disconnect()
+        controller = hass.data.get(DOMAIN)
+        controller.disconnect()
 
     def start_mochad(event):
         """Start the Mochad service."""
