@@ -1354,6 +1354,25 @@ async def test_report_colored_light_state(hass):
     })
 
 
+async def test_report_colored_temp_light_state(hass):
+    """Test ColorTemperatureController reports color temp correctly."""
+    hass.states.async_set(
+        'light.test_on', 'on', {'friendly_name': "Test light On",
+                                'color_temp': 240,
+                                'supported_features': 2})
+    hass.states.async_set(
+        'light.test_off', 'off', {'friendly_name': "Test light Off",
+                                  'supported_features': 2})
+
+    properties = await reported_properties(hass, 'light.test_on')
+    properties.assert_equal('Alexa.ColorTemperatureController',
+                            'colorTemperatureInKelvin', 4166)
+
+    properties = await reported_properties(hass, 'light.test_off')
+    properties.assert_equal('Alexa.ColorTemperatureController',
+                            'colorTemperatureInKelvin', 0)
+
+
 async def reported_properties(hass, endpoint):
     """Use ReportState to get properties and return them.
 
