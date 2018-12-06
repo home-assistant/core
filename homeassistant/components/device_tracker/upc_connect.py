@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_scanner(hass, config):
+async def async_get_scanner(hass, config):
     """Return the UPC device scanner."""
     return UPCDeviceScanner(hass, config[DOMAIN])
 
