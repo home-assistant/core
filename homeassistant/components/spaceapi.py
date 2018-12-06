@@ -129,7 +129,7 @@ class APISpaceApiView(HomeAssistantView):
 
         if space_state is not None:
             state = {
-                ATTR_OPEN: False if space_state.state == 'off' else True,
+                ATTR_OPEN: space_state.state != 'off',
                 ATTR_LASTCHANGE:
                     dt_util.as_timestamp(space_state.last_updated),
             }
