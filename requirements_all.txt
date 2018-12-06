@@ -604,7 +604,7 @@ liveboxplaytv==2.0.2
 lmnotify==0.0.4
 
 # homeassistant.components.device_tracker.google_maps
-locationsharinglib==3.0.8
+locationsharinglib==3.0.9
 
 # homeassistant.components.logi_circle
 logi_circle==0.1.7
