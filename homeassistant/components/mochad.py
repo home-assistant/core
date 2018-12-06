@@ -49,7 +49,7 @@ def setup(hass, config):
         username = conf_mqtt.get(CONF_USERNAME)
         password = conf_mqtt.get(CONF_PASSWORD)
     else:
-        # No mqtt is configured. Won't use mochad sensors. 
+        # No mqtt is configured. Won't use mochad sensors.
         broker = None
         mqtt_port = None
         username = None
