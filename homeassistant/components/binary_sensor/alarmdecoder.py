@@ -92,14 +92,14 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         """Return the state attributes."""
         attr = {}
         if self._rfid and self._rfstate is not None:
-            attr[ATTR_RF_BIT0] = True if self._rfstate & 0x01 else False
-            attr[ATTR_RF_LOW_BAT] = True if self._rfstate & 0x02 else False
-            attr[ATTR_RF_SUPERVISED] = True if self._rfstate & 0x04 else False
-            attr[ATTR_RF_BIT3] = True if self._rfstate & 0x08 else False
-            attr[ATTR_RF_LOOP3] = True if self._rfstate & 0x10 else False
-            attr[ATTR_RF_LOOP2] = True if self._rfstate & 0x20 else False
-            attr[ATTR_RF_LOOP4] = True if self._rfstate & 0x40 else False
-            attr[ATTR_RF_LOOP1] = True if self._rfstate & 0x80 else False
+            attr[ATTR_RF_BIT0] = bool(self._rfstate & 0x01)
+            attr[ATTR_RF_LOW_BAT] = bool(self._rfstate & 0x02)
+            attr[ATTR_RF_SUPERVISED] = bool(self._rfstate & 0x04)
+            attr[ATTR_RF_BIT3] = bool(self._rfstate & 0x08)
+            attr[ATTR_RF_LOOP3] = bool(self._rfstate & 0x10)
+            attr[ATTR_RF_LOOP2] = bool(self._rfstate & 0x20)
+            attr[ATTR_RF_LOOP4] = bool(self._rfstate & 0x40)
+            attr[ATTR_RF_LOOP1] = bool(self._rfstate & 0x80)
         return attr
 
     @property
