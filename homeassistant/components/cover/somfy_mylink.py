@@ -23,6 +23,8 @@ async def async_setup_platform(hass,
                                async_add_entities,
                                discovery_info=None):
     """Discover and configure Somfy covers."""
+    if discovery_info is None:
+        return
     somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
     config_options = discovery_info
     cover_list = []
