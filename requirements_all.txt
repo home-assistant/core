@@ -861,7 +861,7 @@ pyarlo==0.2.2
 pyatmo==1.4
 
 # homeassistant.components.apple_tv
-pyatv==0.3.11
+pyatv==0.3.12
 
 # homeassistant.components.device_tracker.bbox
 # homeassistant.components.sensor.bbox
