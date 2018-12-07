@@ -30,6 +30,7 @@ WS_TYPE_SAVE_CONFIG = 'lovelace/config/save'
 
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_GET_LOVELACE_UI,
+    vol.Optional('force', default=False): bool,
 })
 
 SCHEMA_SAVE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -50,7 +51,7 @@ class LovelaceStorage:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._config = None
 
-    async def async_load(self):
+    async def async_load(self, force):
         """Load config."""
         if self._config is None:
             self._config = await self._store.async_load()
@@ -70,15 +71,15 @@ class LovelaceYAML:
         """Initialize the YAML config."""
         self.hass = hass
 
-    async def async_load(self):
+    async def async_load(self, force):
         """Load config."""
-        return await self.hass.async_add_executor_job(self._load_config)
+        return await self.hass.async_add_executor_job(self._load_config, force)
 
-    def _load_config(self):
+    def _load_config(self, force):
         """Load the actual config."""
         fname = self.hass.config.path(LOVELACE_CONFIG_FILE)
         # Check for a cached version of the config
-        if DATA_LOVELACE_YAML in self.hass.data:
+        if not force and DATA_LOVELACE_YAML in self.hass.data:
             config, last_update = self.hass.data[DATA_LOVELACE_YAML]
             modtime = os.path.getmtime(fname)
             if config and last_update > modtime:
@@ -143,7 +144,7 @@ def handle_yaml_errors(func):
 @handle_yaml_errors
 async def websocket_lovelace_config(hass, connection, msg):
     """Send Lovelace UI config over WebSocket configuration."""
-    return await hass.data[DOMAIN].async_load()
+    return await hass.data[DOMAIN].async_load(msg['force'])
 
 
 @websocket_api.async_response
