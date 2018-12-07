@@ -25,6 +25,7 @@ DOMAIN = "solaredge"
 CONF_SITE_ID = "site_id"
 
 UPDATE_DELAY = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon]
@@ -52,8 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the SolarEdge Monitoring API sensor."""
     import solaredge
     from requests.exceptions import HTTPError, ConnectTimeout
@@ -92,7 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         sensor = SolarEdgeSensor(platform_name, sensor_key, data)
         entities.append(sensor)
 
-    async_add_entities(entities, True)
+    add_entities(entities, True)
 
 
 class SolarEdgeSensor(Entity):
@@ -131,6 +131,7 @@ class SolarEdgeSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the sensor and update the state."""
+        _LOGGER.debug("async_update")
         await self.hass.async_add_job(self.data.update)
         self._state = self.data.data[self._json_key]
 
