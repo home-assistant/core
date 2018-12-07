@@ -5,10 +5,12 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/somfy_mylink/
 """
 import logging
+
 import voluptuous as vol
-from homeassistant.helpers.discovery import load_platform
+
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['somfy-mylink-synergy==1.0.2']
