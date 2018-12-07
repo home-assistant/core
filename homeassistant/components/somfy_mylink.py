@@ -13,6 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['somfy-mylink-synergy==1.0.2']
 CONF_COVER_OPTIONS = 'cover_options'
+CONF_SYSTEM_ID = 'system_id'
 DATA_SOMFY_MYLINK = 'somfy_mylink_data'
 DOMAIN = 'somfy_mylink'
 SOMFY_MYLINK_COMPONENTS = [
@@ -21,7 +22,7 @@ SOMFY_MYLINK_COMPONENTS = [
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_SYSTEM_ID): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=44100): cv.port,
         vol.Optional(CONF_COVER_OPTIONS): cv.ensure_list
