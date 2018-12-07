@@ -679,11 +679,11 @@ async def test_temperature_setting_climate_range(hass):
             climate.ATTR_MAX_TEMP: 80
         }), BASIC_CONFIG)
     assert trt.sync_attributes() == {
-        'availableThermostatModes': 'off,cool,heat,heatcool',
+        'availableThermostatModes': 'off,cool,heat,auto',
         'thermostatTemperatureUnit': 'F',
     }
     assert trt.query_attributes() == {
-        'thermostatMode': 'heatcool',
+        'thermostatMode': 'auto',
         'thermostatTemperatureAmbient': 21.1,
         'thermostatHumidityAmbient': 25,
         'thermostatTemperatureSetpointLow': 18.3,
@@ -709,7 +709,7 @@ async def test_temperature_setting_climate_range(hass):
     calls = async_mock_service(
         hass, climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE)
     await trt.execute(trait.COMMAND_THERMOSTAT_SET_MODE, {
-        'thermostatMode': 'heatcool',
+        'thermostatMode': 'auto',
     })
     assert len(calls) == 1
     assert calls[0].data == {
