@@ -21,8 +21,8 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
     PRECISION_TENTHS, TEMP_FAHRENHEIT)
 
-DEFAULT_MIN_TEMP = 20
-DEFAULT_MAX_TEMP = 100
+DEFAULT_MIN_TEMP = 110
+DEFAULT_MAX_TEMP = 140
 
 DOMAIN = 'water_heater'
 
@@ -78,6 +78,7 @@ SET_OPERATION_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_OPERATION_MODE): cv.string,
 })
+
 
 async def async_setup(hass, config):
     """Set up water_heater devices."""
@@ -273,13 +274,13 @@ class WaterHeaterDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_CELSIUS,
+        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_FAHRENHEIT,
                                    self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_CELSIUS,
+        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT,
                                    self.temperature_unit)
 
 
@@ -307,4 +308,3 @@ async def async_service_temperature_set(entity, service):
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-removing current temp
