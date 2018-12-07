@@ -20,7 +20,11 @@ import homeassistant.util.ruamel_yaml as yaml
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'lovelace'
-LOVELACE_DATA = 'lovelace'
+DATA_YAML_CONF = 'lovelace_yaml'
+
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+CONF_LEGACY = 'legacy'
 
 LOVELACE_CONFIG_FILE = 'ui-lovelace.yaml'
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
@@ -145,13 +149,55 @@ class DuplicateIdError(HomeAssistantError):
     """Duplicate ID's."""
 
 
+class LegacyError(HomeAssistantError):
+    """Legacy Error."""
+
+
+class LovelaceStorage:
+    """Class to handle Storage based Lovelace config."""
+
+    def __init__(self, hass):
+        """Initialize Lovelace config based on storage helper."""
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._config = None
+
+    async def async_load(self):
+        """Load config."""
+        if self._config is None:
+            self._config = await self._store.async_load()
+
+        return self._config
+
+    async def async_save(self, config):
+        """Save config."""
+        self._config = config
+        await self._store.async_save(config)
+
+
+class LovelaceYAML:
+    """Class to handle YAML-based Lovelace config."""
+
+    def __init__(self, hass):
+        """Initialize the YAML config."""
+        self.hass = hass
+
+    async def async_load(self):
+        """Load config."""
+        return await hass.async_add_executor_job(load_config, hass,
+                                                 msg.get('force', False))
+
+    async def async_save(self, config):
+        """Save config."""
+        raise NotImplementedError
+
+
 def load_config(hass, force: bool) -> JSON_TYPE:
     """Load a YAML file."""
     fname = hass.config.path(LOVELACE_CONFIG_FILE)
 
     # Check for a cached version of the config
-    if not force and LOVELACE_DATA in hass.data:
-        config, last_update = hass.data[LOVELACE_DATA]
+    if not force and DOMAIN in hass.data:
+        config, last_update = hass.data[DATA_YAML_CONF]
         modtime = os.path.getmtime(fname)
         if config and last_update > modtime:
             return config
@@ -182,7 +228,7 @@ def load_config(hass, force: bool) -> JSON_TYPE:
                     'ID `{}` has multiple occurances in cards'
                     .format(card_id))
             seen_card_ids.add(card_id)
-    hass.data[LOVELACE_DATA] = (config, time.time())
+    hass.data[DATA_YAML_CONF] = (config, time.time())
     return config
 
 
@@ -454,6 +500,11 @@ def delete_view(fname: str, view_id: str) -> None:
 
 async def async_setup(hass, config):
     """Set up the Lovelace commands."""
+    if config.get(DOMAIN, {}).get(CONF_LEGACY):
+        hass.data[DOMAIN] = LovelaceYAML(hass)
+    else:
+        hass.data[DOMAIN] = LovelaceStorage(hass)
+
     # Backwards compat. Added in 0.80. Remove after 0.85
     hass.components.websocket_api.async_register_command(
         OLD_WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
@@ -525,6 +576,8 @@ def handle_yaml_errors(func):
             error = 'unsupported_error', str(err)
         except yaml.WriteError as err:
             error = 'write_error', str(err)
+        except LegacyError:
+            error = 'legacy_mode', 'Not allowed in legacy mode.'
         except DuplicateIdError as err:
             error = 'duplicate_id', str(err)
         except CardNotFoundError as err:
@@ -546,8 +599,7 @@ def handle_yaml_errors(func):
 @handle_yaml_errors
 async def websocket_lovelace_config(hass, connection, msg):
     """Send Lovelace UI config over WebSocket configuration."""
-    return await hass.async_add_executor_job(load_config, hass,
-                                             msg.get('force', False))
+    return await hass.data[DOMAIN].async_load()
 
 
 @websocket_api.async_response
@@ -562,9 +614,7 @@ async def websocket_lovelace_migrate_config(hass, connection, msg):
 @handle_yaml_errors
 async def websocket_lovelace_save_config(hass, connection, msg):
     """Save Lovelace UI configuration."""
-    return await hass.async_add_executor_job(
-        save_config, hass.config.path(LOVELACE_CONFIG_FILE), msg['config'],
-        msg.get('format', FORMAT_JSON))
+    await hass.data[DOMAIN].async_save(msg['config'])
 
 
 @websocket_api.async_response
