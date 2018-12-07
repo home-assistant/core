@@ -74,5 +74,7 @@ async def async_setup(hass, config):
         return False
     hass.data[DATA_SOMFY_MYLINK] = somfy_mylink
     for component in SOMFY_MYLINK_COMPONENTS:
-        load_platform(hass, component, DOMAIN, config[DOMAIN], config)
+        hass.async_create_task(async_load_platform(
+            hass, component, DOMAIN, entity_config,
+            config))
     return True

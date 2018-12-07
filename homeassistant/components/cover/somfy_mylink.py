@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
 from homeassistant.components.somfy_mylink import (
     CONF_COVER_OPTIONS, DATA_SOMFY_MYLINK)
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['somfy_mylink']
@@ -233,4 +234,4 @@ class SomfyShade(CoverDevice):
             else:
                 await self.async_stop_cover()
         self._closed = self.current_cover_position <= 0
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
