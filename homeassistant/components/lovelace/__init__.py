@@ -39,10 +39,6 @@ SCHEMA_SAVE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 })
 
 
-class LegacyError(HomeAssistantError):
-    """Legacy Error."""
-
-
 class LovelaceStorage:
     """Class to handle Storage based Lovelace config."""
 
@@ -91,15 +87,18 @@ class LovelaceYAML:
 
     async def async_save(self, config):
         """Save config."""
-        raise NotImplementedError
+        raise HomeAssistantError('Not supported')
 
 
 async def async_setup(hass, config):
     """Set up the Lovelace commands."""
-    if config.get(DOMAIN, {}).get(CONF_LEGACY):
-        hass.data[DOMAIN] = LovelaceYAML(hass)
-    else:
-        hass.data[DOMAIN] = LovelaceStorage(hass)
+    legacy = config.get(DOMAIN, {}).get(CONF_LEGACY)
+
+    await hass.components.frontend.async_register_built_in_panel(DOMAIN, {
+        'legacy': legacy
+    })
+
+    hass.data[DOMAIN] = LovelaceYAML(hass) if legacy else LovelaceStorage(hass)
 
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
@@ -127,8 +126,6 @@ def handle_yaml_errors(func):
                      'Could not find ui-lovelace.yaml in your config dir.')
         except yaml.UnsupportedYamlError as err:
             error = 'unsupported_error', str(err)
-        except LegacyError:
-            error = 'legacy_mode', 'Not allowed in legacy mode.'
         except HomeAssistantError as err:
             error = 'error', str(err)
 
