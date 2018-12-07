@@ -395,5 +395,7 @@ class FibaroDevice(Entity):
         except (ValueError, KeyError):
             pass
 
+        attr['fibaro_room'] = self.fibaro_device.room_name
+        attr['fibaro_hub'] = self.controller.hub_serial
         attr['fibaro_id'] = self.fibaro_device.id
         return attr
