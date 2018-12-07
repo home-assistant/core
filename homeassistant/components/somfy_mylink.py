@@ -26,6 +26,7 @@ SOMFY_MYLINK_COMPONENTS = [
     'cover', 'scene'
 ]
 
+
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
     entity_config_schema = vol.Schema({
@@ -52,7 +53,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config
     })
 }, extra=vol.ALLOW_EXTRA)
-
 
 
 async def async_setup(hass, config):
