@@ -21,8 +21,8 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
     PRECISION_TENTHS, TEMP_FAHRENHEIT)
 
-DEFAULT_MIN_TEMP = 110
-DEFAULT_MAX_TEMP = 140
+DEFAULT_MIN_TEMP = 20
+DEFAULT_MAX_TEMP = 100
 
 DOMAIN = 'water_heater'
 
@@ -45,7 +45,6 @@ SUPPORT_OPERATION_MODE = 2
 SUPPORT_AWAY_MODE = 4
 SUPPORT_ON_OFF = 8
 
-ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
 ATTR_TARGET_TEMP_STEP = 'target_temp_step'
@@ -79,7 +78,6 @@ SET_OPERATION_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_OPERATION_MODE): cv.string,
 })
-
 
 async def async_setup(hass, config):
     """Set up water_heater devices."""
@@ -146,9 +144,6 @@ class WaterHeaterDevice(Entity):
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
-            ATTR_CURRENT_TEMPERATURE: show_temp(
-                self.hass, self.current_temperature, self.temperature_unit,
-                self.precision),
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit,
                 self.precision),
@@ -192,11 +187,6 @@ class WaterHeaterDevice(Entity):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return None
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
         return None
 
     @property
@@ -283,13 +273,13 @@ class WaterHeaterDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_FAHRENHEIT,
+        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_CELSIUS,
                                    self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT,
+        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_CELSIUS,
                                    self.temperature_unit)
 
 
@@ -317,3 +307,4 @@ async def async_service_temperature_set(entity, service):
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+removing current temp
