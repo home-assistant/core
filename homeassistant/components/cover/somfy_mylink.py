@@ -11,7 +11,7 @@ from homeassistant.components.cover import (ATTR_POSITION, SUPPORT_CLOSE,
                                             SUPPORT_STOP, CoverDevice)
 from homeassistant.components.somfy_mylink import DATA_SOMFY_MYLINK
 from homeassistant.helpers.event import async_track_time_change
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ async def async_setup_platform(hass,
     async_add_entities(cover_list)
 
 
-class SomfyShade(CoverDevice):
+class SomfyShade(CoverDevice, RestoreEntity):
     """Object for controlling a Somfy cover."""
 
     LISTEN_INTERVAL = 1
@@ -123,7 +123,9 @@ class SomfyShade(CoverDevice):
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
-        state = await async_get_last_state(self.hass, self.entity_id)
+        if self._state is not None:
+            return
+        state = await self.async_get_last_state()
         if state:
             self._state = state.state
             self._state_ts = state.last_updated
