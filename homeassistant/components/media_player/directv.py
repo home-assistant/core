@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean,
     vol.Optional(CONF_CLIENT_DISCOVER_INTERVAL,
                  default=DEFAULT_CLIENT_DISCOVER_INTERVAL):
-        cv.time_period,
+        vol.All(cv.time_period, cv.positive_timedelta)
 })
 
 
@@ -94,6 +94,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                               "receiver id for %s", ex, name)
                 resp = []
 
+        client_discover_interval = config.get(CONF_CLIENT_DISCOVER_INTERVAL,
+                                              DEFAULT_CLIENT_DISCOVER_INTERVAL)
+        if client_discover_interval < timedelta(seconds=5):
+            _LOGGER.warning("Invalid client_discover_interval value %s "
+                            "provided for %s, minimum is 5 seconds",
+                            client_discover_interval, name)
+            client_discover_interval = DEFAULT_CLIENT_DISCOVER_INTERVAL
+
         directv_entity = {
             CONF_NAME: name,
             CONF_HOST: host,
@@ -101,8 +109,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_DEVICE: device,
             RECEIVER_ID: resp.get('receiverId', host).replace(' ', ''),
             CONF_DISCOVER_CLIENTS: config.get(CONF_DISCOVER_CLIENTS),
-            CONF_CLIENT_DISCOVER_INTERVAL: config.get(
-                CONF_CLIENT_DISCOVER_INTERVAL),
+            CONF_CLIENT_DISCOVER_INTERVAL: client_discover_interval,
         }
 
     elif discovery_info:
