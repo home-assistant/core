@@ -8,9 +8,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['somfy-mylink-synergy==1.0.2']

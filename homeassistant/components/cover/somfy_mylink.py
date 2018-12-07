@@ -6,9 +6,9 @@ https://home-assistant.io/components/cover.somfy_mylink/
 """
 import logging
 
-from homeassistant.components.cover import (
-    ATTR_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
-    SUPPORT_STOP, CoverDevice)
+from homeassistant.components.cover import (ATTR_POSITION, SUPPORT_CLOSE,
+                                            SUPPORT_OPEN, SUPPORT_SET_POSITION,
+                                            SUPPORT_STOP, CoverDevice)
 from homeassistant.components.somfy_mylink import DATA_SOMFY_MYLINK
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.restore_state import async_get_last_state
