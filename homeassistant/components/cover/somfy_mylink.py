@@ -16,6 +16,7 @@ from homeassistant.helpers.event import async_track_time_change
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['somfy_mylink']
 DEFAULT_SUPPORTED_FEATURES = (SUPPORT_OPEN | SUPPORT_STOP | SUPPORT_CLOSE)
+ENTITY_ID_FORMAT = 'cover.{}'
 
 
 async def async_setup_platform(hass,
@@ -35,7 +36,7 @@ async def async_setup_platform(hass,
         for key, val in config_options.get('default', {}).items():
             cover_config[key] = val
         for config_entity, config_opt in config_options.items():
-            entity_id = "cover.{}".format(slugify(cover['name']))
+            entity_id = ENTITY_ID_FORMAT.format(slugify(cover['name']))
             if config_entity == entity_id:
                 for key, val in config_opt.items():
                     cover_config[key] = val
