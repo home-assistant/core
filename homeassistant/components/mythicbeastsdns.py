@@ -36,7 +36,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Initialize the Mythic Beasts component."""
-
     import mbddns
 
     domain = config[DOMAIN][CONF_DOMAIN]

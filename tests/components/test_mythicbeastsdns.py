@@ -1,99 +1,70 @@
 """Test the Mythic Beasts DNS component."""
-import asyncio
-import pytest
+import logging
+import asynctest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components import mythicbeastsdns
-from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
-
-DOMAIN = 'example.org'
-PASSWORD = 'test_password'
-HOST = 'test'
-UPDATE_INTERVAL = mythicbeastsdns.DEFAULT_INTERVAL
-UPDATE_URL = 'https://dnsapi4.mythic-beasts.com/'
+_LOGGER = logging.getLogger(__name__)
 
 
-@pytest.fixture
-def setup_mythicbeastsdns(hass, aioclient_mock):
-    """Fixture that sets up Mythic Beasts."""
-    aioclient_mock.post(UPDATE_URL, data={
-        'domain': DOMAIN,
-        'password': PASSWORD,
-        'command': "REPLACE {} 5 A DYNAMIC_IP".format(HOST)
-    }, text='REPLACE {} 5 A DYNAMIC_IP'.format(HOST))
+async def mbddns_update_mock(domain, password, host, ttl=60, session=None):
+    """Mock out mythic beasts updater."""
+    if password == 'incorrect':
+        _LOGGER.error("Updating Mythic Beasts failed: Not authenticated")
+        return False
+    if host[0] == '$':
+        _LOGGER.error("Updating Mythic Beasts failed: Invalid Character")
+        return False
+    return True
 
-    hass.loop.run_until_complete(
-        async_setup_component(hass, mythicbeastsdns.DOMAIN, {
+
+@asynctest.mock.patch('mbddns.update', new=mbddns_update_mock)
+async def test_update(hass):
+    """Run with correct values and check true is returned."""
+    result = await async_setup_component(
+        hass,
+        mythicbeastsdns.DOMAIN,
+        {
             mythicbeastsdns.DOMAIN: {
-                'domain': DOMAIN,
-                'password': PASSWORD,
-                'host': HOST,
+                'domain': 'example.org',
+                'password': 'correct',
+                'host': 'hass'
             }
-        }))
-
-
-@asyncio.coroutine
-def test_setup(hass, aioclient_mock):
-    """Test setup works if update passes."""
-    aioclient_mock.post(UPDATE_URL, data={
-        'domain': DOMAIN,
-        'password': PASSWORD,
-        'command': "REPLACE {} 60 A DYNAMIC_IP".format(HOST)
-    }, text='REPLACE {} 60 A DYNAMIC_IP'.format(HOST))
-
-    result = yield from async_setup_component(hass, mythicbeastsdns.DOMAIN, {
-        mythicbeastsdns.DOMAIN: {
-            'domain': DOMAIN,
-            'password': PASSWORD,
-            'host': HOST
         }
-    })
+    )
     assert result
-    assert aioclient_mock.call_count == 1
-
-    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
-    yield from hass.async_block_till_done()
-    assert aioclient_mock.call_count == 2
 
 
-@asyncio.coroutine
-def test_setup_fails_if_wrong_token(hass, aioclient_mock):
-    """Test setup fails if first update fails through wrong token."""
-    aioclient_mock.post(UPDATE_URL, data={
-        'domain': DOMAIN,
-        'password': PASSWORD,
-        'command': "REPLACE {} 60 A DYNAMIC_IP".format(HOST)
-    }, text='ERR Not authenticated')
-
-    result = yield from async_setup_component(hass, mythicbeastsdns.DOMAIN, {
-        mythicbeastsdns.DOMAIN: {
-            'domain': DOMAIN,
-            'password': PASSWORD,
-            'host': HOST,
+@asynctest.mock.patch('mbddns.update', new=mbddns_update_mock)
+async def test_update_fails_if_wrong_token(hass):
+    """Run with incorrect token and check false is returned."""
+    result = await async_setup_component(
+        hass,
+        mythicbeastsdns.DOMAIN,
+        {
+            mythicbeastsdns.DOMAIN: {
+                'domain': 'example.org',
+                'password': 'incorrect',
+                'host': 'hass'
+            }
         }
-    })
+    )
     assert not result
-    assert aioclient_mock.call_count == 1
 
 
-@asyncio.coroutine
-def test_setup_fails_if_invalid_host(hass, aioclient_mock):
-    """Test setup fails if first update fails through invalid host."""
-    aioclient_mock.post(UPDATE_URL, data={
-        'domain': DOMAIN,
-        'password': PASSWORD,
-        'command': "REPLACE {} 60 A DYNAMIC_IP".format(HOST)
-    }, text='NREPLACE test 60 A DYNAMIC_IP;Invalid host (must be "@", "*" or\
-     only contain a-z, 0-9, - and .)')
-
-    result = yield from async_setup_component(hass, mythicbeastsdns.DOMAIN, {
-        mythicbeastsdns.DOMAIN: {
-            'domain': DOMAIN,
-            'password': PASSWORD,
-            'host': HOST,
+@asynctest.mock.patch('mbddns.update', new=mbddns_update_mock)
+async def test_update_fails_if_invalid_host(hass):
+    """Run with invalid characters in host and check false is returned."""
+    result = await async_setup_component(
+        hass,
+        mythicbeastsdns.DOMAIN,
+        {
+            mythicbeastsdns.DOMAIN: {
+                'domain': 'example.org',
+                'password': 'correct',
+                'host': '$hass'
+            }
         }
-    })
+    )
     assert not result
-    assert aioclient_mock.call_count == 1
