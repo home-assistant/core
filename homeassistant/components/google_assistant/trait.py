@@ -617,7 +617,8 @@ class TemperatureSettingTrait(_Trait):
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
                     "Upper bound for temperature range should be between "
-                    "{} and {}".format(min_temp, max_temp))            
+                    "{} and {}".format(min_temp, max_temp))
+
             temp_low = temp_util.convert(
                 params['thermostatTemperatureSetpointLow'], TEMP_CELSIUS,
                 unit)
