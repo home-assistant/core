@@ -39,3 +39,4 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
    :target: https://home-assistant.io/demo/
 .. |screenshot-components| image:: https://raw.github.com/home-assistant/home-assistant/dev/docs/screenshot-components.png
    :target: https://home-assistant.io/components/
+test
