@@ -111,24 +111,17 @@ class SomfyShade(CoverDevice):
         if self._supported_features is not None:
             return self._supported_features
         return super().supported_features
-
-    async def async_close_cover(self, **kwargs):
-        """Close the cover."""
-        if self._reverse and not kwargs.get('redir'):
-            await self.async_open_cover(redir=True)
-        elif self._move_time:
-            await self.async_set_cover_position(position=0)
+    async def mylink_open_cover(self):
+        """Open the cover, respecting reversal status."""
+        if not self._reverse:
+            await self.somfy_mylink.move_up(self._target_id)
         else:
             await self.somfy_mylink.move_down(self._target_id)
-            self._closed = True
-        self.schedule_update_ha_state()
 
-    async def async_open_cover(self, **kwargs):
-        """Open the cover."""
-        if self._reverse and not kwargs.get('redir'):
-            await self.async_close_cover(redir=True)
-        elif self._move_time:
-            await self.async_set_cover_position(position=100)
+    async def mylink_close_cover(self):
+        """Close the cover, respecting reversal status."""
+        if not self._reverse:
+            await self.somfy_mylink.move_down(self._target_id)
         else:
             await self.somfy_mylink.move_up(self._target_id)
 
@@ -146,18 +139,33 @@ class SomfyShade(CoverDevice):
                 self._closed = True
             else:
                 self._closed = False
+
+    async def async_open_cover(self, **kwargs):
+        """Handles Homeassistant calls to open the cover."""
+        if self._move_time:
+            await self.async_set_cover_position(position=100)
             self._closed = False
-        self.schedule_update_ha_state()
+            return
+        await self.mylink_open_cover()
+        self._closed = None
+
+    async def async_close_cover(self, **kwargs):
+        """Handles Homeassistant calls to close the cover."""
+        if self._move_time:
+            await self.async_set_cover_position(position=0)
+            self._closed = True
+            return
+        await self.mylink_close_cover()
+        self._closed = None
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         await self.somfy_mylink.move_stop(self._target_id)
         self._is_closing = False
         self._is_opening = False
+        self._closed = None
         if self._position is None:
             return
-        if self._move_time:
-            self._closed = self.current_cover_position <= 0
         if self._unsub_listener_cover is not None:
             self._unsub_listener_cover()
             self._unsub_listener_cover = None
@@ -172,19 +180,18 @@ class SomfyShade(CoverDevice):
         self._partial_move_time = self._calculate_move_time(self._set_position)
         self._requested_closing = position < self._position
         _LOGGER.debug("Moving to position %s in %s seconds",
-                      self._set_position, self._partial_move_time)
+                     self._set_position, self._partial_move_time)
         if self._requested_closing:
-            await self.somfy_mylink.move_down(self._target_id)
+            await self.mylink_close_cover()
             if self._position is None:
                 self._closed = True
                 self._position = 100
-            self._listen_cover()
         else:
-            await self.somfy_mylink.move_up(self._target_id)
+            await self.mylink_open_cover()
             if self._position is None:
                 self._closed = False
                 self._position = 0
-            self._listen_cover()
+        self._listen_cover()
 
     def _calculate_move_time(self, target_position):
         """Calculate time required to move the cover."""
@@ -214,7 +221,7 @@ class SomfyShade(CoverDevice):
         else:
             self._position += move_increment
         _LOGGER.debug("%s At position %s, incrementing to %s",
-                      now, self._position, self._set_position)
+                     now, self._position, self._set_position)
         curr_position = round(self._position, -1)
         if curr_position == self._set_position:
             self._position = curr_position
