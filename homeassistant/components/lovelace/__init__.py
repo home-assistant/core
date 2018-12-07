@@ -48,6 +48,7 @@ WS_TYPE_DELETE_VIEW = 'lovelace/config/view/delete'
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'):
         vol.Any(WS_TYPE_GET_LOVELACE_UI, OLD_WS_TYPE_GET_LOVELACE_UI),
+    vol.Optional('force', default=False): bool,
 })
 
 SCHEMA_MIGRATE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -144,12 +145,12 @@ class DuplicateIdError(HomeAssistantError):
     """Duplicate ID's."""
 
 
-def load_config(hass) -> JSON_TYPE:
+def load_config(hass, force: bool) -> JSON_TYPE:
     """Load a YAML file."""
     fname = hass.config.path(LOVELACE_CONFIG_FILE)
 
     # Check for a cached version of the config
-    if LOVELACE_DATA in hass.data:
+    if not force and LOVELACE_DATA in hass.data:
         config, last_update = hass.data[LOVELACE_DATA]
         modtime = os.path.getmtime(fname)
         if config and last_update > modtime:
@@ -158,23 +159,29 @@ def load_config(hass) -> JSON_TYPE:
     config = yaml.load_yaml(fname, False)
     seen_card_ids = set()
     seen_view_ids = set()
+    if 'views' in config and not isinstance(config['views'], list):
+        raise HomeAssistantError("Views should be a list.")
     for view in config.get('views', []):
-        view_id = view.get('id')
-        if view_id:
-            view_id = str(view_id)
-            if view_id in seen_view_ids:
-                raise DuplicateIdError(
-                    'ID `{}` has multiple occurances in views'.format(view_id))
-            seen_view_ids.add(view_id)
+        if 'id' in view and not isinstance(view['id'], (str, int)):
+            raise HomeAssistantError(
+                "Your config contains view(s) with invalid ID(s).")
+        view_id = str(view.get('id', ''))
+        if view_id in seen_view_ids:
+            raise DuplicateIdError(
+                'ID `{}` has multiple occurances in views'.format(view_id))
+        seen_view_ids.add(view_id)
+        if 'cards' in view and not isinstance(view['cards'], list):
+            raise HomeAssistantError("Cards should be a list.")
         for card in view.get('cards', []):
-            card_id = card.get('id')
-            if card_id:
-                card_id = str(card_id)
-                if card_id in seen_card_ids:
-                    raise DuplicateIdError(
-                        'ID `{}` has multiple occurances in cards'
-                        .format(card_id))
-                seen_card_ids.add(card_id)
+            if 'id' in card and not isinstance(card['id'], (str, int)):
+                raise HomeAssistantError(
+                    "Your config contains card(s) with invalid ID(s).")
+            card_id = str(card.get('id', ''))
+            if card_id in seen_card_ids:
+                raise DuplicateIdError(
+                    'ID `{}` has multiple occurances in cards'
+                    .format(card_id))
+            seen_card_ids.add(card_id)
     hass.data[LOVELACE_DATA] = (config, time.time())
     return config
 
@@ -539,7 +546,8 @@ def handle_yaml_errors(func):
 @handle_yaml_errors
 async def websocket_lovelace_config(hass, connection, msg):
     """Send Lovelace UI config over WebSocket configuration."""
-    return await hass.async_add_executor_job(load_config, hass)
+    return await hass.async_add_executor_job(load_config, hass,
+                                             msg.get('force', False))
 
 
 @websocket_api.async_response
