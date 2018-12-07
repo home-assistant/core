@@ -107,12 +107,6 @@ class SomfyShade(CoverDevice):
         if self._move_time:
             return self._position
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._supported_features is not None:
-            return self._supported_features
-        return super().supported_features
     async def mylink_open_cover(self):
         """Open the cover, respecting reversal status."""
         if not self._reverse:
