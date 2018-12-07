@@ -21,7 +21,7 @@ async def async_setup_platform(hass,
     if discovery_info is None:
         return
     somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
-    scene_list = list()
+    scene_list = []
     mylink_scenes = await somfy_mylink.scene_list()
     for scene in mylink_scenes['result']:
         _LOGGER.info('Adding Somfy Scene: %s with sceneID %s',
