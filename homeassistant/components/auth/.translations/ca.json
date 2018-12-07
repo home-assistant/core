@@ -13,7 +13,7 @@
                     "title": "Configureu una contrasenya d'un sol \u00fas a trav\u00e9s del component de notificacions"
                 },
                 "setup": {
-                    "description": "**notify.{notify_service}** ha enviat una contrasenya d'un sol \u00fas. Introdu\u00efu-la a continuaci\u00f3:",
+                    "description": "S'ha enviat una contrasenya d'un sol \u00fas mitjan\u00e7ant **notify.{notify_service}**. Introdu\u00efu-la a continuaci\u00f3:",
                     "title": "Verifiqueu la configuraci\u00f3"
                 }
             },

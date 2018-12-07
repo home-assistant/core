@@ -384,6 +384,7 @@ class MockUser(auth_models.User):
             'name': name,
             'system_generated': system_generated,
             'groups': groups or [],
+            'perm_lookup': None,
         }
         if id is not None:
             kwargs['id'] = id
@@ -401,7 +402,8 @@ class MockUser(auth_models.User):
 
     def mock_policy(self, policy):
         """Mock a policy for a user."""
-        self._permissions = auth_permissions.PolicyPermissions(policy)
+        self._permissions = auth_permissions.PolicyPermissions(
+            policy, self.perm_lookup)
 
 
 async def register_auth_provider(hass, config):
@@ -715,9 +717,11 @@ def mock_restore_cache(hass, states):
     """Mock the DATA_RESTORE_CACHE."""
     key = restore_state.DATA_RESTORE_STATE_TASK
     data = restore_state.RestoreStateData(hass)
+    now = date_util.utcnow()
 
     data.last_states = {
-        state.entity_id: state for state in states}
+        state.entity_id: restore_state.StoredState(state, now)
+        for state in states}
     _LOGGER.debug('Restore cache: %s', data.last_states)
     assert len(data.last_states) == len(states), \
         "Duplicate entity_id? {}".format(states)

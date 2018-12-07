@@ -7,10 +7,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL)
+    CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SSL)
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN
 
 
 @callback
@@ -74,6 +74,12 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
                 CONF_PASSWORD: 'invalid_credentials'
             })
 
+        # Since the config entry doesn't allow for configuration of SSL, make
+        # sure it's set:
+        if user_input.get(CONF_SSL) is None:
+            user_input[CONF_SSL] = DEFAULT_SSL
+
+        # Timedeltas are easily serializable, so store the seconds instead:
         scan_interval = user_input.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds

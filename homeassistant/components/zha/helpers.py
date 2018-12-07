@@ -4,9 +4,10 @@ Helpers for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
-import logging
 import asyncio
-from .const import RadioType, DEFAULT_BAUDRATE
+import logging
+
+from .const import DEFAULT_BAUDRATE, RadioType
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -4,6 +4,10 @@ from datetime import timedelta
 from unittest import mock
 import unittest
 
+import voluptuous as vol
+import pytest
+
+from homeassistant import exceptions
 from homeassistant.core import Context, callback
 # Otherwise can't test just this file (import order issue)
 import homeassistant.components  # noqa
@@ -774,3 +778,84 @@ class TestScriptHelper(unittest.TestCase):
             self.hass.block_till_done()
 
         assert script_obj.last_triggered == time
+
+
+async def test_propagate_error_service_not_found(hass):
+    """Test that a script aborts when a service is not found."""
+    events = []
+
+    @callback
+    def record_event(event):
+        events.append(event)
+
+    hass.bus.async_listen('test_event', record_event)
+
+    script_obj = script.Script(hass, cv.SCRIPT_SCHEMA([
+        {'service': 'test.script'},
+        {'event': 'test_event'}]))
+
+    with pytest.raises(exceptions.ServiceNotFound):
+        await script_obj.async_run()
+
+    assert len(events) == 0
+
+
+async def test_propagate_error_invalid_service_data(hass):
+    """Test that a script aborts when we send invalid service data."""
+    events = []
+
+    @callback
+    def record_event(event):
+        events.append(event)
+
+    hass.bus.async_listen('test_event', record_event)
+
+    calls = []
+
+    @callback
+    def record_call(service):
+        """Add recorded event to set."""
+        calls.append(service)
+
+    hass.services.async_register('test', 'script', record_call,
+                                 schema=vol.Schema({'text': str}))
+
+    script_obj = script.Script(hass, cv.SCRIPT_SCHEMA([
+        {'service': 'test.script', 'data': {'text': 1}},
+        {'event': 'test_event'}]))
+
+    with pytest.raises(vol.Invalid):
+        await script_obj.async_run()
+
+    assert len(events) == 0
+    assert len(calls) == 0
+
+
+async def test_propagate_error_service_exception(hass):
+    """Test that a script aborts when a service throws an exception."""
+    events = []
+
+    @callback
+    def record_event(event):
+        events.append(event)
+
+    hass.bus.async_listen('test_event', record_event)
+
+    calls = []
+
+    @callback
+    def record_call(service):
+        """Add recorded event to set."""
+        raise ValueError("BROKEN")
+
+    hass.services.async_register('test', 'script', record_call)
+
+    script_obj = script.Script(hass, cv.SCRIPT_SCHEMA([
+        {'service': 'test.script'},
+        {'event': 'test_event'}]))
+
+    with pytest.raises(ValueError):
+        await script_obj.async_run()
+
+    assert len(events) == 0
+    assert len(calls) == 0
