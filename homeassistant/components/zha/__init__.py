@@ -32,7 +32,7 @@ REQUIREMENTS = [
     'bellows==0.7.0',
     'zigpy==0.2.0',
     'zigpy-xbee==0.1.1',
-    'zha-quirks'
+    'zha-quirks==0.0.5'
 ]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
