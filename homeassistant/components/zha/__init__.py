@@ -32,6 +32,7 @@ REQUIREMENTS = [
     'bellows==0.7.0',
     'zigpy==0.2.0',
     'zigpy-xbee==0.1.1',
+    'zha-quirks'
 ]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -103,6 +104,10 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
+    # needs to be done here so that the ZHA module is finished loading before
+    # zhaquirks is imported
+    import zhaquirks
+
     global APPLICATION_CONTROLLER
 
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
