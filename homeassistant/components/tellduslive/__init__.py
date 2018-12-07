@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tellduslive/
 """
 import asyncio
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -16,9 +17,9 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import (
-    CONF_HOST, CONF_UPDATE_INTERVAL, DOMAIN, KEY_HOST, KEY_SESSION,
-    MIN_UPDATE_INTERVAL, NOT_SO_PRIVATE_KEY, PUBLIC_KEY, SCAN_INTERVAL,
-    SIGNAL_UPDATE_ENTITY, TELLDUS_DISCOVERY_NEW)
+    CONF_HOST, CONF_UPDATE_INTERVAL, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL,
+    KEY_SESSION, MIN_UPDATE_INTERVAL, NOT_SO_PRIVATE_KEY, PUBLIC_KEY,
+    SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, TELLDUS_DISCOVERY_NEW)
 
 APPLICATION_NAME = 'Home Assistant'
 
@@ -70,8 +71,7 @@ async def async_setup_entry(hass, entry):
 
     await client.update()
 
-    interval = hass.data.get("{}_{}".format(DOMAIN, CONF_UPDATE_INTERVAL),
-                             SCAN_INTERVAL)
+    interval = timedelta(seconds=entry.data[KEY_SCAN_INTERVAL])
     _LOGGER.debug('Update interval %s', interval)
     async_track_time_interval(hass, client.update, interval)
 
@@ -87,7 +87,10 @@ async def async_setup(hass, config):
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={'source': config_entries.SOURCE_IMPORT},
-            data={KEY_HOST: config[DOMAIN].get(CONF_HOST)}))
+            data={
+                KEY_HOST: config[DOMAIN].get(CONF_HOST),
+                KEY_SCAN_INTERVAL: config[DOMAIN].get(CONF_UPDATE_INTERVAL),
+            }))
     return True
 
 

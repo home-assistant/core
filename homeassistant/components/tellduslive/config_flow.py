@@ -10,8 +10,9 @@ from homeassistant import config_entries
 from homeassistant.util.json import load_json
 
 from .const import (
-    APPLICATION_NAME, CLOUD_NAME, DOMAIN, KEY_HOST, KEY_SESSION,
-    NOT_SO_PRIVATE_KEY, PUBLIC_KEY, TELLDUS_CONFIG_FILE)
+    APPLICATION_NAME, CLOUD_NAME, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL,
+    KEY_SESSION, NOT_SO_PRIVATE_KEY, PUBLIC_KEY, SCAN_INTERVAL,
+    TELLDUS_CONFIG_FILE)
 
 KEY_TOKEN = 'token'
 KEY_TOKEN_SECRET = 'token_secret'
@@ -31,9 +32,16 @@ class FlowHandler(config_entries.ConfigFlow):
         self._hosts = [CLOUD_NAME]
         self._host = None
         self._session = None
+        self._scan_interval = SCAN_INTERVAL
+
+    def _get_auth_url(self):
+        return self._session.authorize_url
 
     async def async_step_user(self, user_input=None):
         """Let user select host or cloud."""
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return self.async_abort(reason='already_setup')
+
         from tellduslive import Session
         if user_input is not None or len(self._hosts) == 1:
             if user_input is not None and user_input[KEY_HOST] != CLOUD_NAME:
@@ -69,17 +77,15 @@ class FlowHandler(config_entries.ConfigFlow):
                 }
             return self.async_create_entry(
                 title=host, data={
+                    KEY_HOST: host,
+                    KEY_SCAN_INTERVAL: self._scan_interval.seconds,
                     KEY_SESSION: session,
-                    KEY_HOST: host
                 })
-
-        def get_auth_url(session):
-            return session.authorize_url
 
         try:
             with async_timeout.timeout(10):
-                auth_url = await self.hass.async_add_exeutor_job(
-                    get_auth_url, self._session)
+                auth_url = await self.hass.async_add_executor_job(
+                    self._get_auth_url)
         except asyncio.TimeoutError:
             return self.async_abort(reason='authorize_url_timeout')
         except Exception:  # pylint: disable=broad-except
@@ -114,11 +120,10 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        for entry in self._async_current_entries():
-            host = entry.data[KEY_HOST]
-            if host in (user_input[KEY_HOST], CLOUD_NAME):
-                return self.async_abort(reason='already_configured')
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return self.async_abort(reason='already_setup')
 
+        self._scan_interval = user_input[KEY_SCAN_INTERVAL]
         if user_input[KEY_HOST] != DOMAIN:
             self._hosts.append(user_input[KEY_HOST])
 
@@ -137,6 +142,7 @@ class FlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(
             title=host,
             data={
+                KEY_HOST: host,
+                KEY_SCAN_INTERVAL: self._scan_interval.seconds,
                 KEY_SESSION: next(iter(conf.values())),
-                KEY_HOST: host
             })

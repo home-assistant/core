@@ -15,6 +15,7 @@ SIGNAL_UPDATE_ENTITY = 'tellduslive_update'
 
 KEY_HOST = 'host'
 KEY_SESSION = 'session'
+KEY_SCAN_INTERVAL = 'scan_interval'
 
 CONF_TOKEN_SECRET = 'token_secret'
 CONF_UPDATE_INTERVAL = 'update_interval'
