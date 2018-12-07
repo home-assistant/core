@@ -588,14 +588,11 @@ class TemperatureSettingTrait(_Trait):
         max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
 
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
+            temp = temp_util.convert(
+                params['thermostatTemperatureSetpoint'], TEMP_CELSIUS,
+                unit)
             if unit == TEMP_FAHRENHEIT:
-                temp = round(temp_util.convert(
-                    params['thermostatTemperatureSetpoint'], TEMP_CELSIUS,
-                    unit))
-            else:
-                temp = temp_util.convert(
-                    params['thermostatTemperatureSetpoint'], TEMP_CELSIUS,
-                    unit)
+                temp = round(temp)
 
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
@@ -610,28 +607,22 @@ class TemperatureSettingTrait(_Trait):
                 }, blocking=True)
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
+            temp_high = temp_util.convert(
+                params['thermostatTemperatureSetpointHigh'], TEMP_CELSIUS,
+                unit)
             if unit == TEMP_FAHRENHEIT:
-                temp_high = round(temp_util.convert(
-                    params['thermostatTemperatureSetpointHigh'], TEMP_CELSIUS,
-                    unit))
-            else:
-                temp_high = temp_util.convert(
-                    params['thermostatTemperatureSetpointHigh'], TEMP_CELSIUS,
-                    unit)
+                temp_high = round(temp_high)
 
             if temp_high < min_temp or temp_high > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
                     "Upper bound for temperature range should be between "
-                    "{} and {}".format(min_temp, max_temp))
+                    "{} and {}".format(min_temp, max_temp))            
+            temp_low = temp_util.convert(
+                params['thermostatTemperatureSetpointLow'], TEMP_CELSIUS,
+                unit)
             if unit == TEMP_FAHRENHEIT:
-                temp_low = round(temp_util.convert(
-                    params['thermostatTemperatureSetpointLow'], TEMP_CELSIUS,
-                    unit))
-            else:
-                temp_low = temp_util.convert(
-                    params['thermostatTemperatureSetpointLow'], TEMP_CELSIUS,
-                    unit)
+                temp_low = round(temp_low)
 
             if temp_low < min_temp or temp_low > max_temp:
                 raise SmartHomeError(
