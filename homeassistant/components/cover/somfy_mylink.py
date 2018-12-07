@@ -123,9 +123,10 @@ class SomfyShade(CoverDevice, RestoreEntity):
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
         if self._state is not None:
             return
-        state = await self.async_get_last_state()
+        state = await super().async_get_last_state()
         if state:
             self._state = state.state
             self._state_ts = state.last_updated
