@@ -15,9 +15,8 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
         'type': 'lovelace/config'
     })
     response = await client.receive_json()
-    assert response['success']
-
-    assert response['result'] is None
+    assert not response['success']
+    assert response['error']['code'] == 'config_not_found'
 
     # Store new config
     await client.send_json({
@@ -64,7 +63,7 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
     response = await client.receive_json()
     assert not response['success']
 
-    assert response['error']['code'] == 'file_not_found'
+    assert response['error']['code'] == 'config_not_found'
 
     # Store new config not allowed
     await client.send_json({

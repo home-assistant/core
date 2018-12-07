@@ -39,25 +39,34 @@ SCHEMA_SAVE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 })
 
 
+class ConfigNotFound(HomeAssistantError):
+    """When no config available."""
+
+
 class LovelaceStorage:
     """Class to handle Storage based Lovelace config."""
 
     def __init__(self, hass):
         """Initialize Lovelace config based on storage helper."""
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-        self._config = None
+        self._data = None
 
     async def async_load(self, force):
         """Load config."""
-        if self._config is None:
+        if self._data is None:
             data = await self._store.async_load()
-            self._config = data if data else {'config': None}
+            self._data = data if data else {'config': None}
 
-        return self._config['config']
+        config = self._data['config']
+
+        if config is None:
+            raise ConfigNotFound
+
+        return config
 
     async def async_save(self, config):
         """Save config."""
-        self._config = {'config': config}
+        self._data = {'config': config}
         await self._store.async_save(config)
 
 
@@ -82,7 +91,11 @@ class LovelaceYAML:
             if config and last_update > modtime:
                 return config
 
-        config = yaml.load_yaml(fname, False)
+        try:
+            config = yaml.load_yaml(fname, False)
+        except FileNotFoundError:
+            raise ConfigNotFound from None
+
         self.hass.data[DATA_LOVELACE_YAML] = (config, time.time())
         return config
 
@@ -122,9 +135,8 @@ def handle_yaml_errors(func):
             message = websocket_api.result_message(
                 msg['id'], result
             )
-        except FileNotFoundError:
-            error = ('file_not_found',
-                     'Could not find ui-lovelace.yaml in your config dir.')
+        except ConfigNotFound:
+            error = 'config_not_found', 'No config found.'
         except yaml.UnsupportedYamlError as err:
             error = 'unsupported_error', str(err)
         except HomeAssistantError as err:
