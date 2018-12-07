@@ -162,21 +162,27 @@ def load_config(hass, force: bool) -> JSON_TYPE:
     if 'views' in config and not isinstance(config['views'], list):
         raise HomeAssistantError("Views should be a list.")
     for view in config.get('views', []):
-        if 'id' in view and not isinstance(view['id'], (str, int)):
+        if 'id' not in view:
+            continue
+        view_id = view.get('id')
+        if not isinstance(view_id, (str, int)):
             raise HomeAssistantError(
                 "Your config contains view(s) with invalid ID(s).")
-        view_id = str(view.get('id', ''))
+        view_id = str(view_id)
         if view_id in seen_view_ids:
             raise DuplicateIdError(
                 'ID `{}` has multiple occurances in views'.format(view_id))
-        seen_view_ids.add(view_id)
+            seen_view_ids.add(view_id)
         if 'cards' in view and not isinstance(view['cards'], list):
             raise HomeAssistantError("Cards should be a list.")
         for card in view.get('cards', []):
-            if 'id' in card and not isinstance(card['id'], (str, int)):
+            if 'id' not in card:
+                continue
+            card_id = card.get('id')
+            if not isinstance(card_id, (str, int)):
                 raise HomeAssistantError(
-                    "Your config contains card(s) with invalid ID(s).")
-            card_id = str(card.get('id', ''))
+                    "Your config contains card(s) with invalid ID(s)")
+            card_id = str(card_id)
             if card_id in seen_card_ids:
                 raise DuplicateIdError(
                     'ID `{}` has multiple occurances in cards'
