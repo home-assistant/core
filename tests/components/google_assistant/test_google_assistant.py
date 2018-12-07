@@ -214,7 +214,7 @@ def test_query_climate_request(hass_fixture, assistant_client, auth_header):
         'online': True,
         'thermostatTemperatureSetpointHigh': 24,
         'thermostatTemperatureAmbient': 23,
-        'thermostatMode': 'heatcool',
+        'thermostatMode': 'auto',
         'thermostatTemperatureSetpointLow': 21
     }
     assert devices['climate.hvac'] == {
@@ -271,7 +271,7 @@ def test_query_climate_request_f(hass_fixture, assistant_client, auth_header):
         'online': True,
         'thermostatTemperatureSetpointHigh': -4.4,
         'thermostatTemperatureAmbient': -5,
-        'thermostatMode': 'heatcool',
+        'thermostatMode': 'auto',
         'thermostatTemperatureSetpointLow': -6.1,
     }
     assert devices['climate.hvac'] == {
