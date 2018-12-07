@@ -11,7 +11,7 @@ from homeassistant.components.fan import (
     FanEntity)
 from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_OP, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -88,7 +88,7 @@ class ZhaFan(ZhaEntity, FanEntity):
     def attributes_to_report(self) -> dict:
         """Return a dict of attribute reporting configuration."""
         return {
-            self.cluster: {self.value_attribute: (5, 600, 1)}
+            self.cluster: {self.value_attribute: REPORT_CONFIG_OP}
         }
 
     @property
