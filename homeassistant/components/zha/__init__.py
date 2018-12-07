@@ -109,7 +109,8 @@ async def async_setup_entry(hass, config_entry):
     if config_entry.data.get(ENABLE_QUIRKS):
         # needs to be done here so that the ZHA module is finished loading
         # before zhaquirks is imported
-        import zhaquirks
+        # pylint: disable=W0611, W0612
+        import zhaquirks  # noqa
 
     global APPLICATION_CONTROLLER
 
