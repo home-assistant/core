@@ -7,7 +7,6 @@ https://home-assistant.io/components/mythicbeastsdns/
 from datetime import timedelta
 import logging
 import voluptuous as vol
-import mbddns
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_DOMAIN, CONF_PASSWORD
@@ -37,6 +36,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Initialize the Mythic Beasts component."""
+
+    import mbddns
+
     domain = config[DOMAIN][CONF_DOMAIN]
     password = config[DOMAIN][CONF_PASSWORD]
     host = config[DOMAIN][CONF_HOST]
