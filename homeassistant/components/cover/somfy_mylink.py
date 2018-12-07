@@ -24,15 +24,18 @@ async def async_setup_platform(hass,
                                discovery_info=None):
     """Discover and configure Somfy covers."""
     somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
-    cover_options = discovery_info.get(CONF_COVER_OPTIONS, [])
-    cover_list = list()
+    config_options = discovery_info
+    cover_list = []
     mylink_status = await somfy_mylink.status_info()
     for cover in mylink_status['result']:
-        cover_config = dict()
+        cover_config = {}
         cover_config['target_id'] = cover['targetID']
-        for cover_opt in cover_options:
-            if cover_opt.get('name') in ('*', cover['name']):
-                for key, val in cover_opt.items():
+        for key, val in config_options.get('default', {}).items():
+            cover_config[key] = val
+        for config_entity, config_opt in config_options.items():
+            entity_id = "cover.{}".format(slugify(cover['name']))
+            if config_entity == entity_id:
+                for key, val in config_opt.items():
                     cover_config[key] = val
         cover_config['name'] = cover['name']
         cover_list.append(SomfyShade(somfy_mylink, **cover_config))
