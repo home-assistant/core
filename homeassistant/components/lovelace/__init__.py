@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.ruamel_yaml as yaml
+from homeassistant.util.yaml import load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class LovelaceYAML:
                 return config
 
         try:
-            config = yaml.load_yaml(fname, False)
+            config = load_yaml(fname)
         except FileNotFoundError:
             raise ConfigNotFound from None
 
@@ -137,8 +137,6 @@ def handle_yaml_errors(func):
             )
         except ConfigNotFound:
             error = 'config_not_found', 'No config found.'
-        except yaml.UnsupportedYamlError as err:
-            error = 'unsupported_error', str(err)
         except HomeAssistantError as err:
             error = 'error', str(err)
 

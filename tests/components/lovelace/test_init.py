@@ -1,4 +1,6 @@
 """Test the Lovelace initialization."""
+from unittest.mock import patch
+
 from homeassistant.setup import async_setup_component
 from homeassistant.components import lovelace
 
@@ -75,3 +77,16 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
     })
     response = await client.receive_json()
     assert not response['success']
+
+    # Patch data
+    with patch('homeassistant.components.lovelace.load_yaml', return_value={
+        'hello': 'yo'
+    }):
+        await client.send_json({
+            'id': 7,
+            'type': 'lovelace/config'
+        })
+        response = await client.receive_json()
+
+    assert response['success']
+    assert response['result'] == {'hello': 'yo'}
