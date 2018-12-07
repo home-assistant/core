@@ -16,8 +16,7 @@ from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
                                  CONF_PASSWORD)
 from homeassistant.setup import setup_component
 
-REQUIREMENTS = ["pymochad_mqtt>=0.8.4"]
-REQUIREMENTS = ['pymochad==0.2.0']
+REQUIREMENTS = ["pymochad_mqtt==0.8.6", 'pymochad==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
