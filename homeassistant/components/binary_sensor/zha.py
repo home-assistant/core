@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -225,14 +225,12 @@ class Remote(ZhaEntity, BinarySensorDevice):
             general.LevelControl.cluster_id: self.LevelListener(self),
         }
         out_clusters = kwargs.get('out_clusters')
-        min_rpt = 0
         for cluster_id in [general.OnOff.cluster_id,
                            general.LevelControl.cluster_id]:
             if cluster_id not in out_clusters:
                 continue
             cluster = out_clusters[cluster_id]
-            self._attributes_to_report[cluster] = {0: (min_rpt, 600, 1)}
-            min_rpt += 1
+            self._attributes_to_report[cluster] = {0: REPORT_CONFIG_IMMEDIATE}
 
     @property
     def should_poll(self) -> bool:

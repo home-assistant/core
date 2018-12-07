@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -74,7 +74,7 @@ class Switch(ZhaEntity, SwitchDevice):
     def attributes_to_report(self) -> dict:
         """Retrun a dict of attribute reporting configuration."""
         return {
-            self.cluster: {'on_off': (0, 600, 1)}
+            self.cluster: {'on_off': REPORT_CONFIG_IMMEDIATE}
         }
 
     @property

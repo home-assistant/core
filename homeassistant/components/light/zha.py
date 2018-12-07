@@ -9,7 +9,8 @@ import logging
 from homeassistant.components import light
 from homeassistant.components.zha import helpers
 from homeassistant.components.zha.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW)
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_IMMEDIATE, ZHA_DISCOVERY_NEW)
 from homeassistant.components.zha.entities import ZhaEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
@@ -112,12 +113,12 @@ class Light(ZhaEntity, light.Light):
     def attributes_to_report(self) -> dict:
         """Return attribute reporting configuration."""
         return {
-            'on_off': {'on_off': (0, 600, 1)},
-            'level': {'current_level': (2, 600, 1)},
+            'on_off': {'on_off': REPORT_CONFIG_IMMEDIATE},
+            'level': {'current_level': REPORT_CONFIG_ASAP},
             'light_color': {
-                'current_x': (2, 600, 10),
-                'current_y': (2, 600, 10),
-                'color_temperature': (2, 600, 10),
+                'current_x': REPORT_CONFIG_DEFAULT,
+                'current_y': REPORT_CONFIG_DEFAULT,
+                'color_temperature': REPORT_CONFIG_DEFAULT,
             }
         }
 

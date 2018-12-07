@@ -7,7 +7,9 @@ https://home-assistant.io/components/zha/
 import asyncio
 import logging
 
-from .const import DEFAULT_BAUDRATE, RadioType
+from .const import (
+    DEFAULT_BAUDRATE, REPORT_CONFIG_MAX_INT, REPORT_CONFIG_MIN_INT,
+    REPORT_CONFIG_RPT_CHANGE, RadioType)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +33,9 @@ async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
 
 
 async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
-                              min_report=300, max_report=900,
-                              reportable_change=1):
+                              min_report=REPORT_CONFIG_MIN_INT,
+                              max_report=REPORT_CONFIG_MAX_INT,
+                              reportable_change=REPORT_CONFIG_RPT_CHANGE):
     """Configure attribute reporting for a cluster.
 
     while swallowing the DeliverError exceptions in case of unreachable
