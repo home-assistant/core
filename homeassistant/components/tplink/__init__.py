@@ -129,6 +129,9 @@ async def async_unload_entry(hass, entry):
     hass.data[DOMAIN][CONF_LIGHT] = None
     hass.data[DOMAIN][CONF_SWITCH] = None
 
+    # balloob if config entry was never marked loaded, return True from async_setup_config_entry
+    # for unloading, make sure you return True from unloading too
+
     return remove_lights and remove_switches
 
 
