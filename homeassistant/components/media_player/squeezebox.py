@@ -18,7 +18,8 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE,
+    MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_COMMAND, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
@@ -34,7 +35,8 @@ TIMEOUT = 10
 SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
-    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | SUPPORT_CLEAR_PLAYLIST
+    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | SUPPORT_CLEAR_PLAYLIST | \
+    SUPPORT_SELECT_SOURCE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -105,6 +107,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
 
+    lms.register_update_playlists()
+
     players = await lms.create_players()
 
     hass.data[DATA_SQUEEZEBOX].extend(players)
@@ -152,6 +156,12 @@ class LogitechMediaServer:
         self.port = port
         self._username = username
         self._password = password
+        self._playlists = []
+
+    @property
+    def playlists(self):
+        """Return the playlists of LMS."""
+        return self._playlists
 
     async def create_players(self):
         """Create a list of devices connected to LMS."""
@@ -164,6 +174,27 @@ class LogitechMediaServer:
                 self, players['playerid'], players['name'])
             await player.async_update()
             result.append(player)
+        return result
+
+    def register_update_playlists(self):
+        """Begin update playlist loop."""
+        self.hass.loop.create_task(self.async_update_playlists())
+
+    async def async_update_playlists(self):
+        """Update playlist and reschedule loop."""
+        self._playlists = await self.async_get_playlists()
+        await asyncio.sleep(60)
+        self.register_update_playlists()
+
+    async def async_get_playlists(self):
+        """Create a list of playlists from LMS to use as sources."""
+        result = []
+        data = await self.async_query('playlists', '')
+        if data is False:
+            return result
+        for playlist in data.get('playlists_loop', []):
+            result.append(playlist['playlist'])
+
         return result
 
     async def async_query(self, *command, player=""):
@@ -243,6 +274,11 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             if self._status['mode'] == 'stop':
                 return STATE_IDLE
         return STATE_UNKNOWN
+
+    @property
+    def source_list(self):
+        """List of available sources (playlists)."""
+        return sorted(self._lms.playlists)
 
     def async_query(self, *parameters):
         """Send a command to the LMS.
@@ -508,3 +544,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             for parameter in parameters:
                 all_params.append(urllib.parse.quote(parameter, safe=':=/?'))
         return self.async_query(*all_params)
+
+    def async_select_source(self, source):
+        """Select the playlist."""
+        return self.async_query('playlist', 'play', source)
