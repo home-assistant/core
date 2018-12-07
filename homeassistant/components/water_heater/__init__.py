@@ -80,6 +80,7 @@ SET_OPERATION_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_OPERATION_MODE): cv.string,
 })
 
+
 async def async_setup(hass, config):
     """Set up water_heater devices."""
     component = hass.data[DOMAIN] = \
