@@ -26,7 +26,8 @@ from .const import (
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
     DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
-    DEFAULT_RADIO_TYPE, DOMAIN, ZHA_DISCOVERY_NEW, RadioType)
+    DEFAULT_RADIO_TYPE, DOMAIN, ZHA_DISCOVERY_NEW, RadioType,
+    ENABLE_QUIRKS)
 
 REQUIREMENTS = [
     'bellows==0.7.0',
@@ -50,6 +51,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DATABASE): cv.string,
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(ENABLE_QUIRKS, default=True): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -93,7 +95,8 @@ async def async_setup(hass, config):
             context={'source': config_entries.SOURCE_IMPORT},
             data={
                 CONF_USB_PATH: conf[CONF_USB_PATH],
-                CONF_RADIO_TYPE: conf.get(CONF_RADIO_TYPE).value
+                CONF_RADIO_TYPE: conf.get(CONF_RADIO_TYPE).value,
+                ENABLE_QUIRKS: conf[ENABLE_QUIRKS]
             }
         ))
     return True
@@ -104,9 +107,10 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    # needs to be done here so that the ZHA module is finished loading before
-    # zhaquirks is imported
-    import zhaquirks
+    if config_entry.data.get(ENABLE_QUIRKS):
+        # needs to be done here so that the ZHA module is finished loading
+        # before zhaquirks is imported
+        import zhaquirks
 
     global APPLICATION_CONTROLLER
 

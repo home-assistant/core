@@ -29,6 +29,7 @@ CONF_DEVICE_CONFIG = 'device_config'
 CONF_RADIO_TYPE = 'radio_type'
 CONF_USB_PATH = 'usb_path'
 DATA_DEVICE_CONFIG = 'zha_device_config'
+ENABLE_QUIRKS = 'enable_quirks'
 
 DEFAULT_RADIO_TYPE = 'ezsp'
 DEFAULT_BAUDRATE = 57600
