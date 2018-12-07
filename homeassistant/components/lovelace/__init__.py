@@ -162,7 +162,7 @@ def load_config(hass, force: bool) -> JSON_TYPE:
     if 'views' in config and not isinstance(config['views'], list):
         raise HomeAssistantError("Views should be a list.")
     for view in config.get('views', []):
-        if 'id' in view and not (isinstance(view['id'], (str, int)):
+        if 'id' in view and not isinstance(view['id'], (str, int)):
             raise HomeAssistantError(
                 "Your config contains view(s) with invalid ID(s).")
         view_id = str(view.get('id', ''))
@@ -173,7 +173,7 @@ def load_config(hass, force: bool) -> JSON_TYPE:
         if 'cards' in view and not isinstance(view['cards'], list):
             raise HomeAssistantError("Cards should be a list.")
         for card in view.get('cards', []):
-            if 'id' in card and not (isinstance(card['id'], (str, int)):
+            if 'id' in card and not isinstance(card['id'], (str, int)):
                 raise HomeAssistantError(
                     "Your config contains card(s) with invalid ID(s).")
             card_id = str(card.get('id', ''))
