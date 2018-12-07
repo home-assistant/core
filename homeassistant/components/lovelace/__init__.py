@@ -50,13 +50,14 @@ class LovelaceStorage:
     async def async_load(self, force):
         """Load config."""
         if self._config is None:
-            self._config = await self._store.async_load()
+            data = await self._store.async_load()
+            self._config = data if data else {'config': None}
 
-        return self._config
+        return self._config['config']
 
     async def async_save(self, config):
         """Save config."""
-        self._config = config
+        self._config = {'config': config}
         await self._store.async_save(config)
 
 
