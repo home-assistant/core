@@ -18,11 +18,11 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    STATE_ON, STATE_OFF, TEMP_CELSIUS, PRECISION_WHOLE,
+    STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
     PRECISION_TENTHS, TEMP_FAHRENHEIT)
 
-DEFAULT_MIN_TEMP = 110
-DEFAULT_MAX_TEMP = 140
+DEFAULT_MIN_TEMP = 20
+DEFAULT_MAX_TEMP = 100
 
 DOMAIN = 'water_heater'
 
@@ -43,12 +43,16 @@ STATE_GAS = 'gas'
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_OPERATION_MODE = 2
 SUPPORT_AWAY_MODE = 4
+SUPPORT_ON_OFF = 8
 
+ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
+ATTR_TARGET_TEMP_STEP = 'target_temp_step'
 ATTR_AWAY_MODE = 'away_mode'
 ATTR_OPERATION_MODE = 'operation_mode'
 ATTR_OPERATION_LIST = 'operation_list'
+ATTR_IS_ON = 'is_on'
 
 CONVERTIBLE_ATTRIBUTE = [
     ATTR_TEMPERATURE,
@@ -75,7 +79,6 @@ SET_OPERATION_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_OPERATION_MODE): cv.string,
 })
-
 
 async def async_setup(hass, config):
     """Set up water_heater devices."""
@@ -123,7 +126,13 @@ class WaterHeaterDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
-        return self.current_operation
+        if self.is_on is False:
+            return STATE_OFF
+        if self.current_operation:
+            return self.current_operation
+        if self.is_on:
+            return STATE_ON
+        return STATE_UNKNOWN
 
     @property
     def precision(self):
@@ -136,6 +145,9 @@ class WaterHeaterDevice(Entity):
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
+            ATTR_CURRENT_TEMPERATURE: show_temp(
+                self.hass, self.current_temperature, self.temperature_unit,
+                self.precision),
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit,
                 self.precision),
@@ -148,6 +160,8 @@ class WaterHeaterDevice(Entity):
         }
 
         supported_features = self.supported_features
+        if self.target_temperature_step is not None:
+            data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
 
         if supported_features & SUPPORT_OPERATION_MODE:
             data[ATTR_OPERATION_MODE] = self.current_operation
@@ -157,6 +171,10 @@ class WaterHeaterDevice(Entity):
         if supported_features & SUPPORT_AWAY_MODE:
             is_away = self.is_away_mode_on
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
+
+        if supported_features & SUPPORT_ON_OFF:
+            is_on = self.is_on
+            data[ATTR_IS_ON] = STATE_ON if is_on else STATE_OFF
 
         return data
 
@@ -176,14 +194,51 @@ class WaterHeaterDevice(Entity):
         return None
 
     @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        return None
+
+    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        return None
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
         return None
 
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
         return None
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return None
+
+    def turn_on(self):
+        """Turn device on."""
+        raise NotImplementedError()
+
+    def async_turn_on(self):
+        """Turn device on.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.turn_on)
+
+    def turn_off(self):
+        """Turn device off."""
+        raise NotImplementedError()
+
+    def async_turn_off(self):
+        """Turn device off.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.turn_off)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -227,13 +282,13 @@ class WaterHeaterDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_FAHRENHEIT,
+        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_CELSIUS,
                                    self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT,
+        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_CELSIUS,
                                    self.temperature_unit)
 
 
