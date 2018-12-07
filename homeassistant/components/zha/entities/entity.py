@@ -6,7 +6,7 @@ https://home-assistant.io/components/zha/
 """
 from homeassistant.components.zha.const import (
     DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN)
-from homeassistant.core import callback
+from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.util import slugify
@@ -103,3 +103,16 @@ class ZhaEntity(entity.Entity):
             'name': self._device_state_attributes['friendly_name'],
             'via_hub': (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
+
+    @callback
+    def zha_send_event(self, cluster, command, args):
+        """Relay entity events to hass"""
+        self.hass.bus.async_fire(
+            'zha_event',
+            {
+                'entity_id': self.entity_id,
+                'command': command,
+                'args': args
+            },
+            EventOrigin.remote
+        )

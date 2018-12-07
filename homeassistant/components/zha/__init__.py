@@ -7,6 +7,7 @@ https://home-assistant.io/components/zha/
 import collections
 import logging
 import os
+import types
 
 import voluptuous as vol
 
@@ -130,6 +131,19 @@ async def async_setup_entry(hass, config_entry):
         database = config[CONF_DATABASE]
     else:
         database = os.path.join(hass.config.config_dir, DEFAULT_DATABASE_NAME)
+
+    # patch zigpy listener to prevent flooding logs with warnings due to
+    # how zigpy implemented its listeners
+    from zigpy.appdb import ClusterPersistingListener
+
+    def zha_send_event(self, cluster, command, args):
+        pass
+
+    ClusterPersistingListener.zha_send_event = types.MethodType(
+        zha_send_event,
+        ClusterPersistingListener
+    )
+
     APPLICATION_CONTROLLER = ControllerApplication(radio, database)
     listener = ApplicationListener(hass, config)
     APPLICATION_CONTROLLER.add_listener(listener)
