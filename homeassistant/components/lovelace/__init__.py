@@ -7,9 +7,7 @@ at https://www.home-assistant.io/lovelace/
 from functools import wraps
 import logging
 import os
-from typing import Dict, List, Union
 import time
-import uuid
 
 import voluptuous as vol
 
@@ -20,16 +18,18 @@ import homeassistant.util.ruamel_yaml as yaml
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'lovelace'
-
+DATA_LOVELACE_YAML = 'lovelace_yaml'
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 CONF_LEGACY = 'legacy'
 
 LOVELACE_CONFIG_FILE = 'ui-lovelace.yaml'
 
+WS_TYPE_GET_LOVELACE_UI = 'lovelace/config'
+WS_TYPE_SAVE_CONFIG = 'lovelace/config/save'
+
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'):
-        vol.Any(WS_TYPE_GET_LOVELACE_UI, OLD_WS_TYPE_GET_LOVELACE_UI),
+    vol.Required('type'): WS_TYPE_GET_LOVELACE_UI,
 })
 
 SCHEMA_SAVE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -72,8 +72,21 @@ class LovelaceYAML:
 
     async def async_load(self):
         """Load config."""
-        return await hass.async_add_executor_job(load_config, hass,
-                                                 msg.get('force', False))
+        return await self.hass.async_add_executor_job(self._load_config)
+
+    def _load_config(self):
+        """Load the actual config."""
+        fname = self.hass.config.path(LOVELACE_CONFIG_FILE)
+        # Check for a cached version of the config
+        if DATA_LOVELACE_YAML in self.hass.data:
+            config, last_update = self.hass.data[DATA_LOVELACE_YAML]
+            modtime = os.path.getmtime(fname)
+            if config and last_update > modtime:
+                return config
+
+        config = yaml.load_yaml(fname, False)
+        self.hass.data[DATA_LOVELACE_YAML] = (config, time.time())
+        return config
 
     async def async_save(self, config):
         """Save config."""
@@ -113,16 +126,8 @@ def handle_yaml_errors(func):
                      'Could not find ui-lovelace.yaml in your config dir.')
         except yaml.UnsupportedYamlError as err:
             error = 'unsupported_error', str(err)
-        except yaml.WriteError as err:
-            error = 'write_error', str(err)
         except LegacyError:
             error = 'legacy_mode', 'Not allowed in legacy mode.'
-        except DuplicateIdError as err:
-            error = 'duplicate_id', str(err)
-        except CardNotFoundError as err:
-            error = 'card_not_found', str(err)
-        except ViewNotFoundError as err:
-            error = 'view_not_found', str(err)
         except HomeAssistantError as err:
             error = 'error', str(err)
 
