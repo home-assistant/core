@@ -172,7 +172,7 @@ def load_config(hass, force: bool) -> JSON_TYPE:
         if view_id in seen_view_ids:
             raise DuplicateIdError(
                 'ID `{}` has multiple occurances in views'.format(view_id))
-            seen_view_ids.add(view_id)
+        seen_view_ids.add(view_id)
         if 'cards' in view and not isinstance(view['cards'], list):
             raise HomeAssistantError("Cards should be a list.")
         for card in view.get('cards', []):
