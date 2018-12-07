@@ -124,7 +124,7 @@ async def test_api_no_base_url(hass):
     assert hass.config.api.base_url == 'http://127.0.0.1:8123'
 
 
-async def test_not_log_password(hass, aiohttp_client, caplog):
+async def test_not_log_password(hass, aiohttp_client, caplog, legacy_auth):
     """Test access with password doesn't get logged."""
     assert await async_setup_component(hass, 'api', {
         'http': {

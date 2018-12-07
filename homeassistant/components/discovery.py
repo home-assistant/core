@@ -51,7 +51,6 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_HUE: 'hue',
     SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
-    'igd': 'upnp',
 }
 
 SERVICE_HANDLERS = {
@@ -135,6 +134,7 @@ async def async_setup(hass, config):
 
         discovery_hash = json.dumps([service, info], sort_keys=True)
         if discovery_hash in already_discovered:
+            logger.debug("Already discoverd service %s %s.", service, info)
             return
 
         already_discovered.add(discovery_hash)

@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.mailgun import CONF_SANDBOX, DATA_MAILGUN
+from homeassistant.components.mailgun import (
+    CONF_SANDBOX, DOMAIN as MAILGUN_DOMAIN)
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService, ATTR_TITLE, ATTR_TITLE_DEFAULT,
     ATTR_DATA)
@@ -35,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the Mailgun notification service."""
-    data = hass.data[DATA_MAILGUN]
+    data = hass.data[MAILGUN_DOMAIN]
     mailgun_service = MailgunNotificationService(
         data.get(CONF_DOMAIN), data.get(CONF_SANDBOX),
         data.get(CONF_API_KEY), config.get(CONF_SENDER),

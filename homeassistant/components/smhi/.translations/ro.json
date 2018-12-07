@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "name_exists": "Numele exist\u0103 deja"
+            "name_exists": "Numele exist\u0103 deja",
+            "wrong_location": "Loca\u021bia numai \u00een Suedia"
         },
         "step": {
             "user": {

@@ -61,23 +61,21 @@ class TestShellCommand(unittest.TestCase):
             self.hass.services.call('shell_command', 'test_service',
                                     blocking=True)
             self.hass.block_till_done()
-            self.assertTrue(os.path.isfile(path))
+            assert os.path.isfile(path)
 
     def test_config_not_dict(self):
         """Test that setup fails if config is not a dict."""
-        self.assertFalse(
-                setup_component(self.hass, shell_command.DOMAIN, {
+        assert not setup_component(self.hass, shell_command.DOMAIN, {
                     shell_command.DOMAIN: ['some', 'weird', 'list']
-                    }))
+                    })
 
     def test_config_not_valid_service_names(self):
         """Test that setup fails if config contains invalid service names."""
-        self.assertFalse(
-                setup_component(self.hass, shell_command.DOMAIN, {
+        assert not setup_component(self.hass, shell_command.DOMAIN, {
                     shell_command.DOMAIN: {
                         'this is invalid because space': 'touch bla.txt'
                         }
-                    }))
+                    })
 
     @patch('homeassistant.components.shell_command.asyncio.subprocess'
            '.create_subprocess_shell')
@@ -85,14 +83,13 @@ class TestShellCommand(unittest.TestCase):
         """Ensure shell_commands without templates get rendered properly."""
         mock_call.return_value = mock_process_creator(error=False)
 
-        self.assertTrue(
-                setup_component(
+        assert setup_component(
                     self.hass,
                     shell_command.DOMAIN, {
                         shell_command.DOMAIN: {
                             'test_service': "ls /bin"
                             }
-                        }))
+                        })
 
         self.hass.services.call('shell_command', 'test_service',
                                 blocking=True)
@@ -100,8 +97,8 @@ class TestShellCommand(unittest.TestCase):
         self.hass.block_till_done()
         cmd = mock_call.mock_calls[0][1][0]
 
-        self.assertEqual(1, mock_call.call_count)
-        self.assertEqual('ls /bin', cmd)
+        assert 1 == mock_call.call_count
+        assert 'ls /bin' == cmd
 
     @patch('homeassistant.components.shell_command.asyncio.subprocess'
            '.create_subprocess_exec')
@@ -109,13 +106,12 @@ class TestShellCommand(unittest.TestCase):
         """Ensure shell_commands with templates get rendered properly."""
         self.hass.states.set('sensor.test_state', 'Works')
         mock_call.return_value = mock_process_creator(error=False)
-        self.assertTrue(
-                setup_component(self.hass, shell_command.DOMAIN, {
+        assert setup_component(self.hass, shell_command.DOMAIN, {
                     shell_command.DOMAIN: {
                         'test_service': ("ls /bin {{ states.sensor"
                                          ".test_state.state }}")
                         }
-                    }))
+                    })
 
         self.hass.services.call('shell_command', 'test_service',
                                 blocking=True)
@@ -123,8 +119,8 @@ class TestShellCommand(unittest.TestCase):
         self.hass.block_till_done()
         cmd = mock_call.mock_calls[0][1]
 
-        self.assertEqual(1, mock_call.call_count)
-        self.assertEqual(('ls', '/bin', 'Works'), cmd)
+        assert 1 == mock_call.call_count
+        assert ('ls', '/bin', 'Works') == cmd
 
     @patch('homeassistant.components.shell_command.asyncio.subprocess'
            '.create_subprocess_shell')
@@ -134,55 +130,52 @@ class TestShellCommand(unittest.TestCase):
         mock_call.return_value = mock_process_creator(error=True)
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'called.txt')
-            self.assertTrue(
-                    setup_component(self.hass, shell_command.DOMAIN, {
+            assert setup_component(self.hass, shell_command.DOMAIN, {
                         shell_command.DOMAIN: {
                             'test_service': "touch {}".format(path)
                             }
-                        }))
+                        })
 
             self.hass.services.call('shell_command', 'test_service',
                                     blocking=True)
 
             self.hass.block_till_done()
-            self.assertEqual(1, mock_call.call_count)
-            self.assertEqual(1, mock_error.call_count)
-            self.assertFalse(os.path.isfile(path))
+            assert 1 == mock_call.call_count
+            assert 1 == mock_error.call_count
+            assert not os.path.isfile(path)
 
     @patch('homeassistant.components.shell_command._LOGGER.debug')
     def test_stdout_captured(self, mock_output):
         """Test subprocess that has stdout."""
         test_phrase = "I have output"
-        self.assertTrue(
-                setup_component(self.hass, shell_command.DOMAIN, {
+        assert setup_component(self.hass, shell_command.DOMAIN, {
                     shell_command.DOMAIN: {
                         'test_service': "echo {}".format(test_phrase)
                         }
-                    }))
+                    })
 
         self.hass.services.call('shell_command', 'test_service',
                                 blocking=True)
 
         self.hass.block_till_done()
-        self.assertEqual(1, mock_output.call_count)
-        self.assertEqual(test_phrase.encode() + b'\n',
-                         mock_output.call_args_list[0][0][-1])
+        assert 1 == mock_output.call_count
+        assert test_phrase.encode() + b'\n' == \
+            mock_output.call_args_list[0][0][-1]
 
     @patch('homeassistant.components.shell_command._LOGGER.debug')
     def test_stderr_captured(self, mock_output):
         """Test subprocess that has stderr."""
         test_phrase = "I have error"
-        self.assertTrue(
-                setup_component(self.hass, shell_command.DOMAIN, {
+        assert setup_component(self.hass, shell_command.DOMAIN, {
                     shell_command.DOMAIN: {
                         'test_service': ">&2 echo {}".format(test_phrase)
                         }
-                    }))
+                    })
 
         self.hass.services.call('shell_command', 'test_service',
                                 blocking=True)
 
         self.hass.block_till_done()
-        self.assertEqual(1, mock_output.call_count)
-        self.assertEqual(test_phrase.encode() + b'\n',
-                         mock_output.call_args_list[0][0][-1])
+        assert 1 == mock_output.call_count
+        assert test_phrase.encode() + b'\n' == \
+            mock_output.call_args_list[0][0][-1]

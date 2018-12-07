@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['xknx==0.8.5']
+REQUIREMENTS = ['xknx==0.9.1']
 
 DOMAIN = "knx"
 DATA_KNX = "data_knx"

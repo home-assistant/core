@@ -42,14 +42,14 @@ class TestConfiguration(unittest.TestCase):
                 patch.object(rtm.RememberTheMilkConfiguration, 'save_config'):
             config = rtm.RememberTheMilkConfiguration(self.hass)
             config.set_token(self.profile, self.token)
-        self.assertEqual(config.get_token(self.profile), self.token)
+        assert config.get_token(self.profile) == self.token
 
     def test_load_config(self):
         """Test loading an existing token from the file."""
         with patch("builtins.open", mock_open(read_data=self.json_string)), \
                 patch("os.path.isfile", Mock(return_value=True)):
             config = rtm.RememberTheMilkConfiguration(self.hass)
-        self.assertEqual(config.get_token(self.profile), self.token)
+        assert config.get_token(self.profile) == self.token
 
     def test_invalid_data(self):
         """Test starts with invalid data and should not raise an exception."""
@@ -57,7 +57,7 @@ class TestConfiguration(unittest.TestCase):
                    mock_open(read_data='random characters')),\
                 patch("os.path.isfile", Mock(return_value=True)):
             config = rtm.RememberTheMilkConfiguration(self.hass)
-        self.assertIsNotNone(config)
+        assert config is not None
 
     def test_id_map(self):
         """Test the hass to rtm task is mapping."""
@@ -70,18 +70,18 @@ class TestConfiguration(unittest.TestCase):
                 patch.object(rtm.RememberTheMilkConfiguration, 'save_config'):
             config = rtm.RememberTheMilkConfiguration(self.hass)
 
-            self.assertEqual(None, config.get_rtm_id(self.profile, hass_id))
+            assert config.get_rtm_id(self.profile, hass_id) is None
             config.set_rtm_id(self.profile, hass_id, list_id, timeseries_id,
                               rtm_id)
-            self.assertEqual((list_id, timeseries_id, rtm_id),
-                             config.get_rtm_id(self.profile, hass_id))
+            assert (list_id, timeseries_id, rtm_id) == \
+                config.get_rtm_id(self.profile, hass_id)
             config.delete_rtm_id(self.profile, hass_id)
-            self.assertEqual(None, config.get_rtm_id(self.profile, hass_id))
+            assert config.get_rtm_id(self.profile, hass_id) is None
 
     def test_load_key_map(self):
         """Test loading an existing key map from the file."""
         with patch("builtins.open", mock_open(read_data=self.json_string)), \
                 patch("os.path.isfile", Mock(return_value=True)):
             config = rtm.RememberTheMilkConfiguration(self.hass)
-        self.assertEqual(('0', '1', '2',),
-                         config.get_rtm_id(self.profile, "1234"))
+        assert ('0', '1', '2',) == \
+            config.get_rtm_id(self.profile, "1234")

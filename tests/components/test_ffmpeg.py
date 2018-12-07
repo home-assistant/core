@@ -1,6 +1,6 @@
 """The tests for Home Assistant ffmpeg."""
 import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 import homeassistant.components.ffmpeg as ffmpeg
 from homeassistant.components.ffmpeg import (
@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_coro)
+    get_test_home_assistant, assert_setup_component)
 
 
 @callback
@@ -85,14 +85,14 @@ class TestFFmpegSetup:
 
     def test_setup_component(self):
         """Set up ffmpeg component."""
-        with assert_setup_component(2):
+        with assert_setup_component(1):
             setup_component(self.hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
         assert self.hass.data[ffmpeg.DATA_FFMPEG].binary == 'ffmpeg'
 
     def test_setup_component_test_service(self):
         """Set up ffmpeg component test services."""
-        with assert_setup_component(2):
+        with assert_setup_component(1):
             setup_component(self.hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
         assert self.hass.services.has_service(ffmpeg.DOMAIN, 'start')
@@ -103,7 +103,7 @@ class TestFFmpegSetup:
 @asyncio.coroutine
 def test_setup_component_test_register(hass):
     """Set up ffmpeg component test register."""
-    with assert_setup_component(2):
+    with assert_setup_component(1):
         yield from async_setup_component(
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
@@ -118,7 +118,7 @@ def test_setup_component_test_register(hass):
 @asyncio.coroutine
 def test_setup_component_test_register_no_startup(hass):
     """Set up ffmpeg component test register without startup."""
-    with assert_setup_component(2):
+    with assert_setup_component(1):
         yield from async_setup_component(
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
@@ -133,7 +133,7 @@ def test_setup_component_test_register_no_startup(hass):
 @asyncio.coroutine
 def test_setup_component_test_service_start(hass):
     """Set up ffmpeg component test service start."""
-    with assert_setup_component(2):
+    with assert_setup_component(1):
         yield from async_setup_component(
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
@@ -149,7 +149,7 @@ def test_setup_component_test_service_start(hass):
 @asyncio.coroutine
 def test_setup_component_test_service_stop(hass):
     """Set up ffmpeg component test service stop."""
-    with assert_setup_component(2):
+    with assert_setup_component(1):
         yield from async_setup_component(
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
@@ -165,7 +165,7 @@ def test_setup_component_test_service_stop(hass):
 @asyncio.coroutine
 def test_setup_component_test_service_restart(hass):
     """Set up ffmpeg component test service restart."""
-    with assert_setup_component(2):
+    with assert_setup_component(1):
         yield from async_setup_component(
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
@@ -182,7 +182,7 @@ def test_setup_component_test_service_restart(hass):
 @asyncio.coroutine
 def test_setup_component_test_service_start_with_entity(hass):
     """Set up ffmpeg component test service start."""
-    with assert_setup_component(2):
+    with assert_setup_component(1):
         yield from async_setup_component(
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
@@ -194,71 +194,3 @@ def test_setup_component_test_service_start_with_entity(hass):
 
     assert ffmpeg_dev.called_start
     assert ffmpeg_dev.called_entities == ['test.ffmpeg_device']
-
-
-@asyncio.coroutine
-def test_setup_component_test_run_test_false(hass):
-    """Set up ffmpeg component test run_test false."""
-    with assert_setup_component(2):
-        yield from async_setup_component(
-            hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {
-                'run_test': False,
-            }})
-
-    manager = hass.data[ffmpeg.DATA_FFMPEG]
-    with patch('haffmpeg.Test.run_test', return_value=mock_coro(False)):
-        yield from manager.async_run_test("blabalblabla")
-
-    assert len(manager._cache) == 0
-
-
-@asyncio.coroutine
-def test_setup_component_test_run_test(hass):
-    """Set up ffmpeg component test run_test."""
-    with assert_setup_component(2):
-        yield from async_setup_component(
-            hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
-
-    manager = hass.data[ffmpeg.DATA_FFMPEG]
-
-    with patch('haffmpeg.Test.run_test', return_value=mock_coro(True)) \
-            as mock_test:
-        yield from manager.async_run_test("blabalblabla")
-
-        assert mock_test.called
-        assert mock_test.call_count == 1
-        assert len(manager._cache) == 1
-        assert manager._cache['blabalblabla']
-
-        yield from manager.async_run_test("blabalblabla")
-
-        assert mock_test.called
-        assert mock_test.call_count == 1
-        assert len(manager._cache) == 1
-        assert manager._cache['blabalblabla']
-
-
-@asyncio.coroutine
-def test_setup_component_test_run_test_test_fail(hass):
-    """Set up ffmpeg component test run_test."""
-    with assert_setup_component(2):
-        yield from async_setup_component(
-            hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
-
-    manager = hass.data[ffmpeg.DATA_FFMPEG]
-
-    with patch('haffmpeg.Test.run_test', return_value=mock_coro(False)) \
-            as mock_test:
-        yield from manager.async_run_test("blabalblabla")
-
-        assert mock_test.called
-        assert mock_test.call_count == 1
-        assert len(manager._cache) == 1
-        assert not manager._cache['blabalblabla']
-
-        yield from manager.async_run_test("blabalblabla")
-
-        assert mock_test.called
-        assert mock_test.call_count == 1
-        assert len(manager._cache) == 1
-        assert not manager._cache['blabalblabla']

@@ -6,15 +6,16 @@ https://home-assistant.io/components/switch.rflink/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.rflink import (
     CONF_ALIASES, CONF_ALIASSES, CONF_DEVICE_DEFAULTS, CONF_DEVICES,
     CONF_FIRE_EVENT, CONF_GROUP, CONF_GROUP_ALIASES, CONF_GROUP_ALIASSES,
     CONF_NOGROUP_ALIASES, CONF_NOGROUP_ALIASSES, CONF_SIGNAL_REPETITIONS,
-    DEVICE_DEFAULTS_SCHEMA, SwitchableRflinkDevice, cv,
-    remove_deprecated, vol)
+    DEVICE_DEFAULTS_SCHEMA, SwitchableRflinkDevice, remove_deprecated)
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA, SwitchDevice)
-
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 
 DEPENDENCIES = ['rflink']

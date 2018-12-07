@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u50c5\u5141\u8a31\u8a2d\u5b9a\u4e00\u7d44 ZHA\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 ZHA \u88dd\u7f6e\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radio_type": "\u7121\u7dda\u96fb\u985e\u578b",
+                    "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
+                },
+                "description": "\u7a7a\u767d",
+                "title": "ZHA"
+            }
+        },
+        "title": "ZHA"
+    }
+}

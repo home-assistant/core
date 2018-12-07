@@ -16,12 +16,13 @@ from homeassistant.core import CoreState
 from homeassistant.loader import bind_hass
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID)
+    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID,
+    EVENT_AUTOMATION_TRIGGERED, ATTR_NAME)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
 
@@ -182,7 +183,7 @@ async def async_setup(hass, config):
     return True
 
 
-class AutomationEntity(ToggleEntity):
+class AutomationEntity(ToggleEntity, RestoreEntity):
     """Entity to show status of entity."""
 
     def __init__(self, automation_id, name, async_attach_triggers, cond_func,
@@ -227,12 +228,13 @@ class AutomationEntity(ToggleEntity):
 
     async def async_added_to_hass(self) -> None:
         """Startup with initial state or previous state."""
+        await super().async_added_to_hass()
         if self._initial_state is not None:
             enable_automation = self._initial_state
             _LOGGER.debug("Automation %s initial state %s from config "
                           "initial_state", self.entity_id, enable_automation)
         else:
-            state = await async_get_last_state(self.hass, self.entity_id)
+            state = await self.async_get_last_state()
             if state:
                 enable_automation = state.state == STATE_ON
                 self._last_triggered = state.attributes.get('last_triggered')
@@ -285,12 +287,17 @@ class AutomationEntity(ToggleEntity):
         """
         if skip_condition or self._cond_func(variables):
             self.async_set_context(context)
+            self.hass.bus.async_fire(EVENT_AUTOMATION_TRIGGERED, {
+                ATTR_NAME: self._name,
+                ATTR_ENTITY_ID: self.entity_id,
+            }, context=context)
             await self._async_action(self.entity_id, variables, context)
             self._last_triggered = utcnow()
             await self.async_update_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from HASS."""
+        await super().async_will_remove_from_hass()
         await self.async_turn_off()
 
     async def async_enable(self):
@@ -368,8 +375,6 @@ def _async_get_action(hass, config, name):
     async def action(entity_id, variables, context):
         """Execute an action."""
         _LOGGER.info('Executing %s', name)
-        hass.components.logbook.async_log_entry(
-            name, 'has been triggered', DOMAIN, entity_id)
         await script_obj.async_run(variables, context)
 
     return action
@@ -400,6 +405,9 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
     This method is a coroutine.
     """
     removes = []
+    info = {
+        'name': name
+    }
 
     for conf in trigger_configs:
         platform = await async_prepare_setup_platform(
@@ -408,7 +416,7 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
         if platform is None:
             return None
 
-        remove = await platform.async_trigger(hass, conf, action)
+        remove = await platform.async_trigger(hass, conf, action, info)
 
         if not remove:
             _LOGGER.error("Error setting up trigger %s", name)

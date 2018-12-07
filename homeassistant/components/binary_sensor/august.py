@@ -19,14 +19,15 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 def _retrieve_door_state(data, lock):
     """Get the latest state of the DoorSense sensor."""
-    from august.lock import LockDoorStatus
-    doorstate = data.get_door_state(lock.device_id)
-    return doorstate == LockDoorStatus.OPEN
+    return data.get_door_state(lock.device_id)
 
 
 def _retrieve_online_state(data, doorbell):
     """Get the latest state of the sensor."""
     detail = data.get_doorbell_detail(doorbell.device_id)
+    if detail is None:
+        return None
+
     return detail.is_online
 
 
@@ -138,9 +139,10 @@ class AugustDoorBinarySensor(BinarySensorDevice):
         """Get the latest state of the sensor."""
         state_provider = SENSOR_TYPES_DOOR[self._sensor_type][2]
         self._state = state_provider(self._data, self._door)
+        self._available = self._state is not None
 
         from august.lock import LockDoorStatus
-        self._available = self._state != LockDoorStatus.UNKNOWN
+        self._state = self._state == LockDoorStatus.OPEN
 
 
 class AugustDoorbellBinarySensor(BinarySensorDevice):
@@ -152,6 +154,12 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
         self._sensor_type = sensor_type
         self._doorbell = doorbell
         self._state = None
+        self._available = False
+
+    @property
+    def available(self):
+        """Return the availability of this sensor."""
+        return self._available
 
     @property
     def is_on(self):
@@ -173,3 +181,4 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
         """Get the latest state of the sensor."""
         state_provider = SENSOR_TYPES_DOORBELL[self._sensor_type][2]
         self._state = state_provider(self._data, self._doorbell)
+        self._available = self._state is not None

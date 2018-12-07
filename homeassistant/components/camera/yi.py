@@ -144,7 +144,9 @@ class YiCamera(Camera):
         await stream.open_camera(
             self._last_url, extra_cmd=self._extra_arguments)
 
-        await async_aiohttp_proxy_stream(
-            self.hass, request, stream,
-            'multipart/x-mixed-replace;boundary=ffserver')
-        await stream.close()
+        try:
+            return await async_aiohttp_proxy_stream(
+                self.hass, request, stream,
+                'multipart/x-mixed-replace;boundary=ffserver')
+        finally:
+            await stream.close()

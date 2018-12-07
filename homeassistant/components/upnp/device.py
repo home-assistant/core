@@ -6,7 +6,6 @@ import aiohttp
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import get_local_ip
 
 from .const import LOGGER as _LOGGER
 
@@ -51,15 +50,13 @@ class Device:
         """Get the name."""
         return self._igd_device.name
 
-    async def async_add_port_mappings(self, ports, local_ip=None):
+    async def async_add_port_mappings(self, ports, local_ip):
         """Add port mappings."""
-        # determine local ip, ensure sane IP
-        if local_ip is None:
-            local_ip = get_local_ip()
-
         if local_ip == '127.0.0.1':
             _LOGGER.error(
                 'Could not create port mapping, our IP is 127.0.0.1')
+
+        # determine local ip, ensure sane IP
         local_ip = IPv4Address(local_ip)
 
         # create port mappings

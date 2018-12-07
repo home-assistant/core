@@ -6,11 +6,9 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers import aiohttp_client
-from homeassistant.util.json import load_json
 
 from .const import (
-    CONF_ALLOW_DECONZ_GROUPS, CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DOMAIN)
-
+    CONF_ALLOW_DECONZ_GROUPS, CONF_ALLOW_CLIP_SENSOR, DEFAULT_PORT, DOMAIN)
 
 CONF_BRIDGEID = 'bridgeid'
 
@@ -55,6 +53,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
                 if bridge[CONF_HOST] == user_input[CONF_HOST]:
                     self.deconz_config = bridge
                     return await self.async_step_link()
+            self.deconz_config = user_input
+            return await self.async_step_link()
 
         session = aiohttp_client.async_get_clientsession(self.hass)
         self.bridges = await async_discovery(session)
@@ -62,6 +62,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         if len(self.bridges) == 1:
             self.deconz_config = self.bridges[0]
             return await self.async_step_link()
+
         if len(self.bridges) > 1:
             hosts = []
             for bridge in self.bridges:
@@ -73,8 +74,12 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
                 })
             )
 
-        return self.async_abort(
-            reason='no_bridges'
+        return self.async_show_form(
+            step_id='user',
+            data_schema=vol.Schema({
+                vol.Required(CONF_HOST): str,
+                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+            }),
         )
 
     async def async_step_link(self, user_input=None):
@@ -138,13 +143,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         deconz_config[CONF_HOST] = discovery_info.get(CONF_HOST)
         deconz_config[CONF_PORT] = discovery_info.get(CONF_PORT)
         deconz_config[CONF_BRIDGEID] = discovery_info.get('serial')
-
-        config_file = await self.hass.async_add_job(
-            load_json, self.hass.config.path(CONFIG_FILE))
-        if config_file and \
-           config_file[CONF_HOST] == deconz_config[CONF_HOST] and \
-           CONF_API_KEY in config_file:
-            deconz_config[CONF_API_KEY] = config_file[CONF_API_KEY]
 
         return await self.async_step_import(deconz_config)
 

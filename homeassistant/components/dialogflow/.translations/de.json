@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Dialogflow Webhook einrichten"
+            }
+        },
+        "title": "Dialogflow"
+    }
+}

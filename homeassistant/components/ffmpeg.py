@@ -37,15 +37,12 @@ CONF_INPUT = 'input'
 CONF_FFMPEG_BIN = 'ffmpeg_bin'
 CONF_EXTRA_ARGUMENTS = 'extra_arguments'
 CONF_OUTPUT = 'output'
-CONF_RUN_TEST = 'run_test'
 
 DEFAULT_BINARY = 'ffmpeg'
-DEFAULT_RUN_TEST = True
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_FFMPEG_BIN, default=DEFAULT_BINARY): cv.string,
-        vol.Optional(CONF_RUN_TEST, default=DEFAULT_RUN_TEST): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -60,8 +57,7 @@ async def async_setup(hass, config):
 
     manager = FFmpegManager(
         hass,
-        conf.get(CONF_FFMPEG_BIN, DEFAULT_BINARY),
-        conf.get(CONF_RUN_TEST, DEFAULT_RUN_TEST)
+        conf.get(CONF_FFMPEG_BIN, DEFAULT_BINARY)
     )
 
     # Register service
@@ -95,39 +91,16 @@ async def async_setup(hass, config):
 class FFmpegManager:
     """Helper for ha-ffmpeg."""
 
-    def __init__(self, hass, ffmpeg_bin, run_test):
+    def __init__(self, hass, ffmpeg_bin):
         """Initialize helper."""
         self.hass = hass
         self._cache = {}
         self._bin = ffmpeg_bin
-        self._run_test = run_test
 
     @property
     def binary(self):
         """Return ffmpeg binary from config."""
         return self._bin
-
-    async def async_run_test(self, input_source):
-        """Run test on this input. TRUE is deactivate or run correct.
-
-        This method must be run in the event loop.
-        """
-        from haffmpeg import Test
-
-        if self._run_test:
-            # if in cache
-            if input_source in self._cache:
-                return self._cache[input_source]
-
-            # run test
-            ffmpeg_test = Test(self.binary, loop=self.hass.loop)
-            success = await ffmpeg_test.run_test(input_source)
-            if not success:
-                _LOGGER.error("FFmpeg '%s' test fails!", input_source)
-                self._cache[input_source] = False
-                return False
-            self._cache[input_source] = True
-        return True
 
 
 class FFmpegBase(Entity):

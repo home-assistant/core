@@ -59,14 +59,15 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 def extract_image_from_mjpeg(stream):
     """Take in a MJPEG stream object, return the jpg from it."""
-    data = b''
+    data = bytes()
+    data_start = b"\xff\xd8"
+    data_end = b"\xff\xd9"
     for chunk in stream:
+        end_idx = chunk.find(data_end)
+        if end_idx != -1:
+            return data[data.find(data_start):] + chunk[:end_idx + 2]
+
         data += chunk
-        jpg_start = data.find(b'\xff\xd8')
-        jpg_end = data.find(b'\xff\xd9')
-        if jpg_start != -1 and jpg_end != -1:
-            jpg = data[jpg_start:jpg_end + 2]
-            return jpg
 
 
 class MjpegCamera(Camera):
@@ -134,8 +135,7 @@ class MjpegCamera(Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         # aiohttp don't support DigestAuth -> Fallback
         if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-            await super().handle_async_mjpeg_stream(request)
-            return
+            return await super().handle_async_mjpeg_stream(request)
 
         # connect to stream
         websession = async_get_clientsession(self.hass)
