@@ -68,6 +68,8 @@ class SomfyShade(CoverDevice):
         self._is_opening = False
         self._is_closing = False
         self._closed = True
+        self._state = None
+        self._state_ts = None
         self._supported_features = DEFAULT_SUPPORTED_FEATURES
         if self._move_time:
             self._supported_features |= SUPPORT_SET_POSITION
@@ -129,6 +131,21 @@ class SomfyShade(CoverDevice):
             await self.async_set_cover_position(position=100)
         else:
             await self.somfy_mylink.move_up(self._target_id)
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
+        state = await async_get_last_state(self.hass, self.entity_id)
+        if state:
+            self._state = state.state
+            self._state_ts = state.last_updated
+            if self._move_time:
+                self._position = state.attributes.get('current_position', 0)
+            else:
+                self._position = None
+            if state.state == 'closed':
+                self._closed = True
+            else:
+                self._closed = False
             self._closed = False
         self.schedule_update_ha_state()
 
