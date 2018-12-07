@@ -594,7 +594,8 @@ class TemperatureSettingTrait(_Trait):
                     unit))
             else:
                 temp = temp_util.convert(
-                    params['thermostatTemperatureSetpoint'], TEMP_CELSIUS, unit)
+                    params['thermostatTemperatureSetpoint'], TEMP_CELSIUS,
+                    unit)
 
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
