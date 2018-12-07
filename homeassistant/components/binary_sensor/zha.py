@@ -191,7 +191,7 @@ class Remote(ZhaEntity, BinarySensorDevice):
             pass
 
         def zha_send_event(self, cluster, command, args):
-            """Relay entity events to hass"""
+            """Relay entity events to hass."""
             self._entity.zha_send_event(cluster, command, args)
 
     class LevelListener:
@@ -225,7 +225,7 @@ class Remote(ZhaEntity, BinarySensorDevice):
             pass
 
         def zha_send_event(self, cluster, command, args):
-            """Relay entity events to hass"""
+            """Relay entity events to hass."""
             self._entity.zha_send_event(cluster, command, args)
 
     def __init__(self, **kwargs):

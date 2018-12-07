@@ -106,7 +106,7 @@ class ZhaEntity(entity.Entity):
 
     @callback
     def zha_send_event(self, cluster, command, args):
-        """Relay entity events to hass"""
+        """Relay entity events to hass."""
         self.hass.bus.async_fire(
             'zha_event',
             {
