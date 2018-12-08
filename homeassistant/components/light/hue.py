@@ -215,7 +215,7 @@ class HueLight(Light):
 
     def __init__(self, light, request_bridge_update, bridge, is_group=False):
         from rgbxy import Converter, GamutA
-        
+
         """Initialize the light."""
         self.light = light
         self.async_request_bridge_update = request_bridge_update
