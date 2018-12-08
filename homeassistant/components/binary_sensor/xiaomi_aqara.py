@@ -423,9 +423,7 @@ class XiaomiButton(XiaomiBinarySensor):
         })
         self._last_action = click_type
 
-        if value in ['long_click_press', 'long_click_release']:
-            return True
-        return False
+        return True
 
 
 class XiaomiCube(XiaomiBinarySensor):
