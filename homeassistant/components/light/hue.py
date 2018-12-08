@@ -220,7 +220,7 @@ class HueLight(Light):
         self.async_request_bridge_update = request_bridge_update
         self.bridge = bridge
         self.is_group = is_group
-        self.philips_hue_converter = Converter(GamutA)
+        self.hue_converter = Converter(GamutA)
 
         if is_group:
             self.is_osram = False
@@ -260,7 +260,7 @@ class HueLight(Light):
         source = self.light.action if self.is_group else self.light.state
 
         if mode in ('xy', 'hs') and 'xy' in source:
-            rgb = self.philips_hue_converter.xy_to_rgb(*source['xy'])
+            rgb = self.hue_converter.xy_to_rgb(*source['xy'])
             return color.color_RGB_to_hs(rgb[0], rgb[1], rgb[2])
 
         return None
@@ -336,7 +336,7 @@ class HueLight(Light):
                 # requests, so we convert to XY first to ensure a consistent
                 # color.
                 rgb = color.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-                xy = self.philips_hue_converter.rgb_to_xy(rgb[0], rgb[1], rgb[2])
+                xy = self.hue_converter.rgb_to_xy(rgb[0], rgb[1], rgb[2])
                 command['xy'] = xy
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
