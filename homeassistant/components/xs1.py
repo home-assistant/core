@@ -62,7 +62,7 @@ def _create_controller_api(host, port, ssl, user, password):
 
 
 async def async_setup(hass, config):
-    """Set up XS1 Component"""
+    """Set up XS1 Component."""
     _LOGGER.debug("Initializing XS1")
 
     host = config[DOMAIN].get(CONF_HOST)
@@ -112,7 +112,6 @@ class XS1DeviceEntity(Entity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-
         async with UPDATE_LOCK:
             await self.hass.async_add_executor_job(
                 partial(self.device.update))

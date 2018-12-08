@@ -18,8 +18,8 @@ DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Setup the XS1 platform."""
     _LOGGER.debug("initializing XS1 Thermostat")
 
@@ -75,12 +75,12 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
 
     @property
     def temperature_unit(self):
-        """The unit of measurement used by the platform."""
+        """Return the unit of measurement used by the platform."""
         return self.device.unit()
 
     @property
     def target_temperature(self):
-        """Returns the current target temperature."""
+        """Return the current target temperature."""
         return self.device.new_value()
 
     @property
@@ -112,7 +112,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
             self.async_schedule_update_ha_state()
 
     async def async_update(self):
-        """We also have to update the sensor"""
+        """Also update the sensor when available."""
         await super().async_update()
         if self.sensor is not None:
             self.async_schedule_update_ha_state()
