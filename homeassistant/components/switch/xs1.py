@@ -6,6 +6,7 @@ https://home-assistant.io/components/xs1/
 """
 import asyncio
 import logging
+from functools import partial
 
 from homeassistant.helpers.entity import ToggleEntity
 
@@ -15,21 +16,23 @@ DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the XS1 platform."""
-    _LOGGER.info("initializing XS1 Switch")
+    _LOGGER.debug("initializing XS1 Switch")
 
     from xs1_api_client.api_constants import ActuatorType
 
     actuators = hass.data[DOMAIN][ACTUATORS]
 
+    switch_entities = []
     for actuator in actuators:
         if (actuator.type() == ActuatorType.SWITCH) or \
                 (actuator.type() == ActuatorType.DIMMER):
-            async_add_devices([XS1SwitchEntity(actuator)])
+            switch_entities.append(XS1SwitchEntity(actuator))
 
-    _LOGGER.info("Added Switches!")
+    async_add_devices(switch_entities)
+
+    _LOGGER.debug("Added Switches!")
 
 
 class XS1SwitchEntity(XS1DeviceEntity, ToggleEntity):
@@ -45,14 +48,14 @@ class XS1SwitchEntity(XS1DeviceEntity, ToggleEntity):
         """Return true if switch is on."""
         return self.device.value() == 100
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        self.device.turn_on()
-        self.schedule_update_ha_state()
+        await self.hass.async_add_executor_job(
+            partial(self.device.turn_on))
+        self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        self.device.turn_off()
-        self.schedule_update_ha_state()
+        await self.hass.async_add_executor_job(
+            partial(self.device.turn_off))
+        self.async_schedule_update_ha_state()

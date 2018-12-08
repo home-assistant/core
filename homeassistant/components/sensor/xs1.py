@@ -18,8 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = ['temperature']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the sensor platform."""
 
     _LOGGER.debug("initializing XS1 Sensor")
@@ -28,8 +27,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     _LOGGER.debug("Adding Sensor devices...")
 
+    sensor_entities = []
     for sensor in sensors:
-        async_add_devices([XS1Sensor(sensor)])
+        sensor_entities.append(XS1Sensor(sensor))
+
+    async_add_devices(sensor_entities)
 
 
 class XS1Sensor(XS1DeviceEntity, Entity):

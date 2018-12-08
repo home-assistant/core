@@ -7,12 +7,13 @@ https://home-assistant.io/components/xs1/
 
 import asyncio
 import logging
+from functools import partial
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['xs1-api-client==2.3.4']
@@ -43,8 +44,22 @@ XS1_COMPONENTS = [
     'climate'
 ]
 
+# Lock used to limit the amount of concurrent update requests
+# as the XS1 Gateway can only handle a very small amount of concurrent requests
+UPDATE_LOCK = asyncio.Lock()
 
-def setup(hass, config):
+
+def _create_controller_api(host, port, ssl, user, password):
+    import xs1_api_client
+    return xs1_api_client.XS1(
+        host=host,
+        port=port,
+        ssl=ssl,
+        user=user,
+        password=password)
+
+
+async def async_setup(hass, config):
     """Set up XS1 Component"""
     _LOGGER.debug("Initializing XS1")
 
@@ -55,26 +70,28 @@ def setup(hass, config):
     password = config[DOMAIN].get(CONF_PASSWORD)
 
     # initialize XS1 API
-    import xs1_api_client
-    xs1 = xs1_api_client.XS1(
-        host=host,
-        port=port,
-        ssl=ssl,
-        user=user,
-        password=password
-    )
+
+    xs1 = await hass.async_add_executor_job(
+        partial(_create_controller_api,
+                host, port, ssl, user, password))
 
     _LOGGER.debug(
         "Establishing connection to XS1 gateway and retrieving data...")
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][ACTUATORS] = xs1.get_all_actuators()
-    hass.data[DOMAIN][SENSORS] = xs1.get_all_sensors()
+
+    actuators = await hass.async_add_executor_job(partial(xs1.get_all_actuators, enabled=True))
+    sensors = await hass.async_add_executor_job(partial(xs1.get_all_sensors, enabled=True))
+
+    hass.data[DOMAIN][ACTUATORS] = actuators
+    hass.data[DOMAIN][SENSORS] = sensors
 
     _LOGGER.debug("loading components for XS1 platform...")
     # load components for supported devices
     for component in XS1_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass, component, DOMAIN, {}, config))
 
     return True
 
@@ -86,10 +103,11 @@ class XS1DeviceEntity(Entity):
         """Initialize the XS1 device."""
         self.device = device
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch new state data for the sensor.
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        self.device.update()
+
+        async with UPDATE_LOCK:
+            await self.hass.async_add_executor_job(partial(self.device.update))

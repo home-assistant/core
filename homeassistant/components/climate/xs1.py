@@ -4,8 +4,8 @@ Support for XS1 climate devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/xs1/
 """
-import asyncio
 import logging
+from functools import partial
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE, ClimateDevice)
@@ -18,16 +18,16 @@ DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the XS1 platform."""
-    _LOGGER.info("initializing XS1 Thermostat")
+    _LOGGER.debug("initializing XS1 Thermostat")
 
     from xs1_api_client.api_constants import ActuatorType
 
     actuators = hass.data[DOMAIN][ACTUATORS]
     sensors = hass.data[DOMAIN][SENSORS]
 
+    thermostat_entities = []
     for actuator in actuators:
         if actuator.type() == ActuatorType.TEMPERATURE:
             # Search for a matching sensor (by name)
@@ -40,11 +40,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
                     break
 
-            async_add_devices(
-                [XS1ThermostatEntity(actuator, matching_sensor, 8, 25)]
-            )
+            thermostat_entities.append(XS1ThermostatEntity(actuator, matching_sensor, 8, 25))
 
-    _LOGGER.info("Added Thermostats!")
+    async_add_devices(thermostat_entities)
+
+    _LOGGER.debug("Added Thermostats!")
 
 
 class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
@@ -99,17 +99,18 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
             self.unit_of_measurement
         )
 
-    @asyncio.coroutine
-    def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
-        self.device.set_value(temp)
-        if self.sensor is not None:
-            self.sensor.update()
 
-    @asyncio.coroutine
-    def async_update(self):
-        """We also have to update the sensor"""
-        super().async_update()
+        await self.hass.async_add_executor_job(
+            partial(self.device.set_value, temp))
+
         if self.sensor is not None:
-            self.sensor.update()
+            self.async_schedule_update_ha_state()
+
+    async def async_update(self):
+        """We also have to update the sensor"""
+        await super().async_update()
+        if self.sensor is not None:
+            self.async_schedule_update_ha_state()
