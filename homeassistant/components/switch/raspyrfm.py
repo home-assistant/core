@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     vol.Optional(CONF_GATEWAY_MANUFACTURER): cv.string,
     vol.Optional(CONF_GATEWAY_MODEL): cv.string,
-    vol.Required(CONF_SWITCHES, default={}): vol.Schema([{
+    vol.Required(CONF_SWITCHES, default=[]): vol.Schema([{
         vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
         vol.Required(CONF_CONTROLUNIT_MANUFACTURER): cv.string,
         vol.Required(CONF_CONTROLUNIT_MODEL): cv.string,
@@ -109,7 +109,7 @@ class RaspyRFMSwitch(SwitchDevice):
         self._gateway = gateway
         self._controlunit = controlunit
 
-        self._state = False
+        self._state = None
 
     @property
     def name(self):
