@@ -14,7 +14,7 @@ DEPENDENCIES = ['roku']
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the Apple TV remote platform."""
+    """Set up the Roku remote platform."""
     if not discovery_info:
         return
 
@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 class RokuRemote(remote.RemoteDevice):
-    """Device that sends commands to an Apple TV."""
+    """Device that sends commands to an Roku."""
 
     def __init__(self, host):
         """Initialize the Roku device."""
@@ -52,7 +52,7 @@ class RokuRemote(remote.RemoteDevice):
 
     @property
     def should_poll(self):
-        """No polling needed for Apple TV."""
+        """No polling needed for Roku."""
         return False
 
     def send_command(self, command, **kwargs):
