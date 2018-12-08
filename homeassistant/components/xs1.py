@@ -16,7 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWO
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['xs1-api-client==2.3.4']
+REQUIREMENTS = ['xs1-api-client==2.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
