@@ -85,10 +85,7 @@ async def test_full_flow_implementation(hass, mock_tellduslive):  # noqa pylint:
     assert result['title'] == 'localhost'
     assert result['data']['host'] == 'localhost'
     assert result['data']['scan_interval'] == 60
-    assert result['data']['session'] == {
-        'token': 'token',
-        'host': 'localhost'
-    }
+    assert result['data']['session'] == {'token': 'token', 'host': 'localhost'}
 
 
 async def test_step_import(hass, mock_tellduslive):  # pylint: disable=W0621
@@ -113,8 +110,8 @@ async def test_step_discovery(hass, mock_tellduslive):  # pylint: disable=W0621
 
 
 @pytest.mark.parametrize('supports_local_api', [False])
-async def test_step_disco_no_local_api(hass, mock_tellduslive):  # pylint: disable=W0621
-    """Test that we trigger when configuring from discovery, not supporting local api."""
+async def test_step_disco_no_local_api(hass, mock_tellduslive):  # noqa pylint: disable=W0621
+    """Test that we trigger when configuring from discovery, not supporting local api."""  # noqa
     flow = init_config_flow(hass)
 
     result = await flow.async_step_discovery(['localhost', 'tellstick'])
@@ -148,7 +145,7 @@ async def test_wrong_auth_flow_implementation(hass, mock_tellduslive):  # noqa p
     assert result['step_id'] == 'auth'
 
 
-async def test_not_pick_host_if_only_one(hass, mock_tellduslive):
+async def test_not_pick_host_if_only_one(hass, mock_tellduslive):  # noqa pylint: disable=W0621
     """Test not picking host if we have just one."""
     flow = init_config_flow(hass)
 
@@ -157,7 +154,7 @@ async def test_not_pick_host_if_only_one(hass, mock_tellduslive):
     assert result['step_id'] == 'auth'
 
 
-async def test_abort_if_timeout_generating_auth_url(hass, mock_tellduslive):
+async def test_abort_if_timeout_generating_auth_url(hass, mock_tellduslive):  # noqa pylint: disable=W0621
     """Test abort if generating authorize url timeout."""
     flow = init_config_flow(hass, side_effect=asyncio.TimeoutError)
 
@@ -166,7 +163,7 @@ async def test_abort_if_timeout_generating_auth_url(hass, mock_tellduslive):
     assert result['reason'] == 'authorize_url_timeout'
 
 
-async def test_abort_if_exception_generating_auth_url(hass, mock_tellduslive):
+async def test_abort_if_exception_generating_auth_url(hass, mock_tellduslive):  # noqa pylint: disable=W0621
     """Test we abort if generating authorize url blows up."""
     flow = init_config_flow(hass, side_effect=ValueError)
 
