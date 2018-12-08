@@ -1752,7 +1752,7 @@ xknx==0.9.3
 xmltodict==0.11.0
 
 # homeassistant.components.xs1
-xs1-api-client==2.3.4
+xs1-api-client==2.3.5
 
 # homeassistant.components.sensor.yweather
 # homeassistant.components.weather.yweather
