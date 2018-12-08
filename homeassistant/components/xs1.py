@@ -10,7 +10,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -24,9 +24,7 @@ ACTUATORS = 'actuators'
 SENSORS = 'sensors'
 
 # configuration keys
-CONF_USER = 'user'
 CONF_SSL = 'ssl'
-CONF_PASSWORD = 'password'
 
 # define configuration parameters
 CONFIG_SCHEMA = vol.Schema({
@@ -34,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.string,
         vol.Optional(CONF_SSL): cv.boolean,
-        vol.Optional(CONF_USER): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -53,7 +51,7 @@ def setup(hass, config):
     host = config[DOMAIN].get(CONF_HOST)
     port = config[DOMAIN].get(CONF_PORT)
     ssl = config[DOMAIN].get(CONF_SSL, False)
-    user = config[DOMAIN].get(CONF_USER)
+    user = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
 
     # initialize XS1 API
