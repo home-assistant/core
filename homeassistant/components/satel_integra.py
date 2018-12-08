@@ -19,7 +19,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['satel_integra==0.1.0']
+REQUIREMENTS = ['satel_integra==0.2.0']
 
 DEFAULT_ALARM_NAME = 'satel_integra'
 DEFAULT_PORT = 7094
@@ -78,7 +78,7 @@ async def async_setup(hass, config):
 
     from satel_integra.satel_integra import AsyncSatel, AlarmState
 
-    controller = AsyncSatel(host, port, zones, hass.loop, partition)
+    controller = AsyncSatel(host, port, hass.loop, zones, [], partition)
 
     hass.data[DATA_SATEL] = controller
 
