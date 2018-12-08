@@ -9,7 +9,6 @@ from datetime import timedelta
 import logging
 from time import monotonic
 import random
-from rgbxy import Converter, GamutA
 
 import async_timeout
 
@@ -215,6 +214,8 @@ class HueLight(Light):
     """Representation of a Hue light."""
 
     def __init__(self, light, request_bridge_update, bridge, is_group=False):
+        from rgbxy import Converter, GamutA
+        
         """Initialize the light."""
         self.light = light
         self.async_request_bridge_update = request_bridge_update
