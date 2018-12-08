@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Setup the XS1 platform."""
+    """Set up the XS1 platform."""
     _LOGGER.debug("initializing XS1 Switch")
 
     from xs1_api_client.api_constants import ActuatorType
