@@ -12,7 +12,8 @@ from functools import partial
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, \
+    CONF_PORT, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
@@ -45,7 +46,8 @@ XS1_COMPONENTS = [
 ]
 
 # Lock used to limit the amount of concurrent update requests
-# as the XS1 Gateway can only handle a very small amount of concurrent requests
+# as the XS1 Gateway can only handle a very
+# small amount of concurrent requests
 UPDATE_LOCK = asyncio.Lock()
 
 
@@ -80,8 +82,10 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
 
-    actuators = await hass.async_add_executor_job(partial(xs1.get_all_actuators, enabled=True))
-    sensors = await hass.async_add_executor_job(partial(xs1.get_all_sensors, enabled=True))
+    actuators = await hass.async_add_executor_job(
+        partial(xs1.get_all_actuators, enabled=True))
+    sensors = await hass.async_add_executor_job(
+        partial(xs1.get_all_sensors, enabled=True))
 
     hass.data[DOMAIN][ACTUATORS] = actuators
     hass.data[DOMAIN][SENSORS] = sensors
@@ -110,4 +114,5 @@ class XS1DeviceEntity(Entity):
         """
 
         async with UPDATE_LOCK:
-            await self.hass.async_add_executor_job(partial(self.device.update))
+            await self.hass.async_add_executor_job(
+                partial(self.device.update))

@@ -16,7 +16,8 @@ DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Setup the sensor platform."""
 
     _LOGGER.debug("initializing XS1 Sensor")
