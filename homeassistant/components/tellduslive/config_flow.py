@@ -42,16 +42,9 @@ class FlowHandler(config_entries.ConfigFlow):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
-        from tellduslive import Session
         if user_input is not None or len(self._hosts) == 1:
             if user_input is not None and user_input[KEY_HOST] != CLOUD_NAME:
                 self._host = user_input[KEY_HOST]
-            self._session = Session(
-                public_key=PUBLIC_KEY,
-                private_key=NOT_SO_PRIVATE_KEY,
-                host=self._host,
-                application=APPLICATION_NAME,
-            )
             return await self.async_step_auth()
 
         return self.async_show_form(
@@ -63,6 +56,15 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_auth(self, user_input=None):
         """Handle the submitted configuration."""
+        if not self._session:
+            from tellduslive import Session
+            self._session = Session(
+                public_key=PUBLIC_KEY,
+                private_key=NOT_SO_PRIVATE_KEY,
+                host=self._host,
+                application=APPLICATION_NAME,
+            )
+
         if user_input is not None and self._session.authorize():
             host = self._host or CLOUD_NAME
             if self._host:

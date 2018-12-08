@@ -92,7 +92,7 @@ async def test_full_flow_implementation(hass, mock_tellduslive):  # noqa pylint:
 
 
 async def test_step_import(hass, mock_tellduslive):  # pylint: disable=W0621
-    """Test that we trigger import when configuring with client."""
+    """Test that we trigger auth when configuring from import."""
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import({
@@ -103,9 +103,43 @@ async def test_step_import(hass, mock_tellduslive):  # pylint: disable=W0621
     assert result['step_id'] == 'auth'
 
 
+async def test_step_discovery(hass, mock_tellduslive):  # pylint: disable=W0621
+    """Test that we trigger auth when configuring from discovery."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_discovery(['localhost', 'tellstick'])
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'user'
+
+
+@pytest.mark.parametrize('supports_local_api', [False])
+async def test_step_disco_no_local_api(hass, mock_tellduslive):  # pylint: disable=W0621
+    """Test that we trigger when configuring from discovery, not supporting local api."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_discovery(['localhost', 'tellstick'])
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'auth'
+
+
+async def test_step_auth(hass, mock_tellduslive):  # pylint: disable=W0621
+    """Test that create cloud entity from auth."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_auth(['localhost', 'tellstick'])
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result['title'] == 'Cloud API'
+    assert result['data']['host'] == 'Cloud API'
+    assert result['data']['scan_interval'] == 60
+    assert result['data']['session'] == {
+        'token': 'token',
+        'token_secret': 'token_secret',
+    }
+
+
 @pytest.mark.parametrize('authorize', [False])
 async def test_wrong_auth_flow_implementation(hass, mock_tellduslive):  # noqa pylint: disable=W0621
-    """Test wrong code."""
+    """Test wrong auth."""
     flow = init_config_flow(hass)
 
     await flow.async_step_user()
@@ -114,8 +148,8 @@ async def test_wrong_auth_flow_implementation(hass, mock_tellduslive):  # noqa p
     assert result['step_id'] == 'auth'
 
 
-async def test_not_pick_host_if_only_one(hass):
-    """Test we allow picking host if we have one."""
+async def test_not_pick_host_if_only_one(hass, mock_tellduslive):
+    """Test not picking host if we have just one."""
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
@@ -123,8 +157,8 @@ async def test_not_pick_host_if_only_one(hass):
     assert result['step_id'] == 'auth'
 
 
-async def test_abort_if_timeout_generating_auth_url(hass):
-    """Test we abort if generating authorize url fails."""
+async def test_abort_if_timeout_generating_auth_url(hass, mock_tellduslive):
+    """Test abort if generating authorize url timeout."""
     flow = init_config_flow(hass, side_effect=asyncio.TimeoutError)
 
     result = await flow.async_step_user()
@@ -132,19 +166,10 @@ async def test_abort_if_timeout_generating_auth_url(hass):
     assert result['reason'] == 'authorize_url_timeout'
 
 
-async def test_abort_if_exception_generating_auth_url(hass):
+async def test_abort_if_exception_generating_auth_url(hass, mock_tellduslive):
     """Test we abort if generating authorize url blows up."""
     flow = init_config_flow(hass, side_effect=ValueError)
 
     result = await flow.async_step_user()
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'authorize_url_fail'
-
-
-# async def test_abort_no_code(hass):
-#     """Test if no code is given to step_code."""
-#     flow = init_config_flow(hass)
-
-#     result = await flow.async_step_code()
-#     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-#     assert result['reason'] == 'no_code'
