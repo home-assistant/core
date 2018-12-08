@@ -14,9 +14,10 @@ from homeassistant.components import mqtt, climate
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, ClimateDevice,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
-    ATTR_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
-    SUPPORT_SWING_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
+    ATTR_OPERATION_MODE, ATTR_FAN_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_FAN_MODE,
+    SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP,
+    DEFAULT_MAX_TEMP)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, CONF_VALUE_TEMPLATE)
 from homeassistant.components.mqtt import (
@@ -523,6 +524,10 @@ class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
+        if kwargs.get(ATTR_FAN_MODE) is not None:
+            fan_mode = kwargs.get(ATTR_FAN_MODE)
+            await self.async_set_fan_mode(fan_mode)
+
         if kwargs.get(ATTR_OPERATION_MODE) is not None:
             operation_mode = kwargs.get(ATTR_OPERATION_MODE)
             await self.async_set_operation_mode(operation_mode)

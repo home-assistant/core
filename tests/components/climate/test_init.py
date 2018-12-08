@@ -34,7 +34,7 @@ def test_set_temp_schema(hass, caplog):
 
     data = {
         'temperature': 20.0, 'operation_mode': 'test',
-        'entity_id': ['climate.test_id']}
+        'entity_id': ['climate.test_id'], 'fan_mode': 'low'}
     yield from hass.services.async_call(domain, service, data)
     yield from hass.async_block_till_done()
 

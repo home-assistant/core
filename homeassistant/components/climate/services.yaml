@@ -45,6 +45,9 @@ set_temperature:
     operation_mode:
       description: Operation mode to set temperature to. This defaults to current_operation mode if not set, or set incorrectly.
       example: 'Heat'
+    fan_mode:
+      description: Fan mode to set temperature to. This defaults to current_fan_mode if not set, or set incorrectly.
+      example: 'low'
 set_humidity:
   description: Set target humidity of climate device.
   fields:
