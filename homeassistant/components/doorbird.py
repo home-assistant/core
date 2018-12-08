@@ -112,7 +112,7 @@ def setup(hass, config):
             return False
 
         # Subscribe to doorbell or motion events
-        if events is not None:
+        if events:
             doorstation.update_schedule(hass)
 
     hass.data[DOMAIN] = doorstations
