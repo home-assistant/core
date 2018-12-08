@@ -163,6 +163,8 @@ class GenericBatterySensor(Sensor):
         7: 'CR2',
         8: 'CR123A',
         9: 'CR2450',
+        10: 'CR2032',
+        11: 'CR1632',
         255: 'Unknown'
     }
 
