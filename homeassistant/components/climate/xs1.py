@@ -116,4 +116,5 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
         """Also update the sensor when available."""
         await super().async_update()
         if self.sensor is not None:
-            self.async_schedule_update_ha_state()
+            await self.hass.async_add_executor_job(
+                partial(self.sensor.update))
