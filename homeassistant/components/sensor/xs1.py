@@ -18,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the sensor platform."""
-
     _LOGGER.debug("initializing XS1 Sensor")
 
     sensors = hass.data[DOMAIN][SENSORS]
