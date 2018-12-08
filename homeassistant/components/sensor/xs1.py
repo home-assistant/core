@@ -15,8 +15,6 @@ from ..xs1 import DOMAIN, SENSORS, XS1DeviceEntity
 DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = ['temperature']
-
 
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the sensor platform."""
