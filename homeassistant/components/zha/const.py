@@ -136,6 +136,7 @@ def populate_data():
         zcl.clusters.measurement.IlluminanceMeasurement: 'sensor',
         zcl.clusters.smartenergy.Metering: 'sensor',
         zcl.clusters.homeautomation.ElectricalMeasurement: 'sensor',
+        zcl.clusters.general.PowerConfiguration: 'sensor',
         zcl.clusters.security.IasZone: 'binary_sensor',
         zcl.clusters.hvac.Fan: 'fan',
     })
