@@ -149,7 +149,6 @@ class Sensor(ZhaEntity):
 
 class GenericBatterySensor(Sensor):
     """ZHA generic battery sensor."""
-
     report_attribute = 32
     value_attribute = 33
     battery_sizes = {
