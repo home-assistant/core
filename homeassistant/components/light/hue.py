@@ -261,7 +261,7 @@ class HueLight(Light):
 
         if mode in ('xy', 'hs') and 'xy' in source:
             rgb = self.philips_hue_converter.xy_to_rgb(*source['xy'])
-            return color.color_RGB_to_hs(rgb[0],rgb[1],rgb[2])
+            return color.color_RGB_to_hs(rgb[0], rgb[1], rgb[2])
 
         return None
 
@@ -336,7 +336,7 @@ class HueLight(Light):
                 # requests, so we convert to XY first to ensure a consistent
                 # color.
                 rgb = color.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-                xy = self.philips_hue_converter.rgb_to_xy(rgb[0],rgb[1],rgb[2])
+                xy = self.philips_hue_converter.rgb_to_xy(rgb[0], rgb[1], rgb[2])
                 command['xy'] = xy
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
