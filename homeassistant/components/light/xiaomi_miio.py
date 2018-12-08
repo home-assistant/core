@@ -801,7 +801,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             state.color_temperature,
             CCT_MIN, CCT_MAX,
             self.max_mireds, self.min_mireds)
-        self._hs_color = self._get_hs(state.rgb)
+        self._hs_color = color.color_RGB_to_hs(*state.rgb)
 
         self._state_attrs.update({
             ATTR_SCENE: state.scene,
@@ -816,11 +816,3 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
     async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off. Unsupported."""
         return
-
-    @staticmethod
-    def _get_hs(rgb: int):
-        blue = rgb & 0xff
-        green = (rgb >> 8) & 0xff
-        red = (rgb >> 16) & 0xff
-
-        return color.color_RGB_to_hs(red, green, blue)
