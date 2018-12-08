@@ -29,7 +29,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.debug("Adding Sensor devices...")
 
     for sensor in sensors:
-        async_add_devices([XS1Sensor(sensor, hass)])
+        async_add_devices([XS1Sensor(sensor)])
 
 
 class XS1Sensor(XS1DeviceEntity, Entity):

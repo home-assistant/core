@@ -41,7 +41,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     break
 
             async_add_devices(
-                [XS1ThermostatEntity(actuator, matching_sensor, hass, 8, 25)]
+                [XS1ThermostatEntity(actuator, matching_sensor, 8, 25)]
             )
 
     _LOGGER.info("Added Thermostats!")
@@ -50,9 +50,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
     """Representation of a XS1 thermostat."""
 
-    def __init__(self, device, sensor, hass, min_temp: int, max_temp: int):
+    def __init__(self, device, sensor, min_temp: int, max_temp: int):
         """Initialize the actuator."""
-        super().__init__(device, hass)
+        super().__init__(device)
         self.sensor = sensor
 
         self._min_temp = min_temp

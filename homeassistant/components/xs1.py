@@ -82,9 +82,8 @@ def setup(hass, config):
 class XS1DeviceEntity(Entity):
     """Representation of a base XS1 device."""
 
-    def __init__(self, device, hass):
+    def __init__(self, device):
         """Initialize the XS1 device."""
-        self.hass = hass
         self.device = device
 
     @asyncio.coroutine

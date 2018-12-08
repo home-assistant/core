@@ -27,7 +27,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for actuator in actuators:
         if (actuator.type() == ActuatorType.SWITCH) or \
                 (actuator.type() == ActuatorType.DIMMER):
-            async_add_devices([XS1SwitchEntity(actuator, hass)])
+            async_add_devices([XS1SwitchEntity(actuator)])
 
     _LOGGER.info("Added Switches!")
 
