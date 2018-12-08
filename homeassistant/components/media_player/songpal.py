@@ -106,7 +106,7 @@ async def async_setup_platform(
 class SongpalDevice(MediaPlayerDevice):
     """Class representing a Songpal device."""
 
-    def __init__(self, name, endpoint, poll):
+    def __init__(self, name, endpoint, poll=False):
         """Init."""
         from songpal import Device
         self._name = name
@@ -130,6 +130,7 @@ class SongpalDevice(MediaPlayerDevice):
 
     @property
     def should_poll(self):
+        """Return True if the device should be polled."""
         return self._poll
 
     async def initialize(self):
@@ -143,31 +144,28 @@ class SongpalDevice(MediaPlayerDevice):
         from songpal import (VolumeChange, ContentChange,
                              PowerChange, ConnectChange)
 
-        async def volume_changed(x: VolumeChange):
-            """Volume changed callback."""
-            _LOGGER.debug("Volume changed: %s", x)
-            self._volume = x.volume
-            self._is_muted = x.mute
+        async def _volume_changed(volume: VolumeChange):
+            _LOGGER.debug("Volume changed: %s", volume)
+            self._volume = volume.volume
+            self._is_muted = volume.mute
             await self.async_update_ha_state()
 
-        async def source_changed(x: ContentChange):
-            """Source changed callback."""
-            _LOGGER.debug("Source changed: %s", x)
-            if x.is_input:
-                self._active_source = self._sources[x.source]
+        async def _source_changed(content: ContentChange):
+            _LOGGER.debug("Source changed: %s", content)
+            if content.is_input:
+                self._active_source = self._sources[content.source]
                 _LOGGER.debug("New active source: %s", self._active_source)
                 await self.async_update_ha_state()
             else:
-                _LOGGER.warning("Got non-handled content change: %s" % x)
+                _LOGGER.warning("Got non-handled content change: %s",
+                                content)
 
-        async def power_changed(x: PowerChange):
-            """Power changed callback."""
-            _LOGGER.debug("Power changed: %s", x)
-            self._state = x.status
+        async def _power_changed(power: PowerChange):
+            _LOGGER.debug("Power changed: %s", power)
+            self._state = power.status
             await self.async_update_ha_state()
 
-        async def try_reconnect(x: ConnectChange):
-            """Callback to reconnect back."""
+        async def _try_reconnect(x: ConnectChange):
             _LOGGER.error("Got disconnected with %s, trying to reconnect.",
                           x.exception)
             self._available = False
@@ -183,10 +181,10 @@ class SongpalDevice(MediaPlayerDevice):
                 # back from a disconnected state.
                 await self.async_update_ha_state()
 
-        self.dev.on_notification(VolumeChange, volume_changed)
-        self.dev.on_notification(ContentChange, source_changed)
-        self.dev.on_notification(PowerChange, power_changed)
-        self.dev.on_notification(ConnectChange, try_reconnect)
+        self.dev.on_notification(VolumeChange, _volume_changed)
+        self.dev.on_notification(ContentChange, _source_changed)
+        self.dev.on_notification(PowerChange, _power_changed)
+        self.dev.on_notification(ConnectChange, _try_reconnect)
 
         async def listen_events():
             await self.dev.listen_notifications()
@@ -251,10 +249,10 @@ class SongpalDevice(MediaPlayerDevice):
             _LOGGER.debug("Got ins: %s", inputs)
 
             self._sources = OrderedDict()
-            for input in inputs:
-                self._sources[input.uri] = input
-                if input.active:
-                    self._active_source = input
+            for input_ in inputs:
+                self._sources[input_.uri] = input_
+                if input_.active:
+                    self._active_source = input_
 
             _LOGGER.debug("Active source: %s", self._active_source)
 
