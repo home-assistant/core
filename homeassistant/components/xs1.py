@@ -10,7 +10,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -25,12 +25,15 @@ SENSORS = 'sensors'
 
 # configuration keys
 CONF_USER = 'user'
+CONF_SSL = 'ssl'
 CONF_PASSWORD = 'password'
 
 # define configuration parameters
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT): cv.string,
+        vol.Optional(CONF_SSL): cv.boolean,
         vol.Optional(CONF_USER): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string
     }),
@@ -45,24 +48,32 @@ XS1_COMPONENTS = [
 
 def setup(hass, config):
     """Set up XS1 Component"""
-    _LOGGER.debug("initializing XS1")
+    _LOGGER.debug("Initializing XS1")
 
     host = config[DOMAIN].get(CONF_HOST)
+    port = config[DOMAIN].get(CONF_PORT)
+    ssl = config[DOMAIN].get(CONF_SSL, False)
     user = config[DOMAIN].get(CONF_USER)
     password = config[DOMAIN].get(CONF_PASSWORD)
 
     # initialize XS1 API
     import xs1_api_client
-    xs1 = xs1_api_client.XS1(host, user, password)
+    xs1 = xs1_api_client.XS1(
+        host=host,
+        port=port,
+        ssl=ssl,
+        user=user,
+        password=password
+    )
 
     _LOGGER.debug(
-        "establishing connection to xs1 gateway and retrieving data...")
+        "Establishing connection to XS1 gateway and retrieving data...")
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ACTUATORS] = xs1.get_all_actuators()
     hass.data[DOMAIN][SENSORS] = xs1.get_all_sensors()
 
-    _LOGGER.debug("loading sensor and switch components...")
+    _LOGGER.debug("loading components for XS1 platform...")
     # load components for supported devices
     for component in XS1_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
