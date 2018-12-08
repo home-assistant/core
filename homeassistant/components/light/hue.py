@@ -337,8 +337,7 @@ class HueLight(Light):
                 # requests, so we convert to XY first to ensure a consistent
                 # color.
                 rgb = color.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-                xy = self.hue_converter.rgb_to_xy(rgb[0], rgb[1], rgb[2])
-                command['xy'] = xy
+                command['xy'] = self.hue_converter.rgb_to_xy(rgb[0], rgb[1], rgb[2])
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
