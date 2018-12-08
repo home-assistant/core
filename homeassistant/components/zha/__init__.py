@@ -135,9 +135,6 @@ async def async_setup_entry(hass, config_entry):
         radio = zigpy_xbee.api.XBee()
         radio_description = "XBee"
 
-    await radio.connect(usb_path, baudrate)
-    hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
-
     if CONF_DATABASE in config:
         database = config[CONF_DATABASE]
     else:
@@ -155,59 +152,93 @@ async def async_setup_entry(hass, config_entry):
         ClusterPersistingListener
     )
 
-    APPLICATION_CONTROLLER = ControllerApplication(radio, database)
-    listener = ApplicationListener(hass, config)
-    APPLICATION_CONTROLLER.add_listener(listener)
-    await APPLICATION_CONTROLLER.startup(auto_form=True)
+    async def async_start_zha(_service_or_event):
+        await radio.connect(usb_path, baudrate)
+        hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
+        APPLICATION_CONTROLLER = ControllerApplication(radio, database)
+        listener = ApplicationListener(hass, config)
+        APPLICATION_CONTROLLER.add_listener(listener)
+        await APPLICATION_CONTROLLER.startup(auto_form=True)
 
-    for device in APPLICATION_CONTROLLER.devices.values():
-        hass.async_create_task(
-            listener.async_device_initialized(device, False))
-
-    device_registry = await \
-        hass.helpers.device_registry.async_get_registry()
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_ZIGBEE, str(APPLICATION_CONTROLLER.ieee))},
-        identifiers={(DOMAIN, str(APPLICATION_CONTROLLER.ieee))},
-        name="Zigbee Coordinator",
-        manufacturer="ZHA",
-        model=radio_description,
-    )
-
-    hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(APPLICATION_CONTROLLER.ieee)
-
-    for component in COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                config_entry, component)
+        hass.bus.async_fire(
+            'zha_network_event',
+            {
+                'controller_ieee': str(APPLICATION_CONTROLLER.ieee),
+                'command': 'network_start'
+            }
         )
 
-    async def permit(service):
-        """Allow devices to join this network."""
-        duration = service.data.get(ATTR_DURATION)
-        _LOGGER.info("Permitting joins for %ss", duration)
-        await APPLICATION_CONTROLLER.permit(duration)
+        device_registry = await \
+            hass.helpers.device_registry.async_get_registry()
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(
+                    CONNECTION_ZIGBEE,
+                    str(
+                        APPLICATION_CONTROLLER.ieee
+                    )
+            )},
+            identifiers={(DOMAIN, str(APPLICATION_CONTROLLER.ieee))},
+            name="Zigbee Coordinator",
+            manufacturer="ZHA",
+            model=radio_description,
+        )
 
-    hass.services.async_register(DOMAIN, SERVICE_PERMIT, permit,
-                                 schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
+        hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
+            APPLICATION_CONTROLLER.ieee
+        )
 
-    async def remove(service):
-        """Remove a node from the network."""
-        from bellows.types import EmberEUI64, uint8_t
-        ieee = service.data.get(ATTR_IEEE)
-        ieee = EmberEUI64([uint8_t(p, base=16) for p in ieee.split(':')])
-        _LOGGER.info("Removing node %s", ieee)
-        await APPLICATION_CONTROLLER.remove(ieee)
+        for component in COMPONENTS:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    config_entry, component)
+            )
 
-    hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
-                                 schema=SERVICE_SCHEMAS[SERVICE_REMOVE])
+        for device in APPLICATION_CONTROLLER.devices.values():
+            hass.async_create_task(
+                listener.async_device_initialized(device, False))
 
-    def zha_shutdown(event):
-        """Close radio."""
-        hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()
+        async def permit(service):
+            """Allow devices to join this network."""
+            duration = service.data.get(ATTR_DURATION)
+            _LOGGER.info("Permitting joins for %ss", duration)
+            await APPLICATION_CONTROLLER.permit(duration)
 
-    hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, zha_shutdown)
+        hass.services.async_register(DOMAIN, SERVICE_PERMIT, permit,
+                                     schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
+
+        async def remove(service):
+            """Remove a node from the network."""
+            from bellows.types import EmberEUI64, uint8_t
+            ieee = service.data.get(ATTR_IEEE)
+            ieee = EmberEUI64([uint8_t(p, base=16) for p in ieee.split(':')])
+            _LOGGER.info("Removing node %s", ieee)
+            await APPLICATION_CONTROLLER.remove(ieee)
+
+        hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
+                                     schema=SERVICE_SCHEMAS[SERVICE_REMOVE])
+
+        def zha_shutdown(event):
+            """Close radio."""
+            hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()
+            hass.bus.async_fire(
+                'zha_network_event',
+                {
+                    'controller_ieee': str(APPLICATION_CONTROLLER.ieee),
+                    'command': 'network_stop'
+                }
+            )
+
+        hass.bus.async_listen_once(
+            ha_const.EVENT_HOMEASSISTANT_STOP,
+            zha_shutdown
+        )
+
+    hass.bus.async_listen_once(
+        ha_const.EVENT_HOMEASSISTANT_START,
+        async_start_zha
+    )
+
     return True
 
 
