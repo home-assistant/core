@@ -9,7 +9,7 @@ from functools import partial
 
 from homeassistant.helpers.entity import ToggleEntity
 
-from ..xs1 import ACTUATORS, DOMAIN, XS1DeviceEntity
+from homeassistant.components.xs1 import ACTUATORS, DOMAIN, XS1DeviceEntity
 
 DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
