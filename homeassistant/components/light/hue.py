@@ -9,6 +9,7 @@ from datetime import timedelta
 import logging
 from time import monotonic
 import random
+from rgbxy import Converter, GamutA
 
 import async_timeout
 
@@ -20,6 +21,8 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR, SUPPORT_TRANSITION,
     Light)
 from homeassistant.util import color
+
+REQUIREMENTS = ['rgbxy==0.5']
 
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -217,6 +220,7 @@ class HueLight(Light):
         self.async_request_bridge_update = request_bridge_update
         self.bridge = bridge
         self.is_group = is_group
+        self.philips_hue_converter = Converter(GamutA)
 
         if is_group:
             self.is_osram = False
@@ -256,7 +260,8 @@ class HueLight(Light):
         source = self.light.action if self.is_group else self.light.state
 
         if mode in ('xy', 'hs') and 'xy' in source:
-            return color.color_xy_to_hs(*source['xy'])
+            rgb = self.philips_hue_converter.xy_to_rgb(*source['xy'])
+            return color.color_RGB_to_hs(rgb[0],rgb[1],rgb[2])
 
         return None
 
@@ -330,7 +335,9 @@ class HueLight(Light):
                 # Philips hue bulb models respond differently to hue/sat
                 # requests, so we convert to XY first to ensure a consistent
                 # color.
-                command['xy'] = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+                rgb = color.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+                xy = self.philips_hue_converter.rgb_to_xy(rgb[0],rgb[1],rgb[2])
+                command['xy'] = xy
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
