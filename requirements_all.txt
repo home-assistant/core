@@ -1360,6 +1360,9 @@ raincloudy==0.0.5
 # homeassistant.components.raspihats
 # raspihats==2.2.3
 
+# homeassistant.components.switch.raspyrfm
+raspyrfm-client==1.2.8
+
 # homeassistant.components.rainmachine
 regenmaschine==1.0.7
 
