@@ -233,42 +233,42 @@ class TemplateVacuum(StateVacuumDevice):
 
     async def async_start(self):
         """Start or resume the cleaning task."""
-        await self._start_script.async_run()
+        await self._start_script.async_run(context=self._context)
 
     async def async_pause(self):
         """Pause the cleaning task."""
         if self._pause_script is None:
             return
 
-        await self._pause_script.async_run()
+        await self._pause_script.async_run(context=self._context)
 
     async def async_stop(self, **kwargs):
         """Stop the cleaning task."""
         if self._stop_script is None:
             return
 
-        await self._stop_script.async_run()
+        await self._stop_script.async_run(context=self._context)
 
     async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
         if self._return_to_base_script is None:
             return
 
-        await self._return_to_base_script.async_run()
+        await self._return_to_base_script.async_run(context=self._context)
 
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
         if self._clean_spot_script is None:
             return
 
-        await self._clean_spot_script.async_run()
+        await self._clean_spot_script.async_run(context=self._context)
 
     async def async_locate(self, **kwargs):
         """Locate the vacuum cleaner."""
         if self._locate_script is None:
             return
 
-        await self._locate_script.async_run()
+        await self._locate_script.async_run(context=self._context)
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
@@ -278,7 +278,7 @@ class TemplateVacuum(StateVacuumDevice):
         if fan_speed in self._fan_speed_list:
             self._fan_speed = fan_speed
             await self._set_fan_speed_script.async_run(
-                {ATTR_FAN_SPEED: fan_speed})
+                {ATTR_FAN_SPEED: fan_speed}, context=self._context)
         else:
             _LOGGER.error(
                 'Received invalid fan speed: %s. Expected: %s.',
