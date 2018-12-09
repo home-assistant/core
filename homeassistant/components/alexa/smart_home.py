@@ -1035,8 +1035,7 @@ async def async_enable_proactive_mode(hass, smart_home_config):
         # not ready yet
         return
 
-    @ha.callback
-    def async_entity_state_listener(changed_entity, old_state, new_state):
+    async def async_entity_state_listener(changed_entity, old_state, new_state):
         if not smart_home_config.should_expose(changed_entity):
             _LOGGER.debug("Not exposing %s because filtered by config",
                           changed_entity)
@@ -1051,8 +1050,8 @@ async def async_enable_proactive_mode(hass, smart_home_config):
 
         for interface in alexa_changed_entity.interfaces():
             if interface.properties_proactively_reported():
-                hass.async_add_job(async_send_changereport_message, hass,
-                                   smart_home_config, alexa_changed_entity)
+                await async_send_changereport_message(hass, smart_home_config,
+                                                      alexa_changed_entity)
                 return
 
     async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
