@@ -416,7 +416,7 @@ gTTS-token==1.1.3
 gearbest_parser==1.0.7
 
 # homeassistant.components.sensor.geizhals
-geizhals==0.0.7
+geizhals==0.0.9
 
 # homeassistant.components.geo_location.geo_json_events
 # homeassistant.components.geo_location.nsw_rural_fire_service_feed
