@@ -48,6 +48,7 @@ WS_TYPE_DELETE_VIEW = 'lovelace/config/view/delete'
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'):
         vol.Any(WS_TYPE_GET_LOVELACE_UI, OLD_WS_TYPE_GET_LOVELACE_UI),
+    vol.Optional('force', default=False): bool,
 })
 
 SCHEMA_MIGRATE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -144,12 +145,12 @@ class DuplicateIdError(HomeAssistantError):
     """Duplicate ID's."""
 
 
-def load_config(hass) -> JSON_TYPE:
+def load_config(hass, force: bool) -> JSON_TYPE:
     """Load a YAML file."""
     fname = hass.config.path(LOVELACE_CONFIG_FILE)
 
     # Check for a cached version of the config
-    if LOVELACE_DATA in hass.data:
+    if not force and LOVELACE_DATA in hass.data:
         config, last_update = hass.data[LOVELACE_DATA]
         modtime = os.path.getmtime(fname)
         if config and last_update > modtime:
@@ -158,21 +159,29 @@ def load_config(hass) -> JSON_TYPE:
     config = yaml.load_yaml(fname, False)
     seen_card_ids = set()
     seen_view_ids = set()
+    if 'views' in config and not isinstance(config['views'], list):
+        raise HomeAssistantError("Views should be a list.")
     for view in config.get('views', []):
+        if 'id' in view and not isinstance(view['id'], (str, int)):
+            raise HomeAssistantError(
+                "Your config contains view(s) with invalid ID(s).")
         view_id = str(view.get('id', ''))
-        if view_id:
-            if view_id in seen_view_ids:
-                raise DuplicateIdError(
-                    'ID `{}` has multiple occurances in views'.format(view_id))
-            seen_view_ids.add(view_id)
+        if view_id in seen_view_ids:
+            raise DuplicateIdError(
+                'ID `{}` has multiple occurances in views'.format(view_id))
+        seen_view_ids.add(view_id)
+        if 'cards' in view and not isinstance(view['cards'], list):
+            raise HomeAssistantError("Cards should be a list.")
         for card in view.get('cards', []):
+            if 'id' in card and not isinstance(card['id'], (str, int)):
+                raise HomeAssistantError(
+                    "Your config contains card(s) with invalid ID(s).")
             card_id = str(card.get('id', ''))
-            if card_id:
-                if card_id in seen_card_ids:
-                    raise DuplicateIdError(
-                        'ID `{}` has multiple occurances in cards'
-                        .format(card_id))
-                seen_card_ids.add(card_id)
+            if card_id in seen_card_ids:
+                raise DuplicateIdError(
+                    'ID `{}` has multiple occurances in cards'
+                    .format(card_id))
+            seen_card_ids.add(card_id)
     hass.data[LOVELACE_DATA] = (config, time.time())
     return config
 
@@ -265,12 +274,18 @@ def add_card(fname: str, view_id: str, card_config: str,
         if str(view.get('id', '')) != view_id:
             continue
         cards = view.get('cards', [])
+        if not cards and 'cards' in view:
+            del view['cards']
         if data_format == FORMAT_YAML:
             card_config = yaml.yaml_to_object(card_config)
+        if 'id' not in card_config:
+            card_config['id'] = uuid.uuid4().hex
         if position is None:
             cards.append(card_config)
         else:
             cards.insert(position, card_config)
+        if 'cards' not in view:
+            view['cards'] = cards
         yaml.save_yaml(fname, config)
         return
 
@@ -376,7 +391,10 @@ def update_view(fname: str, view_id: str, view_config, data_format:
             "View with ID: {} was not found in {}.".format(view_id, fname))
     if data_format == FORMAT_YAML:
         view_config = yaml.yaml_to_object(view_config)
-    view_config['cards'] = found.get('cards', [])
+    if not view_config.get('cards') and found.get('cards'):
+        view_config['cards'] = found.get('cards', [])
+    if not view_config.get('badges') and found.get('badges'):
+        view_config['badges'] = found.get('badges', [])
     found.clear()
     found.update(view_config)
     yaml.save_yaml(fname, config)
@@ -389,10 +407,14 @@ def add_view(fname: str, view_config: str,
     views = config.get('views', [])
     if data_format == FORMAT_YAML:
         view_config = yaml.yaml_to_object(view_config)
+    if 'id' not in view_config:
+        view_config['id'] = uuid.uuid4().hex
     if position is None:
         views.append(view_config)
     else:
         views.insert(position, view_config)
+    if 'views' not in config:
+        config['views'] = views
     yaml.save_yaml(fname, config)
 
 
@@ -524,7 +546,8 @@ def handle_yaml_errors(func):
 @handle_yaml_errors
 async def websocket_lovelace_config(hass, connection, msg):
     """Send Lovelace UI config over WebSocket configuration."""
-    return await hass.async_add_executor_job(load_config, hass)
+    return await hass.async_add_executor_job(load_config, hass,
+                                             msg.get('force', False))
 
 
 @websocket_api.async_response

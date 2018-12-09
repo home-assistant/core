@@ -33,6 +33,12 @@ LOCATION_MESSAGE = {
 }
 
 
+@pytest.fixture(autouse=True)
+def mock_dev_track(mock_device_tracker_conf):
+    """Mock device tracker config loading."""
+    pass
+
+
 @pytest.fixture
 def mock_client(hass, aiohttp_client):
     """Start the Hass HTTP component."""

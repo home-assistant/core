@@ -81,13 +81,9 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
         self._state = False
         self._sub_state = None
 
-        self._name = None
-        self._effect_list = None
         self._topics = None
         self._templates = None
         self._optimistic = False
-        self._qos = None
-        self._retain = None
 
         # features
         self._brightness = None
@@ -102,8 +98,9 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
         availability_topic = config.get(CONF_AVAILABILITY_TOPIC)
         payload_available = config.get(CONF_PAYLOAD_AVAILABLE)
         payload_not_available = config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+        qos = config.get(CONF_QOS)
 
-        MqttAvailability.__init__(self, availability_topic, self._qos,
+        MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
@@ -123,8 +120,8 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._name = config.get(CONF_NAME)
-        self._effect_list = config.get(CONF_EFFECT_LIST)
+        self._config = config
+
         self._topics = {
             key: config.get(key) for key in (
                 CONF_STATE_TOPIC,
@@ -149,8 +146,6 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
         self._optimistic = optimistic \
             or self._topics[CONF_STATE_TOPIC] is None \
             or self._templates[CONF_STATE_TEMPLATE] is None
-        self._qos = config.get(CONF_QOS)
-        self._retain = config.get(CONF_RETAIN)
 
         # features
         if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
@@ -242,7 +237,7 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
                 effect = self._templates[CONF_EFFECT_TEMPLATE].\
                     async_render_with_possible_json_value(payload)
 
-                if effect in self._effect_list:
+                if effect in self._config.get(CONF_EFFECT_LIST):
                     self._effect = effect
                 else:
                     _LOGGER.warning("Unsupported effect value received")
@@ -254,7 +249,7 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
                 self.hass, self._sub_state,
                 {'state_topic': {'topic': self._topics[CONF_STATE_TOPIC],
                                  'msg_callback': state_received,
-                                 'qos': self._qos}})
+                                 'qos': self._config.get(CONF_QOS)}})
 
         if self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
@@ -305,7 +300,7 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
     @property
     def name(self):
         """Return the name of the entity."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def is_on(self):
@@ -320,7 +315,7 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return self._effect_list
+        return self._config.get(CONF_EFFECT_LIST)
 
     @property
     def effect(self):
@@ -386,7 +381,7 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(**values),
-            self._qos, self._retain
+            self._config.get(CONF_QOS), self._config.get(CONF_RETAIN)
         )
 
         if self._optimistic:
@@ -407,7 +402,7 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(**values),
-            self._qos, self._retain
+            self._config.get(CONF_QOS), self._config.get(CONF_RETAIN)
         )
 
         if self._optimistic:
@@ -421,7 +416,7 @@ class MqttTemplate(MqttAvailability, MqttDiscoveryUpdate, Light,
             features = features | SUPPORT_BRIGHTNESS
         if self._hs is not None:
             features = features | SUPPORT_COLOR
-        if self._effect_list is not None:
+        if self._config.get(CONF_EFFECT_LIST) is not None:
             features = features | SUPPORT_EFFECT
         if self._color_temp is not None:
             features = features | SUPPORT_COLOR_TEMP

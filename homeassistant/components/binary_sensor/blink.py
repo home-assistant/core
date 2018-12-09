@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = hass.data[BLINK_DATA]
 
     devs = []
-    for camera in data.sync.cameras:
+    for camera in data.cameras:
         for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
             devs.append(BlinkBinarySensor(data, camera, sensor_type))
     add_entities(devs, True)
@@ -34,7 +34,7 @@ class BlinkBinarySensor(BinarySensorDevice):
         name, icon = BINARY_SENSORS[sensor_type]
         self._name = "{} {} {}".format(BLINK_DATA, camera, name)
         self._icon = icon
-        self._camera = data.sync.cameras[camera]
+        self._camera = data.cameras[camera]
         self._state = None
         self._unique_id = "{}-{}".format(self._camera.serial, self._type)
 

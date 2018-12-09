@@ -148,6 +148,9 @@ omit =
     homeassistant/components/hive.py
     homeassistant/components/*/hive.py
 
+    homeassistant/components/hlk_sw16.py
+    homeassistant/components/*/hlk_sw16.py
+
     homeassistant/components/homekit_controller/__init__.py
     homeassistant/components/*/homekit_controller.py
 
@@ -326,7 +329,8 @@ omit =
     homeassistant/components/tahoma.py
     homeassistant/components/*/tahoma.py
 
-    homeassistant/components/tellduslive.py
+    homeassistant/components/tellduslive/__init__.py
+    homeassistant/components/tellduslive/entry.py
     homeassistant/components/*/tellduslive.py
 
     homeassistant/components/tellstick.py
@@ -642,7 +646,6 @@ omit =
     homeassistant/components/notify/group.py
     homeassistant/components/notify/hipchat.py
     homeassistant/components/notify/homematic.py
-    homeassistant/components/notify/instapush.py
     homeassistant/components/notify/kodi.py
     homeassistant/components/notify/lannouncer.py
     homeassistant/components/notify/llamalab_automate.py

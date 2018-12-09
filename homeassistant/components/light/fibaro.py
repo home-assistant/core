@@ -27,7 +27,7 @@ def scaleto255(value):
     # depending on device type (e.g. dimmer vs led)
     if value > 98:
         value = 100
-    return max(0, min(255, ((value * 256.0) / 100.0)))
+    return max(0, min(255, ((value * 255.0) / 100.0)))
 
 
 def scaleto100(value):
@@ -35,7 +35,7 @@ def scaleto100(value):
     # Make sure a low but non-zero value is not rounded down to zero
     if 0 < value < 3:
         return 1
-    return max(0, min(100, ((value * 100.4) / 255.0)))
+    return max(0, min(100, ((value * 100.0) / 255.0)))
 
 
 async def async_setup_platform(hass,
@@ -122,11 +122,11 @@ class FibaroLight(FibaroDevice, Light):
             self._color = kwargs.get(ATTR_HS_COLOR, self._color)
             rgb = color_util.color_hs_to_RGB(*self._color)
             self.call_set_color(
-                int(rgb[0] * self._brightness / 99.0 + 0.5),
-                int(rgb[1] * self._brightness / 99.0 + 0.5),
-                int(rgb[2] * self._brightness / 99.0 + 0.5),
-                int(self._white * self._brightness / 99.0 +
-                    0.5))
+                round(rgb[0] * self._brightness / 100.0),
+                round(rgb[1] * self._brightness / 100.0),
+                round(rgb[2] * self._brightness / 100.0),
+                round(self._white * self._brightness / 100.0))
+
             if self.state == 'off':
                 self.set_level(int(self._brightness))
             return
@@ -168,6 +168,10 @@ class FibaroLight(FibaroDevice, Light):
         # Brightness handling
         if self._supported_flags & SUPPORT_BRIGHTNESS:
             self._brightness = float(self.fibaro_device.properties.value)
+            # Fibaro might report 0-99 or 0-100 for brightness,
+            # based on device type, so we round up here
+            if self._brightness > 99:
+                self._brightness = 100
         # Color handling
         if self._supported_flags & SUPPORT_COLOR and \
                 'color' in self.fibaro_device.properties and \
