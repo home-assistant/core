@@ -103,17 +103,11 @@ async def schedule_future_update(hass, sensors, midnight_time,
     midnight_dt = datetime.strptime(midnight_dt_str, '%Y-%m-%d::%H:%M')
 
     if now > dt_util.as_local(midnight_dt):
-        """Midnight is after day the changes so schedule update for
-        after Midnight the next day"""
-
         _LOGGER.debug("Midnight is after day the changes so schedule update "
                       "for after Midnight the next day")
 
         next_update_at = midnight_dt + timedelta(days=1, minutes=1)
     else:
-        """Midnight is before the day changes so schedule update for the
-        next start of day"""
-
         _LOGGER.debug(
             "Midnight is before the day changes so schedule update for the "
             "next start of day")
@@ -121,7 +115,7 @@ async def schedule_future_update(hass, sensors, midnight_time,
         tomorrow = now + timedelta(days=1)
         next_update_at = dt_util.start_of_local_day(tomorrow)
 
-    _LOGGER.debug("Next update scheduled for: {}".format(str(next_update_at)))
+    _LOGGER.debug("Next update scheduled for: %s", str(next_update_at))
 
     async_track_point_in_time(hass,
                               update_sensors(hass, sensors, prayer_times_data),
@@ -182,7 +176,7 @@ class IslamicPrayerTimeSensor(Entity):
         prayer_time = self.prayer_times_data.prayer_times[self._name]
         pt_dt = self.get_prayer_time_as_dt(prayer_time)
         self._state = pt_dt.strftime(self._display_format)
-        _LOGGER.debug("\n\n{} State: {}".format(self.sensor_type, self._state))
+        _LOGGER.debug("%s State: %s", self.sensor_type, self._state)
 
     @property
     def name(self):
@@ -206,9 +200,9 @@ class IslamicPrayerTimeSensor(Entity):
 
     async def async_fire_prayer_event(self):
         """Fire event for respective prayer time."""
-        _LOGGER.debug("Firing Event for: {}".format(self.sensor_type))
+        _LOGGER.debug("Firing Event for: %s", self.sensor_type)
         self.hass.bus.async_fire('islamic_prayer_time', {'prayer':
-                                                         self.sensor_type})
+                                                             self.sensor_type})
 
     def get_prayer_time_as_dt(self, prayer_time):
         """Create a datetime object for the respective prayer time."""
@@ -224,21 +218,17 @@ class IslamicPrayerTimeSensor(Entity):
         trigger_time = datetime.strptime(date_time_str, '%Y-%m-%d %I:%M%p')
 
         if datetime.now() < trigger_time:
-            """Only create an event for prayers times in the future"""
-            _LOGGER.debug(
-                "Creating event trigger for: {}".format(self._name))
+            # Only create an event for prayers times in the future
+            _LOGGER.debug("Creating event trigger for: %s", self._name)
 
             async_track_point_in_time(self.hass,
                                       self.async_fire_prayer_event(),
                                       trigger_time)
-        else:
-            _LOGGER.debug("{} is in the past so we won't create an "
-                          "event".format(self._name))
 
     async def async_update(self):
         """Update the sensor."""
         prayer_time = self.prayer_times_data.prayer_times[self.name]
         pt_dt = self.get_prayer_time_as_dt(prayer_time)
         self._state = pt_dt.strftime(self._display_format)
-        _LOGGER.debug("{} prayer time: {}".format(self.name, prayer_time))
+        _LOGGER.debug("%s prayer time: %s", self.name, prayer_time)
         await self.async_set_event_trigger()
