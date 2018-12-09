@@ -138,9 +138,9 @@ async def async_setup(hass, config):
     @callback
     def zones_update_callback(status):
         """Update zone objects as per notification from the alarm."""
-        _LOGGER.debug("Zones callback , status: %s", status)
+        _LOGGER.debug("Zones callback, status: %s", status)
         async_dispatcher_send(hass, SIGNAL_ZONES_UPDATED, status[ZONES])
-    
+
     @callback
     def outputs_update_callback(status):
         """Update zone objects as per notification from the alarm."""
