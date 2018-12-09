@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fail2ban/
 """
 import os
+import asyncio
 import logging
 
 from datetime import timedelta
@@ -29,7 +30,9 @@ DEFAULT_LOG = '/var/log/fail2ban.log'
 SCAN_INTERVAL = timedelta(seconds=120)
 
 STATE_CURRENT_BANS = 'current_bans'
-STATE_ALL_BANS = 'total_bans'
+STATE_ALL_BANS = 'all_bans'
+
+STATE_TOTAL_BANS = 'total'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_JAILS): vol.All(cv.ensure_list, vol.Length(min=1)),
@@ -38,8 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the fail2ban sensor."""
     name = config.get(CONF_NAME)
     jails = config.get(CONF_JAILS)
@@ -63,6 +67,7 @@ class BanSensor(Entity):
         self.jail = jail
         self.ban_dict = {STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
         self.last_ban = None
+        self.total_bans = 0
         self.log_parser = log_parser
         self.log_parser.ip_regex[self.jail] = re.compile(
             r"\[{}\].(Ban|Unban) ([\w+\.]{{3,}})".format(re.escape(self.jail))
@@ -77,12 +82,13 @@ class BanSensor(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes of the fail2ban sensor."""
+        self.ban_dict[STATE_TOTAL_BANS] = self.total_bans
         return self.ban_dict
 
     @property
     def state(self):
         """Return the most recently banned IP Address."""
-        return self.last_ban
+        return len(self.ban_dict[STATE_CURRENT_BANS])
 
     def update(self):
         """Update the list of banned ips."""
@@ -90,6 +96,7 @@ class BanSensor(Entity):
             self.log_parser.read_log(self.jail)
 
         if self.log_parser.data:
+            self.total_bans = 0
             for entry in self.log_parser.data:
                 _LOGGER.debug(entry)
                 current_ip = entry[1]
@@ -98,6 +105,7 @@ class BanSensor(Entity):
                         self.ban_dict[STATE_CURRENT_BANS].append(current_ip)
                     if current_ip not in self.ban_dict[STATE_ALL_BANS]:
                         self.ban_dict[STATE_ALL_BANS].append(current_ip)
+                        self.total_bans = self.total_bans + 1
                     if len(self.ban_dict[STATE_ALL_BANS]) > 10:
                         self.ban_dict[STATE_ALL_BANS].pop(0)
 
