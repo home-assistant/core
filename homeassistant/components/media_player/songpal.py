@@ -24,7 +24,6 @@ REQUIREMENTS = ['python-songpal==0.0.9']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ENDPOINT = 'endpoint'
-CONF_POLL = 'poll'
 
 PARAM_NAME = 'name'
 PARAM_VALUE = 'value'
@@ -40,7 +39,6 @@ SUPPORT_SONGPAL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_ENDPOINT): cv.string,
-    vol.Optional(CONF_POLL, default=False): cv.boolean,
 })
 
 SET_SOUND_SCHEMA = vol.Schema({
@@ -67,8 +65,7 @@ async def async_setup_platform(
     else:
         name = config.get(CONF_NAME)
         endpoint = config.get(CONF_ENDPOINT)
-        poll = config.get(CONF_POLL)
-        device = SongpalDevice(name, endpoint, poll)
+        device = SongpalDevice(name, endpoint, poll=False)
 
     if endpoint in hass.data[PLATFORM]:
         _LOGGER.debug("The endpoint exists already, skipping setup.")
