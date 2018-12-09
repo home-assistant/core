@@ -1573,7 +1573,7 @@ twilio==6.19.1
 uber_rides==0.6.0
 
 # homeassistant.components.upcloud
-upcloud-api==0.4.2
+upcloud-api==0.4.3
 
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.6
