@@ -43,6 +43,8 @@ CONFIG_SCHEMA = vol.Schema(
 DATA_CONFIG_ENTRY_LOCK = 'tellduslive_config_entry_lock'
 CONFIG_ENTRY_IS_SETUP = 'telldus_config_entry_is_setup'
 
+INTERVAL_TRACKER = '{}_INTERVAL'.format(DOMAIN)
+
 
 async def async_setup_entry(hass, entry):
     """Create a tellduslive session."""
@@ -73,7 +75,8 @@ async def async_setup_entry(hass, entry):
 
     interval = timedelta(seconds=entry.data[KEY_SCAN_INTERVAL])
     _LOGGER.debug('Update interval %s', interval)
-    async_track_time_interval(hass, client.update, interval)
+    hass.data[INTERVAL_TRACKER] = async_track_time_interval(
+        hass, client.update, interval)
 
     return True
 
@@ -91,6 +94,19 @@ async def async_setup(hass, config):
                 KEY_HOST: config[DOMAIN].get(CONF_HOST),
                 KEY_SCAN_INTERVAL: config[DOMAIN].get(CONF_UPDATE_INTERVAL),
             }))
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    interval_tracker = hass.data.pop(INTERVAL_TRACKER)
+    interval_tracker()
+    await asyncio.wait([
+        hass.config_entries.async_forward_entry_unload(config_entry, component)
+        for component in hass.data.pop(CONFIG_ENTRY_IS_SETUP)
+    ])
+    del hass.data[DOMAIN]
+    del hass.data[DATA_CONFIG_ENTRY_LOCK]
     return True
 
 
@@ -127,13 +143,11 @@ class TelldusLiveClient:
         """Discover the component."""
         device = self._client.device(device_id)
         component = self.identify_device(device)
-        config_entries_key = '{}.{}'.format(component, DOMAIN)
         async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
-            if config_entries_key not in self._hass.data[
-                    CONFIG_ENTRY_IS_SETUP]:
+            if component not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
                 await self._hass.config_entries.async_forward_entry_setup(
                     self._config_entry, component)
-                self._hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+                self._hass.data[CONFIG_ENTRY_IS_SETUP].add(component)
         device_ids = []
         if device.is_sensor:
             for item in device.items:
