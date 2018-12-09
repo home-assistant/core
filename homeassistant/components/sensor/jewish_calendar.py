@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['hdate==0.7.5']
+REQUIREMENTS = ['hdate>=0.8.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,11 +31,22 @@ SENSOR_TYPES = {
     'mga_end_shma': ['Latest time for Shm"a MG"A', 'mdi:calendar-clock'],
     'plag_mincha': ['Plag Hamincha', 'mdi:weather-sunset-down'],
     'first_stars': ['T\'set Hakochavim', 'mdi:weather-night'],
+    'upcoming_shabbat_candle_lighting': ['Upcoming Shabbat Candle Lighting', 'mdi:candle'],
+    'upcoming_shabbat_havdalah': ['Upcoming Shabbat Havdalah', 'mdi:weather-night'],
+    'upcoming_candle_lighting': ['Upcoming Candle Lighting', 'mdi:candle'],
+    'upcoming_havdalah': ['Upcoming Havdalah', 'mdi:weather-night'],
+    'omer_count': ['Day of the Omer', 'mdi:counter'],
 }
 
 CONF_DIASPORA = 'diaspora'
 CONF_LANGUAGE = 'language'
 CONF_SENSORS = 'sensors'
+CONF_CANDLE_LIGHT_MINUTES = 'candle_lighting_minutes_before_sunset'
+CONF_HAVDALAH_MINUTES = 'havdalah_minutes_after_sunset'
+
+CANDLE_LIGHT_DEFAULT = 18
+HAVDALAH_DEFAULT = 42
+
 
 DEFAULT_NAME = 'Jewish Calendar'
 
@@ -46,6 +57,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_LANGUAGE, default='english'):
         vol.In(['hebrew', 'english']),
+    vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=CANDLE_LIGHT_DEFAULT): int,
+    vol.Optional(CONF_HAVDALAH_MINUTES, default=HAVDALAH_DEFAULT): int,
     vol.Optional(CONF_SENSORS, default=['date']):
         vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
 })
@@ -59,6 +72,8 @@ async def async_setup_platform(
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     diaspora = config.get(CONF_DIASPORA)
+    candle_lighting_offset = config.get(CONF_CANDLE_LIGHT_MINUTES)
+    havdalah_offset = config.get(CONF_HAVDALAH_MINUTES)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -68,7 +83,8 @@ async def async_setup_platform(
     for sensor_type in config[CONF_SENSORS]:
         dev.append(JewishCalSensor(
             name, language, sensor_type, latitude, longitude,
-            hass.config.time_zone, diaspora))
+            hass.config.time_zone, diaspora, candle_lighting_offset, 
+            havdalah_offset))
     async_add_entities(dev, True)
 
 
@@ -77,7 +93,7 @@ class JewishCalSensor(Entity):
 
     def __init__(
             self, name, language, sensor_type, latitude, longitude, timezone,
-            diaspora):
+            diaspora, candle_lighting_offset, havdalah_offset):
         """Initialize the Jewish calendar sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -88,6 +104,8 @@ class JewishCalSensor(Entity):
         self.longitude = longitude
         self.timezone = timezone
         self.diaspora = diaspora
+        self.candle_lighting_offset = candle_lighting_offset
+        self.havdalah_offset = havdalah_offset
         _LOGGER.debug("Sensor %s initialized", self.type)
 
     @property
@@ -123,6 +141,10 @@ class JewishCalSensor(Entity):
 
         date = hdate.HDate(
             today, diaspora=self.diaspora, hebrew=self._hebrew)
+            
+        location = hdate.Location(latitude=self.latitude, 
+                                  longitude=self.longitude,
+                                  timezone=self.timezone)
 
         if self.type == 'date':
             self._state = date.hebrew_date
@@ -132,10 +154,42 @@ class JewishCalSensor(Entity):
             self._state = date.holiday_description
         elif self.type == 'holyness':
             self._state = date.holiday_type
+        elif self.type == 'upcoming_shabbat_candle_lighting' or \
+             self.type == 'upcoming_candle_lighting':             
+            # Start out with Shabbat/Friday.
+            # upcoming_shabbat returns the Saturday, so back up to the Friday
+            # for candle-lighting time.
+            start_day = date.upcoming_shabbat.previous_day
+            # If next yom tov is sooner, advance that.
+            if self.type == 'upcoming_candle_lighting':
+              next_erev_yom_tov = date.upcoming_yom_tov.previous_day
+              if next_erev_yom_tov < start_day:
+                start_day = next_erev_yom_tov
+            times = hdate.Zmanim(
+                date=start_day.gdate, location=location, 
+                hebrew=self._hebrew).zmanim
+            self._state = (times['sunset'] 
+                           - timedelta(minutes=self.candle_lighting_offset))
+        elif self.type == 'upcoming_shabbat_havdalah' or \
+             self.type == 'upcoming_havdalah':
+            end_day = date.upcoming_shabbat
+            if self.type == 'upcoming_havdalah':
+                next_yom_tov_end = date.upcoming_yom_tov
+                while (next_yom_tov_end.next_day.holiday_type == 2):
+                    next_yom_tov_end = next_yom_tov_end.next_day
+                if next_yom_tov_end < end_day:
+                    end_day = next_yom_tov_end
+
+            times = hdate.Zmanim(
+                date=end_day.gdate, location=location,
+                hebrew=self._hebrew).zmanim
+            self._state = (times['sunset'] 
+                           + timedelta(minutes=self.havdalah_offset))
+            
         else:
             times = hdate.Zmanim(
-                date=today, latitude=self.latitude, longitude=self.longitude,
-                timezone=self.timezone, hebrew=self._hebrew).zmanim
+                date=today, location=location,
+                hebrew=self._hebrew).zmanim
             self._state = times[self.type].time()
 
         _LOGGER.debug("New value: %s", self._state)
