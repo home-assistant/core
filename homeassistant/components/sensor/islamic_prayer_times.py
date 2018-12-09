@@ -202,7 +202,7 @@ class IslamicPrayerTimeSensor(Entity):
         """Fire event for respective prayer time."""
         _LOGGER.debug("Firing Event for: %s", self.sensor_type)
         self.hass.bus.async_fire('islamic_prayer_time', {'prayer':
-                                                             self.sensor_type})
+                                                         self.sensor_type})
 
     def get_prayer_time_as_dt(self, prayer_time):
         """Create a datetime object for the respective prayer time."""
