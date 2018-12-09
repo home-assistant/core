@@ -11,7 +11,6 @@ from collections import namedtuple
 from datetime import timedelta
 import logging
 
-from requests import Session
 from requests.exceptions import (
     ConnectionError as ConnectError, HTTPError, Timeout)
 import voluptuous as vol
@@ -28,6 +27,7 @@ from homeassistant.helpers.temperature import display_temp
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['ambient_api']
 DEFAULT_NAME = "Ambient Weather"
 
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -87,15 +87,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 APPLICATION_KEY = ('ad5fc285e0ee47549b3d49a48b0ef9b7df1' +
                    'eba79e837465584f89dcceb938a3f')
 
-AMBIENT_URL = 'https://api.ambientweather.net/v1/devices'
+AMBIENT_URL = 'https://api.ambientweather.net/v1'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Initialize Ambient data object and entity."""
+    from ambient_api.ambientapi import AmbientAPI
+
     api_key = config.get(CONF_API_KEY)
     name = config.get(CONF_NAME)
+    ambient_api = AmbientAPI(AMBIENT_ENDPOINT=AMBIENT_URL,
+                             AMBIENT_API_KEY=api_key,
+                             AMBIENT_APPLICATION_KEY=APPLICATION_KEY,
+                             log_level=_LOGGER.getEffectiveLevel())
 
-    ambient = AmbientData(hass, api_key)
+    ambient = AmbientData(hass, ambient_api)
 
     add_entities([AmbientWeather(hass, name, ambient)])
 
@@ -189,10 +195,6 @@ class AmbientWeather(WeatherEntity):
     def attribution(self):
         """Return the attribution."""
         attr_str = 'Data from Ambient Weather'
-        if self._ambient.station_name is not None:
-            attr_str += ' Station ' + self._ambient.station_name
-        if self._ambient.station_location is not None:
-            attr_str += '@' + self._ambient.station_location
         return attr_str
 
     @property
@@ -220,21 +222,14 @@ class AmbientWeather(WeatherEntity):
 class AmbientData:
     """Helper object to retrieve Ambient data."""
 
-    def __init__(self, hass, api_key):
+    def __init__(self, hass, api):
         """Set up the http session and data structures."""
         self.hass = hass
-        self._session = Session()
-        self._session.params = {
-            'applicationKey': APPLICATION_KEY,
-            'apiKey': api_key
-        }
-
+        self.api = api
         self._data = namedtuple(
             'status', KEY_ORDER
             )
         self.adoutput = None
-        self.station_name = None
-        self.station_location = None
 
     def mph_to_kph(self, value_mph):
         """Convert mph to metric if required."""
@@ -253,10 +248,11 @@ class AmbientData:
     def update(self):
         """Retrieve the data from Ambient and decode."""
         try:
-            resp = self._session.get(AMBIENT_URL)
+            devices = self.api.get_devices()
+
+            payload = devices[0].last_data
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug("Data from ambient %s", resp.text)
-            payload = resp.json()[0].get('lastData')
+                _LOGGER.debug("Payload: %s", payload)
 
             named_list = []
 
@@ -276,13 +272,6 @@ class AmbientData:
                     named_list.append(0.0)
 
             self.adoutput = self._data._make(named_list)
-
-            station_info = resp.json()[0].get('info')
-            if 'name' in station_info:
-                self.station_name = station_info.get('name')
-
-            if 'location' in station_info:
-                self.station_location = station_info.get('location')
 
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 _LOGGER.debug("Retrieved ambient data %s", self.adoutput)
