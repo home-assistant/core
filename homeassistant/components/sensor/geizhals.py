@@ -15,7 +15,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_NAME
 
-REQUIREMENTS = ['geizhals==0.0.7']
+REQUIREMENTS = ['geizhals==0.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
