@@ -1,10 +1,10 @@
 """The tests for the Islamic prayer times sensor platform."""
 from homeassistant.util.async_ import run_coroutine_threadsafe
-from unittest.mock import patch
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 from homeassistant.components.sensor.islamic_prayer_times import (
     IslamicPrayerTimesData, IslamicPrayerTimeSensor)
+from tests.common import MockDependency
 
 LATITUDE = 41
 LONGITUDE = -87
@@ -67,17 +67,20 @@ class TestIslamicPrayerTimesSensor():
         assert pt_data.calc_method == CALC_METHOD
         assert pt_data.prayer_times is None
 
-    @patch('prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times')
-    def test_islamic_prayer_times_data_get_prayer_times(self, mock_fetch_pt):
+    @MockDependency('prayer_times_calculator')
+    def test_islamic_prayer_times_data_get_prayer_times(self, mock_pt_calc):
         """Test Islamic prayer times data fetcher."""
-        mock_fetch_pt.return_value = PRAYER_TIMES
+        mock_pt_calc.PrayerTimesCalculator.return_value.fetch_prayer_times\
+            .return_value = PRAYER_TIMES
+
         pt_data = IslamicPrayerTimesData(latitude=LATITUDE,
                                          longitude=LONGITUDE,
                                          calc_method=CALC_METHOD)
+
         assert pt_data.get_prayer_times() == PRAYER_TIMES
         assert pt_data.prayer_times == PRAYER_TIMES
 
-    @patch('prayer_times_calculator.PrayerTimesCalculator')
+    @MockDependency('prayer_times_calculator')
     def test_islamic_prayer_times_sensor(self, mock_pt_calc):
         """Test Islamic prayer times sensor creation."""
         mock_pt_calc.prayer_times = PRAYER_TIMES
@@ -86,7 +89,7 @@ class TestIslamicPrayerTimesSensor():
         assert pt_sensor.entity_id == 'sensor.islamic_prayer_time_fajr'
         assert pt_sensor.prayer_times_data == mock_pt_calc
 
-    @patch('prayer_times_calculator.PrayerTimesCalculator')
+    @MockDependency('prayer_times_calculator')
     def test_islamic_prayer_times_sensor_properties(self, mock_pt_calc):
         """Test Islamic prayer times sensor properties."""
         mock_pt_calc.prayer_times = PRAYER_TIMES
@@ -96,7 +99,7 @@ class TestIslamicPrayerTimesSensor():
         assert pt_sensor.state == '05:35PM'
         assert pt_sensor.should_poll is False
 
-    @patch('prayer_times_calculator.PrayerTimesCalculator')
+    @MockDependency('prayer_times_calculator')
     def test_islamic_prayer_times_sensor_update(self, mock_pt_calc):
         """Test Islamic prayer times sensor update."""
         mock_pt_calc.prayer_times = PRAYER_TIMES
