@@ -5,21 +5,21 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ambstation/
 """
 
-import logging
-import time
 from datetime import timedelta
+import logging
+import asyncio
 import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, \
+    CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-
 REQUIREMENTS = ['ambient_api==1.5.2']
 
 CONF_APP_KEY = 'app_key'
-CONF_UPDATE_INTERVAL = 'update_interval'
 
 SENSOR_NAME = 0
 SENSOR_UNITS = 1
@@ -28,6 +28,8 @@ CONF_UNITS = 'units'
 UNITS_US = 'us'
 UNITS_SI = 'si'
 UNIT_SYSTEM = {UNITS_US: 0, UNITS_SI: 1}
+
+SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
     'winddir': ['Wind Dir', 'º'],
@@ -67,7 +69,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_APP_KEY): cv.string,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
+    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): (
         vol.All(cv.time_period, cv.positive_timedelta)),
 })
 
@@ -76,8 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Initialze each sensor platform for each monitored condition."""
     api_key = config.get(CONF_API_KEY)
     app_key = config.get(CONF_APP_KEY)
-    interval = config.get(CONF_UPDATE_INTERVAL)
-    station_data = AmbientStationData(api_key, app_key, interval)
+    station_data = AmbientStationData(hass, api_key, app_key)
     sensor_list = list()
 
     if CONF_UNITS in config:
@@ -127,13 +128,13 @@ class AmbientWeatherSensor(Entity):
         """Return the unit of measurement."""
         return self._units
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for the sensor.
 
         This is the only method that should fetch new data for Home Assistant.
         """
         _LOGGER.debug("Getting data for sensor: %s", self._name)
-        data = self.station_data.get_data()
+        data = await self.station_data.get_data()
         if data is None:
             # update likely got throttled and returned None, so use the cached
             # data from the station_data object
@@ -151,18 +152,14 @@ class AmbientWeatherSensor(Entity):
 class AmbientStationData:
     """Class to interface with ambient-api library."""
 
-    def __init__(self, api_key, app_key, interval):
+    def __init__(self, hass, api_key, app_key):
         """Initialize station data object."""
-        self._api_key = api_key
-        self._app_key = app_key
-
-        self._interval = interval
-
+        self.hass = hass
         self._api_keys = {
             'AMBIENT_ENDPOINT':
             'https://api.ambientweather.net/v1',
-            'AMBIENT_API_KEY': self._api_key,
-            'AMBIENT_APPLICATION_KEY': self._app_key,
+            'AMBIENT_API_KEY': api_key,
+            'AMBIENT_APPLICATION_KEY': app_key,
             'log_level': 'DEBUG'
         }
 
@@ -171,17 +168,18 @@ class AmbientStationData:
         self._api = None
         self._devices = None
 
-        self.get_data = Throttle(self._interval)(self.update)
+        self.get_data = Throttle(SCAN_INTERVAL)(self.async_update)
 
-    def update(self):
+    async def async_update(self):
         """Get new data."""
         # refresh API connection since servers turn over nightly
         _LOGGER.debug("Getting new data from server")
         new_data = None
-        self._connect_api()
-        time.sleep(2)   # need minimum 2 seconds between API calls
+        await self.hass.async_add_executor_job(self._connect_api)
+        await asyncio.sleep(2)   # need minimum 2 seconds between API calls
         if self._station is not None:
-            data = self._station.get_data()
+            data = await self.hass.async_add_executor_job(
+                self._station.get_data)
             if data is not None:
                 new_data = data[0]
                 self.data = new_data
