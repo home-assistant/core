@@ -43,6 +43,11 @@ class ZhaEntity(entity.Entity):
                 endpoint.endpoint_id,
                 kwargs.get('entity_suffix', ''),
             )
+            self._device_state_attributes['friendly_name'] = "{}_{}{}".format(
+                ieeetail,
+                endpoint.endpoint_id,
+                kwargs.get('entity_suffix', ''),
+            )
 
         self._endpoint = endpoint
         self._in_clusters = in_clusters
