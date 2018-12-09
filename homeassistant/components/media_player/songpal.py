@@ -165,20 +165,23 @@ class SongpalDevice(MediaPlayerDevice):
             self._state = power.status
             await self.async_update_ha_state()
 
-        async def _try_reconnect(x: ConnectChange):
+        async def _try_reconnect(connect: ConnectChange):
             _LOGGER.error("Got disconnected with %s, trying to reconnect.",
-                          x.exception)
+                          connect.exception)
             self._available = False
             self.dev.clear_notification_callbacks()
             await self.async_update_ha_state()
 
             # Try to reconnect forever, a successful reconnect will initialize
             # the websocket connection again.
+            delay = 10
             while not self._available:
-                await asyncio.sleep(10)
+                _LOGGER.debug("Trying to reconnect in %s seconds", delay)
+                await asyncio.sleep(delay)
                 # We need to inform HA about the state in case we are coming
                 # back from a disconnected state.
                 await self.async_update_ha_state(force_refresh=True)
+                delay = min(2*delay, 300)
 
         self.dev.on_notification(VolumeChange, _volume_changed)
         self.dev.on_notification(ContentChange, _source_changed)
