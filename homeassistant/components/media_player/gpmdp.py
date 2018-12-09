@@ -219,7 +219,7 @@ class GPMDP(MediaPlayerDevice):
             volume_data = self.send_gpmdp_msg('volume', 'getVolume')
             if volume_data is not None:
                 self._volume = volume_data['value'] / 100
-        except Exception:
+        except OSError:
             self._available = False
 
     @property
