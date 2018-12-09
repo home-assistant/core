@@ -41,10 +41,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 class SatelIntegraBinarySensor(BinarySensorDevice):
     """Representation of an Satel Integra binary sensor."""
 
-    def __init__(self, zone_number, zone_name, zone_type):
+    def __init__(self, device_number, device_name, zone_type):
         """Initialize the binary_sensor."""
-        self._zone_number = zone_number
-        self._name = zone_name
+        self._device_number = device_number
+        self._name = device_name
         self._zone_type = zone_type
         self._state = 0
 
@@ -82,7 +82,7 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
     @callback
     def _zones_updated(self, zones):
         """Update the zone's state, if needed."""
-        if self._zone_number in zones \
-                and self._state != zones[self._zone_number]:
-            self._state = zones[self._zone_number]
+        if self._device_number in zones \
+                and self._state != zones[self._device_number]:
+            self._state = zones[self._device_number]
             self.async_schedule_update_ha_state()
