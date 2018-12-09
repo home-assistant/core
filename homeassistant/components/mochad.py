@@ -12,9 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
-                                 CONF_PASSWORD)
-from homeassistant.setup import setup_component
+from homeassistant.const import (CONF_HOST, CONF_PORT)
 from homeassistant.components import mqtt
 
 DEPENDENCIES = ['mqtt']
@@ -54,7 +52,7 @@ def setup(hass, config):
 
     def stop_mochad(event):
         """Stop the Mochad service."""
-        controller = hass.data.get(DOMAIN)
+        controller = hass.data[DOMAIN]
         controller.disconnect()
 
     def start_mochad(event):
@@ -73,14 +71,15 @@ class MochadCtrl:
         self._host = host
         self._port = port
 
-        from pymochad_mqtt import controller
+        from pymochad_mqtt.controller import PyMochadMqtt
 
-        self.ctrl_recv = controller.\
-            PyMochadMqtt(mochad_server=self._host, mochad_port=self._port,
-                         mqtt_client=mqtt_client)
+        self.ctrl_recv = PyMochadMqtt(mochad_server=self._host,
+                                       mochad_port=self._port,
+                                       mqtt_client=mqtt_client)
         self.ctrl_recv.start()
         _LOGGER.debug("""PyMochadMqtt controller created for mochad %s:%s and
-                       mqtt %s:%s""", host, port, mqtt_client._host, mqtt_client._port)
+                       mqtt %s:%s""", host, port, mqtt_client._host, 
+                       mqtt_client._port)
         if self.ctrl_recv.connect_event.wait():
             self.ctrl_send = self.ctrl_recv.ctrl
 
