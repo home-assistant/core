@@ -5,14 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ambstation/
 """
 
+import asyncio
 from datetime import timedelta
 import logging
-import asyncio
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, \
-    CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -76,10 +77,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Initialze each sensor platform for each monitored condition."""
-    api_key = config.get(CONF_API_KEY)
-    app_key = config.get(CONF_APP_KEY)
+    api_key = config[CONF_API_KEY]
+    app_key = config[CONF_APP_KEY]
     station_data = AmbientStationData(hass, api_key, app_key)
-    sensor_list = list()
+    sensor_list = []
 
     if CONF_UNITS in config:
         sys_units = config[CONF_UNITS]
