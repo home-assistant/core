@@ -256,7 +256,8 @@ class SongpalDevice(MediaPlayerDevice):
 
             # activate notifications if wanted
             if not self._poll:
-                await self.hass.async_create_task(self.async_activate_websocket())
+                await self.hass.async_create_task(
+                    self.async_activate_websocket())
         except SongpalException as ex:
             _LOGGER.error("Unable to update: %s", ex)
             self._available = False
