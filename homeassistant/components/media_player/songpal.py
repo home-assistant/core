@@ -176,10 +176,9 @@ class SongpalDevice(MediaPlayerDevice):
             # the websocket connection again.
             while not self._available:
                 await asyncio.sleep(10)
-                await self.async_update()
                 # We need to inform HA about the state in case we are coming
                 # back from a disconnected state.
-                await self.async_update_ha_state()
+                await self.async_update_ha_state(force_refresh=True)
 
         self.dev.on_notification(VolumeChange, _volume_changed)
         self.dev.on_notification(ContentChange, _source_changed)
@@ -190,12 +189,9 @@ class SongpalDevice(MediaPlayerDevice):
             await self.dev.listen_notifications()
 
         async def handle_stop(event):
-            nonlocal remove_hass_stop_listener
-            remove_hass_stop_listener = None
             await self.dev.stop_listen_notifications()
 
-        remove_hass_stop_listener = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, handle_stop)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
         self.hass.loop.create_task(listen_events())
 
@@ -260,7 +256,7 @@ class SongpalDevice(MediaPlayerDevice):
 
             # activate notifications if wanted
             if not self._poll:
-                await self.hass.async_add_job(self.async_activate_websocket)
+                await self.hass.async_create_task(self.async_activate_websocket())
         except SongpalException as ex:
             _LOGGER.error("Unable to update: %s", ex)
             self._available = False
