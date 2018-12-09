@@ -5,12 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.islamic_prayer_times/
 """
 import logging
+from datetime import datetime, timedelta
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-from datetime import datetime, timedelta
 from homeassistant.helpers.event import async_track_point_in_time
 
 REQUIREMENTS = ['prayer_times_calculator==0.0.3']
@@ -204,7 +204,8 @@ class IslamicPrayerTimeSensor(Entity):
         self.hass.bus.async_fire('islamic_prayer_time', {'prayer':
                                                          self.sensor_type})
 
-    def get_prayer_time_as_dt(self, prayer_time):
+    @staticmethod
+    def get_prayer_time_as_dt(prayer_time):
         """Create a datetime object for the respective prayer time."""
         today = datetime.today().strftime('%Y-%m-%d')
         date_time_str = '{} {}'.format(str(today), prayer_time)
