@@ -75,7 +75,8 @@ async def async_setup(hass, config):
     conf = config.get(DOMAIN)
 
     zones = conf.get(CONF_ZONES) if conf.get(CONF_ZONES) is not None else []
-    outputs = conf.get(CONF_OUTPUTS) if conf.get(CONF_OUTPUTS) is not None else []
+    outputs = \
+        conf.get(CONF_OUTPUTS) if conf.get(CONF_OUTPUTS) is not None else []
     host = conf.get(CONF_DEVICE_HOST)
     port = conf.get(CONF_DEVICE_PORT)
     partition = conf.get(CONF_DEVICE_PARTITION)
@@ -105,7 +106,8 @@ async def async_setup(hass, config):
 
     task_zones = hass.async_create_task(
         async_load_platform(hass, 'binary_sensor', DOMAIN,
-                            {CONF_ZONES: zones, CONF_OUTPUTS: outputs}, config))
+                            {CONF_ZONES: zones, CONF_OUTPUTS: outputs}, config)
+        )
 
     await asyncio.wait([task_control_panel, task_zones], loop=hass.loop)
 
