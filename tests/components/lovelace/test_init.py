@@ -2,12 +2,15 @@
 from unittest.mock import patch
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components import lovelace
+from homeassistant.components import frontend, lovelace
 
 
 async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, 'lovelace', {})
+    assert hass.data[frontend.DATA_PANELS]['lovelace'].config == {
+        'legacy': False
+    }
 
     client = await hass_ws_client(hass)
 
@@ -54,6 +57,9 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
             'legacy': True
         }
     })
+    assert hass.data[frontend.DATA_PANELS]['lovelace'].config == {
+        'legacy': True
+    }
 
     client = await hass_ws_client(hass)
 

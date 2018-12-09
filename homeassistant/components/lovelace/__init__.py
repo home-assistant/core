@@ -43,6 +43,28 @@ class ConfigNotFound(HomeAssistantError):
     """When no config available."""
 
 
+async def async_setup(hass, config):
+    """Set up the Lovelace commands."""
+    legacy = config.get(DOMAIN, {}).get(CONF_LEGACY, False)
+
+    await hass.components.frontend.async_register_built_in_panel(
+        DOMAIN, config={
+            'legacy': legacy
+        })
+
+    hass.data[DOMAIN] = LovelaceYAML(hass) if legacy else LovelaceStorage(hass)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
+        SCHEMA_GET_LOVELACE_UI)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_SAVE_CONFIG, websocket_lovelace_save_config,
+        SCHEMA_SAVE_CONFIG)
+
+    return True
+
+
 class LovelaceStorage:
     """Class to handle Storage based Lovelace config."""
 
@@ -102,27 +124,6 @@ class LovelaceYAML:
     async def async_save(self, config):
         """Save config."""
         raise HomeAssistantError('Not supported')
-
-
-async def async_setup(hass, config):
-    """Set up the Lovelace commands."""
-    legacy = config.get(DOMAIN, {}).get(CONF_LEGACY)
-
-    await hass.components.frontend.async_register_built_in_panel(DOMAIN, {
-        'legacy': legacy
-    })
-
-    hass.data[DOMAIN] = LovelaceYAML(hass) if legacy else LovelaceStorage(hass)
-
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
-        SCHEMA_GET_LOVELACE_UI)
-
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SAVE_CONFIG, websocket_lovelace_save_config,
-        SCHEMA_SAVE_CONFIG)
-
-    return True
 
 
 def handle_yaml_errors(func):
