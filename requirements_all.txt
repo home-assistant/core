@@ -1397,7 +1397,7 @@ rxv==0.5.1
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.satel_integra
-satel_integra==0.1.0
+satel_integra==0.2.0
 
 # homeassistant.components.sensor.deutsche_bahn
 schiene==0.22
