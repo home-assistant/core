@@ -22,6 +22,7 @@ COMPONENTS = [
     'light',
     'sensor',
     'switch',
+    'device_tracker',
 ]
 
 CONF_BAUDRATE = 'baudrate'
