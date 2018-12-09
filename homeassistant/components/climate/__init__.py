@@ -29,7 +29,7 @@ DEFAULT_MAX_HUMIDITY = 99
 DOMAIN = 'climate'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(seconds=1)
 
 SERVICE_SET_AWAY_MODE = 'set_away_mode'
 SERVICE_SET_AUX_HEAT = 'set_aux_heat'
