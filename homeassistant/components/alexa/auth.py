@@ -40,6 +40,8 @@ class Auth:
         self._prefs = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
+        self._get_token_lock = asyncio.Lock(loop=hass.loop)
+
     async def async_do_auth(self, accept_grant_code):
         """Do authentication with an AcceptGrant code."""
         # access token not retrieved yet for the first time, so this should
@@ -58,26 +60,27 @@ class Auth:
 
     async def async_get_access_token(self):
         """Perform access token or token refresh request."""
-        if self._prefs is None:
-            await self.async_load_preferences()
+        async with self._get_token_lock:
+            if self._prefs is None:
+                await self.async_load_preferences()
 
-        if self.is_token_valid():
-            _LOGGER.debug("Token still valid, using it.")
-            return self._prefs[STORAGE_ACCESS_TOKEN]
+            if self.is_token_valid():
+                _LOGGER.debug("Token still valid, using it.")
+                return self._prefs[STORAGE_ACCESS_TOKEN]
 
-        if self._prefs[STORAGE_REFRESH_TOKEN] is None:
-            _LOGGER.debug("Token invalid and no refresh token available.")
-            return None
+            if self._prefs[STORAGE_REFRESH_TOKEN] is None:
+                _LOGGER.debug("Token invalid and no refresh token available.")
+                return None
 
-        lwa_params = {
-            "grant_type": "refresh_token",
-            "refresh_token": self._prefs[STORAGE_REFRESH_TOKEN],
-            "client_id": self.client_id,
-            "client_secret": self.client_secret
-        }
+            lwa_params = {
+                "grant_type": "refresh_token",
+                "refresh_token": self._prefs[STORAGE_REFRESH_TOKEN],
+                "client_id": self.client_id,
+                "client_secret": self.client_secret
+            }
 
-        _LOGGER.debug("Calling LWA to refresh the access token.")
-        return await self._async_request_new_token(lwa_params)
+            _LOGGER.debug("Calling LWA to refresh the access token.")
+            return await self._async_request_new_token(lwa_params)
 
     @callback
     def is_token_valid(self):
