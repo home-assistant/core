@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, SERVICE_TOGGLE,
     SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.loader import bind_hass
+from homeassistant.core import callback
 
 
 @bind_hass
@@ -41,6 +42,15 @@ def locate(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_LOCATE, data)
 
 
+@callback
+@bind_hass
+def async_locate(hass, entity_id=None) -> None:
+    """Locate all or specified vacuum."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_LOCATE, data))
+
+
 @bind_hass
 def clean_spot(hass, entity_id=None):
     """Tell all or specified vacuum to perform a spot clean-up."""
@@ -48,11 +58,29 @@ def clean_spot(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_CLEAN_SPOT, data)
 
 
+@callback
+@bind_hass
+def async_clean_spot(hass, entity_id=None) -> None:
+    """Tell all or specified vacuum to perform a spot clean-up."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_CLEAN_SPOT, data))
+
+
 @bind_hass
 def return_to_base(hass, entity_id=None):
     """Tell all or specified vacuum to return to base."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_RETURN_TO_BASE, data)
+
+
+@callback
+@bind_hass
+def async_return_to_base(hass, entity_id=None) -> None:
+    """Tell all or specified vacuum to return to base."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_RETURN_TO_BASE, data))
 
 
 @bind_hass
@@ -69,11 +97,29 @@ def start(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_START, data)
 
 
+@callback
+@bind_hass
+def async_start(hass, entity_id=None) -> None:
+    """Tell all or specified vacuum to start or resume the current task."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_START, data))
+
+
 @bind_hass
 def pause(hass, entity_id=None):
     """Tell all or the specified vacuum to pause the current task."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_PAUSE, data)
+
+
+@callback
+@bind_hass
+def async_pause(hass, entity_id=None) -> None:
+    """Tell all or the specified vacuum to pause the current task."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_PAUSE, data))
 
 
 @bind_hass
@@ -83,12 +129,31 @@ def stop(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_STOP, data)
 
 
+@callback
+@bind_hass
+def async_stop(hass, entity_id=None) -> None:
+    """Stop all or specified vacuum."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_STOP, data))
+
+
 @bind_hass
 def set_fan_speed(hass, fan_speed, entity_id=None):
     """Set fan speed for all or specified vacuum."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     data[ATTR_FAN_SPEED] = fan_speed
     hass.services.call(DOMAIN, SERVICE_SET_FAN_SPEED, data)
+
+
+@callback
+@bind_hass
+def async_set_fan_speed(hass, fan_speed, entity_id=None) -> None:
+    """Set fan speed for all or specified vacuum."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data[ATTR_FAN_SPEED] = fan_speed
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_SET_FAN_SPEED, data))
 
 
 @bind_hass
