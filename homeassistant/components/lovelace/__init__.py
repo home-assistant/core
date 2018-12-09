@@ -18,7 +18,6 @@ from homeassistant.util.yaml import load_yaml
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'lovelace'
-DATA_LOVELACE_YAML = 'lovelace_yaml'
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 CONF_LEGACY = 'legacy'
@@ -98,6 +97,7 @@ class LovelaceYAML:
     def __init__(self, hass):
         """Initialize the YAML config."""
         self.hass = hass
+        self._cache = None
 
     async def async_load(self, force):
         """Load config."""
@@ -107,8 +107,8 @@ class LovelaceYAML:
         """Load the actual config."""
         fname = self.hass.config.path(LOVELACE_CONFIG_FILE)
         # Check for a cached version of the config
-        if not force and DATA_LOVELACE_YAML in self.hass.data:
-            config, last_update = self.hass.data[DATA_LOVELACE_YAML]
+        if not force and self._cache is not None:
+            config, last_update = self._cache
             modtime = os.path.getmtime(fname)
             if config and last_update > modtime:
                 return config
@@ -118,7 +118,7 @@ class LovelaceYAML:
         except FileNotFoundError:
             raise ConfigNotFound from None
 
-        self.hass.data[DATA_LOVELACE_YAML] = (config, time.time())
+        self._cache = (config, time.time())
         return config
 
     async def async_save(self, config):
