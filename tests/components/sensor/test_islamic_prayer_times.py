@@ -47,6 +47,16 @@ class TestIslamicPrayerTimesSensor():
         }
         assert setup_component(self.hass, 'sensor', config)
 
+    def test_islamic_prayer_times_with_calculation_method(self):
+        """Test Islamic prayer times configuration with calculation method."""
+        config = {
+            'sensor': {
+                'platform': 'islamic_prayer_times',
+                'calculation_method': 'mwl'
+            }
+        }
+        assert setup_component(self.hass, 'sensor', config)
+
     def test_islamic_prayer_times_data_init(self):
         """Test Islamic prayer times data object creation."""
         pt_data = IslamicPrayerTimesData(latitude=LATITUDE,
@@ -55,7 +65,7 @@ class TestIslamicPrayerTimesSensor():
         assert pt_data.latitude == LATITUDE
         assert pt_data.longitude == LONGITUDE
         assert pt_data.calc_method == CALC_METHOD
-        assert pt_data.prayer_times == None  # pylint: disable=E711
+        assert pt_data.prayer_times is None
 
     @patch('prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times')
     def test_islamic_prayer_times_data_get_prayer_times(self, mock_fetch_pt):
@@ -84,7 +94,7 @@ class TestIslamicPrayerTimesSensor():
         assert pt_sensor.name == 'Maghrib'
         assert pt_sensor.icon == 'mdi:calendar-clock'
         assert pt_sensor.state == '05:35PM'
-        assert pt_sensor.should_poll == False  # pylint: disable=E712
+        assert pt_sensor.should_poll is False
 
     @patch('prayer_times_calculator.PrayerTimesCalculator')
     def test_islamic_prayer_times_sensor_update(self, mock_pt_calc):
