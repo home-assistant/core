@@ -149,6 +149,9 @@ pilight==0.1.1
 # homeassistant.components.sensor.serial_pm
 pmsensor==0.4
 
+# homeassistant.components.sensor.islamic_prayer_times
+prayer_times_calculator==0.0.3
+
 # homeassistant.components.prometheus
 prometheus_client==0.2.0
 
