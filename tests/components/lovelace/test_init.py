@@ -9,7 +9,7 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, 'lovelace', {})
     assert hass.data[frontend.DATA_PANELS]['lovelace'].config == {
-        'legacy': False
+        'mode': 'storage'
     }
 
     client = await hass_ws_client(hass)
@@ -54,11 +54,11 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
     """Test we load lovelace config from yaml."""
     assert await async_setup_component(hass, 'lovelace', {
         'lovelace': {
-            'legacy': True
+            'mode': 'YAML'
         }
     })
     assert hass.data[frontend.DATA_PANELS]['lovelace'].config == {
-        'legacy': True
+        'mode': 'yaml'
     }
 
     client = await hass_ws_client(hass)

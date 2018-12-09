@@ -20,7 +20,17 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'lovelace'
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-CONF_LEGACY = 'legacy'
+CONF_MODE = 'mode'
+MODE_YAML = 'yaml'
+MODE_STORAGE = 'storage'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_MODE, default=MODE_STORAGE):
+        vol.All(vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])),
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
 
 LOVELACE_CONFIG_FILE = 'ui-lovelace.yaml'
 
@@ -44,14 +54,18 @@ class ConfigNotFound(HomeAssistantError):
 
 async def async_setup(hass, config):
     """Set up the Lovelace commands."""
-    legacy = config.get(DOMAIN, {}).get(CONF_LEGACY, False)
+    # Pass in default to `get` because defaults not set if loaded as dep
+    mode = config.get(DOMAIN, {}).get(CONF_MODE, MODE_STORAGE)
 
     await hass.components.frontend.async_register_built_in_panel(
         DOMAIN, config={
-            'legacy': legacy
+            'mode': mode
         })
 
-    hass.data[DOMAIN] = LovelaceYAML(hass) if legacy else LovelaceStorage(hass)
+    if mode == MODE_YAML:
+        hass.data[DOMAIN] = LovelaceYAML(hass)
+    else:
+        hass.data[DOMAIN] = LovelaceStorage(hass)
 
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
