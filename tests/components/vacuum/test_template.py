@@ -4,8 +4,9 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.const import (STATE_ON, STATE_UNKNOWN)
-from homeassistant.components.vacuum import (ATTR_BATTERY_LEVEL,
-    STATE_CLEANING, STATE_DOCKED, STATE_IDLE, STATE_PAUSED, STATE_RETURNING)
+from homeassistant.components.vacuum import (
+    ATTR_BATTERY_LEVEL, STATE_CLEANING, STATE_DOCKED, STATE_IDLE,
+    STATE_PAUSED, STATE_RETURNING)
 
 from tests.common import (
     async_mock_service, assert_setup_component)
@@ -301,7 +302,7 @@ async def _register_components(hass):
                 'state': {
                     'name': 'State',
                     'options': [STATE_CLEANING, STATE_DOCKED, STATE_IDLE,
-                        STATE_PAUSED, STATE_RETURNING]
+                                STATE_PAUSED, STATE_RETURNING]
                 },
 
                 'fan_speed': {
